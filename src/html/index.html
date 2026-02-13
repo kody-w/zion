@@ -43,54 +43,8 @@
         </div>
         <span style="color:var(--color-text-muted); font-size:0.8rem;">or</span>
         <button class="login-btn" id="login-btn" style="width:100%;"
-          onclick="startGitHubLogin()">Enter with GitHub</button>
+          onclick="Auth.initiateOAuth()">Enter with GitHub</button>
       </div>
-      <div id="device-flow-ui" style="display:none; text-align:center; width:320px;">
-        <p id="device-flow-status" style="color:var(--color-text); margin-bottom:1rem;">Connecting to GitHub...</p>
-        <div id="device-flow-code" style="display:none;">
-          <p style="color:var(--color-text-muted); margin-bottom:0.5rem; font-size:0.9rem;">Enter this code at GitHub:</p>
-          <code id="device-code-display" style="display:block; font-size:2rem; color:var(--color-gold);
-            background:rgba(255,255,255,0.05); padding:1rem; border-radius:8px; border:1px solid var(--color-border);
-            letter-spacing:0.3rem; font-weight:bold; cursor:pointer; user-select:all; margin-bottom:1rem;"
-            onclick="navigator.clipboard&&navigator.clipboard.writeText(this.textContent.trim())"></code>
-          <a id="device-verify-link" href="https://github.com/login/device" target="_blank"
-            style="display:inline-block; padding:0.75rem 1.5rem; background:var(--color-forest);
-            color:white; text-decoration:none; border-radius:8px; font-size:1rem; margin-bottom:1rem;">
-            Open GitHub &rarr;</a>
-          <p style="color:var(--color-text-muted); font-size:0.8rem;">Waiting for authorization...</p>
-        </div>
-        <button onclick="Auth.cancelOAuth();document.getElementById('device-flow-ui').style.display='none';document.getElementById('login-options').style.display='flex';"
-          style="margin-top:1rem; background:none; border:1px solid var(--color-border); color:var(--color-text-muted);
-          padding:0.5rem 1rem; border-radius:8px; cursor:pointer;">Cancel</button>
-      </div>
-      <script>
-        function startGitHubLogin() {
-          document.getElementById('login-options').style.display = 'none';
-          document.getElementById('device-flow-ui').style.display = 'block';
-          Auth.initiateOAuth(function(status) {
-            var statusEl = document.getElementById('device-flow-status');
-            var codeEl = document.getElementById('device-flow-code');
-            if (status.stage === 'requesting') {
-              statusEl.textContent = 'Connecting to GitHub...';
-            } else if (status.stage === 'waiting') {
-              statusEl.textContent = 'Code ready!';
-              codeEl.style.display = 'block';
-              document.getElementById('device-code-display').textContent = status.userCode;
-              if (status.verificationUri) {
-                document.getElementById('device-verify-link').href = status.verificationUri;
-              }
-            } else if (status.stage === 'complete') {
-              statusEl.textContent = 'Welcome, ' + status.username + '!';
-              setTimeout(function() { location.reload(); }, 500);
-            } else if (status.stage === 'error') {
-              statusEl.textContent = status.error || 'Something went wrong.';
-              statusEl.style.color = '#EF5350';
-            }
-          }).catch(function(err) {
-            console.error('OAuth error:', err);
-          });
-        }
-      </script>
     </div>
 
     <div class="notification" id="notification" style="display:none;"></div>

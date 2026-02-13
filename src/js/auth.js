@@ -1,8 +1,10 @@
 (function(exports) {
-  // GitHub OAuth Configuration — Device Flow (no server needed)
+  // GitHub App OAuth Configuration — Standard Web Flow (CORS-enabled for GitHub Apps)
   const OAUTH_CONFIG = {
-    clientId: 'Ov23liwGjahyIYDaIB3p',
-    scope: 'read:user'
+    clientId: 'Iv23lixLqM3xo88npTs4',
+    scope: 'read:user',
+    authorizeUrl: 'https://github.com/login/oauth/authorize',
+    tokenUrl: 'https://github.com/login/oauth/access_token'
   };
 
   // Storage keys
@@ -24,140 +26,76 @@
     try { localStorage.removeItem(key); } catch (e) {}
   }
 
-  // Device Flow state
-  let deviceFlowInterval = null;
-
   /**
-   * Initiate GitHub Device Flow OAuth.
-   * Shows a code to the user, they enter it at github.com/login/device,
-   * and we poll until they authorize.
-   * @param {function} onStatus - callback({stage, userCode, verificationUri, error})
-   * @returns {Promise<{username, avatar_url}>}
+   * Initiate GitHub OAuth — redirects browser to GitHub authorization page.
+   * After the user authorizes, GitHub redirects back with ?code= in the URL.
    */
-  async function initiateOAuth(onStatus) {
-    if (typeof fetch === 'undefined') {
-      throw new Error('fetch not available');
-    }
-
-    onStatus = onStatus || function() {};
-
-    // Step 1: Request device code
-    onStatus({ stage: 'requesting' });
-
-    const codeRes = await fetch('https://github.com/login/device/code', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        client_id: OAUTH_CONFIG.clientId,
-        scope: OAUTH_CONFIG.scope
-      })
-    });
-
-    if (!codeRes.ok) {
-      const err = 'Failed to start device flow: ' + codeRes.status;
-      onStatus({ stage: 'error', error: err });
-      throw new Error(err);
-    }
-
-    const codeData = await codeRes.json();
-    // codeData has: device_code, user_code, verification_uri, expires_in, interval
-
-    // Step 2: Show user the code
-    onStatus({
-      stage: 'waiting',
-      userCode: codeData.user_code,
-      verificationUri: codeData.verification_uri
-    });
-
-    // Step 3: Poll for token
-    const pollInterval = (codeData.interval || 5) * 1000;
-    const expiresAt = Date.now() + (codeData.expires_in || 900) * 1000;
-
-    return new Promise((resolve, reject) => {
-      deviceFlowInterval = setInterval(async () => {
-        if (Date.now() > expiresAt) {
-          clearInterval(deviceFlowInterval);
-          deviceFlowInterval = null;
-          onStatus({ stage: 'error', error: 'Code expired. Try again.' });
-          reject(new Error('Device code expired'));
-          return;
-        }
-
-        try {
-          const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
-            method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              client_id: OAUTH_CONFIG.clientId,
-              device_code: codeData.device_code,
-              grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
-            })
-          });
-
-          const tokenData = await tokenRes.json();
-
-          if (tokenData.access_token) {
-            clearInterval(deviceFlowInterval);
-            deviceFlowInterval = null;
-
-            // Store token
-            setStorage(TOKEN_KEY, tokenData.access_token);
-
-            // Fetch profile
-            const profile = await getProfile(tokenData.access_token);
-            onStatus({ stage: 'complete', username: profile.username });
-            resolve(profile);
-          } else if (tokenData.error === 'authorization_pending') {
-            // Still waiting — keep polling
-          } else if (tokenData.error === 'slow_down') {
-            // Back off — we'll just wait for next interval
-          } else if (tokenData.error === 'expired_token') {
-            clearInterval(deviceFlowInterval);
-            deviceFlowInterval = null;
-            onStatus({ stage: 'error', error: 'Code expired. Try again.' });
-            reject(new Error('Device code expired'));
-          } else if (tokenData.error === 'access_denied') {
-            clearInterval(deviceFlowInterval);
-            deviceFlowInterval = null;
-            onStatus({ stage: 'error', error: 'Authorization denied.' });
-            reject(new Error('Access denied'));
-          }
-        } catch (e) {
-          // Network error, keep retrying
-        }
-      }, pollInterval);
-    });
+  function initiateOAuth() {
+    if (typeof window === 'undefined') return;
+    var redirectUri = window.location.origin + window.location.pathname;
+    var url = OAUTH_CONFIG.authorizeUrl +
+      '?client_id=' + encodeURIComponent(OAUTH_CONFIG.clientId) +
+      '&redirect_uri=' + encodeURIComponent(redirectUri) +
+      '&scope=' + encodeURIComponent(OAUTH_CONFIG.scope);
+    window.location.href = url;
   }
 
   /**
-   * Cancel an in-progress device flow
+   * Handle OAuth callback — checks for ?code= in URL, exchanges for token.
+   * GitHub Apps support CORS on the token exchange endpoint.
+   * @returns {Promise<string|null>} access token or null if no code present
    */
-  function cancelOAuth() {
-    if (deviceFlowInterval) {
-      clearInterval(deviceFlowInterval);
-      deviceFlowInterval = null;
-    }
-  }
-
-  /**
-   * Handle URL callback (?token= for PAT-based auth)
-   */
-  function handleCallback() {
+  async function handleCallback() {
     if (typeof window === 'undefined') return null;
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
+    var params = new URLSearchParams(window.location.search);
+    var code = params.get('code');
+
+    // Also handle legacy ?token= for PAT-based auth
+    var token = params.get('token');
     if (token) {
       setStorage(TOKEN_KEY, token);
       window.history.replaceState({}, document.title, window.location.pathname);
       return token;
     }
-    return null;
+
+    if (!code) return null;
+
+    // Clean the URL immediately
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    try {
+      // Exchange code for access token (CORS-enabled for GitHub Apps)
+      var res = await fetch(OAUTH_CONFIG.tokenUrl, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          client_id: OAUTH_CONFIG.clientId,
+          code: code
+        })
+      });
+
+      if (!res.ok) {
+        console.error('Token exchange failed:', res.status);
+        return null;
+      }
+
+      var data = await res.json();
+      if (data.access_token) {
+        setStorage(TOKEN_KEY, data.access_token);
+        // Fetch and store profile
+        await getProfile(data.access_token);
+        return data.access_token;
+      } else {
+        console.error('Token exchange error:', data.error, data.error_description);
+        return null;
+      }
+    } catch (e) {
+      console.error('OAuth callback error:', e);
+      return null;
+    }
   }
 
   /**
@@ -165,11 +103,11 @@
    */
   async function getProfile(token) {
     if (typeof fetch === 'undefined') throw new Error('fetch not available');
-    const response = await fetch('https://api.github.com/user', {
+    var response = await fetch('https://api.github.com/user', {
       headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github.v3+json' }
     });
     if (!response.ok) throw new Error('GitHub API error: ' + response.status);
-    const data = await response.json();
+    var data = await response.json();
     setStorage(USERNAME_KEY, data.login);
     setStorage(AVATAR_KEY, data.avatar_url || '');
     return { username: data.login, avatar_url: data.avatar_url };
@@ -178,7 +116,6 @@
   function isAuthenticated() { return !!getStorage(TOKEN_KEY); }
   function getUsername() { return getStorage(USERNAME_KEY); }
   function getToken() { return getStorage(TOKEN_KEY); }
-
   function setToken(token) { setStorage(TOKEN_KEY, token); }
 
   function loginAsGuest(username) {
@@ -199,7 +136,6 @@
 
   exports.OAUTH_CONFIG = OAUTH_CONFIG;
   exports.initiateOAuth = initiateOAuth;
-  exports.cancelOAuth = cancelOAuth;
   exports.handleCallback = handleCallback;
   exports.getProfile = getProfile;
   exports.isAuthenticated = isAuthenticated;

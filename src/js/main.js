@@ -54,8 +54,8 @@
       return;
     }
 
-    // Handle OAuth callback
-    Auth.handleCallback();
+    // Handle OAuth callback (exchanges ?code= for token if present)
+    await Auth.handleCallback();
 
     // Check if authenticated
     if (!Auth.isAuthenticated()) {
