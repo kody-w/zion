@@ -185,11 +185,70 @@ html, body {
   :root {
     font-size: 14px;
   }
+
+  .chat-panel {
+    max-width: 250px;
+    bottom: 160px;
+    left: 8px;
+    max-height: 30vh;
+  }
+
+  .player-info {
+    top: 8px;
+    left: 8px;
+    min-width: 150px;
+    padding: 8px;
+  }
+
+  .minimap {
+    top: 8px;
+    right: 8px;
+    padding: 4px;
+  }
+
+  #minimap-canvas {
+    width: 100px;
+    height: 100px;
+  }
+
+  .nearby-list {
+    display: none;
+  }
+
+  .zone-label {
+    font-size: 1rem;
+    top: 10px;
+  }
+
+  .notification {
+    max-width: 280px;
+    padding: 12px;
+    font-size: 0.85rem;
+  }
 }
 
 @media (max-width: 480px) {
   :root {
     font-size: 12px;
+  }
+
+  .chat-panel {
+    max-width: 200px;
+    bottom: 170px;
+    max-height: 25vh;
+  }
+
+  .player-info {
+    min-width: 120px;
+    font-size: 11px;
+  }
+
+  .loading-title {
+    font-size: 2.5rem;
+  }
+
+  .loading-bar-container {
+    width: 200px;
   }
 }
 
@@ -2199,6 +2258,217 @@ html, body {
   height: 100%;
   background: rgba(26, 26, 46, 0.3);
   transition: opacity 2s ease;
+}
+
+/* NPC Speech Bubbles */
+.npc-speech-bubble {
+  position: absolute;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  background: rgba(10, 14, 26, 0.9);
+  border: 1px solid rgba(218, 165, 32, 0.5);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #E8E0D8;
+  white-space: nowrap;
+  max-width: 200px;
+  text-align: center;
+  z-index: 50;
+  animation: speechBubbleIn 0.3s ease-out;
+}
+
+.npc-speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(218, 165, 32, 0.5);
+}
+
+.npc-speech-bubble.fading {
+  animation: speechBubbleOut 0.5s ease-in forwards;
+}
+
+@keyframes speechBubbleIn {
+  0% { opacity: 0; transform: translate(-50%, -80%); }
+  100% { opacity: 1; transform: translate(-50%, -100%); }
+}
+
+@keyframes speechBubbleOut {
+  0% { opacity: 1; transform: translate(-50%, -100%); }
+  100% { opacity: 0; transform: translate(-50%, -120%); }
+}
+
+/* Loading Bar */
+.loading-title {
+  font-family: var(--font-main);
+  font-size: 3.5rem;
+  color: var(--color-gold);
+  letter-spacing: 0.3em;
+  text-shadow: 0 0 30px rgba(218, 165, 32, 0.3);
+  margin-bottom: 0.5rem;
+}
+
+.loading-subtitle {
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-bottom: 2rem;
+}
+
+.loading-bar-container {
+  width: 300px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.loading-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--color-gold), #f0d060);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  animation: loadingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes loadingPulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.loading-status {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.05em;
+}
+
+/* Mobile Touch Controls */
+.mobile-action-btn {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(10, 14, 26, 0.75);
+  border: 2px solid rgba(218, 165, 32, 0.5);
+  color: #DAA520;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  z-index: 100;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.mobile-action-btn:active {
+  background: rgba(218, 165, 32, 0.3);
+  border-color: #DAA520;
+}
+
+.mobile-joystick {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(10, 14, 26, 0.5);
+  border: 2px solid rgba(218, 165, 32, 0.3);
+  z-index: 100;
+  touch-action: none;
+}
+
+.mobile-joystick-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(218, 165, 32, 0.4);
+  border: 2px solid rgba(218, 165, 32, 0.7);
+  transition: none;
+}
+
+/* Controls Overlay */
+.controls-overlay {
+  position: absolute;
+  bottom: var(--space-lg);
+  right: var(--space-lg);
+  background: var(--color-bg-panel);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-md);
+  display: none;
+  max-height: 60vh;
+  overflow-y: auto;
+  z-index: 200;
+}
+
+.controls-overlay.visible {
+  display: block;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.controls-overlay-title {
+  font-family: var(--font-main);
+  font-size: var(--font-size-lg);
+  color: var(--color-gold);
+  margin-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-xs);
+}
+
+.control-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: var(--font-size-sm);
+}
+
+.control-key {
+  color: var(--color-gold);
+  font-weight: bold;
+  min-width: 50px;
+}
+
+.control-desc {
+  color: var(--color-text-muted);
+}
+
+/* Login button styling */
+.login-btn {
+  padding: 0.75rem 1.5rem;
+  background: rgba(218, 165, 32, 0.15);
+  border: 1px solid var(--color-gold);
+  border-radius: 8px;
+  color: var(--color-gold);
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.05em;
+}
+
+.login-btn:hover {
+  background: rgba(218, 165, 32, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(218, 165, 32, 0.2);
+}
+
+.login-btn:active {
+  transform: translateY(0);
 }
 
 /* Performance optimizations */
@@ -22551,6 +22821,255 @@ html, body {
   }
 
   // ========================================================================
+  // ZONE AMBIENCE — Unique atmospheric particles per zone
+  // ========================================================================
+
+  var zoneAmbienceData = {
+    initialized: false,
+    particles: {} // zone name -> { points, velocities, offsets }
+  };
+
+  /**
+   * Initialize zone ambience particles
+   */
+  function initZoneAmbience(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    var scene = sceneCtx.scene;
+    zoneAmbienceData.particles = {};
+
+    // Define particle configs for each zone
+    var configs = {
+      nexus: {
+        count: 40,
+        color: 0xffd700, // golden
+        size: 0.3,
+        rangeX: 50, rangeY: 30, rangeZ: 50,
+        velocityY: 0.5, // slow upward drift
+        velocityX: 0.1, velocityZ: 0.1
+      },
+      gardens: {
+        count: 50,
+        color: 0x90ee90, // light green
+        size: 0.25,
+        rangeX: 70, rangeY: 25, rangeZ: 70,
+        velocityY: 0.2,
+        velocityX: 0.3, velocityZ: 0.2 // wind drift
+      },
+      athenaeum: {
+        count: 35,
+        color: 0x87ceeb, // sky blue
+        size: 0.2,
+        rangeX: 50, rangeY: 35, rangeZ: 50,
+        velocityY: 0.15,
+        velocityX: 0.05, velocityZ: 0.05
+      },
+      studio: {
+        count: 45,
+        color: null, // multi-color, set per particle
+        size: 0.3,
+        rangeX: 50, rangeY: 30, rangeZ: 50,
+        velocityY: 0.25,
+        velocityX: 0.15, velocityZ: 0.15
+      },
+      wilds: {
+        count: 40,
+        color: 0xffffff, // white mist
+        size: 0.4,
+        rangeX: 80, rangeY: 8, rangeZ: 80, // ground-level
+        velocityY: 0.05,
+        velocityX: 0.4, velocityZ: 0.1 // horizontal drift
+      },
+      agora: {
+        count: 35,
+        color: 0xffa500, // orange lantern glow
+        size: 0.25,
+        rangeX: 45, rangeY: 30, rangeZ: 45,
+        velocityY: 0.3,
+        velocityX: 0.1, velocityZ: 0.1
+      },
+      commons: {
+        count: 40,
+        color: 0xf5f5f5, // soft white smoke
+        size: 0.35,
+        rangeX: 45, rangeY: 35, rangeZ: 45,
+        velocityY: 0.6, // rising
+        velocityX: 0.15, velocityZ: 0.15
+      },
+      arena: {
+        count: 35,
+        color: 0xff4500, // red embers
+        size: 0.2,
+        rangeX: 45, rangeY: 40, rangeZ: 45,
+        velocityY: 0.7, // embers rising
+        velocityX: 0.2, velocityZ: 0.2
+      }
+    };
+
+    // Create particle system for each zone
+    for (var zoneName in configs) {
+      if (!configs.hasOwnProperty(zoneName)) continue;
+      var cfg = configs[zoneName];
+      var zone = ZONES[zoneName];
+      if (!zone) continue;
+
+      var count = cfg.count;
+      var positions = new Float32Array(count * 3);
+      var colors = new Float32Array(count * 3);
+      var sizes = new Float32Array(count);
+      var velocities = [];
+      var offsets = [];
+
+      // Initialize particle attributes
+      for (var i = 0; i < count; i++) {
+        var i3 = i * 3;
+
+        // Random position within zone range
+        var rx = (Math.random() - 0.5) * cfg.rangeX;
+        var ry = Math.random() * cfg.rangeY;
+        var rz = (Math.random() - 0.5) * cfg.rangeZ;
+
+        positions[i3] = zone.cx + rx;
+        positions[i3 + 1] = zone.baseHeight + ry;
+        positions[i3 + 2] = zone.cz + rz;
+
+        // Store offsets for reset
+        offsets.push({ x: rx, y: ry, z: rz });
+
+        // Random velocity variation
+        var vx = (Math.random() - 0.5) * cfg.velocityX;
+        var vy = cfg.velocityY * (0.8 + Math.random() * 0.4);
+        var vz = (Math.random() - 0.5) * cfg.velocityZ;
+        velocities.push({ x: vx, y: vy, z: vz });
+
+        // Color
+        var particleColor;
+        if (zoneName === 'studio') {
+          // Random colors for studio
+          var hue = Math.random();
+          var rgb = hslToRgb(hue, 0.7, 0.6);
+          colors[i3] = rgb.r;
+          colors[i3 + 1] = rgb.g;
+          colors[i3 + 2] = rgb.b;
+        } else {
+          var c = new THREE.Color(cfg.color);
+          colors[i3] = c.r;
+          colors[i3 + 1] = c.g;
+          colors[i3 + 2] = c.b;
+        }
+
+        sizes[i] = cfg.size * (0.8 + Math.random() * 0.4);
+      }
+
+      // Create geometry and material
+      var geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+      var material = new THREE.PointsMaterial({
+        size: cfg.size,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.6,
+        sizeAttenuation: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      var points = new THREE.Points(geometry, material);
+      points.visible = false; // Start hidden
+      scene.add(points);
+
+      zoneAmbienceData.particles[zoneName] = {
+        points: points,
+        velocities: velocities,
+        offsets: offsets,
+        config: cfg,
+        zone: zone
+      };
+    }
+
+    zoneAmbienceData.initialized = true;
+  }
+
+  /**
+   * Update zone ambience particles
+   */
+  function updateZoneAmbience(sceneCtx, playerZone, deltaTime) {
+    if (!zoneAmbienceData.initialized) return;
+
+    var dt = deltaTime / 1000; // convert to seconds
+
+    for (var zoneName in zoneAmbienceData.particles) {
+      if (!zoneAmbienceData.particles.hasOwnProperty(zoneName)) continue;
+      var data = zoneAmbienceData.particles[zoneName];
+
+      // Toggle visibility based on player zone
+      var isCurrentZone = zoneName === playerZone;
+      data.points.visible = isCurrentZone;
+
+      if (!isCurrentZone) continue;
+
+      // Update particle positions
+      var positions = data.points.geometry.attributes.position.array;
+      var zone = data.zone;
+      var cfg = data.config;
+
+      for (var i = 0; i < data.velocities.length; i++) {
+        var i3 = i * 3;
+        var vel = data.velocities[i];
+        var offset = data.offsets[i];
+
+        // Apply velocity
+        positions[i3] += vel.x * dt;
+        positions[i3 + 1] += vel.y * dt;
+        positions[i3 + 2] += vel.z * dt;
+
+        // Wrap particles within zone bounds
+        var localX = positions[i3] - zone.cx;
+        var localY = positions[i3 + 1] - zone.baseHeight;
+        var localZ = positions[i3 + 2] - zone.cz;
+
+        // Reset particles that drift too far
+        if (Math.abs(localX) > cfg.rangeX * 0.6 ||
+            localY > cfg.rangeY || localY < 0 ||
+            Math.abs(localZ) > cfg.rangeZ * 0.6) {
+          // Reset to random position
+          positions[i3] = zone.cx + (Math.random() - 0.5) * cfg.rangeX;
+          positions[i3 + 1] = zone.baseHeight + Math.random() * cfg.rangeY * 0.3;
+          positions[i3 + 2] = zone.cz + (Math.random() - 0.5) * cfg.rangeZ;
+        }
+      }
+
+      data.points.geometry.attributes.position.needsUpdate = true;
+    }
+  }
+
+  // Helper function for HSL to RGB conversion (for studio particles)
+  function hslToRgb(h, s, l) {
+    var r, g, b;
+    if (s === 0) {
+      r = g = b = l;
+    } else {
+      var hue2rgb = function(p, q, t) {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      var p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    return { r: r, g: g, b: b };
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -22611,6 +23130,8 @@ html, body {
   exports.initWildlife = initWildlife;
   exports.updateWildlife = updateWildlife;
   exports.clearWildlife = clearWildlife;
+  exports.initZoneAmbience = initZoneAmbience;
+  exports.updateZoneAmbience = updateZoneAmbience;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));
 
@@ -23076,23 +23597,27 @@ html, body {
   }
 
   /**
-   * Initialize touch controls (virtual joystick)
+   * Initialize touch controls (virtual joystick and action buttons)
    */
   function initTouchControls() {
     if (typeof document === 'undefined') return;
 
-    // Create virtual joystick (left side)
+    // Only show on mobile devices
+    var platform = getPlatform();
+    if (platform !== 'phone') return;
+
+    // Create improved virtual joystick (left side) - larger and more responsive
     var joystick = document.createElement('div');
     joystick.id = 'virtual-joystick';
     joystick.style.cssText = `
       position: fixed;
-      bottom: 20px;
-      left: 20px;
+      bottom: 30px;
+      left: 30px;
       width: 120px;
       height: 120px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.3);
-      border: 2px solid rgba(255,255,255,0.5);
+      background: rgba(0,0,0,0.4);
+      border: 3px solid rgba(218,165,32,0.6);
       touch-action: none;
       z-index: 1000;
     `;
@@ -23103,10 +23628,11 @@ html, body {
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.7);
+      background: rgba(218,165,32,0.8);
       top: 35px;
       left: 35px;
       touch-action: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     `;
     joystick.appendChild(stick);
     document.body.appendChild(joystick);
@@ -23163,53 +23689,146 @@ html, body {
       stick.style.top = '35px';
     });
 
-    // Create action buttons (right side)
-    var actionButton = document.createElement('button');
-    actionButton.textContent = 'E';
-    actionButton.style.cssText = `
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: rgba(100,200,100,0.7);
-      border: 2px solid rgba(255,255,255,0.5);
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      z-index: 1000;
-    `;
-    actionButton.addEventListener('click', () => {
-      if (callbacks.onAction) {
-        callbacks.onAction('interact', {});
-      }
-    });
-    document.body.appendChild(actionButton);
+    // Create action buttons overlay (bottom-right, circular arc layout)
+    var actionButtons = [
+      { label: 'E', action: 'interact', size: 50, angle: 0, radius: 0, color: 'rgba(218,165,32,0.7)' },
+      { label: 'I', action: 'toggleInventory', size: 45, angle: -45, radius: 70, color: 'rgba(218,165,32,0.7)' },
+      { label: 'J', action: 'toggle_quest_log', size: 45, angle: -90, radius: 70, color: 'rgba(218,165,32,0.7)' },
+      { label: 'B', action: 'toggleBuild', size: 45, angle: 45, radius: 70, color: 'rgba(218,165,32,0.7)' },
+      { label: '💬', action: 'toggleChat', size: 45, angle: 90, radius: 70, color: 'rgba(218,165,32,0.7)' }
+    ];
 
-    var buildButton = document.createElement('button');
-    buildButton.textContent = 'B';
-    buildButton.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: rgba(200,100,100,0.7);
-      border: 2px solid rgba(255,255,255,0.5);
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      z-index: 1000;
-    `;
-    buildButton.addEventListener('click', () => {
-      buildMode = !buildMode;
-      if (callbacks.onBuild) {
-        callbacks.onBuild({ mode: buildMode });
-      }
+    var baseX = window.innerWidth - 80;
+    var baseY = window.innerHeight - 80;
+
+    actionButtons.forEach(function(btn) {
+      var button = document.createElement('button');
+      button.textContent = btn.label;
+
+      // Calculate position using angle and radius
+      var angleRad = (btn.angle * Math.PI) / 180;
+      var x = baseX + btn.radius * Math.cos(angleRad);
+      var y = baseY + btn.radius * Math.sin(angleRad);
+
+      button.style.cssText = `
+        position: fixed;
+        bottom: ${window.innerHeight - y - btn.size/2}px;
+        right: ${window.innerWidth - x - btn.size/2}px;
+        width: ${btn.size}px;
+        height: ${btn.size}px;
+        border-radius: 50%;
+        background: ${btn.color};
+        border: 3px solid rgba(218,165,32,0.9);
+        color: white;
+        font-size: ${btn.size === 50 ? 20 : 16}px;
+        font-weight: bold;
+        z-index: 1000;
+        touch-action: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      `;
+
+      button.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        if (btn.action === 'toggleBuild') {
+          buildMode = !buildMode;
+          if (callbacks.onBuild) {
+            callbacks.onBuild({ mode: buildMode });
+          }
+        } else if (btn.action === 'toggleChat') {
+          chatMode = !chatMode;
+          if (callbacks.onChat) {
+            callbacks.onChat({ mode: chatMode ? 'open' : 'close' });
+          }
+        } else if (callbacks.onAction) {
+          callbacks.onAction(btn.action, {});
+        }
+      });
+
+      document.body.appendChild(button);
     });
-    document.body.appendChild(buildButton);
+
+    // Add pinch-to-zoom support
+    var lastPinchDistance = 0;
+
+    if (canvas) {
+      canvas.addEventListener('touchstart', handleTouchStart);
+      canvas.addEventListener('touchmove', handleTouchMove);
+      canvas.addEventListener('touchend', handleTouchEnd);
+    }
+
+    var touchStartTime = 0;
+    var touchStartX = 0;
+    var touchStartY = 0;
+    var wasPinching = false;
+
+    function handleTouchStart(e) {
+      if (e.touches.length === 2) {
+        // Two-finger pinch for zoom
+        var dx = e.touches[0].clientX - e.touches[1].clientX;
+        var dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastPinchDistance = Math.sqrt(dx * dx + dy * dy);
+        wasPinching = true;
+      } else if (e.touches.length === 1) {
+        // Single touch - track for tap detection
+        touchStartTime = Date.now();
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        wasPinching = false;
+      }
+    }
+
+    function handleTouchMove(e) {
+      if (e.touches.length === 2) {
+        // Pinch zoom
+        e.preventDefault();
+        var dx = e.touches[0].clientX - e.touches[1].clientX;
+        var dy = e.touches[0].clientY - e.touches[1].clientY;
+        var distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (lastPinchDistance > 0) {
+          var delta = lastPinchDistance - distance;
+          cameraDistance += delta * 0.1;
+          cameraDistance = Math.max(5, Math.min(50, cameraDistance));
+        }
+
+        lastPinchDistance = distance;
+        wasPinching = true;
+      }
+    }
+
+    function handleTouchEnd(e) {
+      if (e.touches.length < 2) {
+        lastPinchDistance = 0;
+      }
+
+      // Tap-to-interact detection (not pinch, not long drag)
+      if (!wasPinching && e.changedTouches.length === 1 && touchStartTime > 0) {
+        var touchEndTime = Date.now();
+        var touchEndX = e.changedTouches[0].clientX;
+        var touchEndY = e.changedTouches[0].clientY;
+
+        var timeDiff = touchEndTime - touchStartTime;
+        var dx = touchEndX - touchStartX;
+        var dy = touchEndY - touchStartY;
+        var distanceMoved = Math.sqrt(dx * dx + dy * dy);
+
+        // Tap if quick (< 300ms) and minimal movement (< 20px)
+        if (timeDiff < 300 && distanceMoved < 20) {
+          var rect = canvas.getBoundingClientRect();
+          var x = ((touchEndX - rect.left) / rect.width) * 2 - 1;
+          var y = -((touchEndY - rect.top) / rect.height) * 2 + 1;
+
+          if (callbacks.onAction) {
+            callbacks.onAction('click', { x: x, y: y, screenX: touchEndX, screenY: touchEndY });
+          }
+        }
+      }
+
+      wasPinching = false;
+    }
   }
 
   /**
@@ -38337,6 +38956,8 @@ html, body {
   let pendingEvents = []; // events to broadcast to all NPCs
   let npcUpdateFrame = 0; // frame counter for staggered updates
   let lastPlayerIdForQuests = null; // Track player ID for quest indicators
+  let speechBubbles = new Map(); // id -> { element, timer, nextSpeechTime }
+  let speechBubbleContainer = null; // HTML container for speech bubbles
 
   // Seeded random number generator
   function seededRandom(seed) {
@@ -38915,6 +39536,80 @@ html, body {
       "Zzz... (sleeping)",
       "Resting for tomorrow.",
       "Shhh, I'm asleep."
+    ]
+  };
+
+  // Archetype-specific speech messages for random ambient dialogue
+  const ARCHETYPE_SPEECH = {
+    builder: [
+      "Working on a new creation!",
+      "Almost finished...",
+      "Need more materials",
+      "This will be magnificent!",
+      "Building the future of Zion"
+    ],
+    gardener: [
+      "The seeds are sprouting!",
+      "Nature provides",
+      "What a lovely garden",
+      "Beautiful day for tending",
+      "The harvest will be bountiful"
+    ],
+    teacher: [
+      "Fascinating discovery!",
+      "Knowledge is power",
+      "The library grows",
+      "So much to learn",
+      "Education enlightens all"
+    ],
+    merchant: [
+      "Best deals in Zion!",
+      "Come see my wares!",
+      "Fair prices today",
+      "Quality goods here!",
+      "Trading makes us prosper"
+    ],
+    artist: [
+      "Art feeds the soul",
+      "Creating something beautiful",
+      "Inspiration strikes!",
+      "Beauty surrounds us",
+      "Every creation tells a story"
+    ],
+    healer: [
+      "Peace and wellness to you",
+      "Rest and recover",
+      "Healing light",
+      "Health is our greatest treasure",
+      "Mind and body in balance"
+    ],
+    explorer: [
+      "I found something interesting!",
+      "The wilds call to me",
+      "Adventure awaits",
+      "What lies beyond?",
+      "Discovery fuels my spirit"
+    ],
+    musician: [
+      "Music lifts the spirit",
+      "Listen to this melody",
+      "Harmony in all things",
+      "The rhythm of life",
+      "Songs connect our souls"
+    ],
+    philosopher: [
+      "Deep thoughts today",
+      "Contemplating existence",
+      "Wisdom grows with time",
+      "Questions lead to truth",
+      "The examined life"
+    ],
+    storyteller: [
+      "Let me tell you a tale",
+      "Stories preserve our history",
+      "Words have power",
+      "Every citizen has a story",
+      "The narrative unfolds"
     ]
   };
 
@@ -40214,6 +40909,22 @@ html, body {
 
     updateChatBubbles(deltaTime);
     updateActivityParticles(deltaTime);
+    updateSpeechBubbleTimers(deltaTime);
+
+    // Trigger random ambient speech for visible NPCs
+    npcAgents.forEach(function(agent) {
+      if (playerPos) {
+        var dx = agent.position.x - playerPos.x;
+        var dz = agent.position.z - playerPos.z;
+        var dist = Math.sqrt(dx * dx + dz * dz);
+        // Only trigger speech for nearby NPCs
+        if (dist < 100) {
+          triggerRandomSpeech(agent, deltaTime);
+        }
+      } else {
+        triggerRandomSpeech(agent, deltaTime);
+      }
+    });
   }
 
   /**
@@ -40835,6 +41546,186 @@ html, body {
   }
 
   /**
+   * Initialize speech bubble container
+   */
+  function initSpeechBubbleContainer() {
+    if (!speechBubbleContainer) {
+      speechBubbleContainer = document.createElement('div');
+      speechBubbleContainer.id = 'npc-speech-bubbles';
+      speechBubbleContainer.style.position = 'absolute';
+      speechBubbleContainer.style.top = '0';
+      speechBubbleContainer.style.left = '0';
+      speechBubbleContainer.style.width = '100%';
+      speechBubbleContainer.style.height = '100%';
+      speechBubbleContainer.style.pointerEvents = 'none';
+      speechBubbleContainer.style.zIndex = '100';
+      document.body.appendChild(speechBubbleContainer);
+    }
+  }
+
+  /**
+   * Show a speech bubble above an NPC's head
+   * @param {string} npcId - NPC ID
+   * @param {string} message - Message to display
+   */
+  function showNPCSpeechBubble(npcId, message) {
+    initSpeechBubbleContainer();
+
+    // Remove existing bubble for this NPC
+    var existing = speechBubbles.get(npcId);
+    if (existing && existing.element) {
+      speechBubbleContainer.removeChild(existing.element);
+    }
+
+    // Create new bubble element
+    var bubble = document.createElement('div');
+    bubble.style.position = 'absolute';
+    bubble.style.padding = '8px 12px';
+    bubble.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+    bubble.style.border = '2px solid rgba(0, 0, 0, 0.3)';
+    bubble.style.borderRadius = '12px';
+    bubble.style.fontSize = '14px';
+    bubble.style.fontFamily = 'Arial, sans-serif';
+    bubble.style.color = '#333';
+    bubble.style.whiteSpace = 'nowrap';
+    bubble.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+    bubble.style.transition = 'opacity 0.3s ease-out';
+    bubble.textContent = message;
+
+    speechBubbleContainer.appendChild(bubble);
+
+    // Store bubble data
+    speechBubbles.set(npcId, {
+      element: bubble,
+      timer: 3.0 // Display for 3 seconds
+    });
+  }
+
+  /**
+   * Update speech bubble positions based on camera projection
+   * @param {THREE.Camera} camera - The camera to project from
+   */
+  function updateSpeechBubbles(camera) {
+    if (!camera || !speechBubbleContainer) return;
+
+    var THREE = window.THREE;
+    if (!THREE) return;
+
+    // Get renderer size for projection
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    for (var [npcId, bubble] of speechBubbles.entries()) {
+      var npcMesh = npcMeshes.get(npcId);
+      if (!npcMesh) {
+        // NPC no longer exists, remove bubble
+        if (bubble.element) {
+          speechBubbleContainer.removeChild(bubble.element);
+        }
+        speechBubbles.delete(npcId);
+        continue;
+      }
+
+      // Calculate position above NPC's head (y = 2.2 is above head at 1.6)
+      var worldPos = new THREE.Vector3();
+      npcMesh.getWorldPosition(worldPos);
+      worldPos.y += 2.2;
+
+      // Project to screen coordinates
+      var screenPos = worldPos.clone();
+      screenPos.project(camera);
+
+      // Convert to pixel coordinates
+      var x = (screenPos.x * 0.5 + 0.5) * width;
+      var y = (-screenPos.y * 0.5 + 0.5) * height;
+
+      // Check if behind camera
+      if (screenPos.z > 1) {
+        bubble.element.style.display = 'none';
+      } else {
+        bubble.element.style.display = 'block';
+        bubble.element.style.left = x + 'px';
+        bubble.element.style.top = y + 'px';
+        bubble.element.style.transform = 'translate(-50%, -100%)';
+      }
+    }
+  }
+
+  /**
+   * Update speech bubble timers and remove expired ones
+   * @param {number} deltaTime - Time since last frame
+   */
+  function updateSpeechBubbleTimers(deltaTime) {
+    for (var [npcId, bubble] of speechBubbles.entries()) {
+      bubble.timer -= deltaTime;
+
+      if (bubble.timer <= 0) {
+        // Remove expired bubble
+        if (bubble.element) {
+          speechBubbleContainer.removeChild(bubble.element);
+        }
+        speechBubbles.delete(npcId);
+      } else if (bubble.timer < 0.5) {
+        // Fade out in last 0.5 seconds
+        if (bubble.element) {
+          bubble.element.style.opacity = (bubble.timer / 0.5).toString();
+        }
+      }
+    }
+  }
+
+  /**
+   * Clear all speech bubbles
+   */
+  function clearSpeechBubbles() {
+    for (var [npcId, bubble] of speechBubbles.entries()) {
+      if (bubble.element) {
+        speechBubbleContainer.removeChild(bubble.element);
+      }
+    }
+    speechBubbles.clear();
+  }
+
+  /**
+   * Trigger random ambient speech for NPCs
+   * Called periodically from updateNPCs
+   */
+  function triggerRandomSpeech(agent, deltaTime) {
+    // Initialize next speech time if not set
+    var bubbleData = speechBubbles.get(agent.id);
+    if (!bubbleData) {
+      bubbleData = {
+        element: null,
+        timer: 0,
+        nextSpeechTime: 15 + Math.random() * 15 // Random 15-30 seconds
+      };
+      speechBubbles.set(agent.id, bubbleData);
+    }
+
+    // Don't show speech if already showing a bubble
+    if (bubbleData.element && bubbleData.timer > 0) {
+      return;
+    }
+
+    // Countdown to next speech
+    bubbleData.nextSpeechTime -= deltaTime;
+
+    if (bubbleData.nextSpeechTime <= 0) {
+      // Time to speak! Get archetype-specific message
+      var messages = ARCHETYPE_SPEECH[agent.archetype];
+      if (!messages || messages.length === 0) {
+        messages = ["Hello!", "Beautiful day!", "Greetings!"];
+      }
+
+      var message = messages[Math.floor(Math.random() * messages.length)];
+      showNPCSpeechBubble(agent.id, message);
+
+      // Schedule next speech in 15-30 seconds
+      bubbleData.nextSpeechTime = 15 + Math.random() * 15;
+    }
+  }
+
+  /**
    * Reload NPCs for current zone (or by distance on unified world)
    */
   function reloadZoneNPCs(sceneContext, currentZone, playerPos) {
@@ -41249,6 +42140,9 @@ html, body {
   exports.getActivityDialogue = getActivityDialogue;
   exports.getActivityZone = getActivityZone;
   exports.getTimePeriod = getTimePeriod;
+  exports.showNPCSpeechBubble = showNPCSpeechBubble;
+  exports.updateSpeechBubbles = updateSpeechBubbles;
+  exports.clearSpeechBubbles = clearSpeechBubbles;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));
 
@@ -42467,6 +43361,11 @@ html, body {
           World.initWildlife(sceneContext);
         }
 
+        // Initialize zone ambience particles
+        if (World.initZoneAmbience) {
+          World.initZoneAmbience(sceneContext);
+        }
+
         // Create zone boundary particles (golden floating markers at zone edges)
         if (World.createZoneBoundaryParticles && sceneContext.scene) {
           World.createZoneBoundaryParticles(sceneContext.scene);
@@ -42955,11 +43854,14 @@ html, body {
         if (footstepTimer >= 0.4) {
           // Determine footstep sound based on zone
           var footstepTerrain = 'grass'; // default
-          if (currentZone === 'nexus' || currentZone === 'athenaeum') footstepTerrain = 'stone';
-          else if (currentZone === 'arena') footstepTerrain = 'sand';
-          else if (currentZone === 'agora' || currentZone === 'commons') footstepTerrain = 'wood';
+          if (currentZone === 'nexus') footstepTerrain = 'stone';
           else if (currentZone === 'gardens') footstepTerrain = 'grass';
+          else if (currentZone === 'athenaeum') footstepTerrain = 'stone';
+          else if (currentZone === 'studio') footstepTerrain = 'wood';
           else if (currentZone === 'wilds') footstepTerrain = 'grass';
+          else if (currentZone === 'agora') footstepTerrain = 'stone';
+          else if (currentZone === 'commons') footstepTerrain = 'wood';
+          else if (currentZone === 'arena') footstepTerrain = 'stone';
 
           if (Audio && Audio.playFootstep) {
             Audio.playFootstep(footstepTerrain);
@@ -43014,6 +43916,10 @@ html, body {
         playerId: localPlayer ? localPlayer.id : null
       };
       NPCs.updateNPCs(sceneContext, gameState, deltaTime, worldTime, npcWorldState);
+      // Update speech bubble positions based on camera
+      if (NPCs.updateSpeechBubbles && sceneContext && sceneContext.camera) {
+        NPCs.updateSpeechBubbles(sceneContext.camera);
+      }
     }
 
     // Update rendering
@@ -43130,6 +44036,11 @@ html, body {
       // Update weather effects (rain, snow)
       if (World.updateWeatherEffects) {
         World.updateWeatherEffects(sceneContext, deltaTime * 1000, localPlayer ? localPlayer.position : null);
+      }
+
+      // Update zone ambience particles
+      if (World.updateZoneAmbience && localPlayer) {
+        World.updateZoneAmbience(sceneContext, localPlayer.zone, deltaTime * 1000);
       }
 
       // Update water bodies (animated waves)

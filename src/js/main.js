@@ -336,6 +336,11 @@
           World.initWildlife(sceneContext);
         }
 
+        // Initialize zone ambience particles
+        if (World.initZoneAmbience) {
+          World.initZoneAmbience(sceneContext);
+        }
+
         // Create zone boundary particles (golden floating markers at zone edges)
         if (World.createZoneBoundaryParticles && sceneContext.scene) {
           World.createZoneBoundaryParticles(sceneContext.scene);
@@ -824,11 +829,14 @@
         if (footstepTimer >= 0.4) {
           // Determine footstep sound based on zone
           var footstepTerrain = 'grass'; // default
-          if (currentZone === 'nexus' || currentZone === 'athenaeum') footstepTerrain = 'stone';
-          else if (currentZone === 'arena') footstepTerrain = 'sand';
-          else if (currentZone === 'agora' || currentZone === 'commons') footstepTerrain = 'wood';
+          if (currentZone === 'nexus') footstepTerrain = 'stone';
           else if (currentZone === 'gardens') footstepTerrain = 'grass';
+          else if (currentZone === 'athenaeum') footstepTerrain = 'stone';
+          else if (currentZone === 'studio') footstepTerrain = 'wood';
           else if (currentZone === 'wilds') footstepTerrain = 'grass';
+          else if (currentZone === 'agora') footstepTerrain = 'stone';
+          else if (currentZone === 'commons') footstepTerrain = 'wood';
+          else if (currentZone === 'arena') footstepTerrain = 'stone';
 
           if (Audio && Audio.playFootstep) {
             Audio.playFootstep(footstepTerrain);
@@ -883,6 +891,10 @@
         playerId: localPlayer ? localPlayer.id : null
       };
       NPCs.updateNPCs(sceneContext, gameState, deltaTime, worldTime, npcWorldState);
+      // Update speech bubble positions based on camera
+      if (NPCs.updateSpeechBubbles && sceneContext && sceneContext.camera) {
+        NPCs.updateSpeechBubbles(sceneContext.camera);
+      }
     }
 
     // Update rendering
@@ -999,6 +1011,11 @@
       // Update weather effects (rain, snow)
       if (World.updateWeatherEffects) {
         World.updateWeatherEffects(sceneContext, deltaTime * 1000, localPlayer ? localPlayer.position : null);
+      }
+
+      // Update zone ambience particles
+      if (World.updateZoneAmbience && localPlayer) {
+        World.updateZoneAmbience(sceneContext, localPlayer.zone, deltaTime * 1000);
       }
 
       // Update water bodies (animated waves)

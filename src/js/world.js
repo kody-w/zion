@@ -6411,6 +6411,255 @@
   }
 
   // ========================================================================
+  // ZONE AMBIENCE — Unique atmospheric particles per zone
+  // ========================================================================
+
+  var zoneAmbienceData = {
+    initialized: false,
+    particles: {} // zone name -> { points, velocities, offsets }
+  };
+
+  /**
+   * Initialize zone ambience particles
+   */
+  function initZoneAmbience(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    var scene = sceneCtx.scene;
+    zoneAmbienceData.particles = {};
+
+    // Define particle configs for each zone
+    var configs = {
+      nexus: {
+        count: 40,
+        color: 0xffd700, // golden
+        size: 0.3,
+        rangeX: 50, rangeY: 30, rangeZ: 50,
+        velocityY: 0.5, // slow upward drift
+        velocityX: 0.1, velocityZ: 0.1
+      },
+      gardens: {
+        count: 50,
+        color: 0x90ee90, // light green
+        size: 0.25,
+        rangeX: 70, rangeY: 25, rangeZ: 70,
+        velocityY: 0.2,
+        velocityX: 0.3, velocityZ: 0.2 // wind drift
+      },
+      athenaeum: {
+        count: 35,
+        color: 0x87ceeb, // sky blue
+        size: 0.2,
+        rangeX: 50, rangeY: 35, rangeZ: 50,
+        velocityY: 0.15,
+        velocityX: 0.05, velocityZ: 0.05
+      },
+      studio: {
+        count: 45,
+        color: null, // multi-color, set per particle
+        size: 0.3,
+        rangeX: 50, rangeY: 30, rangeZ: 50,
+        velocityY: 0.25,
+        velocityX: 0.15, velocityZ: 0.15
+      },
+      wilds: {
+        count: 40,
+        color: 0xffffff, // white mist
+        size: 0.4,
+        rangeX: 80, rangeY: 8, rangeZ: 80, // ground-level
+        velocityY: 0.05,
+        velocityX: 0.4, velocityZ: 0.1 // horizontal drift
+      },
+      agora: {
+        count: 35,
+        color: 0xffa500, // orange lantern glow
+        size: 0.25,
+        rangeX: 45, rangeY: 30, rangeZ: 45,
+        velocityY: 0.3,
+        velocityX: 0.1, velocityZ: 0.1
+      },
+      commons: {
+        count: 40,
+        color: 0xf5f5f5, // soft white smoke
+        size: 0.35,
+        rangeX: 45, rangeY: 35, rangeZ: 45,
+        velocityY: 0.6, // rising
+        velocityX: 0.15, velocityZ: 0.15
+      },
+      arena: {
+        count: 35,
+        color: 0xff4500, // red embers
+        size: 0.2,
+        rangeX: 45, rangeY: 40, rangeZ: 45,
+        velocityY: 0.7, // embers rising
+        velocityX: 0.2, velocityZ: 0.2
+      }
+    };
+
+    // Create particle system for each zone
+    for (var zoneName in configs) {
+      if (!configs.hasOwnProperty(zoneName)) continue;
+      var cfg = configs[zoneName];
+      var zone = ZONES[zoneName];
+      if (!zone) continue;
+
+      var count = cfg.count;
+      var positions = new Float32Array(count * 3);
+      var colors = new Float32Array(count * 3);
+      var sizes = new Float32Array(count);
+      var velocities = [];
+      var offsets = [];
+
+      // Initialize particle attributes
+      for (var i = 0; i < count; i++) {
+        var i3 = i * 3;
+
+        // Random position within zone range
+        var rx = (Math.random() - 0.5) * cfg.rangeX;
+        var ry = Math.random() * cfg.rangeY;
+        var rz = (Math.random() - 0.5) * cfg.rangeZ;
+
+        positions[i3] = zone.cx + rx;
+        positions[i3 + 1] = zone.baseHeight + ry;
+        positions[i3 + 2] = zone.cz + rz;
+
+        // Store offsets for reset
+        offsets.push({ x: rx, y: ry, z: rz });
+
+        // Random velocity variation
+        var vx = (Math.random() - 0.5) * cfg.velocityX;
+        var vy = cfg.velocityY * (0.8 + Math.random() * 0.4);
+        var vz = (Math.random() - 0.5) * cfg.velocityZ;
+        velocities.push({ x: vx, y: vy, z: vz });
+
+        // Color
+        var particleColor;
+        if (zoneName === 'studio') {
+          // Random colors for studio
+          var hue = Math.random();
+          var rgb = hslToRgb(hue, 0.7, 0.6);
+          colors[i3] = rgb.r;
+          colors[i3 + 1] = rgb.g;
+          colors[i3 + 2] = rgb.b;
+        } else {
+          var c = new THREE.Color(cfg.color);
+          colors[i3] = c.r;
+          colors[i3 + 1] = c.g;
+          colors[i3 + 2] = c.b;
+        }
+
+        sizes[i] = cfg.size * (0.8 + Math.random() * 0.4);
+      }
+
+      // Create geometry and material
+      var geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+      var material = new THREE.PointsMaterial({
+        size: cfg.size,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.6,
+        sizeAttenuation: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      var points = new THREE.Points(geometry, material);
+      points.visible = false; // Start hidden
+      scene.add(points);
+
+      zoneAmbienceData.particles[zoneName] = {
+        points: points,
+        velocities: velocities,
+        offsets: offsets,
+        config: cfg,
+        zone: zone
+      };
+    }
+
+    zoneAmbienceData.initialized = true;
+  }
+
+  /**
+   * Update zone ambience particles
+   */
+  function updateZoneAmbience(sceneCtx, playerZone, deltaTime) {
+    if (!zoneAmbienceData.initialized) return;
+
+    var dt = deltaTime / 1000; // convert to seconds
+
+    for (var zoneName in zoneAmbienceData.particles) {
+      if (!zoneAmbienceData.particles.hasOwnProperty(zoneName)) continue;
+      var data = zoneAmbienceData.particles[zoneName];
+
+      // Toggle visibility based on player zone
+      var isCurrentZone = zoneName === playerZone;
+      data.points.visible = isCurrentZone;
+
+      if (!isCurrentZone) continue;
+
+      // Update particle positions
+      var positions = data.points.geometry.attributes.position.array;
+      var zone = data.zone;
+      var cfg = data.config;
+
+      for (var i = 0; i < data.velocities.length; i++) {
+        var i3 = i * 3;
+        var vel = data.velocities[i];
+        var offset = data.offsets[i];
+
+        // Apply velocity
+        positions[i3] += vel.x * dt;
+        positions[i3 + 1] += vel.y * dt;
+        positions[i3 + 2] += vel.z * dt;
+
+        // Wrap particles within zone bounds
+        var localX = positions[i3] - zone.cx;
+        var localY = positions[i3 + 1] - zone.baseHeight;
+        var localZ = positions[i3 + 2] - zone.cz;
+
+        // Reset particles that drift too far
+        if (Math.abs(localX) > cfg.rangeX * 0.6 ||
+            localY > cfg.rangeY || localY < 0 ||
+            Math.abs(localZ) > cfg.rangeZ * 0.6) {
+          // Reset to random position
+          positions[i3] = zone.cx + (Math.random() - 0.5) * cfg.rangeX;
+          positions[i3 + 1] = zone.baseHeight + Math.random() * cfg.rangeY * 0.3;
+          positions[i3 + 2] = zone.cz + (Math.random() - 0.5) * cfg.rangeZ;
+        }
+      }
+
+      data.points.geometry.attributes.position.needsUpdate = true;
+    }
+  }
+
+  // Helper function for HSL to RGB conversion (for studio particles)
+  function hslToRgb(h, s, l) {
+    var r, g, b;
+    if (s === 0) {
+      r = g = b = l;
+    } else {
+      var hue2rgb = function(p, q, t) {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      var p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    return { r: r, g: g, b: b };
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -6471,5 +6720,7 @@
   exports.initWildlife = initWildlife;
   exports.updateWildlife = updateWildlife;
   exports.clearWildlife = clearWildlife;
+  exports.initZoneAmbience = initZoneAmbience;
+  exports.updateZoneAmbience = updateZoneAmbience;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));

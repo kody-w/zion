@@ -458,23 +458,27 @@
   }
 
   /**
-   * Initialize touch controls (virtual joystick)
+   * Initialize touch controls (virtual joystick and action buttons)
    */
   function initTouchControls() {
     if (typeof document === 'undefined') return;
 
-    // Create virtual joystick (left side)
+    // Only show on mobile devices
+    var platform = getPlatform();
+    if (platform !== 'phone') return;
+
+    // Create improved virtual joystick (left side) - larger and more responsive
     var joystick = document.createElement('div');
     joystick.id = 'virtual-joystick';
     joystick.style.cssText = `
       position: fixed;
-      bottom: 20px;
-      left: 20px;
+      bottom: 30px;
+      left: 30px;
       width: 120px;
       height: 120px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.3);
-      border: 2px solid rgba(255,255,255,0.5);
+      background: rgba(0,0,0,0.4);
+      border: 3px solid rgba(218,165,32,0.6);
       touch-action: none;
       z-index: 1000;
     `;
@@ -485,10 +489,11 @@
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.7);
+      background: rgba(218,165,32,0.8);
       top: 35px;
       left: 35px;
       touch-action: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     `;
     joystick.appendChild(stick);
     document.body.appendChild(joystick);
@@ -545,53 +550,146 @@
       stick.style.top = '35px';
     });
 
-    // Create action buttons (right side)
-    var actionButton = document.createElement('button');
-    actionButton.textContent = 'E';
-    actionButton.style.cssText = `
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: rgba(100,200,100,0.7);
-      border: 2px solid rgba(255,255,255,0.5);
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      z-index: 1000;
-    `;
-    actionButton.addEventListener('click', () => {
-      if (callbacks.onAction) {
-        callbacks.onAction('interact', {});
-      }
-    });
-    document.body.appendChild(actionButton);
+    // Create action buttons overlay (bottom-right, circular arc layout)
+    var actionButtons = [
+      { label: 'E', action: 'interact', size: 50, angle: 0, radius: 0, color: 'rgba(218,165,32,0.7)' },
+      { label: 'I', action: 'toggleInventory', size: 45, angle: -45, radius: 70, color: 'rgba(218,165,32,0.7)' },
+      { label: 'J', action: 'toggle_quest_log', size: 45, angle: -90, radius: 70, color: 'rgba(218,165,32,0.7)' },
+      { label: 'B', action: 'toggleBuild', size: 45, angle: 45, radius: 70, color: 'rgba(218,165,32,0.7)' },
+      { label: '💬', action: 'toggleChat', size: 45, angle: 90, radius: 70, color: 'rgba(218,165,32,0.7)' }
+    ];
 
-    var buildButton = document.createElement('button');
-    buildButton.textContent = 'B';
-    buildButton.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: rgba(200,100,100,0.7);
-      border: 2px solid rgba(255,255,255,0.5);
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      z-index: 1000;
-    `;
-    buildButton.addEventListener('click', () => {
-      buildMode = !buildMode;
-      if (callbacks.onBuild) {
-        callbacks.onBuild({ mode: buildMode });
-      }
+    var baseX = window.innerWidth - 80;
+    var baseY = window.innerHeight - 80;
+
+    actionButtons.forEach(function(btn) {
+      var button = document.createElement('button');
+      button.textContent = btn.label;
+
+      // Calculate position using angle and radius
+      var angleRad = (btn.angle * Math.PI) / 180;
+      var x = baseX + btn.radius * Math.cos(angleRad);
+      var y = baseY + btn.radius * Math.sin(angleRad);
+
+      button.style.cssText = `
+        position: fixed;
+        bottom: ${window.innerHeight - y - btn.size/2}px;
+        right: ${window.innerWidth - x - btn.size/2}px;
+        width: ${btn.size}px;
+        height: ${btn.size}px;
+        border-radius: 50%;
+        background: ${btn.color};
+        border: 3px solid rgba(218,165,32,0.9);
+        color: white;
+        font-size: ${btn.size === 50 ? 20 : 16}px;
+        font-weight: bold;
+        z-index: 1000;
+        touch-action: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      `;
+
+      button.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        if (btn.action === 'toggleBuild') {
+          buildMode = !buildMode;
+          if (callbacks.onBuild) {
+            callbacks.onBuild({ mode: buildMode });
+          }
+        } else if (btn.action === 'toggleChat') {
+          chatMode = !chatMode;
+          if (callbacks.onChat) {
+            callbacks.onChat({ mode: chatMode ? 'open' : 'close' });
+          }
+        } else if (callbacks.onAction) {
+          callbacks.onAction(btn.action, {});
+        }
+      });
+
+      document.body.appendChild(button);
     });
-    document.body.appendChild(buildButton);
+
+    // Add pinch-to-zoom support
+    var lastPinchDistance = 0;
+
+    if (canvas) {
+      canvas.addEventListener('touchstart', handleTouchStart);
+      canvas.addEventListener('touchmove', handleTouchMove);
+      canvas.addEventListener('touchend', handleTouchEnd);
+    }
+
+    var touchStartTime = 0;
+    var touchStartX = 0;
+    var touchStartY = 0;
+    var wasPinching = false;
+
+    function handleTouchStart(e) {
+      if (e.touches.length === 2) {
+        // Two-finger pinch for zoom
+        var dx = e.touches[0].clientX - e.touches[1].clientX;
+        var dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastPinchDistance = Math.sqrt(dx * dx + dy * dy);
+        wasPinching = true;
+      } else if (e.touches.length === 1) {
+        // Single touch - track for tap detection
+        touchStartTime = Date.now();
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        wasPinching = false;
+      }
+    }
+
+    function handleTouchMove(e) {
+      if (e.touches.length === 2) {
+        // Pinch zoom
+        e.preventDefault();
+        var dx = e.touches[0].clientX - e.touches[1].clientX;
+        var dy = e.touches[0].clientY - e.touches[1].clientY;
+        var distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (lastPinchDistance > 0) {
+          var delta = lastPinchDistance - distance;
+          cameraDistance += delta * 0.1;
+          cameraDistance = Math.max(5, Math.min(50, cameraDistance));
+        }
+
+        lastPinchDistance = distance;
+        wasPinching = true;
+      }
+    }
+
+    function handleTouchEnd(e) {
+      if (e.touches.length < 2) {
+        lastPinchDistance = 0;
+      }
+
+      // Tap-to-interact detection (not pinch, not long drag)
+      if (!wasPinching && e.changedTouches.length === 1 && touchStartTime > 0) {
+        var touchEndTime = Date.now();
+        var touchEndX = e.changedTouches[0].clientX;
+        var touchEndY = e.changedTouches[0].clientY;
+
+        var timeDiff = touchEndTime - touchStartTime;
+        var dx = touchEndX - touchStartX;
+        var dy = touchEndY - touchStartY;
+        var distanceMoved = Math.sqrt(dx * dx + dy * dy);
+
+        // Tap if quick (< 300ms) and minimal movement (< 20px)
+        if (timeDiff < 300 && distanceMoved < 20) {
+          var rect = canvas.getBoundingClientRect();
+          var x = ((touchEndX - rect.left) / rect.width) * 2 - 1;
+          var y = -((touchEndY - rect.top) / rect.height) * 2 + 1;
+
+          if (callbacks.onAction) {
+            callbacks.onAction('click', { x: x, y: y, screenX: touchEndX, screenY: touchEndY });
+          }
+        }
+      }
+
+      wasPinching = false;
+    }
   }
 
   /**

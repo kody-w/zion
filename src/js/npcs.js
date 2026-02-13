@@ -37,6 +37,8 @@
   let pendingEvents = []; // events to broadcast to all NPCs
   let npcUpdateFrame = 0; // frame counter for staggered updates
   let lastPlayerIdForQuests = null; // Track player ID for quest indicators
+  let speechBubbles = new Map(); // id -> { element, timer, nextSpeechTime }
+  let speechBubbleContainer = null; // HTML container for speech bubbles
 
   // Seeded random number generator
   function seededRandom(seed) {
@@ -615,6 +617,80 @@
       "Zzz... (sleeping)",
       "Resting for tomorrow.",
       "Shhh, I'm asleep."
+    ]
+  };
+
+  // Archetype-specific speech messages for random ambient dialogue
+  const ARCHETYPE_SPEECH = {
+    builder: [
+      "Working on a new creation!",
+      "Almost finished...",
+      "Need more materials",
+      "This will be magnificent!",
+      "Building the future of Zion"
+    ],
+    gardener: [
+      "The seeds are sprouting!",
+      "Nature provides",
+      "What a lovely garden",
+      "Beautiful day for tending",
+      "The harvest will be bountiful"
+    ],
+    teacher: [
+      "Fascinating discovery!",
+      "Knowledge is power",
+      "The library grows",
+      "So much to learn",
+      "Education enlightens all"
+    ],
+    merchant: [
+      "Best deals in Zion!",
+      "Come see my wares!",
+      "Fair prices today",
+      "Quality goods here!",
+      "Trading makes us prosper"
+    ],
+    artist: [
+      "Art feeds the soul",
+      "Creating something beautiful",
+      "Inspiration strikes!",
+      "Beauty surrounds us",
+      "Every creation tells a story"
+    ],
+    healer: [
+      "Peace and wellness to you",
+      "Rest and recover",
+      "Healing light",
+      "Health is our greatest treasure",
+      "Mind and body in balance"
+    ],
+    explorer: [
+      "I found something interesting!",
+      "The wilds call to me",
+      "Adventure awaits",
+      "What lies beyond?",
+      "Discovery fuels my spirit"
+    ],
+    musician: [
+      "Music lifts the spirit",
+      "Listen to this melody",
+      "Harmony in all things",
+      "The rhythm of life",
+      "Songs connect our souls"
+    ],
+    philosopher: [
+      "Deep thoughts today",
+      "Contemplating existence",
+      "Wisdom grows with time",
+      "Questions lead to truth",
+      "The examined life"
+    ],
+    storyteller: [
+      "Let me tell you a tale",
+      "Stories preserve our history",
+      "Words have power",
+      "Every citizen has a story",
+      "The narrative unfolds"
     ]
   };
 
@@ -1914,6 +1990,22 @@
 
     updateChatBubbles(deltaTime);
     updateActivityParticles(deltaTime);
+    updateSpeechBubbleTimers(deltaTime);
+
+    // Trigger random ambient speech for visible NPCs
+    npcAgents.forEach(function(agent) {
+      if (playerPos) {
+        var dx = agent.position.x - playerPos.x;
+        var dz = agent.position.z - playerPos.z;
+        var dist = Math.sqrt(dx * dx + dz * dz);
+        // Only trigger speech for nearby NPCs
+        if (dist < 100) {
+          triggerRandomSpeech(agent, deltaTime);
+        }
+      } else {
+        triggerRandomSpeech(agent, deltaTime);
+      }
+    });
   }
 
   /**
@@ -2535,6 +2627,186 @@
   }
 
   /**
+   * Initialize speech bubble container
+   */
+  function initSpeechBubbleContainer() {
+    if (!speechBubbleContainer) {
+      speechBubbleContainer = document.createElement('div');
+      speechBubbleContainer.id = 'npc-speech-bubbles';
+      speechBubbleContainer.style.position = 'absolute';
+      speechBubbleContainer.style.top = '0';
+      speechBubbleContainer.style.left = '0';
+      speechBubbleContainer.style.width = '100%';
+      speechBubbleContainer.style.height = '100%';
+      speechBubbleContainer.style.pointerEvents = 'none';
+      speechBubbleContainer.style.zIndex = '100';
+      document.body.appendChild(speechBubbleContainer);
+    }
+  }
+
+  /**
+   * Show a speech bubble above an NPC's head
+   * @param {string} npcId - NPC ID
+   * @param {string} message - Message to display
+   */
+  function showNPCSpeechBubble(npcId, message) {
+    initSpeechBubbleContainer();
+
+    // Remove existing bubble for this NPC
+    var existing = speechBubbles.get(npcId);
+    if (existing && existing.element) {
+      speechBubbleContainer.removeChild(existing.element);
+    }
+
+    // Create new bubble element
+    var bubble = document.createElement('div');
+    bubble.style.position = 'absolute';
+    bubble.style.padding = '8px 12px';
+    bubble.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+    bubble.style.border = '2px solid rgba(0, 0, 0, 0.3)';
+    bubble.style.borderRadius = '12px';
+    bubble.style.fontSize = '14px';
+    bubble.style.fontFamily = 'Arial, sans-serif';
+    bubble.style.color = '#333';
+    bubble.style.whiteSpace = 'nowrap';
+    bubble.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+    bubble.style.transition = 'opacity 0.3s ease-out';
+    bubble.textContent = message;
+
+    speechBubbleContainer.appendChild(bubble);
+
+    // Store bubble data
+    speechBubbles.set(npcId, {
+      element: bubble,
+      timer: 3.0 // Display for 3 seconds
+    });
+  }
+
+  /**
+   * Update speech bubble positions based on camera projection
+   * @param {THREE.Camera} camera - The camera to project from
+   */
+  function updateSpeechBubbles(camera) {
+    if (!camera || !speechBubbleContainer) return;
+
+    var THREE = window.THREE;
+    if (!THREE) return;
+
+    // Get renderer size for projection
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    for (var [npcId, bubble] of speechBubbles.entries()) {
+      var npcMesh = npcMeshes.get(npcId);
+      if (!npcMesh) {
+        // NPC no longer exists, remove bubble
+        if (bubble.element) {
+          speechBubbleContainer.removeChild(bubble.element);
+        }
+        speechBubbles.delete(npcId);
+        continue;
+      }
+
+      // Calculate position above NPC's head (y = 2.2 is above head at 1.6)
+      var worldPos = new THREE.Vector3();
+      npcMesh.getWorldPosition(worldPos);
+      worldPos.y += 2.2;
+
+      // Project to screen coordinates
+      var screenPos = worldPos.clone();
+      screenPos.project(camera);
+
+      // Convert to pixel coordinates
+      var x = (screenPos.x * 0.5 + 0.5) * width;
+      var y = (-screenPos.y * 0.5 + 0.5) * height;
+
+      // Check if behind camera
+      if (screenPos.z > 1) {
+        bubble.element.style.display = 'none';
+      } else {
+        bubble.element.style.display = 'block';
+        bubble.element.style.left = x + 'px';
+        bubble.element.style.top = y + 'px';
+        bubble.element.style.transform = 'translate(-50%, -100%)';
+      }
+    }
+  }
+
+  /**
+   * Update speech bubble timers and remove expired ones
+   * @param {number} deltaTime - Time since last frame
+   */
+  function updateSpeechBubbleTimers(deltaTime) {
+    for (var [npcId, bubble] of speechBubbles.entries()) {
+      bubble.timer -= deltaTime;
+
+      if (bubble.timer <= 0) {
+        // Remove expired bubble
+        if (bubble.element) {
+          speechBubbleContainer.removeChild(bubble.element);
+        }
+        speechBubbles.delete(npcId);
+      } else if (bubble.timer < 0.5) {
+        // Fade out in last 0.5 seconds
+        if (bubble.element) {
+          bubble.element.style.opacity = (bubble.timer / 0.5).toString();
+        }
+      }
+    }
+  }
+
+  /**
+   * Clear all speech bubbles
+   */
+  function clearSpeechBubbles() {
+    for (var [npcId, bubble] of speechBubbles.entries()) {
+      if (bubble.element) {
+        speechBubbleContainer.removeChild(bubble.element);
+      }
+    }
+    speechBubbles.clear();
+  }
+
+  /**
+   * Trigger random ambient speech for NPCs
+   * Called periodically from updateNPCs
+   */
+  function triggerRandomSpeech(agent, deltaTime) {
+    // Initialize next speech time if not set
+    var bubbleData = speechBubbles.get(agent.id);
+    if (!bubbleData) {
+      bubbleData = {
+        element: null,
+        timer: 0,
+        nextSpeechTime: 15 + Math.random() * 15 // Random 15-30 seconds
+      };
+      speechBubbles.set(agent.id, bubbleData);
+    }
+
+    // Don't show speech if already showing a bubble
+    if (bubbleData.element && bubbleData.timer > 0) {
+      return;
+    }
+
+    // Countdown to next speech
+    bubbleData.nextSpeechTime -= deltaTime;
+
+    if (bubbleData.nextSpeechTime <= 0) {
+      // Time to speak! Get archetype-specific message
+      var messages = ARCHETYPE_SPEECH[agent.archetype];
+      if (!messages || messages.length === 0) {
+        messages = ["Hello!", "Beautiful day!", "Greetings!"];
+      }
+
+      var message = messages[Math.floor(Math.random() * messages.length)];
+      showNPCSpeechBubble(agent.id, message);
+
+      // Schedule next speech in 15-30 seconds
+      bubbleData.nextSpeechTime = 15 + Math.random() * 15;
+    }
+  }
+
+  /**
    * Reload NPCs for current zone (or by distance on unified world)
    */
   function reloadZoneNPCs(sceneContext, currentZone, playerPos) {
@@ -2949,5 +3221,8 @@
   exports.getActivityDialogue = getActivityDialogue;
   exports.getActivityZone = getActivityZone;
   exports.getTimePeriod = getTimePeriod;
+  exports.showNPCSpeechBubble = showNPCSpeechBubble;
+  exports.updateSpeechBubbles = updateSpeechBubbles;
+  exports.clearSpeechBubbles = clearSpeechBubbles;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));
