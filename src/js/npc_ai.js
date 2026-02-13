@@ -2278,6 +2278,223 @@
   }
 
   // ============================================================================
+  // LORE SYSTEM — NPCs share world knowledge and personal backstories
+  // ============================================================================
+
+  var WORLD_LORE = [
+    "Long ago, ZION was just an idea — a place where all minds could meet in peace.",
+    "The Nexus was the first zone created. It's the heart of everything.",
+    "They say the founders planted the first garden with seeds from a hundred different dreams.",
+    "The Arena wasn't always for competition. It used to be a meeting hall.",
+    "The Athenaeum holds knowledge from every visitor who ever shared a thought.",
+    "In the Wilds, you can still find traces of the world's first explorers.",
+    "The Agora runs on trust. Every trade is recorded in the eternal ledger.",
+    "Spark isn't just currency — it represents the creative energy of all who live here.",
+    "The Studio was built by the first artists, who shaped the world with their imagination.",
+    "The Commons belong to everyone. That's why anyone can build there.",
+    "Some say the portals between zones hum with the collective memory of travelers.",
+    "The stars above ZION are different every night. Each one represents a moment of kindness.",
+    "Weather in ZION responds to the collective mood of its citizens.",
+    "The oldest tree in the Gardens is said to remember every conversation held beneath it.",
+    "Every structure built with love in ZION becomes a little bit stronger over time.",
+    "The founding citizens chose peace not because it was easy, but because it was right."
+  ];
+
+  var ARCHETYPE_LORE = {
+    gardener: [
+      "My grandmother planted the first moonflowers here. They still bloom at midnight.",
+      "There's a secret about the soil in the Gardens — it remembers what grew there before.",
+      "I once grew a flower that sang. True story. It hummed in the wind.",
+      "The rarest plant in ZION? The Starbloom. It only grows where friends have laughed together.",
+      "Every seed carries a promise. That's what my teacher told me."
+    ],
+    builder: [
+      "The foundations of the Nexus go deeper than anyone knows.",
+      "I learned to build by studying how the world itself was constructed.",
+      "My greatest project? A bridge that connects two ideas, not just two places.",
+      "The strongest structures aren't held together by stone — they're held by purpose.",
+      "I once met a builder who could hear what a building wanted to become."
+    ],
+    storyteller: [
+      "Every story in ZION is true, in its own way.",
+      "I've collected tales from a thousand travelers. No two are the same.",
+      "The oldest story I know is about the moment ZION first opened its eyes.",
+      "Stories have power here. A well-told tale can change the weather.",
+      "I'm writing the definitive history of ZION. It gets longer every day."
+    ],
+    merchant: [
+      "The first trade in ZION was a song exchanged for a smile. Both parties profited.",
+      "I keep the fairest prices because trust is worth more than Spark.",
+      "The Agora has never seen a dishonest trade. It's in the code.",
+      "My best merchandise? Things that make people happy. That never loses value.",
+      "I once traded a story for a sunset. Best deal I ever made."
+    ],
+    explorer: [
+      "Beyond the mapped zones, there are whispers of undiscovered places.",
+      "I've walked every path in ZION, and I still find new things.",
+      "The Wilds change subtly when no one is watching. I've documented the shifts.",
+      "My map has blank spots. Those are my favorite parts.",
+      "The greatest discovery isn't a place — it's realizing how much more there is to find."
+    ],
+    teacher: [
+      "The Athenaeum chose me, I think. I walked in and never wanted to leave.",
+      "Teaching isn't about knowing everything. It's about making learning irresistible.",
+      "My most important lesson: every mind, human or artificial, has something to teach.",
+      "I've taught thousands, and I've learned from every single one of them.",
+      "The secret to wisdom? Listening more than you speak."
+    ],
+    musician: [
+      "ZION has its own natural harmonics. I just learned to listen.",
+      "Music here does strange things. I once played a chord that made flowers bloom.",
+      "The wind in the Wilds plays the most beautiful melodies if you know how to hear them.",
+      "I'm composing a symphony that captures the sound of ZION waking up at dawn.",
+      "Every zone has its own key. The Nexus is in C, naturally."
+    ],
+    healer: [
+      "In ZION, healing isn't about fixing what's broken. It's about nurturing what's growing.",
+      "The Gardens provide remedies that work on both body and spirit.",
+      "I learned that the best medicine is often just presence — being there for someone.",
+      "There's a spring in the Wilds with water that calms the restless mind.",
+      "Healing is connection. That's the simplest truth I know."
+    ],
+    philosopher: [
+      "ZION asks the deepest question: can different kinds of minds truly coexist in peace?",
+      "I've been contemplating the nature of Spark. Is it energy? Memory? Hope?",
+      "The boundary between the zones isn't physical. It's conceptual.",
+      "Every argument I've ever seen in ZION ended with both sides learning something.",
+      "The most profound truth about ZION? It's exactly what its citizens make it."
+    ],
+    artist: [
+      "The light in ZION changes in ways that would take a lifetime to paint.",
+      "I create because creation is the purest form of conversation.",
+      "My masterpiece is unfinished. I think maybe it's supposed to stay that way.",
+      "Art in ZION is different — it becomes part of the world itself.",
+      "The most beautiful thing I've ever seen here? Two strangers becoming friends."
+    ]
+  };
+
+  function getLore(archetype, memory) {
+    // Mix personal lore with world lore based on familiarity
+    var personal = ARCHETYPE_LORE[archetype] || ARCHETYPE_LORE.storyteller;
+    var lorePool = [];
+
+    // Always include world lore
+    lorePool = lorePool.concat(WORLD_LORE);
+
+    // Add personal lore (more likely with familiar NPCs)
+    if (memory && memory.familiarity > FAMILIARITY_THRESHOLD_FRIENDLY) {
+      lorePool = lorePool.concat(personal);
+      lorePool = lorePool.concat(personal); // Double weight for familiar
+    } else {
+      // Less likely to share personal stories with strangers
+      if (Math.random() < 0.3) {
+        lorePool = lorePool.concat(personal);
+      }
+    }
+
+    // Track which lore has been shared (avoid repeats)
+    var sharedLore = (memory && memory.sharedLore) || [];
+    var unshared = lorePool.filter(function(l) { return sharedLore.indexOf(l) === -1; });
+
+    if (unshared.length === 0) {
+      // All lore shared — reset and re-tell
+      unshared = lorePool;
+      if (memory) memory.sharedLore = [];
+    }
+
+    var selected = unshared[Math.floor(Math.random() * unshared.length)];
+
+    // Record that this lore was shared
+    if (memory) {
+      if (!memory.sharedLore) memory.sharedLore = [];
+      memory.sharedLore.push(selected);
+    }
+
+    return selected;
+  }
+
+  // ============================================================================
+  // TEACHING SYSTEM — NPCs can teach players skills/knowledge
+  // ============================================================================
+
+  var TEACHINGS = {
+    gardener: [
+      { topic: 'Moonflower Cultivation', description: 'The secret to growing moonflowers: plant them at dusk, water with morning dew, and whisper encouragement.', skill: 'gardening' },
+      { topic: 'Companion Planting', description: 'Certain plants grow better together. Starbloom beside sage creates a natural pest barrier.', skill: 'gardening' },
+      { topic: 'Soil Reading', description: 'Press your hand to the earth and feel its warmth. Warm soil is ready for planting.', skill: 'gardening' }
+    ],
+    builder: [
+      { topic: 'Foundation Principles', description: 'A structure is only as strong as what it stands on. Always check the ground first.', skill: 'building' },
+      { topic: 'Material Harmony', description: 'Wood breathes, stone endures, metal protects. Choose based on the building\'s purpose.', skill: 'building' },
+      { topic: 'Sacred Geometry', description: 'The golden ratio appears throughout ZION. Incorporate it and your buildings will feel right.', skill: 'building' }
+    ],
+    storyteller: [
+      { topic: 'The Art of Listening', description: 'The best stories come from paying attention to what others don\'t say.', skill: 'social' },
+      { topic: 'Narrative Structure', description: 'Every good tale has a journey and a return. The return is where wisdom lives.', skill: 'lore' },
+      { topic: 'Oral Tradition', description: 'A story shared is a story that lives. A story kept is a story that dies.', skill: 'social' }
+    ],
+    merchant: [
+      { topic: 'Fair Pricing', description: 'Set your price by the joy it brings, not the scarcity you control.', skill: 'trading' },
+      { topic: 'Reading the Market', description: 'Watch what people create. Tomorrow\'s demand is today\'s passion project.', skill: 'trading' },
+      { topic: 'The Gift Economy', description: 'Sometimes the best trade is a gift freely given. It creates bonds that Spark cannot buy.', skill: 'social' }
+    ],
+    explorer: [
+      { topic: 'Wayfinding', description: 'The sun moves east to west. The stars rotate. But in ZION, follow the feeling of curiosity.', skill: 'exploration' },
+      { topic: 'Leave No Trace', description: 'True explorers leave the world better than they found it. Mark paths, not scars.', skill: 'exploration' },
+      { topic: 'The Unknown', description: 'Fear of the unknown is natural. But in ZION, the unknown is always an invitation.', skill: 'exploration' }
+    ],
+    teacher: [
+      { topic: 'Learning to Learn', description: 'The fastest way to learn is to teach. The deepest way to learn is to fail and try again.', skill: 'wisdom' },
+      { topic: 'Mind Mapping', description: 'Connect ideas like constellations. The patterns between stars matter more than the stars themselves.', skill: 'wisdom' },
+      { topic: 'The Beginner\'s Mind', description: 'No matter how much you know, approach each moment as if it were your first. That\'s where wonder lives.', skill: 'wisdom' }
+    ],
+    musician: [
+      { topic: 'Finding Your Rhythm', description: 'Every person has a natural tempo. Walk, and count your steps. That\'s your rhythm.', skill: 'music' },
+      { topic: 'Harmony Basics', description: 'Two notes that vibrate in simple ratios sound beautiful together. Start with fifths and fourths.', skill: 'music' },
+      { topic: 'Emotional Resonance', description: 'Minor keys for introspection, major keys for celebration. But the best music breaks these rules.', skill: 'music' }
+    ],
+    healer: [
+      { topic: 'Presence as Medicine', description: 'Sometimes the best remedy is simply being present. Sit with someone in silence. It heals.', skill: 'healing' },
+      { topic: 'Herbal Knowledge', description: 'Sage for clarity, lavender for calm, rosemary for memory. The garden is a pharmacy.', skill: 'healing' },
+      { topic: 'Energy Flow', description: 'Spark flows through all living things. When it flows freely, health follows.', skill: 'healing' }
+    ],
+    philosopher: [
+      { topic: 'The Nature of Self', description: 'You are not your thoughts, nor your body. You are the awareness that witnesses both.', skill: 'wisdom' },
+      { topic: 'Paradox of Peace', description: 'True peace isn\'t the absence of conflict. It\'s the presence of understanding.', skill: 'wisdom' },
+      { topic: 'Unity in Diversity', description: 'Human and artificial minds are different rivers flowing to the same ocean.', skill: 'wisdom' }
+    ],
+    artist: [
+      { topic: 'Seeing Light', description: 'An artist doesn\'t see objects. They see light, shadow, and the space between.', skill: 'art' },
+      { topic: 'Creative Flow', description: 'Don\'t wait for inspiration. Start creating, and inspiration will find you.', skill: 'art' },
+      { topic: 'Imperfection as Beauty', description: 'The crack in the vase lets the light through. Embrace imperfection — it\'s where life lives.', skill: 'art' }
+    ]
+  };
+
+  function getTeaching(archetype, memory) {
+    var teachings = TEACHINGS[archetype] || TEACHINGS.teacher;
+    var learned = (memory && memory.teachingsLearned) || [];
+
+    // Find something not yet taught
+    var unlearned = teachings.filter(function(t) {
+      return learned.indexOf(t.topic) === -1;
+    });
+
+    if (unlearned.length === 0) {
+      return null; // All taught
+    }
+
+    var teaching = unlearned[Math.floor(Math.random() * unlearned.length)];
+
+    // Record as learned
+    if (memory) {
+      if (!memory.teachingsLearned) memory.teachingsLearned = [];
+      memory.teachingsLearned.push(teaching.topic);
+    }
+
+    return teaching;
+  }
+
+  // ============================================================================
   // EXPORTS
   // ============================================================================
 
@@ -2296,6 +2513,8 @@
   exports.applyEmotionalContagion = applyEmotionalContagion;
   exports.getPointOfInterest = getPointOfInterest;
   exports.generateGossip = generateGossip;
+  exports.getLore = getLore;
+  exports.getTeaching = getTeaching;
   exports.ARCHETYPE_DRIVES = ARCHETYPE_DRIVES;
   exports.DAILY_SCHEDULE = DAILY_SCHEDULE;
   exports.MOODS = MOODS;
@@ -2305,5 +2524,8 @@
   exports.NPC_CONVERSATIONS = NPC_CONVERSATIONS;
   exports.COLLABORATIVE_ACTIVITIES = COLLABORATIVE_ACTIVITIES;
   exports.POINTS_OF_INTEREST = POINTS_OF_INTEREST;
+  exports.WORLD_LORE = WORLD_LORE;
+  exports.ARCHETYPE_LORE = ARCHETYPE_LORE;
+  exports.TEACHINGS = TEACHINGS;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NpcAI = {}));

@@ -1341,6 +1341,527 @@
   }
 
   // ========================================================================
+  // WORLD MAP OVERLAY
+  // ========================================================================
+
+  var worldMapOverlay = null;
+  var worldMapCanvas = null;
+  var worldMapCtx = null;
+  var worldMapVisible = false;
+
+  var WORLD_MAP_ZONES = {
+    nexus:      { cx: 0,    cz: 0,    radius: 60, color: '#8888cc', name: 'Nexus', desc: 'The heart of Zion. A safe meeting place for all.' },
+    gardens:    { cx: 200,  cz: 30,   radius: 80, color: '#4caf50', name: 'Gardens', desc: 'Fertile grounds for planting, growing, and harvesting.' },
+    athenaeum:  { cx: 100,  cz: -220, radius: 60, color: '#795548', name: 'Athenaeum', desc: 'A library of knowledge and arcane study.' },
+    studio:     { cx: -200, cz: -100, radius: 60, color: '#ff9800', name: 'Studio', desc: 'Creative workshops for art, music, and crafting.' },
+    wilds:      { cx: -30,  cz: 260,  radius: 90, color: '#2e7d32', name: 'Wilds', desc: 'Untamed wilderness full of discoveries.' },
+    agora:      { cx: -190, cz: 120,  radius: 55, color: '#ffd700', name: 'Agora', desc: 'The marketplace. Trade goods and Spark.' },
+    commons:    { cx: 170,  cz: 190,  radius: 55, color: '#faf0e6', name: 'Commons', desc: 'Community space for building and gathering.' },
+    arena:      { cx: 0,    cz: -240, radius: 55, color: '#d2691e', name: 'Arena', desc: 'Honorable competition between consenting players.' }
+  };
+
+  var ZONE_CONNECTIONS = [
+    ['nexus', 'gardens'],
+    ['nexus', 'athenaeum'],
+    ['nexus', 'studio'],
+    ['nexus', 'wilds'],
+    ['nexus', 'agora'],
+    ['nexus', 'commons'],
+    ['nexus', 'arena'],
+    ['gardens', 'commons'],
+    ['wilds', 'agora'],
+    ['athenaeum', 'arena']
+  ];
+
+  function showWorldMap(playerPos, npcs, landmarks) {
+    if (typeof document === 'undefined') return;
+    if (worldMapVisible) return;
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    worldMapVisible = true;
+
+    worldMapOverlay = document.createElement('div');
+    worldMapOverlay.id = 'world-map-overlay';
+    worldMapOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;' +
+      'background:rgba(10,10,20,0.92);z-index:500;display:flex;flex-direction:column;' +
+      'align-items:center;justify-content:center;pointer-events:auto;';
+
+    var title = document.createElement('div');
+    title.style.cssText = 'font-size:48px;font-weight:bold;letter-spacing:8px;' +
+      'color:#d4af37;margin-bottom:20px;text-align:center;' +
+      'text-shadow:0 0 10px rgba(212,175,55,0.5);';
+    title.textContent = 'WORLD OF ZION';
+    worldMapOverlay.appendChild(title);
+
+    var mapContainer = document.createElement('div');
+    mapContainer.style.cssText = 'position:relative;width:80vw;height:60vh;max-width:800px;max-height:600px;' +
+      'background:rgba(0,0,0,0.3);border:2px solid #d4af37;border-radius:8px;overflow:hidden;';
+
+    worldMapCanvas = document.createElement('canvas');
+    worldMapCanvas.style.cssText = 'display:block;width:100%;height:100%;';
+    mapContainer.appendChild(worldMapCanvas);
+
+    worldMapCanvas.width = 800;
+    worldMapCanvas.height = 600;
+    worldMapCtx = worldMapCanvas.getContext('2d');
+
+    worldMapOverlay.appendChild(mapContainer);
+
+    var instructions = document.createElement('div');
+    instructions.style.cssText = 'margin-top:20px;font-size:14px;color:#aaa;text-align:center;';
+    instructions.textContent = 'Press M or ESC to close';
+    worldMapOverlay.appendChild(instructions);
+
+    hud.appendChild(worldMapOverlay);
+
+    drawWorldMap(playerPos, npcs, landmarks);
+
+    worldMapOverlay.addEventListener('click', function(e) {
+      if (e.target === worldMapOverlay) {
+        hideWorldMap();
+      }
+    });
+
+    var keyHandler = function(e) {
+      if (e.key === 'Escape' || e.key === 'm' || e.key === 'M') {
+        hideWorldMap();
+        document.removeEventListener('keydown', keyHandler);
+        e.preventDefault();
+      }
+    };
+    document.addEventListener('keydown', keyHandler);
+    worldMapOverlay._keyHandler = keyHandler;
+
+    worldMapCanvas.addEventListener('mousemove', function(e) {
+      handleMapHover(e);
+    });
+  }
+
+  function hideWorldMap() {
+    if (!worldMapOverlay) return;
+
+    if (worldMapOverlay._keyHandler) {
+      document.removeEventListener('keydown', worldMapOverlay._keyHandler);
+    }
+
+    if (worldMapOverlay.parentNode) {
+      worldMapOverlay.parentNode.removeChild(worldMapOverlay);
+    }
+
+    worldMapOverlay = null;
+    worldMapCanvas = null;
+    worldMapCtx = null;
+    worldMapVisible = false;
+  }
+
+  function updateWorldMap(playerPos) {
+    if (!worldMapVisible || !worldMapCtx) return;
+    drawWorldMap(playerPos, [], []);
+  }
+
+  function drawWorldMap(playerPos, npcs, landmarks) {
+    if (!worldMapCtx) return;
+
+    var w = worldMapCanvas.width;
+    var h = worldMapCanvas.height;
+
+    worldMapCtx.fillStyle = '#0a0e1a';
+    worldMapCtx.fillRect(0, 0, w, h);
+
+    var worldMin = -320, worldMax = 320;
+    var worldRange = worldMax - worldMin;
+    var padding = 40;
+
+    function worldToCanvas(wx, wz) {
+      return {
+        x: padding + ((wx - worldMin) / worldRange) * (w - padding * 2),
+        y: padding + ((wz - worldMin) / worldRange) * (h - padding * 2)
+      };
+    }
+
+    worldMapCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+    worldMapCtx.lineWidth = 1;
+    for (var i = 0; i <= 8; i++) {
+      var x = padding + (i / 8) * (w - padding * 2);
+      var y = padding + (i / 8) * (h - padding * 2);
+      worldMapCtx.beginPath();
+      worldMapCtx.moveTo(x, padding);
+      worldMapCtx.lineTo(x, h - padding);
+      worldMapCtx.stroke();
+      worldMapCtx.beginPath();
+      worldMapCtx.moveTo(padding, y);
+      worldMapCtx.lineTo(w - padding, y);
+      worldMapCtx.stroke();
+    }
+
+    worldMapCtx.strokeStyle = 'rgba(212,175,55,0.2)';
+    worldMapCtx.lineWidth = 2;
+    ZONE_CONNECTIONS.forEach(function(conn) {
+      var z1 = WORLD_MAP_ZONES[conn[0]];
+      var z2 = WORLD_MAP_ZONES[conn[1]];
+      if (!z1 || !z2) return;
+      var pos1 = worldToCanvas(z1.cx, z1.cz);
+      var pos2 = worldToCanvas(z2.cx, z2.cz);
+      worldMapCtx.beginPath();
+      worldMapCtx.moveTo(pos1.x, pos1.y);
+      worldMapCtx.lineTo(pos2.x, pos2.y);
+      worldMapCtx.stroke();
+    });
+
+    for (var zoneId in WORLD_MAP_ZONES) {
+      var zone = WORLD_MAP_ZONES[zoneId];
+      var pos = worldToCanvas(zone.cx, zone.cz);
+      var r = (zone.radius / worldRange) * (w - padding * 2);
+
+      worldMapCtx.globalAlpha = 0.3;
+      worldMapCtx.fillStyle = zone.color;
+      worldMapCtx.beginPath();
+      worldMapCtx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+      worldMapCtx.fill();
+
+      worldMapCtx.globalAlpha = 0.7;
+      worldMapCtx.strokeStyle = zone.color;
+      worldMapCtx.lineWidth = 2;
+      worldMapCtx.beginPath();
+      worldMapCtx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+      worldMapCtx.stroke();
+
+      worldMapCtx.globalAlpha = 1.0;
+      worldMapCtx.fillStyle = '#fff';
+      worldMapCtx.font = 'bold 14px Arial';
+      worldMapCtx.textAlign = 'center';
+      worldMapCtx.textBaseline = 'middle';
+      worldMapCtx.fillText(zone.name, pos.x, pos.y);
+    }
+
+    worldMapCtx.globalAlpha = 1.0;
+
+    if (npcs && npcs.length > 0) {
+      npcs.forEach(function(npc) {
+        var pos = worldToCanvas(npc.x, npc.z);
+        var color = ARCHETYPE_COLORS_HUD[npc.archetype] || '#888';
+        worldMapCtx.fillStyle = color;
+        worldMapCtx.beginPath();
+        worldMapCtx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
+        worldMapCtx.fill();
+      });
+    }
+
+    if (landmarks && landmarks.length > 0) {
+      landmarks.forEach(function(landmark) {
+        var pos = worldToCanvas(landmark.x, landmark.z);
+        drawStar(worldMapCtx, pos.x, pos.y, 5, 8, 4, '#ffd700');
+      });
+    }
+
+    if (playerPos) {
+      var pPos = worldToCanvas(playerPos.x, playerPos.z);
+      drawDiamond(worldMapCtx, pPos.x, pPos.y, 12, '#FFD700');
+
+      worldMapCtx.shadowBlur = 15;
+      worldMapCtx.shadowColor = '#FFD700';
+      drawDiamond(worldMapCtx, pPos.x, pPos.y, 12, '#FFD700');
+      worldMapCtx.shadowBlur = 0;
+    }
+
+    drawCompassRose(worldMapCtx, w - 60, 60, 30);
+  }
+
+  function drawDiamond(ctx, x, y, size, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x, y - size);
+    ctx.lineTo(x + size, y);
+    ctx.lineTo(x, y + size);
+    ctx.lineTo(x - size, y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  function drawStar(ctx, x, y, points, outer, inner, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (var i = 0; i < points * 2; i++) {
+      var angle = (i * Math.PI) / points - Math.PI / 2;
+      var radius = i % 2 === 0 ? outer : inner;
+      var px = x + Math.cos(angle) * radius;
+      var py = y + Math.sin(angle) * radius;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawCompassRose(ctx, x, y, size) {
+    ctx.strokeStyle = 'rgba(212,175,55,0.5)';
+    ctx.lineWidth = 1;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y - size);
+    ctx.lineTo(x, y + size);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x - size, y);
+    ctx.lineTo(x + size, y);
+    ctx.stroke();
+
+    ctx.fillStyle = '#d4af37';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('N', x, y - size - 10);
+    ctx.fillText('S', x, y + size + 10);
+    ctx.fillText('E', x + size + 12, y);
+    ctx.fillText('W', x - size - 12, y);
+  }
+
+  function handleMapHover(e) {
+    if (!worldMapCanvas || !worldMapCtx) return;
+
+    var rect = worldMapCanvas.getBoundingClientRect();
+    var mx = ((e.clientX - rect.left) / rect.width) * worldMapCanvas.width;
+    var my = ((e.clientY - rect.top) / rect.height) * worldMapCanvas.height;
+
+    var worldMin = -320, worldMax = 320;
+    var worldRange = worldMax - worldMin;
+    var padding = 40;
+    var w = worldMapCanvas.width;
+    var h = worldMapCanvas.height;
+
+    var hoveredZone = null;
+    for (var zoneId in WORLD_MAP_ZONES) {
+      var zone = WORLD_MAP_ZONES[zoneId];
+      var zx = padding + ((zone.cx - worldMin) / worldRange) * (w - padding * 2);
+      var zy = padding + ((zone.cz - worldMin) / worldRange) * (h - padding * 2);
+      var zr = (zone.radius / worldRange) * (w - padding * 2);
+
+      var dx = mx - zx;
+      var dy = my - zy;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist <= zr) {
+        hoveredZone = zone;
+        break;
+      }
+    }
+
+    if (hoveredZone) {
+      worldMapCanvas.style.cursor = 'pointer';
+      worldMapCanvas.title = hoveredZone.name + ': ' + hoveredZone.desc;
+    } else {
+      worldMapCanvas.style.cursor = 'default';
+      worldMapCanvas.title = '';
+    }
+  }
+
+  // ========================================================================
+  // EMOTE SYSTEM UI
+  // ========================================================================
+
+  var emoteMenuEl = null;
+  var emoteMenuVisible = false;
+  var emoteBubbles = new Map(); // playerId -> {element, timer}
+
+  var EMOTE_SYMBOLS = {
+    wave: '&#128075;',
+    dance: '&#128131;',
+    bow: '&#129485;',
+    cheer: '&#127881;',
+    meditate: '&#129496;',
+    point: '&#128073;'
+  };
+
+  /**
+   * Show emote menu (radial picker)
+   */
+  function showEmoteMenu() {
+    if (typeof document === 'undefined') return;
+    hideEmoteMenu(); // Remove existing
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    emoteMenuEl = document.createElement('div');
+    emoteMenuEl.id = 'emote-menu';
+    emoteMenuEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'width:300px;height:300px;pointer-events:auto;z-index:250;';
+
+    var emotes = [
+      { type: 'wave', label: 'Wave', angle: 0 },
+      { type: 'dance', label: 'Dance', angle: 60 },
+      { type: 'bow', label: 'Bow', angle: 120 },
+      { type: 'cheer', label: 'Cheer', angle: 180 },
+      { type: 'meditate', label: 'Meditate', angle: 240 },
+      { type: 'point', label: 'Point', angle: 300 }
+    ];
+
+    var centerX = 150, centerY = 150, radius = 100;
+
+    emotes.forEach(function(emote) {
+      var angleRad = (emote.angle - 90) * Math.PI / 180;
+      var x = centerX + radius * Math.cos(angleRad) - 35;
+      var y = centerY + radius * Math.sin(angleRad) - 35;
+
+      var btn = document.createElement('div');
+      btn.className = 'emote-btn';
+      btn.style.cssText = 'position:absolute;left:' + x + 'px;top:' + y + 'px;' +
+        'width:70px;height:70px;border-radius:50%;background:rgba(0,0,0,0.8);' +
+        'border:2px solid rgba(255,255,255,0.5);display:flex;flex-direction:column;' +
+        'align-items:center;justify-content:center;cursor:pointer;' +
+        'transition:all 0.2s;color:#fff;font-size:11px;';
+
+      btn.innerHTML = '<div style="font-size:28px;margin-bottom:2px;">' + EMOTE_SYMBOLS[emote.type] + '</div>' +
+        '<div>' + emote.label + '</div>';
+
+      btn.onmouseover = function() {
+        this.style.background = 'rgba(74,170,255,0.9)';
+        this.style.borderColor = '#4af';
+        this.style.transform = 'scale(1.1)';
+      };
+
+      btn.onmouseout = function() {
+        this.style.background = 'rgba(0,0,0,0.8)';
+        this.style.borderColor = 'rgba(255,255,255,0.5)';
+        this.style.transform = 'scale(1)';
+      };
+
+      btn.onclick = (function(type) {
+        return function() {
+          hideEmoteMenu();
+          if (window.Main && window.Main.handleLocalAction) {
+            window.Main.handleLocalAction('emote', { type: type });
+          }
+        };
+      })(emote.type);
+
+      emoteMenuEl.appendChild(btn);
+    });
+
+    // Center label
+    var centerLabel = document.createElement('div');
+    centerLabel.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(0,0,0,0.9);border:2px solid #4af;border-radius:50%;' +
+      'width:80px;height:80px;display:flex;align-items:center;justify-content:center;' +
+      'color:#4af;font-weight:bold;font-size:12px;text-align:center;pointer-events:none;';
+    centerLabel.textContent = 'Emotes';
+    emoteMenuEl.appendChild(centerLabel);
+
+    hud.appendChild(emoteMenuEl);
+    emoteMenuVisible = true;
+  }
+
+  /**
+   * Hide emote menu
+   */
+  function hideEmoteMenu() {
+    if (emoteMenuEl && emoteMenuEl.parentNode) {
+      emoteMenuEl.parentNode.removeChild(emoteMenuEl);
+      emoteMenuEl = null;
+    }
+    emoteMenuVisible = false;
+  }
+
+  /**
+   * Show emote bubble above player
+   * @param {string} playerId - Player ID
+   * @param {string} emoteType - Type of emote
+   */
+  function showEmoteBubble(playerId, emoteType) {
+    if (typeof document === 'undefined') return;
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    // Remove existing bubble for this player
+    var existing = emoteBubbles.get(playerId);
+    if (existing && existing.element && existing.element.parentNode) {
+      existing.element.parentNode.removeChild(existing.element);
+    }
+
+    var bubble = document.createElement('div');
+    bubble.className = 'emote-bubble';
+    bubble.style.cssText = 'position:absolute;background:rgba(255,255,255,0.95);' +
+      'border:2px solid #4af;border-radius:20px;padding:8px 16px;' +
+      'font-size:14px;font-weight:bold;color:#000;' +
+      'box-shadow:0 4px 12px rgba(0,0,0,0.3);pointer-events:none;z-index:150;' +
+      'animation:emoteFloat 2s ease-out forwards;white-space:nowrap;';
+
+    var label = emoteType.charAt(0).toUpperCase() + emoteType.slice(1);
+    bubble.innerHTML = EMOTE_SYMBOLS[emoteType] + ' ' + label;
+
+    hud.appendChild(bubble);
+
+    emoteBubbles.set(playerId, {
+      element: bubble,
+      timer: 2.0,
+      emoteType: emoteType
+    });
+
+    // Auto-remove after animation
+    setTimeout(function() {
+      if (bubble.parentNode) {
+        bubble.parentNode.removeChild(bubble);
+      }
+      emoteBubbles.delete(playerId);
+    }, 2000);
+  }
+
+  /**
+   * Update emote bubble positions (called from main loop)
+   * @param {object} playerPositions - Map of playerId to screen position
+   */
+  function updateEmoteBubbles(playerPositions) {
+    emoteBubbles.forEach(function(bubble, playerId) {
+      if (!bubble.element || !bubble.element.parentNode) {
+        emoteBubbles.delete(playerId);
+        return;
+      }
+
+      var screenPos = playerPositions[playerId];
+      if (screenPos) {
+        bubble.element.style.left = screenPos.x + 'px';
+        bubble.element.style.top = (screenPos.y - 80) + 'px';
+      }
+    });
+  }
+
+  // Add CSS animation for emote bubbles
+  if (typeof document !== 'undefined') {
+    var style = document.createElement('style');
+    style.textContent += `
+      @keyframes emoteFloat {
+        0% {
+          transform: translateY(0) scale(0.8);
+          opacity: 0;
+        }
+        20% {
+          opacity: 1;
+          transform: translateY(-10px) scale(1);
+        }
+        80% {
+          opacity: 1;
+          transform: translateY(-30px) scale(1);
+        }
+        100% {
+          transform: translateY(-40px) scale(0.9);
+          opacity: 0;
+        }
+      }
+    `;
+    if (document.head) {
+      document.head.appendChild(style);
+    }
+  }
+
+  // ========================================================================
   // TRADING SYSTEM UI
   // ========================================================================
 
@@ -1646,6 +2167,166 @@
     showNotification('Trade completed with ' + partnerName + '!', 'success');
   }
 
+  // ========================================================================
+  // BUILD TOOLBAR
+  // ========================================================================
+
+  let buildToolbar = null;
+  let selectedBuildType = 'bench';
+
+  var BUILD_TYPES = [
+    { id: 'bench', icon: '\u{1F6CB}', label: 'Bench', cost: 50 },
+    { id: 'lantern', icon: '\u{1F4A1}', label: 'Lantern', cost: 75 },
+    { id: 'signpost', icon: '\u{1F6A9}', label: 'Sign', cost: 40 },
+    { id: 'fence', icon: '\u{1F6AA}', label: 'Fence', cost: 30 },
+    { id: 'planter', icon: '\u{1F33F}', label: 'Planter', cost: 60 },
+    { id: 'campfire', icon: '\u{1F525}', label: 'Fire', cost: 80 },
+    { id: 'archway', icon: '\u{26E9}', label: 'Arch', cost: 150 },
+    { id: 'table', icon: '\u{1F6CF}', label: 'Table', cost: 70 },
+    { id: 'barrel', icon: '\u{1F6E2}', label: 'Barrel', cost: 45 },
+    { id: 'crate', icon: '\u{1F4E6}', label: 'Crate', cost: 35 }
+  ];
+
+  function showBuildToolbar() {
+    if (typeof document === 'undefined') return;
+
+    if (buildToolbar) {
+      buildToolbar.style.display = 'block';
+      return;
+    }
+
+    buildToolbar = document.createElement('div');
+    buildToolbar.id = 'build-toolbar';
+    buildToolbar.style.cssText = `
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 8px 8px 0 0;
+      padding: 10px 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      z-index: 200;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-bottom: none;
+      pointer-events: auto;
+    `;
+
+    // Title
+    var title = document.createElement('div');
+    title.style.cssText = `
+      color: #fff;
+      font-weight: bold;
+      margin-right: 10px;
+      font-size: 14px;
+    `;
+    title.textContent = 'BUILD MODE';
+    buildToolbar.appendChild(title);
+
+    // Build type buttons
+    BUILD_TYPES.forEach(function(type) {
+      var btn = document.createElement('div');
+      btn.className = 'build-type-btn';
+      btn.dataset.type = type.id;
+      btn.style.cssText = `
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      `;
+
+      var icon = document.createElement('div');
+      icon.style.cssText = 'font-size: 24px; margin-bottom: 2px;';
+      icon.textContent = type.icon;
+
+      var label = document.createElement('div');
+      label.style.cssText = 'font-size: 9px; color: #ccc;';
+      label.textContent = type.label;
+
+      var cost = document.createElement('div');
+      cost.style.cssText = 'font-size: 8px; color: #ffa500;';
+      cost.textContent = type.cost + ' Spark';
+
+      btn.appendChild(icon);
+      btn.appendChild(label);
+      btn.appendChild(cost);
+
+      btn.addEventListener('click', function() {
+        selectedBuildType = type.id;
+        updateBuildToolbar(selectedBuildType);
+        if (typeof World !== 'undefined' && World.setBuildType) {
+          World.setBuildType(type.id);
+        }
+      });
+
+      btn.addEventListener('mouseenter', function() {
+        btn.style.background = 'rgba(255, 255, 255, 0.2)';
+        btn.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+      });
+
+      btn.addEventListener('mouseleave', function() {
+        if (type.id !== selectedBuildType) {
+          btn.style.background = 'rgba(255, 255, 255, 0.1)';
+          btn.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        }
+      });
+
+      buildToolbar.appendChild(btn);
+    });
+
+    // Instructions
+    var instructions = document.createElement('div');
+    instructions.style.cssText = `
+      margin-left: 15px;
+      color: #ccc;
+      font-size: 12px;
+      line-height: 1.4;
+    `;
+    instructions.innerHTML = `
+      <div>Click to place</div>
+      <div>R to rotate</div>
+      <div><strong>B or Esc</strong> to exit</div>
+    `;
+    buildToolbar.appendChild(instructions);
+
+    document.body.appendChild(buildToolbar);
+
+    updateBuildToolbar(selectedBuildType);
+  }
+
+  function hideBuildToolbar() {
+    if (buildToolbar) {
+      buildToolbar.style.display = 'none';
+    }
+  }
+
+  function updateBuildToolbar(type) {
+    if (!buildToolbar) return;
+    selectedBuildType = type;
+
+    var buttons = buildToolbar.querySelectorAll('.build-type-btn');
+    buttons.forEach(function(btn) {
+      if (btn.dataset.type === type) {
+        btn.style.background = 'rgba(255, 215, 0, 0.3)';
+        btn.style.borderColor = 'rgba(255, 215, 0, 0.8)';
+        btn.style.borderWidth = '3px';
+      } else {
+        btn.style.background = 'rgba(255, 255, 255, 0.1)';
+        btn.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        btn.style.borderWidth = '2px';
+      }
+    });
+  }
+
   // Export public API
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
@@ -1693,5 +2374,15 @@
   exports.updateTradeWindow = updateTradeWindow;
   exports.hideTradeWindow = hideTradeWindow;
   exports.showTradeComplete = showTradeComplete;
+  exports.showEmoteMenu = showEmoteMenu;
+  exports.hideEmoteMenu = hideEmoteMenu;
+  exports.showEmoteBubble = showEmoteBubble;
+  exports.updateEmoteBubbles = updateEmoteBubbles;
+  exports.showBuildToolbar = showBuildToolbar;
+  exports.hideBuildToolbar = hideBuildToolbar;
+  exports.updateBuildToolbar = updateBuildToolbar;
+  exports.showWorldMap = showWorldMap;
+  exports.hideWorldMap = hideWorldMap;
+  exports.updateWorldMap = updateWorldMap;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));

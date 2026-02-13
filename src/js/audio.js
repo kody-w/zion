@@ -3948,6 +3948,353 @@
     });
   }
 
+  // ========================================================================
+  // PROCEDURAL MUSIC SYSTEM — Generative ambient music per zone/time
+  // ========================================================================
+
+  var musicState = {
+    playing: false,
+    zone: null,
+    timeOfDay: 'day',
+    volume: 0.12,
+    oscillators: [],
+    gains: [],
+    nextNoteTime: 0,
+    noteIndex: 0,
+    chordIndex: 0,
+    arpIndex: 0,
+    beatTimer: null,
+    padNodes: [],
+    melodyTimeout: null
+  };
+
+  // Musical scales (frequencies in Hz)
+  var SCALES = {
+    // Pentatonic scales — always pleasant, no dissonance
+    nexus:     [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25],  // C major pentatonic
+    gardens:   [293.66, 329.63, 369.99, 440.00, 493.88, 587.33, 659.25, 739.99],  // D major pentatonic
+    athenaeum: [246.94, 277.18, 329.63, 369.99, 415.30, 493.88, 554.37, 659.25],  // B minor pentatonic
+    studio:    [329.63, 369.99, 415.30, 493.88, 554.37, 659.25, 739.99, 830.61],  // E major pentatonic
+    wilds:     [220.00, 261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33],  // A minor pentatonic
+    agora:     [349.23, 392.00, 440.00, 523.25, 587.33, 698.46, 783.99, 880.00],  // F major pentatonic
+    commons:   [293.66, 349.23, 392.00, 440.00, 523.25, 587.33, 698.46, 783.99],  // D mixolydian penta
+    arena:     [196.00, 233.08, 261.63, 293.66, 349.23, 392.00, 466.16, 523.25]   // G minor pentatonic
+  };
+
+  // Chord progressions per zone (indices into the scale)
+  var CHORD_PROGRESSIONS = {
+    nexus:     [[0, 2, 4], [1, 3, 5], [2, 4, 6], [0, 3, 5]],
+    gardens:   [[0, 2, 4], [2, 4, 6], [1, 3, 5], [0, 2, 5]],
+    athenaeum: [[0, 2, 4], [1, 3, 5], [0, 3, 5], [2, 4, 6]],
+    studio:    [[0, 2, 4], [1, 4, 6], [2, 4, 6], [0, 3, 5]],
+    wilds:     [[0, 2, 4], [1, 3, 5], [0, 2, 5], [1, 4, 6]],
+    agora:     [[0, 2, 4], [1, 3, 5], [2, 4, 6], [0, 2, 5]],
+    commons:   [[0, 2, 4], [2, 4, 6], [1, 3, 5], [0, 3, 5]],
+    arena:     [[0, 2, 4], [0, 3, 5], [1, 4, 6], [2, 4, 6]]
+  };
+
+  // Tempo and feel per zone (beat duration in seconds)
+  var ZONE_MUSIC_STYLE = {
+    nexus:     { beatDuration: 2.0, padVolume: 0.08, melodyChance: 0.3, melodyVolume: 0.04, type: 'ethereal' },
+    gardens:   { beatDuration: 1.8, padVolume: 0.07, melodyChance: 0.4, melodyVolume: 0.05, type: 'pastoral' },
+    athenaeum: { beatDuration: 2.5, padVolume: 0.06, melodyChance: 0.2, melodyVolume: 0.03, type: 'mysterious' },
+    studio:    { beatDuration: 1.5, padVolume: 0.07, melodyChance: 0.5, melodyVolume: 0.06, type: 'creative' },
+    wilds:     { beatDuration: 2.2, padVolume: 0.05, melodyChance: 0.25, melodyVolume: 0.04, type: 'nature' },
+    agora:     { beatDuration: 1.4, padVolume: 0.06, melodyChance: 0.4, melodyVolume: 0.05, type: 'lively' },
+    commons:   { beatDuration: 1.8, padVolume: 0.07, melodyChance: 0.35, melodyVolume: 0.04, type: 'warm' },
+    arena:     { beatDuration: 1.6, padVolume: 0.08, melodyChance: 0.3, melodyVolume: 0.05, type: 'dramatic' }
+  };
+
+  // Time-of-day modifiers
+  var TIME_MODIFIERS = {
+    dawn:    { tempoMult: 0.8, volumeMult: 0.6, melodyMult: 0.5, octaveShift: 0 },
+    morning: { tempoMult: 0.9, volumeMult: 0.8, melodyMult: 0.8, octaveShift: 0 },
+    midday:  { tempoMult: 1.0, volumeMult: 1.0, melodyMult: 1.0, octaveShift: 0 },
+    afternoon: { tempoMult: 1.0, volumeMult: 0.9, melodyMult: 0.9, octaveShift: 0 },
+    evening: { tempoMult: 0.85, volumeMult: 0.7, melodyMult: 0.6, octaveShift: -1 },
+    night:   { tempoMult: 0.7, volumeMult: 0.4, melodyMult: 0.3, octaveShift: -1 }
+  };
+
+  function startMusic(zone, timeOfDay) {
+    if (!audioContext || !masterGain) return;
+    zone = zone || 'nexus';
+    timeOfDay = timeOfDay || 'midday';
+
+    // Stop existing music if playing
+    if (musicState.playing) {
+      stopMusic();
+    }
+
+    musicState.zone = zone;
+    musicState.timeOfDay = timeOfDay;
+    musicState.playing = true;
+    musicState.chordIndex = 0;
+    musicState.noteIndex = 0;
+    musicState.arpIndex = 0;
+
+    // Start the pad drone
+    playPadChord();
+
+    // Schedule melody notes
+    scheduleMelody();
+  }
+
+  function playPadChord() {
+    if (!audioContext || !masterGain || !musicState.playing) return;
+
+    var zone = musicState.zone || 'nexus';
+    var scale = SCALES[zone] || SCALES.nexus;
+    var progression = CHORD_PROGRESSIONS[zone] || CHORD_PROGRESSIONS.nexus;
+    var style = ZONE_MUSIC_STYLE[zone] || ZONE_MUSIC_STYLE.nexus;
+    var timeMod = TIME_MODIFIERS[musicState.timeOfDay] || TIME_MODIFIERS.midday;
+
+    var chordIndices = progression[musicState.chordIndex % progression.length];
+    var beatDur = style.beatDuration / timeMod.tempoMult;
+    var chordDuration = beatDur * 4; // 4 beats per chord
+
+    // Clean up old pad nodes
+    cleanupPadNodes();
+
+    // Create pad oscillators for each note in the chord
+    for (var i = 0; i < chordIndices.length; i++) {
+      var noteIdx = chordIndices[i];
+      var freq = scale[noteIdx % scale.length];
+
+      // Apply octave shift for time of day
+      if (timeMod.octaveShift < 0) freq *= 0.5;
+      if (timeMod.octaveShift > 0) freq *= 2;
+
+      // Pad uses two detuned oscillators for warmth
+      for (var d = 0; d < 2; d++) {
+        var osc = audioContext.createOscillator();
+        var gain = audioContext.createGain();
+        var filter = audioContext.createBiquadFilter();
+
+        osc.type = (style.type === 'ethereal' || style.type === 'mysterious') ? 'sine' : 'triangle';
+        osc.frequency.value = freq + (d === 0 ? -0.5 : 0.5); // slight detune
+
+        filter.type = 'lowpass';
+        filter.frequency.value = 800;
+        filter.Q.value = 0.5;
+
+        var padVol = style.padVolume * timeMod.volumeMult * musicState.volume;
+        var now = audioContext.currentTime;
+
+        // Fade in
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(padVol, now + chordDuration * 0.15);
+        // Sustain
+        gain.gain.setValueAtTime(padVol, now + chordDuration * 0.7);
+        // Fade out
+        gain.gain.linearRampToValueAtTime(0, now + chordDuration);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start(now);
+        osc.stop(now + chordDuration + 0.1);
+
+        musicState.padNodes.push({ osc: osc, gain: gain, filter: filter, endTime: now + chordDuration + 0.2 });
+      }
+    }
+
+    // Arpeggio — occasionally play individual notes from the chord
+    if (Math.random() < 0.6) {
+      var arpDelay = beatDur * 0.5;
+      for (var a = 0; a < 3; a++) {
+        (function(arpIdx, delay) {
+          setTimeout(function() {
+            if (!musicState.playing || !audioContext) return;
+            var arpFreq = scale[chordIndices[arpIdx % chordIndices.length] % scale.length];
+            if (timeMod.octaveShift < 0) arpFreq *= 0.5;
+            arpFreq *= 2; // One octave up for sparkle
+
+            var arpOsc = audioContext.createOscillator();
+            var arpGain = audioContext.createGain();
+
+            arpOsc.type = 'sine';
+            arpOsc.frequency.value = arpFreq;
+
+            var arpVol = style.melodyVolume * timeMod.volumeMult * musicState.volume * 0.6;
+            var t = audioContext.currentTime;
+            arpGain.gain.setValueAtTime(0, t);
+            arpGain.gain.linearRampToValueAtTime(arpVol, t + 0.05);
+            arpGain.gain.exponentialRampToValueAtTime(0.001, t + beatDur * 0.8);
+
+            arpOsc.connect(arpGain);
+            arpGain.connect(masterGain);
+            arpOsc.start(t);
+            arpOsc.stop(t + beatDur);
+          }, delay * 1000);
+        })(a, arpDelay * (a + 1));
+      }
+    }
+
+    // Schedule next chord
+    musicState.chordIndex++;
+    musicState.beatTimer = setTimeout(function() {
+      if (musicState.playing) playPadChord();
+    }, chordDuration * 1000);
+  }
+
+  function scheduleMelody() {
+    if (!audioContext || !masterGain || !musicState.playing) return;
+
+    var zone = musicState.zone || 'nexus';
+    var scale = SCALES[zone] || SCALES.nexus;
+    var style = ZONE_MUSIC_STYLE[zone] || ZONE_MUSIC_STYLE.nexus;
+    var timeMod = TIME_MODIFIERS[musicState.timeOfDay] || TIME_MODIFIERS.midday;
+
+    var melodyChance = style.melodyChance * timeMod.melodyMult;
+    var beatDur = style.beatDuration / timeMod.tempoMult;
+
+    // Random delay before next melody note
+    var delay = beatDur * (1 + Math.random() * 3);
+
+    musicState.melodyTimeout = setTimeout(function() {
+      if (!musicState.playing || !audioContext) return;
+
+      if (Math.random() < melodyChance) {
+        // Pick a note from the scale — favor stepwise motion
+        var direction = Math.random() < 0.5 ? 1 : -1;
+        var step = Math.random() < 0.7 ? 1 : 2;
+        musicState.noteIndex = Math.max(0, Math.min(scale.length - 1, musicState.noteIndex + direction * step));
+        var freq = scale[musicState.noteIndex];
+        if (timeMod.octaveShift < 0) freq *= 0.5;
+        freq *= 2; // Melody one octave up
+
+        var melOsc = audioContext.createOscillator();
+        var melGain = audioContext.createGain();
+        var melFilter = audioContext.createBiquadFilter();
+
+        // Vary timbre by zone
+        if (style.type === 'nature' || style.type === 'pastoral') {
+          melOsc.type = 'sine';
+        } else if (style.type === 'dramatic' || style.type === 'lively') {
+          melOsc.type = 'triangle';
+        } else {
+          melOsc.type = Math.random() < 0.5 ? 'sine' : 'triangle';
+        }
+
+        melOsc.frequency.value = freq;
+
+        melFilter.type = 'lowpass';
+        melFilter.frequency.value = 1200;
+
+        var melVol = style.melodyVolume * timeMod.volumeMult * musicState.volume;
+        var noteDur = beatDur * (0.5 + Math.random() * 1.5);
+        var t = audioContext.currentTime;
+
+        melGain.gain.setValueAtTime(0, t);
+        melGain.gain.linearRampToValueAtTime(melVol, t + 0.03);
+        melGain.gain.setValueAtTime(melVol * 0.8, t + noteDur * 0.5);
+        melGain.gain.exponentialRampToValueAtTime(0.001, t + noteDur);
+
+        melOsc.connect(melFilter);
+        melFilter.connect(melGain);
+        melGain.connect(masterGain);
+
+        melOsc.start(t);
+        melOsc.stop(t + noteDur + 0.1);
+
+        // Occasionally add a harmony note
+        if (Math.random() < 0.25) {
+          var harmIdx = (musicState.noteIndex + 2) % scale.length;
+          var harmFreq = scale[harmIdx] * 2;
+          if (timeMod.octaveShift < 0) harmFreq *= 0.5;
+
+          var harmOsc = audioContext.createOscillator();
+          var harmGain = audioContext.createGain();
+
+          harmOsc.type = 'sine';
+          harmOsc.frequency.value = harmFreq;
+
+          var harmVol = melVol * 0.4;
+          harmGain.gain.setValueAtTime(0, t + 0.05);
+          harmGain.gain.linearRampToValueAtTime(harmVol, t + 0.1);
+          harmGain.gain.exponentialRampToValueAtTime(0.001, t + noteDur * 0.8);
+
+          harmOsc.connect(harmGain);
+          harmGain.connect(masterGain);
+          harmOsc.start(t + 0.05);
+          harmOsc.stop(t + noteDur);
+        }
+      }
+
+      // Schedule next melody note
+      scheduleMelody();
+    }, delay * 1000);
+  }
+
+  function cleanupPadNodes() {
+    var now = audioContext ? audioContext.currentTime : 0;
+    musicState.padNodes = musicState.padNodes.filter(function(node) {
+      if (now > node.endTime) {
+        try {
+          node.osc.disconnect();
+          node.gain.disconnect();
+          node.filter.disconnect();
+        } catch (e) {}
+        return false;
+      }
+      return true;
+    });
+  }
+
+  function stopMusic() {
+    musicState.playing = false;
+
+    if (musicState.beatTimer) {
+      clearTimeout(musicState.beatTimer);
+      musicState.beatTimer = null;
+    }
+    if (musicState.melodyTimeout) {
+      clearTimeout(musicState.melodyTimeout);
+      musicState.melodyTimeout = null;
+    }
+
+    // Fade out all pad nodes
+    for (var i = 0; i < musicState.padNodes.length; i++) {
+      try {
+        var node = musicState.padNodes[i];
+        if (node.gain && audioContext) {
+          node.gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
+        }
+      } catch (e) {}
+    }
+
+    // Clean up after fade
+    setTimeout(function() {
+      for (var i = 0; i < musicState.padNodes.length; i++) {
+        try {
+          musicState.padNodes[i].osc.disconnect();
+          musicState.padNodes[i].gain.disconnect();
+          musicState.padNodes[i].filter.disconnect();
+        } catch (e) {}
+      }
+      musicState.padNodes = [];
+    }, 600);
+  }
+
+  function updateMusic(zone, timeOfDay) {
+    if (!musicState.playing) return;
+    if (zone && zone !== musicState.zone) {
+      startMusic(zone, timeOfDay || musicState.timeOfDay);
+    } else if (timeOfDay && timeOfDay !== musicState.timeOfDay) {
+      musicState.timeOfDay = timeOfDay;
+      // Time changes take effect on next chord cycle naturally
+    }
+  }
+
+  function setMusicVolume(vol) {
+    musicState.volume = Math.max(0, Math.min(1, vol));
+  }
+
+  function isMusicPlaying() {
+    return musicState.playing;
+  }
+
   // Export public API
   exports.initAudio = initAudio;
   exports.playAmbient = playAmbient;
@@ -3965,5 +4312,12 @@
 
   // NPC sounds
   exports.playNPCSound = playNPCSound;
+
+  // Music system
+  exports.startMusic = startMusic;
+  exports.stopMusic = stopMusic;
+  exports.updateMusic = updateMusic;
+  exports.setMusicVolume = setMusicVolume;
+  exports.isMusicPlaying = isMusicPlaying;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Audio = {}));

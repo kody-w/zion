@@ -290,6 +290,174 @@
     return `zion-lobby-${worldId}`;
   }
 
+  // ========================================================================
+  // LOBBY SYSTEM — Automatic peer discovery
+  // ========================================================================
+
+  var lobbyState = {
+    peerId: null,
+    worldId: 'main',
+    discoveryInterval: null,
+    knownPeers: [],       // All peer IDs ever seen
+    heartbeatInterval: null,
+    playerName: '',
+    zone: 'nexus',
+    lastAnnounce: 0
+  };
+
+  /**
+   * Join the world lobby for automatic peer discovery.
+   * Uses a well-known lobby peer ID that the first player to join becomes.
+   * Others connect to the lobby peer and receive the full peer list.
+   */
+  function joinLobby(worldId, playerName, zone) {
+    lobbyState.worldId = worldId || 'main';
+    lobbyState.playerName = playerName || 'Anonymous';
+    lobbyState.zone = zone || 'nexus';
+
+    if (!peer) return;
+
+    lobbyState.peerId = peer.id;
+
+    // Try connecting to the lobby peer
+    var lobbyId = getLobbyPeerId(lobbyState.worldId);
+
+    if (peer.id !== lobbyId) {
+      // Not the lobby — try connecting to it
+      connectToPeer(lobbyId);
+    }
+
+    // Also try a list of "seed" peer IDs derived from the world
+    // This creates a gossip-based discovery pattern
+    var seedCount = 5;
+    for (var i = 0; i < seedCount; i++) {
+      var seedId = 'zion-seed-' + lobbyState.worldId + '-' + i;
+      if (seedId !== peer.id) {
+        connectToPeer(seedId);
+      }
+    }
+
+    // Periodically announce presence and discover peers
+    if (lobbyState.discoveryInterval) {
+      clearInterval(lobbyState.discoveryInterval);
+    }
+
+    lobbyState.discoveryInterval = setInterval(function() {
+      announcePresence();
+    }, 10000); // Every 10 seconds
+
+    // Start heartbeat
+    if (lobbyState.heartbeatInterval) {
+      clearInterval(lobbyState.heartbeatInterval);
+    }
+
+    lobbyState.heartbeatInterval = setInterval(function() {
+      sendHeartbeat();
+    }, 30000); // Every 30 seconds
+
+    // Initial announce
+    announcePresence();
+  }
+
+  function announcePresence() {
+    if (!peer || !peer.open) return;
+
+    var announcement = {
+      type: '_lobby_announce',
+      peerId: peer.id,
+      playerName: lobbyState.playerName,
+      zone: lobbyState.zone,
+      peers: getPeers(), // Share our peer list for gossip
+      timestamp: Date.now()
+    };
+
+    broadcastMessage(announcement);
+    lobbyState.lastAnnounce = Date.now();
+  }
+
+  function sendHeartbeat() {
+    if (!peer || !peer.open) return;
+
+    broadcastMessage({
+      type: '_heartbeat',
+      peerId: peer.id,
+      zone: lobbyState.zone,
+      peerCount: connections.size,
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Handle lobby-specific messages (called from handleIncomingMessage)
+   */
+  function handleLobbyMessage(msg) {
+    if (!msg || !msg.type) return false;
+
+    if (msg.type === '_lobby_announce') {
+      // Someone announced — connect to their known peers
+      if (msg.peers && Array.isArray(msg.peers)) {
+        msg.peers.forEach(function(peerId) {
+          if (peerId !== peer.id && !connections.has(peerId)) {
+            // Track known peer
+            if (lobbyState.knownPeers.indexOf(peerId) === -1) {
+              lobbyState.knownPeers.push(peerId);
+            }
+            // Try connecting if we have room
+            if (connections.size < 20) {
+              connectToPeer(peerId);
+            }
+          }
+        });
+      }
+      return true; // Handled
+    }
+
+    if (msg.type === '_heartbeat') {
+      // Update known peer activity
+      return true; // Handled, don't propagate to game
+    }
+
+    if (msg.type === '_peer_list_request') {
+      // Someone asking for our peer list
+      broadcastMessage({
+        type: '_lobby_announce',
+        peerId: peer.id,
+        playerName: lobbyState.playerName,
+        zone: lobbyState.zone,
+        peers: getPeers(),
+        timestamp: Date.now()
+      });
+      return true;
+    }
+
+    return false; // Not a lobby message
+  }
+
+  function updateLobbyZone(zone) {
+    lobbyState.zone = zone;
+  }
+
+  function leaveLobby() {
+    if (lobbyState.discoveryInterval) {
+      clearInterval(lobbyState.discoveryInterval);
+      lobbyState.discoveryInterval = null;
+    }
+    if (lobbyState.heartbeatInterval) {
+      clearInterval(lobbyState.heartbeatInterval);
+      lobbyState.heartbeatInterval = null;
+    }
+  }
+
+  function getNetworkStats() {
+    return {
+      peerId: peer ? peer.id : null,
+      connected: peer ? peer.open : false,
+      peerCount: connections.size,
+      knownPeers: lobbyState.knownPeers.length,
+      seenMessages: seenMessages.size
+    };
+  }
+
   // Export public API
   exports.initMesh = initMesh;
   exports.broadcastMessage = broadcastMessage;
@@ -298,5 +466,10 @@
   exports.connectToPeer = connectToPeer;
   exports.disconnect = disconnect;
   exports.getLobbyPeerId = getLobbyPeerId;
+  exports.joinLobby = joinLobby;
+  exports.leaveLobby = leaveLobby;
+  exports.updateLobbyZone = updateLobbyZone;
+  exports.handleLobbyMessage = handleLobbyMessage;
+  exports.getNetworkStats = getNetworkStats;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Network = {}));

@@ -2048,6 +2048,177 @@
     return state ? state.currentState : 'unknown';
   }
 
+  /**
+   * Play emote animation on player mesh
+   * @param {THREE.Group} playerMesh - Player mesh group
+   * @param {string} emoteType - Type of emote (wave, dance, bow, cheer, meditate, point)
+   */
+  function playEmoteAnimation(playerMesh, emoteType) {
+    if (!playerMesh || !playerMesh.userData) return;
+
+    var userData = playerMesh.userData;
+    if (!userData.head || !userData.torso || !userData.leftArm || !userData.rightArm) return;
+
+    // Cancel any existing emote animation
+    if (playerMesh.userData.emoteAnimation) {
+      clearTimeout(playerMesh.userData.emoteAnimation.timeout);
+      cancelAnimationFrame(playerMesh.userData.emoteAnimation.frame);
+    }
+
+    var startTime = Date.now();
+    var duration = 0;
+    var emoteData = { type: emoteType, startTime: startTime };
+
+    function animate() {
+      var elapsed = (Date.now() - startTime) / 1000;
+      var t = elapsed;
+
+      // Reset to neutral first
+      userData.leftArm.rotation.x = 0;
+      userData.leftArm.rotation.z = 0;
+      userData.rightArm.rotation.x = 0;
+      userData.rightArm.rotation.z = 0;
+      userData.leftLeg.rotation.x = 0;
+      userData.rightLeg.rotation.x = 0;
+      userData.head.rotation.x = 0;
+      userData.head.rotation.y = 0;
+      userData.torso.rotation.x = 0;
+      playerMesh.position.y = 0;
+
+      var isComplete = false;
+
+      switch (emoteType) {
+        case 'wave':
+          // Right arm raises and sways side to side for 2 seconds
+          duration = 2.0;
+          if (elapsed < duration) {
+            var waveProgress = Math.min(elapsed / 0.3, 1.0);
+            userData.rightArm.rotation.x = -1.5 * waveProgress;
+            userData.rightArm.rotation.z = -0.3 * waveProgress;
+            var swayAmount = Math.sin(t * 6) * 0.4;
+            userData.rightArm.rotation.y = swayAmount;
+            userData.head.rotation.y = swayAmount * 0.3;
+          } else {
+            isComplete = true;
+          }
+          break;
+
+        case 'dance':
+          // Body bobs up/down, arms alternating raise, slight rotation for 3 seconds
+          duration = 3.0;
+          if (elapsed < duration) {
+            var bobAmount = Math.sin(t * 4) * 0.15;
+            playerMesh.position.y = Math.abs(bobAmount);
+            userData.leftArm.rotation.x = -0.5 + Math.sin(t * 4) * 0.8;
+            userData.rightArm.rotation.x = -0.5 + Math.sin(t * 4 + Math.PI) * 0.8;
+            userData.torso.rotation.y = Math.sin(t * 3) * 0.15;
+            userData.leftLeg.rotation.x = Math.sin(t * 4) * 0.3;
+            userData.rightLeg.rotation.x = Math.sin(t * 4 + Math.PI) * 0.3;
+          } else {
+            isComplete = true;
+          }
+          break;
+
+        case 'bow':
+          // Upper body tilts forward 45 degrees then returns, 1.5 seconds
+          duration = 1.5;
+          if (elapsed < duration) {
+            var bowProgress;
+            if (elapsed < duration * 0.5) {
+              bowProgress = (elapsed / (duration * 0.5));
+            } else {
+              bowProgress = 1.0 - ((elapsed - duration * 0.5) / (duration * 0.5));
+            }
+            userData.torso.rotation.x = bowProgress * 0.785;
+            userData.head.rotation.x = bowProgress * 0.3;
+            userData.leftArm.rotation.x = bowProgress * 0.2;
+            userData.rightArm.rotation.x = bowProgress * 0.2;
+          } else {
+            isComplete = true;
+          }
+          break;
+
+        case 'cheer':
+          // Both arms raise up, small hop (y bounce), 2 seconds
+          duration = 2.0;
+          if (elapsed < duration) {
+            var cheerProgress = Math.min(elapsed / 0.2, 1.0);
+            userData.leftArm.rotation.x = -2.0 * cheerProgress;
+            userData.leftArm.rotation.z = 0.3 * cheerProgress;
+            userData.rightArm.rotation.x = -2.0 * cheerProgress;
+            userData.rightArm.rotation.z = -0.3 * cheerProgress;
+            var hopAmount = Math.abs(Math.sin(t * 5)) * 0.2;
+            playerMesh.position.y = hopAmount;
+          } else {
+            isComplete = true;
+          }
+          break;
+
+        case 'meditate':
+          // Body lowers slightly, arms to sides, gentle floating motion, 3 seconds
+          duration = 3.0;
+          if (elapsed < duration) {
+            var meditateProgress = Math.min(elapsed / 0.5, 1.0);
+            playerMesh.position.y = -0.2 * meditateProgress + Math.sin(t * 2) * 0.03;
+            userData.leftArm.rotation.x = 0.3 * meditateProgress;
+            userData.leftArm.rotation.z = 0.5 * meditateProgress;
+            userData.rightArm.rotation.x = 0.3 * meditateProgress;
+            userData.rightArm.rotation.z = -0.5 * meditateProgress;
+            userData.leftLeg.rotation.z = 0.4 * meditateProgress;
+            userData.rightLeg.rotation.z = -0.4 * meditateProgress;
+            userData.head.rotation.x = -0.2 * meditateProgress;
+            userData.torso.rotation.x = -0.1 * meditateProgress;
+          } else {
+            isComplete = true;
+          }
+          break;
+
+        case 'point':
+          // Right arm extends forward, holds 1.5 seconds
+          duration = 1.5;
+          if (elapsed < duration) {
+            var pointProgress = Math.min(elapsed / 0.3, 1.0);
+            userData.rightArm.rotation.x = -1.2 * pointProgress;
+            userData.rightArm.rotation.y = 0.2 * pointProgress;
+            userData.rightArm.rotation.z = -0.1 * pointProgress;
+            userData.head.rotation.y = 0.2 * pointProgress;
+            userData.torso.rotation.y = 0.1 * pointProgress;
+          } else {
+            isComplete = true;
+          }
+          break;
+
+        default:
+          isComplete = true;
+      }
+
+      if (!isComplete) {
+        emoteData.frame = requestAnimationFrame(animate);
+      } else {
+        // Return to neutral
+        userData.leftArm.rotation.x = 0;
+        userData.leftArm.rotation.y = 0;
+        userData.leftArm.rotation.z = 0;
+        userData.rightArm.rotation.x = 0;
+        userData.rightArm.rotation.y = 0;
+        userData.rightArm.rotation.z = 0;
+        userData.leftLeg.rotation.x = 0;
+        userData.leftLeg.rotation.z = 0;
+        userData.rightLeg.rotation.x = 0;
+        userData.rightLeg.rotation.z = 0;
+        userData.head.rotation.x = 0;
+        userData.head.rotation.y = 0;
+        userData.torso.rotation.x = 0;
+        userData.torso.rotation.y = 0;
+        playerMesh.position.y = 0;
+        playerMesh.userData.emoteAnimation = null;
+      }
+    }
+
+    playerMesh.userData.emoteAnimation = emoteData;
+    animate();
+  }
+
   // Export public API
   exports.initNPCs = initNPCs;
   exports.updateNPCs = updateNPCs;
@@ -2062,5 +2233,6 @@
   exports.getNPCGoal = getNPCGoal;
   exports.getNPCActivity = getNPCActivity;
   exports.updateQuestIndicators = updateQuestIndicators;
+  exports.playEmoteAnimation = playEmoteAnimation;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));

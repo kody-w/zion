@@ -5,6 +5,7 @@
   let chatMode = false;
   let buildMode = false;
   let canvas = null;
+  let mouseNDC = { x: 0, y: 0 }; // Normalized device coordinates
 
   /**
    * Initialize input handlers
@@ -31,6 +32,7 @@
     if (canvas) {
       canvas.addEventListener('click', handleMouseClick);
       canvas.addEventListener('contextmenu', handleContextMenu);
+      canvas.addEventListener('mousemove', handleMouseMove);
     }
 
     // Touch handlers for mobile
@@ -121,8 +123,18 @@
       case '3':
       case '4':
       case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+      case '0':
         if (!chatMode) {
-          if (callbacks.onAction) {
+          if (buildMode && callbacks.onBuild) {
+            // In build mode, number keys select build type
+            var typeIndex = (e.key === '0' ? 9 : parseInt(e.key) - 1);
+            callbacks.onBuild({ action: 'selectType', typeIndex: typeIndex });
+          } else if (callbacks.onAction && parseInt(e.key) >= 1 && parseInt(e.key) <= 5) {
+            // Outside build mode, 1-5 are quick slots
             callbacks.onAction('useQuickSlot', { slot: parseInt(e.key) - 1 });
           }
           e.preventDefault();
@@ -148,6 +160,55 @@
           e.preventDefault();
         }
         break;
+
+      case 'f':
+      case 'F':
+        if (!chatMode) {
+          // F key toggles emote menu
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleEmoteMenu', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'm':
+      case 'M':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleMap', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'r':
+      case 'R':
+        if (!chatMode && buildMode) {
+          // R key rotates build preview
+          if (callbacks.onBuild) {
+            callbacks.onBuild({ action: 'rotate' });
+          }
+          e.preventDefault();
+        }
+        break;
+    }
+
+    // Emote hotkeys: F+Number
+    if (!chatMode && (keys['f'] || keys['F'])) {
+      var emoteType = null;
+      switch (e.key) {
+        case '1': emoteType = 'wave'; break;
+        case '2': emoteType = 'dance'; break;
+        case '3': emoteType = 'bow'; break;
+        case '4': emoteType = 'cheer'; break;
+        case '5': emoteType = 'meditate'; break;
+        case '6': emoteType = 'point'; break;
+      }
+      if (emoteType && callbacks.onAction) {
+        callbacks.onAction('emote', { type: emoteType });
+        e.preventDefault();
+      }
     }
   }
 
@@ -168,7 +229,10 @@
     const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-    if (callbacks.onAction) {
+    // In build mode, click places structure
+    if (buildMode && callbacks.onBuild) {
+      callbacks.onBuild({ action: 'place', x: x, y: y });
+    } else if (callbacks.onAction) {
       callbacks.onAction('click', { x, y, screenX: e.clientX, screenY: e.clientY });
     }
   }
@@ -182,6 +246,24 @@
     if (callbacks.onAction) {
       callbacks.onAction('context', { x: e.clientX, y: e.clientY });
     }
+  }
+
+  /**
+   * Handle mouse move
+   */
+  function handleMouseMove(e) {
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  }
+
+  /**
+   * Get current mouse position in NDC
+   */
+  function getMouseNDC() {
+    return mouseNDC;
   }
 
   /**
@@ -403,5 +485,6 @@
   exports.getMovementDelta = getMovementDelta;
   exports.getPlatform = getPlatform;
   exports.createMoveMessage = createMoveMessage;
+  exports.getMouseNDC = getMouseNDC;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Input = {}));

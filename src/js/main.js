@@ -266,11 +266,7 @@
           }
         },
         onBuild: (data) => {
-          console.log('Build mode:', data.mode);
-          HUD && HUD.showNotification(
-            data.mode ? 'Build mode activated' : 'Build mode deactivated',
-            'info'
-          );
+          handleBuildAction(data);
         }
       });
     }
@@ -324,6 +320,24 @@
     playStartTime = Date.now();
 
     console.log('Game systems initialized');
+  }
+
+  /**
+   * Convert 3D position to screen coordinates
+   */
+  function getScreenPosition(position, camera, renderer) {
+    if (!window.THREE || !camera || !renderer) return null;
+
+    var vector = new window.THREE.Vector3(position.x, position.y + 2, position.z);
+    vector.project(camera);
+
+    var widthHalf = renderer.domElement.width / 2;
+    var heightHalf = renderer.domElement.height / 2;
+
+    return {
+      x: (vector.x * widthHalf) + widthHalf,
+      y: -(vector.y * heightHalf) + heightHalf
+    };
   }
 
   /**
@@ -712,6 +726,12 @@
         World.updateSkybox(sceneContext, worldTime);
       }
 
+      // Update build preview if in build mode
+      if (buildModeActive && World && World.updateBuildPreview && Input && Input.getMouseNDC) {
+        var mousePos = Input.getMouseNDC();
+        World.updateBuildPreview(sceneContext, mousePos.x, mousePos.y, sceneContext.camera);
+      }
+
       // Render scene
       if (sceneContext.renderer && sceneContext.scene && sceneContext.camera) {
         sceneContext.renderer.render(sceneContext.scene, sceneContext.camera);
@@ -723,8 +743,25 @@
       // Update player info
       HUD.updatePlayerInfo(localPlayer);
 
-      // Update minimap
+      // Update minimap and emote bubbles
       const players = State.getPlayers(gameState);
+
+      // Update emote bubble positions
+      if (HUD.updateEmoteBubbles && sceneContext && sceneContext.camera) {
+        var playerPositions = {};
+        players.forEach(function(player) {
+          if (World && World.getPlayerMesh) {
+            var mesh = World.getPlayerMesh(sceneContext, player.id);
+            if (mesh) {
+              var screenPos = getScreenPosition(mesh.position, sceneContext.camera, sceneContext.renderer);
+              if (screenPos) {
+                playerPositions[player.id] = screenPos;
+              }
+            }
+          }
+        });
+        HUD.updateEmoteBubbles(playerPositions);
+      }
       const mapPlayers = players.map(p => ({
         id: p.id,
         position: p.position,
@@ -851,8 +888,31 @@
       case 'trade_decline':
         handleTradeProtocolMessage(msg);
         break;
+      case 'emote':
+        handleEmoteMessage(msg);
+        break;
       default:
         console.log('Unknown message type:', msg.type);
+    }
+  }
+
+  /**
+   * Handle emote message
+   */
+  function handleEmoteMessage(msg) {
+    if (!msg.payload || !msg.payload.emoteType) return;
+
+    // Play animation on remote player mesh
+    if (World && sceneContext && NPCs && NPCs.playEmoteAnimation) {
+      var playerMesh = World.getPlayerMesh ? World.getPlayerMesh(sceneContext, msg.from) : null;
+      if (playerMesh) {
+        NPCs.playEmoteAnimation(playerMesh, msg.payload.emoteType);
+      }
+    }
+
+    // Show emote bubble
+    if (HUD && HUD.showEmoteBubble) {
+      HUD.showEmoteBubble(msg.from, msg.payload.emoteType);
     }
   }
 
@@ -1259,6 +1319,77 @@
   }
 
   /**
+   * Handle build mode actions
+   */
+  var buildModeActive = false;
+  var BUILD_TYPES = [
+    'bench', 'lantern', 'signpost', 'fence', 'planter',
+    'campfire', 'archway', 'table', 'barrel', 'crate'
+  ];
+
+  function handleBuildAction(data) {
+    if (data.mode !== undefined) {
+      // Toggle build mode
+      buildModeActive = data.mode;
+
+      if (buildModeActive) {
+        if (World && World.enterBuildMode && sceneContext) {
+          World.enterBuildMode(sceneContext);
+        }
+        if (HUD && HUD.showBuildToolbar) {
+          HUD.showBuildToolbar();
+        }
+        if (HUD && HUD.showNotification) {
+          HUD.showNotification('Build mode activated - Click to place structures', 'info');
+        }
+      } else {
+        if (World && World.exitBuildMode && sceneContext) {
+          World.exitBuildMode(sceneContext);
+        }
+        if (HUD && HUD.hideBuildToolbar) {
+          HUD.hideBuildToolbar();
+        }
+        if (HUD && HUD.showNotification) {
+          HUD.showNotification('Build mode deactivated', 'info');
+        }
+      }
+    } else if (data.action === 'place') {
+      // Place structure
+      if (World && World.confirmPlacement && sceneContext && localPlayer) {
+        var result = World.confirmPlacement(sceneContext, localPlayer.position, currentZone);
+        if (result && result.error) {
+          if (HUD && HUD.showNotification) {
+            HUD.showNotification(result.error, 'error');
+          }
+        } else if (result) {
+          if (HUD && HUD.showNotification) {
+            HUD.showNotification('Structure placed: ' + result.type, 'success');
+          }
+          // TODO: Broadcast to network
+          // TODO: Deduct Spark cost
+        }
+      }
+    } else if (data.action === 'rotate') {
+      // Rotate build preview
+      if (World && World.rotateBuildPreview) {
+        World.rotateBuildPreview(Math.PI / 4); // 45 degrees
+      }
+    } else if (data.action === 'selectType') {
+      // Select build type by number key
+      var typeIndex = data.typeIndex;
+      if (typeIndex >= 0 && typeIndex < BUILD_TYPES.length) {
+        var buildType = BUILD_TYPES[typeIndex];
+        if (World && World.setBuildType) {
+          World.setBuildType(buildType);
+        }
+        if (HUD && HUD.updateBuildToolbar) {
+          HUD.updateBuildToolbar(buildType);
+        }
+      }
+    }
+  }
+
+  /**
    * Handle local action (created by this client)
    */
   function handleLocalAction(type, payload) {
@@ -1272,13 +1403,70 @@
         break;
 
       case 'chat':
-        msg = Protocol.create.chat(localPlayer.id, payload.message);
+        // Check for emote chat commands
+        var message = payload.message;
+        var emoteMatch = message.match(/^\/(wave|dance|bow|cheer|meditate|point)$/);
+        if (emoteMatch) {
+          // Trigger emote instead of chat
+          handleLocalAction('emote', { type: emoteMatch[1] });
+          return;
+        }
+
+        msg = Protocol.create.chat(localPlayer.id, message);
         // Broadcast player chat to NPCs for reaction
         if (NPCs && NPCs.broadcastEvent) {
           NPCs.broadcastEvent({ type: 'player_action', data: {
             playerId: localPlayer.id, action: 'chat',
-            position: localPlayer.position, message: payload.message
+            position: localPlayer.position, message: message
           }});
+        }
+        break;
+
+      case 'emote':
+        // Handle emote action
+        if (World && sceneContext && localPlayer) {
+          var playerMesh = World.getPlayerMesh ? World.getPlayerMesh(sceneContext, localPlayer.id) : null;
+          if (playerMesh && NPCs && NPCs.playEmoteAnimation) {
+            NPCs.playEmoteAnimation(playerMesh, payload.type);
+          }
+          if (HUD && HUD.showEmoteBubble) {
+            HUD.showEmoteBubble(localPlayer.id, payload.type);
+          }
+          if (Audio) {
+            Audio.playSound('chat');
+          }
+        }
+        // Create and broadcast emote message
+        msg = {
+          type: 'emote',
+          from: localPlayer.id,
+          timestamp: Date.now(),
+          nonce: Math.random().toString(36).substr(2, 9),
+          payload: { emoteType: payload.type }
+        };
+        break;
+
+      case 'toggleEmoteMenu':
+        if (HUD) {
+          var emoteMenuEl = document.getElementById('emote-menu');
+          if (emoteMenuEl) {
+            HUD.hideEmoteMenu();
+          } else {
+            HUD.showEmoteMenu();
+          }
+        }
+        break;
+
+      case 'toggleMap':
+        if (HUD && localPlayer) {
+          var mapEl = document.getElementById('world-map-overlay');
+          if (mapEl) {
+            HUD.hideWorldMap();
+          } else {
+            var npcPositions = NPCs && NPCs.getNPCPositions ? NPCs.getNPCPositions() : [];
+            var landmarks = [];
+            HUD.showWorldMap(localPlayer.position, npcPositions, landmarks);
+          }
         }
         break;
 

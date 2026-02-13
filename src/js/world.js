@@ -1831,7 +1831,148 @@
       }
     }
 
-    console.log('Environment populated with trees, rocks, furniture, creatures, and ground cover');
+    // ---- ZONE ARCHITECTURE: detailed structures per zone ----
+
+    if (Models.createRuinWall) {
+      // Arena: ancient ruins and ruin walls
+      var arenaZone = ZONES.arena;
+      for (var rw = 0; rw < 4; rw++) {
+        var rwa = hash2D(rw, 1000) * Math.PI * 2;
+        var rwr = 15 + hash2D(rw, 1001) * 25;
+        var rwx = arenaZone.cx + Math.cos(rwa) * rwr;
+        var rwz = arenaZone.cz + Math.sin(rwa) * rwr;
+        var ruinWall = Models.createRuinWall(0.8 + hash2D(rw, 1002) * 0.4);
+        ruinWall.position.set(rwx, terrainHeight(rwx, rwz), rwz);
+        ruinWall.rotation.y = rwa + Math.PI / 2;
+        scene.add(ruinWall);
+      }
+    }
+
+    if (Models.createColumnRow) {
+      // Athenaeum: classical columns
+      var athenZone = ZONES.athenaeum;
+      for (var cr = 0; cr < 3; cr++) {
+        var cra = hash2D(cr, 1010) * Math.PI * 2;
+        var crr = 10 + hash2D(cr, 1011) * 20;
+        var crx = athenZone.cx + Math.cos(cra) * crr;
+        var crz = athenZone.cz + Math.sin(cra) * crr;
+        var columns = Models.createColumnRow(4 + Math.floor(hash2D(cr, 1012) * 3), 3.5, 2, 0.9);
+        columns.position.set(crx, terrainHeight(crx, crz), crz);
+        columns.rotation.y = cra;
+        scene.add(columns);
+      }
+    }
+
+    if (Models.createAmphitheater) {
+      // Arena: amphitheater at center
+      var amphitheater = Models.createAmphitheater(1.2);
+      amphitheater.position.set(arenaZone.cx, terrainHeight(arenaZone.cx, arenaZone.cz), arenaZone.cz);
+      scene.add(amphitheater);
+    }
+
+    if (Models.createWishingWell) {
+      // Gardens: wishing well
+      var gardenZone = ZONES.gardens;
+      var well = Models.createWishingWell(1.0);
+      well.position.set(gardenZone.cx + 15, terrainHeight(gardenZone.cx + 15, gardenZone.cz - 10), gardenZone.cz - 10);
+      scene.add(well);
+
+      // Commons: another wishing well
+      var commonsZone = ZONES.commons;
+      var well2 = Models.createWishingWell(0.9);
+      well2.position.set(commonsZone.cx - 8, terrainHeight(commonsZone.cx - 8, commonsZone.cz + 5), commonsZone.cz + 5);
+      scene.add(well2);
+    }
+
+    if (Models.createBookshelf) {
+      // Athenaeum: bookshelves
+      for (var bs = 0; bs < 6; bs++) {
+        var bsa = hash2D(bs, 1030) * Math.PI * 2;
+        var bsr = 8 + hash2D(bs, 1031) * 12;
+        var bsx = athenZone.cx + Math.cos(bsa) * bsr;
+        var bsz = athenZone.cz + Math.sin(bsa) * bsr;
+        var bookshelf = Models.createBookshelf(1.0);
+        bookshelf.position.set(bsx, terrainHeight(bsx, bsz), bsz);
+        bookshelf.rotation.y = bsa + Math.PI;
+        scene.add(bookshelf);
+      }
+    }
+
+    if (Models.createTorch) {
+      // Place torches near landmarks in several zones
+      var torchZones = ['nexus', 'athenaeum', 'arena', 'agora'];
+      for (var tz = 0; tz < torchZones.length; tz++) {
+        var torchZone = ZONES[torchZones[tz]];
+        for (var tc = 0; tc < 4; tc++) {
+          var tca = hash2D(tc + tz * 10, 1040) * Math.PI * 2;
+          var tcr = 8 + hash2D(tc + tz * 10, 1041) * 15;
+          var tcx = torchZone.cx + Math.cos(tca) * tcr;
+          var tcz = torchZone.cz + Math.sin(tca) * tcr;
+          var torch = Models.createTorch(1.0);
+          torch.position.set(tcx, terrainHeight(tcx, tcz), tcz);
+          torch.rotation.y = tca;
+          scene.add(torch);
+          animatedObjects.push(torch);
+        }
+      }
+    }
+
+    if (Models.createBridge) {
+      // Bridges between close zones
+      // Gardens to Commons bridge
+      var bridgeGC = Models.createBridge(10, 0.9);
+      var bgcx = (gardenZone.cx + commonsZone.cx) / 2;
+      var bgcz = (gardenZone.cz + commonsZone.cz) / 2;
+      bridgeGC.position.set(bgcx, terrainHeight(bgcx, bgcz) - 0.5, bgcz);
+      bridgeGC.rotation.y = Math.atan2(commonsZone.cz - gardenZone.cz, commonsZone.cx - gardenZone.cx);
+      scene.add(bridgeGC);
+
+      // Nexus to Athenaeum bridge
+      var bridgeNA = Models.createBridge(12, 0.9);
+      var bnax = (ZONES.nexus.cx + athenZone.cx) / 2;
+      var bnaz = (ZONES.nexus.cz + athenZone.cz) / 2;
+      bridgeNA.position.set(bnax, terrainHeight(bnax, bnaz) - 0.5, bnaz);
+      bridgeNA.rotation.y = Math.atan2(athenZone.cz - ZONES.nexus.cz, athenZone.cx - ZONES.nexus.cx);
+      scene.add(bridgeNA);
+    }
+
+    if (Models.createGardenArch) {
+      // Garden arches at garden entrances
+      for (var ga = 0; ga < 3; ga++) {
+        var gaa = hash2D(ga, 1060) * Math.PI * 2;
+        var gar = gardenZone.radius * 0.6;
+        var gax = gardenZone.cx + Math.cos(gaa) * gar;
+        var gaz = gardenZone.cz + Math.sin(gaa) * gar;
+        var gardenArch = Models.createGardenArch(1.1);
+        gardenArch.position.set(gax, terrainHeight(gax, gaz), gaz);
+        gardenArch.rotation.y = gaa;
+        scene.add(gardenArch);
+        animatedObjects.push(gardenArch);
+      }
+    }
+
+    if (Models.createBannerPole) {
+      // Banner poles in agora and arena
+      var bannerColors = [0xcc0000, 0x0000cc, 0x00cc00, 0xcc9900, 0x9900cc, 0x009999];
+      var bannerZones = ['agora', 'arena', 'nexus'];
+      for (var bz = 0; bz < bannerZones.length; bz++) {
+        var bannerZone = ZONES[bannerZones[bz]];
+        var bannerCount = bz === 0 ? 6 : 4;
+        for (var bp = 0; bp < bannerCount; bp++) {
+          var bpa = hash2D(bp + bz * 20, 1070) * Math.PI * 2;
+          var bpr = 10 + hash2D(bp + bz * 20, 1071) * 20;
+          var bpx = bannerZone.cx + Math.cos(bpa) * bpr;
+          var bpz = bannerZone.cz + Math.sin(bpa) * bpr;
+          var bannerColor = bannerColors[(bp + bz * 3) % bannerColors.length];
+          var banner = Models.createBannerPole(bannerColor, 0.9);
+          banner.position.set(bpx, terrainHeight(bpx, bpz), bpz);
+          scene.add(banner);
+          animatedObjects.push(banner);
+        }
+      }
+    }
+
+    console.log('Environment populated with trees, rocks, furniture, creatures, ground cover, and architecture');
   }
 
   // ========================================================================
@@ -3508,6 +3649,346 @@
   }
 
   // ========================================================================
+  // BUILD MODE — Visual building placement system
+  // ========================================================================
+
+  var buildMode = false;
+  var buildType = 'bench';
+  var buildGhost = null;
+  var buildRotation = 0;
+  var placedBuildings = [];
+
+  // Simple buildable structure models
+  function createBuildableModel(type) {
+    var group = new THREE.Group();
+
+    switch (type) {
+      case 'bench':
+        // Seat plank
+        var seatGeo = new THREE.BoxGeometry(1.2, 0.1, 0.4);
+        var woodMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
+        var seat = new THREE.Mesh(seatGeo, woodMat);
+        seat.position.y = 0.4;
+        group.add(seat);
+        // Legs
+        for (var i = 0; i < 4; i++) {
+          var legGeo = new THREE.BoxGeometry(0.08, 0.4, 0.08);
+          var leg = new THREE.Mesh(legGeo, woodMat);
+          leg.position.x = (i % 2 === 0) ? -0.5 : 0.5;
+          leg.position.z = (i < 2) ? -0.15 : 0.15;
+          leg.position.y = 0.2;
+          group.add(leg);
+        }
+        break;
+
+      case 'lantern':
+        // Post
+        var postGeo = new THREE.CylinderGeometry(0.05, 0.05, 2, 8);
+        var metalMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.6, roughness: 0.4 });
+        var post = new THREE.Mesh(postGeo, metalMat);
+        post.position.y = 1;
+        group.add(post);
+        // Light box
+        var lightGeo = new THREE.BoxGeometry(0.3, 0.4, 0.3);
+        var lightMat = new THREE.MeshStandardMaterial({
+          color: 0xffdd88,
+          emissive: 0xffaa00,
+          emissiveIntensity: 0.5,
+          roughness: 0.3
+        });
+        var light = new THREE.Mesh(lightGeo, lightMat);
+        light.position.y = 2.2;
+        group.add(light);
+        break;
+
+      case 'signpost':
+        // Post
+        var signPostGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.5, 6);
+        var signPostMat = new THREE.MeshStandardMaterial({ color: 0x654321, roughness: 0.9 });
+        var signPost = new THREE.Mesh(signPostGeo, signPostMat);
+        signPost.position.y = 0.75;
+        group.add(signPost);
+        // Sign board
+        var boardGeo = new THREE.BoxGeometry(1, 0.4, 0.1);
+        var boardMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.7 });
+        var board = new THREE.Mesh(boardGeo, boardMat);
+        board.position.y = 1.6;
+        group.add(board);
+        break;
+
+      case 'fence':
+        // Two posts
+        var fencePostGeo = new THREE.CylinderGeometry(0.06, 0.06, 1, 6);
+        var fencePostMat = new THREE.MeshStandardMaterial({ color: 0x654321, roughness: 0.9 });
+        var post1 = new THREE.Mesh(fencePostGeo, fencePostMat);
+        post1.position.set(-0.4, 0.5, 0);
+        group.add(post1);
+        var post2 = new THREE.Mesh(fencePostGeo, fencePostMat);
+        post2.position.set(0.4, 0.5, 0);
+        group.add(post2);
+        // Horizontal bar
+        var barGeo = new THREE.BoxGeometry(1, 0.08, 0.08);
+        var bar = new THREE.Mesh(barGeo, fencePostMat);
+        bar.position.y = 0.6;
+        group.add(bar);
+        break;
+
+      case 'planter':
+        // Box
+        var planterGeo = new THREE.BoxGeometry(0.8, 0.4, 0.8);
+        var planterMat = new THREE.MeshStandardMaterial({ color: 0x5d4037, roughness: 0.8 });
+        var planter = new THREE.Mesh(planterGeo, planterMat);
+        planter.position.y = 0.2;
+        group.add(planter);
+        // Green top (soil/plants)
+        var soilGeo = new THREE.BoxGeometry(0.7, 0.1, 0.7);
+        var soilMat = new THREE.MeshStandardMaterial({ color: 0x2d5016, roughness: 0.9 });
+        var soil = new THREE.Mesh(soilGeo, soilMat);
+        soil.position.y = 0.45;
+        group.add(soil);
+        break;
+
+      case 'campfire':
+        // Fire ring (stones)
+        for (var j = 0; j < 8; j++) {
+          var angle = (j / 8) * Math.PI * 2;
+          var stoneGeo = new THREE.BoxGeometry(0.15, 0.1, 0.1);
+          var stoneMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.95 });
+          var stone = new THREE.Mesh(stoneGeo, stoneMat);
+          stone.position.x = Math.cos(angle) * 0.35;
+          stone.position.z = Math.sin(angle) * 0.35;
+          stone.position.y = 0.05;
+          stone.rotation.y = angle;
+          group.add(stone);
+        }
+        // Fire glow
+        var fireGeo = new THREE.CylinderGeometry(0.2, 0.15, 0.3, 6);
+        var fireMat = new THREE.MeshStandardMaterial({
+          color: 0xff6600,
+          emissive: 0xff4400,
+          emissiveIntensity: 0.8,
+          roughness: 0.2
+        });
+        var fire = new THREE.Mesh(fireGeo, fireMat);
+        fire.position.y = 0.2;
+        group.add(fire);
+        break;
+
+      case 'archway':
+        // Two pillars
+        var pillarGeo = new THREE.BoxGeometry(0.3, 2.5, 0.3);
+        var pillarMat = new THREE.MeshStandardMaterial({ color: 0x9e9e9e, roughness: 0.7 });
+        var pillar1 = new THREE.Mesh(pillarGeo, pillarMat);
+        pillar1.position.set(-0.8, 1.25, 0);
+        group.add(pillar1);
+        var pillar2 = new THREE.Mesh(pillarGeo, pillarMat);
+        pillar2.position.set(0.8, 1.25, 0);
+        group.add(pillar2);
+        // Curved top (simplified as box)
+        var archGeo = new THREE.BoxGeometry(1.9, 0.3, 0.3);
+        var arch = new THREE.Mesh(archGeo, pillarMat);
+        arch.position.y = 2.6;
+        group.add(arch);
+        break;
+
+      case 'table':
+        // Flat top
+        var topGeo = new THREE.BoxGeometry(1.2, 0.1, 0.8);
+        var tableMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.7 });
+        var top = new THREE.Mesh(topGeo, tableMat);
+        top.position.y = 0.7;
+        group.add(top);
+        // 4 legs
+        for (var k = 0; k < 4; k++) {
+          var tableLegGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.7, 6);
+          var tableLeg = new THREE.Mesh(tableLegGeo, tableMat);
+          tableLeg.position.x = (k % 2 === 0) ? -0.5 : 0.5;
+          tableLeg.position.z = (k < 2) ? -0.3 : 0.3;
+          tableLeg.position.y = 0.35;
+          group.add(tableLeg);
+        }
+        break;
+
+      case 'barrel':
+        var barrelGeo = new THREE.CylinderGeometry(0.3, 0.35, 0.8, 12);
+        var barrelMat = new THREE.MeshStandardMaterial({ color: 0x6d4c41, roughness: 0.8 });
+        var barrel = new THREE.Mesh(barrelGeo, barrelMat);
+        barrel.position.y = 0.4;
+        group.add(barrel);
+        // Metal bands
+        for (var m = 0; m < 2; m++) {
+          var bandGeo = new THREE.CylinderGeometry(0.32, 0.36, 0.05, 12);
+          var bandMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.5, roughness: 0.5 });
+          var band = new THREE.Mesh(bandGeo, bandMat);
+          band.position.y = 0.2 + m * 0.4;
+          group.add(band);
+        }
+        break;
+
+      case 'crate':
+        var crateGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+        var crateMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.9 });
+        var crate = new THREE.Mesh(crateGeo, crateMat);
+        crate.position.y = 0.3;
+        group.add(crate);
+        // Cross pattern
+        var crossGeo1 = new THREE.BoxGeometry(0.05, 0.05, 0.7);
+        var crossMat = new THREE.MeshStandardMaterial({ color: 0x654321, roughness: 0.9 });
+        var cross1 = new THREE.Mesh(crossGeo1, crossMat);
+        cross1.position.set(0, 0.3, 0);
+        cross1.rotation.y = Math.PI / 4;
+        group.add(cross1);
+        var cross2 = new THREE.Mesh(crossGeo1, crossMat);
+        cross2.position.set(0, 0.3, 0);
+        cross2.rotation.y = -Math.PI / 4;
+        group.add(cross2);
+        break;
+
+      default:
+        // Fallback: simple cube
+        var defaultGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+        var defaultMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.8 });
+        var defaultMesh = new THREE.Mesh(defaultGeo, defaultMat);
+        defaultMesh.position.y = 0.25;
+        group.add(defaultMesh);
+    }
+
+    return group;
+  }
+
+  function enterBuildMode(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    buildMode = true;
+    buildRotation = 0;
+
+    // Create ghost preview
+    buildGhost = createBuildableModel(buildType);
+    buildGhost.userData.isGhost = true;
+
+    // Make all materials transparent
+    buildGhost.traverse(function(child) {
+      if (child.material) {
+        var mat = child.material.clone();
+        mat.transparent = true;
+        mat.opacity = 0.5;
+        mat.depthWrite = false;
+        child.material = mat;
+      }
+    });
+
+    sceneCtx.scene.add(buildGhost);
+  }
+
+  function exitBuildMode(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    buildMode = false;
+
+    if (buildGhost) {
+      sceneCtx.scene.remove(buildGhost);
+      buildGhost.traverse(function(child) {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) child.material.dispose();
+      });
+      buildGhost = null;
+    }
+  }
+
+  function setBuildType(type) {
+    buildType = type;
+    buildRotation = 0;
+  }
+
+  function confirmPlacement(sceneCtx, playerPos, zone) {
+    if (!buildMode || !buildGhost || !sceneCtx || !sceneCtx.scene) return null;
+
+    // Check if zone allows building
+    var allowsBuild = (zone === 'commons' || zone === 'studio');
+    if (!allowsBuild) {
+      return { error: 'This zone does not allow building' };
+    }
+
+    // Get ghost position
+    var pos = {
+      x: buildGhost.position.x,
+      y: buildGhost.position.y,
+      z: buildGhost.position.z
+    };
+
+    // Create permanent structure
+    var structure = createBuildableModel(buildType);
+    structure.position.set(pos.x, pos.y, pos.z);
+    structure.rotation.y = buildRotation;
+    structure.userData.isBuilding = true;
+    structure.userData.buildType = buildType;
+
+    sceneCtx.scene.add(structure);
+
+    // Track placement
+    var placement = {
+      type: buildType,
+      x: pos.x,
+      y: pos.y,
+      z: pos.z,
+      rotation: buildRotation
+    };
+    placedBuildings.push(placement);
+
+    return placement;
+  }
+
+  function updateBuildPreview(sceneCtx, mouseX, mouseY, camera) {
+    if (!buildMode || !buildGhost || !sceneCtx || !camera) return;
+
+    // Create raycaster
+    var raycaster = new THREE.Raycaster();
+    var mouse = new THREE.Vector2(mouseX, mouseY);
+    raycaster.setFromCamera(mouse, camera);
+
+    // Raycast onto ground plane (y=0 for simplicity, could use terrain height)
+    var plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    var hitPoint = new THREE.Vector3();
+    raycaster.ray.intersectPlane(plane, hitPoint);
+
+    if (hitPoint) {
+      // Snap to 2-unit grid
+      var snappedX = Math.round(hitPoint.x / 2) * 2;
+      var snappedZ = Math.round(hitPoint.z / 2) * 2;
+
+      // Get terrain height at this position
+      var groundY = terrainHeight(snappedX, snappedZ);
+
+      buildGhost.position.set(snappedX, groundY, snappedZ);
+      buildGhost.rotation.y = buildRotation;
+
+      // Check if placement is valid (in building zone)
+      var buildZone = getZoneAtPosition(snappedX, snappedZ);
+      var isValid = (buildZone === 'commons' || buildZone === 'studio');
+
+      // Update ghost color (green if valid, red if invalid)
+      buildGhost.traverse(function(child) {
+        if (child.material && child.material.color) {
+          if (isValid) {
+            child.material.color.setHex(0x00ff00);
+          } else {
+            child.material.color.setHex(0xff0000);
+          }
+        }
+      });
+    }
+  }
+
+  function rotateBuildPreview(delta) {
+    buildRotation += delta;
+    if (buildGhost) {
+      buildGhost.rotation.y = buildRotation;
+    }
+  }
+
+  function getBuildMode() {
+    return buildMode;
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -3541,5 +4022,12 @@
   exports.harvestResource = harvestResource;
   exports.getResourceNodeAtMouse = getResourceNodeAtMouse;
   exports.ZONES = ZONES;
+  exports.enterBuildMode = enterBuildMode;
+  exports.exitBuildMode = exitBuildMode;
+  exports.setBuildType = setBuildType;
+  exports.confirmPlacement = confirmPlacement;
+  exports.updateBuildPreview = updateBuildPreview;
+  exports.rotateBuildPreview = rotateBuildPreview;
+  exports.getBuildMode = getBuildMode;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));

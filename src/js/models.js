@@ -1983,6 +1983,535 @@
   }
 
   // ========================================
+  // ZONE ARCHITECTURE — Detailed structures for each zone
+  // ========================================
+
+  function createRuinWall(scale) {
+    scale = scale || 1;
+    var group = new THREE.Group();
+    group.name = 'ruin_wall';
+
+    var stoneMat = new THREE.MeshLambertMaterial({ color: 0x8a8378 });
+    var mossyMat = new THREE.MeshLambertMaterial({ color: 0x6b7c5a });
+
+    // Main wall section (irregular top edge simulated by stacked blocks)
+    var wallBase = new THREE.Mesh(
+      new THREE.BoxGeometry(4 * scale, 2 * scale, 0.5 * scale),
+      stoneMat
+    );
+    wallBase.position.y = 1 * scale;
+    group.add(wallBase);
+
+    // Irregular top blocks (ruined look)
+    var topHeights = [0.8, 1.2, 0.4, 1.0, 0.6, 0.9, 0.3];
+    for (var i = 0; i < topHeights.length; i++) {
+      var blockW = (4 / topHeights.length) * scale;
+      var blockH = topHeights[i] * scale;
+      var mat = Math.random() < 0.3 ? mossyMat : stoneMat;
+      var block = new THREE.Mesh(
+        new THREE.BoxGeometry(blockW * 0.9, blockH, 0.5 * scale),
+        mat
+      );
+      block.position.x = (i - topHeights.length / 2 + 0.5) * blockW;
+      block.position.y = 2 * scale + blockH / 2;
+      group.add(block);
+    }
+
+    // Moss patches at base
+    for (var m = 0; m < 4; m++) {
+      var moss = new THREE.Mesh(
+        new THREE.SphereGeometry(0.15 * scale, 5, 4, 0, Math.PI * 2, 0, Math.PI * 0.5),
+        mossyMat
+      );
+      moss.position.x = (Math.random() - 0.5) * 3.5 * scale;
+      moss.position.y = 0.05 * scale;
+      moss.position.z = 0.2 * scale;
+      group.add(moss);
+    }
+
+    return group;
+  }
+
+  function createColumnRow(count, height, spacing, scale) {
+    scale = scale || 1;
+    count = count || 4;
+    height = height || 4;
+    spacing = spacing || 2;
+    var group = new THREE.Group();
+    group.name = 'column_row';
+
+    var columnMat = new THREE.MeshPhongMaterial({ color: 0xd4c8b0 });
+    var capMat = new THREE.MeshPhongMaterial({ color: 0xc8bca0 });
+
+    for (var i = 0; i < count; i++) {
+      // Column shaft
+      var shaft = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2 * scale, 0.25 * scale, height * scale, 8),
+        columnMat
+      );
+      shaft.position.x = (i - (count - 1) / 2) * spacing * scale;
+      shaft.position.y = height * scale / 2;
+      group.add(shaft);
+
+      // Base
+      var base = new THREE.Mesh(
+        new THREE.BoxGeometry(0.6 * scale, 0.15 * scale, 0.6 * scale),
+        capMat
+      );
+      base.position.x = shaft.position.x;
+      base.position.y = 0.075 * scale;
+      group.add(base);
+
+      // Capital
+      var capital = new THREE.Mesh(
+        new THREE.BoxGeometry(0.55 * scale, 0.12 * scale, 0.55 * scale),
+        capMat
+      );
+      capital.position.x = shaft.position.x;
+      capital.position.y = height * scale + 0.06 * scale;
+      group.add(capital);
+    }
+
+    // Architrave (beam across top)
+    var beam = new THREE.Mesh(
+      new THREE.BoxGeometry((count - 1) * spacing * scale + 0.8 * scale, 0.2 * scale, 0.5 * scale),
+      capMat
+    );
+    beam.position.y = height * scale + 0.22 * scale;
+    group.add(beam);
+
+    return group;
+  }
+
+  function createAmphitheater(scale) {
+    scale = scale || 1;
+    var group = new THREE.Group();
+    group.name = 'amphitheater';
+
+    var seatMat = new THREE.MeshLambertMaterial({ color: 0xa09080 });
+    var stageMat = new THREE.MeshLambertMaterial({ color: 0xd4c090 });
+
+    // Tiered seating (semicircular)
+    for (var tier = 0; tier < 5; tier++) {
+      var innerR = (3 + tier * 1.5) * scale;
+      var outerR = innerR + 1.2 * scale;
+      var seatHeight = (0.4 + tier * 0.5) * scale;
+
+      // Use a ring of boxes to approximate the arc
+      var segments = 12;
+      for (var s = 0; s < segments; s++) {
+        var angle = (s / segments) * Math.PI - Math.PI / 2; // semicircle
+        var midR = (innerR + outerR) / 2;
+        var seat = new THREE.Mesh(
+          new THREE.BoxGeometry(1.2 * scale, 0.3 * scale, 1.0 * scale),
+          seatMat
+        );
+        seat.position.x = Math.cos(angle) * midR;
+        seat.position.z = Math.sin(angle) * midR;
+        seat.position.y = seatHeight;
+        seat.rotation.y = -angle + Math.PI / 2;
+        group.add(seat);
+      }
+    }
+
+    // Stage platform
+    var stage = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.5 * scale, 2.5 * scale, 0.3 * scale, 16, 1, false, 0, Math.PI),
+      stageMat
+    );
+    stage.position.y = 0.15 * scale;
+    group.add(stage);
+
+    // Stage backdrop columns
+    for (var c = -1; c <= 1; c++) {
+      var col = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15 * scale, 0.18 * scale, 3 * scale, 6),
+        new THREE.MeshPhongMaterial({ color: 0xc8b890 })
+      );
+      col.position.x = c * 2 * scale;
+      col.position.y = 1.5 * scale;
+      col.position.z = -0.5 * scale;
+      group.add(col);
+    }
+
+    return group;
+  }
+
+  function createWishingWell(scale) {
+    scale = scale || 1;
+    var group = new THREE.Group();
+    group.name = 'wishing_well';
+
+    var stoneMat = new THREE.MeshLambertMaterial({ color: 0x8a8a8a });
+    var roofMat = new THREE.MeshLambertMaterial({ color: 0x5a3e2b });
+    var waterMat = new THREE.MeshPhongMaterial({ color: 0x2244aa, transparent: true, opacity: 0.6 });
+
+    // Stone wall (ring)
+    var wallOuter = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.8 * scale, 0.85 * scale, 0.7 * scale, 12),
+      stoneMat
+    );
+    wallOuter.position.y = 0.35 * scale;
+    group.add(wallOuter);
+
+    // Water inside
+    var water = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.65 * scale, 0.65 * scale, 0.05 * scale, 12),
+      waterMat
+    );
+    water.position.y = 0.5 * scale;
+    group.add(water);
+
+    // Support posts
+    for (var p = 0; p < 2; p++) {
+      var post = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.06 * scale, 0.06 * scale, 1.8 * scale, 6),
+        roofMat
+      );
+      post.position.x = (p === 0 ? -0.6 : 0.6) * scale;
+      post.position.y = 1.2 * scale;
+      group.add(post);
+    }
+
+    // Crossbeam
+    var beam = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04 * scale, 0.04 * scale, 1.3 * scale, 6),
+      roofMat
+    );
+    beam.rotation.z = Math.PI / 2;
+    beam.position.y = 2.1 * scale;
+    group.add(beam);
+
+    // Small roof
+    var roof = new THREE.Mesh(
+      new THREE.ConeGeometry(0.9 * scale, 0.5 * scale, 4),
+      roofMat
+    );
+    roof.position.y = 2.45 * scale;
+    roof.rotation.y = Math.PI / 4;
+    group.add(roof);
+
+    // Bucket (hanging)
+    var bucket = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.1 * scale, 0.08 * scale, 0.15 * scale, 8, 1, true),
+      new THREE.MeshLambertMaterial({ color: 0x654321, side: THREE.DoubleSide })
+    );
+    bucket.position.y = 1.5 * scale;
+    group.add(bucket);
+
+    group.userData.animationType = 'bob';
+    group.userData.bobSpeed = 0.5;
+    group.userData.bobAmount = 0.02;
+
+    return group;
+  }
+
+  function createBookshelf(scale) {
+    scale = scale || 1;
+    var group = new THREE.Group();
+    group.name = 'bookshelf';
+
+    var woodMat = new THREE.MeshLambertMaterial({ color: 0x5c3a1e });
+    var bookColors = [0x8b0000, 0x00008b, 0x006400, 0x8b4513, 0x4b0082, 0xb8860b, 0x2f4f4f];
+
+    // Frame
+    // Back panel
+    var back = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5 * scale, 2.2 * scale, 0.05 * scale),
+      woodMat
+    );
+    back.position.y = 1.1 * scale;
+    back.position.z = -0.15 * scale;
+    group.add(back);
+
+    // Sides
+    for (var side = -1; side <= 1; side += 2) {
+      var sidePanel = new THREE.Mesh(
+        new THREE.BoxGeometry(0.05 * scale, 2.2 * scale, 0.35 * scale),
+        woodMat
+      );
+      sidePanel.position.x = side * 0.75 * scale;
+      sidePanel.position.y = 1.1 * scale;
+      group.add(sidePanel);
+    }
+
+    // Shelves (4 levels)
+    for (var shelf = 0; shelf < 5; shelf++) {
+      var shelfBoard = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5 * scale, 0.04 * scale, 0.35 * scale),
+        woodMat
+      );
+      shelfBoard.position.y = shelf * 0.55 * scale;
+      group.add(shelfBoard);
+
+      // Books on each shelf (except top)
+      if (shelf < 4) {
+        var bookCount = 5 + Math.floor(Math.random() * 4);
+        var xPos = -0.6 * scale;
+        for (var b = 0; b < bookCount && xPos < 0.6 * scale; b++) {
+          var bookW = (0.06 + Math.random() * 0.08) * scale;
+          var bookH = (0.35 + Math.random() * 0.15) * scale;
+          var book = new THREE.Mesh(
+            new THREE.BoxGeometry(bookW, bookH, 0.2 * scale),
+            new THREE.MeshLambertMaterial({ color: bookColors[Math.floor(Math.random() * bookColors.length)] })
+          );
+          book.position.x = xPos + bookW / 2;
+          book.position.y = shelf * 0.55 * scale + 0.02 * scale + bookH / 2;
+          // Slight random tilt
+          book.rotation.z = (Math.random() - 0.5) * 0.08;
+          group.add(book);
+          xPos += bookW + 0.01 * scale;
+        }
+      }
+    }
+
+    return group;
+  }
+
+  function createTorch(scale) {
+    scale = scale || 1;
+    var group = new THREE.Group();
+    group.name = 'torch';
+
+    // Bracket (wall mount)
+    var bracketMat = new THREE.MeshLambertMaterial({ color: 0x3a3a3a });
+    var bracket = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08 * scale, 0.08 * scale, 0.3 * scale),
+      bracketMat
+    );
+    bracket.position.z = -0.15 * scale;
+    bracket.position.y = 1.5 * scale;
+    group.add(bracket);
+
+    // Torch handle
+    var handleMat = new THREE.MeshLambertMaterial({ color: 0x5c3a1e });
+    var handle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03 * scale, 0.04 * scale, 0.6 * scale, 6),
+      handleMat
+    );
+    handle.position.y = 1.5 * scale;
+    group.add(handle);
+
+    // Fire (two overlapping cones)
+    var fireMat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
+    var innerFireMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+
+    var fireOuter = new THREE.Mesh(
+      new THREE.ConeGeometry(0.08 * scale, 0.2 * scale, 6),
+      fireMat
+    );
+    fireOuter.position.y = 1.9 * scale;
+    group.add(fireOuter);
+
+    var fireInner = new THREE.Mesh(
+      new THREE.ConeGeometry(0.04 * scale, 0.15 * scale, 5),
+      innerFireMat
+    );
+    fireInner.position.y = 1.88 * scale;
+    group.add(fireInner);
+
+    // Light
+    var light = new THREE.PointLight(0xff8833, 0.8, 10);
+    light.position.y = 2 * scale;
+    group.add(light);
+
+    group.userData.animationType = 'fire';
+
+    return group;
+  }
+
+  function createBridge(length, scale) {
+    scale = scale || 1;
+    length = length || 8;
+    var group = new THREE.Group();
+    group.name = 'bridge';
+
+    var plankMat = new THREE.MeshLambertMaterial({ color: 0x6b4226 });
+    var ropeMat = new THREE.MeshLambertMaterial({ color: 0x8b7355 });
+    var postMat = new THREE.MeshLambertMaterial({ color: 0x4a3018 });
+
+    // Posts at each end
+    for (var end = -1; end <= 1; end += 2) {
+      for (var side = -1; side <= 1; side += 2) {
+        var post = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.06 * scale, 0.06 * scale, 1.5 * scale, 6),
+          postMat
+        );
+        post.position.x = end * length / 2 * scale;
+        post.position.y = 0.75 * scale;
+        post.position.z = side * 0.6 * scale;
+        group.add(post);
+      }
+    }
+
+    // Planks
+    var plankCount = Math.floor(length * 2);
+    for (var p = 0; p < plankCount; p++) {
+      var plank = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4 * scale, 0.04 * scale, 1.0 * scale),
+        plankMat
+      );
+      plank.position.x = (p / plankCount - 0.5) * length * scale;
+      // Slight sag in the middle
+      var sagT = (p / plankCount - 0.5) * 2;
+      plank.position.y = -sagT * sagT * 0.3 * scale + 0.3 * scale;
+      // Slight random rotation for worn look
+      plank.rotation.y = (Math.random() - 0.5) * 0.05;
+      group.add(plank);
+    }
+
+    // Rope railings (approximated with thin cylinders)
+    for (var ropeSide = -1; ropeSide <= 1; ropeSide += 2) {
+      var ropeSegments = 8;
+      for (var rs = 0; rs < ropeSegments; rs++) {
+        var segLen = length / ropeSegments * scale;
+        var rope = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.015 * scale, 0.015 * scale, segLen, 4),
+          ropeMat
+        );
+        rope.rotation.z = Math.PI / 2;
+        var t1 = rs / ropeSegments - 0.5;
+        rope.position.x = (t1 + 0.5 / ropeSegments) * length * scale;
+        var sagR = t1 * 2;
+        rope.position.y = 1.2 * scale - sagR * sagR * 0.2 * scale;
+        rope.position.z = ropeSide * 0.6 * scale;
+        group.add(rope);
+      }
+    }
+
+    return group;
+  }
+
+  function createGardenArch(scale) {
+    scale = scale || 1;
+    var group = new THREE.Group();
+    group.name = 'garden_arch';
+
+    var woodMat = new THREE.MeshLambertMaterial({ color: 0xfaf0e6 });
+    var vineMat = new THREE.MeshLambertMaterial({ color: 0x2d5a1e });
+    var flowerMat = new THREE.MeshLambertMaterial({ color: 0xff69b4 });
+
+    // Two posts
+    for (var s = -1; s <= 1; s += 2) {
+      var post = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1 * scale, 3 * scale, 0.1 * scale),
+        woodMat
+      );
+      post.position.x = s * 1.2 * scale;
+      post.position.y = 1.5 * scale;
+      group.add(post);
+    }
+
+    // Arch top (box curved approximation)
+    var archSegments = 8;
+    for (var a = 0; a < archSegments; a++) {
+      var angle = (a / (archSegments - 1)) * Math.PI;
+      var ax = Math.cos(angle) * 1.2 * scale;
+      var ay = 3 * scale + Math.sin(angle) * 0.6 * scale;
+      var seg = new THREE.Mesh(
+        new THREE.BoxGeometry(0.35 * scale, 0.08 * scale, 0.1 * scale),
+        woodMat
+      );
+      seg.position.x = ax;
+      seg.position.y = ay;
+      seg.rotation.z = angle - Math.PI / 2;
+      group.add(seg);
+    }
+
+    // Vines wrapping around
+    for (var v = 0; v < 8; v++) {
+      var vineAngle = (v / 8) * Math.PI;
+      var vine = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08 * scale, 5, 4),
+        vineMat
+      );
+      vine.position.x = Math.cos(vineAngle) * 1.15 * scale;
+      vine.position.y = 2.9 * scale + Math.sin(vineAngle) * 0.55 * scale;
+      vine.position.z = (Math.random() - 0.5) * 0.15 * scale;
+      group.add(vine);
+
+      // Occasional flower
+      if (Math.random() < 0.4) {
+        var flower = new THREE.Mesh(
+          new THREE.SphereGeometry(0.05 * scale, 5, 4),
+          flowerMat
+        );
+        flower.position.copy(vine.position);
+        flower.position.z += 0.1 * scale;
+        group.add(flower);
+      }
+    }
+
+    // Vine tendrils down the posts
+    for (var side = -1; side <= 1; side += 2) {
+      for (var tv = 0; tv < 4; tv++) {
+        var tendril = new THREE.Mesh(
+          new THREE.SphereGeometry(0.06 * scale, 4, 3),
+          vineMat
+        );
+        tendril.position.x = side * 1.15 * scale + (Math.random() - 0.5) * 0.1 * scale;
+        tendril.position.y = 0.5 + tv * 0.7 * scale;
+        tendril.position.z = (Math.random() - 0.5) * 0.1 * scale;
+        group.add(tendril);
+      }
+    }
+
+    group.userData.animationType = 'sway';
+    group.userData.swayAmount = 0.01;
+    group.userData.swaySpeed = 1;
+
+    return group;
+  }
+
+  function createBannerPole(color, scale) {
+    scale = scale || 1;
+    color = color || 0xcc0000;
+    var group = new THREE.Group();
+    group.name = 'banner_pole';
+
+    // Pole
+    var poleMat = new THREE.MeshLambertMaterial({ color: 0x8a8a8a });
+    var pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04 * scale, 0.05 * scale, 4 * scale, 6),
+      poleMat
+    );
+    pole.position.y = 2 * scale;
+    group.add(pole);
+
+    // Finial (top ornament)
+    var finial = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08 * scale, 6, 6),
+      new THREE.MeshPhongMaterial({ color: 0xdaa520 })
+    );
+    finial.position.y = 4.1 * scale;
+    group.add(finial);
+
+    // Banner (two triangles forming a flag)
+    var bannerMat = new THREE.MeshLambertMaterial({ color: color, side: THREE.DoubleSide });
+    var bannerGeo = new THREE.PlaneGeometry(0.8 * scale, 1.2 * scale);
+    var banner = new THREE.Mesh(bannerGeo, bannerMat);
+    banner.position.x = 0.4 * scale;
+    banner.position.y = 3.4 * scale;
+    group.add(banner);
+
+    // Banner trim
+    var trimMat = new THREE.MeshLambertMaterial({ color: 0xdaa520 });
+    var trim = new THREE.Mesh(
+      new THREE.BoxGeometry(0.82 * scale, 0.04 * scale, 0.02 * scale),
+      trimMat
+    );
+    trim.position.x = 0.4 * scale;
+    trim.position.y = 4 * scale;
+    group.add(trim);
+
+    group.userData.animationType = 'sway';
+    group.userData.swayAmount = 0.03;
+    group.userData.swaySpeed = 1.5;
+
+    return group;
+  }
+
+  // ========================================
   // EXPORTS
   // ========================================
 
@@ -1998,6 +2527,15 @@
   exports.createMushroom = createMushroom;
   exports.createBush = createBush;
   exports.createFallenLog = createFallenLog;
+  exports.createRuinWall = createRuinWall;
+  exports.createColumnRow = createColumnRow;
+  exports.createAmphitheater = createAmphitheater;
+  exports.createWishingWell = createWishingWell;
+  exports.createBookshelf = createBookshelf;
+  exports.createTorch = createTorch;
+  exports.createBridge = createBridge;
+  exports.createGardenArch = createGardenArch;
+  exports.createBannerPole = createBannerPole;
   exports.animateModel = animateModel;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Models = {}));
