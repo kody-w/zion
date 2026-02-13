@@ -330,13 +330,19 @@
     // State-specific setup
     switch (newState) {
       case 'walking':
-        // Pick random nearby destination within zone bounds
-        const angle = seededRandom(seed + 2) * Math.PI * 2;
-        const distance = 5 + seededRandom(seed + 3) * 10;
-        state.destination = {
-          x: Math.max(-30, Math.min(30, agent.position.x + Math.cos(angle) * distance)),
-          z: Math.max(-30, Math.min(30, agent.position.z + Math.sin(angle) * distance))
-        };
+        // Pick random nearby destination within zone bounds, avoiding center structures
+        var wAngle = seededRandom(seed + 2) * Math.PI * 2;
+        var wDist = 5 + seededRandom(seed + 3) * 15;
+        var destX = Math.max(-60, Math.min(60, agent.position.x + Math.cos(wAngle) * wDist));
+        var destZ = Math.max(-60, Math.min(60, agent.position.z + Math.sin(wAngle) * wDist));
+        // Keep away from center (fountain/main structure is within ~8 units of origin)
+        var centerDist = Math.sqrt(destX * destX + destZ * destZ);
+        if (centerDist < 10) {
+          // Push destination outward
+          destX = destX / centerDist * 12;
+          destZ = destZ / centerDist * 12;
+        }
+        state.destination = { x: destX, z: destZ };
         break;
 
       case 'talking':

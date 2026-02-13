@@ -349,6 +349,11 @@
       // Update day/night cycle
       World.updateDayNight(sceneContext, worldTime);
 
+      // Cull distant lights for performance (max 8 nearest within 40 units)
+      if (World.cullLights) {
+        World.cullLights(sceneContext, localPlayer.position, 40, 8);
+      }
+
       // Render scene
       if (sceneContext.renderer && sceneContext.scene && sceneContext.camera) {
         sceneContext.renderer.render(sceneContext.scene, sceneContext.camera);
