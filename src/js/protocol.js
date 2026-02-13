@@ -241,6 +241,16 @@
     };
   }
 
+  // Convenience creators: Protocol.create.join(from, payload), etc.
+  var create = {};
+  MESSAGE_TYPES.forEach(function(type) {
+    create[type] = function(from, payload, opts) {
+      return createMessage(type, from, payload || {}, opts);
+    };
+  });
+  // Alias: Protocol.create.chat → say
+  create.chat = create.say;
+
   // Export all functions and constants
   exports.PROTOCOL_VERSION = PROTOCOL_VERSION;
   exports.MESSAGE_TYPES = MESSAGE_TYPES;
@@ -251,5 +261,6 @@
   exports.getNextSeq = getNextSeq;
   exports.generateUUID = generateUUID;
   exports.generateTimestamp = generateTimestamp;
+  exports.create = create;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Protocol = {}));
