@@ -663,8 +663,50 @@
     return merged;
   }
 
+  // Convenience helpers used by main.js
+  function initState() {
+    return createWorldState();
+  }
+
+  function addPlayer(state, player) {
+    if (!state || !player) return;
+    state.players[player.id] = {
+      id: player.id,
+      name: player.name || player.id,
+      position: player.position || { x: 0, y: 0, z: 0 },
+      zone: player.zone || 'nexus',
+      spark: player.spark || 0,
+      warmth: player.warmth || 0,
+      online: true,
+      lastSeen: new Date().toISOString()
+    };
+  }
+
+  function removePlayer(state, playerId) {
+    if (!state || !playerId) return;
+    if (state.players[playerId]) {
+      state.players[playerId].online = false;
+      state.players[playerId].lastSeen = new Date().toISOString();
+    }
+  }
+
+  function getPlayer(state, playerId) {
+    if (!state || !playerId) return null;
+    return state.players[playerId] || null;
+  }
+
+  function getPlayers(state) {
+    if (!state) return {};
+    return state.players;
+  }
+
   // Export public API
   exports.createWorldState = createWorldState;
+  exports.initState = initState;
+  exports.addPlayer = addPlayer;
+  exports.removePlayer = removePlayer;
+  exports.getPlayer = getPlayer;
+  exports.getPlayers = getPlayers;
   exports.getLiveState = getLiveState;
   exports.setLiveState = setLiveState;
   exports.flushToLocal = flushToLocal;
