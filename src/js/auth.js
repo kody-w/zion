@@ -165,6 +165,20 @@
   }
 
   /**
+   * Enter as guest with a chosen username
+   * @param {string} username
+   */
+  function loginAsGuest(username) {
+    if (!username || typeof username !== 'string') return false;
+    username = username.trim().replace(/[^a-zA-Z0-9_-]/g, '');
+    if (username.length < 1 || username.length > 39) return false;
+    setStorage(TOKEN_KEY, 'guest_' + username);
+    setStorage(USERNAME_KEY, username);
+    setStorage(AVATAR_KEY, '');
+    return true;
+  }
+
+  /**
    * Log out and clear all auth data
    */
   function logout() {
@@ -183,6 +197,7 @@
   exports.getUsername = getUsername;
   exports.getToken = getToken;
   exports.setToken = setToken;
+  exports.loginAsGuest = loginAsGuest;
   exports.logout = logout;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Auth = {}));
