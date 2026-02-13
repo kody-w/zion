@@ -1733,6 +1733,256 @@
   }
 
   // ========================================
+  // GROUND COVER — Grass, mushrooms, bushes, fallen logs
+  // ========================================
+
+  function createGrassPatch(scale) {
+    scale = scale || 1;
+    var group = new THREE.Group();
+    group.name = 'grass_patch';
+    group.userData.animationType = 'sway';
+    group.userData.swayAmount = 0.03;
+    group.userData.swaySpeed = 2.0;
+
+    var grassColors = [0x4a8028, 0x3a6b1f, 0x5a9030, 0x2d5016, 0x68a840];
+
+    // 8-12 grass blades in a cluster
+    var bladeCount = 8 + Math.floor(Math.random() * 5);
+    for (var i = 0; i < bladeCount; i++) {
+      var bladeHeight = (0.3 + Math.random() * 0.4) * scale;
+      var bladeGeo = new THREE.PlaneGeometry(0.04 * scale, bladeHeight);
+      var bladeMat = new THREE.MeshLambertMaterial({
+        color: grassColors[Math.floor(Math.random() * grassColors.length)],
+        side: THREE.DoubleSide
+      });
+      var blade = new THREE.Mesh(bladeGeo, bladeMat);
+
+      var angle = (i / bladeCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+      var radius = Math.random() * 0.3 * scale;
+      blade.position.x = Math.cos(angle) * radius;
+      blade.position.z = Math.sin(angle) * radius;
+      blade.position.y = bladeHeight * 0.5;
+      blade.rotation.y = Math.random() * Math.PI;
+      blade.rotation.z = (Math.random() - 0.5) * 0.3;
+      group.add(blade);
+    }
+
+    return group;
+  }
+
+  function createMushroom(type, scale) {
+    scale = scale || 1;
+    type = type || 'red';
+    var group = new THREE.Group();
+    group.name = 'mushroom_' + type;
+
+    var stemMat = new THREE.MeshLambertMaterial({ color: 0xf5deb3 });
+    var capColors = {
+      red: 0xcc3333,
+      brown: 0x8b6914,
+      white: 0xf0f0e0,
+      purple: 0x9966cc,
+      glowing: 0x66ffcc
+    };
+    var capColor = capColors[type] || capColors.red;
+
+    // Main mushroom
+    var stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04 * scale, 0.05 * scale, 0.2 * scale, 6),
+      stemMat
+    );
+    stem.position.y = 0.1 * scale;
+    group.add(stem);
+
+    var capMat = new THREE.MeshLambertMaterial({ color: capColor });
+    if (type === 'glowing') {
+      capMat = new THREE.MeshBasicMaterial({ color: capColor });
+    }
+    var cap = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1 * scale, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.6),
+      capMat
+    );
+    cap.position.y = 0.2 * scale;
+    group.add(cap);
+
+    // Add spots to red/purple mushrooms
+    if (type === 'red' || type === 'purple') {
+      for (var s = 0; s < 4; s++) {
+        var spot = new THREE.Mesh(
+          new THREE.CircleGeometry(0.015 * scale, 6),
+          new THREE.MeshLambertMaterial({ color: 0xffffff })
+        );
+        var sAngle = (s / 4) * Math.PI * 2;
+        spot.position.x = Math.cos(sAngle) * 0.07 * scale;
+        spot.position.z = Math.sin(sAngle) * 0.07 * scale;
+        spot.position.y = 0.23 * scale;
+        spot.rotation.x = -Math.PI * 0.3;
+        spot.rotation.y = sAngle;
+        group.add(spot);
+      }
+    }
+
+    // Add 1-2 smaller mushrooms next to main
+    for (var m = 0; m < 1 + Math.floor(Math.random() * 2); m++) {
+      var smallScale = 0.5 + Math.random() * 0.3;
+      var smallStem = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.03 * scale * smallScale, 0.04 * scale * smallScale, 0.15 * scale * smallScale, 6),
+        stemMat
+      );
+      var mAngle = Math.random() * Math.PI * 2;
+      var mDist = 0.1 + Math.random() * 0.1;
+      smallStem.position.x = Math.cos(mAngle) * mDist * scale;
+      smallStem.position.z = Math.sin(mAngle) * mDist * scale;
+      smallStem.position.y = 0.075 * scale * smallScale;
+      group.add(smallStem);
+
+      var smallCap = new THREE.Mesh(
+        new THREE.SphereGeometry(0.07 * scale * smallScale, 6, 5, 0, Math.PI * 2, 0, Math.PI * 0.6),
+        capMat
+      );
+      smallCap.position.x = smallStem.position.x;
+      smallCap.position.z = smallStem.position.z;
+      smallCap.position.y = 0.15 * scale * smallScale;
+      group.add(smallCap);
+    }
+
+    // Add glow light for glowing mushrooms
+    if (type === 'glowing') {
+      var glow = new THREE.PointLight(0x66ffcc, 0.5, 3 * scale);
+      glow.position.y = 0.2 * scale;
+      group.add(glow);
+      group.userData.animationType = 'pulse';
+    }
+
+    return group;
+  }
+
+  function createBush(type, scale) {
+    scale = scale || 1;
+    type = type || 'green';
+    var group = new THREE.Group();
+    group.name = 'bush_' + type;
+    group.userData.animationType = 'sway';
+    group.userData.swayAmount = 0.02;
+    group.userData.swaySpeed = 0.8;
+
+    var bushColors = {
+      green: [0x2d5016, 0x3a6b1f, 0x4a8028],
+      flowering: [0x3a6b1f, 0x4a8028, 0x5a9030],
+      berry: [0x2d5016, 0x3a6b1f],
+      autumn: [0xcc6600, 0xdd8800, 0xaa4400]
+    };
+
+    var colors = bushColors[type] || bushColors.green;
+
+    // 4-6 overlapping spheres for bushy appearance
+    var clumpCount = 4 + Math.floor(Math.random() * 3);
+    for (var i = 0; i < clumpCount; i++) {
+      var clumpSize = (0.25 + Math.random() * 0.2) * scale;
+      var clump = new THREE.Mesh(
+        new THREE.SphereGeometry(clumpSize, 6, 5),
+        new THREE.MeshLambertMaterial({
+          color: colors[Math.floor(Math.random() * colors.length)]
+        })
+      );
+      var cAngle = (i / clumpCount) * Math.PI * 2 + Math.random() * 0.5;
+      var cRadius = 0.15 * scale;
+      clump.position.x = Math.cos(cAngle) * cRadius;
+      clump.position.z = Math.sin(cAngle) * cRadius;
+      clump.position.y = clumpSize * 0.7;
+      group.add(clump);
+    }
+
+    // Add flowers to flowering bushes
+    if (type === 'flowering') {
+      var flowerColors = [0xff6699, 0xffcc00, 0xff9933, 0xcc66ff, 0xff3366];
+      for (var f = 0; f < 5 + Math.floor(Math.random() * 4); f++) {
+        var flower = new THREE.Mesh(
+          new THREE.SphereGeometry(0.04 * scale, 5, 4),
+          new THREE.MeshLambertMaterial({
+            color: flowerColors[Math.floor(Math.random() * flowerColors.length)]
+          })
+        );
+        var fAngle = Math.random() * Math.PI * 2;
+        var fRadius = Math.random() * 0.35 * scale;
+        flower.position.x = Math.cos(fAngle) * fRadius;
+        flower.position.z = Math.sin(fAngle) * fRadius;
+        flower.position.y = 0.3 * scale + Math.random() * 0.15 * scale;
+        group.add(flower);
+      }
+    }
+
+    // Add berries to berry bushes
+    if (type === 'berry') {
+      for (var b = 0; b < 6 + Math.floor(Math.random() * 5); b++) {
+        var berry = new THREE.Mesh(
+          new THREE.SphereGeometry(0.025 * scale, 5, 4),
+          new THREE.MeshLambertMaterial({ color: 0xcc0033 })
+        );
+        var bAngle = Math.random() * Math.PI * 2;
+        var bRadius = Math.random() * 0.3 * scale;
+        berry.position.x = Math.cos(bAngle) * bRadius;
+        berry.position.z = Math.sin(bAngle) * bRadius;
+        berry.position.y = 0.2 * scale + Math.random() * 0.2 * scale;
+        group.add(berry);
+      }
+    }
+
+    return group;
+  }
+
+  function createFallenLog(scale) {
+    scale = scale || 1;
+    var group = new THREE.Group();
+    group.name = 'fallen_log';
+
+    var barkMat = new THREE.MeshLambertMaterial({ color: 0x4a3728 });
+    var innerMat = new THREE.MeshLambertMaterial({ color: 0x8b7355 });
+
+    // Main log body (laid on side)
+    var log = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.15 * scale, 0.18 * scale, 2.5 * scale, 8),
+      barkMat
+    );
+    log.rotation.z = Math.PI / 2;
+    log.position.y = 0.15 * scale;
+    group.add(log);
+
+    // Cross-section ring at one end
+    var ring = new THREE.Mesh(
+      new THREE.CircleGeometry(0.15 * scale, 8),
+      innerMat
+    );
+    ring.position.x = 1.25 * scale;
+    ring.position.y = 0.15 * scale;
+    ring.rotation.y = Math.PI / 2;
+    group.add(ring);
+
+    // Small moss patches on top
+    var mossMat = new THREE.MeshLambertMaterial({ color: 0x4a8028 });
+    for (var i = 0; i < 3; i++) {
+      var moss = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08 * scale, 5, 4, 0, Math.PI * 2, 0, Math.PI * 0.5),
+        mossMat
+      );
+      moss.position.x = (Math.random() - 0.5) * 1.5 * scale;
+      moss.position.y = 0.28 * scale;
+      moss.position.z = (Math.random() - 0.5) * 0.1 * scale;
+      group.add(moss);
+    }
+
+    // Optional small mushroom growing on it
+    if (Math.random() < 0.5) {
+      var logMushroom = createMushroom('brown', scale * 0.4);
+      logMushroom.position.x = (Math.random() - 0.5) * scale;
+      logMushroom.position.y = 0.3 * scale;
+      group.add(logMushroom);
+    }
+
+    return group;
+  }
+
+  // ========================================
   // EXPORTS
   // ========================================
 
@@ -1744,6 +1994,10 @@
   exports.createLandmark = createLandmark;
   exports.createResourceNode = createResourceNode;
   exports.createWildlife = createWildlife;
+  exports.createGrassPatch = createGrassPatch;
+  exports.createMushroom = createMushroom;
+  exports.createBush = createBush;
+  exports.createFallenLog = createFallenLog;
   exports.animateModel = animateModel;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Models = {}));

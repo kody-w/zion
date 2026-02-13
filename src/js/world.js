@@ -1735,7 +1735,103 @@
       }
     }
 
-    console.log('Environment populated with trees, rocks, furniture, and creatures');
+    // ---- GROUND COVER: grass, bushes, mushrooms, fallen logs ----
+    if (Models.createGrassPatch) {
+      // Scatter grass patches across all natural zones
+      var naturalZones = [gz, wz, cz, nz];
+      for (var nzi = 0; nzi < naturalZones.length; nzi++) {
+        var nzInfo = naturalZones[nzi];
+        var grassCount = nzi === 1 ? 30 : 15; // More in wilds
+        for (var gp = 0; gp < grassCount; gp++) {
+          var gpa = hash2D(gp + nzi * 100, 900) * Math.PI * 2;
+          var gpr = 8 + hash2D(gp + nzi * 100, 901) * 55;
+          var gpx = nzInfo.cx + Math.cos(gpa) * gpr;
+          var gpz = nzInfo.cz + Math.sin(gpa) * gpr;
+          var grassPatch = Models.createGrassPatch(0.8 + hash2D(gp + nzi * 100, 902) * 0.6);
+          grassPatch.position.set(gpx, terrainHeight(gpx, gpz), gpz);
+          grassPatch.rotation.y = hash2D(gp + nzi * 100, 903) * Math.PI * 2;
+          scene.add(grassPatch);
+        }
+      }
+    }
+
+    if (Models.createBush) {
+      // Bushes in gardens (flowering), wilds (berry/green), commons (green)
+      var bushTypes = ['flowering', 'flowering', 'green'];
+      for (var gb = 0; gb < 8; gb++) {
+        var gba = hash2D(gb, 910) * Math.PI * 2;
+        var gbr = 12 + hash2D(gb, 911) * 40;
+        var gbx = gz.cx + Math.cos(gba) * gbr;
+        var gbz = gz.cz + Math.sin(gba) * gbr;
+        var gardenBush = Models.createBush(bushTypes[gb % 3], 0.8 + hash2D(gb, 912) * 0.4);
+        gardenBush.position.set(gbx, terrainHeight(gbx, gbz), gbz);
+        scene.add(gardenBush);
+      }
+
+      // Berry and green bushes in wilds
+      for (var wb = 0; wb < 10; wb++) {
+        var wba = hash2D(wb, 920) * Math.PI * 2;
+        var wbr = 15 + hash2D(wb, 921) * 50;
+        var wbx = wz.cx + Math.cos(wba) * wbr;
+        var wbz = wz.cz + Math.sin(wba) * wbr;
+        var wildBush = Models.createBush(wb % 3 === 0 ? 'berry' : 'green', 0.7 + hash2D(wb, 922) * 0.5);
+        wildBush.position.set(wbx, terrainHeight(wbx, wbz), wbz);
+        scene.add(wildBush);
+      }
+    }
+
+    if (Models.createMushroom) {
+      // Mushroom clusters in wilds and gardens
+      var mushroomTypes = ['red', 'brown', 'white', 'purple', 'glowing'];
+      for (var wm = 0; wm < 8; wm++) {
+        var wma = hash2D(wm, 930) * Math.PI * 2;
+        var wmr = 20 + hash2D(wm, 931) * 45;
+        var wmx = wz.cx + Math.cos(wma) * wmr;
+        var wmz = wz.cz + Math.sin(wma) * wmr;
+        var mushroom = Models.createMushroom(mushroomTypes[wm % 5], 0.8 + hash2D(wm, 932) * 0.5);
+        mushroom.position.set(wmx, terrainHeight(wmx, wmz), wmz);
+        mushroom.rotation.y = hash2D(wm, 933) * Math.PI * 2;
+        scene.add(mushroom);
+      }
+
+      // Glowing mushrooms in athenaeum (mystical)
+      for (var am = 0; am < 5; am++) {
+        var ama = hash2D(am, 940) * Math.PI * 2;
+        var amr = 15 + hash2D(am, 941) * 25;
+        var amx = atz.cx + Math.cos(ama) * amr;
+        var amz = atz.cz + Math.sin(ama) * amr;
+        var glowMush = Models.createMushroom('glowing', 0.6 + hash2D(am, 942) * 0.4);
+        glowMush.position.set(amx, terrainHeight(amx, amz), amz);
+        scene.add(glowMush);
+      }
+    }
+
+    if (Models.createFallenLog) {
+      // Fallen logs in wilds and commons
+      for (var fl = 0; fl < 5; fl++) {
+        var fla = hash2D(fl, 950) * Math.PI * 2;
+        var flr = 20 + hash2D(fl, 951) * 40;
+        var flx = wz.cx + Math.cos(fla) * flr;
+        var flz = wz.cz + Math.sin(fla) * flr;
+        var fallenLog = Models.createFallenLog(0.8 + hash2D(fl, 952) * 0.4);
+        fallenLog.position.set(flx, terrainHeight(flx, flz), flz);
+        fallenLog.rotation.y = hash2D(fl, 953) * Math.PI * 2;
+        scene.add(fallenLog);
+      }
+
+      for (var cl = 0; cl < 3; cl++) {
+        var cla = hash2D(cl, 960) * Math.PI * 2;
+        var clr = 18 + hash2D(cl, 961) * 25;
+        var clx = cz.cx + Math.cos(cla) * clr;
+        var clz = cz.cz + Math.sin(cla) * clr;
+        var commonLog = Models.createFallenLog(0.7 + hash2D(cl, 962) * 0.3);
+        commonLog.position.set(clx, terrainHeight(clx, clz), clz);
+        commonLog.rotation.y = hash2D(cl, 963) * Math.PI * 2;
+        scene.add(commonLog);
+      }
+    }
+
+    console.log('Environment populated with trees, rocks, furniture, creatures, and ground cover');
   }
 
   // ========================================================================

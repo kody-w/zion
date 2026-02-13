@@ -46,6 +46,7 @@
   let playerInventory = null;
   let economyLedger = null;
   let raycaster = null;
+  let npcUpdateFrame = 0;
 
   // Platform detection
   let platform = 'desktop';
@@ -432,6 +433,9 @@
 
     const deltaTime = (timestamp - lastTimestamp) / 1000; // seconds
     lastTimestamp = timestamp;
+
+    // Increment frame counter for periodic updates
+    npcUpdateFrame++;
 
     // Process queued messages
     processMessageQueue();

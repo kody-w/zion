@@ -291,17 +291,25 @@
       var pp = worldToMap(player.position.x, player.position.z);
 
       if (player.isLocal) {
-        // Local player — larger bright dot with direction indicator
-        minimapCtx.fillStyle = '#00ccff';
+        // Local player — larger bright gold dot with white border
+        minimapCtx.fillStyle = '#FFD700';
         minimapCtx.beginPath();
         minimapCtx.arc(pp.x, pp.y, 4, 0, Math.PI * 2);
         minimapCtx.fill();
         // White border
         minimapCtx.strokeStyle = '#fff';
-        minimapCtx.lineWidth = 1;
+        minimapCtx.lineWidth = 1.5;
         minimapCtx.beginPath();
         minimapCtx.arc(pp.x, pp.y, 4, 0, Math.PI * 2);
         minimapCtx.stroke();
+        // Add subtle glow
+        minimapCtx.shadowBlur = 8;
+        minimapCtx.shadowColor = '#FFD700';
+        minimapCtx.fillStyle = '#FFD700';
+        minimapCtx.beginPath();
+        minimapCtx.arc(pp.x, pp.y, 4, 0, Math.PI * 2);
+        minimapCtx.fill();
+        minimapCtx.shadowBlur = 0;
       } else {
         // Other players — smaller green dots
         minimapCtx.fillStyle = '#44ff44';

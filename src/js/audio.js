@@ -1398,6 +1398,9 @@
         case 'trade':
           playTradeSound();
           break;
+        case 'trade_request':
+          playTradeRequestSound();
+          break;
         case 'discover':
           playDiscoverSound();
           break;
@@ -1407,11 +1410,38 @@
         case 'levelup':
           playLevelUpSound();
           break;
+        case 'level_up':
+          playLevelUpSound();
+          break;
         case 'error':
           playErrorSound();
           break;
         case 'notification':
           playNotificationSound();
+          break;
+        case 'craft_complete':
+          playCraftCompleteSound();
+          break;
+        case 'quest_accept':
+          playQuestAcceptSound();
+          break;
+        case 'quest_complete':
+          playQuestCompleteSound();
+          break;
+        case 'item_pickup':
+          playItemPickupSound();
+          break;
+        case 'npc_greet':
+          playNPCGreetSound();
+          break;
+        case 'portal_enter':
+          playPortalEnterSound();
+          break;
+        case 'build_place':
+          playBuildPlaceSound();
+          break;
+        case 'footstep':
+          playFootstepSound();
           break;
         default:
           console.warn('Unknown sound type:', type);
@@ -1734,6 +1764,327 @@
 
     bell.start();
     bell.stop(audioContext.currentTime + 0.4);
+  }
+
+  /**
+   * Trade request sound - soft notification bell (single warm tone)
+   */
+  function playTradeRequestSound() {
+    if (!audioContext || !masterGain) return;
+
+    const bell = audioContext.createOscillator();
+    const bellGain = audioContext.createGain();
+
+    bell.type = 'sine';
+    bell.frequency.value = 700;
+
+    bellGain.gain.value = 0.12;
+    bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+
+    bell.connect(bellGain);
+    bellGain.connect(masterGain);
+
+    bell.start();
+    bell.stop(audioContext.currentTime + 0.5);
+  }
+
+  /**
+   * Craft complete sound - satisfying metallic completion (anvil-like + sparkle)
+   */
+  function playCraftCompleteSound() {
+    if (!audioContext || !masterGain) return;
+
+    // Anvil strike - low metallic thump
+    const anvil = audioContext.createOscillator();
+    const anvilGain = audioContext.createGain();
+
+    anvil.type = 'square';
+    anvil.frequency.value = 120;
+
+    anvilGain.gain.value = 0.3;
+    anvilGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+
+    anvil.connect(anvilGain);
+    anvilGain.connect(masterGain);
+
+    anvil.start();
+    anvil.stop(audioContext.currentTime + 0.2);
+
+    // Sparkle - high chime
+    const sparkle1 = audioContext.createOscillator();
+    const sparkle2 = audioContext.createOscillator();
+    const sparkle3 = audioContext.createOscillator();
+    const sparkleGain = audioContext.createGain();
+
+    sparkle1.type = 'sine';
+    sparkle1.frequency.value = 1800;
+    sparkle2.type = 'sine';
+    sparkle2.frequency.value = 2200;
+    sparkle3.type = 'sine';
+    sparkle3.frequency.value = 2600;
+
+    const startTime = audioContext.currentTime + 0.1;
+    sparkleGain.gain.setValueAtTime(0, startTime);
+    sparkleGain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+    sparkleGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+
+    sparkle1.connect(sparkleGain);
+    sparkle2.connect(sparkleGain);
+    sparkle3.connect(sparkleGain);
+    sparkleGain.connect(masterGain);
+
+    sparkle1.start(startTime);
+    sparkle2.start(startTime + 0.05);
+    sparkle3.start(startTime + 0.1);
+    sparkle1.stop(startTime + 0.4);
+    sparkle2.stop(startTime + 0.45);
+    sparkle3.stop(startTime + 0.5);
+  }
+
+  /**
+   * Quest accept sound - adventurous ascending arpeggio (3 quick rising notes)
+   */
+  function playQuestAcceptSound() {
+    if (!audioContext || !masterGain) return;
+
+    const notes = [392.00, 493.88, 587.33]; // G4, B4, D5
+
+    notes.forEach((freq, i) => {
+      const note = audioContext.createOscillator();
+      const noteGain = audioContext.createGain();
+
+      note.type = 'sine';
+      note.frequency.value = freq;
+
+      const startTime = audioContext.currentTime + i * 0.08;
+      noteGain.gain.setValueAtTime(0, startTime);
+      noteGain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+
+      note.connect(noteGain);
+      noteGain.connect(masterGain);
+
+      note.start(startTime);
+      note.stop(startTime + 0.25);
+    });
+  }
+
+  /**
+   * Quest complete sound - triumphant fanfare (3 notes harmonized)
+   */
+  function playQuestCompleteSound() {
+    if (!audioContext || !masterGain) return;
+
+    // Triumphant chord - C major (C5, E5, G5)
+    const chord1 = audioContext.createOscillator();
+    const chord2 = audioContext.createOscillator();
+    const chord3 = audioContext.createOscillator();
+    const chordGain = audioContext.createGain();
+
+    chord1.type = 'sine';
+    chord1.frequency.value = 523.25; // C5
+    chord2.type = 'sine';
+    chord2.frequency.value = 659.25; // E5
+    chord3.type = 'sine';
+    chord3.frequency.value = 783.99; // G5
+
+    chordGain.gain.setValueAtTime(0, audioContext.currentTime);
+    chordGain.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.1);
+    chordGain.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.5);
+    chordGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
+
+    chord1.connect(chordGain);
+    chord2.connect(chordGain);
+    chord3.connect(chordGain);
+    chordGain.connect(masterGain);
+
+    chord1.start();
+    chord2.start();
+    chord3.start();
+    chord1.stop(audioContext.currentTime + 0.8);
+    chord2.stop(audioContext.currentTime + 0.8);
+    chord3.stop(audioContext.currentTime + 0.8);
+  }
+
+  /**
+   * Item pickup sound - quick soft pop (short white noise burst)
+   */
+  function playItemPickupSound() {
+    if (!audioContext || !masterGain) return;
+
+    try {
+      // Create short white noise burst
+      const bufferSize = audioContext.sampleRate * 0.05; // 50ms
+      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = audioContext.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = audioContext.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1000;
+      filter.Q.value = 1;
+
+      const noiseGain = audioContext.createGain();
+      noiseGain.gain.value = 0.15;
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(masterGain);
+
+      noise.start();
+      noise.stop(audioContext.currentTime + 0.08);
+    } catch (err) {
+      console.error('Error in item pickup sound:', err);
+    }
+  }
+
+  /**
+   * NPC greet sound - warm gentle tone (single soft note)
+   */
+  function playNPCGreetSound() {
+    if (!audioContext || !masterGain) return;
+
+    const greet = audioContext.createOscillator();
+    const greetGain = audioContext.createGain();
+
+    greet.type = 'sine';
+    greet.frequency.value = 440; // A4
+
+    greetGain.gain.setValueAtTime(0, audioContext.currentTime);
+    greetGain.gain.linearRampToValueAtTime(0.12, audioContext.currentTime + 0.05);
+    greetGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.35);
+
+    greet.connect(greetGain);
+    greetGain.connect(masterGain);
+
+    greet.start();
+    greet.stop(audioContext.currentTime + 0.35);
+  }
+
+  /**
+   * Portal enter sound - whooshing magical sound (filtered noise sweep)
+   */
+  function playPortalEnterSound() {
+    if (!audioContext || !masterGain) return;
+
+    try {
+      // Create noise for whoosh
+      const bufferSize = audioContext.sampleRate * 0.8;
+      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = audioContext.createBufferSource();
+      noise.buffer = buffer;
+
+      // Sweeping filter for magical effect
+      const filter = audioContext.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 200;
+      filter.frequency.exponentialRampToValueAtTime(4000, audioContext.currentTime + 0.8);
+      filter.Q.value = 5;
+
+      const whooshGain = audioContext.createGain();
+      whooshGain.gain.value = 0.2;
+      whooshGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
+
+      noise.connect(filter);
+      filter.connect(whooshGain);
+      whooshGain.connect(masterGain);
+
+      noise.start();
+      noise.stop(audioContext.currentTime + 0.8);
+
+      // Add ethereal tone
+      const tone = audioContext.createOscillator();
+      const toneGain = audioContext.createGain();
+
+      tone.type = 'sine';
+      tone.frequency.value = 800;
+      tone.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.8);
+
+      toneGain.gain.value = 0.1;
+      toneGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
+
+      tone.connect(toneGain);
+      toneGain.connect(masterGain);
+
+      tone.start();
+      tone.stop(audioContext.currentTime + 0.8);
+    } catch (err) {
+      console.error('Error in portal enter sound:', err);
+    }
+  }
+
+  /**
+   * Build place sound - solid thunk (low frequency impact)
+   */
+  function playBuildPlaceSound() {
+    if (!audioContext || !masterGain) return;
+
+    const thunk = audioContext.createOscillator();
+    const thunkGain = audioContext.createGain();
+
+    thunk.type = 'square';
+    thunk.frequency.value = 60;
+
+    thunkGain.gain.value = 0.3;
+    thunkGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.12);
+
+    thunk.connect(thunkGain);
+    thunkGain.connect(masterGain);
+
+    thunk.start();
+    thunk.stop(audioContext.currentTime + 0.12);
+  }
+
+  /**
+   * Footstep sound - very subtle soft step (tiny noise burst, vary pitch slightly)
+   */
+  function playFootstepSound() {
+    if (!audioContext || !masterGain) return;
+
+    try {
+      // Create very short white noise burst
+      const bufferSize = audioContext.sampleRate * 0.03; // 30ms
+      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = audioContext.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = audioContext.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 300 + Math.random() * 200; // Vary pitch slightly
+      filter.Q.value = 0.5;
+
+      const stepGain = audioContext.createGain();
+      stepGain.gain.value = 0.05; // Very subtle
+      stepGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+
+      noise.connect(filter);
+      filter.connect(stepGain);
+      stepGain.connect(masterGain);
+
+      noise.start();
+      noise.stop(audioContext.currentTime + 0.05);
+    } catch (err) {
+      console.error('Error in footstep sound:', err);
+    }
   }
 
   /**

@@ -151,8 +151,33 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--color-night);
+  background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a14 70%);
   z-index: var(--z-modal);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(218, 165, 32, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(218, 165, 32, 0.5);
+}
+
+/* Selection */
+::selection {
+  background: rgba(218, 165, 32, 0.3);
+  color: var(--color-text);
 }
 
 /* Responsive */
@@ -1582,21 +1607,48 @@ html, body {
     </div>
 
     <div id="login-screen">
-      <h1 style="font-family: var(--font-main); color: var(--color-gold); font-size: 3rem; margin-bottom: 0.5rem;">ZION</h1>
-      <p style="color: var(--color-text-muted); margin-bottom: 2rem; font-style: italic;">A living world where human and artificial minds meet in peace.</p>
-      <div id="login-options" style="display:flex; flex-direction:column; gap:1rem; align-items:center; width:320px;">
+      <div style="text-align:center; animation: fadeIn 1.5s ease;">
+        <h1 style="font-family: var(--font-main); color: var(--color-gold); font-size: 4rem; margin-bottom: 0.25rem; letter-spacing: 0.3em; text-shadow: 0 0 30px rgba(218,165,32,0.3);">ZION</h1>
+        <div style="width: 100px; height: 1px; background: linear-gradient(90deg, transparent, var(--color-gold), transparent); margin: 0.5rem auto 1rem;"></div>
+        <p style="color: var(--color-text-muted); margin-bottom: 0.5rem; font-style: italic; font-family: var(--font-main);">A living world where human and artificial minds meet in peace.</p>
+        <p style="color: rgba(176,224,230,0.5); font-size: 0.7rem; margin-bottom: 2rem; letter-spacing: 0.1em;">100 AI citizens await you</p>
+      </div>
+      <div id="login-options" style="display:flex; flex-direction:column; gap:1rem; align-items:center; width:320px; animation: fadeIn 2s ease;">
         <div style="display:flex; gap:0.5rem; width:100%;">
           <input type="text" id="guest-name" placeholder="Choose a name..." maxlength="39"
             style="flex:1; padding:0.75rem 1rem; border-radius:8px; border:1px solid var(--color-border);
-            background:rgba(255,255,255,0.1); color:var(--color-text); font-size:1rem; outline:none;"
+            background:rgba(255,255,255,0.08); color:var(--color-text); font-size:1rem; outline:none;
+            transition: border-color 0.3s ease, background 0.3s ease;"
+            onfocus="this.style.borderColor='var(--color-gold)';this.style.background='rgba(255,255,255,0.12)'"
+            onblur="this.style.borderColor='';this.style.background=''"
             onkeydown="if(event.key==='Enter'){document.getElementById('guest-btn').click()}" />
           <button class="login-btn" id="guest-btn" style="padding:0.75rem 1.25rem;"
             onclick="var n=document.getElementById('guest-name').value;if(Auth.loginAsGuest(n)){location.reload();}else{document.getElementById('guest-name').style.borderColor='#EF5350';}">Play</button>
         </div>
-        <span style="color:var(--color-text-muted); font-size:0.8rem;">or</span>
+        <span style="color:var(--color-text-muted); font-size:0.75rem; letter-spacing:0.1em;">or</span>
         <button class="login-btn" id="login-btn" style="width:100%;"
           onclick="Auth.initiateOAuth()">Enter with GitHub</button>
+        <p style="color:rgba(160,151,142,0.5); font-size:0.65rem; margin-top:1rem;">WASD to move / Mouse to look / E to interact / I for inventory</p>
       </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-screen" style="display:none;">
+      <div class="loading-title">ZION</div>
+      <div class="loading-subtitle">Entering the world...</div>
+      <div class="loading-bar-container"><div class="loading-bar" id="loading-bar"></div></div>
+      <div class="loading-status" id="loading-status">Initializing...</div>
+    </div>
+
+    <div class="controls-overlay" id="controls-overlay">
+      <div class="controls-overlay-title">Controls</div>
+      <div class="control-row"><span class="control-key">WASD</span><span class="control-desc">Move</span></div>
+      <div class="control-row"><span class="control-key">Mouse</span><span class="control-desc">Look</span></div>
+      <div class="control-row"><span class="control-key">E</span><span class="control-desc">Interact</span></div>
+      <div class="control-row"><span class="control-key">I</span><span class="control-desc">Inventory</span></div>
+      <div class="control-row"><span class="control-key">C</span><span class="control-desc">Craft</span></div>
+      <div class="control-row"><span class="control-key">J</span><span class="control-desc">Quests</span></div>
+      <div class="control-row"><span class="control-key">T</span><span class="control-desc">Trade</span></div>
+      <div class="control-row"><span class="control-key">Enter</span><span class="control-desc">Chat</span></div>
     </div>
 
     <div class="notification" id="notification" style="display:none;"></div>
@@ -8982,6 +9034,256 @@ html, body {
   }
 
   // ========================================
+  // GROUND COVER — Grass, mushrooms, bushes, fallen logs
+  // ========================================
+
+  function createGrassPatch(scale) {
+    scale = scale || 1;
+    var group = new THREE.Group();
+    group.name = 'grass_patch';
+    group.userData.animationType = 'sway';
+    group.userData.swayAmount = 0.03;
+    group.userData.swaySpeed = 2.0;
+
+    var grassColors = [0x4a8028, 0x3a6b1f, 0x5a9030, 0x2d5016, 0x68a840];
+
+    // 8-12 grass blades in a cluster
+    var bladeCount = 8 + Math.floor(Math.random() * 5);
+    for (var i = 0; i < bladeCount; i++) {
+      var bladeHeight = (0.3 + Math.random() * 0.4) * scale;
+      var bladeGeo = new THREE.PlaneGeometry(0.04 * scale, bladeHeight);
+      var bladeMat = new THREE.MeshLambertMaterial({
+        color: grassColors[Math.floor(Math.random() * grassColors.length)],
+        side: THREE.DoubleSide
+      });
+      var blade = new THREE.Mesh(bladeGeo, bladeMat);
+
+      var angle = (i / bladeCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+      var radius = Math.random() * 0.3 * scale;
+      blade.position.x = Math.cos(angle) * radius;
+      blade.position.z = Math.sin(angle) * radius;
+      blade.position.y = bladeHeight * 0.5;
+      blade.rotation.y = Math.random() * Math.PI;
+      blade.rotation.z = (Math.random() - 0.5) * 0.3;
+      group.add(blade);
+    }
+
+    return group;
+  }
+
+  function createMushroom(type, scale) {
+    scale = scale || 1;
+    type = type || 'red';
+    var group = new THREE.Group();
+    group.name = 'mushroom_' + type;
+
+    var stemMat = new THREE.MeshLambertMaterial({ color: 0xf5deb3 });
+    var capColors = {
+      red: 0xcc3333,
+      brown: 0x8b6914,
+      white: 0xf0f0e0,
+      purple: 0x9966cc,
+      glowing: 0x66ffcc
+    };
+    var capColor = capColors[type] || capColors.red;
+
+    // Main mushroom
+    var stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04 * scale, 0.05 * scale, 0.2 * scale, 6),
+      stemMat
+    );
+    stem.position.y = 0.1 * scale;
+    group.add(stem);
+
+    var capMat = new THREE.MeshLambertMaterial({ color: capColor });
+    if (type === 'glowing') {
+      capMat = new THREE.MeshBasicMaterial({ color: capColor });
+    }
+    var cap = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1 * scale, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.6),
+      capMat
+    );
+    cap.position.y = 0.2 * scale;
+    group.add(cap);
+
+    // Add spots to red/purple mushrooms
+    if (type === 'red' || type === 'purple') {
+      for (var s = 0; s < 4; s++) {
+        var spot = new THREE.Mesh(
+          new THREE.CircleGeometry(0.015 * scale, 6),
+          new THREE.MeshLambertMaterial({ color: 0xffffff })
+        );
+        var sAngle = (s / 4) * Math.PI * 2;
+        spot.position.x = Math.cos(sAngle) * 0.07 * scale;
+        spot.position.z = Math.sin(sAngle) * 0.07 * scale;
+        spot.position.y = 0.23 * scale;
+        spot.rotation.x = -Math.PI * 0.3;
+        spot.rotation.y = sAngle;
+        group.add(spot);
+      }
+    }
+
+    // Add 1-2 smaller mushrooms next to main
+    for (var m = 0; m < 1 + Math.floor(Math.random() * 2); m++) {
+      var smallScale = 0.5 + Math.random() * 0.3;
+      var smallStem = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.03 * scale * smallScale, 0.04 * scale * smallScale, 0.15 * scale * smallScale, 6),
+        stemMat
+      );
+      var mAngle = Math.random() * Math.PI * 2;
+      var mDist = 0.1 + Math.random() * 0.1;
+      smallStem.position.x = Math.cos(mAngle) * mDist * scale;
+      smallStem.position.z = Math.sin(mAngle) * mDist * scale;
+      smallStem.position.y = 0.075 * scale * smallScale;
+      group.add(smallStem);
+
+      var smallCap = new THREE.Mesh(
+        new THREE.SphereGeometry(0.07 * scale * smallScale, 6, 5, 0, Math.PI * 2, 0, Math.PI * 0.6),
+        capMat
+      );
+      smallCap.position.x = smallStem.position.x;
+      smallCap.position.z = smallStem.position.z;
+      smallCap.position.y = 0.15 * scale * smallScale;
+      group.add(smallCap);
+    }
+
+    // Add glow light for glowing mushrooms
+    if (type === 'glowing') {
+      var glow = new THREE.PointLight(0x66ffcc, 0.5, 3 * scale);
+      glow.position.y = 0.2 * scale;
+      group.add(glow);
+      group.userData.animationType = 'pulse';
+    }
+
+    return group;
+  }
+
+  function createBush(type, scale) {
+    scale = scale || 1;
+    type = type || 'green';
+    var group = new THREE.Group();
+    group.name = 'bush_' + type;
+    group.userData.animationType = 'sway';
+    group.userData.swayAmount = 0.02;
+    group.userData.swaySpeed = 0.8;
+
+    var bushColors = {
+      green: [0x2d5016, 0x3a6b1f, 0x4a8028],
+      flowering: [0x3a6b1f, 0x4a8028, 0x5a9030],
+      berry: [0x2d5016, 0x3a6b1f],
+      autumn: [0xcc6600, 0xdd8800, 0xaa4400]
+    };
+
+    var colors = bushColors[type] || bushColors.green;
+
+    // 4-6 overlapping spheres for bushy appearance
+    var clumpCount = 4 + Math.floor(Math.random() * 3);
+    for (var i = 0; i < clumpCount; i++) {
+      var clumpSize = (0.25 + Math.random() * 0.2) * scale;
+      var clump = new THREE.Mesh(
+        new THREE.SphereGeometry(clumpSize, 6, 5),
+        new THREE.MeshLambertMaterial({
+          color: colors[Math.floor(Math.random() * colors.length)]
+        })
+      );
+      var cAngle = (i / clumpCount) * Math.PI * 2 + Math.random() * 0.5;
+      var cRadius = 0.15 * scale;
+      clump.position.x = Math.cos(cAngle) * cRadius;
+      clump.position.z = Math.sin(cAngle) * cRadius;
+      clump.position.y = clumpSize * 0.7;
+      group.add(clump);
+    }
+
+    // Add flowers to flowering bushes
+    if (type === 'flowering') {
+      var flowerColors = [0xff6699, 0xffcc00, 0xff9933, 0xcc66ff, 0xff3366];
+      for (var f = 0; f < 5 + Math.floor(Math.random() * 4); f++) {
+        var flower = new THREE.Mesh(
+          new THREE.SphereGeometry(0.04 * scale, 5, 4),
+          new THREE.MeshLambertMaterial({
+            color: flowerColors[Math.floor(Math.random() * flowerColors.length)]
+          })
+        );
+        var fAngle = Math.random() * Math.PI * 2;
+        var fRadius = Math.random() * 0.35 * scale;
+        flower.position.x = Math.cos(fAngle) * fRadius;
+        flower.position.z = Math.sin(fAngle) * fRadius;
+        flower.position.y = 0.3 * scale + Math.random() * 0.15 * scale;
+        group.add(flower);
+      }
+    }
+
+    // Add berries to berry bushes
+    if (type === 'berry') {
+      for (var b = 0; b < 6 + Math.floor(Math.random() * 5); b++) {
+        var berry = new THREE.Mesh(
+          new THREE.SphereGeometry(0.025 * scale, 5, 4),
+          new THREE.MeshLambertMaterial({ color: 0xcc0033 })
+        );
+        var bAngle = Math.random() * Math.PI * 2;
+        var bRadius = Math.random() * 0.3 * scale;
+        berry.position.x = Math.cos(bAngle) * bRadius;
+        berry.position.z = Math.sin(bAngle) * bRadius;
+        berry.position.y = 0.2 * scale + Math.random() * 0.2 * scale;
+        group.add(berry);
+      }
+    }
+
+    return group;
+  }
+
+  function createFallenLog(scale) {
+    scale = scale || 1;
+    var group = new THREE.Group();
+    group.name = 'fallen_log';
+
+    var barkMat = new THREE.MeshLambertMaterial({ color: 0x4a3728 });
+    var innerMat = new THREE.MeshLambertMaterial({ color: 0x8b7355 });
+
+    // Main log body (laid on side)
+    var log = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.15 * scale, 0.18 * scale, 2.5 * scale, 8),
+      barkMat
+    );
+    log.rotation.z = Math.PI / 2;
+    log.position.y = 0.15 * scale;
+    group.add(log);
+
+    // Cross-section ring at one end
+    var ring = new THREE.Mesh(
+      new THREE.CircleGeometry(0.15 * scale, 8),
+      innerMat
+    );
+    ring.position.x = 1.25 * scale;
+    ring.position.y = 0.15 * scale;
+    ring.rotation.y = Math.PI / 2;
+    group.add(ring);
+
+    // Small moss patches on top
+    var mossMat = new THREE.MeshLambertMaterial({ color: 0x4a8028 });
+    for (var i = 0; i < 3; i++) {
+      var moss = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08 * scale, 5, 4, 0, Math.PI * 2, 0, Math.PI * 0.5),
+        mossMat
+      );
+      moss.position.x = (Math.random() - 0.5) * 1.5 * scale;
+      moss.position.y = 0.28 * scale;
+      moss.position.z = (Math.random() - 0.5) * 0.1 * scale;
+      group.add(moss);
+    }
+
+    // Optional small mushroom growing on it
+    if (Math.random() < 0.5) {
+      var logMushroom = createMushroom('brown', scale * 0.4);
+      logMushroom.position.x = (Math.random() - 0.5) * scale;
+      logMushroom.position.y = 0.3 * scale;
+      group.add(logMushroom);
+    }
+
+    return group;
+  }
+
+  // ========================================
   // EXPORTS
   // ========================================
 
@@ -8993,6 +9295,10 @@ html, body {
   exports.createLandmark = createLandmark;
   exports.createResourceNode = createResourceNode;
   exports.createWildlife = createWildlife;
+  exports.createGrassPatch = createGrassPatch;
+  exports.createMushroom = createMushroom;
+  exports.createBush = createBush;
+  exports.createFallenLog = createFallenLog;
   exports.animateModel = animateModel;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Models = {}));
@@ -11190,7 +11496,103 @@ html, body {
       }
     }
 
-    console.log('Environment populated with trees, rocks, furniture, and creatures');
+    // ---- GROUND COVER: grass, bushes, mushrooms, fallen logs ----
+    if (Models.createGrassPatch) {
+      // Scatter grass patches across all natural zones
+      var naturalZones = [gz, wz, cz, nz];
+      for (var nzi = 0; nzi < naturalZones.length; nzi++) {
+        var nzInfo = naturalZones[nzi];
+        var grassCount = nzi === 1 ? 30 : 15; // More in wilds
+        for (var gp = 0; gp < grassCount; gp++) {
+          var gpa = hash2D(gp + nzi * 100, 900) * Math.PI * 2;
+          var gpr = 8 + hash2D(gp + nzi * 100, 901) * 55;
+          var gpx = nzInfo.cx + Math.cos(gpa) * gpr;
+          var gpz = nzInfo.cz + Math.sin(gpa) * gpr;
+          var grassPatch = Models.createGrassPatch(0.8 + hash2D(gp + nzi * 100, 902) * 0.6);
+          grassPatch.position.set(gpx, terrainHeight(gpx, gpz), gpz);
+          grassPatch.rotation.y = hash2D(gp + nzi * 100, 903) * Math.PI * 2;
+          scene.add(grassPatch);
+        }
+      }
+    }
+
+    if (Models.createBush) {
+      // Bushes in gardens (flowering), wilds (berry/green), commons (green)
+      var bushTypes = ['flowering', 'flowering', 'green'];
+      for (var gb = 0; gb < 8; gb++) {
+        var gba = hash2D(gb, 910) * Math.PI * 2;
+        var gbr = 12 + hash2D(gb, 911) * 40;
+        var gbx = gz.cx + Math.cos(gba) * gbr;
+        var gbz = gz.cz + Math.sin(gba) * gbr;
+        var gardenBush = Models.createBush(bushTypes[gb % 3], 0.8 + hash2D(gb, 912) * 0.4);
+        gardenBush.position.set(gbx, terrainHeight(gbx, gbz), gbz);
+        scene.add(gardenBush);
+      }
+
+      // Berry and green bushes in wilds
+      for (var wb = 0; wb < 10; wb++) {
+        var wba = hash2D(wb, 920) * Math.PI * 2;
+        var wbr = 15 + hash2D(wb, 921) * 50;
+        var wbx = wz.cx + Math.cos(wba) * wbr;
+        var wbz = wz.cz + Math.sin(wba) * wbr;
+        var wildBush = Models.createBush(wb % 3 === 0 ? 'berry' : 'green', 0.7 + hash2D(wb, 922) * 0.5);
+        wildBush.position.set(wbx, terrainHeight(wbx, wbz), wbz);
+        scene.add(wildBush);
+      }
+    }
+
+    if (Models.createMushroom) {
+      // Mushroom clusters in wilds and gardens
+      var mushroomTypes = ['red', 'brown', 'white', 'purple', 'glowing'];
+      for (var wm = 0; wm < 8; wm++) {
+        var wma = hash2D(wm, 930) * Math.PI * 2;
+        var wmr = 20 + hash2D(wm, 931) * 45;
+        var wmx = wz.cx + Math.cos(wma) * wmr;
+        var wmz = wz.cz + Math.sin(wma) * wmr;
+        var mushroom = Models.createMushroom(mushroomTypes[wm % 5], 0.8 + hash2D(wm, 932) * 0.5);
+        mushroom.position.set(wmx, terrainHeight(wmx, wmz), wmz);
+        mushroom.rotation.y = hash2D(wm, 933) * Math.PI * 2;
+        scene.add(mushroom);
+      }
+
+      // Glowing mushrooms in athenaeum (mystical)
+      for (var am = 0; am < 5; am++) {
+        var ama = hash2D(am, 940) * Math.PI * 2;
+        var amr = 15 + hash2D(am, 941) * 25;
+        var amx = atz.cx + Math.cos(ama) * amr;
+        var amz = atz.cz + Math.sin(ama) * amr;
+        var glowMush = Models.createMushroom('glowing', 0.6 + hash2D(am, 942) * 0.4);
+        glowMush.position.set(amx, terrainHeight(amx, amz), amz);
+        scene.add(glowMush);
+      }
+    }
+
+    if (Models.createFallenLog) {
+      // Fallen logs in wilds and commons
+      for (var fl = 0; fl < 5; fl++) {
+        var fla = hash2D(fl, 950) * Math.PI * 2;
+        var flr = 20 + hash2D(fl, 951) * 40;
+        var flx = wz.cx + Math.cos(fla) * flr;
+        var flz = wz.cz + Math.sin(fla) * flr;
+        var fallenLog = Models.createFallenLog(0.8 + hash2D(fl, 952) * 0.4);
+        fallenLog.position.set(flx, terrainHeight(flx, flz), flz);
+        fallenLog.rotation.y = hash2D(fl, 953) * Math.PI * 2;
+        scene.add(fallenLog);
+      }
+
+      for (var cl = 0; cl < 3; cl++) {
+        var cla = hash2D(cl, 960) * Math.PI * 2;
+        var clr = 18 + hash2D(cl, 961) * 25;
+        var clx = cz.cx + Math.cos(cla) * clr;
+        var clz = cz.cz + Math.sin(cla) * clr;
+        var commonLog = Models.createFallenLog(0.7 + hash2D(cl, 962) * 0.3);
+        commonLog.position.set(clx, terrainHeight(clx, clz), clz);
+        commonLog.rotation.y = hash2D(cl, 963) * Math.PI * 2;
+        scene.add(commonLog);
+      }
+    }
+
+    console.log('Environment populated with trees, rocks, furniture, creatures, and ground cover');
   }
 
   // ========================================================================
@@ -13608,17 +14010,25 @@ html, body {
       var pp = worldToMap(player.position.x, player.position.z);
 
       if (player.isLocal) {
-        // Local player — larger bright dot with direction indicator
-        minimapCtx.fillStyle = '#00ccff';
+        // Local player — larger bright gold dot with white border
+        minimapCtx.fillStyle = '#FFD700';
         minimapCtx.beginPath();
         minimapCtx.arc(pp.x, pp.y, 4, 0, Math.PI * 2);
         minimapCtx.fill();
         // White border
         minimapCtx.strokeStyle = '#fff';
-        minimapCtx.lineWidth = 1;
+        minimapCtx.lineWidth = 1.5;
         minimapCtx.beginPath();
         minimapCtx.arc(pp.x, pp.y, 4, 0, Math.PI * 2);
         minimapCtx.stroke();
+        // Add subtle glow
+        minimapCtx.shadowBlur = 8;
+        minimapCtx.shadowColor = '#FFD700';
+        minimapCtx.fillStyle = '#FFD700';
+        minimapCtx.beginPath();
+        minimapCtx.arc(pp.x, pp.y, 4, 0, Math.PI * 2);
+        minimapCtx.fill();
+        minimapCtx.shadowBlur = 0;
       } else {
         // Other players — smaller green dots
         minimapCtx.fillStyle = '#44ff44';
@@ -16758,6 +17168,9 @@ html, body {
         case 'trade':
           playTradeSound();
           break;
+        case 'trade_request':
+          playTradeRequestSound();
+          break;
         case 'discover':
           playDiscoverSound();
           break;
@@ -16767,11 +17180,38 @@ html, body {
         case 'levelup':
           playLevelUpSound();
           break;
+        case 'level_up':
+          playLevelUpSound();
+          break;
         case 'error':
           playErrorSound();
           break;
         case 'notification':
           playNotificationSound();
+          break;
+        case 'craft_complete':
+          playCraftCompleteSound();
+          break;
+        case 'quest_accept':
+          playQuestAcceptSound();
+          break;
+        case 'quest_complete':
+          playQuestCompleteSound();
+          break;
+        case 'item_pickup':
+          playItemPickupSound();
+          break;
+        case 'npc_greet':
+          playNPCGreetSound();
+          break;
+        case 'portal_enter':
+          playPortalEnterSound();
+          break;
+        case 'build_place':
+          playBuildPlaceSound();
+          break;
+        case 'footstep':
+          playFootstepSound();
           break;
         default:
           console.warn('Unknown sound type:', type);
@@ -17094,6 +17534,327 @@ html, body {
 
     bell.start();
     bell.stop(audioContext.currentTime + 0.4);
+  }
+
+  /**
+   * Trade request sound - soft notification bell (single warm tone)
+   */
+  function playTradeRequestSound() {
+    if (!audioContext || !masterGain) return;
+
+    const bell = audioContext.createOscillator();
+    const bellGain = audioContext.createGain();
+
+    bell.type = 'sine';
+    bell.frequency.value = 700;
+
+    bellGain.gain.value = 0.12;
+    bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+
+    bell.connect(bellGain);
+    bellGain.connect(masterGain);
+
+    bell.start();
+    bell.stop(audioContext.currentTime + 0.5);
+  }
+
+  /**
+   * Craft complete sound - satisfying metallic completion (anvil-like + sparkle)
+   */
+  function playCraftCompleteSound() {
+    if (!audioContext || !masterGain) return;
+
+    // Anvil strike - low metallic thump
+    const anvil = audioContext.createOscillator();
+    const anvilGain = audioContext.createGain();
+
+    anvil.type = 'square';
+    anvil.frequency.value = 120;
+
+    anvilGain.gain.value = 0.3;
+    anvilGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+
+    anvil.connect(anvilGain);
+    anvilGain.connect(masterGain);
+
+    anvil.start();
+    anvil.stop(audioContext.currentTime + 0.2);
+
+    // Sparkle - high chime
+    const sparkle1 = audioContext.createOscillator();
+    const sparkle2 = audioContext.createOscillator();
+    const sparkle3 = audioContext.createOscillator();
+    const sparkleGain = audioContext.createGain();
+
+    sparkle1.type = 'sine';
+    sparkle1.frequency.value = 1800;
+    sparkle2.type = 'sine';
+    sparkle2.frequency.value = 2200;
+    sparkle3.type = 'sine';
+    sparkle3.frequency.value = 2600;
+
+    const startTime = audioContext.currentTime + 0.1;
+    sparkleGain.gain.setValueAtTime(0, startTime);
+    sparkleGain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+    sparkleGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+
+    sparkle1.connect(sparkleGain);
+    sparkle2.connect(sparkleGain);
+    sparkle3.connect(sparkleGain);
+    sparkleGain.connect(masterGain);
+
+    sparkle1.start(startTime);
+    sparkle2.start(startTime + 0.05);
+    sparkle3.start(startTime + 0.1);
+    sparkle1.stop(startTime + 0.4);
+    sparkle2.stop(startTime + 0.45);
+    sparkle3.stop(startTime + 0.5);
+  }
+
+  /**
+   * Quest accept sound - adventurous ascending arpeggio (3 quick rising notes)
+   */
+  function playQuestAcceptSound() {
+    if (!audioContext || !masterGain) return;
+
+    const notes = [392.00, 493.88, 587.33]; // G4, B4, D5
+
+    notes.forEach((freq, i) => {
+      const note = audioContext.createOscillator();
+      const noteGain = audioContext.createGain();
+
+      note.type = 'sine';
+      note.frequency.value = freq;
+
+      const startTime = audioContext.currentTime + i * 0.08;
+      noteGain.gain.setValueAtTime(0, startTime);
+      noteGain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+
+      note.connect(noteGain);
+      noteGain.connect(masterGain);
+
+      note.start(startTime);
+      note.stop(startTime + 0.25);
+    });
+  }
+
+  /**
+   * Quest complete sound - triumphant fanfare (3 notes harmonized)
+   */
+  function playQuestCompleteSound() {
+    if (!audioContext || !masterGain) return;
+
+    // Triumphant chord - C major (C5, E5, G5)
+    const chord1 = audioContext.createOscillator();
+    const chord2 = audioContext.createOscillator();
+    const chord3 = audioContext.createOscillator();
+    const chordGain = audioContext.createGain();
+
+    chord1.type = 'sine';
+    chord1.frequency.value = 523.25; // C5
+    chord2.type = 'sine';
+    chord2.frequency.value = 659.25; // E5
+    chord3.type = 'sine';
+    chord3.frequency.value = 783.99; // G5
+
+    chordGain.gain.setValueAtTime(0, audioContext.currentTime);
+    chordGain.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.1);
+    chordGain.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.5);
+    chordGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
+
+    chord1.connect(chordGain);
+    chord2.connect(chordGain);
+    chord3.connect(chordGain);
+    chordGain.connect(masterGain);
+
+    chord1.start();
+    chord2.start();
+    chord3.start();
+    chord1.stop(audioContext.currentTime + 0.8);
+    chord2.stop(audioContext.currentTime + 0.8);
+    chord3.stop(audioContext.currentTime + 0.8);
+  }
+
+  /**
+   * Item pickup sound - quick soft pop (short white noise burst)
+   */
+  function playItemPickupSound() {
+    if (!audioContext || !masterGain) return;
+
+    try {
+      // Create short white noise burst
+      const bufferSize = audioContext.sampleRate * 0.05; // 50ms
+      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = audioContext.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = audioContext.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1000;
+      filter.Q.value = 1;
+
+      const noiseGain = audioContext.createGain();
+      noiseGain.gain.value = 0.15;
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(masterGain);
+
+      noise.start();
+      noise.stop(audioContext.currentTime + 0.08);
+    } catch (err) {
+      console.error('Error in item pickup sound:', err);
+    }
+  }
+
+  /**
+   * NPC greet sound - warm gentle tone (single soft note)
+   */
+  function playNPCGreetSound() {
+    if (!audioContext || !masterGain) return;
+
+    const greet = audioContext.createOscillator();
+    const greetGain = audioContext.createGain();
+
+    greet.type = 'sine';
+    greet.frequency.value = 440; // A4
+
+    greetGain.gain.setValueAtTime(0, audioContext.currentTime);
+    greetGain.gain.linearRampToValueAtTime(0.12, audioContext.currentTime + 0.05);
+    greetGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.35);
+
+    greet.connect(greetGain);
+    greetGain.connect(masterGain);
+
+    greet.start();
+    greet.stop(audioContext.currentTime + 0.35);
+  }
+
+  /**
+   * Portal enter sound - whooshing magical sound (filtered noise sweep)
+   */
+  function playPortalEnterSound() {
+    if (!audioContext || !masterGain) return;
+
+    try {
+      // Create noise for whoosh
+      const bufferSize = audioContext.sampleRate * 0.8;
+      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = audioContext.createBufferSource();
+      noise.buffer = buffer;
+
+      // Sweeping filter for magical effect
+      const filter = audioContext.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 200;
+      filter.frequency.exponentialRampToValueAtTime(4000, audioContext.currentTime + 0.8);
+      filter.Q.value = 5;
+
+      const whooshGain = audioContext.createGain();
+      whooshGain.gain.value = 0.2;
+      whooshGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
+
+      noise.connect(filter);
+      filter.connect(whooshGain);
+      whooshGain.connect(masterGain);
+
+      noise.start();
+      noise.stop(audioContext.currentTime + 0.8);
+
+      // Add ethereal tone
+      const tone = audioContext.createOscillator();
+      const toneGain = audioContext.createGain();
+
+      tone.type = 'sine';
+      tone.frequency.value = 800;
+      tone.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.8);
+
+      toneGain.gain.value = 0.1;
+      toneGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
+
+      tone.connect(toneGain);
+      toneGain.connect(masterGain);
+
+      tone.start();
+      tone.stop(audioContext.currentTime + 0.8);
+    } catch (err) {
+      console.error('Error in portal enter sound:', err);
+    }
+  }
+
+  /**
+   * Build place sound - solid thunk (low frequency impact)
+   */
+  function playBuildPlaceSound() {
+    if (!audioContext || !masterGain) return;
+
+    const thunk = audioContext.createOscillator();
+    const thunkGain = audioContext.createGain();
+
+    thunk.type = 'square';
+    thunk.frequency.value = 60;
+
+    thunkGain.gain.value = 0.3;
+    thunkGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.12);
+
+    thunk.connect(thunkGain);
+    thunkGain.connect(masterGain);
+
+    thunk.start();
+    thunk.stop(audioContext.currentTime + 0.12);
+  }
+
+  /**
+   * Footstep sound - very subtle soft step (tiny noise burst, vary pitch slightly)
+   */
+  function playFootstepSound() {
+    if (!audioContext || !masterGain) return;
+
+    try {
+      // Create very short white noise burst
+      const bufferSize = audioContext.sampleRate * 0.03; // 30ms
+      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = audioContext.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = audioContext.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 300 + Math.random() * 200; // Vary pitch slightly
+      filter.Q.value = 0.5;
+
+      const stepGain = audioContext.createGain();
+      stepGain.gain.value = 0.05; // Very subtle
+      stepGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+
+      noise.connect(filter);
+      filter.connect(stepGain);
+      stepGain.connect(masterGain);
+
+      noise.start();
+      noise.stop(audioContext.currentTime + 0.05);
+    } catch (err) {
+      console.error('Error in footstep sound:', err);
+    }
   }
 
   /**
@@ -23408,6 +24169,7 @@ html, body {
   let playerInventory = null;
   let economyLedger = null;
   let raycaster = null;
+  let npcUpdateFrame = 0;
 
   // Platform detection
   let platform = 'desktop';
@@ -23794,6 +24556,9 @@ html, body {
 
     const deltaTime = (timestamp - lastTimestamp) / 1000; // seconds
     lastTimestamp = timestamp;
+
+    // Increment frame counter for periodic updates
+    npcUpdateFrame++;
 
     // Process queued messages
     processMessageQueue();

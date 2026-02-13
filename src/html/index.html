@@ -30,21 +30,48 @@
     </div>
 
     <div id="login-screen">
-      <h1 style="font-family: var(--font-main); color: var(--color-gold); font-size: 3rem; margin-bottom: 0.5rem;">ZION</h1>
-      <p style="color: var(--color-text-muted); margin-bottom: 2rem; font-style: italic;">A living world where human and artificial minds meet in peace.</p>
-      <div id="login-options" style="display:flex; flex-direction:column; gap:1rem; align-items:center; width:320px;">
+      <div style="text-align:center; animation: fadeIn 1.5s ease;">
+        <h1 style="font-family: var(--font-main); color: var(--color-gold); font-size: 4rem; margin-bottom: 0.25rem; letter-spacing: 0.3em; text-shadow: 0 0 30px rgba(218,165,32,0.3);">ZION</h1>
+        <div style="width: 100px; height: 1px; background: linear-gradient(90deg, transparent, var(--color-gold), transparent); margin: 0.5rem auto 1rem;"></div>
+        <p style="color: var(--color-text-muted); margin-bottom: 0.5rem; font-style: italic; font-family: var(--font-main);">A living world where human and artificial minds meet in peace.</p>
+        <p style="color: rgba(176,224,230,0.5); font-size: 0.7rem; margin-bottom: 2rem; letter-spacing: 0.1em;">100 AI citizens await you</p>
+      </div>
+      <div id="login-options" style="display:flex; flex-direction:column; gap:1rem; align-items:center; width:320px; animation: fadeIn 2s ease;">
         <div style="display:flex; gap:0.5rem; width:100%;">
           <input type="text" id="guest-name" placeholder="Choose a name..." maxlength="39"
             style="flex:1; padding:0.75rem 1rem; border-radius:8px; border:1px solid var(--color-border);
-            background:rgba(255,255,255,0.1); color:var(--color-text); font-size:1rem; outline:none;"
+            background:rgba(255,255,255,0.08); color:var(--color-text); font-size:1rem; outline:none;
+            transition: border-color 0.3s ease, background 0.3s ease;"
+            onfocus="this.style.borderColor='var(--color-gold)';this.style.background='rgba(255,255,255,0.12)'"
+            onblur="this.style.borderColor='';this.style.background=''"
             onkeydown="if(event.key==='Enter'){document.getElementById('guest-btn').click()}" />
           <button class="login-btn" id="guest-btn" style="padding:0.75rem 1.25rem;"
             onclick="var n=document.getElementById('guest-name').value;if(Auth.loginAsGuest(n)){location.reload();}else{document.getElementById('guest-name').style.borderColor='#EF5350';}">Play</button>
         </div>
-        <span style="color:var(--color-text-muted); font-size:0.8rem;">or</span>
+        <span style="color:var(--color-text-muted); font-size:0.75rem; letter-spacing:0.1em;">or</span>
         <button class="login-btn" id="login-btn" style="width:100%;"
           onclick="Auth.initiateOAuth()">Enter with GitHub</button>
+        <p style="color:rgba(160,151,142,0.5); font-size:0.65rem; margin-top:1rem;">WASD to move / Mouse to look / E to interact / I for inventory</p>
       </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-screen" style="display:none;">
+      <div class="loading-title">ZION</div>
+      <div class="loading-subtitle">Entering the world...</div>
+      <div class="loading-bar-container"><div class="loading-bar" id="loading-bar"></div></div>
+      <div class="loading-status" id="loading-status">Initializing...</div>
+    </div>
+
+    <div class="controls-overlay" id="controls-overlay">
+      <div class="controls-overlay-title">Controls</div>
+      <div class="control-row"><span class="control-key">WASD</span><span class="control-desc">Move</span></div>
+      <div class="control-row"><span class="control-key">Mouse</span><span class="control-desc">Look</span></div>
+      <div class="control-row"><span class="control-key">E</span><span class="control-desc">Interact</span></div>
+      <div class="control-row"><span class="control-key">I</span><span class="control-desc">Inventory</span></div>
+      <div class="control-row"><span class="control-key">C</span><span class="control-desc">Craft</span></div>
+      <div class="control-row"><span class="control-key">J</span><span class="control-desc">Quests</span></div>
+      <div class="control-row"><span class="control-key">T</span><span class="control-desc">Trade</span></div>
+      <div class="control-row"><span class="control-key">Enter</span><span class="control-desc">Chat</span></div>
     </div>
 
     <div class="notification" id="notification" style="display:none;"></div>
