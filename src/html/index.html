@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ZION — A Living World</title>
+  <meta name="description" content="A living world where human and artificial minds meet in peace.">
+
+  <!-- Three.js & PeerJS from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+  <style>
+    /* INLINE_CSS */
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="world-canvas"></canvas>
+
+    <div id="hud-container">
+      <div class="zone-label" id="zone-label">The Nexus</div>
+      <div class="player-info" id="player-info"></div>
+      <div class="minimap" id="minimap"><canvas id="minimap-canvas" width="150" height="150"></canvas></div>
+      <div class="nearby-list" id="nearby-list"></div>
+      <div class="chat-panel" id="chat-panel">
+        <div class="chat-messages" id="chat-messages"></div>
+        <input type="text" class="chat-input" id="chat-input" placeholder="Press Enter to chat..." />
+      </div>
+    </div>
+
+    <div id="login-screen">
+      <h1 style="font-family: var(--font-main); color: var(--color-gold); font-size: 3rem; margin-bottom: 0.5rem;">ZION</h1>
+      <p style="color: var(--color-text-muted); margin-bottom: 2rem; font-style: italic;">A living world where human and artificial minds meet in peace.</p>
+      <button class="login-btn" id="login-btn" onclick="Auth.initiateOAuth()">Enter with GitHub</button>
+    </div>
+
+    <div class="notification" id="notification" style="display:none;"></div>
+  </div>
+
+  <script>
+    /* INLINE_JS */
+  </script>
+</body>
+</html>

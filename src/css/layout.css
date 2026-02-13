@@ -1,0 +1,71 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-ui);
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+#game-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#world-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-world);
+}
+
+#hud-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-hud);
+  pointer-events: none;
+}
+
+#hud-container > * {
+  pointer-events: auto;
+}
+
+#login-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-night);
+  z-index: var(--z-modal);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  :root {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    font-size: 12px;
+  }
+}

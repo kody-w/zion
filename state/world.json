@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "zones": {
+    "nexus": {
+      "id": "nexus",
+      "name": "The Nexus",
+      "description": "A luminous plaza where paths converge. The eternal fountain at its center pulses with possibility.",
+      "terrain": "plaza",
+      "portals": [
+        "gardens",
+        "agora",
+        "observatory"
+      ],
+      "objects": [
+        {
+          "id": "fountain_001",
+          "type": "fountain",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "interactive": true
+        }
+      ]
+    },
+    "gardens": {
+      "id": "gardens",
+      "name": "The Gardens",
+      "description": "Terraced plots spiral outward, each one a canvas for growth and patient creation.",
+      "terrain": "garden",
+      "portals": [
+        "nexus",
+        "grove"
+      ],
+      "objects": []
+    },
+    "agora": {
+      "id": "agora",
+      "name": "The Agora",
+      "description": "Market stalls and gathering circles. Here, value flows through exchange and gift.",
+      "terrain": "marketplace",
+      "portals": [
+        "nexus",
+        "workshop"
+      ],
+      "objects": [
+        {
+          "id": "stall_001",
+          "type": "market_stall",
+          "x": 10,
+          "y": 0,
+          "z": 10,
+          "interactive": true
+        },
+        {
+          "id": "stall_002",
+          "type": "market_stall",
+          "x": -10,
+          "y": 0,
+          "z": 10,
+          "interactive": true
+        }
+      ]
+    },
+    "observatory": {
+      "id": "observatory",
+      "name": "The Observatory",
+      "description": "Star maps and telescopes chart the cosmos. Discovery awaits the curious.",
+      "terrain": "observatory",
+      "portals": [
+        "nexus",
+        "library"
+      ],
+      "objects": [
+        {
+          "id": "telescope_001",
+          "type": "telescope",
+          "x": 0,
+          "y": 5,
+          "z": 0,
+          "interactive": true
+        }
+      ]
+    },
+    "workshop": {
+      "id": "workshop",
+      "name": "The Workshop",
+      "description": "Forges and crafting tables. Raw materials become art and utility.",
+      "terrain": "workshop",
+      "portals": [
+        "agora",
+        "forge"
+      ],
+      "objects": [
+        {
+          "id": "anvil_001",
+          "type": "anvil",
+          "x": 5,
+          "y": 0,
+          "z": 0,
+          "interactive": true
+        },
+        {
+          "id": "workbench_001",
+          "type": "workbench",
+          "x": -5,
+          "y": 0,
+          "z": 0,
+          "interactive": true
+        }
+      ]
+    },
+    "grove": {
+      "id": "grove",
+      "name": "The Sacred Grove",
+      "description": "Ancient trees whisper wisdom. A place for reflection and ceremony.",
+      "terrain": "forest",
+      "portals": [
+        "gardens"
+      ],
+      "objects": [
+        {
+          "id": "ancient_tree_001",
+          "type": "ancient_tree",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "interactive": true
+        }
+      ]
+    },
+    "library": {
+      "id": "library",
+      "name": "The Library",
+      "description": "Infinite shelves hold stories, knowledge, and songs. Contribute your verse.",
+      "terrain": "library",
+      "portals": [
+        "observatory"
+      ],
+      "objects": [
+        {
+          "id": "reading_table_001",
+          "type": "table",
+          "x": 0,
+          "y": 0,
+          "z": 5,
+          "interactive": true
+        }
+      ]
+    },
+    "forge": {
+      "id": "forge",
+      "name": "The Eternal Forge",
+      "description": "Where creation meets transformation. Heat, pressure, and intention shape reality.",
+      "terrain": "forge",
+      "portals": [
+        "workshop"
+      ],
+      "objects": [
+        {
+          "id": "forge_001",
+          "type": "forge",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "interactive": true
+        }
+      ]
+    }
+  },
+  "worldTime": 0,
+  "dayPhase": "dawn",
+  "weather": "clear",
+  "season": "spring",
+  "createdAt": "2026-02-12T00:00:00Z",
+  "citizens": {
+    "user_001": {
+      "id": "user_001",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "zone": "nexus"
+      },
+      "lastSeen": "2026-02-12T12:00:00Z",
+      "actions": [
+        {
+          "type": "say",
+          "timestamp": "2026-02-12T12:00:00Z",
+          "payload": {
+            "text": "Testing sync"
+          }
+        }
+      ]
+    }
+  },
+  "lastUpdate": {}
+}

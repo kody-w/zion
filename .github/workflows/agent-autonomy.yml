@@ -1,0 +1,36 @@
+name: Agent Autonomy
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  agents:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Activate agents
+        run: |
+          python scripts/agent_autonomy.py > /tmp/agent_actions.json
+          # Apply actions to state
+          python -c "
+          import json
+          with open('/tmp/agent_actions.json') as f:
+            actions = json.load(f)
+          with open('state/actions.json') as f:
+            state = json.load(f)
+          state['actions'].extend(actions)
+          with open('state/actions.json', 'w') as f:
+            json.dump(state, f, indent=2)
+          "
+      - name: Commit
+        run: |
+          git config user.name "ZION Agent Engine"
+          git config user.email "zion-agents@users.noreply.github.com"
+          git add state/
+          git diff --staged --quiet || git commit -m "Agents: autonomous actions"
+          git push

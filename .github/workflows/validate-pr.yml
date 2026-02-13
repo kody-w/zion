@@ -1,0 +1,25 @@
+name: Validate PR
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run tests
+        run: |
+          chmod +x tests/run_all.sh
+          ./tests/run_all.sh
+      - name: PII scan
+        run: python scripts/pii_scan.py
+      - name: Validate messages
+        run: |
+          for f in state/actions.json state/chat.json; do
+            if [ -f "$f" ]; then
+              python scripts/validate_message.py "$f" || true
+            fi
+          done

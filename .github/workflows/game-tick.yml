@@ -1,0 +1,37 @@
+name: Game Tick
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run game tick
+        run: |
+          python scripts/game_tick.py state/world.json state/gardens.json > /tmp/tick_output.json
+          # Update state files if changed
+          python -c "
+          import json
+          with open('/tmp/tick_output.json') as f:
+            data = json.load(f)
+          if 'world' in data:
+            with open('state/world.json', 'w') as f:
+              json.dump(data['world'], f, indent=2)
+          if 'gardens' in data:
+            with open('state/gardens.json', 'w') as f:
+              json.dump(data['gardens'], f, indent=2)
+          "
+      - name: Commit changes
+        run: |
+          git config user.name "ZION World Engine"
+          git config user.email "zion-engine@users.noreply.github.com"
+          git add state/
+          git diff --staged --quiet || git commit -m "Game tick: advance world state"
+          git push
