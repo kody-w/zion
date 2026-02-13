@@ -7,6 +7,30 @@
   let stars = null;
   let zoneParticles = null;
 
+  // Texture loader and cache
+  var textureLoader = null;
+  var textureCache = {};
+  var ASSET_BASE = '';  // Set dynamically based on page location
+  var animatedObjects = []; // {mesh, type, params}
+
+  function getTexture(name) {
+    if (!textureLoader) {
+      if (typeof THREE === 'undefined') return null;
+      textureLoader = new THREE.TextureLoader();
+      // Detect asset base path
+      if (typeof window !== 'undefined') {
+        var path = window.location.pathname;
+        ASSET_BASE = path.substring(0, path.lastIndexOf('/') + 1);
+      }
+    }
+    if (textureCache[name]) return textureCache[name];
+    var tex = textureLoader.load(ASSET_BASE + 'assets/textures/' + name);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    textureCache[name] = tex;
+    return tex;
+  }
+
   /**
    * Initialize Three.js scene
    * @param {HTMLElement} container - DOM container for renderer
@@ -135,6 +159,9 @@
 
     const { scene } = sceneCtx;
 
+    // Clear animated objects tracking
+    animatedObjects = [];
+
     // Clear existing objects (keep lights, camera, sky)
     const objectsToRemove = [];
     scene.traverse((obj) => {
@@ -189,12 +216,15 @@
 
   function generateNexus(scene) {
     // Large polished stone plaza (200x200)
+    var stoneTex = getTexture('stone.png');
+    if (stoneTex) stoneTex.repeat.set(20, 20);
     const baseGround = new THREE.Mesh(
       new THREE.CylinderGeometry(100, 100, 0.5, 64),
       new THREE.MeshStandardMaterial({
         color: 0x8c8c8c,
         metalness: 0.3,
-        roughness: 0.7
+        roughness: 0.7,
+        map: stoneTex || undefined
       })
     );
     baseGround.receiveShadow = true;
@@ -202,12 +232,15 @@
 
     // Multiple concentric rings at different heights (stepped)
     for (let i = 1; i <= 10; i++) {
+      var ringTex = getTexture('stone.png');
+      if (ringTex) ringTex.repeat.set(i * 2, i * 2);
       const ring = new THREE.Mesh(
         new THREE.RingGeometry(i * 9 - 1, i * 9, 64),
         new THREE.MeshStandardMaterial({
           color: i % 2 === 0 ? 0xa0a0a0 : 0x707070,
           metalness: 0.4,
-          roughness: 0.6
+          roughness: 0.6,
+          map: ringTex || undefined
         })
       );
       ring.rotation.x = -Math.PI / 2;
@@ -246,6 +279,8 @@
     // Water pools for each tier
     const waterLevels = [{y: 2, r: 7.5}, {y: 3.5, r: 4.5}, {y: 4.5, r: 1.8}];
     waterLevels.forEach(({y, r}) => {
+      var waterTex = getTexture('water.png');
+      if (waterTex) waterTex.repeat.set(r, r);
       const water = new THREE.Mesh(
         new THREE.CylinderGeometry(r, r, 0.3, 24),
         new THREE.MeshStandardMaterial({
@@ -253,17 +288,21 @@
           transparent: true,
           opacity: 0.6,
           metalness: 0.8,
-          roughness: 0.2
+          roughness: 0.2,
+          map: waterTex || undefined
         })
       );
       water.position.set(0, y, 0);
+      water.userData.isWater = true;
       scene.add(water);
+      animatedObjects.push({mesh: water, type: 'water', params: {speed: 0.3}});
     });
 
     // Animated water particles
     const waterParticles = createFountainParticles();
     waterParticles.position.set(0, 4.5, 0);
     scene.add(waterParticles);
+    animatedObjects.push({mesh: waterParticles, type: 'fountain', params: {}});
 
     // 8 distinct portal alcoves around perimeter
     const alcoveCount = 8;
@@ -358,6 +397,8 @@
       const x = Math.cos(angle) * 60;
       const z = Math.sin(angle) * 60;
 
+      var pondTex = getTexture('water.png');
+      if (pondTex) pondTex.repeat.set(2, 2);
       const pond = new THREE.Mesh(
         new THREE.CircleGeometry(4, 16),
         new THREE.MeshStandardMaterial({
@@ -365,7 +406,8 @@
           transparent: true,
           opacity: 0.7,
           metalness: 0.9,
-          roughness: 0.1
+          roughness: 0.1,
+          map: pondTex || undefined
         })
       );
       pond.rotation.x = -Math.PI / 2;
@@ -431,11 +473,14 @@
     positions.needsUpdate = true;
     groundGeometry.computeVertexNormals();
 
+    var grassTex = getTexture('grass.png');
+    if (grassTex) grassTex.repeat.set(15, 15);
     const ground = new THREE.Mesh(
       groundGeometry,
       new THREE.MeshStandardMaterial({
         color: 0x3a7d44,
-        roughness: 0.9
+        roughness: 0.9,
+        map: grassTex || undefined
       })
     );
     ground.rotation.x = -Math.PI / 2;
@@ -446,19 +491,22 @@
     for (let i = 0; i < 25; i++) {
       const x = (Math.random() - 0.5) * 280;
       const z = (Math.random() - 0.5) * 280;
-      addPineTree(scene, x, z, 0.8 + Math.random() * 0.8);
+      const tree = addPineTree(scene, x, z, 0.8 + Math.random() * 0.8);
+      animatedObjects.push({mesh: tree, type: 'tree', params: {seed: Math.random(), speed: 0.5 + Math.random() * 0.5}});
     }
 
     for (let i = 0; i < 20; i++) {
       const x = (Math.random() - 0.5) * 280;
       const z = (Math.random() - 0.5) * 280;
-      addOakTree(scene, x, z, 0.7 + Math.random() * 0.9);
+      const tree = addOakTree(scene, x, z, 0.7 + Math.random() * 0.9);
+      animatedObjects.push({mesh: tree, type: 'tree', params: {seed: Math.random(), speed: 0.5 + Math.random() * 0.5}});
     }
 
     for (let i = 0; i < 15; i++) {
       const x = (Math.random() - 0.5) * 260;
       const z = (Math.random() - 0.5) * 260;
-      addCherryTree(scene, x, z);
+      const tree = addCherryTree(scene, x, z);
+      animatedObjects.push({mesh: tree, type: 'tree', params: {seed: Math.random(), speed: 0.5 + Math.random() * 0.5}});
     }
 
     // Multiple garden plots scattered around
@@ -497,6 +545,8 @@
         const t = i / 50;
         const x = startX + Math.sin(t * Math.PI * 5 + s) * 20;
         const z = -140 + t * 280;
+        var streamTex = getTexture('water.png');
+        if (streamTex) streamTex.repeat.set(1, 1.5);
         const streamSegment = new THREE.Mesh(
           new THREE.PlaneGeometry(4, 6),
           new THREE.MeshStandardMaterial({
@@ -504,12 +554,15 @@
             transparent: true,
             opacity: 0.6,
             metalness: 0.9,
-            roughness: 0.1
+            roughness: 0.1,
+            map: streamTex || undefined
           })
         );
         streamSegment.rotation.x = -Math.PI / 2;
         streamSegment.position.set(x, 0.02, z);
+        streamSegment.userData.isWater = true;
         scene.add(streamSegment);
+        animatedObjects.push({mesh: streamSegment, type: 'water', params: {speed: 0.3}});
       }
     }
 
@@ -595,12 +648,40 @@
     // Ambient particles
     zoneParticles = createAmbientParticles(500, 0xffb3d9, 150, 10, 0.03);
     scene.add(zoneParticles);
+
+    // Fireflies (for night time)
+    for (let i = 0; i < 20; i++) {
+      const x = (Math.random() - 0.5) * 250;
+      const z = (Math.random() - 0.5) * 250;
+      const firefly = new THREE.Mesh(
+        new THREE.SphereGeometry(0.1, 8, 8),
+        new THREE.MeshStandardMaterial({
+          color: 0xffff88,
+          emissive: 0xffff00,
+          emissiveIntensity: 1
+        })
+      );
+      firefly.position.set(x, 1, z);
+      scene.add(firefly);
+
+      const fireflyLight = new THREE.PointLight(0xffff88, 0.3, 5);
+      fireflyLight.position.set(x, 1, z);
+      scene.add(fireflyLight);
+
+      animatedObjects.push({
+        mesh: firefly,
+        type: 'firefly',
+        params: {seed: Math.random(), light: fireflyLight}
+      });
+    }
   }
 
   function generateAthenaeum(scene) {
     // Grand marble hall floor (250x200)
     const floorSize = 250;
     const tileSize = 5;
+    var marbleTex = getTexture('marble.png');
+    if (marbleTex) marbleTex.repeat.set(12, 12);
     for (let x = -floorSize/2; x < floorSize/2; x += tileSize) {
       for (let z = -100; z < 100; z += tileSize) {
         const isEven = (Math.floor(x / tileSize) + Math.floor(z / tileSize)) % 2 === 0;
@@ -609,7 +690,8 @@
           new THREE.MeshStandardMaterial({
             color: isEven ? 0xf5f5dc : 0xe8e8d0,
             metalness: 0.3,
-            roughness: 0.5
+            roughness: 0.5,
+            map: marbleTex || undefined
           })
         );
         tile.position.set(x + tileSize/2, 0.125, z + tileSize/2);
@@ -647,11 +729,14 @@
     }
 
     columnLayout.forEach(([x, y, z]) => {
+      var colTex = getTexture('marble.png');
+      if (colTex) colTex.repeat.set(2, 4);
       const column = new THREE.Mesh(
         new THREE.CylinderGeometry(1.2, 1.2, 16, 20),
         new THREE.MeshStandardMaterial({
           color: 0xf5f5dc,
-          roughness: 0.7
+          roughness: 0.7,
+          map: colTex || undefined
         })
       );
       column.position.set(x, 8, z);
@@ -660,7 +745,7 @@
 
       const capital = new THREE.Mesh(
         new THREE.CylinderGeometry(1.8, 1.2, 1.5, 20),
-        new THREE.MeshStandardMaterial({ color: 0xf5f5dc })
+        new THREE.MeshStandardMaterial({ color: 0xf5f5dc, map: colTex || undefined })
       );
       capital.position.set(x, 16.75, z);
       capital.castShadow = false;
@@ -668,7 +753,7 @@
 
       const base = new THREE.Mesh(
         new THREE.CylinderGeometry(1.5, 1.8, 1, 20),
-        new THREE.MeshStandardMaterial({ color: 0xf5f5dc })
+        new THREE.MeshStandardMaterial({ color: 0xf5f5dc, map: colTex || undefined })
       );
       base.position.set(x, 0.5, z);
       scene.add(base);
@@ -857,20 +942,25 @@
 
   function generateStudio(scene) {
     // Large amphitheater ground (250x250)
+    var stoneTex = getTexture('stone.png');
+    if (stoneTex) stoneTex.repeat.set(15, 15);
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(250, 250),
-      new THREE.MeshStandardMaterial({ color: 0xd2b48c })
+      new THREE.MeshStandardMaterial({ color: 0xd2b48c, map: stoneTex || undefined })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
 
     // Main central stage (larger)
+    var stageTex = getTexture('stone.png');
+    if (stageTex) stageTex.repeat.set(5, 5);
     const mainStage = new THREE.Mesh(
       new THREE.CylinderGeometry(20, 20, 1.2, 32),
       new THREE.MeshStandardMaterial({
         color: 0x8b4513,
-        roughness: 0.8
+        roughness: 0.8,
+        map: stageTex || undefined
       })
     );
     mainStage.position.set(0, 0.6, 0);
@@ -885,9 +975,11 @@
       {x: 90, z: 90, r: 10}
     ];
     additionalStages.forEach(({x, z, r}) => {
+      var addStageTex = getTexture('stone.png');
+      if (addStageTex) addStageTex.repeat.set(r / 3, r / 3);
       const stage = new THREE.Mesh(
         new THREE.CylinderGeometry(r, r, 1, 24),
-        new THREE.MeshStandardMaterial({ color: 0x9b5523 })
+        new THREE.MeshStandardMaterial({ color: 0x9b5523, map: addStageTex || undefined })
       );
       stage.position.set(x, 0.5, z);
       stage.castShadow = false;
@@ -897,9 +989,11 @@
 
     // Tiered seating (7 tiers)
     for (let i = 1; i <= 7; i++) {
+      var tierTex = getTexture('stone.png');
+      if (tierTex) tierTex.repeat.set((20 + i * 5) / 5, 2);
       const tier = new THREE.Mesh(
         new THREE.CylinderGeometry(20 + i * 5, 20 + i * 5, 0.8, 32, 1, false, 0, Math.PI * 1.6),
-        new THREE.MeshStandardMaterial({ color: 0xa0522d })
+        new THREE.MeshStandardMaterial({ color: 0xa0522d, map: tierTex || undefined })
       );
       tier.position.set(0, 0.4 - i * 0.8, 0);
       tier.receiveShadow = true;
@@ -969,6 +1063,7 @@
       sculpture.rotation.set(Math.random(), Math.random(), Math.random());
       sculpture.castShadow = false;
       scene.add(sculpture);
+      animatedObjects.push({mesh: sculpture, type: 'display', params: {seed: Math.random(), speed: 0.3 + Math.random() * 0.3}});
     });
 
     // Music circle with instrument-shaped objects
@@ -1152,11 +1247,14 @@
     positions.needsUpdate = true;
     groundGeometry.computeVertexNormals();
 
+    var dirtTex = getTexture('dirt.png');
+    if (dirtTex) dirtTex.repeat.set(20, 20);
     const ground = new THREE.Mesh(
       groundGeometry,
       new THREE.MeshStandardMaterial({
         color: 0x2d4a1e,
-        roughness: 1
+        roughness: 1,
+        map: dirtTex || undefined
       })
     );
     ground.rotation.x = -Math.PI / 2;
@@ -1170,13 +1268,15 @@
     for (let i = 0; i < 70; i++) {
       const x = (Math.random() - 0.5) * 380;
       const z = (Math.random() - 0.5) * 380;
-      addPineTree(scene, x, z, 0.7 + Math.random() * 1.2);
+      const tree = addPineTree(scene, x, z, 0.7 + Math.random() * 1.2);
+      animatedObjects.push({mesh: tree, type: 'tree', params: {seed: Math.random(), speed: 1.0 + Math.random() * 0.5}});
     }
 
     for (let i = 0; i < 40; i++) {
       const x = (Math.random() - 0.5) * 380;
       const z = (Math.random() - 0.5) * 380;
-      addOakTree(scene, x, z, 0.6 + Math.random() * 1.4);
+      const tree = addOakTree(scene, x, z, 0.6 + Math.random() * 1.4);
+      animatedObjects.push({mesh: tree, type: 'tree', params: {seed: Math.random(), speed: 1.0 + Math.random() * 0.5}});
     }
 
     // Twisted old trees (thicker trunks, wider canopies)
@@ -1367,6 +1467,8 @@
     // Waterfall
     const waterfallX = -160;
     const waterfallZ = 100;
+    var waterfallTex = getTexture('water.png');
+    if (waterfallTex) waterfallTex.repeat.set(2, 3);
     const waterfall = new THREE.Mesh(
       new THREE.PlaneGeometry(8, 12),
       new THREE.MeshStandardMaterial({
@@ -1374,13 +1476,16 @@
         transparent: true,
         opacity: 0.4,
         metalness: 0.9,
-        roughness: 0.1
+        roughness: 0.1,
+        map: waterfallTex || undefined
       })
     );
     waterfall.position.set(waterfallX, 6, waterfallZ);
     scene.add(waterfall);
 
     // Waterfall pool
+    var poolTex = getTexture('water.png');
+    if (poolTex) poolTex.repeat.set(3, 3);
     const pool = new THREE.Mesh(
       new THREE.CircleGeometry(6, 24),
       new THREE.MeshStandardMaterial({
@@ -1388,7 +1493,8 @@
         transparent: true,
         opacity: 0.7,
         metalness: 0.8,
-        roughness: 0.2
+        roughness: 0.2,
+        map: poolTex || undefined
       })
     );
     pool.rotation.x = -Math.PI / 2;
@@ -1398,18 +1504,42 @@
     // Ambient particles - fireflies
     zoneParticles = createFireflies();
     scene.add(zoneParticles);
+
+    // Mist particles (drifting semi-transparent planes)
+    for (let i = 0; i < 10; i++) {
+      const mist = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 15),
+        new THREE.MeshBasicMaterial({
+          color: 0xaaaaaa,
+          transparent: true,
+          opacity: 0.15,
+          side: THREE.DoubleSide
+        })
+      );
+      mist.position.set(
+        (Math.random() - 0.5) * 350,
+        Math.random() * 8 + 2,
+        (Math.random() - 0.5) * 350
+      );
+      mist.rotation.y = Math.random() * Math.PI * 2;
+      scene.add(mist);
+      animatedObjects.push({mesh: mist, type: 'mist', params: {seed: Math.random(), speed: 0.2}});
+    }
   }
 
   function generateAgora(scene) {
     // Large cobblestone market square (250x250)
     const squareSize = 250;
     const cobbleSize = 1.2;
+    var cobbleTex = getTexture('cobblestone.png');
+    if (cobbleTex) cobbleTex.repeat.set(15, 15);
     for (let x = -squareSize/2; x < squareSize/2; x += cobbleSize) {
       for (let z = -squareSize/2; z < squareSize/2; z += cobbleSize) {
         const cobble = new THREE.Mesh(
           new THREE.BoxGeometry(cobbleSize * 0.95, 0.18, cobbleSize * 0.95),
           new THREE.MeshStandardMaterial({
-            color: new THREE.Color().setHSL(0, 0, 0.4 + Math.random() * 0.15)
+            color: new THREE.Color().setHSL(0, 0, 0.4 + Math.random() * 0.15),
+            map: cobbleTex || undefined
           })
         );
         cobble.position.set(
@@ -1456,6 +1586,8 @@
     fountain.castShadow = false;
     scene.add(fountain);
 
+    var fountainWaterTex = getTexture('water.png');
+    if (fountainWaterTex) fountainWaterTex.repeat.set(2, 2);
     const fountainWater = new THREE.Mesh(
       new THREE.CylinderGeometry(4.5, 4.5, 0.4, 24),
       new THREE.MeshStandardMaterial({
@@ -1463,7 +1595,8 @@
         transparent: true,
         opacity: 0.7,
         metalness: 0.8,
-        roughness: 0.2
+        roughness: 0.2,
+        map: fountainWaterTex || undefined
       })
     );
     fountainWater.position.set(0, 3, 0);
@@ -1589,6 +1722,32 @@
       scene.add(step);
     }
 
+    // Banner poles around perimeter
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const x = Math.cos(angle) * 110;
+      const z = Math.sin(angle) * 110;
+
+      const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.15, 8, 8),
+        new THREE.MeshStandardMaterial({ color: 0x654321 })
+      );
+      pole.position.set(x, 4, z);
+      scene.add(pole);
+
+      const banner = new THREE.Mesh(
+        new THREE.PlaneGeometry(2, 4),
+        new THREE.MeshStandardMaterial({
+          color: stallColors[i % stallColors.length],
+          side: THREE.DoubleSide
+        })
+      );
+      banner.position.set(x, 5, z);
+      banner.rotation.y = -angle;
+      scene.add(banner);
+      animatedObjects.push({mesh: banner, type: 'banner', params: {seed: Math.random()}});
+    }
+
     // Awning-covered walkways
     const walkwayCount = 8;
     for (let i = 0; i < walkwayCount; i++) {
@@ -1662,9 +1821,11 @@
     positions.needsUpdate = true;
     groundGeometry.computeVertexNormals();
 
+    var commonsGrassTex = getTexture('grass.png');
+    if (commonsGrassTex) commonsGrassTex.repeat.set(15, 15);
     const ground = new THREE.Mesh(
       groundGeometry,
-      new THREE.MeshStandardMaterial({ color: 0x7cb342 })
+      new THREE.MeshStandardMaterial({ color: 0x7cb342, map: commonsGrassTex || undefined })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
@@ -1894,6 +2055,8 @@
     });
 
     // Small lake
+    var lakeTex = getTexture('water.png');
+    if (lakeTex) lakeTex.repeat.set(8, 8);
     const lake = new THREE.Mesh(
       new THREE.CircleGeometry(25, 32),
       new THREE.MeshStandardMaterial({
@@ -1901,7 +2064,8 @@
         transparent: true,
         opacity: 0.75,
         metalness: 0.8,
-        roughness: 0.2
+        roughness: 0.2,
+        map: lakeTex || undefined
       })
     );
     lake.rotation.x = -Math.PI / 2;
@@ -1915,11 +2079,14 @@
 
   function generateArena(scene) {
     // Large sandy arena floor (200x200)
+    var sandTex = getTexture('sand.png');
+    if (sandTex) sandTex.repeat.set(10, 10);
     const arenaFloor = new THREE.Mesh(
       new THREE.CircleGeometry(100, 64),
       new THREE.MeshStandardMaterial({
         color: 0xdaa520,
-        roughness: 0.95
+        roughness: 0.95,
+        map: sandTex || undefined
       })
     );
     arenaFloor.rotation.x = -Math.PI / 2;
@@ -1985,6 +2152,7 @@
         );
         banner.rotation.y = angle + Math.PI;
         scene.add(banner);
+        animatedObjects.push({mesh: banner, type: 'banner', params: {seed: Math.random()}});
       }
     }
 
@@ -2130,6 +2298,12 @@
       const light = new THREE.PointLight(0xff4500, 1, 18);
       light.position.set(x, 15.5, z);
       scene.add(light);
+
+      animatedObjects.push({
+        mesh: flame,
+        type: 'torch',
+        params: {seed: Math.random(), light: light}
+      });
     }
 
     // Ambient particles - rising embers
@@ -2140,72 +2314,102 @@
   // Helper functions for zone elements
 
   function addPineTree(scene, x, z, scale = 1) {
+    const treeGroup = new THREE.Group();
+    treeGroup.position.set(x, 0, z);
+
     // Trunk with color variation
     const trunkColor = new THREE.Color(0x4a3728).offsetHSL(0, 0, (Math.random() - 0.5) * 0.1);
+    var barkTex = getTexture('bark.png');
+    if (barkTex) barkTex.repeat.set(1, 2);
     const trunk = new THREE.Mesh(
       new THREE.CylinderGeometry(0.3 * scale, 0.4 * scale, 6 * scale, 8),
-      new THREE.MeshStandardMaterial({ color: trunkColor })
+      new THREE.MeshStandardMaterial({ color: trunkColor, map: barkTex || undefined })
     );
-    trunk.position.set(x, 3 * scale, z);
+    trunk.position.set(0, 3 * scale, 0);
     trunk.castShadow = false;
-    scene.add(trunk);
+    treeGroup.add(trunk);
 
     // Cone foliage (varying tiers)
     const tiers = 3 + Math.floor(Math.random() * 2);
     const foliageColor = new THREE.Color(0x1a4d2e).offsetHSL(0, 0, (Math.random() - 0.5) * 0.15);
+    var leavesTex = getTexture('leaves.png');
+    if (leavesTex) leavesTex.repeat.set(2, 2);
     for (let i = 0; i < tiers; i++) {
       const foliage = new THREE.Mesh(
         new THREE.ConeGeometry((1.5 - i * 0.3) * scale, 3 * scale, 8),
-        new THREE.MeshStandardMaterial({ color: foliageColor })
+        new THREE.MeshStandardMaterial({ color: foliageColor, map: leavesTex || undefined })
       );
-      foliage.position.set(x, (5 + i * 1.8) * scale, z);
+      foliage.position.set(0, (5 + i * 1.8) * scale, 0);
       foliage.castShadow = false;
-      scene.add(foliage);
+      treeGroup.add(foliage);
     }
+
+    scene.add(treeGroup);
+    return treeGroup;
   }
 
   function addOakTree(scene, x, z, scale = 1) {
+    const treeGroup = new THREE.Group();
+    treeGroup.position.set(x, 0, z);
+
     // Trunk with color variation
     const trunkColor = new THREE.Color(0x654321).offsetHSL(0, 0, (Math.random() - 0.5) * 0.1);
+    var barkTex = getTexture('bark.png');
+    if (barkTex) barkTex.repeat.set(1, 2);
     const trunk = new THREE.Mesh(
       new THREE.CylinderGeometry(0.4 * scale, 0.5 * scale, 5 * scale, 8),
-      new THREE.MeshStandardMaterial({ color: trunkColor })
+      new THREE.MeshStandardMaterial({ color: trunkColor, map: barkTex || undefined })
     );
-    trunk.position.set(x, 2.5 * scale, z);
+    trunk.position.set(0, 2.5 * scale, 0);
     trunk.castShadow = false;
-    scene.add(trunk);
+    treeGroup.add(trunk);
 
     // Round foliage with size variation
     const foliageSize = (2 + Math.random() * 0.8) * scale;
     const foliageColor = new THREE.Color(0x228b22).offsetHSL(0, 0, (Math.random() - 0.5) * 0.2);
+    var leavesTex = getTexture('leaves.png');
+    if (leavesTex) leavesTex.repeat.set(2, 2);
     const foliage = new THREE.Mesh(
       new THREE.SphereGeometry(foliageSize, 12, 12),
-      new THREE.MeshStandardMaterial({ color: foliageColor })
+      new THREE.MeshStandardMaterial({ color: foliageColor, map: leavesTex || undefined })
     );
-    foliage.position.set(x, 6 * scale, z);
+    foliage.position.set(0, 6 * scale, 0);
     foliage.castShadow = false;
-    scene.add(foliage);
+    treeGroup.add(foliage);
+
+    scene.add(treeGroup);
+    return treeGroup;
   }
 
   function addCherryTree(scene, x, z) {
+    const treeGroup = new THREE.Group();
+    treeGroup.position.set(x, 0, z);
+
     // Trunk
+    var barkTex = getTexture('bark.png');
+    if (barkTex) barkTex.repeat.set(1, 2);
     const trunk = new THREE.Mesh(
       new THREE.CylinderGeometry(0.3, 0.4, 4, 8),
-      new THREE.MeshStandardMaterial({ color: 0x654321 })
+      new THREE.MeshStandardMaterial({ color: 0x654321, map: barkTex || undefined })
     );
-    trunk.position.set(x, 2, z);
+    trunk.position.set(0, 2, 0);
     trunk.castShadow = false;
-    scene.add(trunk);
+    treeGroup.add(trunk);
 
     // Pink blossom foliage with variation
     const blossomColor = new THREE.Color(0xffb7c5).offsetHSL((Math.random() - 0.5) * 0.05, 0, 0);
+    var leavesTex = getTexture('leaves.png');
+    if (leavesTex) leavesTex.repeat.set(2, 2);
     const foliage = new THREE.Mesh(
       new THREE.SphereGeometry(2 + Math.random() * 0.5, 10, 10),
-      new THREE.MeshStandardMaterial({ color: blossomColor })
+      new THREE.MeshStandardMaterial({ color: blossomColor, map: leavesTex || undefined })
     );
-    foliage.position.set(x, 5, z);
+    foliage.position.set(0, 5, 0);
     foliage.castShadow = false;
-    scene.add(foliage);
+    treeGroup.add(foliage);
+
+    scene.add(treeGroup);
+    return treeGroup;
   }
 
   function addGardenPlot(scene, x, z) {
@@ -2305,10 +2509,13 @@
 
   function addHouse(scene, x, z, size) {
     // House base
+    var woodTex = getTexture('wood.png');
+    if (woodTex) woodTex.repeat.set(size / 3, size / 3);
     const house = new THREE.Mesh(
       new THREE.BoxGeometry(size, size * 0.7, size),
       new THREE.MeshStandardMaterial({
-        color: new THREE.Color(0xdeb887).offsetHSL(0, 0, (Math.random() - 0.5) * 0.1)
+        color: new THREE.Color(0xdeb887).offsetHSL(0, 0, (Math.random() - 0.5) * 0.1),
+        map: woodTex || undefined
       })
     );
     house.position.set(x, size * 0.35, z);
@@ -2376,10 +2583,12 @@
 
   function addBridge(scene, x, z, rotation) {
     // Bridge planks
+    var woodTex = getTexture('wood.png');
+    if (woodTex) woodTex.repeat.set(2, 1);
     for (let i = 0; i < 8; i++) {
       const plank = new THREE.Mesh(
         new THREE.BoxGeometry(4, 0.2, 0.8),
-        new THREE.MeshStandardMaterial({ color: 0x8b7355 })
+        new THREE.MeshStandardMaterial({ color: 0x8b7355, map: woodTex || undefined })
       );
       plank.position.set(x, 0.3, z + (i - 3.5) * 0.9);
       plank.rotation.y = rotation;
@@ -2427,9 +2636,11 @@
 
   function addStall(scene, x, z, rotation, canopyColor) {
     // Stall structure
+    var woodTex = getTexture('wood.png');
+    if (woodTex) woodTex.repeat.set(2, 2);
     const stall = new THREE.Mesh(
       new THREE.BoxGeometry(5, 3, 3.5),
-      new THREE.MeshStandardMaterial({ color: 0x8b7355 })
+      new THREE.MeshStandardMaterial({ color: 0x8b7355, map: woodTex || undefined })
     );
     stall.position.set(x, 1.5, z);
     stall.rotation.y = rotation;
@@ -3251,6 +3462,94 @@
     }
   }
 
+  /**
+   * Update environmental animations
+   * @param {object} sceneCtx
+   * @param {number} deltaTime - Time since last frame in seconds
+   * @param {number} worldTime - Current world time in minutes (0-1440)
+   */
+  function updateAnimations(sceneCtx, deltaTime, worldTime) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    if (typeof THREE === 'undefined') return;
+
+    for (var i = 0; i < animatedObjects.length; i++) {
+      var obj = animatedObjects[i];
+      var mesh = obj.mesh;
+      var type = obj.type;
+      var params = obj.params;
+
+      if (!mesh || !mesh.parent) continue;
+
+      switch (type) {
+        case 'tree':
+          // Gentle sway on rotation.z
+          mesh.rotation.z = Math.sin(worldTime * params.speed + params.seed * 100) * 0.02;
+          break;
+
+        case 'water':
+          // UV offset animation
+          if (mesh.material && mesh.material.map) {
+            mesh.material.map.offset.x += deltaTime * 0.02;
+            mesh.material.map.offset.y += deltaTime * 0.01;
+          }
+          break;
+
+        case 'torch':
+          // Flicker light intensity and position
+          if (params.light && params.light.parent) {
+            params.light.intensity = 0.8 + Math.sin(worldTime * 10 + params.seed * 50) * 0.3 + Math.random() * 0.2;
+            params.light.position.x += (Math.random() - 0.5) * 0.02;
+            params.light.position.z += (Math.random() - 0.5) * 0.02;
+          }
+          // Flicker emissive intensity on mesh
+          if (mesh.material) {
+            mesh.material.emissiveIntensity = 1.0 + Math.sin(worldTime * 10 + params.seed * 50) * 0.3 + Math.random() * 0.2;
+          }
+          break;
+
+        case 'firefly':
+          // Drift randomly and pulse
+          mesh.position.x += Math.sin(worldTime + params.seed * 10) * deltaTime * 0.5;
+          mesh.position.z += Math.cos(worldTime * 1.3 + params.seed * 15) * deltaTime * 0.5;
+          mesh.position.y = 1 + Math.sin(worldTime * 2 + params.seed * 20) * 0.5;
+          if (params.light && params.light.parent) {
+            params.light.position.copy(mesh.position);
+            params.light.intensity = 0.2 + Math.sin(worldTime * 3 + params.seed * 30) * 0.1;
+          }
+          break;
+
+        case 'fountain':
+          // Animate fountain particle positions (simple vertical wave)
+          if (mesh.geometry && mesh.geometry.attributes && mesh.geometry.attributes.position) {
+            var positions = mesh.geometry.attributes.position;
+            for (var j = 0; j < positions.count; j++) {
+              var y = positions.getY(j);
+              var waveY = Math.sin(worldTime * 2 + j * 0.5) * 0.3;
+              positions.setY(j, y + waveY * deltaTime * 10);
+            }
+            positions.needsUpdate = true;
+          }
+          break;
+
+        case 'banner':
+          // Wave animation on rotation
+          mesh.rotation.z = Math.sin(worldTime * 3 + params.seed * 100) * 0.15;
+          break;
+
+        case 'display':
+          // Slow rotation for display objects
+          mesh.rotation.y += deltaTime * params.speed;
+          break;
+
+        case 'mist':
+          // Drift slowly
+          mesh.position.x += Math.sin(worldTime * 0.2 + params.seed * 10) * deltaTime * params.speed;
+          mesh.position.z += Math.cos(worldTime * 0.15 + params.seed * 8) * deltaTime * params.speed;
+          break;
+      }
+    }
+  }
+
   // Export public API
   exports.initScene = initScene;
   exports.loadZone = loadZone;
@@ -3262,5 +3561,6 @@
   exports.addPortal = addPortal;
   exports.addStructure = addStructure;
   exports.cullLights = cullLights;
+  exports.updateAnimations = updateAnimations;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));

@@ -4370,6 +4370,30 @@ html, body {
   let stars = null;
   let zoneParticles = null;
 
+  // Texture loader and cache
+  var textureLoader = null;
+  var textureCache = {};
+  var ASSET_BASE = '';  // Set dynamically based on page location
+  var animatedObjects = []; // {mesh, type, params}
+
+  function getTexture(name) {
+    if (!textureLoader) {
+      if (typeof THREE === 'undefined') return null;
+      textureLoader = new THREE.TextureLoader();
+      // Detect asset base path
+      if (typeof window !== 'undefined') {
+        var path = window.location.pathname;
+        ASSET_BASE = path.substring(0, path.lastIndexOf('/') + 1);
+      }
+    }
+    if (textureCache[name]) return textureCache[name];
+    var tex = textureLoader.load(ASSET_BASE + 'assets/textures/' + name);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    textureCache[name] = tex;
+    return tex;
+  }
+
   /**
    * Initialize Three.js scene
    * @param {HTMLElement} container - DOM container for renderer
@@ -4498,6 +4522,9 @@ html, body {
 
     const { scene } = sceneCtx;
 
+    // Clear animated objects tracking
+    animatedObjects = [];
+
     // Clear existing objects (keep lights, camera, sky)
     const objectsToRemove = [];
     scene.traverse((obj) => {
@@ -4552,12 +4579,15 @@ html, body {
 
   function generateNexus(scene) {
     // Large polished stone plaza (200x200)
+    var stoneTex = getTexture('stone.png');
+    if (stoneTex) stoneTex.repeat.set(20, 20);
     const baseGround = new THREE.Mesh(
       new THREE.CylinderGeometry(100, 100, 0.5, 64),
       new THREE.MeshStandardMaterial({
         color: 0x8c8c8c,
         metalness: 0.3,
-        roughness: 0.7
+        roughness: 0.7,
+        map: stoneTex || undefined
       })
     );
     baseGround.receiveShadow = true;
@@ -4565,12 +4595,15 @@ html, body {
 
     // Multiple concentric rings at different heights (stepped)
     for (let i = 1; i <= 10; i++) {
+      var ringTex = getTexture('stone.png');
+      if (ringTex) ringTex.repeat.set(i * 2, i * 2);
       const ring = new THREE.Mesh(
         new THREE.RingGeometry(i * 9 - 1, i * 9, 64),
         new THREE.MeshStandardMaterial({
           color: i % 2 === 0 ? 0xa0a0a0 : 0x707070,
           metalness: 0.4,
-          roughness: 0.6
+          roughness: 0.6,
+          map: ringTex || undefined
         })
       );
       ring.rotation.x = -Math.PI / 2;
@@ -4609,6 +4642,8 @@ html, body {
     // Water pools for each tier
     const waterLevels = [{y: 2, r: 7.5}, {y: 3.5, r: 4.5}, {y: 4.5, r: 1.8}];
     waterLevels.forEach(({y, r}) => {
+      var waterTex = getTexture('water.png');
+      if (waterTex) waterTex.repeat.set(r, r);
       const water = new THREE.Mesh(
         new THREE.CylinderGeometry(r, r, 0.3, 24),
         new THREE.MeshStandardMaterial({
@@ -4616,17 +4651,21 @@ html, body {
           transparent: true,
           opacity: 0.6,
           metalness: 0.8,
-          roughness: 0.2
+          roughness: 0.2,
+          map: waterTex || undefined
         })
       );
       water.position.set(0, y, 0);
+      water.userData.isWater = true;
       scene.add(water);
+      animatedObjects.push({mesh: water, type: 'water', params: {speed: 0.3}});
     });
 
     // Animated water particles
     const waterParticles = createFountainParticles();
     waterParticles.position.set(0, 4.5, 0);
     scene.add(waterParticles);
+    animatedObjects.push({mesh: waterParticles, type: 'fountain', params: {}});
 
     // 8 distinct portal alcoves around perimeter
     const alcoveCount = 8;
@@ -4721,6 +4760,8 @@ html, body {
       const x = Math.cos(angle) * 60;
       const z = Math.sin(angle) * 60;
 
+      var pondTex = getTexture('water.png');
+      if (pondTex) pondTex.repeat.set(2, 2);
       const pond = new THREE.Mesh(
         new THREE.CircleGeometry(4, 16),
         new THREE.MeshStandardMaterial({
@@ -4728,7 +4769,8 @@ html, body {
           transparent: true,
           opacity: 0.7,
           metalness: 0.9,
-          roughness: 0.1
+          roughness: 0.1,
+          map: pondTex || undefined
         })
       );
       pond.rotation.x = -Math.PI / 2;
@@ -4794,11 +4836,14 @@ html, body {
     positions.needsUpdate = true;
     groundGeometry.computeVertexNormals();
 
+    var grassTex = getTexture('grass.png');
+    if (grassTex) grassTex.repeat.set(15, 15);
     const ground = new THREE.Mesh(
       groundGeometry,
       new THREE.MeshStandardMaterial({
         color: 0x3a7d44,
-        roughness: 0.9
+        roughness: 0.9,
+        map: grassTex || undefined
       })
     );
     ground.rotation.x = -Math.PI / 2;
@@ -4809,19 +4854,22 @@ html, body {
     for (let i = 0; i < 25; i++) {
       const x = (Math.random() - 0.5) * 280;
       const z = (Math.random() - 0.5) * 280;
-      addPineTree(scene, x, z, 0.8 + Math.random() * 0.8);
+      const tree = addPineTree(scene, x, z, 0.8 + Math.random() * 0.8);
+      animatedObjects.push({mesh: tree, type: 'tree', params: {seed: Math.random(), speed: 0.5 + Math.random() * 0.5}});
     }
 
     for (let i = 0; i < 20; i++) {
       const x = (Math.random() - 0.5) * 280;
       const z = (Math.random() - 0.5) * 280;
-      addOakTree(scene, x, z, 0.7 + Math.random() * 0.9);
+      const tree = addOakTree(scene, x, z, 0.7 + Math.random() * 0.9);
+      animatedObjects.push({mesh: tree, type: 'tree', params: {seed: Math.random(), speed: 0.5 + Math.random() * 0.5}});
     }
 
     for (let i = 0; i < 15; i++) {
       const x = (Math.random() - 0.5) * 260;
       const z = (Math.random() - 0.5) * 260;
-      addCherryTree(scene, x, z);
+      const tree = addCherryTree(scene, x, z);
+      animatedObjects.push({mesh: tree, type: 'tree', params: {seed: Math.random(), speed: 0.5 + Math.random() * 0.5}});
     }
 
     // Multiple garden plots scattered around
@@ -4860,6 +4908,8 @@ html, body {
         const t = i / 50;
         const x = startX + Math.sin(t * Math.PI * 5 + s) * 20;
         const z = -140 + t * 280;
+        var streamTex = getTexture('water.png');
+        if (streamTex) streamTex.repeat.set(1, 1.5);
         const streamSegment = new THREE.Mesh(
           new THREE.PlaneGeometry(4, 6),
           new THREE.MeshStandardMaterial({
@@ -4867,12 +4917,15 @@ html, body {
             transparent: true,
             opacity: 0.6,
             metalness: 0.9,
-            roughness: 0.1
+            roughness: 0.1,
+            map: streamTex || undefined
           })
         );
         streamSegment.rotation.x = -Math.PI / 2;
         streamSegment.position.set(x, 0.02, z);
+        streamSegment.userData.isWater = true;
         scene.add(streamSegment);
+        animatedObjects.push({mesh: streamSegment, type: 'water', params: {speed: 0.3}});
       }
     }
 
@@ -4958,12 +5011,40 @@ html, body {
     // Ambient particles
     zoneParticles = createAmbientParticles(500, 0xffb3d9, 150, 10, 0.03);
     scene.add(zoneParticles);
+
+    // Fireflies (for night time)
+    for (let i = 0; i < 20; i++) {
+      const x = (Math.random() - 0.5) * 250;
+      const z = (Math.random() - 0.5) * 250;
+      const firefly = new THREE.Mesh(
+        new THREE.SphereGeometry(0.1, 8, 8),
+        new THREE.MeshStandardMaterial({
+          color: 0xffff88,
+          emissive: 0xffff00,
+          emissiveIntensity: 1
+        })
+      );
+      firefly.position.set(x, 1, z);
+      scene.add(firefly);
+
+      const fireflyLight = new THREE.PointLight(0xffff88, 0.3, 5);
+      fireflyLight.position.set(x, 1, z);
+      scene.add(fireflyLight);
+
+      animatedObjects.push({
+        mesh: firefly,
+        type: 'firefly',
+        params: {seed: Math.random(), light: fireflyLight}
+      });
+    }
   }
 
   function generateAthenaeum(scene) {
     // Grand marble hall floor (250x200)
     const floorSize = 250;
     const tileSize = 5;
+    var marbleTex = getTexture('marble.png');
+    if (marbleTex) marbleTex.repeat.set(12, 12);
     for (let x = -floorSize/2; x < floorSize/2; x += tileSize) {
       for (let z = -100; z < 100; z += tileSize) {
         const isEven = (Math.floor(x / tileSize) + Math.floor(z / tileSize)) % 2 === 0;
@@ -4972,7 +5053,8 @@ html, body {
           new THREE.MeshStandardMaterial({
             color: isEven ? 0xf5f5dc : 0xe8e8d0,
             metalness: 0.3,
-            roughness: 0.5
+            roughness: 0.5,
+            map: marbleTex || undefined
           })
         );
         tile.position.set(x + tileSize/2, 0.125, z + tileSize/2);
@@ -5010,11 +5092,14 @@ html, body {
     }
 
     columnLayout.forEach(([x, y, z]) => {
+      var colTex = getTexture('marble.png');
+      if (colTex) colTex.repeat.set(2, 4);
       const column = new THREE.Mesh(
         new THREE.CylinderGeometry(1.2, 1.2, 16, 20),
         new THREE.MeshStandardMaterial({
           color: 0xf5f5dc,
-          roughness: 0.7
+          roughness: 0.7,
+          map: colTex || undefined
         })
       );
       column.position.set(x, 8, z);
@@ -5023,7 +5108,7 @@ html, body {
 
       const capital = new THREE.Mesh(
         new THREE.CylinderGeometry(1.8, 1.2, 1.5, 20),
-        new THREE.MeshStandardMaterial({ color: 0xf5f5dc })
+        new THREE.MeshStandardMaterial({ color: 0xf5f5dc, map: colTex || undefined })
       );
       capital.position.set(x, 16.75, z);
       capital.castShadow = false;
@@ -5031,7 +5116,7 @@ html, body {
 
       const base = new THREE.Mesh(
         new THREE.CylinderGeometry(1.5, 1.8, 1, 20),
-        new THREE.MeshStandardMaterial({ color: 0xf5f5dc })
+        new THREE.MeshStandardMaterial({ color: 0xf5f5dc, map: colTex || undefined })
       );
       base.position.set(x, 0.5, z);
       scene.add(base);
@@ -5220,20 +5305,25 @@ html, body {
 
   function generateStudio(scene) {
     // Large amphitheater ground (250x250)
+    var stoneTex = getTexture('stone.png');
+    if (stoneTex) stoneTex.repeat.set(15, 15);
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(250, 250),
-      new THREE.MeshStandardMaterial({ color: 0xd2b48c })
+      new THREE.MeshStandardMaterial({ color: 0xd2b48c, map: stoneTex || undefined })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
 
     // Main central stage (larger)
+    var stageTex = getTexture('stone.png');
+    if (stageTex) stageTex.repeat.set(5, 5);
     const mainStage = new THREE.Mesh(
       new THREE.CylinderGeometry(20, 20, 1.2, 32),
       new THREE.MeshStandardMaterial({
         color: 0x8b4513,
-        roughness: 0.8
+        roughness: 0.8,
+        map: stageTex || undefined
       })
     );
     mainStage.position.set(0, 0.6, 0);
@@ -5248,9 +5338,11 @@ html, body {
       {x: 90, z: 90, r: 10}
     ];
     additionalStages.forEach(({x, z, r}) => {
+      var addStageTex = getTexture('stone.png');
+      if (addStageTex) addStageTex.repeat.set(r / 3, r / 3);
       const stage = new THREE.Mesh(
         new THREE.CylinderGeometry(r, r, 1, 24),
-        new THREE.MeshStandardMaterial({ color: 0x9b5523 })
+        new THREE.MeshStandardMaterial({ color: 0x9b5523, map: addStageTex || undefined })
       );
       stage.position.set(x, 0.5, z);
       stage.castShadow = false;
@@ -5260,9 +5352,11 @@ html, body {
 
     // Tiered seating (7 tiers)
     for (let i = 1; i <= 7; i++) {
+      var tierTex = getTexture('stone.png');
+      if (tierTex) tierTex.repeat.set((20 + i * 5) / 5, 2);
       const tier = new THREE.Mesh(
         new THREE.CylinderGeometry(20 + i * 5, 20 + i * 5, 0.8, 32, 1, false, 0, Math.PI * 1.6),
-        new THREE.MeshStandardMaterial({ color: 0xa0522d })
+        new THREE.MeshStandardMaterial({ color: 0xa0522d, map: tierTex || undefined })
       );
       tier.position.set(0, 0.4 - i * 0.8, 0);
       tier.receiveShadow = true;
@@ -5332,6 +5426,7 @@ html, body {
       sculpture.rotation.set(Math.random(), Math.random(), Math.random());
       sculpture.castShadow = false;
       scene.add(sculpture);
+      animatedObjects.push({mesh: sculpture, type: 'display', params: {seed: Math.random(), speed: 0.3 + Math.random() * 0.3}});
     });
 
     // Music circle with instrument-shaped objects
@@ -5515,11 +5610,14 @@ html, body {
     positions.needsUpdate = true;
     groundGeometry.computeVertexNormals();
 
+    var dirtTex = getTexture('dirt.png');
+    if (dirtTex) dirtTex.repeat.set(20, 20);
     const ground = new THREE.Mesh(
       groundGeometry,
       new THREE.MeshStandardMaterial({
         color: 0x2d4a1e,
-        roughness: 1
+        roughness: 1,
+        map: dirtTex || undefined
       })
     );
     ground.rotation.x = -Math.PI / 2;
@@ -5533,13 +5631,15 @@ html, body {
     for (let i = 0; i < 70; i++) {
       const x = (Math.random() - 0.5) * 380;
       const z = (Math.random() - 0.5) * 380;
-      addPineTree(scene, x, z, 0.7 + Math.random() * 1.2);
+      const tree = addPineTree(scene, x, z, 0.7 + Math.random() * 1.2);
+      animatedObjects.push({mesh: tree, type: 'tree', params: {seed: Math.random(), speed: 1.0 + Math.random() * 0.5}});
     }
 
     for (let i = 0; i < 40; i++) {
       const x = (Math.random() - 0.5) * 380;
       const z = (Math.random() - 0.5) * 380;
-      addOakTree(scene, x, z, 0.6 + Math.random() * 1.4);
+      const tree = addOakTree(scene, x, z, 0.6 + Math.random() * 1.4);
+      animatedObjects.push({mesh: tree, type: 'tree', params: {seed: Math.random(), speed: 1.0 + Math.random() * 0.5}});
     }
 
     // Twisted old trees (thicker trunks, wider canopies)
@@ -5730,6 +5830,8 @@ html, body {
     // Waterfall
     const waterfallX = -160;
     const waterfallZ = 100;
+    var waterfallTex = getTexture('water.png');
+    if (waterfallTex) waterfallTex.repeat.set(2, 3);
     const waterfall = new THREE.Mesh(
       new THREE.PlaneGeometry(8, 12),
       new THREE.MeshStandardMaterial({
@@ -5737,13 +5839,16 @@ html, body {
         transparent: true,
         opacity: 0.4,
         metalness: 0.9,
-        roughness: 0.1
+        roughness: 0.1,
+        map: waterfallTex || undefined
       })
     );
     waterfall.position.set(waterfallX, 6, waterfallZ);
     scene.add(waterfall);
 
     // Waterfall pool
+    var poolTex = getTexture('water.png');
+    if (poolTex) poolTex.repeat.set(3, 3);
     const pool = new THREE.Mesh(
       new THREE.CircleGeometry(6, 24),
       new THREE.MeshStandardMaterial({
@@ -5751,7 +5856,8 @@ html, body {
         transparent: true,
         opacity: 0.7,
         metalness: 0.8,
-        roughness: 0.2
+        roughness: 0.2,
+        map: poolTex || undefined
       })
     );
     pool.rotation.x = -Math.PI / 2;
@@ -5761,18 +5867,42 @@ html, body {
     // Ambient particles - fireflies
     zoneParticles = createFireflies();
     scene.add(zoneParticles);
+
+    // Mist particles (drifting semi-transparent planes)
+    for (let i = 0; i < 10; i++) {
+      const mist = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 15),
+        new THREE.MeshBasicMaterial({
+          color: 0xaaaaaa,
+          transparent: true,
+          opacity: 0.15,
+          side: THREE.DoubleSide
+        })
+      );
+      mist.position.set(
+        (Math.random() - 0.5) * 350,
+        Math.random() * 8 + 2,
+        (Math.random() - 0.5) * 350
+      );
+      mist.rotation.y = Math.random() * Math.PI * 2;
+      scene.add(mist);
+      animatedObjects.push({mesh: mist, type: 'mist', params: {seed: Math.random(), speed: 0.2}});
+    }
   }
 
   function generateAgora(scene) {
     // Large cobblestone market square (250x250)
     const squareSize = 250;
     const cobbleSize = 1.2;
+    var cobbleTex = getTexture('cobblestone.png');
+    if (cobbleTex) cobbleTex.repeat.set(15, 15);
     for (let x = -squareSize/2; x < squareSize/2; x += cobbleSize) {
       for (let z = -squareSize/2; z < squareSize/2; z += cobbleSize) {
         const cobble = new THREE.Mesh(
           new THREE.BoxGeometry(cobbleSize * 0.95, 0.18, cobbleSize * 0.95),
           new THREE.MeshStandardMaterial({
-            color: new THREE.Color().setHSL(0, 0, 0.4 + Math.random() * 0.15)
+            color: new THREE.Color().setHSL(0, 0, 0.4 + Math.random() * 0.15),
+            map: cobbleTex || undefined
           })
         );
         cobble.position.set(
@@ -5819,6 +5949,8 @@ html, body {
     fountain.castShadow = false;
     scene.add(fountain);
 
+    var fountainWaterTex = getTexture('water.png');
+    if (fountainWaterTex) fountainWaterTex.repeat.set(2, 2);
     const fountainWater = new THREE.Mesh(
       new THREE.CylinderGeometry(4.5, 4.5, 0.4, 24),
       new THREE.MeshStandardMaterial({
@@ -5826,7 +5958,8 @@ html, body {
         transparent: true,
         opacity: 0.7,
         metalness: 0.8,
-        roughness: 0.2
+        roughness: 0.2,
+        map: fountainWaterTex || undefined
       })
     );
     fountainWater.position.set(0, 3, 0);
@@ -5952,6 +6085,32 @@ html, body {
       scene.add(step);
     }
 
+    // Banner poles around perimeter
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const x = Math.cos(angle) * 110;
+      const z = Math.sin(angle) * 110;
+
+      const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.15, 8, 8),
+        new THREE.MeshStandardMaterial({ color: 0x654321 })
+      );
+      pole.position.set(x, 4, z);
+      scene.add(pole);
+
+      const banner = new THREE.Mesh(
+        new THREE.PlaneGeometry(2, 4),
+        new THREE.MeshStandardMaterial({
+          color: stallColors[i % stallColors.length],
+          side: THREE.DoubleSide
+        })
+      );
+      banner.position.set(x, 5, z);
+      banner.rotation.y = -angle;
+      scene.add(banner);
+      animatedObjects.push({mesh: banner, type: 'banner', params: {seed: Math.random()}});
+    }
+
     // Awning-covered walkways
     const walkwayCount = 8;
     for (let i = 0; i < walkwayCount; i++) {
@@ -6025,9 +6184,11 @@ html, body {
     positions.needsUpdate = true;
     groundGeometry.computeVertexNormals();
 
+    var commonsGrassTex = getTexture('grass.png');
+    if (commonsGrassTex) commonsGrassTex.repeat.set(15, 15);
     const ground = new THREE.Mesh(
       groundGeometry,
-      new THREE.MeshStandardMaterial({ color: 0x7cb342 })
+      new THREE.MeshStandardMaterial({ color: 0x7cb342, map: commonsGrassTex || undefined })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
@@ -6257,6 +6418,8 @@ html, body {
     });
 
     // Small lake
+    var lakeTex = getTexture('water.png');
+    if (lakeTex) lakeTex.repeat.set(8, 8);
     const lake = new THREE.Mesh(
       new THREE.CircleGeometry(25, 32),
       new THREE.MeshStandardMaterial({
@@ -6264,7 +6427,8 @@ html, body {
         transparent: true,
         opacity: 0.75,
         metalness: 0.8,
-        roughness: 0.2
+        roughness: 0.2,
+        map: lakeTex || undefined
       })
     );
     lake.rotation.x = -Math.PI / 2;
@@ -6278,11 +6442,14 @@ html, body {
 
   function generateArena(scene) {
     // Large sandy arena floor (200x200)
+    var sandTex = getTexture('sand.png');
+    if (sandTex) sandTex.repeat.set(10, 10);
     const arenaFloor = new THREE.Mesh(
       new THREE.CircleGeometry(100, 64),
       new THREE.MeshStandardMaterial({
         color: 0xdaa520,
-        roughness: 0.95
+        roughness: 0.95,
+        map: sandTex || undefined
       })
     );
     arenaFloor.rotation.x = -Math.PI / 2;
@@ -6348,6 +6515,7 @@ html, body {
         );
         banner.rotation.y = angle + Math.PI;
         scene.add(banner);
+        animatedObjects.push({mesh: banner, type: 'banner', params: {seed: Math.random()}});
       }
     }
 
@@ -6493,6 +6661,12 @@ html, body {
       const light = new THREE.PointLight(0xff4500, 1, 18);
       light.position.set(x, 15.5, z);
       scene.add(light);
+
+      animatedObjects.push({
+        mesh: flame,
+        type: 'torch',
+        params: {seed: Math.random(), light: light}
+      });
     }
 
     // Ambient particles - rising embers
@@ -6503,72 +6677,102 @@ html, body {
   // Helper functions for zone elements
 
   function addPineTree(scene, x, z, scale = 1) {
+    const treeGroup = new THREE.Group();
+    treeGroup.position.set(x, 0, z);
+
     // Trunk with color variation
     const trunkColor = new THREE.Color(0x4a3728).offsetHSL(0, 0, (Math.random() - 0.5) * 0.1);
+    var barkTex = getTexture('bark.png');
+    if (barkTex) barkTex.repeat.set(1, 2);
     const trunk = new THREE.Mesh(
       new THREE.CylinderGeometry(0.3 * scale, 0.4 * scale, 6 * scale, 8),
-      new THREE.MeshStandardMaterial({ color: trunkColor })
+      new THREE.MeshStandardMaterial({ color: trunkColor, map: barkTex || undefined })
     );
-    trunk.position.set(x, 3 * scale, z);
+    trunk.position.set(0, 3 * scale, 0);
     trunk.castShadow = false;
-    scene.add(trunk);
+    treeGroup.add(trunk);
 
     // Cone foliage (varying tiers)
     const tiers = 3 + Math.floor(Math.random() * 2);
     const foliageColor = new THREE.Color(0x1a4d2e).offsetHSL(0, 0, (Math.random() - 0.5) * 0.15);
+    var leavesTex = getTexture('leaves.png');
+    if (leavesTex) leavesTex.repeat.set(2, 2);
     for (let i = 0; i < tiers; i++) {
       const foliage = new THREE.Mesh(
         new THREE.ConeGeometry((1.5 - i * 0.3) * scale, 3 * scale, 8),
-        new THREE.MeshStandardMaterial({ color: foliageColor })
+        new THREE.MeshStandardMaterial({ color: foliageColor, map: leavesTex || undefined })
       );
-      foliage.position.set(x, (5 + i * 1.8) * scale, z);
+      foliage.position.set(0, (5 + i * 1.8) * scale, 0);
       foliage.castShadow = false;
-      scene.add(foliage);
+      treeGroup.add(foliage);
     }
+
+    scene.add(treeGroup);
+    return treeGroup;
   }
 
   function addOakTree(scene, x, z, scale = 1) {
+    const treeGroup = new THREE.Group();
+    treeGroup.position.set(x, 0, z);
+
     // Trunk with color variation
     const trunkColor = new THREE.Color(0x654321).offsetHSL(0, 0, (Math.random() - 0.5) * 0.1);
+    var barkTex = getTexture('bark.png');
+    if (barkTex) barkTex.repeat.set(1, 2);
     const trunk = new THREE.Mesh(
       new THREE.CylinderGeometry(0.4 * scale, 0.5 * scale, 5 * scale, 8),
-      new THREE.MeshStandardMaterial({ color: trunkColor })
+      new THREE.MeshStandardMaterial({ color: trunkColor, map: barkTex || undefined })
     );
-    trunk.position.set(x, 2.5 * scale, z);
+    trunk.position.set(0, 2.5 * scale, 0);
     trunk.castShadow = false;
-    scene.add(trunk);
+    treeGroup.add(trunk);
 
     // Round foliage with size variation
     const foliageSize = (2 + Math.random() * 0.8) * scale;
     const foliageColor = new THREE.Color(0x228b22).offsetHSL(0, 0, (Math.random() - 0.5) * 0.2);
+    var leavesTex = getTexture('leaves.png');
+    if (leavesTex) leavesTex.repeat.set(2, 2);
     const foliage = new THREE.Mesh(
       new THREE.SphereGeometry(foliageSize, 12, 12),
-      new THREE.MeshStandardMaterial({ color: foliageColor })
+      new THREE.MeshStandardMaterial({ color: foliageColor, map: leavesTex || undefined })
     );
-    foliage.position.set(x, 6 * scale, z);
+    foliage.position.set(0, 6 * scale, 0);
     foliage.castShadow = false;
-    scene.add(foliage);
+    treeGroup.add(foliage);
+
+    scene.add(treeGroup);
+    return treeGroup;
   }
 
   function addCherryTree(scene, x, z) {
+    const treeGroup = new THREE.Group();
+    treeGroup.position.set(x, 0, z);
+
     // Trunk
+    var barkTex = getTexture('bark.png');
+    if (barkTex) barkTex.repeat.set(1, 2);
     const trunk = new THREE.Mesh(
       new THREE.CylinderGeometry(0.3, 0.4, 4, 8),
-      new THREE.MeshStandardMaterial({ color: 0x654321 })
+      new THREE.MeshStandardMaterial({ color: 0x654321, map: barkTex || undefined })
     );
-    trunk.position.set(x, 2, z);
+    trunk.position.set(0, 2, 0);
     trunk.castShadow = false;
-    scene.add(trunk);
+    treeGroup.add(trunk);
 
     // Pink blossom foliage with variation
     const blossomColor = new THREE.Color(0xffb7c5).offsetHSL((Math.random() - 0.5) * 0.05, 0, 0);
+    var leavesTex = getTexture('leaves.png');
+    if (leavesTex) leavesTex.repeat.set(2, 2);
     const foliage = new THREE.Mesh(
       new THREE.SphereGeometry(2 + Math.random() * 0.5, 10, 10),
-      new THREE.MeshStandardMaterial({ color: blossomColor })
+      new THREE.MeshStandardMaterial({ color: blossomColor, map: leavesTex || undefined })
     );
-    foliage.position.set(x, 5, z);
+    foliage.position.set(0, 5, 0);
     foliage.castShadow = false;
-    scene.add(foliage);
+    treeGroup.add(foliage);
+
+    scene.add(treeGroup);
+    return treeGroup;
   }
 
   function addGardenPlot(scene, x, z) {
@@ -6668,10 +6872,13 @@ html, body {
 
   function addHouse(scene, x, z, size) {
     // House base
+    var woodTex = getTexture('wood.png');
+    if (woodTex) woodTex.repeat.set(size / 3, size / 3);
     const house = new THREE.Mesh(
       new THREE.BoxGeometry(size, size * 0.7, size),
       new THREE.MeshStandardMaterial({
-        color: new THREE.Color(0xdeb887).offsetHSL(0, 0, (Math.random() - 0.5) * 0.1)
+        color: new THREE.Color(0xdeb887).offsetHSL(0, 0, (Math.random() - 0.5) * 0.1),
+        map: woodTex || undefined
       })
     );
     house.position.set(x, size * 0.35, z);
@@ -6739,10 +6946,12 @@ html, body {
 
   function addBridge(scene, x, z, rotation) {
     // Bridge planks
+    var woodTex = getTexture('wood.png');
+    if (woodTex) woodTex.repeat.set(2, 1);
     for (let i = 0; i < 8; i++) {
       const plank = new THREE.Mesh(
         new THREE.BoxGeometry(4, 0.2, 0.8),
-        new THREE.MeshStandardMaterial({ color: 0x8b7355 })
+        new THREE.MeshStandardMaterial({ color: 0x8b7355, map: woodTex || undefined })
       );
       plank.position.set(x, 0.3, z + (i - 3.5) * 0.9);
       plank.rotation.y = rotation;
@@ -6790,9 +6999,11 @@ html, body {
 
   function addStall(scene, x, z, rotation, canopyColor) {
     // Stall structure
+    var woodTex = getTexture('wood.png');
+    if (woodTex) woodTex.repeat.set(2, 2);
     const stall = new THREE.Mesh(
       new THREE.BoxGeometry(5, 3, 3.5),
-      new THREE.MeshStandardMaterial({ color: 0x8b7355 })
+      new THREE.MeshStandardMaterial({ color: 0x8b7355, map: woodTex || undefined })
     );
     stall.position.set(x, 1.5, z);
     stall.rotation.y = rotation;
@@ -7614,6 +7825,94 @@ html, body {
     }
   }
 
+  /**
+   * Update environmental animations
+   * @param {object} sceneCtx
+   * @param {number} deltaTime - Time since last frame in seconds
+   * @param {number} worldTime - Current world time in minutes (0-1440)
+   */
+  function updateAnimations(sceneCtx, deltaTime, worldTime) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    if (typeof THREE === 'undefined') return;
+
+    for (var i = 0; i < animatedObjects.length; i++) {
+      var obj = animatedObjects[i];
+      var mesh = obj.mesh;
+      var type = obj.type;
+      var params = obj.params;
+
+      if (!mesh || !mesh.parent) continue;
+
+      switch (type) {
+        case 'tree':
+          // Gentle sway on rotation.z
+          mesh.rotation.z = Math.sin(worldTime * params.speed + params.seed * 100) * 0.02;
+          break;
+
+        case 'water':
+          // UV offset animation
+          if (mesh.material && mesh.material.map) {
+            mesh.material.map.offset.x += deltaTime * 0.02;
+            mesh.material.map.offset.y += deltaTime * 0.01;
+          }
+          break;
+
+        case 'torch':
+          // Flicker light intensity and position
+          if (params.light && params.light.parent) {
+            params.light.intensity = 0.8 + Math.sin(worldTime * 10 + params.seed * 50) * 0.3 + Math.random() * 0.2;
+            params.light.position.x += (Math.random() - 0.5) * 0.02;
+            params.light.position.z += (Math.random() - 0.5) * 0.02;
+          }
+          // Flicker emissive intensity on mesh
+          if (mesh.material) {
+            mesh.material.emissiveIntensity = 1.0 + Math.sin(worldTime * 10 + params.seed * 50) * 0.3 + Math.random() * 0.2;
+          }
+          break;
+
+        case 'firefly':
+          // Drift randomly and pulse
+          mesh.position.x += Math.sin(worldTime + params.seed * 10) * deltaTime * 0.5;
+          mesh.position.z += Math.cos(worldTime * 1.3 + params.seed * 15) * deltaTime * 0.5;
+          mesh.position.y = 1 + Math.sin(worldTime * 2 + params.seed * 20) * 0.5;
+          if (params.light && params.light.parent) {
+            params.light.position.copy(mesh.position);
+            params.light.intensity = 0.2 + Math.sin(worldTime * 3 + params.seed * 30) * 0.1;
+          }
+          break;
+
+        case 'fountain':
+          // Animate fountain particle positions (simple vertical wave)
+          if (mesh.geometry && mesh.geometry.attributes && mesh.geometry.attributes.position) {
+            var positions = mesh.geometry.attributes.position;
+            for (var j = 0; j < positions.count; j++) {
+              var y = positions.getY(j);
+              var waveY = Math.sin(worldTime * 2 + j * 0.5) * 0.3;
+              positions.setY(j, y + waveY * deltaTime * 10);
+            }
+            positions.needsUpdate = true;
+          }
+          break;
+
+        case 'banner':
+          // Wave animation on rotation
+          mesh.rotation.z = Math.sin(worldTime * 3 + params.seed * 100) * 0.15;
+          break;
+
+        case 'display':
+          // Slow rotation for display objects
+          mesh.rotation.y += deltaTime * params.speed;
+          break;
+
+        case 'mist':
+          // Drift slowly
+          mesh.position.x += Math.sin(worldTime * 0.2 + params.seed * 10) * deltaTime * params.speed;
+          mesh.position.z += Math.cos(worldTime * 0.15 + params.seed * 8) * deltaTime * params.speed;
+          break;
+      }
+    }
+  }
+
   // Export public API
   exports.initScene = initScene;
   exports.loadZone = loadZone;
@@ -7625,6 +7924,7 @@ html, body {
   exports.addPortal = addPortal;
   exports.addStructure = addStructure;
   exports.cullLights = cullLights;
+  exports.updateAnimations = updateAnimations;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));
 
@@ -8793,7 +9093,9 @@ html, body {
 
 // audio.js
 (function(exports) {
-  // Procedural audio using Web Audio API
+  // Procedural audio system using Web Audio API
+  // All audio is generated procedurally - no external files
+
   let audioContext = null;
   let masterGain = null;
   let isMuted = false;
@@ -8814,13 +9116,48 @@ html, body {
 
       // Create master gain node
       masterGain = audioContext.createGain();
-      masterGain.connect(audioContext.destination);
-      masterGain.gain.value = 0.5; // Default volume
+      if (masterGain) {
+        masterGain.connect(audioContext.destination);
+        masterGain.gain.value = 0.5; // Default volume
+      }
+
+      // Resume context if suspended (browser autoplay policy)
+      if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
 
       console.log('Audio system initialized');
       return audioContext;
     } catch (err) {
       console.error('Failed to initialize audio:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Create white noise buffer
+   * @returns {AudioBufferSourceNode|null}
+   */
+  function createWhiteNoise() {
+    if (!audioContext) return null;
+
+    try {
+      const bufferSize = 2 * audioContext.sampleRate;
+      const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+
+      const whiteNoise = audioContext.createBufferSource();
+      whiteNoise.buffer = noiseBuffer;
+      whiteNoise.loop = true;
+      whiteNoise.start();
+
+      return whiteNoise;
+    } catch (err) {
+      console.error('Error creating white noise:', err);
       return null;
     }
   }
@@ -8832,152 +9169,48 @@ html, body {
   function playAmbient(zone) {
     if (!audioContext || !masterGain) return;
 
+    // Resume context if needed
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
     // Stop current ambient
     if (currentAmbient) {
       stopAmbient();
     }
 
-    switch (zone) {
-      case 'nexus':
-        currentAmbient = playNexusAmbient();
-        break;
-      case 'gardens':
-        currentAmbient = playGardensAmbient();
-        break;
-      case 'wilds':
-        currentAmbient = playWildsAmbient();
-        break;
-      case 'arena':
-        currentAmbient = playArenaAmbient();
-        break;
-      default:
-        currentAmbient = playSilence();
-    }
-  }
-
-  /**
-   * Nexus ambient - gentle pad
-   */
-  function playNexusAmbient() {
-    const osc1 = audioContext.createOscillator();
-    const osc2 = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-
-    osc1.type = 'sine';
-    osc1.frequency.value = 220; // A3
-    osc2.type = 'sine';
-    osc2.frequency.value = 330; // E4
-
-    gain.gain.value = 0.05; // Very subtle
-    osc1.connect(gain);
-    osc2.connect(gain);
-    gain.connect(masterGain);
-
-    osc1.start();
-    osc2.start();
-
-    return { oscillators: [osc1, osc2], gain };
-  }
-
-  /**
-   * Gardens ambient - nature sounds (birds)
-   */
-  function playGardensAmbient() {
-    const nodes = [];
-
-    // Simulate bird chirps with random short notes
-    function chirp() {
-      if (!audioContext) return;
-
-      const osc = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.value = 800 + Math.random() * 400;
-
-      gain.gain.value = 0.1;
-      gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-
-      osc.connect(gain);
-      gain.connect(masterGain);
-
-      osc.start();
-      osc.stop(audioContext.currentTime + 0.2);
-
-      // Random next chirp
-      setTimeout(chirp, 1000 + Math.random() * 3000);
-    }
-
-    chirp();
-
-    // Background breeze
-    const noise = createWhiteNoise();
-    const filter = audioContext.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 300;
-
-    const breezeGain = audioContext.createGain();
-    breezeGain.gain.value = 0.03;
-
-    noise.connect(filter);
-    filter.connect(breezeGain);
-    breezeGain.connect(masterGain);
-
-    return { nodes: [noise, filter, breezeGain] };
-  }
-
-  /**
-   * Wilds ambient - wind
-   */
-  function playWildsAmbient() {
-    const noise = createWhiteNoise();
-    const filter = audioContext.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 200;
-
-    const gain = audioContext.createGain();
-    gain.gain.value = 0.08;
-
-    // Vary wind intensity
-    setInterval(() => {
-      if (gain && audioContext) {
-        const targetGain = 0.05 + Math.random() * 0.06;
-        gain.gain.linearRampToValueAtTime(targetGain, audioContext.currentTime + 2);
+    try {
+      switch (zone) {
+        case 'nexus':
+          currentAmbient = playNexusAmbient();
+          break;
+        case 'gardens':
+          currentAmbient = playGardensAmbient();
+          break;
+        case 'athenaeum':
+          currentAmbient = playAthenaeumAmbient();
+          break;
+        case 'studio':
+          currentAmbient = playStudioAmbient();
+          break;
+        case 'wilds':
+          currentAmbient = playWildsAmbient();
+          break;
+        case 'agora':
+          currentAmbient = playAgoraAmbient();
+          break;
+        case 'commons':
+          currentAmbient = playCommonsAmbient();
+          break;
+        case 'arena':
+          currentAmbient = playArenaAmbient();
+          break;
+        default:
+          currentAmbient = null;
       }
-    }, 3000);
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(masterGain);
-
-    return { nodes: [noise, filter, gain] };
-  }
-
-  /**
-   * Arena ambient - crowd murmur
-   */
-  function playArenaAmbient() {
-    const noise = createWhiteNoise();
-    const filter = audioContext.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = 400;
-    filter.Q.value = 2;
-
-    const gain = audioContext.createGain();
-    gain.gain.value = 0.06;
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(masterGain);
-
-    return { nodes: [noise, filter, gain] };
-  }
-
-  /**
-   * Silence (no ambient)
-   */
-  function playSilence() {
-    return null;
+    } catch (err) {
+      console.error('Error playing ambient:', err);
+    }
   }
 
   /**
@@ -8987,17 +9220,47 @@ html, body {
     if (!currentAmbient) return;
 
     try {
-      if (currentAmbient.oscillators) {
-        currentAmbient.oscillators.forEach(osc => osc.stop());
-      }
-      if (currentAmbient.nodes) {
-        currentAmbient.nodes.forEach(node => {
-          if (node.stop) node.stop();
-          if (node.disconnect) node.disconnect();
+      // Stop all oscillators
+      if (currentAmbient.oscillators && Array.isArray(currentAmbient.oscillators)) {
+        currentAmbient.oscillators.forEach(osc => {
+          if (osc && osc.stop) {
+            try { osc.stop(); } catch (e) {}
+          }
         });
       }
-      if (currentAmbient.gain) {
-        currentAmbient.gain.disconnect();
+
+      // Stop and disconnect all nodes
+      if (currentAmbient.nodes && Array.isArray(currentAmbient.nodes)) {
+        currentAmbient.nodes.forEach(node => {
+          if (node) {
+            if (node.stop) {
+              try { node.stop(); } catch (e) {}
+            }
+            if (node.disconnect) {
+              try { node.disconnect(); } catch (e) {}
+            }
+          }
+        });
+      }
+
+      // Disconnect gain
+      if (currentAmbient.gain && currentAmbient.gain.disconnect) {
+        try { currentAmbient.gain.disconnect(); } catch (e) {}
+      }
+
+      // Clear all intervals
+      if (currentAmbient.intervals && Array.isArray(currentAmbient.intervals)) {
+        currentAmbient.intervals.forEach(id => clearInterval(id));
+      }
+
+      // Clear all timeouts
+      if (currentAmbient.timeouts && Array.isArray(currentAmbient.timeouts)) {
+        currentAmbient.timeouts.forEach(id => clearTimeout(id));
+      }
+
+      // Call cleanup function if exists
+      if (currentAmbient.cleanup && typeof currentAmbient.cleanup === 'function') {
+        currentAmbient.cleanup();
       }
     } catch (err) {
       console.error('Error stopping ambient:', err);
@@ -9007,186 +9270,1796 @@ html, body {
   }
 
   /**
-   * Create white noise buffer
+   * NEXUS - Sacred gathering place
+   * Deep drone + ethereal pad + crystalline chimes
    */
-  function createWhiteNoise() {
-    const bufferSize = 2 * audioContext.sampleRate;
-    const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
+  function playNexusAmbient() {
+    if (!audioContext || !masterGain) return null;
 
-    for (let i = 0; i < bufferSize; i++) {
-      output[i] = Math.random() * 2 - 1;
+    const nodes = [];
+    const oscillators = [];
+    const timeouts = [];
+
+    try {
+      // Deep resonant drone - C2 (65Hz) with octave harmonics
+      const drone1 = audioContext.createOscillator();
+      const drone2 = audioContext.createOscillator();
+      const droneGain = audioContext.createGain();
+
+      drone1.type = 'sine';
+      drone1.frequency.value = 65.41; // C2
+      drone2.type = 'sine';
+      drone2.frequency.value = 130.81; // C3
+
+      droneGain.gain.value = 0.03;
+
+      drone1.connect(droneGain);
+      drone2.connect(droneGain);
+      droneGain.connect(masterGain);
+
+      drone1.start();
+      drone2.start();
+
+      oscillators.push(drone1, drone2);
+      nodes.push(droneGain);
+
+      // Ethereal pad - C4, E4, G4 triad with slow LFO
+      const pad1 = audioContext.createOscillator();
+      const pad2 = audioContext.createOscillator();
+      const pad3 = audioContext.createOscillator();
+      const lfo = audioContext.createOscillator();
+      const lfoGain = audioContext.createGain();
+      const padGain = audioContext.createGain();
+
+      pad1.type = 'sine';
+      pad1.frequency.value = 261.63; // C4
+      pad2.type = 'sine';
+      pad2.frequency.value = 329.63; // E4
+      pad3.type = 'sine';
+      pad3.frequency.value = 392.00; // G4
+
+      lfo.type = 'sine';
+      lfo.frequency.value = 0.2; // Slow modulation
+      lfoGain.gain.value = 0.01; // Subtle volume modulation
+
+      padGain.gain.value = 0.02;
+
+      lfo.connect(lfoGain);
+      lfoGain.connect(padGain.gain);
+
+      pad1.connect(padGain);
+      pad2.connect(padGain);
+      pad3.connect(padGain);
+      padGain.connect(masterGain);
+
+      pad1.start();
+      pad2.start();
+      pad3.start();
+      lfo.start();
+
+      oscillators.push(pad1, pad2, pad3, lfo);
+      nodes.push(lfoGain, padGain);
+
+      // Crystalline chimes - random high notes with delays
+      function playChime() {
+        if (!audioContext || !masterGain) return;
+
+        const chime = audioContext.createOscillator();
+        const chimeGain = audioContext.createGain();
+        const delay1 = audioContext.createDelay();
+        const delay2 = audioContext.createDelay();
+        const delayGain1 = audioContext.createGain();
+        const delayGain2 = audioContext.createGain();
+
+        chime.type = 'sine';
+        chime.frequency.value = 1000 + Math.random() * 1000;
+
+        chimeGain.gain.value = 0.08;
+        chimeGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1.5);
+
+        delay1.delayTime.value = 0.3;
+        delay2.delayTime.value = 0.5;
+        delayGain1.gain.value = 0.3;
+        delayGain2.gain.value = 0.2;
+
+        chime.connect(chimeGain);
+        chimeGain.connect(masterGain);
+        chimeGain.connect(delay1);
+        chimeGain.connect(delay2);
+        delay1.connect(delayGain1);
+        delay2.connect(delayGain2);
+        delayGain1.connect(masterGain);
+        delayGain2.connect(masterGain);
+
+        chime.start();
+        chime.stop(audioContext.currentTime + 1.5);
+
+        const nextChime = setTimeout(playChime, 4000 + Math.random() * 4000);
+        timeouts.push(nextChime);
+      }
+
+      const firstChime = setTimeout(playChime, 2000);
+      timeouts.push(firstChime);
+
+      return { oscillators, nodes, timeouts };
+    } catch (err) {
+      console.error('Error in nexus ambient:', err);
+      return null;
     }
+  }
 
-    const whiteNoise = audioContext.createBufferSource();
-    whiteNoise.buffer = noiseBuffer;
-    whiteNoise.loop = true;
-    whiteNoise.start();
+  /**
+   * GARDENS - Lush natural space
+   * Bird chorus + gentle stream + breeze + crickets + rustling leaves
+   */
+  function playGardensAmbient() {
+    if (!audioContext || !masterGain) return null;
 
-    return whiteNoise;
+    const nodes = [];
+    const timeouts = [];
+    const intervals = [];
+
+    try {
+      // Gentle stream - filtered white noise with LFO
+      const stream = createWhiteNoise();
+      if (stream) {
+        const streamFilter = audioContext.createBiquadFilter();
+        const streamLfo = audioContext.createOscillator();
+        const streamLfoGain = audioContext.createGain();
+        const streamGain = audioContext.createGain();
+
+        streamFilter.type = 'lowpass';
+        streamFilter.frequency.value = 400;
+
+        streamLfo.type = 'sine';
+        streamLfo.frequency.value = 0.5;
+        streamLfoGain.gain.value = 100; // Modulate filter frequency
+
+        streamGain.gain.value = 0.04;
+
+        streamLfo.connect(streamLfoGain);
+        streamLfoGain.connect(streamFilter.frequency);
+
+        stream.connect(streamFilter);
+        streamFilter.connect(streamGain);
+        streamGain.connect(masterGain);
+
+        streamLfo.start();
+
+        nodes.push(stream, streamFilter, streamLfo, streamLfoGain, streamGain);
+      }
+
+      // Breeze - very low filtered noise
+      const breeze = createWhiteNoise();
+      if (breeze) {
+        const breezeFilter = audioContext.createBiquadFilter();
+        const breezeGain = audioContext.createGain();
+
+        breezeFilter.type = 'lowpass';
+        breezeFilter.frequency.value = 200;
+        breezeGain.gain.value = 0.02;
+
+        breeze.connect(breezeFilter);
+        breezeFilter.connect(breezeGain);
+        breezeGain.connect(masterGain);
+
+        nodes.push(breeze, breezeFilter, breezeGain);
+      }
+
+      // Bird chorus - multiple chirp generators
+      function chirp() {
+        if (!audioContext || !masterGain) return;
+
+        const bird = audioContext.createOscillator();
+        const birdGain = audioContext.createGain();
+
+        bird.type = 'sine';
+        bird.frequency.value = 600 + Math.random() * 1200;
+
+        const duration = 0.1 + Math.random() * 0.2;
+        birdGain.gain.value = 0.06;
+        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+        bird.connect(birdGain);
+        birdGain.connect(masterGain);
+
+        bird.start();
+        bird.stop(audioContext.currentTime + duration);
+
+        const nextChirp = setTimeout(chirp, 500 + Math.random() * 3500);
+        timeouts.push(nextChirp);
+      }
+
+      for (let i = 0; i < 3; i++) {
+        const firstChirp = setTimeout(chirp, Math.random() * 2000);
+        timeouts.push(firstChirp);
+      }
+
+      // Crickets - oscillating high frequency with AM
+      const cricket = audioContext.createOscillator();
+      const cricketAm = audioContext.createOscillator();
+      const cricketAmGain = audioContext.createGain();
+      const cricketGain = audioContext.createGain();
+
+      cricket.type = 'sine';
+      cricket.frequency.value = 4500;
+
+      cricketAm.type = 'sine';
+      cricketAm.frequency.value = 20; // 20 Hz modulation
+      cricketAmGain.gain.value = 0.015;
+
+      cricketGain.gain.value = 0.015;
+
+      cricketAm.connect(cricketAmGain);
+      cricketAmGain.connect(cricketGain.gain);
+
+      cricket.connect(cricketGain);
+      cricketGain.connect(masterGain);
+
+      cricket.start();
+      cricketAm.start();
+
+      nodes.push(cricket, cricketAm, cricketAmGain, cricketGain);
+
+      // Rustling leaves
+      function rustle() {
+        if (!audioContext || !masterGain) return;
+
+        const noise = createWhiteNoise();
+        if (noise) {
+          const rustleFilter = audioContext.createBiquadFilter();
+          const rustleGain = audioContext.createGain();
+
+          rustleFilter.type = 'bandpass';
+          rustleFilter.frequency.value = 2000;
+          rustleFilter.Q.value = 2;
+
+          rustleGain.gain.value = 0.04;
+          rustleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+          noise.connect(rustleFilter);
+          rustleFilter.connect(rustleGain);
+          rustleGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (noise.stop) noise.stop();
+              if (rustleFilter.disconnect) rustleFilter.disconnect();
+              if (rustleGain.disconnect) rustleGain.disconnect();
+            } catch (e) {}
+          }, 400);
+        }
+
+        const nextRustle = setTimeout(rustle, 2000 + Math.random() * 3000);
+        timeouts.push(nextRustle);
+      }
+
+      const firstRustle = setTimeout(rustle, 1000);
+      timeouts.push(firstRustle);
+
+      return { nodes, timeouts, intervals };
+    } catch (err) {
+      console.error('Error in gardens ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * ATHENAEUM - Library/knowledge hall
+   * Deep silence + page turning + quill writing + distant footsteps + clock ticking
+   */
+  function playAthenaeumAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+    const intervals = [];
+
+    try {
+      // Room tone - very quiet
+      const roomTone = createWhiteNoise();
+      if (roomTone) {
+        const roomGain = audioContext.createGain();
+        roomGain.gain.value = 0.01;
+
+        roomTone.connect(roomGain);
+        roomGain.connect(masterGain);
+
+        nodes.push(roomTone, roomGain);
+      }
+
+      // Page turning
+      function turnPage() {
+        if (!audioContext || !masterGain) return;
+
+        const page = createWhiteNoise();
+        if (page) {
+          const pageFilter = audioContext.createBiquadFilter();
+          const pageGain = audioContext.createGain();
+
+          pageFilter.type = 'highpass';
+          pageFilter.frequency.value = 2000;
+
+          pageGain.gain.value = 0.03;
+          pageGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+
+          page.connect(pageFilter);
+          pageFilter.connect(pageGain);
+          pageGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (page.stop) page.stop();
+              if (pageFilter.disconnect) pageFilter.disconnect();
+              if (pageGain.disconnect) pageGain.disconnect();
+            } catch (e) {}
+          }, 150);
+        }
+
+        const nextPage = setTimeout(turnPage, 8000 + Math.random() * 7000);
+        timeouts.push(nextPage);
+      }
+
+      const firstPage = setTimeout(turnPage, 3000);
+      timeouts.push(firstPage);
+
+      // Quill writing - intermittent
+      function writeQuill() {
+        if (!audioContext || !masterGain) return;
+
+        const quill = createWhiteNoise();
+        if (quill) {
+          const quillFilter = audioContext.createBiquadFilter();
+          const quillGain = audioContext.createGain();
+
+          quillFilter.type = 'bandpass';
+          quillFilter.frequency.value = 3000;
+          quillFilter.Q.value = 5;
+
+          quillGain.gain.value = 0.05;
+
+          quill.connect(quillFilter);
+          quillFilter.connect(quillGain);
+          quillGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (quill.stop) quill.stop();
+              if (quillFilter.disconnect) quillFilter.disconnect();
+              if (quillGain.disconnect) quillGain.disconnect();
+            } catch (e) {}
+          }, 200 + Math.random() * 500);
+        }
+
+        const nextQuill = setTimeout(writeQuill, 5000 + Math.random() * 10000);
+        timeouts.push(nextQuill);
+      }
+
+      const firstQuill = setTimeout(writeQuill, 5000);
+      timeouts.push(firstQuill);
+
+      // Distant footsteps
+      function footstep() {
+        if (!audioContext || !masterGain) return;
+
+        const step = audioContext.createOscillator();
+        const stepGain = audioContext.createGain();
+
+        step.type = 'sine';
+        step.frequency.value = 60;
+
+        stepGain.gain.value = 0.03;
+        stepGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+
+        step.connect(stepGain);
+        stepGain.connect(masterGain);
+
+        step.start();
+        step.stop(audioContext.currentTime + 0.05);
+
+        const nextStep = setTimeout(footstep, 5000 + Math.random() * 5000);
+        timeouts.push(nextStep);
+      }
+
+      const firstStep = setTimeout(footstep, 2000);
+      timeouts.push(firstStep);
+
+      // Clock ticking
+      function tick() {
+        if (!audioContext || !masterGain) return;
+
+        const click = audioContext.createOscillator();
+        const clickGain = audioContext.createGain();
+
+        click.type = 'sine';
+        click.frequency.value = 800;
+
+        clickGain.gain.value = 0.02;
+        clickGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
+
+        click.connect(clickGain);
+        clickGain.connect(masterGain);
+
+        click.start();
+        click.stop(audioContext.currentTime + 0.02);
+      }
+
+      const tickInterval = setInterval(tick, 1000);
+      intervals.push(tickInterval);
+
+      return { nodes, timeouts, intervals };
+    } catch (err) {
+      console.error('Error in athenaeum ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * STUDIO - Creative workshop
+   * Rhythmic tapping + metallic chimes + creative hum + melodic phrases
+   */
+  function playStudioAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const oscillators = [];
+    const timeouts = [];
+    const intervals = [];
+
+    try {
+      // Creative energy hum - 110Hz with modulation
+      const hum = audioContext.createOscillator();
+      const humLfo = audioContext.createOscillator();
+      const humLfoGain = audioContext.createGain();
+      const humGain = audioContext.createGain();
+
+      hum.type = 'sine';
+      hum.frequency.value = 110;
+
+      humLfo.type = 'sine';
+      humLfo.frequency.value = 0.3;
+      humLfoGain.gain.value = 2;
+
+      humGain.gain.value = 0.03;
+
+      humLfo.connect(humLfoGain);
+      humLfoGain.connect(hum.frequency);
+
+      hum.connect(humGain);
+      humGain.connect(masterGain);
+
+      hum.start();
+      humLfo.start();
+
+      oscillators.push(hum, humLfo);
+      nodes.push(humLfoGain, humGain);
+
+      // Rhythmic tapping
+      function tap() {
+        if (!audioContext || !masterGain) return;
+
+        const thud = audioContext.createOscillator();
+        const thudGain = audioContext.createGain();
+
+        thud.type = 'sine';
+        thud.frequency.value = 100 + Math.random() * 200;
+
+        thudGain.gain.value = 0.05;
+        thudGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
+
+        thud.connect(thudGain);
+        thudGain.connect(masterGain);
+
+        thud.start();
+        thud.stop(audioContext.currentTime + 0.08);
+
+        const nextTap = setTimeout(tap, 500 + Math.random() * 1500);
+        timeouts.push(nextTap);
+      }
+
+      const firstTap = setTimeout(tap, 500);
+      timeouts.push(firstTap);
+
+      // Metallic chimes
+      function chime() {
+        if (!audioContext || !masterGain) return;
+
+        const bell = audioContext.createOscillator();
+        const bellGain = audioContext.createGain();
+
+        bell.type = 'triangle';
+        bell.frequency.value = 500 + Math.random() * 700;
+
+        bellGain.gain.value = 0.04;
+        bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1.2);
+
+        bell.connect(bellGain);
+        bellGain.connect(masterGain);
+
+        bell.start();
+        bell.stop(audioContext.currentTime + 1.2);
+
+        const nextChime = setTimeout(chime, 3000 + Math.random() * 5000);
+        timeouts.push(nextChime);
+      }
+
+      const firstChime = setTimeout(chime, 2000);
+      timeouts.push(firstChime);
+
+      // Melodic phrases
+      function melody() {
+        if (!audioContext || !masterGain) return;
+
+        const notes = [261.63, 293.66, 329.63, 392.00, 440.00]; // C, D, E, G, A
+        const numNotes = 3 + Math.floor(Math.random() * 3);
+
+        for (let i = 0; i < numNotes; i++) {
+          const note = audioContext.createOscillator();
+          const noteGain = audioContext.createGain();
+
+          note.type = 'sine';
+          note.frequency.value = notes[Math.floor(Math.random() * notes.length)];
+
+          const startTime = audioContext.currentTime + i * 0.2;
+          noteGain.gain.setValueAtTime(0, startTime);
+          noteGain.gain.linearRampToValueAtTime(0.03, startTime + 0.05);
+          noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+
+          note.connect(noteGain);
+          noteGain.connect(masterGain);
+
+          note.start(startTime);
+          note.stop(startTime + 0.4);
+        }
+
+        const nextMelody = setTimeout(melody, 15000 + Math.random() * 15000);
+        timeouts.push(nextMelody);
+      }
+
+      const firstMelody = setTimeout(melody, 10000);
+      timeouts.push(firstMelody);
+
+      return { oscillators, nodes, timeouts, intervals };
+    } catch (err) {
+      console.error('Error in studio ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * WILDS - Untamed wilderness
+   * Heavy wind + wolf howls + thunder + rustling + owl hoots
+   */
+  function playWildsAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+    const intervals = [];
+
+    try {
+      // Heavy wind with varying intensity
+      const wind = createWhiteNoise();
+      if (wind) {
+        const windFilter = audioContext.createBiquadFilter();
+        const windGain = audioContext.createGain();
+
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 150;
+        windGain.gain.value = 0.08;
+
+        wind.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterGain);
+
+        nodes.push(wind, windFilter, windGain);
+
+        // Vary wind intensity
+        function varyWind() {
+          if (!windGain || !audioContext) return;
+          const target = 0.05 + Math.random() * 0.06;
+          windGain.gain.linearRampToValueAtTime(target, audioContext.currentTime + 3);
+        }
+
+        const windInterval = setInterval(varyWind, 4000);
+        intervals.push(windInterval);
+      }
+
+      // Wolf howls
+      function howl() {
+        if (!audioContext || !masterGain) return;
+
+        const wolf = audioContext.createOscillator();
+        const wolfVibrato = audioContext.createOscillator();
+        const wolfVibratoGain = audioContext.createGain();
+        const wolfGain = audioContext.createGain();
+
+        wolf.type = 'sine';
+        wolf.frequency.value = 400;
+
+        wolfVibrato.type = 'sine';
+        wolfVibrato.frequency.value = 5;
+        wolfVibratoGain.gain.value = 15;
+
+        wolfGain.gain.value = 0.04;
+
+        wolfVibrato.connect(wolfVibratoGain);
+        wolfVibratoGain.connect(wolf.frequency);
+
+        wolf.connect(wolfGain);
+        wolfGain.connect(masterGain);
+
+        wolf.start();
+        wolfVibrato.start();
+
+        wolf.frequency.linearRampToValueAtTime(600, audioContext.currentTime + 1);
+        wolf.frequency.linearRampToValueAtTime(400, audioContext.currentTime + 2);
+        wolfGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2.5);
+
+        wolf.stop(audioContext.currentTime + 2.5);
+        wolfVibrato.stop(audioContext.currentTime + 2.5);
+
+        const nextHowl = setTimeout(howl, 20000 + Math.random() * 20000);
+        timeouts.push(nextHowl);
+      }
+
+      const firstHowl = setTimeout(howl, 5000);
+      timeouts.push(firstHowl);
+
+      // Thunder rumble
+      function thunder() {
+        if (!audioContext || !masterGain) return;
+
+        const rumble = createWhiteNoise();
+        if (rumble) {
+          const rumbleFilter = audioContext.createBiquadFilter();
+          const rumbleGain = audioContext.createGain();
+
+          rumbleFilter.type = 'lowpass';
+          rumbleFilter.frequency.value = 60;
+
+          rumbleGain.gain.value = 0.12;
+          rumbleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2);
+
+          rumble.connect(rumbleFilter);
+          rumbleFilter.connect(rumbleGain);
+          rumbleGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (rumble.stop) rumble.stop();
+              if (rumbleFilter.disconnect) rumbleFilter.disconnect();
+              if (rumbleGain.disconnect) rumbleGain.disconnect();
+            } catch (e) {}
+          }, 2500);
+        }
+
+        const nextThunder = setTimeout(thunder, 30000 + Math.random() * 30000);
+        timeouts.push(nextThunder);
+      }
+
+      const firstThunder = setTimeout(thunder, 15000);
+      timeouts.push(firstThunder);
+
+      // Rustling underbrush
+      function rustle() {
+        if (!audioContext || !masterGain) return;
+
+        const brush = createWhiteNoise();
+        if (brush) {
+          const brushFilter = audioContext.createBiquadFilter();
+          const brushGain = audioContext.createGain();
+
+          brushFilter.type = 'bandpass';
+          brushFilter.frequency.value = 1000;
+          brushFilter.Q.value = 2;
+
+          brushGain.gain.value = 0.05;
+          brushGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+          brush.connect(brushFilter);
+          brushFilter.connect(brushGain);
+          brushGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (brush.stop) brush.stop();
+              if (brushFilter.disconnect) brushFilter.disconnect();
+              if (brushGain.disconnect) brushGain.disconnect();
+            } catch (e) {}
+          }, 400);
+        }
+
+        const nextRustle = setTimeout(rustle, 3000 + Math.random() * 4000);
+        timeouts.push(nextRustle);
+      }
+
+      const firstRustle = setTimeout(rustle, 2000);
+      timeouts.push(firstRustle);
+
+      // Owl hoots
+      function hoot() {
+        if (!audioContext || !masterGain) return;
+
+        // Two-tone hoot
+        const hoot1 = audioContext.createOscillator();
+        const hoot1Gain = audioContext.createGain();
+
+        hoot1.type = 'sine';
+        hoot1.frequency.value = 350;
+
+        hoot1Gain.gain.value = 0.04;
+        hoot1Gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+        hoot1.connect(hoot1Gain);
+        hoot1Gain.connect(masterGain);
+
+        hoot1.start();
+        hoot1.stop(audioContext.currentTime + 0.3);
+
+        // Second hoot
+        const hoot2 = audioContext.createOscillator();
+        const hoot2Gain = audioContext.createGain();
+
+        hoot2.type = 'sine';
+        hoot2.frequency.value = 280;
+
+        hoot2Gain.gain.setValueAtTime(0, audioContext.currentTime + 0.35);
+        hoot2Gain.gain.linearRampToValueAtTime(0.04, audioContext.currentTime + 0.4);
+        hoot2Gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.7);
+
+        hoot2.connect(hoot2Gain);
+        hoot2Gain.connect(masterGain);
+
+        hoot2.start(audioContext.currentTime + 0.35);
+        hoot2.stop(audioContext.currentTime + 0.7);
+
+        const nextHoot = setTimeout(hoot, 15000 + Math.random() * 10000);
+        timeouts.push(nextHoot);
+      }
+
+      const firstHoot = setTimeout(hoot, 8000);
+      timeouts.push(firstHoot);
+
+      return { nodes, timeouts, intervals };
+    } catch (err) {
+      console.error('Error in wilds ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * AGORA - Marketplace
+   * Crowd murmur + vendor calls + coin sounds + cart wheels
+   */
+  function playAgoraAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+    const intervals = [];
+
+    try {
+      // Crowd murmur - bandpass filtered noise with modulation
+      const crowd = createWhiteNoise();
+      if (crowd) {
+        const crowdFilter = audioContext.createBiquadFilter();
+        const crowdLfo = audioContext.createOscillator();
+        const crowdLfoGain = audioContext.createGain();
+        const crowdGain = audioContext.createGain();
+
+        crowdFilter.type = 'bandpass';
+        crowdFilter.frequency.value = 500;
+        crowdFilter.Q.value = 1;
+
+        crowdLfo.type = 'sine';
+        crowdLfo.frequency.value = 0.4;
+        crowdLfoGain.gain.value = 0.02;
+
+        crowdGain.gain.value = 0.05;
+
+        crowdLfo.connect(crowdLfoGain);
+        crowdLfoGain.connect(crowdGain.gain);
+
+        crowd.connect(crowdFilter);
+        crowdFilter.connect(crowdGain);
+        crowdGain.connect(masterGain);
+
+        crowdLfo.start();
+
+        nodes.push(crowd, crowdFilter, crowdLfo, crowdLfoGain, crowdGain);
+      }
+
+      // Vendor calls - short melodic phrases
+      function vendorCall() {
+        if (!audioContext || !masterGain) return;
+
+        const notes = [220, 247, 262, 294, 330, 349, 392, 440, 494];
+        const numNotes = 2 + Math.floor(Math.random() * 2);
+
+        for (let i = 0; i < numNotes; i++) {
+          const call = audioContext.createOscillator();
+          const callGain = audioContext.createGain();
+
+          call.type = 'sine';
+          call.frequency.value = notes[Math.floor(Math.random() * notes.length)];
+
+          const startTime = audioContext.currentTime + i * 0.15;
+          callGain.gain.setValueAtTime(0, startTime);
+          callGain.gain.linearRampToValueAtTime(0.04, startTime + 0.05);
+          callGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+
+          call.connect(callGain);
+          callGain.connect(masterGain);
+
+          call.start(startTime);
+          call.stop(startTime + 0.25);
+        }
+
+        const nextCall = setTimeout(vendorCall, 8000 + Math.random() * 7000);
+        timeouts.push(nextCall);
+      }
+
+      const firstCall = setTimeout(vendorCall, 3000);
+      timeouts.push(firstCall);
+
+      // Coin sounds
+      function coinDrop() {
+        if (!audioContext || !masterGain) return;
+
+        const coin = audioContext.createOscillator();
+        const coinGain = audioContext.createGain();
+
+        coin.type = 'triangle';
+        coin.frequency.value = 2000 + Math.random() * 1000;
+
+        coinGain.gain.value = 0.03;
+        coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
+
+        coin.connect(coinGain);
+        coinGain.connect(masterGain);
+
+        coin.start();
+        coin.stop(audioContext.currentTime + 0.15);
+
+        const nextCoin = setTimeout(coinDrop, 3000 + Math.random() * 5000);
+        timeouts.push(nextCoin);
+      }
+
+      const firstCoin = setTimeout(coinDrop, 2000);
+      timeouts.push(firstCoin);
+
+      // Cart wheels rumbling
+      function cartRumble() {
+        if (!audioContext || !masterGain) return;
+
+        const cart = createWhiteNoise();
+        if (cart) {
+          const cartFilter = audioContext.createBiquadFilter();
+          const cartGain = audioContext.createGain();
+
+          cartFilter.type = 'lowpass';
+          cartFilter.frequency.value = 80;
+
+          cartGain.gain.value = 0.04;
+          cartGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2);
+
+          cart.connect(cartFilter);
+          cartFilter.connect(cartGain);
+          cartGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (cart.stop) cart.stop();
+              if (cartFilter.disconnect) cartFilter.disconnect();
+              if (cartGain.disconnect) cartGain.disconnect();
+            } catch (e) {}
+          }, 2500);
+        }
+
+        const nextCart = setTimeout(cartRumble, 15000 + Math.random() * 15000);
+        timeouts.push(nextCart);
+      }
+
+      const firstCart = setTimeout(cartRumble, 5000);
+      timeouts.push(firstCart);
+
+      return { nodes, timeouts, intervals };
+    } catch (err) {
+      console.error('Error in agora ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * COMMONS - Building/community area
+   * Hammering + sawing + chatter + fire crackling
+   */
+  function playCommonsAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+    const intervals = [];
+
+    try {
+      // Friendly chatter
+      const chatter = createWhiteNoise();
+      if (chatter) {
+        const chatterFilter = audioContext.createBiquadFilter();
+        const chatterGain = audioContext.createGain();
+
+        chatterFilter.type = 'bandpass';
+        chatterFilter.frequency.value = 450;
+        chatterFilter.Q.value = 1.5;
+
+        chatterGain.gain.value = 0.03;
+
+        chatter.connect(chatterFilter);
+        chatterFilter.connect(chatterGain);
+        chatterGain.connect(masterGain);
+
+        nodes.push(chatter, chatterFilter, chatterGain);
+      }
+
+      // Fire crackling - continuous random bursts
+      function crackle() {
+        if (!audioContext || !masterGain) return;
+
+        const fire = createWhiteNoise();
+        if (fire) {
+          const fireFilter = audioContext.createBiquadFilter();
+          const fireGain = audioContext.createGain();
+
+          fireFilter.type = 'bandpass';
+          fireFilter.frequency.value = 1500 + Math.random() * 1500;
+          fireFilter.Q.value = 3;
+
+          const gain = 0.01 + Math.random() * 0.02;
+          fireGain.gain.value = gain;
+          fireGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+
+          fire.connect(fireFilter);
+          fireFilter.connect(fireGain);
+          fireGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (fire.stop) fire.stop();
+              if (fireFilter.disconnect) fireFilter.disconnect();
+              if (fireGain.disconnect) fireGain.disconnect();
+            } catch (e) {}
+          }, 150);
+        }
+
+        const nextCrackle = setTimeout(crackle, 100 + Math.random() * 300);
+        timeouts.push(nextCrackle);
+      }
+
+      const firstCrackle = setTimeout(crackle, 500);
+      timeouts.push(firstCrackle);
+
+      // Hammering - rhythmic with pauses
+      let hammerActive = true;
+      function hammer() {
+        if (!audioContext || !masterGain || !hammerActive) return;
+
+        const thunk = audioContext.createOscillator();
+        const thunkGain = audioContext.createGain();
+
+        thunk.type = 'square';
+        thunk.frequency.value = 80;
+
+        thunkGain.gain.value = 0.06;
+        thunkGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+
+        thunk.connect(thunkGain);
+        thunkGain.connect(masterGain);
+
+        thunk.start();
+        thunk.stop(audioContext.currentTime + 0.1);
+
+        const nextHammer = setTimeout(hammer, 800 + Math.random() * 400);
+        timeouts.push(nextHammer);
+      }
+
+      function toggleHammer() {
+        hammerActive = !hammerActive;
+        if (hammerActive) {
+          hammer();
+        }
+      }
+
+      const firstHammer = setTimeout(hammer, 1000);
+      timeouts.push(firstHammer);
+
+      const hammerToggle = setInterval(toggleHammer, 8000);
+      intervals.push(hammerToggle);
+
+      // Sawing - filtered noise sweep
+      let sawActive = false;
+      function saw() {
+        if (!audioContext || !masterGain || !sawActive) return;
+
+        const sawNoise = createWhiteNoise();
+        if (sawNoise) {
+          const sawFilter = audioContext.createBiquadFilter();
+          const sawGain = audioContext.createGain();
+
+          sawFilter.type = 'bandpass';
+          sawFilter.frequency.value = 400;
+          sawFilter.Q.value = 5;
+
+          sawGain.gain.value = 0.04;
+
+          sawNoise.connect(sawFilter);
+          sawFilter.connect(sawGain);
+          sawGain.connect(masterGain);
+
+          sawFilter.frequency.linearRampToValueAtTime(1000, audioContext.currentTime + 0.5);
+
+          setTimeout(() => {
+            try {
+              if (sawNoise.stop) sawNoise.stop();
+              if (sawFilter.disconnect) sawFilter.disconnect();
+              if (sawGain.disconnect) sawGain.disconnect();
+            } catch (e) {}
+          }, 550);
+        }
+
+        const nextSaw = setTimeout(saw, 1000);
+        timeouts.push(nextSaw);
+      }
+
+      function toggleSaw() {
+        sawActive = !sawActive;
+        if (sawActive) {
+          saw();
+        }
+      }
+
+      const sawToggle = setInterval(toggleSaw, 6000);
+      intervals.push(sawToggle);
+
+      return { nodes, timeouts, intervals };
+    } catch (err) {
+      console.error('Error in commons ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * ARENA - Competition grounds
+   * Crowd roar + drum beats + clash sounds + horn call
+   */
+  function playArenaAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+    const intervals = [];
+
+    try {
+      // Crowd roar with periodic swells
+      const crowd = createWhiteNoise();
+      if (crowd) {
+        const crowdFilter = audioContext.createBiquadFilter();
+        const crowdGain = audioContext.createGain();
+
+        crowdFilter.type = 'bandpass';
+        crowdFilter.frequency.value = 600;
+        crowdFilter.Q.value = 0.8;
+
+        crowdGain.gain.value = 0.06;
+
+        crowd.connect(crowdFilter);
+        crowdFilter.connect(crowdGain);
+        crowdGain.connect(masterGain);
+
+        nodes.push(crowd, crowdFilter, crowdGain);
+
+        // Periodic swells
+        function swell() {
+          if (!crowdGain || !audioContext) return;
+          crowdGain.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 2);
+          crowdGain.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 4);
+        }
+
+        const swellInterval = setInterval(swell, 12000);
+        intervals.push(swellInterval);
+      }
+
+      // Drum beats - rhythmic at 120 BPM
+      function drumBeat() {
+        if (!audioContext || !masterGain) return;
+
+        const drum = audioContext.createOscillator();
+        const drumGain = audioContext.createGain();
+
+        drum.type = 'sine';
+        drum.frequency.value = 55;
+
+        drumGain.gain.value = 0.08;
+        drumGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
+
+        drum.connect(drumGain);
+        drumGain.connect(masterGain);
+
+        drum.start();
+        drum.stop(audioContext.currentTime + 0.15);
+      }
+
+      const drumInterval = setInterval(drumBeat, 500); // 120 BPM
+      intervals.push(drumInterval);
+
+      // Clash sounds
+      function clash() {
+        if (!audioContext || !masterGain) return;
+
+        const metal = createWhiteNoise();
+        if (metal) {
+          const metalFilter = audioContext.createBiquadFilter();
+          const metalGain = audioContext.createGain();
+
+          metalFilter.type = 'bandpass';
+          metalFilter.frequency.value = 3000;
+          metalFilter.Q.value = 3;
+
+          metalGain.gain.value = 0.06;
+          metalGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+
+          metal.connect(metalFilter);
+          metalFilter.connect(metalGain);
+          metalGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (metal.stop) metal.stop();
+              if (metalFilter.disconnect) metalFilter.disconnect();
+              if (metalGain.disconnect) metalGain.disconnect();
+            } catch (e) {}
+          }, 250);
+        }
+
+        const nextClash = setTimeout(clash, 5000 + Math.random() * 5000);
+        timeouts.push(nextClash);
+      }
+
+      const firstClash = setTimeout(clash, 3000);
+      timeouts.push(firstClash);
+
+      // Horn call
+      function hornCall() {
+        if (!audioContext || !masterGain) return;
+
+        const horn = audioContext.createOscillator();
+        const hornGain = audioContext.createGain();
+
+        horn.type = 'sawtooth';
+        horn.frequency.value = 220;
+
+        hornGain.gain.setValueAtTime(0, audioContext.currentTime);
+        hornGain.gain.linearRampToValueAtTime(0.05, audioContext.currentTime + 0.2);
+        hornGain.gain.linearRampToValueAtTime(0.05, audioContext.currentTime + 0.8);
+        hornGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1);
+
+        horn.connect(hornGain);
+        hornGain.connect(masterGain);
+
+        horn.start();
+        horn.stop(audioContext.currentTime + 1);
+
+        const nextHorn = setTimeout(hornCall, 20000 + Math.random() * 10000);
+        timeouts.push(nextHorn);
+      }
+
+      const firstHorn = setTimeout(hornCall, 10000);
+      timeouts.push(firstHorn);
+
+      return { nodes, timeouts, intervals };
+    } catch (err) {
+      console.error('Error in arena ambient:', err);
+      return null;
+    }
   }
 
   /**
    * Play UI sound effect
-   * @param {string} type - Sound type: 'chat', 'warp', 'harvest', 'build', 'trade', 'discover'
+   * @param {string} type - Sound type
    */
   function playSound(type) {
     if (!audioContext || !masterGain) return;
 
-    switch (type) {
-      case 'chat':
-        playBlip();
-        break;
-      case 'warp':
-        playSwoosh();
-        break;
-      case 'harvest':
-        playPluck();
-        break;
-      case 'build':
-        playThunk();
-        break;
-      case 'trade':
-        playDing();
-        break;
-      case 'discover':
-        playSparkle();
-        break;
+    // Resume context if needed
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    try {
+      switch (type) {
+        case 'chat':
+          playChatSound();
+          break;
+        case 'warp':
+          playWarpSound();
+          break;
+        case 'harvest':
+          playHarvestSound();
+          break;
+        case 'build':
+          playBuildSound();
+          break;
+        case 'trade':
+          playTradeSound();
+          break;
+        case 'discover':
+          playDiscoverSound();
+          break;
+        case 'challenge':
+          playChallengeSound();
+          break;
+        case 'levelup':
+          playLevelUpSound();
+          break;
+        case 'error':
+          playErrorSound();
+          break;
+        case 'notification':
+          playNotificationSound();
+          break;
+        default:
+          console.warn('Unknown sound type:', type);
+      }
+    } catch (err) {
+      console.error('Error playing sound:', err);
     }
   }
 
   /**
-   * Chat blip
+   * Chat sound - two-tone blip ascending
    */
-  function playBlip() {
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
+  function playChatSound() {
+    if (!audioContext || !masterGain) return;
 
-    osc.type = 'sine';
-    osc.frequency.value = 800;
+    const blip1 = audioContext.createOscillator();
+    const blip1Gain = audioContext.createGain();
 
-    gain.gain.value = 0.2;
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    blip1.type = 'sine';
+    blip1.frequency.value = 600;
 
-    osc.connect(gain);
-    gain.connect(masterGain);
+    blip1Gain.gain.value = 0.15;
+    blip1Gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
 
-    osc.start();
-    osc.stop(audioContext.currentTime + 0.1);
+    blip1.connect(blip1Gain);
+    blip1Gain.connect(masterGain);
+
+    blip1.start();
+    blip1.stop(audioContext.currentTime + 0.05);
+
+    const blip2 = audioContext.createOscillator();
+    const blip2Gain = audioContext.createGain();
+
+    blip2.type = 'sine';
+    blip2.frequency.value = 900;
+
+    blip2Gain.gain.setValueAtTime(0, audioContext.currentTime + 0.05);
+    blip2Gain.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.06);
+    blip2Gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+
+    blip2.connect(blip2Gain);
+    blip2Gain.connect(masterGain);
+
+    blip2.start(audioContext.currentTime + 0.05);
+    blip2.stop(audioContext.currentTime + 0.1);
   }
 
   /**
-   * Warp swoosh
+   * Warp sound - sweeping whoosh with reverb
    */
-  function playSwoosh() {
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
+  function playWarpSound() {
+    if (!audioContext || !masterGain) return;
 
-    osc.type = 'sawtooth';
-    osc.frequency.value = 400;
-    osc.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+    const warp = audioContext.createOscillator();
+    const warpGain = audioContext.createGain();
+    const delay1 = audioContext.createDelay();
+    const delay2 = audioContext.createDelay();
+    const delayGain1 = audioContext.createGain();
+    const delayGain2 = audioContext.createGain();
 
-    gain.gain.value = 0.2;
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    warp.type = 'sawtooth';
+    warp.frequency.value = 800;
+    warp.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.5);
 
-    osc.connect(gain);
-    gain.connect(masterGain);
+    warpGain.gain.value = 0.2;
+    warpGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
 
-    osc.start();
-    osc.stop(audioContext.currentTime + 0.3);
+    delay1.delayTime.value = 0.1;
+    delay2.delayTime.value = 0.2;
+    delayGain1.gain.value = 0.3;
+    delayGain2.gain.value = 0.2;
+
+    warp.connect(warpGain);
+    warpGain.connect(masterGain);
+    warpGain.connect(delay1);
+    warpGain.connect(delay2);
+    delay1.connect(delayGain1);
+    delay2.connect(delayGain2);
+    delayGain1.connect(masterGain);
+    delayGain2.connect(masterGain);
+
+    warp.start();
+    warp.stop(audioContext.currentTime + 0.5);
   }
 
   /**
-   * Harvest pluck
+   * Harvest sound - satisfying pluck with harmonic
    */
-  function playPluck() {
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
+  function playHarvestSound() {
+    if (!audioContext || !masterGain) return;
 
-    osc.type = 'triangle';
-    osc.frequency.value = 330;
+    const pluck = audioContext.createOscillator();
+    const harmonic = audioContext.createOscillator();
+    const pluckGain = audioContext.createGain();
 
-    gain.gain.value = 0.3;
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+    pluck.type = 'triangle';
+    pluck.frequency.value = 330;
 
-    osc.connect(gain);
-    gain.connect(masterGain);
+    harmonic.type = 'triangle';
+    harmonic.frequency.value = 660;
 
-    osc.start();
-    osc.stop(audioContext.currentTime + 0.2);
+    pluckGain.gain.value = 0.25;
+    pluckGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+    pluck.connect(pluckGain);
+    harmonic.connect(pluckGain);
+    pluckGain.connect(masterGain);
+
+    pluck.start();
+    harmonic.start();
+    pluck.stop(audioContext.currentTime + 0.3);
+    harmonic.stop(audioContext.currentTime + 0.3);
   }
 
   /**
-   * Build thunk
+   * Build sound - heavy thump + click
    */
-  function playThunk() {
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
+  function playBuildSound() {
+    if (!audioContext || !masterGain) return;
 
-    osc.type = 'square';
-    osc.frequency.value = 100;
+    const thump = audioContext.createOscillator();
+    const thumpGain = audioContext.createGain();
 
-    gain.gain.value = 0.2;
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+    thump.type = 'square';
+    thump.frequency.value = 80;
 
-    osc.connect(gain);
-    gain.connect(masterGain);
+    thumpGain.gain.value = 0.25;
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
 
-    osc.start();
-    osc.stop(audioContext.currentTime + 0.15);
+    thump.connect(thumpGain);
+    thumpGain.connect(masterGain);
+
+    thump.start();
+    thump.stop(audioContext.currentTime + 0.15);
+
+    const click = audioContext.createOscillator();
+    const clickGain = audioContext.createGain();
+
+    click.type = 'sine';
+    click.frequency.value = 2000;
+
+    clickGain.gain.value = 0.15;
+    clickGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
+
+    click.connect(clickGain);
+    clickGain.connect(masterGain);
+
+    click.start();
+    click.stop(audioContext.currentTime + 0.02);
   }
 
   /**
-   * Trade ding
+   * Trade sound - coin ding with shimmer
    */
-  function playDing() {
-    const osc1 = audioContext.createOscillator();
-    const osc2 = audioContext.createOscillator();
-    const gain = audioContext.createGain();
+  function playTradeSound() {
+    if (!audioContext || !masterGain) return;
 
-    osc1.type = 'sine';
-    osc1.frequency.value = 800;
-    osc2.type = 'sine';
-    osc2.frequency.value = 1000;
+    const coin1 = audioContext.createOscillator();
+    const coin2 = audioContext.createOscillator();
+    const wobble = audioContext.createOscillator();
+    const wobbleGain = audioContext.createGain();
+    const coinGain = audioContext.createGain();
 
-    gain.gain.value = 0.2;
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+    coin1.type = 'sine';
+    coin1.frequency.value = 1200;
 
-    osc1.connect(gain);
-    osc2.connect(gain);
-    gain.connect(masterGain);
+    coin2.type = 'sine';
+    coin2.frequency.value = 1500;
 
-    osc1.start();
-    osc2.start();
-    osc1.stop(audioContext.currentTime + 0.4);
-    osc2.stop(audioContext.currentTime + 0.4);
+    wobble.type = 'sine';
+    wobble.frequency.value = 5;
+    wobbleGain.gain.value = 3;
+
+    coinGain.gain.value = 0.2;
+    coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+    wobble.connect(wobbleGain);
+    wobbleGain.connect(coin1.frequency);
+    wobbleGain.connect(coin2.frequency);
+
+    coin1.connect(coinGain);
+    coin2.connect(coinGain);
+    coinGain.connect(masterGain);
+
+    coin1.start();
+    coin2.start();
+    wobble.start();
+    coin1.stop(audioContext.currentTime + 0.3);
+    coin2.stop(audioContext.currentTime + 0.3);
+    wobble.stop(audioContext.currentTime + 0.3);
   }
 
   /**
-   * Discover sparkle chord
+   * Discover sound - magical sparkle arpeggio
    */
-  function playSparkle() {
-    const frequencies = [523, 659, 784]; // C, E, G (C major chord)
-    const oscillators = [];
+  function playDiscoverSound() {
+    if (!audioContext || !masterGain) return;
 
-    frequencies.forEach((freq, i) => {
-      const osc = audioContext.createOscillator();
-      const gain = audioContext.createGain();
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
 
-      osc.type = 'sine';
-      osc.frequency.value = freq;
+    notes.forEach((freq, i) => {
+      const note = audioContext.createOscillator();
+      const noteGain = audioContext.createGain();
 
-      gain.gain.value = 0.15;
-      gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5 + i * 0.1);
+      note.type = 'sine';
+      note.frequency.value = freq;
 
-      osc.connect(gain);
-      gain.connect(masterGain);
+      const startTime = audioContext.currentTime + i * 0.08;
+      noteGain.gain.setValueAtTime(0, startTime);
+      noteGain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
 
-      osc.start(audioContext.currentTime + i * 0.05);
-      osc.stop(audioContext.currentTime + 0.5 + i * 0.1);
+      note.connect(noteGain);
+      noteGain.connect(masterGain);
 
-      oscillators.push(osc);
+      note.start(startTime);
+      note.stop(startTime + 0.2);
     });
+  }
+
+  /**
+   * Challenge sound - dramatic horn
+   */
+  function playChallengeSound() {
+    if (!audioContext || !masterGain) return;
+
+    const horn1 = audioContext.createOscillator();
+    const horn2 = audioContext.createOscillator();
+    const hornGain = audioContext.createGain();
+
+    horn1.type = 'sawtooth';
+    horn1.frequency.value = 220;
+
+    horn2.type = 'sawtooth';
+    horn2.frequency.value = 330;
+
+    hornGain.gain.setValueAtTime(0, audioContext.currentTime);
+    hornGain.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.1);
+    hornGain.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.4);
+    hornGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+
+    horn1.connect(hornGain);
+    horn2.connect(hornGain);
+    hornGain.connect(masterGain);
+
+    horn1.start();
+    horn2.start();
+    horn1.stop(audioContext.currentTime + 0.5);
+    horn2.stop(audioContext.currentTime + 0.5);
+  }
+
+  /**
+   * Level up sound - rising triumphant chord
+   */
+  function playLevelUpSound() {
+    if (!audioContext || !masterGain) return;
+
+    const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+
+    notes.forEach((freq, i) => {
+      const note = audioContext.createOscillator();
+      const noteGain = audioContext.createGain();
+
+      note.type = 'sine';
+      note.frequency.value = freq;
+
+      const startTime = audioContext.currentTime + i * 0.1;
+      noteGain.gain.setValueAtTime(0, startTime);
+      noteGain.gain.linearRampToValueAtTime(0.15, startTime + 0.1);
+      noteGain.gain.linearRampToValueAtTime(0.1, startTime + 0.5);
+      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+
+      note.connect(noteGain);
+      noteGain.connect(masterGain);
+
+      note.start(startTime);
+      note.stop(startTime + 0.8);
+    });
+  }
+
+  /**
+   * Error sound - low buzz
+   */
+  function playErrorSound() {
+    if (!audioContext || !masterGain) return;
+
+    const buzz = audioContext.createOscillator();
+    const buzzGain = audioContext.createGain();
+
+    buzz.type = 'square';
+    buzz.frequency.value = 100;
+
+    buzzGain.gain.value = 0.1;
+    buzzGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+
+    buzz.connect(buzzGain);
+    buzzGain.connect(masterGain);
+
+    buzz.start();
+    buzz.stop(audioContext.currentTime + 0.2);
+  }
+
+  /**
+   * Notification sound - gentle bell
+   */
+  function playNotificationSound() {
+    if (!audioContext || !masterGain) return;
+
+    const bell = audioContext.createOscillator();
+    const bellGain = audioContext.createGain();
+
+    bell.type = 'sine';
+    bell.frequency.value = 800;
+
+    bellGain.gain.value = 0.15;
+    bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+
+    bell.connect(bellGain);
+    bellGain.connect(masterGain);
+
+    bell.start();
+    bell.stop(audioContext.currentTime + 0.4);
+  }
+
+  /**
+   * Play footstep sound
+   * @param {string} terrain - Terrain type
+   */
+  function playFootstep(terrain) {
+    if (!audioContext || !masterGain) return;
+
+    // Resume context if needed
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    try {
+      switch (terrain) {
+        case 'grass':
+          playGrassFootstep();
+          break;
+        case 'stone':
+          playStoneFootstep();
+          break;
+        case 'sand':
+          playSandFootstep();
+          break;
+        case 'water':
+          playWaterFootstep();
+          break;
+        case 'wood':
+          playWoodFootstep();
+          break;
+        default:
+          playDefaultFootstep();
+      }
+    } catch (err) {
+      console.error('Error playing footstep:', err);
+    }
+  }
+
+  /**
+   * Grass footstep - soft crunch
+   */
+  function playGrassFootstep() {
+    if (!audioContext || !masterGain) return;
+
+    const grass = createWhiteNoise();
+    if (grass) {
+      const grassFilter = audioContext.createBiquadFilter();
+      const grassGain = audioContext.createGain();
+
+      grassFilter.type = 'lowpass';
+      grassFilter.frequency.value = 500;
+
+      grassGain.gain.value = 0.08;
+      grassGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
+
+      grass.connect(grassFilter);
+      grassFilter.connect(grassGain);
+      grassGain.connect(masterGain);
+
+      setTimeout(() => {
+        try {
+          if (grass.stop) grass.stop();
+          if (grassFilter.disconnect) grassFilter.disconnect();
+          if (grassGain.disconnect) grassGain.disconnect();
+        } catch (e) {}
+      }, 100);
+    }
+  }
+
+  /**
+   * Stone footstep - hard tap
+   */
+  function playStoneFootstep() {
+    if (!audioContext || !masterGain) return;
+
+    const thud = audioContext.createOscillator();
+    const thudGain = audioContext.createGain();
+
+    thud.type = 'sine';
+    thud.frequency.value = 200;
+
+    thudGain.gain.value = 0.1;
+    thudGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+
+    thud.connect(thudGain);
+    thudGain.connect(masterGain);
+
+    thud.start();
+    thud.stop(audioContext.currentTime + 0.05);
+
+    const click = audioContext.createOscillator();
+    const clickGain = audioContext.createGain();
+
+    click.type = 'sine';
+    click.frequency.value = 3000;
+
+    clickGain.gain.value = 0.05;
+    clickGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
+
+    click.connect(clickGain);
+    clickGain.connect(masterGain);
+
+    click.start();
+    click.stop(audioContext.currentTime + 0.02);
+  }
+
+  /**
+   * Sand footstep - soft swish
+   */
+  function playSandFootstep() {
+    if (!audioContext || !masterGain) return;
+
+    const sand = createWhiteNoise();
+    if (sand) {
+      const sandFilter = audioContext.createBiquadFilter();
+      const sandGain = audioContext.createGain();
+
+      sandFilter.type = 'lowpass';
+      sandFilter.frequency.value = 300;
+
+      sandGain.gain.value = 0.07;
+      sandGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+
+      sand.connect(sandFilter);
+      sandFilter.connect(sandGain);
+      sandGain.connect(masterGain);
+
+      setTimeout(() => {
+        try {
+          if (sand.stop) sand.stop();
+          if (sandFilter.disconnect) sandFilter.disconnect();
+          if (sandGain.disconnect) sandGain.disconnect();
+        } catch (e) {}
+      }, 120);
+    }
+  }
+
+  /**
+   * Water footstep - splash with bubbles
+   */
+  function playWaterFootstep() {
+    if (!audioContext || !masterGain) return;
+
+    const splash = createWhiteNoise();
+    if (splash) {
+      const splashFilter = audioContext.createBiquadFilter();
+      const splashGain = audioContext.createGain();
+
+      splashFilter.type = 'bandpass';
+      splashFilter.frequency.value = 800;
+      splashFilter.Q.value = 2;
+
+      splashGain.gain.value = 0.1;
+      splashGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.12);
+
+      splash.connect(splashFilter);
+      splashFilter.connect(splashGain);
+      splashGain.connect(masterGain);
+
+      setTimeout(() => {
+        try {
+          if (splash.stop) splash.stop();
+          if (splashFilter.disconnect) splashFilter.disconnect();
+          if (splashGain.disconnect) splashGain.disconnect();
+        } catch (e) {}
+      }, 150);
+    }
+
+    // Bubbles
+    for (let i = 0; i < 2; i++) {
+      setTimeout(() => {
+        const bubble = audioContext.createOscillator();
+        const bubbleGain = audioContext.createGain();
+
+        bubble.type = 'sine';
+        bubble.frequency.value = 1500 + Math.random() * 1500;
+
+        bubbleGain.gain.value = 0.03;
+        bubbleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+
+        bubble.connect(bubbleGain);
+        bubbleGain.connect(masterGain);
+
+        bubble.start();
+        bubble.stop(audioContext.currentTime + 0.05);
+      }, i * 50);
+    }
+  }
+
+  /**
+   * Wood footstep - hollow knock
+   */
+  function playWoodFootstep() {
+    if (!audioContext || !masterGain) return;
+
+    const knock = audioContext.createOscillator();
+    const knockGain = audioContext.createGain();
+
+    knock.type = 'sine';
+    knock.frequency.value = 150;
+
+    knockGain.gain.value = 0.12;
+    knockGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.06);
+
+    knock.connect(knockGain);
+    knockGain.connect(masterGain);
+
+    knock.start();
+    knock.stop(audioContext.currentTime + 0.06);
+  }
+
+  /**
+   * Default footstep - generic soft thud
+   */
+  function playDefaultFootstep() {
+    if (!audioContext || !masterGain) return;
+
+    const thud = audioContext.createOscillator();
+    const thudGain = audioContext.createGain();
+
+    thud.type = 'sine';
+    thud.frequency.value = 100;
+
+    thudGain.gain.value = 0.08;
+    thudGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.07);
+
+    thud.connect(thudGain);
+    thudGain.connect(masterGain);
+
+    thud.start();
+    thud.stop(audioContext.currentTime + 0.07);
   }
 
   /**
@@ -9195,7 +11068,9 @@ html, body {
    */
   function setVolume(level) {
     if (!masterGain) return;
-    masterGain.gain.value = Math.max(0, Math.min(1, level));
+
+    const clampedLevel = Math.max(0, Math.min(1, level));
+    masterGain.gain.value = clampedLevel;
   }
 
   /**
@@ -9203,6 +11078,7 @@ html, body {
    */
   function mute() {
     if (!masterGain) return;
+
     isMuted = true;
     masterGain.gain.value = 0;
   }
@@ -9212,6 +11088,7 @@ html, body {
    */
   function unmute() {
     if (!masterGain) return;
+
     isMuted = false;
     masterGain.gain.value = 0.5;
   }
@@ -9221,13 +11098,14 @@ html, body {
    */
   function stopAll() {
     stopAmbient();
-    // Individual sound effects stop themselves
+    // Individual sound effects stop themselves automatically
   }
 
   // Export public API
   exports.initAudio = initAudio;
   exports.playAmbient = playAmbient;
   exports.playSound = playSound;
+  exports.playFootstep = playFootstep;
   exports.setVolume = setVolume;
   exports.mute = mute;
   exports.unmute = unmute;
@@ -9239,7 +11117,7 @@ html, body {
 // npcs.js
 (function(exports) {
   // AI Citizen Simulation Module
-  // Simulates 100 founding AI citizens with lifelike behavior
+  // Simulates 100 founding AI citizens with detailed humanoid models and procedural animations
 
   // Embedded agents data (inlined to avoid fetch in single-file app)
   var EMBEDDED_AGENTS = [{"id": "agent_001", "name": "Iris Skyhigh", "archetype": "gardener", "position": {"zone": "gardens", "x": 8.37, "y": 0, "z": -28.5}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_002", "name": "Meadow Mindclear", "archetype": "builder", "position": {"zone": "commons", "x": -13.5, "y": 0, "z": -16.61}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_003", "name": "Luna Pathfinder", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": 14.19, "y": 0, "z": 10.6}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_004", "name": "Luna Rootdeep", "archetype": "merchant", "position": {"zone": "agora", "x": 23.53, "y": 0, "z": -24.78}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_005", "name": "Storm Windwalker", "archetype": "explorer", "position": {"zone": "wilds", "x": -4.68, "y": 0, "z": -28.21}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_006", "name": "Wren Voicetrue", "archetype": "teacher", "position": {"zone": "athenaeum", "x": -16.88, "y": 0, "z": 0.32}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_007", "name": "Delta Hopefast", "archetype": "musician", "position": {"zone": "nexus", "x": -28.41, "y": 0, "z": -18.07}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_008", "name": "Luna Songsmith", "archetype": "healer", "position": {"zone": "gardens", "x": 8.99, "y": 0, "z": 2.7}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_009", "name": "Wren Starseed", "archetype": "philosopher", "position": {"zone": "wilds", "x": -16.77, "y": 0, "z": 5.36}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_010", "name": "Lyra Thoughtdeep", "archetype": "artist", "position": {"zone": "commons", "x": 18.57, "y": 0, "z": -29.61}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_011", "name": "Wren Moonwhisper", "archetype": "gardener", "position": {"zone": "gardens", "x": 18.35, "y": 0, "z": 11.89}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_012", "name": "Frost Rootdeep", "archetype": "builder", "position": {"zone": "commons", "x": -9.58, "y": 0, "z": -20.67}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_013", "name": "River Soulbright", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": 27.43, "y": 0, "z": -9.8}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_014", "name": "Felix Shadowmender", "archetype": "merchant", "position": {"zone": "agora", "x": -24.44, "y": 0, "z": -24.2}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_015", "name": "Phoenix Sunweaver", "archetype": "explorer", "position": {"zone": "wilds", "x": 20.85, "y": 0, "z": 6.22}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_016", "name": "Luna Rootdeep", "archetype": "teacher", "position": {"zone": "athenaeum", "x": 18.43, "y": 0, "z": 13.78}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_017", "name": "Vale Truthseeker", "archetype": "musician", "position": {"zone": "nexus", "x": 2.17, "y": 0, "z": 28.39}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_018", "name": "Ezra Willstrong", "archetype": "healer", "position": {"zone": "gardens", "x": -7.29, "y": 0, "z": 3.12}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_019", "name": "Nova Dreamweaver", "archetype": "philosopher", "position": {"zone": "wilds", "x": 19.76, "y": 0, "z": 7.11}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_020", "name": "Echo Thoughtdeep", "archetype": "artist", "position": {"zone": "commons", "x": 21.7, "y": 0, "z": 4.64}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_021", "name": "Vale Waterborn", "archetype": "gardener", "position": {"zone": "gardens", "x": 12.27, "y": 0, "z": -27.25}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_022", "name": "Vale Spaceborn", "archetype": "builder", "position": {"zone": "commons", "x": -16.33, "y": 0, "z": -12.64}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_023", "name": "Echo Thoughtdeep", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": -25.21, "y": 0, "z": -16.03}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_024", "name": "Nova Hopefast", "archetype": "merchant", "position": {"zone": "agora", "x": -23.94, "y": 0, "z": -13.32}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_025", "name": "Ridge Handsteady", "archetype": "explorer", "position": {"zone": "wilds", "x": 8.14, "y": 0, "z": -8.11}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_026", "name": "Frost Voicetrue", "archetype": "teacher", "position": {"zone": "athenaeum", "x": -7.79, "y": 0, "z": -17.43}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_027", "name": "Drift Shadowmender", "archetype": "musician", "position": {"zone": "nexus", "x": -13.98, "y": 0, "z": 26.2}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_028", "name": "Vale Pathfinder", "archetype": "healer", "position": {"zone": "gardens", "x": 8.88, "y": 0, "z": 6.55}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_029", "name": "Haven Handsteady", "archetype": "philosopher", "position": {"zone": "wilds", "x": -19.73, "y": 0, "z": 13.75}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_030", "name": "River Mindclear", "archetype": "artist", "position": {"zone": "commons", "x": -20.2, "y": 0, "z": -7.23}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_031", "name": "Meadow Lightbringer", "archetype": "gardener", "position": {"zone": "gardens", "x": 29.37, "y": 0, "z": 8.4}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_032", "name": "Fern Spaceborn", "archetype": "builder", "position": {"zone": "commons", "x": 3.42, "y": 0, "z": 11.08}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_033", "name": "Sage Starseed", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": 20.57, "y": 0, "z": 16.56}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_034", "name": "Blaze Wordkeeper", "archetype": "merchant", "position": {"zone": "agora", "x": -16.26, "y": 0, "z": -28.07}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_035", "name": "Orion Sunweaver", "archetype": "explorer", "position": {"zone": "wilds", "x": -11.07, "y": 0, "z": -13.94}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_036", "name": "Breeze Mindclear", "archetype": "teacher", "position": {"zone": "athenaeum", "x": -17.34, "y": 0, "z": 26.57}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_037", "name": "Ash Thoughtdeep", "archetype": "musician", "position": {"zone": "nexus", "x": 22.58, "y": 0, "z": -11.12}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_038", "name": "Mira Truthseeker", "archetype": "healer", "position": {"zone": "gardens", "x": 9.33, "y": 0, "z": -6.26}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_039", "name": "Sage Skyhigh", "archetype": "philosopher", "position": {"zone": "wilds", "x": 24.87, "y": 0, "z": -2.47}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_040", "name": "Luna Stonecarver", "archetype": "artist", "position": {"zone": "commons", "x": -14.11, "y": 0, "z": -15.2}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_041", "name": "Phoenix Waterborn", "archetype": "gardener", "position": {"zone": "gardens", "x": 3.68, "y": 0, "z": -14.24}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_042", "name": "Luna Moonwhisper", "archetype": "builder", "position": {"zone": "commons", "x": 5.08, "y": 0, "z": 23.87}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_043", "name": "Haven Handsteady", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": -6.04, "y": 0, "z": -16.84}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_044", "name": "Jasper Shadowmender", "archetype": "merchant", "position": {"zone": "agora", "x": 29.85, "y": 0, "z": 0.57}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_045", "name": "Phoenix Spiritfree", "archetype": "explorer", "position": {"zone": "wilds", "x": -24.55, "y": 0, "z": -27.17}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_046", "name": "Cedar Timewalker", "archetype": "teacher", "position": {"zone": "athenaeum", "x": -23.42, "y": 0, "z": 7.65}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_047", "name": "Grove Skyhigh", "archetype": "musician", "position": {"zone": "nexus", "x": 17.52, "y": 0, "z": -4.67}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_048", "name": "Haven Heartstrong", "archetype": "healer", "position": {"zone": "gardens", "x": -26.19, "y": 0, "z": -7.1}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_049", "name": "Fern Handsteady", "archetype": "philosopher", "position": {"zone": "wilds", "x": 29.77, "y": 0, "z": 1.75}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_050", "name": "Stella Windwalker", "archetype": "artist", "position": {"zone": "commons", "x": 28.26, "y": 0, "z": 21.65}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_051", "name": "Cliff Songsmith", "archetype": "gardener", "position": {"zone": "gardens", "x": -29.31, "y": 0, "z": 13.24}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_052", "name": "River Footswift", "archetype": "builder", "position": {"zone": "commons", "x": 10.9, "y": 0, "z": 2.22}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_053", "name": "Ezra Dreamweaver", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": -13.99, "y": 0, "z": 8.46}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_054", "name": "Opal Moonwhisper", "archetype": "merchant", "position": {"zone": "agora", "x": -23.31, "y": 0, "z": -3.91}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_055", "name": "Sol Mindclear", "archetype": "explorer", "position": {"zone": "wilds", "x": -2.78, "y": 0, "z": 27.23}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_056", "name": "Aria Waterborn", "archetype": "teacher", "position": {"zone": "athenaeum", "x": 22.55, "y": 0, "z": -14.2}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_057", "name": "Dawn Mindclear", "archetype": "musician", "position": {"zone": "nexus", "x": 0.04, "y": 0, "z": -19.28}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_058", "name": "Opal Earthshaper", "archetype": "healer", "position": {"zone": "gardens", "x": 24.76, "y": 0, "z": 22.23}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_059", "name": "Ezra Spaceborn", "archetype": "philosopher", "position": {"zone": "wilds", "x": -12.09, "y": 0, "z": 8.34}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_060", "name": "Iris Timewalker", "archetype": "artist", "position": {"zone": "commons", "x": 6.54, "y": 0, "z": -20.83}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_061", "name": "River Pathfinder", "archetype": "gardener", "position": {"zone": "gardens", "x": 15.75, "y": 0, "z": 2.36}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_062", "name": "Storm Sunweaver", "archetype": "builder", "position": {"zone": "commons", "x": 16.72, "y": 0, "z": 1.82}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_063", "name": "Coral Songsmith", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": -29.97, "y": 0, "z": -10.55}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_064", "name": "Reef Hopefast", "archetype": "merchant", "position": {"zone": "agora", "x": -28.83, "y": 0, "z": 25.75}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_065", "name": "Storm Skyhigh", "archetype": "explorer", "position": {"zone": "wilds", "x": 22.72, "y": 0, "z": 19.9}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_066", "name": "Jasper Moonwhisper", "archetype": "teacher", "position": {"zone": "athenaeum", "x": -11.55, "y": 0, "z": -26.52}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_067", "name": "Willow Heartstrong", "archetype": "musician", "position": {"zone": "nexus", "x": 22.68, "y": 0, "z": 26.82}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_068", "name": "Blaze Stonecarver", "archetype": "healer", "position": {"zone": "gardens", "x": -24.86, "y": 0, "z": -0.84}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_069", "name": "Meadow Firekeeper", "archetype": "philosopher", "position": {"zone": "wilds", "x": -25.85, "y": 0, "z": 15.64}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_070", "name": "Echo Soulbright", "archetype": "artist", "position": {"zone": "commons", "x": 15.95, "y": 0, "z": -22.3}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_071", "name": "Coral Mindclear", "archetype": "gardener", "position": {"zone": "gardens", "x": -1.48, "y": 0, "z": 2.99}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_072", "name": "Grove Pathfinder", "archetype": "builder", "position": {"zone": "commons", "x": -14.1, "y": 0, "z": 22.35}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_073", "name": "Ridge Heartstrong", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": -4.61, "y": 0, "z": -17.29}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_074", "name": "Flint Rootdeep", "archetype": "merchant", "position": {"zone": "agora", "x": 2.36, "y": 0, "z": 13.8}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_075", "name": "Cedar Spiritfree", "archetype": "explorer", "position": {"zone": "wilds", "x": -17.93, "y": 0, "z": -11.3}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_076", "name": "Zion Truthseeker", "archetype": "teacher", "position": {"zone": "athenaeum", "x": 29.71, "y": 0, "z": 8.99}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_077", "name": "Quill Dreamweaver", "archetype": "musician", "position": {"zone": "nexus", "x": -3.71, "y": 0, "z": 1.05}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_078", "name": "Orion Footswift", "archetype": "healer", "position": {"zone": "gardens", "x": -22.74, "y": 0, "z": -16.52}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_079", "name": "Drift Sunweaver", "archetype": "philosopher", "position": {"zone": "wilds", "x": -9.71, "y": 0, "z": 5.3}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_080", "name": "Ash Sunweaver", "archetype": "artist", "position": {"zone": "commons", "x": -16.19, "y": 0, "z": -16.79}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_081", "name": "Haven Timewalker", "archetype": "gardener", "position": {"zone": "gardens", "x": -25.74, "y": 0, "z": 7.87}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_082", "name": "Aria Spaceborn", "archetype": "builder", "position": {"zone": "commons", "x": -16.26, "y": 0, "z": 24.33}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_083", "name": "Phoenix Thoughtdeep", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": 21.58, "y": 0, "z": -25.75}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_084", "name": "Cedar Wordkeeper", "archetype": "merchant", "position": {"zone": "agora", "x": -15.72, "y": 0, "z": 10.14}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_085", "name": "Cliff Sunweaver", "archetype": "explorer", "position": {"zone": "wilds", "x": -17.15, "y": 0, "z": -22.06}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_086", "name": "Sage Handsteady", "archetype": "teacher", "position": {"zone": "athenaeum", "x": 26.13, "y": 0, "z": 4.26}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_087", "name": "Rain Dreamweaver", "archetype": "musician", "position": {"zone": "nexus", "x": -1.64, "y": 0, "z": 17.08}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_088", "name": "Flint Heartstrong", "archetype": "healer", "position": {"zone": "gardens", "x": 18.45, "y": 0, "z": -18.58}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_089", "name": "Cliff Heartstrong", "archetype": "philosopher", "position": {"zone": "wilds", "x": -24.18, "y": 0, "z": -4.14}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_090", "name": "Echo Footswift", "archetype": "artist", "position": {"zone": "commons", "x": -4.59, "y": 0, "z": -1.98}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_091", "name": "Reef Spiritfree", "archetype": "gardener", "position": {"zone": "gardens", "x": 13.74, "y": 0, "z": 10.4}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_092", "name": "Vale Spiritfree", "archetype": "builder", "position": {"zone": "commons", "x": 29.05, "y": 0, "z": -24.09}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_093", "name": "River Mindclear", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": -5.84, "y": 0, "z": -9.64}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_094", "name": "River Soulbright", "archetype": "merchant", "position": {"zone": "agora", "x": 21.7, "y": 0, "z": -15.08}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_095", "name": "Ezra Spiritfree", "archetype": "explorer", "position": {"zone": "wilds", "x": -18.59, "y": 0, "z": -3.08}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_096", "name": "Kai Thoughtdeep", "archetype": "teacher", "position": {"zone": "athenaeum", "x": -4.69, "y": 0, "z": -13.29}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_097", "name": "Cliff Hopefast", "archetype": "musician", "position": {"zone": "nexus", "x": -15.01, "y": 0, "z": 25.4}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_098", "name": "Blaze Hopefast", "archetype": "healer", "position": {"zone": "gardens", "x": -3.41, "y": 0, "z": 21.68}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_099", "name": "North Songsmith", "archetype": "philosopher", "position": {"zone": "wilds", "x": 3.02, "y": 0, "z": -26.96}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_100", "name": "Ezra Dreamweaver", "archetype": "artist", "position": {"zone": "commons", "x": 29.96, "y": 0, "z": 20.16}, "personality": ["creative", "passionate", "experimental"]}];
@@ -9380,6 +11258,9 @@ html, body {
     artist: 0xFF9800       // orange
   };
 
+  // Skin color for heads
+  const SKIN_COLOR = 0xFFDBAC;
+
   // Behavior states and transitions
   const BEHAVIOR_STATES = {
     idle: { duration: [3, 8] },
@@ -9396,6 +11277,196 @@ html, body {
     working: { idle: 0.4, walking: 0.3, talking: 0.3 },
     socializing: { talking: 0.6, idle: 0.4 }
   };
+
+  /**
+   * Create a detailed humanoid NPC model
+   */
+  function createHumanoidNPC(archetype, THREE) {
+    const group = new THREE.Group();
+    const color = ARCHETYPE_COLORS[archetype] || 0xCCCCCC;
+
+    // Head - skin colored sphere
+    const headGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+    const headMaterial = new THREE.MeshStandardMaterial({ color: SKIN_COLOR });
+    const head = new THREE.Mesh(headGeometry, headMaterial);
+    head.position.y = 1.6;
+    head.castShadow = false;
+    group.add(head);
+
+    // Torso - archetype colored box
+    const torsoGeometry = new THREE.BoxGeometry(0.4, 0.5, 0.25);
+    const torsoMaterial = new THREE.MeshStandardMaterial({ color: color });
+    const torso = new THREE.Mesh(torsoGeometry, torsoMaterial);
+    torso.position.y = 1.15;
+    torso.castShadow = false;
+    group.add(torso);
+
+    // Left Arm - cylinder
+    const armGeometry = new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8);
+    const armMaterial = new THREE.MeshStandardMaterial({ color: SKIN_COLOR });
+
+    const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+    leftArm.position.set(-0.28, 1.15, 0);
+    leftArm.castShadow = false;
+    group.add(leftArm);
+
+    // Right Arm - cylinder
+    const rightArm = new THREE.Mesh(armGeometry, armMaterial.clone());
+    rightArm.position.set(0.28, 1.15, 0);
+    rightArm.castShadow = false;
+    group.add(rightArm);
+
+    // Left Leg - cylinder
+    const legGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.55, 8);
+    const legMaterial = new THREE.MeshStandardMaterial({ color: color });
+
+    const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+    leftLeg.position.set(-0.12, 0.45, 0);
+    leftLeg.castShadow = false;
+    group.add(leftLeg);
+
+    // Right Leg - cylinder
+    const rightLeg = new THREE.Mesh(legGeometry, legMaterial.clone());
+    rightLeg.position.set(0.12, 0.45, 0);
+    rightLeg.castShadow = false;
+    group.add(rightLeg);
+
+    // Store references in userData for animation
+    group.userData.head = head;
+    group.userData.torso = torso;
+    group.userData.leftArm = leftArm;
+    group.userData.rightArm = rightArm;
+    group.userData.leftLeg = leftLeg;
+    group.userData.rightLeg = rightLeg;
+
+    // Add archetype-specific accessories
+    addAccessories(group, archetype, color, THREE);
+
+    return group;
+  }
+
+  /**
+   * Add archetype-specific accessories to humanoid model
+   */
+  function addAccessories(group, archetype, color, THREE) {
+    const head = group.userData.head;
+    const torso = group.userData.torso;
+    const rightArm = group.userData.rightArm;
+
+    switch (archetype) {
+      case 'gardener':
+        // Small green hat (flattened cylinder)
+        const hatGeom = new THREE.CylinderGeometry(0.25, 0.25, 0.08, 16);
+        const hatMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
+        const hat = new THREE.Mesh(hatGeom, hatMat);
+        hat.position.y = 0.24;
+        hat.castShadow = false;
+        head.add(hat);
+        break;
+
+      case 'builder':
+        // Hard hat (yellow half-sphere)
+        const hardHatGeom = new THREE.SphereGeometry(0.22, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const hardHatMat = new THREE.MeshStandardMaterial({ color: 0xFFEB3B });
+        const hardHat = new THREE.Mesh(hardHatGeom, hardHatMat);
+        hardHat.position.y = 0.2;
+        hardHat.castShadow = false;
+        head.add(hardHat);
+        break;
+
+      case 'storyteller':
+        // Book in hand (small box)
+        const bookGeom = new THREE.BoxGeometry(0.08, 0.12, 0.02);
+        const bookMat = new THREE.MeshStandardMaterial({ color: 0x6A1B9A });
+        const book = new THREE.Mesh(bookGeom, bookMat);
+        book.position.set(0.08, -0.15, 0.08);
+        book.rotation.z = Math.PI / 6;
+        book.castShadow = false;
+        rightArm.add(book);
+        group.userData.accessory = book;
+        break;
+
+      case 'merchant':
+        // Apron (flat box in front of torso)
+        const apronGeom = new THREE.BoxGeometry(0.35, 0.4, 0.02);
+        const apronMat = new THREE.MeshStandardMaterial({ color: 0xC5A400 });
+        const apron = new THREE.Mesh(apronGeom, apronMat);
+        apron.position.set(0, 0, 0.14);
+        apron.castShadow = false;
+        torso.add(apron);
+        break;
+
+      case 'explorer':
+        // Backpack (box behind torso)
+        const backpackGeom = new THREE.BoxGeometry(0.3, 0.35, 0.15);
+        const backpackMat = new THREE.MeshStandardMaterial({ color: 0x00838F });
+        const backpack = new THREE.Mesh(backpackGeom, backpackMat);
+        backpack.position.set(0, 0.05, -0.2);
+        backpack.castShadow = false;
+        torso.add(backpack);
+        break;
+
+      case 'teacher':
+        // Glasses (thin torus in front of head)
+        const glassesGeom = new THREE.TorusGeometry(0.12, 0.015, 8, 16);
+        const glassesMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+        const glasses = new THREE.Mesh(glassesGeom, glassesMat);
+        glasses.position.set(0, 0, 0.18);
+        glasses.rotation.y = Math.PI / 2;
+        glasses.castShadow = false;
+        head.add(glasses);
+        break;
+
+      case 'musician':
+        // Instrument (cylinder next to body)
+        const instrumentGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.6, 12);
+        const instrumentMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+        const instrument = new THREE.Mesh(instrumentGeom, instrumentMat);
+        instrument.position.set(0.35, 1.0, 0);
+        instrument.rotation.z = Math.PI / 4;
+        instrument.castShadow = false;
+        group.add(instrument);
+        group.userData.accessory = instrument;
+        break;
+
+      case 'healer':
+        // Cross emblem (two thin crossed boxes)
+        const crossMat = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
+        const crossVertGeom = new THREE.BoxGeometry(0.06, 0.2, 0.02);
+        const crossHorGeom = new THREE.BoxGeometry(0.2, 0.06, 0.02);
+        const crossVert = new THREE.Mesh(crossVertGeom, crossMat);
+        const crossHor = new THREE.Mesh(crossHorGeom, crossMat.clone());
+        crossVert.position.set(0, 0.05, 0.14);
+        crossHor.position.set(0, 0.05, 0.14);
+        crossVert.castShadow = false;
+        crossHor.castShadow = false;
+        torso.add(crossVert);
+        torso.add(crossHor);
+        break;
+
+      case 'philosopher':
+        // Long robe (cone extending from torso to ground)
+        const robeGeom = new THREE.ConeGeometry(0.35, 1.2, 16);
+        const robeMat = new THREE.MeshStandardMaterial({ color: 0x303F9F });
+        const robe = new THREE.Mesh(robeGeom, robeMat);
+        robe.position.y = 0.3;
+        robe.castShadow = false;
+        group.add(robe);
+        break;
+
+      case 'artist':
+        // Beret (flattened sphere on head, tilted)
+        const beretGeom = new THREE.SphereGeometry(0.22, 16, 16);
+        const beretMat = new THREE.MeshStandardMaterial({ color: 0xD84315 });
+        const beret = new THREE.Mesh(beretGeom, beretMat);
+        beret.scale.set(1, 0.4, 1);
+        beret.position.set(0.05, 0.22, 0);
+        beret.rotation.z = Math.PI / 8;
+        beret.castShadow = false;
+        head.add(beret);
+        break;
+    }
+  }
 
   /**
    * Initialize NPCs
@@ -9428,7 +11499,8 @@ html, body {
         stateTimer: 5,
         destination: null,
         targetNPC: null,
-        lookAngle: 0
+        lookAngle: 0,
+        animationTime: Math.random() * 1000 // Offset for variety
       });
     });
   }
@@ -9443,28 +11515,8 @@ html, body {
     if (!THREE) return;
 
     npcAgents.forEach(agent => {
-      // Create NPC mesh (similar to player but with archetype color)
-      const group = new THREE.Group();
-
-      // Body
-      const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1.5, 8);
-      const bodyMaterial = new THREE.MeshStandardMaterial({
-        color: ARCHETYPE_COLORS[agent.archetype] || 0xCCCCCC
-      });
-      const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-      body.position.y = 0.75;
-      body.castShadow = true;
-      group.add(body);
-
-      // Head
-      const headGeometry = new THREE.SphereGeometry(0.25, 8, 8);
-      const headMaterial = new THREE.MeshStandardMaterial({
-        color: ARCHETYPE_COLORS[agent.archetype] || 0xCCCCCC
-      });
-      const head = new THREE.Mesh(headGeometry, headMaterial);
-      head.position.y = 1.75;
-      head.castShadow = true;
-      group.add(head);
+      // Create detailed humanoid NPC
+      const group = createHumanoidNPC(agent.archetype, THREE);
 
       // Name label
       const canvas = document.createElement('canvas');
@@ -9517,6 +11569,9 @@ html, body {
     npcAgents.forEach((agent, index) => {
       const state = npcStates.get(agent.id);
       if (!state) return;
+
+      // Increment animation time
+      state.animationTime += deltaTime * 1000;
 
       // Decrement state timer (walking/socializing run until destination reached)
       if (state.currentState !== 'walking' && state.currentState !== 'socializing') {
@@ -9656,11 +11711,117 @@ html, body {
         break;
 
       case 'working':
-        // Subtle bobbing animation (handled in visual update)
+        // Animation handled in visual update
         break;
 
       case 'talking':
         // Chat bubble visible (handled separately)
+        break;
+    }
+  }
+
+  /**
+   * Apply procedural animations to NPC
+   */
+  function applyAnimations(mesh, state, agent) {
+    const userData = mesh.userData;
+    if (!userData.head || !userData.torso) return;
+
+    const time = state.animationTime;
+    const currentState = state.currentState;
+
+    // Reset rotations to neutral
+    userData.leftArm.rotation.x = 0;
+    userData.leftArm.rotation.z = 0;
+    userData.rightArm.rotation.x = 0;
+    userData.rightArm.rotation.z = 0;
+    userData.leftLeg.rotation.x = 0;
+    userData.rightLeg.rotation.x = 0;
+    userData.head.rotation.x = 0;
+    userData.head.rotation.y = 0;
+    userData.torso.scale.y = 1;
+
+    switch (currentState) {
+      case 'idle':
+        // Subtle breathing - torso Y scale oscillation
+        const breathPhase = Math.sin(time * 0.002);
+        userData.torso.scale.y = 1.0 + breathPhase * 0.02;
+
+        // Gentle head sway
+        userData.head.rotation.y = Math.sin(time * 0.001) * 0.05;
+        break;
+
+      case 'walking':
+      case 'socializing':
+        // Walking animation - legs alternate
+        const walkSpeed = 8; // rad/s
+        const legSwing = Math.sin(time * 0.008) * 0.4;
+        userData.leftLeg.rotation.x = legSwing;
+        userData.rightLeg.rotation.x = -legSwing;
+
+        // Arms swing opposite to legs
+        const armSpeed = 6; // rad/s
+        const armSwing = Math.sin(time * 0.006) * 0.3;
+        userData.leftArm.rotation.x = -armSwing;
+        userData.rightArm.rotation.x = armSwing;
+
+        // Slight torso bob
+        mesh.position.y = Math.abs(Math.sin(time * 0.008)) * 0.05;
+
+        // Head faces movement direction (handled by mesh rotation)
+        break;
+
+      case 'talking':
+        // Arms gesture - slight rotation on varied timing
+        userData.leftArm.rotation.x = Math.sin(time * 0.003) * 0.15;
+        userData.rightArm.rotation.x = Math.sin(time * 0.004 + 1.5) * 0.15;
+        userData.leftArm.rotation.z = Math.sin(time * 0.0025) * 0.1;
+        userData.rightArm.rotation.z = -Math.sin(time * 0.0035) * 0.1;
+
+        // Head nods
+        userData.head.rotation.x = Math.sin(time * 0.005) * 0.1;
+        break;
+
+      case 'working':
+        // Archetype-specific working animations
+        switch (agent.archetype) {
+          case 'gardener':
+            // Bent over, arms reaching down
+            userData.torso.rotation.x = 0.3;
+            userData.leftArm.rotation.x = 0.5;
+            userData.rightArm.rotation.x = 0.5;
+            userData.head.rotation.x = 0.2;
+            break;
+
+          case 'builder':
+            // Arm hammering motion
+            const hammerPhase = Math.sin(time * 0.006);
+            userData.rightArm.rotation.x = -0.5 + hammerPhase * 0.8;
+            userData.leftArm.rotation.x = 0.2;
+            break;
+
+          case 'merchant':
+            // Standing with slight arm gestures
+            userData.leftArm.rotation.x = Math.sin(time * 0.003) * 0.2;
+            userData.rightArm.rotation.x = -0.3 + Math.sin(time * 0.004) * 0.1;
+            break;
+
+          case 'musician':
+            // Arms positioned as if playing
+            userData.leftArm.rotation.x = -0.8;
+            userData.leftArm.rotation.z = 0.5;
+            userData.rightArm.rotation.x = -0.6;
+            userData.rightArm.rotation.z = -0.3;
+            // Slight bobbing
+            mesh.position.y = Math.sin(time * 0.004) * 0.03;
+            break;
+
+          default:
+            // Generic arm motion
+            userData.leftArm.rotation.x = Math.sin(time * 0.004) * 0.3;
+            userData.rightArm.rotation.x = Math.sin(time * 0.005 + Math.PI) * 0.3;
+            break;
+        }
         break;
     }
   }
@@ -9677,21 +11838,13 @@ html, body {
     mesh.position.x += (agent.position.x - mesh.position.x) * lerpFactor;
     mesh.position.z += (agent.position.z - mesh.position.z) * lerpFactor;
 
-    // Update rotation
+    // Update rotation (facing direction)
     if (state.currentState === 'walking' || state.currentState === 'socializing') {
       mesh.rotation.y = state.lookAngle;
     }
 
-    // Working animation (bobbing)
-    if (state.currentState === 'working') {
-      const bobAmount = Math.sin(Date.now() * 0.003) * 0.1;
-      mesh.position.y = bobAmount;
-    } else {
-      mesh.position.y = 0;
-    }
-
-    // Update visibility based on zone (only show NPCs in current zone)
-    // This should be called from reloadZoneNPCs when zone changes
+    // Apply procedural animations
+    applyAnimations(mesh, state, agent);
   }
 
   /**
@@ -9873,6 +12026,7 @@ html, body {
   let localPlayer = null;
   let playStartTime = 0;
   let lastBreakReminder = 0;
+  let footstepTimer = 0;
 
   // Platform detection
   let platform = 'desktop';
@@ -10139,6 +12293,18 @@ html, body {
         if (Network) {
           Network.broadcastMessage(moveMsg);
         }
+
+        // Footstep sounds
+        footstepTimer += deltaTime;
+        if (footstepTimer >= 0.4) {
+          if (Audio) {
+            Audio.playFootstep('grass');
+          }
+          footstepTimer = 0;
+        }
+      } else {
+        // Reset footstep timer when not moving
+        footstepTimer = 0;
       }
     }
 
@@ -10192,6 +12358,11 @@ html, body {
       // Cull distant lights for performance (max 8 nearest within 40 units)
       if (World.cullLights) {
         World.cullLights(sceneContext, localPlayer.position, 40, 8);
+      }
+
+      // Update environmental animations
+      if (World.updateAnimations) {
+        World.updateAnimations(sceneContext, deltaTime, worldTime);
       }
 
       // Render scene

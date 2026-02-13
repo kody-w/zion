@@ -33,6 +33,7 @@
   let localPlayer = null;
   let playStartTime = 0;
   let lastBreakReminder = 0;
+  let footstepTimer = 0;
 
   // Platform detection
   let platform = 'desktop';
@@ -299,6 +300,18 @@
         if (Network) {
           Network.broadcastMessage(moveMsg);
         }
+
+        // Footstep sounds
+        footstepTimer += deltaTime;
+        if (footstepTimer >= 0.4) {
+          if (Audio) {
+            Audio.playFootstep('grass');
+          }
+          footstepTimer = 0;
+        }
+      } else {
+        // Reset footstep timer when not moving
+        footstepTimer = 0;
       }
     }
 
@@ -352,6 +365,11 @@
       // Cull distant lights for performance (max 8 nearest within 40 units)
       if (World.cullLights) {
         World.cullLights(sceneContext, localPlayer.position, 40, 8);
+      }
+
+      // Update environmental animations
+      if (World.updateAnimations) {
+        World.updateAnimations(sceneContext, deltaTime, worldTime);
       }
 
       // Render scene

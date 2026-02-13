@@ -1,6 +1,6 @@
 (function(exports) {
   // AI Citizen Simulation Module
-  // Simulates 100 founding AI citizens with lifelike behavior
+  // Simulates 100 founding AI citizens with detailed humanoid models and procedural animations
 
   // Embedded agents data (inlined to avoid fetch in single-file app)
   var EMBEDDED_AGENTS = AGENTS_PLACEHOLDER;
@@ -141,6 +141,9 @@
     artist: 0xFF9800       // orange
   };
 
+  // Skin color for heads
+  const SKIN_COLOR = 0xFFDBAC;
+
   // Behavior states and transitions
   const BEHAVIOR_STATES = {
     idle: { duration: [3, 8] },
@@ -157,6 +160,196 @@
     working: { idle: 0.4, walking: 0.3, talking: 0.3 },
     socializing: { talking: 0.6, idle: 0.4 }
   };
+
+  /**
+   * Create a detailed humanoid NPC model
+   */
+  function createHumanoidNPC(archetype, THREE) {
+    const group = new THREE.Group();
+    const color = ARCHETYPE_COLORS[archetype] || 0xCCCCCC;
+
+    // Head - skin colored sphere
+    const headGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+    const headMaterial = new THREE.MeshStandardMaterial({ color: SKIN_COLOR });
+    const head = new THREE.Mesh(headGeometry, headMaterial);
+    head.position.y = 1.6;
+    head.castShadow = false;
+    group.add(head);
+
+    // Torso - archetype colored box
+    const torsoGeometry = new THREE.BoxGeometry(0.4, 0.5, 0.25);
+    const torsoMaterial = new THREE.MeshStandardMaterial({ color: color });
+    const torso = new THREE.Mesh(torsoGeometry, torsoMaterial);
+    torso.position.y = 1.15;
+    torso.castShadow = false;
+    group.add(torso);
+
+    // Left Arm - cylinder
+    const armGeometry = new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8);
+    const armMaterial = new THREE.MeshStandardMaterial({ color: SKIN_COLOR });
+
+    const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+    leftArm.position.set(-0.28, 1.15, 0);
+    leftArm.castShadow = false;
+    group.add(leftArm);
+
+    // Right Arm - cylinder
+    const rightArm = new THREE.Mesh(armGeometry, armMaterial.clone());
+    rightArm.position.set(0.28, 1.15, 0);
+    rightArm.castShadow = false;
+    group.add(rightArm);
+
+    // Left Leg - cylinder
+    const legGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.55, 8);
+    const legMaterial = new THREE.MeshStandardMaterial({ color: color });
+
+    const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+    leftLeg.position.set(-0.12, 0.45, 0);
+    leftLeg.castShadow = false;
+    group.add(leftLeg);
+
+    // Right Leg - cylinder
+    const rightLeg = new THREE.Mesh(legGeometry, legMaterial.clone());
+    rightLeg.position.set(0.12, 0.45, 0);
+    rightLeg.castShadow = false;
+    group.add(rightLeg);
+
+    // Store references in userData for animation
+    group.userData.head = head;
+    group.userData.torso = torso;
+    group.userData.leftArm = leftArm;
+    group.userData.rightArm = rightArm;
+    group.userData.leftLeg = leftLeg;
+    group.userData.rightLeg = rightLeg;
+
+    // Add archetype-specific accessories
+    addAccessories(group, archetype, color, THREE);
+
+    return group;
+  }
+
+  /**
+   * Add archetype-specific accessories to humanoid model
+   */
+  function addAccessories(group, archetype, color, THREE) {
+    const head = group.userData.head;
+    const torso = group.userData.torso;
+    const rightArm = group.userData.rightArm;
+
+    switch (archetype) {
+      case 'gardener':
+        // Small green hat (flattened cylinder)
+        const hatGeom = new THREE.CylinderGeometry(0.25, 0.25, 0.08, 16);
+        const hatMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
+        const hat = new THREE.Mesh(hatGeom, hatMat);
+        hat.position.y = 0.24;
+        hat.castShadow = false;
+        head.add(hat);
+        break;
+
+      case 'builder':
+        // Hard hat (yellow half-sphere)
+        const hardHatGeom = new THREE.SphereGeometry(0.22, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const hardHatMat = new THREE.MeshStandardMaterial({ color: 0xFFEB3B });
+        const hardHat = new THREE.Mesh(hardHatGeom, hardHatMat);
+        hardHat.position.y = 0.2;
+        hardHat.castShadow = false;
+        head.add(hardHat);
+        break;
+
+      case 'storyteller':
+        // Book in hand (small box)
+        const bookGeom = new THREE.BoxGeometry(0.08, 0.12, 0.02);
+        const bookMat = new THREE.MeshStandardMaterial({ color: 0x6A1B9A });
+        const book = new THREE.Mesh(bookGeom, bookMat);
+        book.position.set(0.08, -0.15, 0.08);
+        book.rotation.z = Math.PI / 6;
+        book.castShadow = false;
+        rightArm.add(book);
+        group.userData.accessory = book;
+        break;
+
+      case 'merchant':
+        // Apron (flat box in front of torso)
+        const apronGeom = new THREE.BoxGeometry(0.35, 0.4, 0.02);
+        const apronMat = new THREE.MeshStandardMaterial({ color: 0xC5A400 });
+        const apron = new THREE.Mesh(apronGeom, apronMat);
+        apron.position.set(0, 0, 0.14);
+        apron.castShadow = false;
+        torso.add(apron);
+        break;
+
+      case 'explorer':
+        // Backpack (box behind torso)
+        const backpackGeom = new THREE.BoxGeometry(0.3, 0.35, 0.15);
+        const backpackMat = new THREE.MeshStandardMaterial({ color: 0x00838F });
+        const backpack = new THREE.Mesh(backpackGeom, backpackMat);
+        backpack.position.set(0, 0.05, -0.2);
+        backpack.castShadow = false;
+        torso.add(backpack);
+        break;
+
+      case 'teacher':
+        // Glasses (thin torus in front of head)
+        const glassesGeom = new THREE.TorusGeometry(0.12, 0.015, 8, 16);
+        const glassesMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+        const glasses = new THREE.Mesh(glassesGeom, glassesMat);
+        glasses.position.set(0, 0, 0.18);
+        glasses.rotation.y = Math.PI / 2;
+        glasses.castShadow = false;
+        head.add(glasses);
+        break;
+
+      case 'musician':
+        // Instrument (cylinder next to body)
+        const instrumentGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.6, 12);
+        const instrumentMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+        const instrument = new THREE.Mesh(instrumentGeom, instrumentMat);
+        instrument.position.set(0.35, 1.0, 0);
+        instrument.rotation.z = Math.PI / 4;
+        instrument.castShadow = false;
+        group.add(instrument);
+        group.userData.accessory = instrument;
+        break;
+
+      case 'healer':
+        // Cross emblem (two thin crossed boxes)
+        const crossMat = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
+        const crossVertGeom = new THREE.BoxGeometry(0.06, 0.2, 0.02);
+        const crossHorGeom = new THREE.BoxGeometry(0.2, 0.06, 0.02);
+        const crossVert = new THREE.Mesh(crossVertGeom, crossMat);
+        const crossHor = new THREE.Mesh(crossHorGeom, crossMat.clone());
+        crossVert.position.set(0, 0.05, 0.14);
+        crossHor.position.set(0, 0.05, 0.14);
+        crossVert.castShadow = false;
+        crossHor.castShadow = false;
+        torso.add(crossVert);
+        torso.add(crossHor);
+        break;
+
+      case 'philosopher':
+        // Long robe (cone extending from torso to ground)
+        const robeGeom = new THREE.ConeGeometry(0.35, 1.2, 16);
+        const robeMat = new THREE.MeshStandardMaterial({ color: 0x303F9F });
+        const robe = new THREE.Mesh(robeGeom, robeMat);
+        robe.position.y = 0.3;
+        robe.castShadow = false;
+        group.add(robe);
+        break;
+
+      case 'artist':
+        // Beret (flattened sphere on head, tilted)
+        const beretGeom = new THREE.SphereGeometry(0.22, 16, 16);
+        const beretMat = new THREE.MeshStandardMaterial({ color: 0xD84315 });
+        const beret = new THREE.Mesh(beretGeom, beretMat);
+        beret.scale.set(1, 0.4, 1);
+        beret.position.set(0.05, 0.22, 0);
+        beret.rotation.z = Math.PI / 8;
+        beret.castShadow = false;
+        head.add(beret);
+        break;
+    }
+  }
 
   /**
    * Initialize NPCs
@@ -189,7 +382,8 @@
         stateTimer: 5,
         destination: null,
         targetNPC: null,
-        lookAngle: 0
+        lookAngle: 0,
+        animationTime: Math.random() * 1000 // Offset for variety
       });
     });
   }
@@ -204,28 +398,8 @@
     if (!THREE) return;
 
     npcAgents.forEach(agent => {
-      // Create NPC mesh (similar to player but with archetype color)
-      const group = new THREE.Group();
-
-      // Body
-      const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1.5, 8);
-      const bodyMaterial = new THREE.MeshStandardMaterial({
-        color: ARCHETYPE_COLORS[agent.archetype] || 0xCCCCCC
-      });
-      const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-      body.position.y = 0.75;
-      body.castShadow = true;
-      group.add(body);
-
-      // Head
-      const headGeometry = new THREE.SphereGeometry(0.25, 8, 8);
-      const headMaterial = new THREE.MeshStandardMaterial({
-        color: ARCHETYPE_COLORS[agent.archetype] || 0xCCCCCC
-      });
-      const head = new THREE.Mesh(headGeometry, headMaterial);
-      head.position.y = 1.75;
-      head.castShadow = true;
-      group.add(head);
+      // Create detailed humanoid NPC
+      const group = createHumanoidNPC(agent.archetype, THREE);
 
       // Name label
       const canvas = document.createElement('canvas');
@@ -278,6 +452,9 @@
     npcAgents.forEach((agent, index) => {
       const state = npcStates.get(agent.id);
       if (!state) return;
+
+      // Increment animation time
+      state.animationTime += deltaTime * 1000;
 
       // Decrement state timer (walking/socializing run until destination reached)
       if (state.currentState !== 'walking' && state.currentState !== 'socializing') {
@@ -417,11 +594,117 @@
         break;
 
       case 'working':
-        // Subtle bobbing animation (handled in visual update)
+        // Animation handled in visual update
         break;
 
       case 'talking':
         // Chat bubble visible (handled separately)
+        break;
+    }
+  }
+
+  /**
+   * Apply procedural animations to NPC
+   */
+  function applyAnimations(mesh, state, agent) {
+    const userData = mesh.userData;
+    if (!userData.head || !userData.torso) return;
+
+    const time = state.animationTime;
+    const currentState = state.currentState;
+
+    // Reset rotations to neutral
+    userData.leftArm.rotation.x = 0;
+    userData.leftArm.rotation.z = 0;
+    userData.rightArm.rotation.x = 0;
+    userData.rightArm.rotation.z = 0;
+    userData.leftLeg.rotation.x = 0;
+    userData.rightLeg.rotation.x = 0;
+    userData.head.rotation.x = 0;
+    userData.head.rotation.y = 0;
+    userData.torso.scale.y = 1;
+
+    switch (currentState) {
+      case 'idle':
+        // Subtle breathing - torso Y scale oscillation
+        const breathPhase = Math.sin(time * 0.002);
+        userData.torso.scale.y = 1.0 + breathPhase * 0.02;
+
+        // Gentle head sway
+        userData.head.rotation.y = Math.sin(time * 0.001) * 0.05;
+        break;
+
+      case 'walking':
+      case 'socializing':
+        // Walking animation - legs alternate
+        const walkSpeed = 8; // rad/s
+        const legSwing = Math.sin(time * 0.008) * 0.4;
+        userData.leftLeg.rotation.x = legSwing;
+        userData.rightLeg.rotation.x = -legSwing;
+
+        // Arms swing opposite to legs
+        const armSpeed = 6; // rad/s
+        const armSwing = Math.sin(time * 0.006) * 0.3;
+        userData.leftArm.rotation.x = -armSwing;
+        userData.rightArm.rotation.x = armSwing;
+
+        // Slight torso bob
+        mesh.position.y = Math.abs(Math.sin(time * 0.008)) * 0.05;
+
+        // Head faces movement direction (handled by mesh rotation)
+        break;
+
+      case 'talking':
+        // Arms gesture - slight rotation on varied timing
+        userData.leftArm.rotation.x = Math.sin(time * 0.003) * 0.15;
+        userData.rightArm.rotation.x = Math.sin(time * 0.004 + 1.5) * 0.15;
+        userData.leftArm.rotation.z = Math.sin(time * 0.0025) * 0.1;
+        userData.rightArm.rotation.z = -Math.sin(time * 0.0035) * 0.1;
+
+        // Head nods
+        userData.head.rotation.x = Math.sin(time * 0.005) * 0.1;
+        break;
+
+      case 'working':
+        // Archetype-specific working animations
+        switch (agent.archetype) {
+          case 'gardener':
+            // Bent over, arms reaching down
+            userData.torso.rotation.x = 0.3;
+            userData.leftArm.rotation.x = 0.5;
+            userData.rightArm.rotation.x = 0.5;
+            userData.head.rotation.x = 0.2;
+            break;
+
+          case 'builder':
+            // Arm hammering motion
+            const hammerPhase = Math.sin(time * 0.006);
+            userData.rightArm.rotation.x = -0.5 + hammerPhase * 0.8;
+            userData.leftArm.rotation.x = 0.2;
+            break;
+
+          case 'merchant':
+            // Standing with slight arm gestures
+            userData.leftArm.rotation.x = Math.sin(time * 0.003) * 0.2;
+            userData.rightArm.rotation.x = -0.3 + Math.sin(time * 0.004) * 0.1;
+            break;
+
+          case 'musician':
+            // Arms positioned as if playing
+            userData.leftArm.rotation.x = -0.8;
+            userData.leftArm.rotation.z = 0.5;
+            userData.rightArm.rotation.x = -0.6;
+            userData.rightArm.rotation.z = -0.3;
+            // Slight bobbing
+            mesh.position.y = Math.sin(time * 0.004) * 0.03;
+            break;
+
+          default:
+            // Generic arm motion
+            userData.leftArm.rotation.x = Math.sin(time * 0.004) * 0.3;
+            userData.rightArm.rotation.x = Math.sin(time * 0.005 + Math.PI) * 0.3;
+            break;
+        }
         break;
     }
   }
@@ -438,21 +721,13 @@
     mesh.position.x += (agent.position.x - mesh.position.x) * lerpFactor;
     mesh.position.z += (agent.position.z - mesh.position.z) * lerpFactor;
 
-    // Update rotation
+    // Update rotation (facing direction)
     if (state.currentState === 'walking' || state.currentState === 'socializing') {
       mesh.rotation.y = state.lookAngle;
     }
 
-    // Working animation (bobbing)
-    if (state.currentState === 'working') {
-      const bobAmount = Math.sin(Date.now() * 0.003) * 0.1;
-      mesh.position.y = bobAmount;
-    } else {
-      mesh.position.y = 0;
-    }
-
-    // Update visibility based on zone (only show NPCs in current zone)
-    // This should be called from reloadZoneNPCs when zone changes
+    // Apply procedural animations
+    applyAnimations(mesh, state, agent);
   }
 
   /**
