@@ -497,13 +497,13 @@
     };
 
     const notification = document.createElement('div');
+    notification.className = 'notification';
     notification.style.cssText = `
       background: rgba(0, 0, 0, 0.8);
       border-left: 4px solid ${colors[type] || colors.info};
       border-radius: 4px;
       padding: 12px 15px;
       margin-bottom: 10px;
-      animation: slideIn 0.3s ease-out;
       pointer-events: auto;
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     `;
@@ -511,10 +511,15 @@
 
     notificationContainer.appendChild(notification);
 
+    // Add visible class after a frame for animation
+    requestAnimationFrame(function() {
+      notification.classList.add('visible');
+    });
+
     // Auto-remove after 5 seconds
-    setTimeout(() => {
-      notification.style.animation = 'slideOut 0.3s ease-in';
-      setTimeout(() => {
+    setTimeout(function() {
+      notification.classList.remove('visible');
+      setTimeout(function() {
         notification.remove();
       }, 300);
     }, 5000);
@@ -844,7 +849,11 @@
       'border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#aaa;font-size:12px;cursor:pointer;">Close Shop</button></div>';
 
     npcShopPanel.innerHTML = header + itemList + closeBtn;
+    npcShopPanel.className = 'npc-shop-panel';
     hud.appendChild(npcShopPanel);
+    requestAnimationFrame(function() {
+      npcShopPanel.classList.add('visible');
+    });
 
     // Wire buy buttons
     npcShopPanel.querySelectorAll('.npc-shop-buy-btn').forEach(function(btn) {
@@ -865,8 +874,13 @@
 
   function hideNPCShop() {
     if (npcShopPanel && npcShopPanel.parentNode) {
-      npcShopPanel.parentNode.removeChild(npcShopPanel);
-      npcShopPanel = null;
+      npcShopPanel.classList.remove('visible');
+      setTimeout(function() {
+        if (npcShopPanel && npcShopPanel.parentNode) {
+          npcShopPanel.parentNode.removeChild(npcShopPanel);
+          npcShopPanel = null;
+        }
+      }, 250);
     }
   }
 
@@ -1054,6 +1068,9 @@
 
     questLogEl.innerHTML = html;
     hud.appendChild(questLogEl);
+    requestAnimationFrame(function() {
+      questLogEl.classList.add('visible');
+    });
   }
 
   /**
@@ -1061,8 +1078,13 @@
    */
   function hideQuestLog() {
     if (questLogEl && questLogEl.parentNode) {
-      questLogEl.parentNode.removeChild(questLogEl);
-      questLogEl = null;
+      questLogEl.classList.remove('visible');
+      setTimeout(function() {
+        if (questLogEl && questLogEl.parentNode) {
+          questLogEl.parentNode.removeChild(questLogEl);
+          questLogEl = null;
+        }
+      }, 250);
     }
   }
 
@@ -1254,11 +1276,19 @@
   function showInventoryPanel() {
     if (!inventoryPanel) initInventoryPanel();
     inventoryPanel.style.display = 'block';
+    requestAnimationFrame(function() {
+      inventoryPanel.classList.add('visible');
+    });
     inventoryVisible = true;
   }
 
   function hideInventoryPanel() {
-    if (inventoryPanel) inventoryPanel.style.display = 'none';
+    if (inventoryPanel) {
+      inventoryPanel.classList.remove('visible');
+      setTimeout(function() {
+        inventoryPanel.style.display = 'none';
+      }, 250);
+    }
     inventoryVisible = false;
   }
 
@@ -1342,11 +1372,19 @@
   function showCraftingPanel() {
     if (!craftingPanel) initCraftingPanel();
     craftingPanel.style.display = 'block';
+    requestAnimationFrame(function() {
+      craftingPanel.classList.add('visible');
+    });
     craftingVisible = true;
   }
 
   function hideCraftingPanel() {
-    if (craftingPanel) craftingPanel.style.display = 'none';
+    if (craftingPanel) {
+      craftingPanel.classList.remove('visible');
+      setTimeout(function() {
+        craftingPanel.style.display = 'none';
+      }, 250);
+    }
     craftingVisible = false;
   }
 
@@ -3325,6 +3363,10 @@
     panel.appendChild(content);
     document.body.appendChild(panel);
     discoveryLogPanel = panel;
+    panel.className = 'discovery-panel';
+    requestAnimationFrame(function() {
+      panel.classList.add('visible');
+    });
 
     // Close on Escape
     var escapeHandler = function(e) {
@@ -3341,8 +3383,13 @@
     if (discoveryLogPanel.escapeHandler) {
       document.removeEventListener('keydown', discoveryLogPanel.escapeHandler);
     }
-    document.body.removeChild(discoveryLogPanel);
-    discoveryLogPanel = null;
+    discoveryLogPanel.classList.remove('visible');
+    setTimeout(function() {
+      if (discoveryLogPanel && discoveryLogPanel.parentNode) {
+        document.body.removeChild(discoveryLogPanel);
+        discoveryLogPanel = null;
+      }
+    }, 250);
   }
 
   // Lore Book Panel
@@ -3677,6 +3724,9 @@
 
     document.body.appendChild(panel);
     loreBookPanel = panel;
+    requestAnimationFrame(function() {
+      panel.classList.add('visible');
+    });
 
     // Close on Escape
     var escapeHandler = function(e) {
@@ -3693,8 +3743,13 @@
     if (loreBookPanel.escapeHandler) {
       document.removeEventListener('keydown', loreBookPanel.escapeHandler);
     }
-    document.body.removeChild(loreBookPanel);
-    loreBookPanel = null;
+    loreBookPanel.classList.remove('visible');
+    setTimeout(function() {
+      if (loreBookPanel && loreBookPanel.parentNode) {
+        document.body.removeChild(loreBookPanel);
+        loreBookPanel = null;
+      }
+    }, 250);
   }
 
   function toggleLoreJournal(playerId, state) {
@@ -3754,11 +3809,11 @@
   // Discovery Popup
   function showDiscoveryPopup(discovery) {
     var popup = document.createElement('div');
+    popup.className = 'discovery-popup';
     popup.style.cssText = `
       position: fixed;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%) scale(0);
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       border: 3px solid #5dade2;
       border-radius: 12px;
@@ -3766,8 +3821,6 @@
       min-width: 400px;
       box-shadow: 0 0 50px rgba(93, 173, 226, 0.6);
       z-index: 10001;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-      opacity: 0;
     `;
 
     var header = document.createElement('div');
@@ -3832,15 +3885,13 @@
     document.body.appendChild(popup);
 
     // Animate in
-    setTimeout(function() {
-      popup.style.transform = 'translate(-50%, -50%) scale(1)';
-      popup.style.opacity = '1';
-    }, 10);
+    requestAnimationFrame(function() {
+      popup.classList.add('visible');
+    });
 
     // Auto-close after 4 seconds
     setTimeout(function() {
-      popup.style.transform = 'translate(-50%, -50%) scale(0)';
-      popup.style.opacity = '0';
+      popup.classList.remove('visible');
       setTimeout(function() {
         if (popup.parentNode) {
           document.body.removeChild(popup);
@@ -3850,8 +3901,7 @@
 
     // Click to close
     popup.onclick = function() {
-      popup.style.transform = 'translate(-50%, -50%) scale(0)';
-      popup.style.opacity = '0';
+      popup.classList.remove('visible');
       setTimeout(function() {
         if (popup.parentNode) {
           document.body.removeChild(popup);
@@ -4859,12 +4909,20 @@
 
     document.body.appendChild(panel);
     guildPanel = panel;
+    requestAnimationFrame(function() {
+      panel.classList.add('visible');
+    });
   }
 
   function hideGuildPanel() {
     if (!guildPanel) return;
-    document.body.removeChild(guildPanel);
-    guildPanel = null;
+    guildPanel.classList.remove('visible');
+    setTimeout(function() {
+      if (guildPanel && guildPanel.parentNode) {
+        document.body.removeChild(guildPanel);
+        guildPanel = null;
+      }
+    }, 250);
   }
 
   function showGuildCreate(callback) {
@@ -5394,8 +5452,12 @@
       'border-radius:6px;color:#fff;font-weight:bold;cursor:pointer;">Close (H)</button></div>';
 
     governancePanel.innerHTML = html;
+    governancePanel.className = 'governance-panel';
     document.body.appendChild(governancePanel);
     governanceVisible = true;
+    requestAnimationFrame(function() {
+      governancePanel.classList.add('visible');
+    });
 
     // Attach event listeners
     var closeBtn = document.getElementById('close-governance-btn');
@@ -5447,8 +5509,13 @@
 
   function hideGovernancePanel() {
     if (governancePanel) {
-      document.body.removeChild(governancePanel);
-      governancePanel = null;
+      governancePanel.classList.remove('visible');
+      setTimeout(function() {
+        if (governancePanel && governancePanel.parentNode) {
+          document.body.removeChild(governancePanel);
+          governancePanel = null;
+        }
+      }, 250);
     }
     governanceVisible = false;
   }
@@ -5630,8 +5697,12 @@
     }
 
     auctionHousePanel.appendChild(contentDiv);
+    auctionHousePanel.className = 'auction-panel';
     document.body.appendChild(auctionHousePanel);
     auctionHouseVisible = true;
+    requestAnimationFrame(function() {
+      auctionHousePanel.classList.add('visible');
+    });
   }
 
   function renderBrowseTab(container, ledger, playerId) {
@@ -6007,8 +6078,13 @@
 
   function hideAuctionHousePanel() {
     if (auctionHousePanel) {
-      document.body.removeChild(auctionHousePanel);
-      auctionHousePanel = null;
+      auctionHousePanel.classList.remove('visible');
+      setTimeout(function() {
+        if (auctionHousePanel && auctionHousePanel.parentNode) {
+          document.body.removeChild(auctionHousePanel);
+          auctionHousePanel = null;
+        }
+      }, 250);
     }
     auctionHouseVisible = false;
   }
@@ -6206,6 +6282,9 @@
 
     document.body.appendChild(panel);
     achievementPanel = panel;
+    requestAnimationFrame(function() {
+      panel.classList.add('visible');
+    });
 
     // Close on Escape
     var escapeHandler = function(e) {
@@ -6222,8 +6301,13 @@
     if (achievementPanel.escapeHandler) {
       document.removeEventListener('keydown', achievementPanel.escapeHandler);
     }
-    document.body.removeChild(achievementPanel);
-    achievementPanel = null;
+    achievementPanel.classList.remove('visible');
+    setTimeout(function() {
+      if (achievementPanel && achievementPanel.parentNode) {
+        document.body.removeChild(achievementPanel);
+        achievementPanel = null;
+      }
+    }, 250);
   }
 
   // Export public API
@@ -6719,6 +6803,9 @@
 
     document.body.appendChild(panel);
     petPanel = panel;
+    requestAnimationFrame(function() {
+      panel.classList.add('visible');
+    });
 
     // Close on Escape
     var escapeHandler = function(e) {
@@ -7024,8 +7111,13 @@
     if (petPanel.escapeHandler) {
       document.removeEventListener('keydown', petPanel.escapeHandler);
     }
-    document.body.removeChild(petPanel);
-    petPanel = null;
+    petPanel.classList.remove('visible');
+    setTimeout(function() {
+      if (petPanel && petPanel.parentNode) {
+        document.body.removeChild(petPanel);
+        petPanel = null;
+      }
+    }, 250);
   }
 
   function showPetAdoptNotification(petName, petType) {

@@ -131,6 +131,83 @@
   // Platform detection
   let platform = 'desktop';
 
+  // Camera shake system
+  var cameraShake = { intensity: 0, duration: 0, elapsed: 0, active: false };
+
+  /**
+   * Trigger camera shake effect
+   * @param {number} intensity - Shake strength (0.1-1.0)
+   * @param {number} duration - Duration in seconds
+   */
+  function triggerCameraShake(intensity, duration) {
+    cameraShake.intensity = intensity;
+    cameraShake.duration = duration;
+    cameraShake.elapsed = 0;
+    cameraShake.active = true;
+  }
+
+  // Interaction target tracking for hover highlights and tooltips
+  var currentInteractionTarget = null; // { object, type, name, distance, action, mesh }
+  var tooltipEl = null;
+
+  // Screen flash overlay element
+  var screenFlashOverlay = null;
+  var vignetteOverlay = null;
+
+  /**
+   * Trigger screen flash effect
+   * @param {string} color - CSS color (e.g., '#DAA520', 'rgba(0,120,255,0.3)')
+   * @param {number} duration - Duration in seconds
+   */
+  function triggerScreenFlash(color, duration) {
+    if (!screenFlashOverlay) {
+      screenFlashOverlay = document.createElement('div');
+      screenFlashOverlay.style.position = 'fixed';
+      screenFlashOverlay.style.top = '0';
+      screenFlashOverlay.style.left = '0';
+      screenFlashOverlay.style.width = '100%';
+      screenFlashOverlay.style.height = '100%';
+      screenFlashOverlay.style.pointerEvents = 'none';
+      screenFlashOverlay.style.zIndex = '9998';
+      screenFlashOverlay.style.opacity = '0';
+      screenFlashOverlay.style.transition = 'opacity 0.1s ease-out';
+      document.body.appendChild(screenFlashOverlay);
+    }
+
+    // Set color and show
+    screenFlashOverlay.style.backgroundColor = color;
+    screenFlashOverlay.style.opacity = '0.6';
+
+    // Fade out
+    setTimeout(function() {
+      screenFlashOverlay.style.transition = 'opacity ' + duration + 's ease-out';
+      screenFlashOverlay.style.opacity = '0';
+    }, 50);
+  }
+
+  /**
+   * Set vignette intensity
+   * @param {number} intensity - Intensity level (0.0-1.0)
+   */
+  function setVignetteIntensity(intensity) {
+    if (!vignetteOverlay) {
+      vignetteOverlay = document.createElement('div');
+      vignetteOverlay.style.position = 'fixed';
+      vignetteOverlay.style.top = '0';
+      vignetteOverlay.style.left = '0';
+      vignetteOverlay.style.width = '100%';
+      vignetteOverlay.style.height = '100%';
+      vignetteOverlay.style.pointerEvents = 'none';
+      vignetteOverlay.style.zIndex = '9997';
+      vignetteOverlay.style.transition = 'box-shadow 0.5s ease';
+      document.body.appendChild(vignetteOverlay);
+    }
+
+    var spread = Math.floor(150 * intensity);
+    var alpha = 0.3 + (intensity * 0.4); // 0.3-0.7 range
+    vignetteOverlay.style.boxShadow = 'inset 0 0 ' + spread + 'px rgba(0,0,0,' + alpha + ')';
+  }
+
   /**
    * Emit level up particle burst effect
    */
@@ -139,6 +216,108 @@
       var levelUpPos = { x: localPlayer.position.x, y: localPlayer.position.y + 2, z: localPlayer.position.z };
       World.emitParticles('sparkle', levelUpPos, 25);
     }
+    // Add golden flash effect for level up
+    triggerScreenFlash('#DAA520', 0.3);
+  }
+
+  /**
+   * Detect nearest interactable object/NPC/resource within range
+   * Returns { object, type, name, distance, action, mesh, position } or null
+   */
+  function detectNearestInteractable() {
+    if (!localPlayer) return null;
+
+    var nearestTarget = null;
+    var minDist = 10; // Max interaction range
+
+    var playerX = localPlayer.position.x;
+    var playerZ = localPlayer.position.z;
+
+    // Check NPCs
+    if (NPCs && NPCs.getNPCPositions) {
+      var npcPositions = NPCs.getNPCPositions();
+      for (var i = 0; i < npcPositions.length; i++) {
+        var npc = npcPositions[i];
+        if (!npc) continue;
+        var dx = npc.x - playerX;
+        var dz = npc.z - playerZ;
+        var dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < minDist) {
+          minDist = dist;
+          nearestTarget = {
+            type: 'npc',
+            name: npc.name || 'NPC',
+            action: 'Talk',
+            distance: dist,
+            mesh: npc.mesh,
+            position: { x: npc.x, y: localPlayer.position.y + 1, z: npc.z }
+          };
+        }
+      }
+    }
+
+    // Check interactive objects (benches, campfires, etc.)
+    if (World && World.getInteractiveAtPosition) {
+      var nearbyObj = World.getInteractiveAtPosition(playerX, playerZ, minDist);
+      if (nearbyObj) {
+        var dx = nearbyObj.position.x - playerX;
+        var dz = nearbyObj.position.z - playerZ;
+        var dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < minDist) {
+          minDist = dist;
+          nearestTarget = {
+            type: 'interactive',
+            name: nearbyObj.type ? nearbyObj.type.replace(/_/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); }) : 'Object',
+            action: nearbyObj.action ? nearbyObj.action.replace(/_/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); }) : 'Use',
+            distance: dist,
+            mesh: nearbyObj.mesh,
+            position: nearbyObj.position
+          };
+        }
+      }
+    }
+
+    // Check resource nodes
+    if (World && World.getResourceNodeAtMouse) {
+      // For now, skip resource node highlighting as it requires mouse position
+      // Could be enhanced later with a separate distance-based check
+    }
+
+    return nearestTarget;
+  }
+
+  /**
+   * Update tooltip position and content based on current interaction target
+   */
+  function updateTooltip() {
+    if (!tooltipEl || !sceneContext || !sceneContext.camera || !sceneContext.renderer) return;
+
+    if (!currentInteractionTarget) {
+      tooltipEl.style.display = 'none';
+      return;
+    }
+
+    // Project 3D position to screen space
+    if (!window.THREE) return;
+    var pos = new window.THREE.Vector3(
+      currentInteractionTarget.position.x,
+      currentInteractionTarget.position.y + 3, // Offset above object
+      currentInteractionTarget.position.z
+    );
+    pos.project(sceneContext.camera);
+
+    // Convert to screen coordinates
+    var x = (pos.x * 0.5 + 0.5) * sceneContext.renderer.domElement.clientWidth;
+    var y = (-pos.y * 0.5 + 0.5) * sceneContext.renderer.domElement.clientHeight;
+
+    // Position tooltip
+    tooltipEl.style.left = x + 'px';
+    tooltipEl.style.top = y + 'px';
+    tooltipEl.style.display = 'block';
+
+    // Update content
+    tooltipEl.innerHTML = '<span style="color:#DAA520">' + currentInteractionTarget.name + '</span>' +
+      '<br><span style="color:#A0978E; font-size:11px">[E] ' + currentInteractionTarget.action + '</span>';
   }
 
   /**
@@ -341,6 +520,10 @@
           World.initZoneAmbience(sceneContext);
         }
 
+        // Initialize vignette overlay with default intensity
+        setVignetteIntensity(0.3);
+        }
+
         // Create zone boundary particles (golden floating markers at zone edges)
         if (World.createZoneBoundaryParticles && sceneContext.scene) {
           World.createZoneBoundaryParticles(sceneContext.scene);
@@ -420,6 +603,18 @@
         handleLocalAction('chat', { message: text });
         HUD.hideChatInput();
       });
+
+      // Initialize interaction tooltip overlay
+      if (!tooltipEl) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.id = 'interaction-tooltip';
+        tooltipEl.style.cssText = 'position:fixed; pointer-events:none; z-index:200; ' +
+          'background:rgba(10,14,26,0.85); border:1px solid rgba(218,165,32,0.6); ' +
+          'border-radius:6px; padding:6px 12px; color:#E8E0D8; font-size:12px; ' +
+          'font-family:var(--font-ui); display:none; transform:translate(-50%,-100%); ' +
+          'backdrop-filter:blur(5px); white-space:nowrap;';
+        document.body.appendChild(tooltipEl);
+      }
     }
 
     // Initialize quest system for local player
@@ -942,6 +1137,21 @@
         sceneContext.camera.position.y += (camTargetY - sceneContext.camera.position.y) * lerpFactor;
         sceneContext.camera.position.z += (camTargetZ - sceneContext.camera.position.z) * lerpFactor;
 
+        // Apply camera shake if active
+        if (cameraShake.active) {
+          cameraShake.elapsed += deltaTime;
+          var progress = cameraShake.elapsed / cameraShake.duration;
+          if (progress >= 1) {
+            cameraShake.active = false;
+          } else {
+            var decay = 1 - progress;
+            var shakeX = (Math.random() - 0.5) * 2 * cameraShake.intensity * decay;
+            var shakeY = (Math.random() - 0.5) * 2 * cameraShake.intensity * decay;
+            sceneContext.camera.position.x += shakeX;
+            sceneContext.camera.position.y += shakeY;
+          }
+        }
+
         sceneContext.camera.lookAt(
           localPlayer.position.x,
           terrainY + 1.5,
@@ -969,6 +1179,14 @@
         // Update ambient audio for weather
         if (Audio && Audio.updateAmbientWeather) {
           Audio.updateAmbientWeather(currentWeather);
+        }
+        // Update vignette intensity based on weather
+        if (currentWeather === 'storm') {
+          setVignetteIntensity(0.7);
+        } else if (currentWeather === 'rain' || currentWeather === 'snow') {
+          setVignetteIntensity(0.5);
+        } else {
+          setVignetteIntensity(0.3);
         }
       }
 
@@ -1018,9 +1236,10 @@
         World.updateZoneAmbience(sceneContext, localPlayer.zone, deltaTime * 1000);
       }
 
-      // Update water bodies (animated waves)
+      // Update water bodies (animated waves, weather-reactive)
       if (World.updateWater) {
-        World.updateWater(deltaTime);
+        var currentWeather = World.getCurrentWeather ? World.getCurrentWeather() : 'clear';
+        World.updateWater(deltaTime, currentWeather);
       }
 
       // Update skybox (sun/moon orbit, star visibility)
@@ -1034,6 +1253,30 @@
       }
       if (World.updateInteractiveHighlights && localPlayer) {
         World.updateInteractiveHighlights(localPlayer.position.x, localPlayer.position.z, 4);
+      }
+
+      // Detect and highlight nearest interactable for E-key interaction
+      if (localPlayer) {
+        var newTarget = detectNearestInteractable();
+
+        // If target changed, update highlighting
+        if (newTarget !== currentInteractionTarget) {
+          // Clear previous highlight
+          if (World && World.unhighlightObject) {
+            World.unhighlightObject();
+          }
+
+          // Set new target
+          currentInteractionTarget = newTarget;
+
+          // Apply new highlight
+          if (currentInteractionTarget && currentInteractionTarget.mesh && World && World.highlightObject) {
+            World.highlightObject(currentInteractionTarget.mesh);
+          }
+        }
+
+        // Update tooltip position
+        updateTooltip();
       }
 
       // Update ambient wildlife (butterflies, fireflies, birds, fish)
@@ -1268,6 +1511,8 @@
 
       case 'cross_world_warp':
         console.log('Player warping to world:', event.targetWorld);
+        triggerCameraShake(0.4, 0.6);
+        triggerScreenFlash('rgba(138,43,226,0.4)', 0.5);
         break;
 
       case 'player_returned':
@@ -1500,6 +1745,10 @@
         HUD.showNotification('Warping to federated world: ' + targetWorld, 'info');
       }
 
+      // Add warp fork screen effects
+      triggerCameraShake(0.4, 0.6);
+      triggerScreenFlash('rgba(138,43,226,0.4)', 0.5);
+
       // In a real implementation, this would navigate to the other world's URL
       // For now, we just track the state
       console.log('Player warped to federated world:', targetWorld);
@@ -1730,6 +1979,12 @@
 
     if (Audio) {
       Audio.playSound('warp');
+    }
+
+    // Add warp screen effects
+    if (msg.from === localPlayer.id) {
+      triggerCameraShake(0.3, 0.5);
+      triggerScreenFlash('rgba(0,120,255,0.4)', 0.4);
     }
   }
 
@@ -2935,6 +3190,9 @@
                     World.emitParticles('sparkle', questPos, 15);
                     World.emitParticles('fountain', questPos, 15);
                   }
+                  // Add quest completion screen effects
+                  triggerCameraShake(0.2, 0.3);
+                  triggerScreenFlash('#DAA520', 0.4);
                 }
               }
 
@@ -4121,5 +4379,8 @@
   exports.joinWorld = joinWorld;
   exports.leaveWorld = leaveWorld;
   exports.handleLocalAction = handleLocalAction;
+  exports.triggerCameraShake = triggerCameraShake;
+  exports.triggerScreenFlash = triggerScreenFlash;
+  exports.setVignetteIntensity = setVignetteIntensity;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Main = {}));

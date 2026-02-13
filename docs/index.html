@@ -270,7 +270,7 @@ html, body {
   border-radius: var(--radius-md);
   padding: var(--space-sm);
   box-shadow: var(--shadow-md);
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.25s ease;
 }
 
 .chat-messages {
@@ -295,6 +295,12 @@ html, body {
 .chat-message {
   margin-bottom: var(--space-xs);
   word-wrap: break-word;
+  animation: chatMsgIn 0.2s ease;
+}
+
+@keyframes chatMsgIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .chat-message .sender {
@@ -429,7 +435,8 @@ html, body {
   position: absolute;
   top: 30%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -70%);
+  opacity: 0;
   background: var(--color-bg-panel);
   backdrop-filter: blur(10px);
   border: 2px solid var(--color-accent);
@@ -442,8 +449,13 @@ html, body {
   text-align: center;
   max-width: 400px;
   z-index: var(--z-notification);
-  animation: fadeInOut 3s ease-in-out;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   pointer-events: none;
+}
+
+.notification.visible {
+  transform: translate(-50%, -50%);
+  opacity: 1;
 }
 
 @keyframes fadeInOut {
@@ -541,7 +553,8 @@ html, body {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
   background: var(--color-bg-panel);
   backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
@@ -551,7 +564,12 @@ html, body {
   min-width: 320px;
   max-width: 420px;
   z-index: var(--z-notification);
-  animation: panelSlideIn 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.inventory-panel.visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 
 .inventory-title {
@@ -611,7 +629,8 @@ html, body {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
   background: var(--color-bg-panel);
   backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
@@ -623,7 +642,12 @@ html, body {
   max-height: 70vh;
   overflow-y: auto;
   z-index: var(--z-notification);
-  animation: panelSlideIn 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.crafting-panel.visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 
 .recipe-item {
@@ -750,7 +774,8 @@ html, body {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) translateX(20px);
+  opacity: 0;
   background: var(--color-bg-panel);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(218, 165, 32, 0.3);
@@ -762,7 +787,12 @@ html, body {
   max-height: 70vh;
   overflow-y: auto;
   z-index: var(--z-notification);
-  animation: panelSlideIn 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.quest-log-panel.visible {
+  transform: translate(-50%, -50%) translateX(0);
+  opacity: 1;
 }
 
 .quest-entry {
@@ -1494,8 +1524,28 @@ html, body {
 #npc-shop-panel::-webkit-scrollbar-track { background: transparent; }
 #npc-shop-panel::-webkit-scrollbar-thumb { background: rgba(218,165,32,0.3); border-radius: 3px; }
 
+.npc-shop-panel {
+  transform: scale(0.95);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.npc-shop-panel.visible {
+  transform: scale(1);
+  opacity: 1;
+}
+
 /* Guild Panel */
-.guild-panel { animation: slideIn 0.3s ease-out; }
+.guild-panel {
+  transform: translateX(20px);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.guild-panel.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
 .guild-member-row {
   display: flex; align-items: center; padding: 6px 8px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
@@ -1519,12 +1569,19 @@ html, body {
 
 /* Discovery Popup */
 .discovery-popup {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.6);
+  opacity: 0;
   background: rgba(10,14,26,0.95); border: 2px solid var(--color-gold);
   border-radius: 16px; padding: 24px 32px; text-align: center;
-  animation: discoveryReveal 0.5s ease-out forwards;
   z-index: 10000; pointer-events: auto;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
+.discovery-popup.visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
 @keyframes discoveryReveal {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
   60% { transform: translate(-50%, -50%) scale(1.05); }
@@ -1550,11 +1607,18 @@ html, body {
 
 /* Achievement panel */
 .achievement-panel {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
   background: rgba(15,12,10,0.95); border: 1px solid rgba(218,165,32,0.3);
   border-radius: 12px; padding: 24px; min-width: 420px; max-width: 550px;
   max-height: 70vh; overflow-y: auto; z-index: 1100;
   backdrop-filter: blur(10px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.achievement-panel.visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 .achievement-panel h2 {
   color: var(--color-gold); margin: 0 0 4px; font-size: 1.2rem;
@@ -1621,11 +1685,18 @@ html, body {
 
 /* Auction house panel */
 .auction-panel {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
   background: rgba(15,12,10,0.95); border: 1px solid rgba(176,224,230,0.3);
   border-radius: 12px; padding: 24px; min-width: 450px; max-width: 600px;
   max-height: 70vh; overflow-y: auto; z-index: 1100;
   backdrop-filter: blur(10px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.auction-panel.visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 .auction-panel h2 {
   color: var(--color-accent); margin: 0 0 16px; font-size: 1.2rem;
@@ -1663,6 +1734,14 @@ html, body {
 /* Lore Journal Panel */
 .lore-journal-panel {
   font-family: Georgia, serif;
+  transform: scale(0.95);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.lore-journal-panel.visible {
+  transform: scale(1);
+  opacity: 1;
 }
 
 .lore-journal-panel::-webkit-scrollbar {
@@ -1709,7 +1788,8 @@ html, body {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
   background: rgba(15, 12, 10, 0.95);
   border: 1px solid rgba(218, 165, 32, 0.3);
   border-radius: 12px;
@@ -1720,7 +1800,12 @@ html, body {
   overflow-y: auto;
   z-index: 1100;
   backdrop-filter: blur(10px);
-  animation: panelSlideIn 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.pet-panel.visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 
 .pet-panel h2 {
@@ -2015,6 +2100,75 @@ html, body {
   background: #80c0e0;
   color: #0a0a14;
   border-color: #a0d4f0;
+}
+
+/* ========================================================================
+   GLOBAL BUTTON HOVER EFFECTS AND ANIMATIONS
+   ======================================================================== */
+
+/* Generic button transitions */
+.hud-btn, .panel-btn, .craft-btn, .trade-btn, .quest-btn,
+.pet-action-btn, .pet-adopt-btn, .npc-dialog-btn {
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.hud-btn:hover, .panel-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(218, 165, 32, 0.2);
+}
+
+.hud-btn:active, .panel-btn:active {
+  transform: translateY(0);
+}
+
+/* Inventory slot hover enhancement */
+.inventory-slot {
+  transition: all 0.2s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.inventory-slot:hover {
+  transform: scale(1.05);
+}
+
+/* Recipe item hover enhancement */
+.recipe-item {
+  transition: all 0.2s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+/* Quest entry hover enhancement */
+.quest-entry {
+  transition: all 0.2s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+/* Panel close button enhancement */
+.panel-close {
+  transition: all 0.2s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.panel-close:hover {
+  transform: scale(1.1);
+}
+
+/* Governance panel */
+.governance-panel {
+  transform: scale(0.95);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.governance-panel.visible {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Discovery panel */
+.discovery-panel {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.discovery-panel.visible {
+  opacity: 1;
 }
 
 
@@ -19954,11 +20108,19 @@ html, body {
       sizeAttenuation: true
     });
 
-    // Load particle texture
-    var particleTex = textureLoader ? textureLoader.load(ASSET_BASE + 'assets/textures/particle.png') : null;
-    if (particleTex) {
-      this.material.map = particleTex;
-    }
+    // Generate procedural particle texture (soft circle)
+    var particleCanvas = document.createElement('canvas');
+    particleCanvas.width = 32;
+    particleCanvas.height = 32;
+    var pctx = particleCanvas.getContext('2d');
+    var gradient = pctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+    gradient.addColorStop(0, 'rgba(255,255,255,1)');
+    gradient.addColorStop(0.5, 'rgba(255,255,255,0.5)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    pctx.fillStyle = gradient;
+    pctx.fillRect(0, 0, 32, 32);
+    var particleTex = new THREE.CanvasTexture(particleCanvas);
+    this.material.map = particleTex;
 
     // Create Points mesh
     this.points = new THREE.Points(this.geometry, this.material);
@@ -20570,12 +20732,17 @@ html, body {
     }
   }
 
+  function getCurrentWeather() {
+    return currentWeatherType;
+  }
+
   // ========================================================================
   // WATER SYSTEM — Animated water bodies for zones
   // ========================================================================
 
   var waterBodies = [];
   var waterTime = 0;
+  var waterWeatherMultiplier = 1.0; // Modified by weather conditions
 
   function initWater(sceneCtx) {
     if (!sceneCtx || !sceneCtx.scene) return;
@@ -20589,7 +20756,7 @@ html, body {
     }
     waterBodies = [];
 
-    // Gardens: Central pond/lake (~30 unit radius)
+    // Gardens: Central pond/lake (~30 unit radius) - peaceful, clear water
     var gardensPond = createWaterBody({
       type: 'circle',
       centerX: ZONES.gardens.cx,
@@ -20598,8 +20765,10 @@ html, body {
       height: ZONES.gardens.baseHeight + 0.3,
       segments: 64,
       waveSpeed: 0.8,
-      waveHeight: 0.15,
-      waveFrequency: 0.3
+      waveHeight: 0.2,
+      waveFrequency: 0.3,
+      color: 0x3388cc,
+      emissive: 0x113355
     });
     scene.add(gardensPond.mesh);
     waterBodies.push(gardensPond);
@@ -20618,15 +20787,17 @@ html, body {
         height: ZONES.wilds.baseHeight + 0.2,
         segments: 64,
         waveSpeed: 1.2,
-        waveHeight: 0.2,
+        waveHeight: 0.25,
         waveFrequency: 0.5,
-        flowDirection: riverSegments[j].direction
+        flowDirection: riverSegments[j].direction,
+        color: 0x2277bb,
+        emissive: 0x0f2844
       });
       scene.add(riverSegment.mesh);
       waterBodies.push(riverSegment);
     }
 
-    // Nexus: Decorative fountain pool (~8 unit radius)
+    // Nexus: Decorative fountain pool (~8 unit radius) - magical, glowing water
     var nexusFountain = createWaterBody({
       type: 'circle',
       centerX: ZONES.nexus.cx,
@@ -20635,8 +20806,10 @@ html, body {
       height: ZONES.nexus.baseHeight + 0.5,
       segments: 64,
       waveSpeed: 1.5,
-      waveHeight: 0.1,
-      waveFrequency: 0.8
+      waveHeight: 0.15,
+      waveFrequency: 0.8,
+      color: 0x4499dd,
+      emissive: 0x225588
     });
     scene.add(nexusFountain.mesh);
     waterBodies.push(nexusFountain);
@@ -20675,14 +20848,20 @@ html, body {
       initialPositions[i] = positions[i];
     }
 
-    // Create water material
+    // Create water material with enhanced visual properties
+    var waterColor = config.color || 0x2266aa;
+    var emissiveColor = config.emissive || 0x112244;
+
     material = new THREE.MeshPhongMaterial({
-      color: 0x2266aa,
+      color: waterColor,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.65,
       side: THREE.DoubleSide,
-      shininess: 80,
-      specular: 0x88aaff
+      shininess: 100,
+      specular: 0xaaddff,
+      emissive: emissiveColor,
+      emissiveIntensity: 0.15,
+      reflectivity: 0.8
     });
 
     mesh = new THREE.Mesh(geometry, material);
@@ -20740,10 +20919,23 @@ html, body {
     return segments;
   }
 
-  function updateWater(deltaTime) {
+  function updateWater(deltaTime, weatherType) {
     if (!waterBodies || waterBodies.length === 0) return;
 
     waterTime += deltaTime;
+
+    // Adjust water animation based on weather conditions
+    var targetMultiplier = 1.0;
+    if (weatherType === 'storm') {
+      targetMultiplier = 2.5; // Much choppier waves during storms
+    } else if (weatherType === 'rain') {
+      targetMultiplier = 1.6; // Moderately rough during rain
+    } else if (weatherType === 'snow') {
+      targetMultiplier = 0.5; // Calmer, colder water
+    }
+
+    // Smoothly interpolate to target multiplier
+    waterWeatherMultiplier += (targetMultiplier - waterWeatherMultiplier) * deltaTime * 0.5;
 
     for (var i = 0; i < waterBodies.length; i++) {
       var water = waterBodies[i];
@@ -20753,9 +20945,13 @@ html, body {
       var initialPos = water.initialPositions;
       var config = water.config;
 
-      var waveSpeed = config.waveSpeed || 1.0;
-      var waveHeight = config.waveHeight || 0.2;
+      var baseWaveSpeed = config.waveSpeed || 1.0;
+      var baseWaveHeight = config.waveHeight || 0.2;
       var waveFrequency = config.waveFrequency || 0.5;
+
+      // Apply weather multiplier to wave parameters
+      var waveSpeed = baseWaveSpeed * waterWeatherMultiplier;
+      var waveHeight = baseWaveHeight * waterWeatherMultiplier;
 
       // Animate vertices with sine waves
       for (var j = 0; j < positions.length; j += 3) {
@@ -20770,38 +20966,85 @@ html, body {
           var dz = z - config.centerZ;
           distFromCenter = Math.sqrt(dx * dx + dz * dz);
 
-          // Radial ripples from center
+          // Multi-layered wave system for more realistic water
+          // Primary radial ripples from center
           var ripple = Math.sin(distFromCenter * waveFrequency - waterTime * waveSpeed) * waveHeight;
 
-          // Add secondary wave pattern
+          // Secondary angular wave pattern
           var angle = Math.atan2(dz, dx);
           var secondaryWave = Math.sin(angle * 3 + waterTime * waveSpeed * 0.5) * waveHeight * 0.3;
 
-          positions[j + 1] = y + ripple + secondaryWave;
+          // Tertiary detail waves for visual complexity
+          var detailWave = Math.sin(x * 0.4 + waterTime * waveSpeed * 1.2) * waveHeight * 0.2 +
+                           Math.sin(z * 0.3 + waterTime * waveSpeed * 0.9) * waveHeight * 0.2;
 
-          // Fade ripples near edge
+          // Random chop for storms
+          var chopWave = 0;
+          if (waterWeatherMultiplier > 1.5) {
+            chopWave = Math.sin(x * 0.8 + z * 0.7 + waterTime * waveSpeed * 2.0) * waveHeight * 0.25;
+          }
+
+          positions[j + 1] = y + ripple + secondaryWave + detailWave + chopWave;
+
+          // Fade ripples near edge for natural boundary
           if (distFromCenter > config.radius * 0.8) {
             var fadeRatio = 1 - (distFromCenter - config.radius * 0.8) / (config.radius * 0.2);
-            positions[j + 1] = y + (ripple + secondaryWave) * Math.max(0, fadeRatio);
+            positions[j + 1] = y + (ripple + secondaryWave + detailWave + chopWave) * Math.max(0, fadeRatio);
           }
         } else if (config.type === 'river') {
-          // Flowing river animation
+          // Flowing river animation with directional waves
           var flowDir = config.flowDirection || { x: 1, z: 0 };
           var flowComponent = (x - config.centerX) * flowDir.x + (z - config.centerZ) * flowDir.z;
 
-          // Waves flowing in direction of river
+          // Primary waves flowing in direction of river
           var flowWave = Math.sin(flowComponent * waveFrequency - waterTime * waveSpeed) * waveHeight;
+
+          // Secondary flow wave at different frequency
+          var flowWave2 = Math.sin(flowComponent * waveFrequency * 1.3 - waterTime * waveSpeed * 1.4) * waveHeight * 0.5;
 
           // Cross-river waves for more natural look
           var crossComponent = -(x - config.centerX) * flowDir.z + (z - config.centerZ) * flowDir.x;
           var crossWave = Math.sin(crossComponent * waveFrequency * 0.8 + waterTime * waveSpeed * 0.6) * waveHeight * 0.4;
 
-          positions[j + 1] = y + flowWave + crossWave;
+          // Detail turbulence
+          var turbulence = Math.sin(x * 0.5 + waterTime * waveSpeed * 1.8) * waveHeight * 0.15 +
+                           Math.sin(z * 0.4 + waterTime * waveSpeed * 1.5) * waveHeight * 0.15;
+
+          // Rapids effect during storms
+          var rapids = 0;
+          if (waterWeatherMultiplier > 1.5) {
+            rapids = Math.sin(flowComponent * 1.2 - waterTime * waveSpeed * 3.0) * waveHeight * 0.3;
+          }
+
+          positions[j + 1] = y + flowWave + flowWave2 + crossWave + turbulence + rapids;
         }
       }
 
       water.geometry.attributes.position.needsUpdate = true;
       water.geometry.computeVertexNormals();
+
+      // Update water material properties based on weather
+      if (water.material) {
+        // Adjust opacity based on weather (rougher water is more opaque)
+        var targetOpacity = 0.65;
+        if (weatherType === 'storm') {
+          targetOpacity = 0.75; // Darker, choppier water
+        } else if (weatherType === 'rain') {
+          targetOpacity = 0.7;
+        }
+        water.material.opacity += (targetOpacity - water.material.opacity) * deltaTime * 0.5;
+
+        // Adjust emissive intensity (calmer water glows more)
+        var targetEmissive = 0.15;
+        if (weatherType === 'storm') {
+          targetEmissive = 0.08; // Less glow during storm
+        } else if (weatherType === 'snow') {
+          targetEmissive = 0.1; // Reduced glow in cold
+        }
+        if (water.material.emissiveIntensity !== undefined) {
+          water.material.emissiveIntensity += (targetEmissive - water.material.emissiveIntensity) * deltaTime * 0.5;
+        }
+      }
     }
   }
 
@@ -22401,6 +22644,62 @@ html, body {
     return result;
   }
 
+  /**
+   * Hover highlight state for interaction system
+   */
+  var highlightedObject = null;
+  var originalMaterials = new Map();
+
+  /**
+   * Highlight a specific object for hover/interaction (golden glow)
+   */
+  function highlightObject(mesh) {
+    if (!mesh) return;
+    if (highlightedObject === mesh) return;
+
+    // Unhighlight previous object first
+    unhighlightObject();
+
+    highlightedObject = mesh;
+
+    // Store original emissive values and apply golden glow
+    mesh.traverse(function(child) {
+      if (child.isMesh && child.material) {
+        originalMaterials.set(child, {
+          emissive: child.material.emissive ? child.material.emissive.clone() : null,
+          emissiveIntensity: child.material.emissiveIntensity || 0
+        });
+
+        // Apply golden highlight glow
+        if (child.material.emissive) {
+          child.material.emissive.set(0xDAA520); // Golden color
+          child.material.emissiveIntensity = 0.4;
+        }
+      }
+    });
+  }
+
+  /**
+   * Remove highlight from currently highlighted object
+   */
+  function unhighlightObject() {
+    if (!highlightedObject) return;
+
+    // Restore original materials
+    highlightedObject.traverse(function(child) {
+      if (child.isMesh && originalMaterials.has(child)) {
+        var orig = originalMaterials.get(child);
+        if (orig.emissive && child.material.emissive) {
+          child.material.emissive.copy(orig.emissive);
+        }
+        child.material.emissiveIntensity = orig.emissiveIntensity;
+      }
+    });
+
+    originalMaterials.clear();
+    highlightedObject = null;
+  }
+
   // ========================================================================
   // END INTERACTIVE OBJECTS SYSTEM
   // ========================================================================
@@ -23083,6 +23382,7 @@ html, body {
   exports.updateWeather = updateWeather;
   exports.setWeather = setWeather;
   exports.updateWeatherEffects = updateWeatherEffects;
+  exports.getCurrentWeather = getCurrentWeather;
   exports.cullLights = cullLights;
   exports.updateAnimations = updateAnimations;
   exports.updateChunks = updateChunks;
@@ -23124,6 +23424,8 @@ html, body {
   exports.updateInteractiveAnimations = updateInteractiveAnimations;
   exports.clearInteractiveObjects = clearInteractiveObjects;
   exports.getZoneInteractives = getZoneInteractives;
+  exports.highlightObject = highlightObject;
+  exports.unhighlightObject = unhighlightObject;
   exports.fadeTransition = fadeTransition;
   exports.createZoneBoundaryParticles = createZoneBoundaryParticles;
   exports.updateZoneBoundaryParticles = updateZoneBoundaryParticles;
@@ -24420,13 +24722,13 @@ html, body {
     };
 
     const notification = document.createElement('div');
+    notification.className = 'notification';
     notification.style.cssText = `
       background: rgba(0, 0, 0, 0.8);
       border-left: 4px solid ${colors[type] || colors.info};
       border-radius: 4px;
       padding: 12px 15px;
       margin-bottom: 10px;
-      animation: slideIn 0.3s ease-out;
       pointer-events: auto;
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     `;
@@ -24434,10 +24736,15 @@ html, body {
 
     notificationContainer.appendChild(notification);
 
+    // Add visible class after a frame for animation
+    requestAnimationFrame(function() {
+      notification.classList.add('visible');
+    });
+
     // Auto-remove after 5 seconds
-    setTimeout(() => {
-      notification.style.animation = 'slideOut 0.3s ease-in';
-      setTimeout(() => {
+    setTimeout(function() {
+      notification.classList.remove('visible');
+      setTimeout(function() {
         notification.remove();
       }, 300);
     }, 5000);
@@ -24767,7 +25074,11 @@ html, body {
       'border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#aaa;font-size:12px;cursor:pointer;">Close Shop</button></div>';
 
     npcShopPanel.innerHTML = header + itemList + closeBtn;
+    npcShopPanel.className = 'npc-shop-panel';
     hud.appendChild(npcShopPanel);
+    requestAnimationFrame(function() {
+      npcShopPanel.classList.add('visible');
+    });
 
     // Wire buy buttons
     npcShopPanel.querySelectorAll('.npc-shop-buy-btn').forEach(function(btn) {
@@ -24788,8 +25099,13 @@ html, body {
 
   function hideNPCShop() {
     if (npcShopPanel && npcShopPanel.parentNode) {
-      npcShopPanel.parentNode.removeChild(npcShopPanel);
-      npcShopPanel = null;
+      npcShopPanel.classList.remove('visible');
+      setTimeout(function() {
+        if (npcShopPanel && npcShopPanel.parentNode) {
+          npcShopPanel.parentNode.removeChild(npcShopPanel);
+          npcShopPanel = null;
+        }
+      }, 250);
     }
   }
 
@@ -24977,6 +25293,9 @@ html, body {
 
     questLogEl.innerHTML = html;
     hud.appendChild(questLogEl);
+    requestAnimationFrame(function() {
+      questLogEl.classList.add('visible');
+    });
   }
 
   /**
@@ -24984,8 +25303,13 @@ html, body {
    */
   function hideQuestLog() {
     if (questLogEl && questLogEl.parentNode) {
-      questLogEl.parentNode.removeChild(questLogEl);
-      questLogEl = null;
+      questLogEl.classList.remove('visible');
+      setTimeout(function() {
+        if (questLogEl && questLogEl.parentNode) {
+          questLogEl.parentNode.removeChild(questLogEl);
+          questLogEl = null;
+        }
+      }, 250);
     }
   }
 
@@ -25177,11 +25501,19 @@ html, body {
   function showInventoryPanel() {
     if (!inventoryPanel) initInventoryPanel();
     inventoryPanel.style.display = 'block';
+    requestAnimationFrame(function() {
+      inventoryPanel.classList.add('visible');
+    });
     inventoryVisible = true;
   }
 
   function hideInventoryPanel() {
-    if (inventoryPanel) inventoryPanel.style.display = 'none';
+    if (inventoryPanel) {
+      inventoryPanel.classList.remove('visible');
+      setTimeout(function() {
+        inventoryPanel.style.display = 'none';
+      }, 250);
+    }
     inventoryVisible = false;
   }
 
@@ -25265,11 +25597,19 @@ html, body {
   function showCraftingPanel() {
     if (!craftingPanel) initCraftingPanel();
     craftingPanel.style.display = 'block';
+    requestAnimationFrame(function() {
+      craftingPanel.classList.add('visible');
+    });
     craftingVisible = true;
   }
 
   function hideCraftingPanel() {
-    if (craftingPanel) craftingPanel.style.display = 'none';
+    if (craftingPanel) {
+      craftingPanel.classList.remove('visible');
+      setTimeout(function() {
+        craftingPanel.style.display = 'none';
+      }, 250);
+    }
     craftingVisible = false;
   }
 
@@ -27248,6 +27588,10 @@ html, body {
     panel.appendChild(content);
     document.body.appendChild(panel);
     discoveryLogPanel = panel;
+    panel.className = 'discovery-panel';
+    requestAnimationFrame(function() {
+      panel.classList.add('visible');
+    });
 
     // Close on Escape
     var escapeHandler = function(e) {
@@ -27264,8 +27608,13 @@ html, body {
     if (discoveryLogPanel.escapeHandler) {
       document.removeEventListener('keydown', discoveryLogPanel.escapeHandler);
     }
-    document.body.removeChild(discoveryLogPanel);
-    discoveryLogPanel = null;
+    discoveryLogPanel.classList.remove('visible');
+    setTimeout(function() {
+      if (discoveryLogPanel && discoveryLogPanel.parentNode) {
+        document.body.removeChild(discoveryLogPanel);
+        discoveryLogPanel = null;
+      }
+    }, 250);
   }
 
   // Lore Book Panel
@@ -27600,6 +27949,9 @@ html, body {
 
     document.body.appendChild(panel);
     loreBookPanel = panel;
+    requestAnimationFrame(function() {
+      panel.classList.add('visible');
+    });
 
     // Close on Escape
     var escapeHandler = function(e) {
@@ -27616,8 +27968,13 @@ html, body {
     if (loreBookPanel.escapeHandler) {
       document.removeEventListener('keydown', loreBookPanel.escapeHandler);
     }
-    document.body.removeChild(loreBookPanel);
-    loreBookPanel = null;
+    loreBookPanel.classList.remove('visible');
+    setTimeout(function() {
+      if (loreBookPanel && loreBookPanel.parentNode) {
+        document.body.removeChild(loreBookPanel);
+        loreBookPanel = null;
+      }
+    }, 250);
   }
 
   function toggleLoreJournal(playerId, state) {
@@ -27677,11 +28034,11 @@ html, body {
   // Discovery Popup
   function showDiscoveryPopup(discovery) {
     var popup = document.createElement('div');
+    popup.className = 'discovery-popup';
     popup.style.cssText = `
       position: fixed;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%) scale(0);
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       border: 3px solid #5dade2;
       border-radius: 12px;
@@ -27689,8 +28046,6 @@ html, body {
       min-width: 400px;
       box-shadow: 0 0 50px rgba(93, 173, 226, 0.6);
       z-index: 10001;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-      opacity: 0;
     `;
 
     var header = document.createElement('div');
@@ -27755,15 +28110,13 @@ html, body {
     document.body.appendChild(popup);
 
     // Animate in
-    setTimeout(function() {
-      popup.style.transform = 'translate(-50%, -50%) scale(1)';
-      popup.style.opacity = '1';
-    }, 10);
+    requestAnimationFrame(function() {
+      popup.classList.add('visible');
+    });
 
     // Auto-close after 4 seconds
     setTimeout(function() {
-      popup.style.transform = 'translate(-50%, -50%) scale(0)';
-      popup.style.opacity = '0';
+      popup.classList.remove('visible');
       setTimeout(function() {
         if (popup.parentNode) {
           document.body.removeChild(popup);
@@ -27773,8 +28126,7 @@ html, body {
 
     // Click to close
     popup.onclick = function() {
-      popup.style.transform = 'translate(-50%, -50%) scale(0)';
-      popup.style.opacity = '0';
+      popup.classList.remove('visible');
       setTimeout(function() {
         if (popup.parentNode) {
           document.body.removeChild(popup);
@@ -28782,12 +29134,20 @@ html, body {
 
     document.body.appendChild(panel);
     guildPanel = panel;
+    requestAnimationFrame(function() {
+      panel.classList.add('visible');
+    });
   }
 
   function hideGuildPanel() {
     if (!guildPanel) return;
-    document.body.removeChild(guildPanel);
-    guildPanel = null;
+    guildPanel.classList.remove('visible');
+    setTimeout(function() {
+      if (guildPanel && guildPanel.parentNode) {
+        document.body.removeChild(guildPanel);
+        guildPanel = null;
+      }
+    }, 250);
   }
 
   function showGuildCreate(callback) {
@@ -29317,8 +29677,12 @@ html, body {
       'border-radius:6px;color:#fff;font-weight:bold;cursor:pointer;">Close (H)</button></div>';
 
     governancePanel.innerHTML = html;
+    governancePanel.className = 'governance-panel';
     document.body.appendChild(governancePanel);
     governanceVisible = true;
+    requestAnimationFrame(function() {
+      governancePanel.classList.add('visible');
+    });
 
     // Attach event listeners
     var closeBtn = document.getElementById('close-governance-btn');
@@ -29370,8 +29734,13 @@ html, body {
 
   function hideGovernancePanel() {
     if (governancePanel) {
-      document.body.removeChild(governancePanel);
-      governancePanel = null;
+      governancePanel.classList.remove('visible');
+      setTimeout(function() {
+        if (governancePanel && governancePanel.parentNode) {
+          document.body.removeChild(governancePanel);
+          governancePanel = null;
+        }
+      }, 250);
     }
     governanceVisible = false;
   }
@@ -29553,8 +29922,12 @@ html, body {
     }
 
     auctionHousePanel.appendChild(contentDiv);
+    auctionHousePanel.className = 'auction-panel';
     document.body.appendChild(auctionHousePanel);
     auctionHouseVisible = true;
+    requestAnimationFrame(function() {
+      auctionHousePanel.classList.add('visible');
+    });
   }
 
   function renderBrowseTab(container, ledger, playerId) {
@@ -29930,8 +30303,13 @@ html, body {
 
   function hideAuctionHousePanel() {
     if (auctionHousePanel) {
-      document.body.removeChild(auctionHousePanel);
-      auctionHousePanel = null;
+      auctionHousePanel.classList.remove('visible');
+      setTimeout(function() {
+        if (auctionHousePanel && auctionHousePanel.parentNode) {
+          document.body.removeChild(auctionHousePanel);
+          auctionHousePanel = null;
+        }
+      }, 250);
     }
     auctionHouseVisible = false;
   }
@@ -30129,6 +30507,9 @@ html, body {
 
     document.body.appendChild(panel);
     achievementPanel = panel;
+    requestAnimationFrame(function() {
+      panel.classList.add('visible');
+    });
 
     // Close on Escape
     var escapeHandler = function(e) {
@@ -30145,8 +30526,13 @@ html, body {
     if (achievementPanel.escapeHandler) {
       document.removeEventListener('keydown', achievementPanel.escapeHandler);
     }
-    document.body.removeChild(achievementPanel);
-    achievementPanel = null;
+    achievementPanel.classList.remove('visible');
+    setTimeout(function() {
+      if (achievementPanel && achievementPanel.parentNode) {
+        document.body.removeChild(achievementPanel);
+        achievementPanel = null;
+      }
+    }, 250);
   }
 
   // Export public API
@@ -30642,6 +31028,9 @@ html, body {
 
     document.body.appendChild(panel);
     petPanel = panel;
+    requestAnimationFrame(function() {
+      panel.classList.add('visible');
+    });
 
     // Close on Escape
     var escapeHandler = function(e) {
@@ -30947,8 +31336,13 @@ html, body {
     if (petPanel.escapeHandler) {
       document.removeEventListener('keydown', petPanel.escapeHandler);
     }
-    document.body.removeChild(petPanel);
-    petPanel = null;
+    petPanel.classList.remove('visible');
+    setTimeout(function() {
+      if (petPanel && petPanel.parentNode) {
+        document.body.removeChild(petPanel);
+        petPanel = null;
+      }
+    }, 250);
   }
 
   function showPetAdoptNotification(petName, petType) {
@@ -31789,10 +32183,11 @@ html, body {
   // Procedural audio system using Web Audio API
   // All audio is generated procedurally - no external files
 
-  let audioContext = null;
-  let masterGain = null;
-  let isMuted = false;
-  let currentAmbient = null;
+  var audioContext = null;
+  var masterGain = null;
+  var isMuted = false;
+  var currentAmbient = null;
+  var volumeLevels = { master: 0.5, music: 0.5, sfx: 0.5 };
 
   /**
    * Initialize audio context
@@ -34107,14 +34502,20 @@ html, body {
   }
 
   /**
-   * Set master volume
+   * Set volume for a channel
+   * @param {string} channel - 'master', 'music', or 'sfx'
    * @param {number} level - 0-1
    */
-  function setVolume(level) {
-    if (!masterGain) return;
-
-    const clampedLevel = Math.max(0, Math.min(1, level));
-    masterGain.gain.value = clampedLevel;
+  function setVolume(channel, level) {
+    if (typeof channel === 'number') {
+      level = channel;
+      channel = 'master';
+    }
+    var clampedLevel = Math.max(0, Math.min(1, level));
+    volumeLevels[channel] = clampedLevel;
+    if (channel === 'master' && masterGain) {
+      masterGain.gain.value = clampedLevel;
+    }
   }
 
   /**
@@ -40577,7 +40978,10 @@ html, body {
         animationTime: Math.random() * 1000,
         currentActivity: 'idle',
         lastActivityUpdate: 0,
-        targetZone: agent.position.zone
+        targetZone: agent.position.zone,
+        targetPosition: null,
+        movementSpeed: 0,
+        idleTimer: Math.random() * 3
       });
 
       // Create AI brain for each NPC (if NpcAI available)
@@ -40940,20 +41344,25 @@ html, body {
       case 'seek_shelter':
         if (decision.target) {
           state.destination = { x: decision.target.x, z: decision.target.z };
+          state.targetPosition = { x: decision.target.x, z: decision.target.z };
           state.currentState = 'walking';
-          // Move toward destination
-          var dx = state.destination.x - agent.position.x;
-          var dz = state.destination.z - agent.position.z;
+          // Smooth interpolation toward target
+          var dx = state.targetPosition.x - agent.position.x;
+          var dz = state.targetPosition.z - agent.position.z;
           var dist = Math.sqrt(dx * dx + dz * dz);
           if (dist > 0.5) {
-            var speed = (decision.speed || 1.5) * deltaTime;
-            var ratio = Math.min(speed / dist, 1);
+            var speed = decision.speed || 1.5;
+            state.movementSpeed = speed;
+            var moveAmount = speed * deltaTime;
+            var ratio = Math.min(moveAmount / dist, 1);
             agent.position.x += dx * ratio;
             agent.position.z += dz * ratio;
             state.lookAngle = Math.atan2(dx, dz);
           } else {
             state.currentState = 'idle';
             state.destination = null;
+            state.targetPosition = null;
+            state.movementSpeed = 0;
           }
         }
         break;
@@ -41173,23 +41582,25 @@ html, body {
       case 'walking':
       case 'socializing':
         if (state.destination) {
-          // Move toward destination
+          // Smooth interpolation toward destination
           const dx = state.destination.x - agent.position.x;
           const dz = state.destination.z - agent.position.z;
           const distance = Math.sqrt(dx * dx + dz * dz);
 
           if (distance > 0.5) {
             const speed = 1.5; // units per second
+            state.movementSpeed = speed;
             const moveAmount = speed * deltaTime;
             const ratio = Math.min(moveAmount / distance, 1);
 
             agent.position.x += dx * ratio;
             agent.position.z += dz * ratio;
 
-            // Update look angle
+            // Update look angle to face movement direction
             state.lookAngle = Math.atan2(dx, dz);
           } else {
             // Reached destination
+            state.movementSpeed = 0;
             if (state.currentState === 'socializing') {
               // Switch to talking
               state.currentState = 'talking';
@@ -41201,6 +41612,7 @@ html, body {
               state.stateTimer = 5;
             }
             state.destination = null;
+            state.targetPosition = null;
           }
         }
         break;
@@ -41244,24 +41656,49 @@ html, body {
 
         // Gentle head sway
         userData.head.rotation.y = Math.sin(time * 0.001) * 0.05;
+
+        // Occasional head turn (every ~3 seconds)
+        state.idleTimer -= 0.016; // approx deltaTime
+        if (state.idleTimer <= 0) {
+          state.idleTimer = 3 + Math.random() * 3;
+        }
+        var headTurnPhase = Math.max(0, 1 - state.idleTimer / 0.5); // Quick turn
+        if (state.idleTimer < 0.5) {
+          userData.head.rotation.y += Math.sin(headTurnPhase * Math.PI) * 0.3;
+        }
+
+        // Subtle weight shift
+        var weightShift = Math.sin(time * 0.0008) * 0.02;
+        mesh.position.y = weightShift;
+        userData.torso.rotation.z = weightShift * 0.5;
         break;
 
       case 'walking':
       case 'socializing':
-        // Walking animation - legs alternate
-        const walkSpeed = 8; // rad/s
-        const legSwing = Math.sin(time * 0.008) * 0.4;
+        // Walking animation proportional to movement speed
+        var walkSpeedMultiplier = Math.max(0.5, state.movementSpeed || 1.5) / 1.5;
+        var walkFrequency = 0.008 * walkSpeedMultiplier;
+
+        // Legs alternate - more pronounced swing
+        var legSwing = Math.sin(time * walkFrequency) * 0.5 * walkSpeedMultiplier;
         userData.leftLeg.rotation.x = legSwing;
         userData.rightLeg.rotation.x = -legSwing;
 
-        // Arms swing opposite to legs
-        const armSpeed = 6; // rad/s
-        const armSwing = Math.sin(time * 0.006) * 0.3;
-        userData.leftArm.rotation.x = -armSwing;
-        userData.rightArm.rotation.x = armSwing;
+        // Arms swing opposite to legs - natural pendulum motion
+        var armSwing = Math.sin(time * walkFrequency + Math.PI) * 0.35 * walkSpeedMultiplier;
+        userData.leftArm.rotation.x = armSwing;
+        userData.rightArm.rotation.x = -armSwing;
 
-        // Slight torso bob
-        mesh.position.y = Math.abs(Math.sin(time * 0.008)) * 0.05;
+        // Torso bob - up and down motion during walk
+        var bobPhase = Math.abs(Math.sin(time * walkFrequency));
+        mesh.position.y = bobPhase * 0.08 * walkSpeedMultiplier;
+
+        // Slight torso sway side-to-side
+        userData.torso.rotation.z = Math.sin(time * walkFrequency * 0.5) * 0.03;
+
+        // Head slight sway for natural movement
+        userData.head.rotation.z = Math.sin(time * walkFrequency * 0.5) * 0.02;
+        userData.head.rotation.y = Math.sin(time * walkFrequency * 0.3) * 0.03;
 
         // Head faces movement direction (handled by mesh rotation)
         break;
@@ -41361,18 +41798,27 @@ html, body {
       mesh.position.y = terrainY;
     }
 
-    // Update rotation (facing direction)
+    // Update rotation (facing direction) with smooth interpolation
+    var targetRotation = mesh.rotation.y;
     if (state.currentState === 'walking' || state.currentState === 'socializing') {
-      mesh.rotation.y = state.lookAngle;
+      targetRotation = state.lookAngle;
     } else if (state.currentState === 'collaborating' && state.collaborateTarget) {
       // Face the partner NPC
       var partnerMesh = npcMeshes.get(state.collaborateTarget);
       if (partnerMesh) {
         var cdx = partnerMesh.position.x - mesh.position.x;
         var cdz = partnerMesh.position.z - mesh.position.z;
-        mesh.rotation.y = Math.atan2(cdx, cdz);
+        targetRotation = Math.atan2(cdx, cdz);
       }
     }
+
+    // Smooth rotation interpolation - handle angle wrapping
+    var angleDiff = targetRotation - mesh.rotation.y;
+    // Normalize angle difference to [-PI, PI]
+    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+    var rotationSpeed = state.currentState === 'walking' ? 8 : 3;
+    mesh.rotation.y += angleDiff * Math.min(deltaTime * rotationSpeed, 1);
 
     // Apply procedural animations
     applyAnimations(mesh, state, agent);
@@ -43156,6 +43602,83 @@ html, body {
   // Platform detection
   let platform = 'desktop';
 
+  // Camera shake system
+  var cameraShake = { intensity: 0, duration: 0, elapsed: 0, active: false };
+
+  /**
+   * Trigger camera shake effect
+   * @param {number} intensity - Shake strength (0.1-1.0)
+   * @param {number} duration - Duration in seconds
+   */
+  function triggerCameraShake(intensity, duration) {
+    cameraShake.intensity = intensity;
+    cameraShake.duration = duration;
+    cameraShake.elapsed = 0;
+    cameraShake.active = true;
+  }
+
+  // Interaction target tracking for hover highlights and tooltips
+  var currentInteractionTarget = null; // { object, type, name, distance, action, mesh }
+  var tooltipEl = null;
+
+  // Screen flash overlay element
+  var screenFlashOverlay = null;
+  var vignetteOverlay = null;
+
+  /**
+   * Trigger screen flash effect
+   * @param {string} color - CSS color (e.g., '#DAA520', 'rgba(0,120,255,0.3)')
+   * @param {number} duration - Duration in seconds
+   */
+  function triggerScreenFlash(color, duration) {
+    if (!screenFlashOverlay) {
+      screenFlashOverlay = document.createElement('div');
+      screenFlashOverlay.style.position = 'fixed';
+      screenFlashOverlay.style.top = '0';
+      screenFlashOverlay.style.left = '0';
+      screenFlashOverlay.style.width = '100%';
+      screenFlashOverlay.style.height = '100%';
+      screenFlashOverlay.style.pointerEvents = 'none';
+      screenFlashOverlay.style.zIndex = '9998';
+      screenFlashOverlay.style.opacity = '0';
+      screenFlashOverlay.style.transition = 'opacity 0.1s ease-out';
+      document.body.appendChild(screenFlashOverlay);
+    }
+
+    // Set color and show
+    screenFlashOverlay.style.backgroundColor = color;
+    screenFlashOverlay.style.opacity = '0.6';
+
+    // Fade out
+    setTimeout(function() {
+      screenFlashOverlay.style.transition = 'opacity ' + duration + 's ease-out';
+      screenFlashOverlay.style.opacity = '0';
+    }, 50);
+  }
+
+  /**
+   * Set vignette intensity
+   * @param {number} intensity - Intensity level (0.0-1.0)
+   */
+  function setVignetteIntensity(intensity) {
+    if (!vignetteOverlay) {
+      vignetteOverlay = document.createElement('div');
+      vignetteOverlay.style.position = 'fixed';
+      vignetteOverlay.style.top = '0';
+      vignetteOverlay.style.left = '0';
+      vignetteOverlay.style.width = '100%';
+      vignetteOverlay.style.height = '100%';
+      vignetteOverlay.style.pointerEvents = 'none';
+      vignetteOverlay.style.zIndex = '9997';
+      vignetteOverlay.style.transition = 'box-shadow 0.5s ease';
+      document.body.appendChild(vignetteOverlay);
+    }
+
+    var spread = Math.floor(150 * intensity);
+    var alpha = 0.3 + (intensity * 0.4); // 0.3-0.7 range
+    vignetteOverlay.style.boxShadow = 'inset 0 0 ' + spread + 'px rgba(0,0,0,' + alpha + ')';
+  }
+
   /**
    * Emit level up particle burst effect
    */
@@ -43164,6 +43687,108 @@ html, body {
       var levelUpPos = { x: localPlayer.position.x, y: localPlayer.position.y + 2, z: localPlayer.position.z };
       World.emitParticles('sparkle', levelUpPos, 25);
     }
+    // Add golden flash effect for level up
+    triggerScreenFlash('#DAA520', 0.3);
+  }
+
+  /**
+   * Detect nearest interactable object/NPC/resource within range
+   * Returns { object, type, name, distance, action, mesh, position } or null
+   */
+  function detectNearestInteractable() {
+    if (!localPlayer) return null;
+
+    var nearestTarget = null;
+    var minDist = 10; // Max interaction range
+
+    var playerX = localPlayer.position.x;
+    var playerZ = localPlayer.position.z;
+
+    // Check NPCs
+    if (NPCs && NPCs.getNPCPositions) {
+      var npcPositions = NPCs.getNPCPositions();
+      for (var i = 0; i < npcPositions.length; i++) {
+        var npc = npcPositions[i];
+        if (!npc) continue;
+        var dx = npc.x - playerX;
+        var dz = npc.z - playerZ;
+        var dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < minDist) {
+          minDist = dist;
+          nearestTarget = {
+            type: 'npc',
+            name: npc.name || 'NPC',
+            action: 'Talk',
+            distance: dist,
+            mesh: npc.mesh,
+            position: { x: npc.x, y: localPlayer.position.y + 1, z: npc.z }
+          };
+        }
+      }
+    }
+
+    // Check interactive objects (benches, campfires, etc.)
+    if (World && World.getInteractiveAtPosition) {
+      var nearbyObj = World.getInteractiveAtPosition(playerX, playerZ, minDist);
+      if (nearbyObj) {
+        var dx = nearbyObj.position.x - playerX;
+        var dz = nearbyObj.position.z - playerZ;
+        var dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < minDist) {
+          minDist = dist;
+          nearestTarget = {
+            type: 'interactive',
+            name: nearbyObj.type ? nearbyObj.type.replace(/_/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); }) : 'Object',
+            action: nearbyObj.action ? nearbyObj.action.replace(/_/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); }) : 'Use',
+            distance: dist,
+            mesh: nearbyObj.mesh,
+            position: nearbyObj.position
+          };
+        }
+      }
+    }
+
+    // Check resource nodes
+    if (World && World.getResourceNodeAtMouse) {
+      // For now, skip resource node highlighting as it requires mouse position
+      // Could be enhanced later with a separate distance-based check
+    }
+
+    return nearestTarget;
+  }
+
+  /**
+   * Update tooltip position and content based on current interaction target
+   */
+  function updateTooltip() {
+    if (!tooltipEl || !sceneContext || !sceneContext.camera || !sceneContext.renderer) return;
+
+    if (!currentInteractionTarget) {
+      tooltipEl.style.display = 'none';
+      return;
+    }
+
+    // Project 3D position to screen space
+    if (!window.THREE) return;
+    var pos = new window.THREE.Vector3(
+      currentInteractionTarget.position.x,
+      currentInteractionTarget.position.y + 3, // Offset above object
+      currentInteractionTarget.position.z
+    );
+    pos.project(sceneContext.camera);
+
+    // Convert to screen coordinates
+    var x = (pos.x * 0.5 + 0.5) * sceneContext.renderer.domElement.clientWidth;
+    var y = (-pos.y * 0.5 + 0.5) * sceneContext.renderer.domElement.clientHeight;
+
+    // Position tooltip
+    tooltipEl.style.left = x + 'px';
+    tooltipEl.style.top = y + 'px';
+    tooltipEl.style.display = 'block';
+
+    // Update content
+    tooltipEl.innerHTML = '<span style="color:#DAA520">' + currentInteractionTarget.name + '</span>' +
+      '<br><span style="color:#A0978E; font-size:11px">[E] ' + currentInteractionTarget.action + '</span>';
   }
 
   /**
@@ -43366,6 +43991,10 @@ html, body {
           World.initZoneAmbience(sceneContext);
         }
 
+        // Initialize vignette overlay with default intensity
+        setVignetteIntensity(0.3);
+        }
+
         // Create zone boundary particles (golden floating markers at zone edges)
         if (World.createZoneBoundaryParticles && sceneContext.scene) {
           World.createZoneBoundaryParticles(sceneContext.scene);
@@ -43445,6 +44074,18 @@ html, body {
         handleLocalAction('chat', { message: text });
         HUD.hideChatInput();
       });
+
+      // Initialize interaction tooltip overlay
+      if (!tooltipEl) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.id = 'interaction-tooltip';
+        tooltipEl.style.cssText = 'position:fixed; pointer-events:none; z-index:200; ' +
+          'background:rgba(10,14,26,0.85); border:1px solid rgba(218,165,32,0.6); ' +
+          'border-radius:6px; padding:6px 12px; color:#E8E0D8; font-size:12px; ' +
+          'font-family:var(--font-ui); display:none; transform:translate(-50%,-100%); ' +
+          'backdrop-filter:blur(5px); white-space:nowrap;';
+        document.body.appendChild(tooltipEl);
+      }
     }
 
     // Initialize quest system for local player
@@ -43967,6 +44608,21 @@ html, body {
         sceneContext.camera.position.y += (camTargetY - sceneContext.camera.position.y) * lerpFactor;
         sceneContext.camera.position.z += (camTargetZ - sceneContext.camera.position.z) * lerpFactor;
 
+        // Apply camera shake if active
+        if (cameraShake.active) {
+          cameraShake.elapsed += deltaTime;
+          var progress = cameraShake.elapsed / cameraShake.duration;
+          if (progress >= 1) {
+            cameraShake.active = false;
+          } else {
+            var decay = 1 - progress;
+            var shakeX = (Math.random() - 0.5) * 2 * cameraShake.intensity * decay;
+            var shakeY = (Math.random() - 0.5) * 2 * cameraShake.intensity * decay;
+            sceneContext.camera.position.x += shakeX;
+            sceneContext.camera.position.y += shakeY;
+          }
+        }
+
         sceneContext.camera.lookAt(
           localPlayer.position.x,
           terrainY + 1.5,
@@ -43994,6 +44650,14 @@ html, body {
         // Update ambient audio for weather
         if (Audio && Audio.updateAmbientWeather) {
           Audio.updateAmbientWeather(currentWeather);
+        }
+        // Update vignette intensity based on weather
+        if (currentWeather === 'storm') {
+          setVignetteIntensity(0.7);
+        } else if (currentWeather === 'rain' || currentWeather === 'snow') {
+          setVignetteIntensity(0.5);
+        } else {
+          setVignetteIntensity(0.3);
         }
       }
 
@@ -44043,9 +44707,10 @@ html, body {
         World.updateZoneAmbience(sceneContext, localPlayer.zone, deltaTime * 1000);
       }
 
-      // Update water bodies (animated waves)
+      // Update water bodies (animated waves, weather-reactive)
       if (World.updateWater) {
-        World.updateWater(deltaTime);
+        var currentWeather = World.getCurrentWeather ? World.getCurrentWeather() : 'clear';
+        World.updateWater(deltaTime, currentWeather);
       }
 
       // Update skybox (sun/moon orbit, star visibility)
@@ -44059,6 +44724,30 @@ html, body {
       }
       if (World.updateInteractiveHighlights && localPlayer) {
         World.updateInteractiveHighlights(localPlayer.position.x, localPlayer.position.z, 4);
+      }
+
+      // Detect and highlight nearest interactable for E-key interaction
+      if (localPlayer) {
+        var newTarget = detectNearestInteractable();
+
+        // If target changed, update highlighting
+        if (newTarget !== currentInteractionTarget) {
+          // Clear previous highlight
+          if (World && World.unhighlightObject) {
+            World.unhighlightObject();
+          }
+
+          // Set new target
+          currentInteractionTarget = newTarget;
+
+          // Apply new highlight
+          if (currentInteractionTarget && currentInteractionTarget.mesh && World && World.highlightObject) {
+            World.highlightObject(currentInteractionTarget.mesh);
+          }
+        }
+
+        // Update tooltip position
+        updateTooltip();
       }
 
       // Update ambient wildlife (butterflies, fireflies, birds, fish)
@@ -44293,6 +44982,8 @@ html, body {
 
       case 'cross_world_warp':
         console.log('Player warping to world:', event.targetWorld);
+        triggerCameraShake(0.4, 0.6);
+        triggerScreenFlash('rgba(138,43,226,0.4)', 0.5);
         break;
 
       case 'player_returned':
@@ -44525,6 +45216,10 @@ html, body {
         HUD.showNotification('Warping to federated world: ' + targetWorld, 'info');
       }
 
+      // Add warp fork screen effects
+      triggerCameraShake(0.4, 0.6);
+      triggerScreenFlash('rgba(138,43,226,0.4)', 0.5);
+
       // In a real implementation, this would navigate to the other world's URL
       // For now, we just track the state
       console.log('Player warped to federated world:', targetWorld);
@@ -44755,6 +45450,12 @@ html, body {
 
     if (Audio) {
       Audio.playSound('warp');
+    }
+
+    // Add warp screen effects
+    if (msg.from === localPlayer.id) {
+      triggerCameraShake(0.3, 0.5);
+      triggerScreenFlash('rgba(0,120,255,0.4)', 0.4);
     }
   }
 
@@ -45960,6 +46661,9 @@ html, body {
                     World.emitParticles('sparkle', questPos, 15);
                     World.emitParticles('fountain', questPos, 15);
                   }
+                  // Add quest completion screen effects
+                  triggerCameraShake(0.2, 0.3);
+                  triggerScreenFlash('#DAA520', 0.4);
                 }
               }
 
@@ -47146,6 +47850,9 @@ html, body {
   exports.joinWorld = joinWorld;
   exports.leaveWorld = leaveWorld;
   exports.handleLocalAction = handleLocalAction;
+  exports.triggerCameraShake = triggerCameraShake;
+  exports.triggerScreenFlash = triggerScreenFlash;
+  exports.setVignetteIntensity = setVignetteIntensity;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Main = {}));
 

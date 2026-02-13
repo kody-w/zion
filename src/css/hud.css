@@ -14,7 +14,7 @@
   border-radius: var(--radius-md);
   padding: var(--space-sm);
   box-shadow: var(--shadow-md);
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.25s ease;
 }
 
 .chat-messages {
@@ -39,6 +39,12 @@
 .chat-message {
   margin-bottom: var(--space-xs);
   word-wrap: break-word;
+  animation: chatMsgIn 0.2s ease;
+}
+
+@keyframes chatMsgIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .chat-message .sender {
@@ -173,7 +179,8 @@
   position: absolute;
   top: 30%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -70%);
+  opacity: 0;
   background: var(--color-bg-panel);
   backdrop-filter: blur(10px);
   border: 2px solid var(--color-accent);
@@ -186,8 +193,13 @@
   text-align: center;
   max-width: 400px;
   z-index: var(--z-notification);
-  animation: fadeInOut 3s ease-in-out;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   pointer-events: none;
+}
+
+.notification.visible {
+  transform: translate(-50%, -50%);
+  opacity: 1;
 }
 
 @keyframes fadeInOut {
@@ -285,7 +297,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
   background: var(--color-bg-panel);
   backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
@@ -295,7 +308,12 @@
   min-width: 320px;
   max-width: 420px;
   z-index: var(--z-notification);
-  animation: panelSlideIn 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.inventory-panel.visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 
 .inventory-title {
@@ -355,7 +373,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
   background: var(--color-bg-panel);
   backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
@@ -367,7 +386,12 @@
   max-height: 70vh;
   overflow-y: auto;
   z-index: var(--z-notification);
-  animation: panelSlideIn 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.crafting-panel.visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 
 .recipe-item {
@@ -494,7 +518,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) translateX(20px);
+  opacity: 0;
   background: var(--color-bg-panel);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(218, 165, 32, 0.3);
@@ -506,7 +531,12 @@
   max-height: 70vh;
   overflow-y: auto;
   z-index: var(--z-notification);
-  animation: panelSlideIn 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.quest-log-panel.visible {
+  transform: translate(-50%, -50%) translateX(0);
+  opacity: 1;
 }
 
 .quest-entry {
@@ -1238,8 +1268,28 @@
 #npc-shop-panel::-webkit-scrollbar-track { background: transparent; }
 #npc-shop-panel::-webkit-scrollbar-thumb { background: rgba(218,165,32,0.3); border-radius: 3px; }
 
+.npc-shop-panel {
+  transform: scale(0.95);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.npc-shop-panel.visible {
+  transform: scale(1);
+  opacity: 1;
+}
+
 /* Guild Panel */
-.guild-panel { animation: slideIn 0.3s ease-out; }
+.guild-panel {
+  transform: translateX(20px);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.guild-panel.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
 .guild-member-row {
   display: flex; align-items: center; padding: 6px 8px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
@@ -1263,12 +1313,19 @@
 
 /* Discovery Popup */
 .discovery-popup {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.6);
+  opacity: 0;
   background: rgba(10,14,26,0.95); border: 2px solid var(--color-gold);
   border-radius: 16px; padding: 24px 32px; text-align: center;
-  animation: discoveryReveal 0.5s ease-out forwards;
   z-index: 10000; pointer-events: auto;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
+.discovery-popup.visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
 @keyframes discoveryReveal {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
   60% { transform: translate(-50%, -50%) scale(1.05); }
@@ -1294,11 +1351,18 @@
 
 /* Achievement panel */
 .achievement-panel {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
   background: rgba(15,12,10,0.95); border: 1px solid rgba(218,165,32,0.3);
   border-radius: 12px; padding: 24px; min-width: 420px; max-width: 550px;
   max-height: 70vh; overflow-y: auto; z-index: 1100;
   backdrop-filter: blur(10px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.achievement-panel.visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 .achievement-panel h2 {
   color: var(--color-gold); margin: 0 0 4px; font-size: 1.2rem;
@@ -1365,11 +1429,18 @@
 
 /* Auction house panel */
 .auction-panel {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
   background: rgba(15,12,10,0.95); border: 1px solid rgba(176,224,230,0.3);
   border-radius: 12px; padding: 24px; min-width: 450px; max-width: 600px;
   max-height: 70vh; overflow-y: auto; z-index: 1100;
   backdrop-filter: blur(10px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.auction-panel.visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 .auction-panel h2 {
   color: var(--color-accent); margin: 0 0 16px; font-size: 1.2rem;
@@ -1407,6 +1478,14 @@
 /* Lore Journal Panel */
 .lore-journal-panel {
   font-family: Georgia, serif;
+  transform: scale(0.95);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.lore-journal-panel.visible {
+  transform: scale(1);
+  opacity: 1;
 }
 
 .lore-journal-panel::-webkit-scrollbar {
@@ -1453,7 +1532,8 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
   background: rgba(15, 12, 10, 0.95);
   border: 1px solid rgba(218, 165, 32, 0.3);
   border-radius: 12px;
@@ -1464,7 +1544,12 @@
   overflow-y: auto;
   z-index: 1100;
   backdrop-filter: blur(10px);
-  animation: panelSlideIn 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.pet-panel.visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
 }
 
 .pet-panel h2 {
@@ -1759,4 +1844,73 @@
   background: #80c0e0;
   color: #0a0a14;
   border-color: #a0d4f0;
+}
+
+/* ========================================================================
+   GLOBAL BUTTON HOVER EFFECTS AND ANIMATIONS
+   ======================================================================== */
+
+/* Generic button transitions */
+.hud-btn, .panel-btn, .craft-btn, .trade-btn, .quest-btn,
+.pet-action-btn, .pet-adopt-btn, .npc-dialog-btn {
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.hud-btn:hover, .panel-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(218, 165, 32, 0.2);
+}
+
+.hud-btn:active, .panel-btn:active {
+  transform: translateY(0);
+}
+
+/* Inventory slot hover enhancement */
+.inventory-slot {
+  transition: all 0.2s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.inventory-slot:hover {
+  transform: scale(1.05);
+}
+
+/* Recipe item hover enhancement */
+.recipe-item {
+  transition: all 0.2s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+/* Quest entry hover enhancement */
+.quest-entry {
+  transition: all 0.2s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+/* Panel close button enhancement */
+.panel-close {
+  transition: all 0.2s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.panel-close:hover {
+  transform: scale(1.1);
+}
+
+/* Governance panel */
+.governance-panel {
+  transform: scale(0.95);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.governance-panel.visible {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Discovery panel */
+.discovery-panel {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.discovery-panel.visible {
+  opacity: 1;
 }

@@ -1658,7 +1658,10 @@
         animationTime: Math.random() * 1000,
         currentActivity: 'idle',
         lastActivityUpdate: 0,
-        targetZone: agent.position.zone
+        targetZone: agent.position.zone,
+        targetPosition: null,
+        movementSpeed: 0,
+        idleTimer: Math.random() * 3
       });
 
       // Create AI brain for each NPC (if NpcAI available)
@@ -2021,20 +2024,25 @@
       case 'seek_shelter':
         if (decision.target) {
           state.destination = { x: decision.target.x, z: decision.target.z };
+          state.targetPosition = { x: decision.target.x, z: decision.target.z };
           state.currentState = 'walking';
-          // Move toward destination
-          var dx = state.destination.x - agent.position.x;
-          var dz = state.destination.z - agent.position.z;
+          // Smooth interpolation toward target
+          var dx = state.targetPosition.x - agent.position.x;
+          var dz = state.targetPosition.z - agent.position.z;
           var dist = Math.sqrt(dx * dx + dz * dz);
           if (dist > 0.5) {
-            var speed = (decision.speed || 1.5) * deltaTime;
-            var ratio = Math.min(speed / dist, 1);
+            var speed = decision.speed || 1.5;
+            state.movementSpeed = speed;
+            var moveAmount = speed * deltaTime;
+            var ratio = Math.min(moveAmount / dist, 1);
             agent.position.x += dx * ratio;
             agent.position.z += dz * ratio;
             state.lookAngle = Math.atan2(dx, dz);
           } else {
             state.currentState = 'idle';
             state.destination = null;
+            state.targetPosition = null;
+            state.movementSpeed = 0;
           }
         }
         break;
@@ -2254,23 +2262,25 @@
       case 'walking':
       case 'socializing':
         if (state.destination) {
-          // Move toward destination
+          // Smooth interpolation toward destination
           const dx = state.destination.x - agent.position.x;
           const dz = state.destination.z - agent.position.z;
           const distance = Math.sqrt(dx * dx + dz * dz);
 
           if (distance > 0.5) {
             const speed = 1.5; // units per second
+            state.movementSpeed = speed;
             const moveAmount = speed * deltaTime;
             const ratio = Math.min(moveAmount / distance, 1);
 
             agent.position.x += dx * ratio;
             agent.position.z += dz * ratio;
 
-            // Update look angle
+            // Update look angle to face movement direction
             state.lookAngle = Math.atan2(dx, dz);
           } else {
             // Reached destination
+            state.movementSpeed = 0;
             if (state.currentState === 'socializing') {
               // Switch to talking
               state.currentState = 'talking';
@@ -2282,6 +2292,7 @@
               state.stateTimer = 5;
             }
             state.destination = null;
+            state.targetPosition = null;
           }
         }
         break;
@@ -2325,24 +2336,49 @@
 
         // Gentle head sway
         userData.head.rotation.y = Math.sin(time * 0.001) * 0.05;
+
+        // Occasional head turn (every ~3 seconds)
+        state.idleTimer -= 0.016; // approx deltaTime
+        if (state.idleTimer <= 0) {
+          state.idleTimer = 3 + Math.random() * 3;
+        }
+        var headTurnPhase = Math.max(0, 1 - state.idleTimer / 0.5); // Quick turn
+        if (state.idleTimer < 0.5) {
+          userData.head.rotation.y += Math.sin(headTurnPhase * Math.PI) * 0.3;
+        }
+
+        // Subtle weight shift
+        var weightShift = Math.sin(time * 0.0008) * 0.02;
+        mesh.position.y = weightShift;
+        userData.torso.rotation.z = weightShift * 0.5;
         break;
 
       case 'walking':
       case 'socializing':
-        // Walking animation - legs alternate
-        const walkSpeed = 8; // rad/s
-        const legSwing = Math.sin(time * 0.008) * 0.4;
+        // Walking animation proportional to movement speed
+        var walkSpeedMultiplier = Math.max(0.5, state.movementSpeed || 1.5) / 1.5;
+        var walkFrequency = 0.008 * walkSpeedMultiplier;
+
+        // Legs alternate - more pronounced swing
+        var legSwing = Math.sin(time * walkFrequency) * 0.5 * walkSpeedMultiplier;
         userData.leftLeg.rotation.x = legSwing;
         userData.rightLeg.rotation.x = -legSwing;
 
-        // Arms swing opposite to legs
-        const armSpeed = 6; // rad/s
-        const armSwing = Math.sin(time * 0.006) * 0.3;
-        userData.leftArm.rotation.x = -armSwing;
-        userData.rightArm.rotation.x = armSwing;
+        // Arms swing opposite to legs - natural pendulum motion
+        var armSwing = Math.sin(time * walkFrequency + Math.PI) * 0.35 * walkSpeedMultiplier;
+        userData.leftArm.rotation.x = armSwing;
+        userData.rightArm.rotation.x = -armSwing;
 
-        // Slight torso bob
-        mesh.position.y = Math.abs(Math.sin(time * 0.008)) * 0.05;
+        // Torso bob - up and down motion during walk
+        var bobPhase = Math.abs(Math.sin(time * walkFrequency));
+        mesh.position.y = bobPhase * 0.08 * walkSpeedMultiplier;
+
+        // Slight torso sway side-to-side
+        userData.torso.rotation.z = Math.sin(time * walkFrequency * 0.5) * 0.03;
+
+        // Head slight sway for natural movement
+        userData.head.rotation.z = Math.sin(time * walkFrequency * 0.5) * 0.02;
+        userData.head.rotation.y = Math.sin(time * walkFrequency * 0.3) * 0.03;
 
         // Head faces movement direction (handled by mesh rotation)
         break;
@@ -2442,18 +2478,27 @@
       mesh.position.y = terrainY;
     }
 
-    // Update rotation (facing direction)
+    // Update rotation (facing direction) with smooth interpolation
+    var targetRotation = mesh.rotation.y;
     if (state.currentState === 'walking' || state.currentState === 'socializing') {
-      mesh.rotation.y = state.lookAngle;
+      targetRotation = state.lookAngle;
     } else if (state.currentState === 'collaborating' && state.collaborateTarget) {
       // Face the partner NPC
       var partnerMesh = npcMeshes.get(state.collaborateTarget);
       if (partnerMesh) {
         var cdx = partnerMesh.position.x - mesh.position.x;
         var cdz = partnerMesh.position.z - mesh.position.z;
-        mesh.rotation.y = Math.atan2(cdx, cdz);
+        targetRotation = Math.atan2(cdx, cdz);
       }
     }
+
+    // Smooth rotation interpolation - handle angle wrapping
+    var angleDiff = targetRotation - mesh.rotation.y;
+    // Normalize angle difference to [-PI, PI]
+    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+    var rotationSpeed = state.currentState === 'walking' ? 8 : 3;
+    mesh.rotation.y += angleDiff * Math.min(deltaTime * rotationSpeed, 1);
 
     // Apply procedural animations
     applyAnimations(mesh, state, agent);

@@ -3544,11 +3544,19 @@
       sizeAttenuation: true
     });
 
-    // Load particle texture
-    var particleTex = textureLoader ? textureLoader.load(ASSET_BASE + 'assets/textures/particle.png') : null;
-    if (particleTex) {
-      this.material.map = particleTex;
-    }
+    // Generate procedural particle texture (soft circle)
+    var particleCanvas = document.createElement('canvas');
+    particleCanvas.width = 32;
+    particleCanvas.height = 32;
+    var pctx = particleCanvas.getContext('2d');
+    var gradient = pctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+    gradient.addColorStop(0, 'rgba(255,255,255,1)');
+    gradient.addColorStop(0.5, 'rgba(255,255,255,0.5)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    pctx.fillStyle = gradient;
+    pctx.fillRect(0, 0, 32, 32);
+    var particleTex = new THREE.CanvasTexture(particleCanvas);
+    this.material.map = particleTex;
 
     // Create Points mesh
     this.points = new THREE.Points(this.geometry, this.material);
@@ -4160,12 +4168,17 @@
     }
   }
 
+  function getCurrentWeather() {
+    return currentWeatherType;
+  }
+
   // ========================================================================
   // WATER SYSTEM — Animated water bodies for zones
   // ========================================================================
 
   var waterBodies = [];
   var waterTime = 0;
+  var waterWeatherMultiplier = 1.0; // Modified by weather conditions
 
   function initWater(sceneCtx) {
     if (!sceneCtx || !sceneCtx.scene) return;
@@ -4179,7 +4192,7 @@
     }
     waterBodies = [];
 
-    // Gardens: Central pond/lake (~30 unit radius)
+    // Gardens: Central pond/lake (~30 unit radius) - peaceful, clear water
     var gardensPond = createWaterBody({
       type: 'circle',
       centerX: ZONES.gardens.cx,
@@ -4188,8 +4201,10 @@
       height: ZONES.gardens.baseHeight + 0.3,
       segments: 64,
       waveSpeed: 0.8,
-      waveHeight: 0.15,
-      waveFrequency: 0.3
+      waveHeight: 0.2,
+      waveFrequency: 0.3,
+      color: 0x3388cc,
+      emissive: 0x113355
     });
     scene.add(gardensPond.mesh);
     waterBodies.push(gardensPond);
@@ -4208,15 +4223,17 @@
         height: ZONES.wilds.baseHeight + 0.2,
         segments: 64,
         waveSpeed: 1.2,
-        waveHeight: 0.2,
+        waveHeight: 0.25,
         waveFrequency: 0.5,
-        flowDirection: riverSegments[j].direction
+        flowDirection: riverSegments[j].direction,
+        color: 0x2277bb,
+        emissive: 0x0f2844
       });
       scene.add(riverSegment.mesh);
       waterBodies.push(riverSegment);
     }
 
-    // Nexus: Decorative fountain pool (~8 unit radius)
+    // Nexus: Decorative fountain pool (~8 unit radius) - magical, glowing water
     var nexusFountain = createWaterBody({
       type: 'circle',
       centerX: ZONES.nexus.cx,
@@ -4225,8 +4242,10 @@
       height: ZONES.nexus.baseHeight + 0.5,
       segments: 64,
       waveSpeed: 1.5,
-      waveHeight: 0.1,
-      waveFrequency: 0.8
+      waveHeight: 0.15,
+      waveFrequency: 0.8,
+      color: 0x4499dd,
+      emissive: 0x225588
     });
     scene.add(nexusFountain.mesh);
     waterBodies.push(nexusFountain);
@@ -4265,14 +4284,20 @@
       initialPositions[i] = positions[i];
     }
 
-    // Create water material
+    // Create water material with enhanced visual properties
+    var waterColor = config.color || 0x2266aa;
+    var emissiveColor = config.emissive || 0x112244;
+
     material = new THREE.MeshPhongMaterial({
-      color: 0x2266aa,
+      color: waterColor,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.65,
       side: THREE.DoubleSide,
-      shininess: 80,
-      specular: 0x88aaff
+      shininess: 100,
+      specular: 0xaaddff,
+      emissive: emissiveColor,
+      emissiveIntensity: 0.15,
+      reflectivity: 0.8
     });
 
     mesh = new THREE.Mesh(geometry, material);
@@ -4330,10 +4355,23 @@
     return segments;
   }
 
-  function updateWater(deltaTime) {
+  function updateWater(deltaTime, weatherType) {
     if (!waterBodies || waterBodies.length === 0) return;
 
     waterTime += deltaTime;
+
+    // Adjust water animation based on weather conditions
+    var targetMultiplier = 1.0;
+    if (weatherType === 'storm') {
+      targetMultiplier = 2.5; // Much choppier waves during storms
+    } else if (weatherType === 'rain') {
+      targetMultiplier = 1.6; // Moderately rough during rain
+    } else if (weatherType === 'snow') {
+      targetMultiplier = 0.5; // Calmer, colder water
+    }
+
+    // Smoothly interpolate to target multiplier
+    waterWeatherMultiplier += (targetMultiplier - waterWeatherMultiplier) * deltaTime * 0.5;
 
     for (var i = 0; i < waterBodies.length; i++) {
       var water = waterBodies[i];
@@ -4343,9 +4381,13 @@
       var initialPos = water.initialPositions;
       var config = water.config;
 
-      var waveSpeed = config.waveSpeed || 1.0;
-      var waveHeight = config.waveHeight || 0.2;
+      var baseWaveSpeed = config.waveSpeed || 1.0;
+      var baseWaveHeight = config.waveHeight || 0.2;
       var waveFrequency = config.waveFrequency || 0.5;
+
+      // Apply weather multiplier to wave parameters
+      var waveSpeed = baseWaveSpeed * waterWeatherMultiplier;
+      var waveHeight = baseWaveHeight * waterWeatherMultiplier;
 
       // Animate vertices with sine waves
       for (var j = 0; j < positions.length; j += 3) {
@@ -4360,38 +4402,85 @@
           var dz = z - config.centerZ;
           distFromCenter = Math.sqrt(dx * dx + dz * dz);
 
-          // Radial ripples from center
+          // Multi-layered wave system for more realistic water
+          // Primary radial ripples from center
           var ripple = Math.sin(distFromCenter * waveFrequency - waterTime * waveSpeed) * waveHeight;
 
-          // Add secondary wave pattern
+          // Secondary angular wave pattern
           var angle = Math.atan2(dz, dx);
           var secondaryWave = Math.sin(angle * 3 + waterTime * waveSpeed * 0.5) * waveHeight * 0.3;
 
-          positions[j + 1] = y + ripple + secondaryWave;
+          // Tertiary detail waves for visual complexity
+          var detailWave = Math.sin(x * 0.4 + waterTime * waveSpeed * 1.2) * waveHeight * 0.2 +
+                           Math.sin(z * 0.3 + waterTime * waveSpeed * 0.9) * waveHeight * 0.2;
 
-          // Fade ripples near edge
+          // Random chop for storms
+          var chopWave = 0;
+          if (waterWeatherMultiplier > 1.5) {
+            chopWave = Math.sin(x * 0.8 + z * 0.7 + waterTime * waveSpeed * 2.0) * waveHeight * 0.25;
+          }
+
+          positions[j + 1] = y + ripple + secondaryWave + detailWave + chopWave;
+
+          // Fade ripples near edge for natural boundary
           if (distFromCenter > config.radius * 0.8) {
             var fadeRatio = 1 - (distFromCenter - config.radius * 0.8) / (config.radius * 0.2);
-            positions[j + 1] = y + (ripple + secondaryWave) * Math.max(0, fadeRatio);
+            positions[j + 1] = y + (ripple + secondaryWave + detailWave + chopWave) * Math.max(0, fadeRatio);
           }
         } else if (config.type === 'river') {
-          // Flowing river animation
+          // Flowing river animation with directional waves
           var flowDir = config.flowDirection || { x: 1, z: 0 };
           var flowComponent = (x - config.centerX) * flowDir.x + (z - config.centerZ) * flowDir.z;
 
-          // Waves flowing in direction of river
+          // Primary waves flowing in direction of river
           var flowWave = Math.sin(flowComponent * waveFrequency - waterTime * waveSpeed) * waveHeight;
+
+          // Secondary flow wave at different frequency
+          var flowWave2 = Math.sin(flowComponent * waveFrequency * 1.3 - waterTime * waveSpeed * 1.4) * waveHeight * 0.5;
 
           // Cross-river waves for more natural look
           var crossComponent = -(x - config.centerX) * flowDir.z + (z - config.centerZ) * flowDir.x;
           var crossWave = Math.sin(crossComponent * waveFrequency * 0.8 + waterTime * waveSpeed * 0.6) * waveHeight * 0.4;
 
-          positions[j + 1] = y + flowWave + crossWave;
+          // Detail turbulence
+          var turbulence = Math.sin(x * 0.5 + waterTime * waveSpeed * 1.8) * waveHeight * 0.15 +
+                           Math.sin(z * 0.4 + waterTime * waveSpeed * 1.5) * waveHeight * 0.15;
+
+          // Rapids effect during storms
+          var rapids = 0;
+          if (waterWeatherMultiplier > 1.5) {
+            rapids = Math.sin(flowComponent * 1.2 - waterTime * waveSpeed * 3.0) * waveHeight * 0.3;
+          }
+
+          positions[j + 1] = y + flowWave + flowWave2 + crossWave + turbulence + rapids;
         }
       }
 
       water.geometry.attributes.position.needsUpdate = true;
       water.geometry.computeVertexNormals();
+
+      // Update water material properties based on weather
+      if (water.material) {
+        // Adjust opacity based on weather (rougher water is more opaque)
+        var targetOpacity = 0.65;
+        if (weatherType === 'storm') {
+          targetOpacity = 0.75; // Darker, choppier water
+        } else if (weatherType === 'rain') {
+          targetOpacity = 0.7;
+        }
+        water.material.opacity += (targetOpacity - water.material.opacity) * deltaTime * 0.5;
+
+        // Adjust emissive intensity (calmer water glows more)
+        var targetEmissive = 0.15;
+        if (weatherType === 'storm') {
+          targetEmissive = 0.08; // Less glow during storm
+        } else if (weatherType === 'snow') {
+          targetEmissive = 0.1; // Reduced glow in cold
+        }
+        if (water.material.emissiveIntensity !== undefined) {
+          water.material.emissiveIntensity += (targetEmissive - water.material.emissiveIntensity) * deltaTime * 0.5;
+        }
+      }
     }
   }
 
@@ -5991,6 +6080,62 @@
     return result;
   }
 
+  /**
+   * Hover highlight state for interaction system
+   */
+  var highlightedObject = null;
+  var originalMaterials = new Map();
+
+  /**
+   * Highlight a specific object for hover/interaction (golden glow)
+   */
+  function highlightObject(mesh) {
+    if (!mesh) return;
+    if (highlightedObject === mesh) return;
+
+    // Unhighlight previous object first
+    unhighlightObject();
+
+    highlightedObject = mesh;
+
+    // Store original emissive values and apply golden glow
+    mesh.traverse(function(child) {
+      if (child.isMesh && child.material) {
+        originalMaterials.set(child, {
+          emissive: child.material.emissive ? child.material.emissive.clone() : null,
+          emissiveIntensity: child.material.emissiveIntensity || 0
+        });
+
+        // Apply golden highlight glow
+        if (child.material.emissive) {
+          child.material.emissive.set(0xDAA520); // Golden color
+          child.material.emissiveIntensity = 0.4;
+        }
+      }
+    });
+  }
+
+  /**
+   * Remove highlight from currently highlighted object
+   */
+  function unhighlightObject() {
+    if (!highlightedObject) return;
+
+    // Restore original materials
+    highlightedObject.traverse(function(child) {
+      if (child.isMesh && originalMaterials.has(child)) {
+        var orig = originalMaterials.get(child);
+        if (orig.emissive && child.material.emissive) {
+          child.material.emissive.copy(orig.emissive);
+        }
+        child.material.emissiveIntensity = orig.emissiveIntensity;
+      }
+    });
+
+    originalMaterials.clear();
+    highlightedObject = null;
+  }
+
   // ========================================================================
   // END INTERACTIVE OBJECTS SYSTEM
   // ========================================================================
@@ -6673,6 +6818,7 @@
   exports.updateWeather = updateWeather;
   exports.setWeather = setWeather;
   exports.updateWeatherEffects = updateWeatherEffects;
+  exports.getCurrentWeather = getCurrentWeather;
   exports.cullLights = cullLights;
   exports.updateAnimations = updateAnimations;
   exports.updateChunks = updateChunks;
@@ -6714,6 +6860,8 @@
   exports.updateInteractiveAnimations = updateInteractiveAnimations;
   exports.clearInteractiveObjects = clearInteractiveObjects;
   exports.getZoneInteractives = getZoneInteractives;
+  exports.highlightObject = highlightObject;
+  exports.unhighlightObject = unhighlightObject;
   exports.fadeTransition = fadeTransition;
   exports.createZoneBoundaryParticles = createZoneBoundaryParticles;
   exports.updateZoneBoundaryParticles = updateZoneBoundaryParticles;

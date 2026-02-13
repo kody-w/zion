@@ -2,10 +2,11 @@
   // Procedural audio system using Web Audio API
   // All audio is generated procedurally - no external files
 
-  let audioContext = null;
-  let masterGain = null;
-  let isMuted = false;
-  let currentAmbient = null;
+  var audioContext = null;
+  var masterGain = null;
+  var isMuted = false;
+  var currentAmbient = null;
+  var volumeLevels = { master: 0.5, music: 0.5, sfx: 0.5 };
 
   /**
    * Initialize audio context
@@ -2320,14 +2321,20 @@
   }
 
   /**
-   * Set master volume
+   * Set volume for a channel
+   * @param {string} channel - 'master', 'music', or 'sfx'
    * @param {number} level - 0-1
    */
-  function setVolume(level) {
-    if (!masterGain) return;
-
-    const clampedLevel = Math.max(0, Math.min(1, level));
-    masterGain.gain.value = clampedLevel;
+  function setVolume(channel, level) {
+    if (typeof channel === 'number') {
+      level = channel;
+      channel = 'master';
+    }
+    var clampedLevel = Math.max(0, Math.min(1, level));
+    volumeLevels[channel] = clampedLevel;
+    if (channel === 'master' && masterGain) {
+      masterGain.gain.value = clampedLevel;
+    }
   }
 
   /**
