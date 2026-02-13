@@ -330,6 +330,21 @@
         });
       }
 
+      // Camera follows player (third-person)
+      if (sceneContext.camera && localPlayer) {
+        var camOffsetX = localPlayer.position.x;
+        var camOffsetY = localPlayer.position.y + 12;
+        var camOffsetZ = localPlayer.position.z + 18;
+        sceneContext.camera.position.lerp(
+          new THREE.Vector3(camOffsetX, camOffsetY, camOffsetZ), 0.05
+        );
+        sceneContext.camera.lookAt(
+          localPlayer.position.x,
+          localPlayer.position.y + 1,
+          localPlayer.position.z
+        );
+      }
+
       // Update day/night cycle
       World.updateDayNight(sceneContext, worldTime);
 

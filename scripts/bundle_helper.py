@@ -70,10 +70,28 @@ def bundle_js(src_dir):
     js_dir = os.path.join(src_dir, 'js')
     js_content = []
 
+    # Load agents data for embedding in npcs.js
+    project_root = os.path.dirname(src_dir)
+    agents_path = os.path.join(project_root, 'state', 'founding', 'agents.json')
+    agents_json = read_file_safe(agents_path)
+
     for filename in JS_FILES:
         filepath = os.path.join(js_dir, filename)
         content = read_file_safe(filepath)
         if content:
+            # Embed agents data in npcs.js
+            if filename == 'npcs.js' and agents_json:
+                import json
+                try:
+                    agents_data = json.loads(agents_json)
+                    compact = json.dumps([{
+                        'id': a['id'], 'name': a['name'], 'archetype': a['archetype'],
+                        'position': a['position'], 'personality': a.get('personality', [])
+                    } for a in agents_data.get('agents', [])])
+                    content = content.replace('AGENTS_PLACEHOLDER', compact)
+                except Exception as e:
+                    print(f"Warning: Could not embed agents: {e}", file=sys.stderr)
+                    content = content.replace('AGENTS_PLACEHOLDER', '[]')
             js_content.append(f"// {filename}")
             js_content.append(content)
             js_content.append('')

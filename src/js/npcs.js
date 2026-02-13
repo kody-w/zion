@@ -2,6 +2,9 @@
   // AI Citizen Simulation Module
   // Simulates 100 founding AI citizens with lifelike behavior
 
+  // Embedded agents data (inlined to avoid fetch in single-file app)
+  var EMBEDDED_AGENTS = AGENTS_PLACEHOLDER;
+
   // NPC data
   let npcAgents = [];
   let npcStates = new Map(); // id -> behavior state
@@ -161,36 +164,18 @@
   function initNPCs(agentsData, gameState, sceneContext) {
     console.log('Initializing AI citizens...');
 
-    // Fetch agents data if not provided
-    if (!agentsData) {
-      fetch('state/founding/agents.json')
-        .then(response => response.json())
-        .then(data => {
-          npcAgents = data.agents;
-          console.log(`Loaded ${npcAgents.length} AI citizens`);
-
-          // Initialize states
-          initNPCStates();
-
-          // Add to scene if available
-          if (sceneContext && sceneContext.scene) {
-            addNPCsToScene(sceneContext);
-          }
-        })
-        .catch(err => {
-          console.error('Failed to load agents:', err);
-        });
-    } else {
+    if (agentsData) {
       npcAgents = agentsData.agents || agentsData;
-      console.log(`Loaded ${npcAgents.length} AI citizens`);
+    } else {
+      // Use embedded agents data (no fetch needed — single-file app)
+      npcAgents = EMBEDDED_AGENTS;
+    }
 
-      // Initialize states
-      initNPCStates();
+    console.log('Loaded ' + npcAgents.length + ' AI citizens');
+    initNPCStates();
 
-      // Add to scene if available
-      if (sceneContext && sceneContext.scene) {
-        addNPCsToScene(sceneContext);
-      }
+    if (sceneContext && sceneContext.scene) {
+      addNPCsToScene(sceneContext);
     }
   }
 
