@@ -757,6 +757,581 @@
     minimapCtx.globalAlpha = 1.0;
   }
 
+  // ========================================================================
+  // QUEST SYSTEM UI
+  // ========================================================================
+
+  var questTrackerEl = null;
+  var questLogEl = null;
+  var questOfferEl = null;
+
+  /**
+   * Initialize quest tracker (top-right, below minimap)
+   */
+  function initQuestTracker() {
+    if (typeof document === 'undefined') return;
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    questTrackerEl = document.createElement('div');
+    questTrackerEl.id = 'quest-tracker';
+    questTrackerEl.style.cssText = 'position:absolute;top:470px;right:20px;background:rgba(10,14,26,0.85);' +
+      'border-left:3px solid #d4af37;border-radius:8px;padding:12px;min-width:220px;max-width:300px;' +
+      'font-size:12px;pointer-events:auto;max-height:250px;overflow-y:auto;';
+    questTrackerEl.innerHTML = '<div style="font-weight:bold;color:#d4af37;margin-bottom:6px;font-size:13px;">Active Quests</div>';
+    hud.appendChild(questTrackerEl);
+  }
+
+  /**
+   * Update quest tracker with active quests
+   * @param {Array} activeQuests - Array of active quest objects
+   */
+  function updateQuestTracker(activeQuests) {
+    if (!questTrackerEl) return;
+
+    if (activeQuests.length === 0) {
+      questTrackerEl.innerHTML = '<div style="font-weight:bold;color:#d4af37;margin-bottom:6px;font-size:13px;">Active Quests</div>' +
+        '<div style="color:#888;font-style:italic;font-size:11px;">No active quests</div>';
+      return;
+    }
+
+    var html = '<div style="font-weight:bold;color:#d4af37;margin-bottom:6px;font-size:13px;">Active Quests</div>';
+
+    activeQuests.forEach(function(quest) {
+      var obj = quest.objectives[0]; // Show first objective
+      var required = obj.required || obj.count || 1;
+      var progress = obj.current + '/' + required;
+      var progressPercent = Math.round((obj.current / required) * 100);
+      var statusColor = quest.status === 'complete' ? '#4f4' : '#fff';
+
+      html += '<div style="margin-bottom:10px;padding:6px;background:rgba(0,0,0,0.3);border-radius:4px;">' +
+        '<div style="font-weight:bold;color:' + statusColor + ';font-size:11px;margin-bottom:3px;">' + quest.title + '</div>' +
+        '<div style="color:#aaa;font-size:10px;margin-bottom:4px;">' + progress + '</div>' +
+        '<div style="width:100%;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;overflow:hidden;">' +
+        '<div style="width:' + progressPercent + '%;height:100%;background:#d4af37;"></div></div>' +
+        '</div>';
+    });
+
+    questTrackerEl.innerHTML = html;
+  }
+
+  /**
+   * Show quest log panel (press J to toggle)
+   */
+  function showQuestLog(questLog, playerId) {
+    if (typeof document === 'undefined') return;
+    hideQuestLog(); // Remove existing if any
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    questLogEl = document.createElement('div');
+    questLogEl.id = 'quest-log-panel';
+    questLogEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #d4af37;border-radius:12px;' +
+      'padding:20px;width:600px;max-height:70vh;overflow-y:auto;pointer-events:auto;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);z-index:200;';
+
+    var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+      '<div style="font-size:24px;font-weight:bold;color:#d4af37;">Quest Log</div>' +
+      '<div style="cursor:pointer;font-size:20px;color:#888;padding:4px 8px;" onclick="window.HUD.hideQuestLog()">✕</div></div>';
+
+    // Active quests section
+    html += '<div style="margin-bottom:20px;">' +
+      '<div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:10px;border-bottom:1px solid #d4af37;padding-bottom:4px;">Active Quests (' + questLog.active.length + '/5)</div>';
+
+    if (questLog.active.length === 0) {
+      html += '<div style="color:#888;font-style:italic;font-size:13px;padding:10px;">No active quests. Speak to NPCs to find new quests!</div>';
+    } else {
+      questLog.active.forEach(function(quest) {
+        var obj = quest.objectives[0];
+        var required = obj.required || obj.count || 1;
+        var progress = obj.current + '/' + required;
+        var statusText = quest.status === 'complete' ? '<span style="color:#4f4;">✓ Ready to turn in</span>' : '<span style="color:#fa4;">In Progress</span>';
+
+        html += '<div style="margin-bottom:12px;padding:12px;background:rgba(0,0,0,0.3);border-radius:6px;border-left:3px solid #d4af37;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;">' +
+          '<div style="font-weight:bold;color:#fff;font-size:14px;">' + quest.title + '</div>' +
+          '<div style="font-size:11px;">' + statusText + '</div></div>' +
+          '<div style="color:#aaa;font-size:12px;margin-bottom:6px;">' + quest.description + '</div>' +
+          '<div style="color:#888;font-size:11px;">Progress: ' + progress + '</div>' +
+          '<div style="margin-top:6px;font-size:11px;color:#d4af37;">Reward: ' + quest.rewards.spark + ' Spark' +
+          (quest.rewards.items.length > 0 ? ' + items' : '') + '</div>' +
+          '<div style="margin-top:8px;text-align:right;">' +
+          '<span style="cursor:pointer;font-size:11px;color:#f44;text-decoration:underline;" onclick="window.HUD.abandonQuestFromLog(\'' + playerId + '\',\'' + quest.id + '\')">Abandon</span>' +
+          '</div></div>';
+      });
+    }
+    html += '</div>';
+
+    // Available quests section
+    html += '<div style="margin-bottom:20px;">' +
+      '<div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:10px;border-bottom:1px solid #d4af37;padding-bottom:4px;">Available Quests (' + questLog.available.length + ')</div>';
+
+    if (questLog.available.length === 0) {
+      html += '<div style="color:#888;font-style:italic;font-size:13px;padding:10px;">No new quests available. Complete prerequisites or explore more zones!</div>';
+    } else {
+      questLog.available.slice(0, 10).forEach(function(quest) {
+        html += '<div style="margin-bottom:12px;padding:12px;background:rgba(0,0,0,0.2);border-radius:6px;border-left:3px solid #888;">' +
+          '<div style="font-weight:bold;color:#fff;font-size:14px;margin-bottom:6px;">' + quest.title + '</div>' +
+          '<div style="color:#aaa;font-size:12px;margin-bottom:6px;">' + quest.description + '</div>' +
+          '<div style="font-size:11px;color:#d4af37;">Reward: ' + quest.rewards.spark + ' Spark' +
+          (quest.rewards.items.length > 0 ? ' + items' : '') + '</div>' +
+          '<div style="margin-top:8px;color:#888;font-size:10px;">Find quest giver to accept</div></div>';
+      });
+    }
+    html += '</div>';
+
+    // Completed quests section
+    html += '<div>' +
+      '<div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:10px;border-bottom:1px solid #d4af37;padding-bottom:4px;">Completed (' + questLog.completed.length + ')</div>';
+
+    if (questLog.completed.length === 0) {
+      html += '<div style="color:#888;font-style:italic;font-size:13px;padding:10px;">No completed quests yet.</div>';
+    } else {
+      html += '<div style="color:#4f4;font-size:12px;padding:10px;">You have completed ' + questLog.completed.length + ' quests!</div>';
+    }
+    html += '</div>';
+
+    html += '<div style="text-align:center;margin-top:16px;font-size:11px;color:#666;">Press J to close</div>';
+
+    questLogEl.innerHTML = html;
+    hud.appendChild(questLogEl);
+  }
+
+  /**
+   * Hide quest log panel
+   */
+  function hideQuestLog() {
+    if (questLogEl && questLogEl.parentNode) {
+      questLogEl.parentNode.removeChild(questLogEl);
+      questLogEl = null;
+    }
+  }
+
+  /**
+   * Show quest offer dialog from NPC
+   * @param {object} quest - Quest object
+   * @param {object} npc - NPC data {name, archetype}
+   */
+  function showQuestOffer(quest, npc, playerId) {
+    if (typeof document === 'undefined') return;
+    hideQuestOffer(); // Remove existing
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    questOfferEl = document.createElement('div');
+    questOfferEl.id = 'quest-offer-dialog';
+    questOfferEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #d4af37;border-radius:12px;' +
+      'padding:20px;width:500px;pointer-events:auto;box-shadow:0 8px 32px rgba(0,0,0,0.8);z-index:300;';
+
+    var questDialogue = quest.dialogue && quest.dialogue.offer ? quest.dialogue.offer : quest.description;
+
+    var html = '<div style="font-size:20px;font-weight:bold;color:#d4af37;margin-bottom:12px;">New Quest</div>' +
+      '<div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:8px;">' + quest.title + '</div>' +
+      '<div style="color:#aaa;font-size:13px;margin-bottom:12px;font-style:italic;">"' + questDialogue + '"</div>' +
+      '<div style="color:#ccc;font-size:12px;margin-bottom:8px;">' + quest.description + '</div>' +
+      '<div style="padding:10px;background:rgba(0,0,0,0.3);border-radius:6px;margin-bottom:16px;">' +
+      '<div style="font-size:12px;color:#d4af37;margin-bottom:4px;">Rewards:</div>' +
+      '<div style="font-size:13px;color:#fff;">• ' + quest.rewards.spark + ' Spark</div>';
+
+    if (quest.rewards.items.length > 0) {
+      quest.rewards.items.forEach(function(item) {
+        html += '<div style="font-size:13px;color:#fff;">• ' + item.count + 'x ' + item.id + '</div>';
+      });
+    }
+
+    html += '</div>' +
+      '<div style="display:flex;gap:12px;justify-content:center;">' +
+      '<button onclick="window.HUD.acceptQuestFromOffer(\'' + playerId + '\',\'' + quest.id + '\')" style="' +
+      'padding:10px 24px;background:#d4af37;color:#000;border:none;border-radius:6px;' +
+      'font-weight:bold;font-size:14px;cursor:pointer;">Accept Quest</button>' +
+      '<button onclick="window.HUD.hideQuestOffer()" style="' +
+      'padding:10px 24px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid #666;border-radius:6px;' +
+      'font-size:14px;cursor:pointer;">Decline</button></div>';
+
+    questOfferEl.innerHTML = html;
+    hud.appendChild(questOfferEl);
+  }
+
+  /**
+   * Hide quest offer dialog
+   */
+  function hideQuestOffer() {
+    if (questOfferEl && questOfferEl.parentNode) {
+      questOfferEl.parentNode.removeChild(questOfferEl);
+      questOfferEl = null;
+    }
+  }
+
+  /**
+   * Show quest complete notification
+   * @param {object} quest - Completed quest
+   * @param {object} rewards - Rewards {spark, items}
+   */
+  function showQuestComplete(quest, rewards) {
+    if (!notificationContainer) return;
+    if (typeof document === 'undefined') return;
+
+    var notification = document.createElement('div');
+    notification.style.cssText = 'background:linear-gradient(135deg,rgba(212,175,55,0.9),rgba(255,215,0,0.9));' +
+      'border-left:4px solid #d4af37;border-radius:8px;padding:16px 20px;margin-bottom:10px;' +
+      'animation:slideIn 0.3s ease-out;pointer-events:auto;box-shadow:0 4px 12px rgba(212,175,55,0.4);';
+
+    var html = '<div style="font-size:18px;font-weight:bold;color:#000;margin-bottom:6px;">Quest Complete!</div>' +
+      '<div style="font-size:14px;color:#111;margin-bottom:8px;">' + quest.title + '</div>' +
+      '<div style="font-size:12px;color:#222;">+ ' + rewards.spark + ' Spark';
+
+    if (rewards.items && rewards.items.length > 0) {
+      html += ' + ' + rewards.items.length + ' item(s)';
+    }
+
+    html += '</div>';
+    notification.innerHTML = html;
+
+    notificationContainer.appendChild(notification);
+
+    // Auto-remove after 6 seconds
+    setTimeout(function() {
+      notification.style.animation = 'slideOut 0.3s ease-in';
+      setTimeout(function() {
+        notification.remove();
+      }, 300);
+    }, 6000);
+  }
+
+  /**
+   * Show quest objective progress update
+   * @param {string} text - Progress text (e.g., "+1/3 Sunflowers")
+   */
+  function showQuestProgress(text) {
+    if (!notificationContainer) return;
+    if (typeof document === 'undefined') return;
+
+    var notification = document.createElement('div');
+    notification.style.cssText = 'background:rgba(212,175,55,0.3);border-left:3px solid #d4af37;' +
+      'border-radius:6px;padding:8px 12px;margin-bottom:8px;animation:slideIn 0.3s ease-out;' +
+      'pointer-events:auto;font-size:13px;color:#d4af37;font-weight:bold;';
+    notification.textContent = text;
+
+    notificationContainer.appendChild(notification);
+
+    // Auto-remove after 3 seconds
+    setTimeout(function() {
+      notification.style.animation = 'slideOut 0.3s ease-in';
+      setTimeout(function() {
+        notification.remove();
+      }, 300);
+    }, 3000);
+  }
+
+  /**
+   * Accept quest from offer dialog (called by inline onclick)
+   */
+  function acceptQuestFromOffer(playerId, questId) {
+    if (window.Quests) {
+      var result = window.Quests.acceptQuest(playerId, questId);
+      if (result.success) {
+        showNotification('Quest accepted: ' + result.quest.title, 'success');
+        hideQuestOffer();
+      } else {
+        showNotification('Cannot accept quest: ' + result.message, 'error');
+      }
+    }
+  }
+
+  /**
+   * Abandon quest from log (called by inline onclick)
+   */
+  function abandonQuestFromLog(playerId, questId) {
+    if (window.Quests) {
+      var result = window.Quests.abandonQuest(playerId, questId);
+      if (result.success) {
+        showNotification('Quest abandoned', 'info');
+        hideQuestLog();
+      }
+    }
+  }
+
+  // ========================================================================
+  // INVENTORY PANEL
+  // ========================================================================
+
+  var inventoryPanel = null;
+  var inventoryVisible = false;
+
+  function initInventoryPanel() {
+    if (typeof document === 'undefined') return;
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    inventoryPanel = document.createElement('div');
+    inventoryPanel.id = 'inventory-panel';
+    inventoryPanel.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #4af;border-radius:12px;' +
+      'padding:20px;min-width:500px;pointer-events:auto;display:none;' +
+      'box-shadow:0 4px 20px rgba(0,0,0,0.8);z-index:200;';
+
+    var header = '<div style="font-size:20px;font-weight:bold;margin-bottom:15px;text-align:center;color:#4af;">Inventory</div>';
+    var slotsGrid = '<div id="inventory-slots" style="display:grid;grid-template-columns:repeat(5,90px);gap:8px;margin-bottom:15px;"></div>';
+    var closeBtn = '<div style="text-align:center;"><button id="close-inventory" style="padding:8px 20px;background:#4af;border:none;border-radius:4px;color:#000;font-weight:bold;cursor:pointer;">Close (I)</button></div>';
+
+    inventoryPanel.innerHTML = header + slotsGrid + closeBtn;
+    hud.appendChild(inventoryPanel);
+
+    document.getElementById('close-inventory').addEventListener('click', function() {
+      hideInventoryPanel();
+    });
+  }
+
+  function toggleInventoryPanel() {
+    if (inventoryVisible) {
+      hideInventoryPanel();
+    } else {
+      showInventoryPanel();
+    }
+  }
+
+  function showInventoryPanel() {
+    if (!inventoryPanel) initInventoryPanel();
+    inventoryPanel.style.display = 'block';
+    inventoryVisible = true;
+  }
+
+  function hideInventoryPanel() {
+    if (inventoryPanel) inventoryPanel.style.display = 'none';
+    inventoryVisible = false;
+  }
+
+  function updateInventoryDisplay(inventory) {
+    if (!inventoryPanel || !inventory) return;
+
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+    if (!Inventory) return;
+
+    var slotsDiv = document.getElementById('inventory-slots');
+    if (!slotsDiv) return;
+
+    var items = Inventory.getInventory(inventory);
+    slotsDiv.innerHTML = '';
+
+    items.forEach(function(item, idx) {
+      var slot = document.createElement('div');
+      slot.style.cssText = 'background:rgba(255,255,255,0.1);border:2px solid #555;border-radius:6px;' +
+        'padding:10px;text-align:center;min-height:70px;position:relative;cursor:pointer;';
+
+      if (item) {
+        var rarityColors = { common: '#aaa', uncommon: '#4af', rare: '#f4a', legendary: '#fa4' };
+        var borderColor = rarityColors[item.rarity] || '#555';
+        slot.style.borderColor = borderColor;
+
+        slot.innerHTML = '<div style="font-size:32px;margin-bottom:4px;">' + item.icon + '</div>' +
+          '<div style="font-size:11px;color:#ccc;">' + item.name + '</div>' +
+          '<div style="position:absolute;top:4px;right:6px;background:#000;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:bold;">' + item.count + '</div>';
+
+        slot.title = item.description + '\\n' + item.rarity.toUpperCase();
+      } else {
+        slot.innerHTML = '<div style="color:#444;padding-top:20px;">Empty</div>';
+      }
+
+      slotsDiv.appendChild(slot);
+    });
+  }
+
+  // ========================================================================
+  // CRAFTING PANEL
+  // ========================================================================
+
+  var craftingPanel = null;
+  var craftingVisible = false;
+  var onCraftCallback = null;
+
+  function initCraftingPanel(onCraft) {
+    if (typeof document === 'undefined') return;
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    onCraftCallback = onCraft;
+
+    craftingPanel = document.createElement('div');
+    craftingPanel.id = 'crafting-panel';
+    craftingPanel.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #fa4;border-radius:12px;' +
+      'padding:20px;min-width:600px;max-height:70vh;overflow-y:auto;pointer-events:auto;display:none;' +
+      'box-shadow:0 4px 20px rgba(0,0,0,0.8);z-index:200;';
+
+    var header = '<div style="font-size:20px;font-weight:bold;margin-bottom:15px;text-align:center;color:#fa4;">Crafting</div>';
+    var recipeList = '<div id="recipe-list"></div>';
+    var closeBtn = '<div style="text-align:center;margin-top:15px;"><button id="close-crafting" style="padding:8px 20px;background:#fa4;border:none;border-radius:4px;color:#000;font-weight:bold;cursor:pointer;">Close (C)</button></div>';
+
+    craftingPanel.innerHTML = header + recipeList + closeBtn;
+    hud.appendChild(craftingPanel);
+
+    document.getElementById('close-crafting').addEventListener('click', function() {
+      hideCraftingPanel();
+    });
+  }
+
+  function toggleCraftingPanel() {
+    if (craftingVisible) {
+      hideCraftingPanel();
+    } else {
+      showCraftingPanel();
+    }
+  }
+
+  function showCraftingPanel() {
+    if (!craftingPanel) initCraftingPanel();
+    craftingPanel.style.display = 'block';
+    craftingVisible = true;
+  }
+
+  function hideCraftingPanel() {
+    if (craftingPanel) craftingPanel.style.display = 'none';
+    craftingVisible = false;
+  }
+
+  function updateCraftingDisplay(inventory) {
+    if (!craftingPanel || !inventory) return;
+
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+    if (!Inventory) return;
+
+    var listDiv = document.getElementById('recipe-list');
+    if (!listDiv) return;
+
+    var allRecipes = Inventory.getAllRecipes();
+    listDiv.innerHTML = '';
+
+    allRecipes.forEach(function(recipe) {
+      var canCraft = Inventory.canCraft(inventory, recipe);
+      var outputItem = Inventory.getItemData(recipe.output.itemId);
+
+      var recipeDiv = document.createElement('div');
+      recipeDiv.style.cssText = 'background:rgba(255,255,255,0.05);border:1px solid ' + (canCraft ? '#4f4' : '#555') + ';' +
+        'border-radius:6px;padding:12px;margin-bottom:10px;';
+
+      var title = '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:' + (canCraft ? '#4f4' : '#888') + ';">' +
+        (outputItem ? outputItem.icon + ' ' : '') + recipe.name + '</div>';
+
+      var reqs = '<div style="font-size:12px;color:#aaa;margin-bottom:8px;">Requires: ';
+      recipe.requirements.forEach(function(req, i) {
+        var reqItem = Inventory.getItemData(req.itemId);
+        var hasCount = Inventory.getItemCount(inventory, req.itemId);
+        var hasEnough = hasCount >= req.count;
+        reqs += (i > 0 ? ', ' : '') + '<span style="color:' + (hasEnough ? '#4f4' : '#f44') + ';">' +
+          (reqItem ? reqItem.icon + ' ' : '') + req.count + ' ' + (reqItem ? reqItem.name : req.itemId) + '</span>';
+      });
+      reqs += '</div>';
+
+      var reward = '<div style="font-size:11px;color:#ffa500;margin-bottom:8px;">Spark Reward: ' + recipe.sparkReward + '</div>';
+
+      var craftBtn = '';
+      if (canCraft) {
+        craftBtn = '<button class="craft-btn" data-recipe="' + recipe.id + '" style="padding:6px 15px;background:#4f4;border:none;border-radius:4px;color:#000;font-weight:bold;cursor:pointer;">Craft</button>';
+      } else {
+        craftBtn = '<button disabled style="padding:6px 15px;background:#333;border:none;border-radius:4px;color:#666;cursor:not-allowed;">Cannot Craft</button>';
+      }
+
+      recipeDiv.innerHTML = title + reqs + reward + craftBtn;
+      listDiv.appendChild(recipeDiv);
+    });
+
+    var craftBtns = document.querySelectorAll('.craft-btn');
+    craftBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var recipeId = this.getAttribute('data-recipe');
+        if (onCraftCallback) {
+          onCraftCallback(recipeId);
+        }
+      });
+    });
+  }
+
+  // ========================================================================
+  // QUICK BAR
+  // ========================================================================
+
+  var quickBarEl = null;
+
+  function initQuickBar() {
+    if (typeof document === 'undefined') return;
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    quickBarEl = document.createElement('div');
+    quickBarEl.id = 'quick-bar';
+    quickBarEl.style.cssText = 'position:absolute;bottom:70px;left:50%;transform:translateX(-50%);' +
+      'display:flex;gap:8px;pointer-events:none;';
+
+    for (var i = 0; i < 5; i++) {
+      var slot = document.createElement('div');
+      slot.className = 'quick-slot';
+      slot.style.cssText = 'background:rgba(0,0,0,0.7);border:2px solid #555;border-radius:6px;' +
+        'padding:8px;width:60px;height:60px;text-align:center;position:relative;';
+
+      var keyLabel = '<div style="position:absolute;top:2px;left:4px;font-size:10px;color:#888;">' + (i + 1) + '</div>';
+      slot.innerHTML = keyLabel + '<div class="quick-content" style="font-size:28px;margin-top:8px;">-</div>';
+
+      quickBarEl.appendChild(slot);
+    }
+
+    hud.appendChild(quickBarEl);
+  }
+
+  function updateQuickBar(inventory) {
+    if (!quickBarEl || !inventory) return;
+
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+    if (!Inventory) return;
+
+    var items = Inventory.getInventory(inventory);
+    var quickSlots = quickBarEl.querySelectorAll('.quick-slot');
+
+    inventory.quickBar.forEach(function(slotIdx, qbIdx) {
+      if (qbIdx >= quickSlots.length) return;
+
+      var item = items[slotIdx];
+      var contentDiv = quickSlots[qbIdx].querySelector('.quick-content');
+
+      if (item) {
+        contentDiv.innerHTML = item.icon;
+        quickSlots[qbIdx].title = item.name + ' (' + item.count + ')';
+      } else {
+        contentDiv.innerHTML = '-';
+        quickSlots[qbIdx].title = 'Empty';
+      }
+    });
+  }
+
+  // ========================================================================
+  // ITEM PICKUP NOTIFICATION
+  // ========================================================================
+
+  function showItemPickup(itemName, count, icon) {
+    if (!notificationContainer) return;
+    if (typeof document === 'undefined') return;
+
+    var pickup = document.createElement('div');
+    pickup.style.cssText = 'background:rgba(0,200,0,0.8);border-left:4px solid #0f0;border-radius:4px;' +
+      'padding:10px 15px;margin-bottom:10px;animation:slideIn 0.3s ease-out;' +
+      'pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,0.3);font-size:14px;';
+
+    pickup.innerHTML = '<span style="font-size:20px;margin-right:8px;">' + (icon || '+') + '</span>' +
+      '<span style="font-weight:bold;">+' + count + ' ' + itemName + '</span>';
+
+    notificationContainer.appendChild(pickup);
+
+    setTimeout(function() {
+      pickup.style.animation = 'slideOut 0.3s ease-in';
+      setTimeout(function() {
+        pickup.remove();
+      }, 300);
+    }, 2000);
+  }
+
   // Export public API
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
@@ -775,5 +1350,28 @@
   exports.showNPCDialog = showNPCDialog;
   exports.hideNPCDialog = hideNPCDialog;
   exports.updateMinimapNPCs = updateMinimapNPCs;
+  exports.initQuestTracker = initQuestTracker;
+  exports.updateQuestTracker = updateQuestTracker;
+  exports.showQuestLog = showQuestLog;
+  exports.hideQuestLog = hideQuestLog;
+  exports.showQuestOffer = showQuestOffer;
+  exports.hideQuestOffer = hideQuestOffer;
+  exports.showQuestComplete = showQuestComplete;
+  exports.showQuestProgress = showQuestProgress;
+  exports.acceptQuestFromOffer = acceptQuestFromOffer;
+  exports.abandonQuestFromLog = abandonQuestFromLog;
+  exports.initInventoryPanel = initInventoryPanel;
+  exports.toggleInventoryPanel = toggleInventoryPanel;
+  exports.showInventoryPanel = showInventoryPanel;
+  exports.hideInventoryPanel = hideInventoryPanel;
+  exports.updateInventoryDisplay = updateInventoryDisplay;
+  exports.initCraftingPanel = initCraftingPanel;
+  exports.toggleCraftingPanel = toggleCraftingPanel;
+  exports.showCraftingPanel = showCraftingPanel;
+  exports.hideCraftingPanel = hideCraftingPanel;
+  exports.updateCraftingDisplay = updateCraftingDisplay;
+  exports.initQuickBar = initQuickBar;
+  exports.updateQuickBar = updateQuickBar;
+  exports.showItemPickup = showItemPickup;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));

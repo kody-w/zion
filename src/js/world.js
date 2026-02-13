@@ -2804,6 +2804,265 @@
   }
 
   // ========================================================================
+  // HARVESTABLE RESOURCE NODES
+  // ========================================================================
+
+  var resourceNodes = [];
+
+  function initResourceNodes(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    addZoneResources(sceneCtx.scene, 'gardens', [
+      { itemId: 'flower_rose', count: 8, radius: 30 },
+      { itemId: 'flower_tulip', count: 10, radius: 35 },
+      { itemId: 'flower_sunflower', count: 12, radius: 40 },
+      { itemId: 'herb_lavender', count: 8, radius: 28 },
+      { itemId: 'seed_wildflower', count: 6, radius: 25 }
+    ]);
+
+    addZoneResources(sceneCtx.scene, 'wilds', [
+      { itemId: 'wood_oak', count: 15, radius: 45 },
+      { itemId: 'wood_pine', count: 12, radius: 50 },
+      { itemId: 'stone_common', count: 10, radius: 40 },
+      { itemId: 'herb_ginseng', count: 5, radius: 35 },
+      { itemId: 'crystal_clear', count: 4, radius: 30 },
+      { itemId: 'food_mushroom', count: 8, radius: 38 },
+      { itemId: 'food_berry', count: 10, radius: 42 }
+    ]);
+
+    addZoneResources(sceneCtx.scene, 'nexus', [
+      { itemId: 'crystal_clear', count: 6, radius: 25 },
+      { itemId: 'crystal_amethyst', count: 4, radius: 20 }
+    ]);
+
+    addZoneResources(sceneCtx.scene, 'studio', [
+      { itemId: 'wood_mystical', count: 3, radius: 25 },
+      { itemId: 'crystal_clear', count: 5, radius: 22 }
+    ]);
+
+    addZoneResources(sceneCtx.scene, 'commons', [
+      { itemId: 'wood_oak', count: 8, radius: 25 },
+      { itemId: 'stone_common', count: 6, radius: 23 }
+    ]);
+
+    addZoneResources(sceneCtx.scene, 'athenaeum', [
+      { itemId: 'item_scroll', count: 10, radius: 28 }
+    ]);
+
+    addZoneResources(sceneCtx.scene, 'arena', [
+      { itemId: 'item_trophy', count: 2, radius: 20 }
+    ]);
+  }
+
+  function addZoneResources(scene, zoneId, resources) {
+    var zone = ZONES[zoneId];
+    if (!zone) return;
+
+    resources.forEach(function(res) {
+      for (var i = 0; i < res.count; i++) {
+        var angle = seededRandom(zoneId.charCodeAt(0), i, res.itemId.charCodeAt(0)) * Math.PI * 2;
+        var dist = seededRandom(zoneId.charCodeAt(1), i, res.itemId.charCodeAt(1)) * res.radius;
+        var x = zone.cx + Math.cos(angle) * dist;
+        var z = zone.cz + Math.sin(angle) * dist;
+
+        var onPath = false;
+        for (var pz in ZONES) {
+          if (pz === 'nexus') continue;
+          if (pointToSegDist(x, z, ZONES.nexus.cx, ZONES.nexus.cz, ZONES[pz].cx, ZONES[pz].cz) < 5) {
+            onPath = true;
+            break;
+          }
+        }
+        if (onPath) continue;
+
+        var distFromCenter = Math.sqrt((x - zone.cx) * (x - zone.cx) + (z - zone.cz) * (z - zone.cz));
+        if (distFromCenter < zone.radius * 0.3) continue;
+
+        var y = terrainHeight(x, z);
+        createResourceNode(scene, x, y, z, res.itemId, zoneId);
+      }
+    });
+  }
+
+  function createResourceNode(scene, x, y, z, itemId, zone) {
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+    if (!Inventory) return;
+
+    var itemData = Inventory.getItemData(itemId);
+    if (!itemData) return;
+
+    var nodeGroup = new THREE.Group();
+    var nodeMesh;
+
+    if (itemData.type === 'wood') {
+      var stumpGeo = new THREE.CylinderGeometry(0.4, 0.5, 1.2, 8);
+      var stumpMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+      nodeMesh = new THREE.Mesh(stumpGeo, stumpMat);
+      nodeMesh.position.y = 0.6;
+      nodeGroup.add(nodeMesh);
+
+      var leavesGeo = new THREE.SphereGeometry(0.5, 6, 6);
+      var leavesMat = new THREE.MeshStandardMaterial({ color: 0x4CAF50, transparent: true, opacity: 0.7 });
+      var leaves = new THREE.Mesh(leavesGeo, leavesMat);
+      leaves.position.y = 1.4;
+      nodeGroup.add(leaves);
+
+    } else if (itemData.type === 'stone') {
+      var rockGeo = new THREE.DodecahedronGeometry(0.6, 0);
+      var rockMat = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.9 });
+      nodeMesh = new THREE.Mesh(rockGeo, rockMat);
+      nodeMesh.position.y = 0.4;
+      nodeMesh.rotation.set(Math.random(), Math.random(), Math.random());
+      nodeGroup.add(nodeMesh);
+
+    } else if (itemData.type === 'crystal') {
+      var crystalGeo = new THREE.OctahedronGeometry(0.5, 0);
+      var crystalColor = itemId === 'crystal_amethyst' ? 0x9C27B0 : (itemId === 'crystal_emerald' ? 0x4CAF50 : 0x00BCD4);
+      var crystalMat = new THREE.MeshStandardMaterial({
+        color: crystalColor,
+        emissive: crystalColor,
+        emissiveIntensity: 0.3,
+        transparent: true,
+        opacity: 0.8
+      });
+      nodeMesh = new THREE.Mesh(crystalGeo, crystalMat);
+      nodeMesh.position.y = 0.7;
+      nodeGroup.add(nodeMesh);
+
+      var glowGeo = new THREE.SphereGeometry(0.3, 8, 8);
+      var glowMat = new THREE.MeshBasicMaterial({ color: crystalColor, transparent: true, opacity: 0.3 });
+      var glow = new THREE.Mesh(glowGeo, glowMat);
+      glow.position.y = 0.7;
+      nodeGroup.add(glow);
+
+      animatedObjects.push({ mesh: nodeMesh, type: 'crystal', params: { speed: 0.3, baseY: 0.7 } });
+
+    } else if (itemData.type === 'flowers' || itemData.type === 'herbs') {
+      var flowerGeo = new THREE.SphereGeometry(0.3, 6, 6);
+      var flowerColors = {
+        flower_rose: 0xFF1744, flower_tulip: 0xE91E63, flower_sunflower: 0xFFEB3B,
+        flower_lotus: 0xE1BEE7, flower_cherry: 0xF8BBD0,
+        herb_mint: 0x4CAF50, herb_sage: 0x66BB6A, herb_ginseng: 0xA1887F, herb_lavender: 0xCE93D8
+      };
+      var flowerColor = flowerColors[itemId] || 0x4CAF50;
+      var flowerMat = new THREE.MeshStandardMaterial({ color: flowerColor });
+      nodeMesh = new THREE.Mesh(flowerGeo, flowerMat);
+      nodeMesh.position.y = 0.3;
+      nodeGroup.add(nodeMesh);
+
+      var stemGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.4, 4);
+      var stemMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
+      var stem = new THREE.Mesh(stemGeo, stemMat);
+      stem.position.y = 0.15;
+      nodeGroup.add(stem);
+
+    } else if (itemData.type === 'seeds') {
+      var seedGeo = new THREE.SphereGeometry(0.2, 6, 6);
+      var seedMat = new THREE.MeshStandardMaterial({ color: 0x8D6E63 });
+      nodeMesh = new THREE.Mesh(seedGeo, seedMat);
+      nodeMesh.position.y = 0.2;
+      nodeGroup.add(nodeMesh);
+
+    } else if (itemData.type === 'food') {
+      var foodGeo = new THREE.SphereGeometry(0.25, 6, 6);
+      var foodColors = { food_mushroom: 0xD32F2F, food_berry: 0x7B1FA2 };
+      var foodColor = foodColors[itemId] || 0x8D6E63;
+      var foodMat = new THREE.MeshStandardMaterial({ color: foodColor });
+      nodeMesh = new THREE.Mesh(foodGeo, foodMat);
+      nodeMesh.position.y = 0.25;
+      nodeGroup.add(nodeMesh);
+
+    } else if (itemData.type === 'knowledge') {
+      var scrollGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.5, 8);
+      var scrollMat = new THREE.MeshStandardMaterial({ color: 0xFFF8DC });
+      nodeMesh = new THREE.Mesh(scrollGeo, scrollMat);
+      nodeMesh.position.y = 0.3;
+      nodeMesh.rotation.z = Math.PI / 2;
+      nodeGroup.add(nodeMesh);
+
+    } else if (itemData.type === 'trophies') {
+      var trophyGeo = new THREE.SphereGeometry(0.3, 8, 8);
+      var trophyMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.8, roughness: 0.2 });
+      nodeMesh = new THREE.Mesh(trophyGeo, trophyMat);
+      nodeMesh.position.y = 0.5;
+      nodeGroup.add(nodeMesh);
+
+      var baseGeo = new THREE.CylinderGeometry(0.2, 0.25, 0.3, 8);
+      var baseMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+      var base = new THREE.Mesh(baseGeo, baseMat);
+      base.position.y = 0.15;
+      nodeGroup.add(base);
+
+    } else {
+      var genGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+      var genMat = new THREE.MeshStandardMaterial({ color: 0xBDBDBD });
+      nodeMesh = new THREE.Mesh(genGeo, genMat);
+      nodeMesh.position.y = 0.2;
+      nodeGroup.add(nodeMesh);
+    }
+
+    nodeGroup.position.set(x, y, z);
+    nodeGroup.userData.isResource = true;
+    nodeGroup.userData.itemId = itemId;
+    nodeGroup.userData.depleted = false;
+    nodeGroup.userData.respawnTime = 0;
+    nodeGroup.userData.zone = zone;
+    nodeGroup.userData.nodeMesh = nodeMesh;
+
+    scene.add(nodeGroup);
+    resourceNodes.push(nodeGroup);
+  }
+
+  function updateResourceNodes(deltaTime) {
+    var currentTime = Date.now();
+
+    resourceNodes.forEach(function(node) {
+      if (node.userData.depleted) {
+        if (currentTime >= node.userData.respawnTime) {
+          node.userData.depleted = false;
+          node.visible = true;
+
+          if (node.userData.nodeMesh && node.userData.nodeMesh.material) {
+            node.userData.nodeMesh.material.opacity = 1.0;
+            node.userData.nodeMesh.material.transparent = false;
+          }
+        }
+      }
+    });
+  }
+
+  function harvestResource(node) {
+    if (!node || !node.userData || !node.userData.isResource) return null;
+    if (node.userData.depleted) return null;
+
+    var itemId = node.userData.itemId;
+
+    node.userData.depleted = true;
+    node.userData.respawnTime = Date.now() + (30000 + Math.random() * 30000);
+
+    if (node.userData.nodeMesh && node.userData.nodeMesh.material) {
+      node.userData.nodeMesh.material.opacity = 0.3;
+      node.userData.nodeMesh.material.transparent = true;
+    }
+
+    return itemId;
+  }
+
+  function getResourceNodeAtMouse(raycaster, camera, mouseX, mouseY) {
+    raycaster.setFromCamera({ x: mouseX, y: mouseY }, camera);
+
+    var intersects = raycaster.intersectObjects(resourceNodes, true);
+    if (intersects.length > 0) {
+      var obj = intersects[0].object;
+      while (obj && !obj.userData.isResource) {
+        obj = obj.parent;
+      }
+      return obj && obj.userData.isResource ? obj : null;
+    }
+    return null;
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -2832,6 +3091,10 @@
   exports.updateWater = updateWater;
   exports.initSkybox = initSkybox;
   exports.updateSkybox = updateSkybox;
+  exports.initResourceNodes = initResourceNodes;
+  exports.updateResourceNodes = updateResourceNodes;
+  exports.harvestResource = harvestResource;
+  exports.getResourceNodeAtMouse = getResourceNodeAtMouse;
   exports.ZONES = ZONES;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));

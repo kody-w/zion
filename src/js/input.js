@@ -95,6 +95,49 @@
           e.preventDefault();
         }
         break;
+
+      case 'i':
+      case 'I':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleInventory', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'c':
+      case 'C':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleCrafting', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('useQuickSlot', { slot: parseInt(e.key) - 1 });
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'j':
+      case 'J':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggle_quest_log', {});
+          }
+          e.preventDefault();
+        }
+        break;
     }
   }
 

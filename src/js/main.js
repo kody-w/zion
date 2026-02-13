@@ -6,6 +6,7 @@
   const State = typeof require !== 'undefined' ? require('./state') : window.State;
   const Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
   const Economy = typeof require !== 'undefined' ? require('./economy') : window.Economy;
+  const Inventory = typeof require !== 'undefined' ? require('./inventory') : window.Inventory;
   const Intentions = typeof require !== 'undefined' ? require('./intentions') : window.Intentions;
   const Social = typeof require !== 'undefined' ? require('./social') : window.Social;
   const Creation = typeof require !== 'undefined' ? require('./creation') : window.Creation;
@@ -20,6 +21,7 @@
   const XR = typeof require !== 'undefined' ? require('./xr') : window.XR;
   const Audio = typeof require !== 'undefined' ? require('./audio') : window.Audio;
   const NPCs = typeof require !== 'undefined' ? require('./npcs') : window.NPCs;
+  const Quests = typeof require !== 'undefined' ? require('./quests') : window.Quests;
 
   // Game state
   let gameState = null;
@@ -40,6 +42,9 @@
   let cameraDistance = 18;  // distance from player
   let isDragging = false;
   let lastMouseX = 0, lastMouseY = 0;
+  let playerInventory = null;
+  let economyLedger = null;
+  let raycaster = null;
 
   // Platform detection
   let platform = 'desktop';
@@ -111,6 +116,25 @@
       State.addPlayer(gameState, localPlayer);
     }
 
+    // Initialize economy ledger
+    if (Economy) {
+      economyLedger = Economy.createLedger();
+      economyLedger.balances[username] = 1000;
+    }
+
+    // Initialize inventory
+    if (Inventory) {
+      playerInventory = Inventory.createInventory();
+      Inventory.addItem(playerInventory, 'wood_oak', 5);
+      Inventory.addItem(playerInventory, 'stone_common', 5);
+      Inventory.addItem(playerInventory, 'seed_wildflower', 3);
+    }
+
+    // Initialize raycaster for clicking
+    if (typeof THREE !== 'undefined') {
+      raycaster = new THREE.Raycaster();
+    }
+
     // Initialize network
     if (Network) {
       const peerId = `zion-${username}-${Date.now()}`;
@@ -162,6 +186,11 @@
         if (World.initSkybox) {
           World.initSkybox(sceneContext);
         }
+
+        // Initialize resource nodes for harvesting
+        if (World.initResourceNodes) {
+          World.initResourceNodes(sceneContext);
+        }
       }
     }
 
@@ -177,11 +206,39 @@
         HUD.initToolbar();
       }
 
+      // Initialize quest tracker
+      if (HUD.initQuestTracker) {
+        HUD.initQuestTracker();
+      }
+
+      // Initialize inventory panel
+      if (HUD.initInventoryPanel) {
+        HUD.initInventoryPanel();
+      }
+
+      // Initialize crafting panel with craft callback
+      if (HUD.initCraftingPanel) {
+        HUD.initCraftingPanel(function(recipeId) {
+          handleCraft(recipeId);
+        });
+      }
+
+      // Initialize quick bar
+      if (HUD.initQuickBar) {
+        HUD.initQuickBar();
+      }
+
       // Add chat input
       HUD.addChatInput((text) => {
         handleLocalAction('chat', { message: text });
         HUD.hideChatInput();
       });
+    }
+
+    // Initialize quest system for local player
+    if (Quests) {
+      Quests.initPlayerQuests(username);
+      console.log('Quest system initialized for player:', username);
     }
 
     // Initialize input
@@ -447,6 +504,16 @@
                 }});
               }
             }
+
+            // Update quest progress for zone visits
+            if (Quests) {
+              var updated = Quests.updateQuestProgress(localPlayer.id, 'visit_zone', { zone: currentZone });
+              if (updated.length > 0 && HUD) {
+                updated.forEach(function(quest) {
+                  HUD.showQuestProgress('Quest progress: ' + quest.title);
+                });
+              }
+            }
           }
         }
 
@@ -602,6 +669,11 @@
         World.updateAnimations(sceneContext, deltaTime, worldTime);
       }
 
+      // Update resource nodes (respawning)
+      if (World.updateResourceNodes) {
+        World.updateResourceNodes(deltaTime);
+      }
+
       // Update player animations (walk/run/idle)
       if (World.updatePlayerAnimations) {
         World.updatePlayerAnimations(sceneContext, deltaTime);
@@ -678,6 +750,17 @@
       // Update chat
       const messages = Social ? Social.getRecentMessages(gameState) : [];
       HUD.updateChat(messages);
+
+      // Update quest tracker (every few frames)
+      if (Quests && HUD.updateQuestTracker && npcUpdateFrame % 30 === 0) {
+        var activeQuests = Quests.getActiveQuests(localPlayer.id);
+        HUD.updateQuestTracker(activeQuests);
+      }
+
+      // Update quest indicators on NPCs (every few frames)
+      if (Quests && NPCs && NPCs.updateQuestIndicators && npcUpdateFrame % 60 === 0) {
+        NPCs.updateQuestIndicators(localPlayer.id, localPlayer.position);
+      }
     }
 
     // Check for break reminder (every 30 minutes)
@@ -930,6 +1013,85 @@
   }
 
   /**
+   * Handle resource node harvesting
+   */
+  function handleResourceHarvest(node) {
+    if (!World || !Inventory || !playerInventory) return;
+
+    var itemId = World.harvestResource(node);
+    if (!itemId) {
+      if (HUD) HUD.showNotification('Resource already depleted', 'warning');
+      return;
+    }
+
+    var itemData = Inventory.getItemData(itemId);
+    if (!itemData) return;
+
+    var result = Inventory.addItem(playerInventory, itemId, 1);
+    if (result.success) {
+      if (HUD) {
+        HUD.showItemPickup(itemData.name, 1, itemData.icon);
+        HUD.updateInventoryDisplay(playerInventory);
+        HUD.updateQuickBar(playerInventory);
+      }
+
+      if (economyLedger && Economy) {
+        var sparkEarned = Economy.earnSpark(economyLedger, localPlayer.id, 'harvest', { complexity: 0.5 });
+        if (localPlayer) {
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          if (HUD) HUD.updatePlayerInfo(localPlayer);
+        }
+      }
+
+      if (Quests) {
+        var updated = Quests.updateQuestProgress(localPlayer.id, 'collect', { item: itemId, amount: 1 });
+        if (updated.length > 0 && HUD) {
+          updated.forEach(function(quest) {
+            HUD.showQuestProgress('Quest progress: ' + quest.title);
+          });
+        }
+      }
+
+      if (Audio) Audio.playSound('harvest');
+    } else {
+      if (HUD) HUD.showNotification(result.message, 'warning');
+    }
+  }
+
+  /**
+   * Handle crafting
+   */
+  function handleCraft(recipeId) {
+    if (!Inventory || !playerInventory) return;
+
+    var result = Inventory.craftItem(playerInventory, recipeId);
+    if (result.success) {
+      if (HUD) {
+        HUD.showNotification(result.message, 'success');
+        HUD.updateInventoryDisplay(playerInventory);
+        HUD.updateCraftingDisplay(playerInventory);
+        HUD.updateQuickBar(playerInventory);
+      }
+
+      if (economyLedger && Economy && result.sparkEarned) {
+        Economy.earnSpark(economyLedger, localPlayer.id, 'craft', { complexity: result.sparkEarned / 50 });
+        if (localPlayer) {
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          if (HUD) HUD.updatePlayerInfo(localPlayer);
+        }
+      }
+
+      if (Quests) {
+        Quests.updateQuestProgress(localPlayer.id, 'craft', { item: result.output.itemId, amount: result.output.count });
+      }
+
+      if (Audio) Audio.playSound('build');
+    } else {
+      if (HUD) HUD.showNotification(result.message, 'error');
+    }
+  }
+
+  /**
    * Handle local action (created by this client)
    */
   function handleLocalAction(type, payload) {
@@ -956,7 +1118,7 @@
       case 'interact':
         // Check for nearby NPCs first
         if (NPCs && NPCs.interactWithNPC && localPlayer) {
-          var npcResponse = NPCs.interactWithNPC(localPlayer.position.x, localPlayer.position.z);
+          var npcResponse = NPCs.interactWithNPC(localPlayer.position.x, localPlayer.position.z, localPlayer.id);
           if (npcResponse) {
             // Show rich NPC interaction dialog
             if (HUD && HUD.showNPCDialog) {
@@ -964,6 +1126,31 @@
             } else if (HUD) {
               HUD.showNotification(npcResponse.name + ': "' + npcResponse.message + '"', 'info');
             }
+
+            // Handle quest interactions
+            if (Quests && npcResponse.questInfo) {
+              var questInfo = npcResponse.questInfo;
+
+              if (questInfo.state === 'available') {
+                // Show quest offer dialog
+                if (HUD && HUD.showQuestOffer) {
+                  HUD.showQuestOffer(questInfo.quest, { name: npcResponse.name, archetype: npcResponse.archetype }, localPlayer.id);
+                }
+              } else if (questInfo.state === 'complete') {
+                // Turn in quest
+                var result = Quests.completeQuest(localPlayer.id, questInfo.quest.id, gameState);
+                if (result.success && HUD) {
+                  HUD.showQuestComplete(result.quest, result.rewards);
+                  // Update player spark display
+                  localPlayer.spark += result.rewards.spark;
+                  HUD.updatePlayerInfo(localPlayer);
+                }
+              }
+
+              // Update quest progress for NPC interaction
+              Quests.updateQuestProgress(localPlayer.id, 'talk_npc', { npcId: npcResponse.id });
+            }
+
             if (Audio) Audio.playSound('chat');
             // Broadcast player interaction to other NPCs
             if (NPCs.broadcastEvent) {
@@ -977,6 +1164,15 @@
         }
         // No NPC nearby — try harvesting
         msg = Protocol.create.harvest(localPlayer.id, 10);
+        // Update quest progress for harvest
+        if (Quests) {
+          var updated = Quests.updateQuestProgress(localPlayer.id, 'collect', { item: 'resource', amount: 1 });
+          if (updated.length > 0 && HUD) {
+            updated.forEach(function(quest) {
+              HUD.showQuestProgress('Quest progress: ' + quest.title);
+            });
+          }
+        }
         // Broadcast harvest action to NPCs
         if (NPCs && NPCs.broadcastEvent) {
           NPCs.broadcastEvent({ type: 'player_action', data: {
@@ -986,9 +1182,45 @@
         }
         break;
 
+      case 'toggle_quest_log':
+        // Toggle quest log panel
+        if (HUD && Quests && localPlayer) {
+          var questLogEl = document.getElementById('quest-log-panel');
+          if (questLogEl) {
+            HUD.hideQuestLog();
+          } else {
+            var questLog = Quests.getQuestLog(localPlayer.id, { level: 0 });
+            HUD.showQuestLog(questLog, localPlayer.id);
+          }
+        }
+        break;
+
+      case 'toggleInventory':
+        if (HUD && playerInventory) {
+          HUD.toggleInventoryPanel();
+          HUD.updateInventoryDisplay(playerInventory);
+        }
+        break;
+
+      case 'toggleCrafting':
+        if (HUD && playerInventory) {
+          HUD.toggleCraftingPanel();
+          HUD.updateCraftingDisplay(playerInventory);
+        }
+        break;
+
+      case 'useQuickSlot':
+        console.log('Use quick slot:', payload.slot);
+        break;
+
       case 'click':
-        // Raycasting for object selection would go here
-        console.log('Click at:', payload);
+        // Raycasting for resource node harvesting
+        if (raycaster && sceneContext && sceneContext.camera && World) {
+          var node = World.getResourceNodeAtMouse(raycaster, sceneContext.camera, payload.x, payload.y);
+          if (node) {
+            handleResourceHarvest(node);
+          }
+        }
         break;
 
       default:

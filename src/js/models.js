@@ -766,6 +766,790 @@
   }
 
   // ========================================
+  // LANDMARK GENERATORS
+  // ========================================
+
+  function createLandmark(type, scale) {
+    scale = scale || 1;
+    const group = new THREE.Group();
+    group.name = 'landmark_' + type;
+
+    switch(type) {
+      case 'fountain':
+        const basinMat = new THREE.MeshLambertMaterial({ color: 0x8899aa });
+        const waterMat = new THREE.MeshLambertMaterial({
+          color: 0x4488cc,
+          transparent: true,
+          opacity: 0.7
+        });
+        const pillarMat = new THREE.MeshLambertMaterial({ color: 0xaabbcc });
+
+        // Circular basin
+        const basin = new THREE.Mesh(
+          new THREE.CylinderGeometry(2 * scale, 2.2 * scale, 0.6 * scale, 16),
+          basinMat
+        );
+        basin.position.y = 0.3 * scale;
+        group.add(basin);
+
+        // Water surface inside basin
+        const water = new THREE.Mesh(
+          new THREE.CylinderGeometry(1.8 * scale, 1.8 * scale, 0.1 * scale, 16),
+          waterMat
+        );
+        water.position.y = 0.5 * scale;
+        group.add(water);
+
+        // Central pillar
+        const centerPillar = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.2 * scale, 0.3 * scale, 2 * scale, 8),
+          pillarMat
+        );
+        centerPillar.position.y = 1.3 * scale;
+        group.add(centerPillar);
+
+        // Top bowl
+        const topBowl = new THREE.Mesh(
+          new THREE.SphereGeometry(0.5 * scale, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+          basinMat
+        );
+        topBowl.position.y = 2.3 * scale;
+        topBowl.rotation.x = Math.PI;
+        group.add(topBowl);
+
+        // Water drop effect (small glowing sphere)
+        const dropMat = new THREE.MeshLambertMaterial({
+          color: 0x88ccff,
+          emissive: 0x2266aa,
+          emissiveIntensity: 0.4
+        });
+        const drop = new THREE.Mesh(
+          new THREE.SphereGeometry(0.15 * scale, 8, 6),
+          dropMat
+        );
+        drop.position.y = 2.5 * scale;
+        drop.name = 'waterDrop';
+        group.add(drop);
+
+        group.userData.animationType = 'fountain';
+        break;
+
+      case 'obelisk':
+        const obeliskMat = new THREE.MeshLambertMaterial({ color: 0x334455 });
+        const runeMat = new THREE.MeshLambertMaterial({
+          color: 0x88aaff,
+          emissive: 0x4466cc,
+          emissiveIntensity: 0.6
+        });
+
+        // Tall tapered column
+        const obelisk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.3 * scale, 0.6 * scale, 5 * scale, 4),
+          obeliskMat
+        );
+        obelisk.position.y = 2.5 * scale;
+        group.add(obelisk);
+
+        // Glowing rune rings
+        for (let i = 0; i < 3; i++) {
+          const rune = new THREE.Mesh(
+            new THREE.TorusGeometry(0.45 * scale, 0.04 * scale, 6, 12),
+            runeMat
+          );
+          rune.position.y = (1.5 + i * 1.2) * scale;
+          rune.rotation.x = Math.PI / 2;
+          group.add(rune);
+        }
+
+        // Pyramidal top
+        const top = new THREE.Mesh(
+          new THREE.ConeGeometry(0.35 * scale, 0.6 * scale, 4),
+          obeliskMat
+        );
+        top.position.y = 5.3 * scale;
+        group.add(top);
+
+        // Glowing tip
+        const tipMat = new THREE.MeshLambertMaterial({
+          color: 0xaaccff,
+          emissive: 0x6688ff,
+          emissiveIntensity: 1.0
+        });
+        const tip = new THREE.Mesh(
+          new THREE.SphereGeometry(0.12 * scale, 8, 6),
+          tipMat
+        );
+        tip.position.y = 5.7 * scale;
+        group.add(tip);
+
+        group.userData.animationType = 'pulse';
+        group.userData.pulseSpeed = 1.5;
+        break;
+
+      case 'statue':
+        const stoneMat = new THREE.MeshLambertMaterial({ color: 0x999999 });
+        const pedestalMat = new THREE.MeshLambertMaterial({ color: 0x777777 });
+
+        // Pedestal
+        const pedestal = new THREE.Mesh(
+          new THREE.BoxGeometry(1.2 * scale, 0.8 * scale, 1.2 * scale),
+          pedestalMat
+        );
+        pedestal.position.y = 0.4 * scale;
+        group.add(pedestal);
+
+        // Body (torso)
+        const torso = new THREE.Mesh(
+          new THREE.BoxGeometry(0.7 * scale, 1.2 * scale, 0.4 * scale),
+          stoneMat
+        );
+        torso.position.y = 1.8 * scale;
+        group.add(torso);
+
+        // Head
+        const head = new THREE.Mesh(
+          new THREE.SphereGeometry(0.25 * scale, 8, 6),
+          stoneMat
+        );
+        head.position.y = 2.7 * scale;
+        group.add(head);
+
+        // Arms reaching out
+        const leftArm = new THREE.Mesh(
+          new THREE.BoxGeometry(0.8 * scale, 0.2 * scale, 0.2 * scale),
+          stoneMat
+        );
+        leftArm.position.set(-0.7 * scale, 2.0 * scale, 0);
+        leftArm.rotation.z = Math.PI / 6;
+        group.add(leftArm);
+
+        const rightArm = new THREE.Mesh(
+          new THREE.BoxGeometry(0.8 * scale, 0.2 * scale, 0.2 * scale),
+          stoneMat
+        );
+        rightArm.position.set(0.7 * scale, 2.0 * scale, 0);
+        rightArm.rotation.z = -Math.PI / 6;
+        group.add(rightArm);
+        break;
+
+      case 'campfire':
+        const logMat = new THREE.MeshLambertMaterial({ color: 0x4a3020 });
+        const fireMat = new THREE.MeshLambertMaterial({
+          color: 0xff6600,
+          emissive: 0xff4400,
+          emissiveIntensity: 0.9
+        });
+        const emberMat = new THREE.MeshLambertMaterial({
+          color: 0xff2200,
+          emissive: 0xff0000,
+          emissiveIntensity: 0.7
+        });
+
+        // Ring of stones
+        for (let i = 0; i < 8; i++) {
+          const stone = new THREE.Mesh(
+            new THREE.SphereGeometry(0.15 * scale, 6, 4),
+            new THREE.MeshLambertMaterial({ color: 0x666666 })
+          );
+          const angle = (i / 8) * Math.PI * 2;
+          stone.position.x = Math.cos(angle) * 0.6 * scale;
+          stone.position.z = Math.sin(angle) * 0.6 * scale;
+          stone.position.y = 0.1 * scale;
+          stone.scale.y = 0.7;
+          group.add(stone);
+        }
+
+        // Logs in triangle pattern
+        for (let i = 0; i < 3; i++) {
+          const log = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.08 * scale, 0.1 * scale, 1 * scale, 6),
+            logMat
+          );
+          const angle = (i / 3) * Math.PI * 2;
+          log.position.x = Math.cos(angle) * 0.2 * scale;
+          log.position.z = Math.sin(angle) * 0.2 * scale;
+          log.position.y = 0.15 * scale;
+          log.rotation.z = Math.PI / 2;
+          log.rotation.y = angle;
+          group.add(log);
+        }
+
+        // Fire core (will be animated)
+        const fireCore = new THREE.Mesh(
+          new THREE.ConeGeometry(0.25 * scale, 0.8 * scale, 6),
+          fireMat
+        );
+        fireCore.position.y = 0.5 * scale;
+        fireCore.name = 'fireCore';
+        group.add(fireCore);
+
+        // Inner flame
+        const innerFlame = new THREE.Mesh(
+          new THREE.ConeGeometry(0.15 * scale, 0.5 * scale, 5),
+          new THREE.MeshLambertMaterial({
+            color: 0xffaa00,
+            emissive: 0xff8800,
+            emissiveIntensity: 1.0
+          })
+        );
+        innerFlame.position.y = 0.55 * scale;
+        innerFlame.name = 'innerFlame';
+        group.add(innerFlame);
+
+        // Embers
+        for (let i = 0; i < 5; i++) {
+          const ember = new THREE.Mesh(
+            new THREE.SphereGeometry(0.04 * scale, 4, 4),
+            emberMat
+          );
+          ember.position.x = (Math.random() - 0.5) * 0.4 * scale;
+          ember.position.z = (Math.random() - 0.5) * 0.4 * scale;
+          ember.position.y = 0.2 * scale;
+          group.add(ember);
+        }
+
+        // Point light for fire glow
+        const fireLight = new THREE.PointLight(0xff6622, 2, 15);
+        fireLight.position.y = 0.8 * scale;
+        group.add(fireLight);
+
+        group.userData.animationType = 'flicker';
+        group.userData.flickerSpeed = 8;
+        break;
+
+      case 'portal_ring':
+        const ringMat = new THREE.MeshLambertMaterial({
+          color: 0x8866ff,
+          emissive: 0x4422cc,
+          emissiveIntensity: 0.8
+        });
+        const frameMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
+
+        // Stone frame pillars
+        const leftPillar = new THREE.Mesh(
+          new THREE.BoxGeometry(0.4 * scale, 4 * scale, 0.4 * scale),
+          frameMat
+        );
+        leftPillar.position.set(-1.5 * scale, 2 * scale, 0);
+        group.add(leftPillar);
+
+        const rightPillar = new THREE.Mesh(
+          new THREE.BoxGeometry(0.4 * scale, 4 * scale, 0.4 * scale),
+          frameMat
+        );
+        rightPillar.position.set(1.5 * scale, 2 * scale, 0);
+        group.add(rightPillar);
+
+        // Arch top
+        const arch = new THREE.Mesh(
+          new THREE.TorusGeometry(1.5 * scale, 0.2 * scale, 8, 12, Math.PI),
+          frameMat
+        );
+        arch.position.y = 4 * scale;
+        group.add(arch);
+
+        // Glowing inner ring
+        const innerRing = new THREE.Mesh(
+          new THREE.TorusGeometry(1.2 * scale, 0.08 * scale, 8, 24),
+          ringMat
+        );
+        innerRing.position.y = 2.5 * scale;
+        innerRing.name = 'portalRing';
+        group.add(innerRing);
+
+        // Swirling energy center (flat disc)
+        const portalCenter = new THREE.Mesh(
+          new THREE.CircleGeometry(1.1 * scale, 16),
+          new THREE.MeshLambertMaterial({
+            color: 0xaa88ff,
+            emissive: 0x6644cc,
+            emissiveIntensity: 0.6,
+            transparent: true,
+            opacity: 0.5,
+            side: THREE.DoubleSide
+          })
+        );
+        portalCenter.position.y = 2.5 * scale;
+        portalCenter.name = 'portalCenter';
+        group.add(portalCenter);
+
+        group.userData.animationType = 'portal';
+        group.userData.spinSpeed = 0.5;
+        break;
+
+      case 'signpost':
+        const postMat = new THREE.MeshLambertMaterial({ color: 0x6b4226 });
+        const signMat = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
+
+        // Post
+        const signPost = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.06 * scale, 0.08 * scale, 2.5 * scale, 6),
+          postMat
+        );
+        signPost.position.y = 1.25 * scale;
+        group.add(signPost);
+
+        // Directional signs (angled boards)
+        const signAngles = [0, Math.PI / 3, -Math.PI / 4];
+        const signColors = [0x9b7924, 0x8b6914, 0x7b5904];
+        signAngles.forEach(function(angle, i) {
+          var signBoard = new THREE.Mesh(
+            new THREE.BoxGeometry(0.8 * scale, 0.2 * scale, 0.05 * scale),
+            new THREE.MeshLambertMaterial({ color: signColors[i] })
+          );
+          signBoard.position.y = (2.0 - i * 0.35) * scale;
+          signBoard.position.x = 0.3 * scale;
+          signBoard.rotation.y = angle;
+          group.add(signBoard);
+        });
+        break;
+
+      case 'gazebo':
+        const gazeboWoodMat = new THREE.MeshLambertMaterial({ color: 0xc9a96e });
+        const gazeboRoofMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+
+        // Floor platform
+        const floor = new THREE.Mesh(
+          new THREE.CylinderGeometry(2.5 * scale, 2.5 * scale, 0.2 * scale, 8),
+          gazeboWoodMat
+        );
+        floor.position.y = 0.3 * scale;
+        group.add(floor);
+
+        // 6 pillars
+        for (let i = 0; i < 6; i++) {
+          const gazeboPillar = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1 * scale, 0.1 * scale, 2.5 * scale, 6),
+            gazeboWoodMat
+          );
+          const pAngle = (i / 6) * Math.PI * 2;
+          gazeboPillar.position.x = Math.cos(pAngle) * 2.2 * scale;
+          gazeboPillar.position.z = Math.sin(pAngle) * 2.2 * scale;
+          gazeboPillar.position.y = 1.55 * scale;
+          group.add(gazeboPillar);
+        }
+
+        // Conical roof
+        const gazeboRoof = new THREE.Mesh(
+          new THREE.ConeGeometry(3 * scale, 1.5 * scale, 8),
+          gazeboRoofMat
+        );
+        gazeboRoof.position.y = 3.6 * scale;
+        group.add(gazeboRoof);
+
+        // Railing sections between pillars
+        for (let i = 0; i < 6; i++) {
+          if (i === 0) continue; // Leave one gap for entrance
+          const a1 = (i / 6) * Math.PI * 2;
+          const a2 = ((i + 1) / 6) * Math.PI * 2;
+          const midAngle = (a1 + a2) / 2;
+          const railing = new THREE.Mesh(
+            new THREE.BoxGeometry(1.5 * scale, 0.1 * scale, 0.08 * scale),
+            gazeboWoodMat
+          );
+          railing.position.x = Math.cos(midAngle) * 2.2 * scale;
+          railing.position.z = Math.sin(midAngle) * 2.2 * scale;
+          railing.position.y = 0.8 * scale;
+          railing.rotation.y = midAngle + Math.PI / 2;
+          group.add(railing);
+        }
+        break;
+    }
+
+    return group;
+  }
+
+  // ========================================
+  // RESOURCE NODE GENERATORS
+  // ========================================
+
+  function createResourceNode(type, scale) {
+    scale = scale || 1;
+    const group = new THREE.Group();
+    group.name = 'resource_' + type;
+    group.userData.isResource = true;
+    group.userData.resourceType = type;
+
+    switch(type) {
+      case 'ore_vein':
+        const oreMat = new THREE.MeshLambertMaterial({ color: 0x8a7b6b });
+        const oreGlintMat = new THREE.MeshLambertMaterial({
+          color: 0xccaa66,
+          emissive: 0x886622,
+          emissiveIntensity: 0.4
+        });
+
+        // Base rock
+        const oreRock = new THREE.Mesh(
+          new THREE.DodecahedronGeometry(0.7 * scale, 0),
+          oreMat
+        );
+        oreRock.position.y = 0.4 * scale;
+        oreRock.scale.y = 0.6;
+        group.add(oreRock);
+
+        // Metallic veins (small shiny patches)
+        for (let i = 0; i < 4; i++) {
+          const vein = new THREE.Mesh(
+            new THREE.SphereGeometry(0.12 * scale, 6, 4),
+            oreGlintMat
+          );
+          const angle = (i / 4) * Math.PI * 2 + Math.random();
+          vein.position.x = Math.cos(angle) * 0.4 * scale;
+          vein.position.z = Math.sin(angle) * 0.4 * scale;
+          vein.position.y = (0.3 + Math.random() * 0.3) * scale;
+          group.add(vein);
+        }
+
+        group.userData.animationType = 'pulse';
+        group.userData.pulseSpeed = 0.8;
+        break;
+
+      case 'crystal_cluster':
+        const crystalColors = [0x88aaff, 0xaa88ff, 0x66ccff, 0xcc88ff];
+
+        // Several upward-pointing crystals
+        for (let i = 0; i < 5; i++) {
+          const crystalHeight = (0.5 + Math.random() * 1.0) * scale;
+          const crystalRadius = (0.08 + Math.random() * 0.12) * scale;
+          const crystal = new THREE.Mesh(
+            new THREE.ConeGeometry(crystalRadius, crystalHeight, 6),
+            new THREE.MeshLambertMaterial({
+              color: crystalColors[i % crystalColors.length],
+              emissive: crystalColors[i % crystalColors.length],
+              emissiveIntensity: 0.3,
+              transparent: true,
+              opacity: 0.85
+            })
+          );
+          const angle = (i / 5) * Math.PI * 2;
+          const rad = 0.2 * scale;
+          crystal.position.x = Math.cos(angle) * rad;
+          crystal.position.z = Math.sin(angle) * rad;
+          crystal.position.y = crystalHeight / 2;
+          // Slight random tilt
+          crystal.rotation.x = (Math.random() - 0.5) * 0.3;
+          crystal.rotation.z = (Math.random() - 0.5) * 0.3;
+          group.add(crystal);
+        }
+
+        // Glow light
+        const crystalLight = new THREE.PointLight(0x8888ff, 0.8, 8);
+        crystalLight.position.y = 0.5 * scale;
+        group.add(crystalLight);
+
+        group.userData.animationType = 'pulse';
+        group.userData.pulseSpeed = 1.2;
+        break;
+
+      case 'herb_patch':
+        const stemMat = new THREE.MeshLambertMaterial({ color: 0x2d7a2d });
+        const flowerColors = [0xff88aa, 0xffaa44, 0xaa88ff, 0x88ffaa];
+
+        // Cluster of small herb plants
+        for (let i = 0; i < 6; i++) {
+          const stem = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02 * scale, 0.02 * scale, 0.4 * scale, 4),
+            stemMat
+          );
+          const angle = (i / 6) * Math.PI * 2;
+          const rad = 0.3 * scale;
+          stem.position.x = Math.cos(angle) * rad;
+          stem.position.z = Math.sin(angle) * rad;
+          stem.position.y = 0.2 * scale;
+          group.add(stem);
+
+          // Tiny flower/leaf at top
+          const flower = new THREE.Mesh(
+            new THREE.SphereGeometry(0.06 * scale, 6, 4),
+            new THREE.MeshLambertMaterial({ color: flowerColors[i % flowerColors.length] })
+          );
+          flower.position.x = stem.position.x;
+          flower.position.z = stem.position.z;
+          flower.position.y = 0.42 * scale;
+          group.add(flower);
+        }
+
+        // Ground cover leaves
+        const leafMat = new THREE.MeshLambertMaterial({ color: 0x3a8a3a });
+        const leafGround = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.5 * scale, 0.5 * scale, 0.05 * scale, 8),
+          leafMat
+        );
+        leafGround.position.y = 0.02 * scale;
+        group.add(leafGround);
+
+        group.userData.animationType = 'sway';
+        group.userData.swayAmount = 0.03;
+        group.userData.swaySpeed = 1.5;
+        break;
+
+      case 'flower_bed':
+        const fStemMat = new THREE.MeshLambertMaterial({ color: 0x2d7a2d });
+        const petalColors = [0xff4488, 0xff88cc, 0xffaa66, 0xffff44, 0xff6644];
+
+        // Flowers in a cluster
+        for (let i = 0; i < 8; i++) {
+          const fStem = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.015 * scale, 0.02 * scale, 0.5 * scale, 4),
+            fStemMat
+          );
+          const angle = Math.random() * Math.PI * 2;
+          const rad = Math.random() * 0.5 * scale;
+          fStem.position.x = Math.cos(angle) * rad;
+          fStem.position.z = Math.sin(angle) * rad;
+          fStem.position.y = 0.25 * scale;
+          // Slight random lean
+          fStem.rotation.x = (Math.random() - 0.5) * 0.15;
+          fStem.rotation.z = (Math.random() - 0.5) * 0.15;
+          group.add(fStem);
+
+          // Flower head (small sphere cluster)
+          const flowerHead = new THREE.Mesh(
+            new THREE.SphereGeometry(0.08 * scale, 6, 4),
+            new THREE.MeshLambertMaterial({
+              color: petalColors[Math.floor(Math.random() * petalColors.length)]
+            })
+          );
+          flowerHead.position.set(fStem.position.x, 0.52 * scale, fStem.position.z);
+          group.add(flowerHead);
+        }
+
+        group.userData.animationType = 'sway';
+        group.userData.swayAmount = 0.02;
+        group.userData.swaySpeed = 2;
+        break;
+
+      case 'wood_pile':
+        const woodMat = new THREE.MeshLambertMaterial({ color: 0x6b4226 });
+        const barkMat = new THREE.MeshLambertMaterial({ color: 0x4a3018 });
+
+        // Stack of logs
+        var logCount = 0;
+        for (let row = 0; row < 3; row++) {
+          var logsInRow = 3 - row;
+          for (let i = 0; i < logsInRow; i++) {
+            const log = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.12 * scale, 0.12 * scale, 1.0 * scale, 6),
+              row % 2 === 0 ? woodMat : barkMat
+            );
+            log.rotation.z = Math.PI / 2;
+            log.position.x = (i - (logsInRow - 1) / 2) * 0.26 * scale;
+            log.position.y = (0.12 + row * 0.22) * scale;
+            log.position.z = ((logCount % 2) * 0.05 - 0.025) * scale;
+            group.add(log);
+            logCount++;
+          }
+        }
+        break;
+    }
+
+    return group;
+  }
+
+  // ========================================
+  // MORE CREATURE GENERATORS
+  // ========================================
+
+  function createWildlife(type) {
+    const group = new THREE.Group();
+    group.name = 'wildlife_' + type;
+
+    switch(type) {
+      case 'deer':
+        const deerBodyMat = new THREE.MeshLambertMaterial({ color: 0xb8860b });
+        const deerLegMat = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
+
+        // Body
+        const deerBody = new THREE.Mesh(
+          new THREE.BoxGeometry(0.4, 0.35, 0.8),
+          deerBodyMat
+        );
+        deerBody.position.y = 0.7;
+        group.add(deerBody);
+
+        // Head
+        const deerHead = new THREE.Mesh(
+          new THREE.BoxGeometry(0.2, 0.2, 0.25),
+          deerBodyMat
+        );
+        deerHead.position.set(0, 0.95, 0.4);
+        group.add(deerHead);
+
+        // Antlers
+        const antlerMat = new THREE.MeshLambertMaterial({ color: 0xd2b48c });
+        for (let side = -1; side <= 1; side += 2) {
+          const antler = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, 0.3, 4),
+            antlerMat
+          );
+          antler.position.set(side * 0.1, 1.15, 0.4);
+          antler.rotation.z = side * Math.PI / 6;
+          group.add(antler);
+
+          // Antler branch
+          const branch = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.015, 0.015, 0.15, 4),
+            antlerMat
+          );
+          branch.position.set(side * 0.2, 1.25, 0.4);
+          branch.rotation.z = side * Math.PI / 4;
+          group.add(branch);
+        }
+
+        // Legs
+        var legPositions = [
+          { x: -0.12, z: 0.25 }, { x: 0.12, z: 0.25 },
+          { x: -0.12, z: -0.25 }, { x: 0.12, z: -0.25 }
+        ];
+        legPositions.forEach(function(pos) {
+          var leg = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.035, 0.03, 0.5, 6),
+            deerLegMat
+          );
+          leg.position.set(pos.x, 0.3, pos.z);
+          group.add(leg);
+        });
+
+        // Tail (small white triangle)
+        const tailMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        const deerTail = new THREE.Mesh(
+          new THREE.ConeGeometry(0.05, 0.1, 4),
+          tailMat
+        );
+        deerTail.position.set(0, 0.75, -0.45);
+        deerTail.rotation.x = -Math.PI / 4;
+        group.add(deerTail);
+
+        group.userData.animationType = 'idle_look';
+        group.scale.set(1.5, 1.5, 1.5);
+        break;
+
+      case 'rabbit':
+        const rabbitMat = new THREE.MeshLambertMaterial({ color: 0xd2b48c });
+
+        // Body
+        const rabbitBody = new THREE.Mesh(
+          new THREE.SphereGeometry(0.15, 8, 6),
+          rabbitMat
+        );
+        rabbitBody.position.y = 0.2;
+        rabbitBody.scale.z = 1.3;
+        group.add(rabbitBody);
+
+        // Head
+        const rabbitHead = new THREE.Mesh(
+          new THREE.SphereGeometry(0.1, 8, 6),
+          rabbitMat
+        );
+        rabbitHead.position.set(0, 0.3, 0.15);
+        group.add(rabbitHead);
+
+        // Ears
+        const earMat = new THREE.MeshLambertMaterial({ color: 0xc4a882 });
+        for (let side = -1; side <= 1; side += 2) {
+          const ear = new THREE.Mesh(
+            new THREE.BoxGeometry(0.03, 0.15, 0.05),
+            earMat
+          );
+          ear.position.set(side * 0.05, 0.45, 0.15);
+          ear.rotation.z = side * 0.2;
+          group.add(ear);
+        }
+
+        // Fluffy tail
+        const puffTail = new THREE.Mesh(
+          new THREE.SphereGeometry(0.06, 6, 4),
+          new THREE.MeshLambertMaterial({ color: 0xeeeeee })
+        );
+        puffTail.position.set(0, 0.2, -0.2);
+        group.add(puffTail);
+
+        group.userData.animationType = 'hop';
+        group.userData.hopInterval = 3;
+        group.userData.hopTimer = Math.random() * 3;
+        break;
+
+      case 'firefly':
+        const ffBodyMat = new THREE.MeshLambertMaterial({ color: 0x333300 });
+        const ffGlowMat = new THREE.MeshLambertMaterial({
+          color: 0xffff44,
+          emissive: 0xaacc00,
+          emissiveIntensity: 1.0
+        });
+
+        // Tiny body
+        const ffBody = new THREE.Mesh(
+          new THREE.SphereGeometry(0.03, 6, 4),
+          ffBodyMat
+        );
+        group.add(ffBody);
+
+        // Glowing abdomen
+        const ffGlow = new THREE.Mesh(
+          new THREE.SphereGeometry(0.04, 6, 4),
+          ffGlowMat
+        );
+        ffGlow.position.z = -0.04;
+        ffGlow.name = 'glow';
+        group.add(ffGlow);
+
+        // Tiny point light
+        const ffLight = new THREE.PointLight(0xaacc00, 0.5, 4);
+        ffLight.position.z = -0.04;
+        group.add(ffLight);
+
+        group.userData.animationType = 'float';
+        group.userData.floatSpeed = 0.5 + Math.random() * 0.5;
+        group.userData.floatRadius = 1 + Math.random() * 2;
+        group.userData.floatAngle = Math.random() * Math.PI * 2;
+        group.userData.floatHeight = 1.5 + Math.random();
+        break;
+
+      case 'frog':
+        const frogMat = new THREE.MeshLambertMaterial({ color: 0x228b22 });
+        const frogEyeMat = new THREE.MeshLambertMaterial({ color: 0xffff00 });
+
+        // Body
+        const frogBody = new THREE.Mesh(
+          new THREE.SphereGeometry(0.12, 8, 6),
+          frogMat
+        );
+        frogBody.position.y = 0.1;
+        frogBody.scale.y = 0.7;
+        frogBody.scale.z = 1.2;
+        group.add(frogBody);
+
+        // Eyes (protruding)
+        for (let side = -1; side <= 1; side += 2) {
+          const eye = new THREE.Mesh(
+            new THREE.SphereGeometry(0.04, 6, 4),
+            frogEyeMat
+          );
+          eye.position.set(side * 0.06, 0.18, 0.08);
+          group.add(eye);
+        }
+
+        // Back legs
+        for (let side = -1; side <= 1; side += 2) {
+          const backLeg = new THREE.Mesh(
+            new THREE.BoxGeometry(0.04, 0.04, 0.15),
+            frogMat
+          );
+          backLeg.position.set(side * 0.1, 0.05, -0.12);
+          group.add(backLeg);
+        }
+
+        group.userData.animationType = 'hop';
+        group.userData.hopInterval = 5;
+        group.userData.hopTimer = Math.random() * 5;
+        break;
+    }
+
+    return group;
+  }
+
+  // ========================================
   // ANIMATION SYSTEM
   // ========================================
 
@@ -835,6 +1619,116 @@
         const spinSpeed = model.userData.spinSpeed || 0.5;
         model.rotation.y += deltaTime * spinSpeed;
         break;
+
+      case 'pulse':
+        // Pulsating glow (scale throb)
+        var pulseSpeed = model.userData.pulseSpeed || 1.5;
+        var pulseVal = 1 + Math.sin(worldTime * pulseSpeed) * 0.08;
+        model.scale.set(pulseVal, pulseVal, pulseVal);
+        break;
+
+      case 'flicker':
+        // Fire flicker animation
+        var flickerSpeed = model.userData.flickerSpeed || 8;
+        var fireCore = model.getObjectByName('fireCore');
+        var innerFlame = model.getObjectByName('innerFlame');
+        if (fireCore) {
+          fireCore.scale.x = 0.8 + Math.sin(worldTime * flickerSpeed) * 0.3;
+          fireCore.scale.z = 0.8 + Math.cos(worldTime * flickerSpeed * 1.3) * 0.3;
+          fireCore.scale.y = 0.9 + Math.sin(worldTime * flickerSpeed * 0.7) * 0.2;
+          fireCore.position.y = 0.5 + Math.sin(worldTime * flickerSpeed * 1.1) * 0.05;
+        }
+        if (innerFlame) {
+          innerFlame.scale.x = 0.7 + Math.cos(worldTime * flickerSpeed * 1.5) * 0.4;
+          innerFlame.scale.z = 0.7 + Math.sin(worldTime * flickerSpeed * 0.9) * 0.4;
+          innerFlame.rotation.y += deltaTime * 2;
+        }
+        break;
+
+      case 'fountain':
+        // Water drop bouncing animation
+        var waterDrop = model.getObjectByName('waterDrop');
+        if (waterDrop) {
+          var fountainCycle = worldTime * 2;
+          var dropPhase = fountainCycle % 2;
+          if (dropPhase < 1) {
+            waterDrop.position.y = 2.5 + dropPhase * 0.5;
+            waterDrop.scale.set(1, 1, 1);
+          } else {
+            waterDrop.position.y = 3.0 - (dropPhase - 1) * 0.8;
+            var shrink = 1 - (dropPhase - 1) * 0.5;
+            waterDrop.scale.set(shrink, shrink, shrink);
+          }
+        }
+        break;
+
+      case 'portal':
+        // Rotating portal ring + wobbling center
+        var portalRing = model.getObjectByName('portalRing');
+        var portalCenter = model.getObjectByName('portalCenter');
+        if (portalRing) {
+          portalRing.rotation.z += deltaTime * 0.5;
+        }
+        if (portalCenter) {
+          portalCenter.rotation.z -= deltaTime * 0.3;
+          var opacity = 0.3 + Math.sin(worldTime * 1.5) * 0.2;
+          if (portalCenter.material) {
+            portalCenter.material.opacity = opacity;
+          }
+        }
+        break;
+
+      case 'float':
+        // Floating in a gentle path (for fireflies)
+        var floatSpeed = model.userData.floatSpeed || 0.5;
+        var floatRadius = model.userData.floatRadius || 2;
+        var floatHeight = model.userData.floatHeight || 2;
+
+        model.userData.floatAngle = (model.userData.floatAngle || 0) + deltaTime * floatSpeed;
+        var fAngle = model.userData.floatAngle;
+
+        if (model.userData.floatCenterX === undefined) {
+          model.userData.floatCenterX = model.position.x;
+          model.userData.floatCenterZ = model.position.z;
+        }
+
+        model.position.x = model.userData.floatCenterX + Math.cos(fAngle) * floatRadius;
+        model.position.z = model.userData.floatCenterZ + Math.sin(fAngle * 0.7) * floatRadius;
+        model.position.y = floatHeight + Math.sin(fAngle * 1.3) * 0.5;
+        break;
+
+      case 'hop':
+        // Occasional hopping for rabbits/frogs
+        model.userData.hopTimer = (model.userData.hopTimer || 0) - deltaTime;
+        if (model.userData.hopTimer <= 0) {
+          model.userData.hopTimer = model.userData.hopInterval || 3;
+          model.userData.isHopping = true;
+          model.userData.hopPhase = 0;
+          // Pick random direction
+          model.userData.hopDirX = (Math.random() - 0.5) * 2;
+          model.userData.hopDirZ = (Math.random() - 0.5) * 2;
+        }
+        if (model.userData.isHopping) {
+          model.userData.hopPhase += deltaTime * 4;
+          if (model.userData.hopPhase < Math.PI) {
+            var hopHeight = Math.sin(model.userData.hopPhase) * 0.3;
+            if (model.userData.baseHopY === undefined) {
+              model.userData.baseHopY = model.position.y;
+            }
+            model.position.y = model.userData.baseHopY + hopHeight;
+            model.position.x += model.userData.hopDirX * deltaTime;
+            model.position.z += model.userData.hopDirZ * deltaTime;
+          } else {
+            model.position.y = model.userData.baseHopY || model.position.y;
+            model.userData.isHopping = false;
+          }
+        }
+        break;
+
+      case 'idle_look':
+        // Gentle head turning for deer
+        model.rotation.y = Math.sin(worldTime * 0.3) * 0.3;
+        break;
     }
   }
 
@@ -847,6 +1741,9 @@
   exports.createBuilding = createBuilding;
   exports.createFurniture = createFurniture;
   exports.createCreature = createCreature;
+  exports.createLandmark = createLandmark;
+  exports.createResourceNode = createResourceNode;
+  exports.createWildlife = createWildlife;
   exports.animateModel = animateModel;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Models = {}));

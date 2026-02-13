@@ -72,6 +72,26 @@
   --z-hud: 100;
   --z-modal: 200;
   --z-notification: 300;
+
+  /* Item Rarity Colors */
+  --color-rarity-common: #cccccc;
+  --color-rarity-uncommon: #2ecc71;
+  --color-rarity-rare: #3498db;
+  --color-rarity-legendary: #f39c12;
+
+  /* Quest Colors */
+  --color-quest-available: #f1c40f;
+  --color-quest-active: #3498db;
+  --color-quest-complete: #2ecc71;
+
+  /* NPC Interaction */
+  --color-npc-friendly: #27ae60;
+  --color-npc-neutral: #95a5a6;
+
+  /* Transition speeds */
+  --transition-fast: 0.15s;
+  --transition-normal: 0.3s;
+  --transition-slow: 0.5s;
 }
 
 
@@ -430,6 +450,432 @@ html, body {
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.1); }
+}
+
+/* Inventory Panel */
+.inventory-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-bg-panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-lg);
+  min-width: 320px;
+  max-width: 420px;
+  z-index: var(--z-notification);
+  animation: panelSlideIn 0.3s ease;
+}
+
+.inventory-title {
+  font-family: var(--font-main);
+  font-size: var(--font-size-lg);
+  color: var(--color-gold);
+  margin-bottom: var(--space-md);
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-sm);
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.inventory-slot {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  width: 56px;
+  height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  font-size: 24px;
+}
+
+.inventory-slot:hover {
+  border-color: var(--color-accent);
+  background: rgba(218, 165, 32, 0.1);
+}
+
+.inventory-slot .slot-count {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 10px;
+  color: var(--color-text);
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.inventory-slot.rarity-uncommon { border-color: #2ecc71; }
+.inventory-slot.rarity-rare { border-color: #3498db; }
+.inventory-slot.rarity-legendary { border-color: #f39c12; box-shadow: 0 0 8px rgba(243, 156, 18, 0.3); }
+
+/* Crafting Panel */
+.crafting-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-bg-panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-lg);
+  min-width: 350px;
+  max-width: 450px;
+  max-height: 70vh;
+  overflow-y: auto;
+  z-index: var(--z-notification);
+  animation: panelSlideIn 0.3s ease;
+}
+
+.recipe-item {
+  display: flex;
+  align-items: center;
+  padding: var(--space-sm);
+  margin-bottom: var(--space-xs);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recipe-item:hover {
+  border-color: var(--color-accent);
+  background: rgba(218, 165, 32, 0.1);
+}
+
+.recipe-item.craftable {
+  border-color: rgba(46, 204, 113, 0.5);
+}
+
+.recipe-icon {
+  font-size: 24px;
+  margin-right: var(--space-sm);
+  width: 36px;
+  text-align: center;
+}
+
+.recipe-info {
+  flex: 1;
+}
+
+.recipe-name {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+}
+
+.recipe-materials {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.craft-btn {
+  background: var(--color-accent);
+  color: var(--color-night);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-xs);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.craft-btn:hover {
+  background: var(--color-gold);
+}
+
+.craft-btn:disabled {
+  background: #555;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* Quest Tracker - Top Right below Minimap */
+.quest-tracker {
+  position: absolute;
+  top: 190px;
+  right: var(--space-md);
+  background: var(--color-bg-panel);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(218, 165, 32, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  box-shadow: var(--shadow-md);
+  min-width: 180px;
+  max-width: 240px;
+  transition: opacity 0.3s ease;
+}
+
+.quest-tracker-title {
+  font-size: var(--font-size-xs);
+  color: var(--color-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-xs);
+}
+
+.quest-tracker-item {
+  margin-bottom: var(--space-xs);
+}
+
+.quest-tracker-name {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  font-weight: bold;
+}
+
+.quest-tracker-objective {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.quest-tracker-progress {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  margin-top: 2px;
+  overflow: hidden;
+}
+
+.quest-tracker-progress-bar {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+/* Quest Log Panel */
+.quest-log-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-bg-panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(218, 165, 32, 0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-lg);
+  min-width: 400px;
+  max-width: 500px;
+  max-height: 70vh;
+  overflow-y: auto;
+  z-index: var(--z-notification);
+  animation: panelSlideIn 0.3s ease;
+}
+
+.quest-entry {
+  padding: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quest-entry:hover {
+  border-color: var(--color-accent);
+}
+
+.quest-entry.active {
+  border-color: var(--color-gold);
+  border-left: 3px solid var(--color-gold);
+}
+
+.quest-entry.completed {
+  opacity: 0.6;
+  border-color: #2ecc71;
+}
+
+.quest-entry-title {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  font-weight: bold;
+}
+
+.quest-entry-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.quest-entry-reward {
+  font-size: var(--font-size-xs);
+  color: var(--color-gold);
+  margin-top: 4px;
+}
+
+/* Quick Bar - Bottom Center */
+.quick-bar {
+  position: absolute;
+  bottom: var(--space-md);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-xs);
+  background: var(--color-bg-panel);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-xs);
+  box-shadow: var(--shadow-md);
+}
+
+.quick-slot {
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-slot:hover {
+  border-color: var(--color-accent);
+}
+
+.quick-slot .slot-key {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 9px;
+  color: var(--color-text-muted);
+}
+
+/* Item Tooltip */
+.item-tooltip {
+  position: absolute;
+  background: rgba(20, 20, 30, 0.95);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  max-width: 200px;
+  z-index: 1000;
+  pointer-events: none;
+  font-size: var(--font-size-xs);
+}
+
+.item-tooltip-name {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.item-tooltip-name.common { color: #ccc; }
+.item-tooltip-name.uncommon { color: #2ecc71; }
+.item-tooltip-name.rare { color: #3498db; }
+.item-tooltip-name.legendary { color: #f39c12; }
+
+.item-tooltip-desc {
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+/* Item Pickup Floating Text */
+.item-pickup-text {
+  position: absolute;
+  font-size: var(--font-size-sm);
+  color: var(--color-gold);
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  animation: floatUp 1.5s ease-out forwards;
+  z-index: var(--z-notification);
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-60px); }
+}
+
+/* Quest Complete Banner */
+.quest-complete-banner {
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(218, 165, 32, 0.15);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--color-gold);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg) var(--space-xl);
+  text-align: center;
+  z-index: var(--z-notification);
+  animation: questComplete 3s ease-in-out forwards;
+  pointer-events: none;
+}
+
+.quest-complete-banner h2 {
+  font-family: var(--font-main);
+  font-size: var(--font-size-xl);
+  color: var(--color-gold);
+  margin: 0 0 var(--space-sm);
+}
+
+.quest-complete-banner .reward {
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+}
+
+@keyframes questComplete {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+  10% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+  15% { transform: translate(-50%, -50%) scale(1); }
+  85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* Panel Slide-in Animation */
+@keyframes panelSlideIn {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Close button for panels */
+.panel-close {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-round);
+  width: 28px;
+  height: 28px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.panel-close:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text);
 }
 
 /* Responsive adjustments */
@@ -1579,6 +2025,871 @@ html, body {
   exports.EARN_TABLE = EARN_TABLE;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Economy = {}));
+
+
+// inventory.js
+/**
+ * ZION Inventory & Crafting System
+ * Manages player inventory, item stacks, crafting recipes, and resource harvesting
+ */
+
+(function(exports) {
+  'use strict';
+
+  // ========================================================================
+  // ITEM CATALOG - All available items in the game
+  // ========================================================================
+
+  const ITEM_CATALOG = {
+    // Seeds
+    seed_wildflower: {
+      id: 'seed_wildflower',
+      name: 'Wildflower Seeds',
+      type: 'seeds',
+      icon: '🌱',
+      description: 'Seeds that grow into colorful wildflowers',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+    seed_lotus: {
+      id: 'seed_lotus',
+      name: 'Lotus Seeds',
+      type: 'seeds',
+      icon: '🪷',
+      description: 'Rare seeds that bloom into mystical lotus flowers',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'rare'
+    },
+    seed_tree: {
+      id: 'seed_tree',
+      name: 'Tree Seeds',
+      type: 'seeds',
+      icon: '🌰',
+      description: 'Seeds for planting new trees',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+
+    // Flowers
+    flower_rose: {
+      id: 'flower_rose',
+      name: 'Rose',
+      type: 'flowers',
+      icon: '🌹',
+      description: 'A beautiful red rose',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'uncommon'
+    },
+    flower_sunflower: {
+      id: 'flower_sunflower',
+      name: 'Sunflower',
+      type: 'flowers',
+      icon: '🌻',
+      description: 'A bright yellow sunflower',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'common'
+    },
+    flower_lotus: {
+      id: 'flower_lotus',
+      name: 'Lotus Flower',
+      type: 'flowers',
+      icon: '🪷',
+      description: 'A mystical lotus flower',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'rare'
+    },
+    flower_tulip: {
+      id: 'flower_tulip',
+      name: 'Tulip',
+      type: 'flowers',
+      icon: '🌷',
+      description: 'A delicate tulip',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'common'
+    },
+    flower_cherry: {
+      id: 'flower_cherry',
+      name: 'Cherry Blossom',
+      type: 'flowers',
+      icon: '🌸',
+      description: 'A gentle cherry blossom',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'uncommon'
+    },
+
+    // Wood
+    wood_oak: {
+      id: 'wood_oak',
+      name: 'Oak Wood',
+      type: 'wood',
+      icon: '🪵',
+      description: 'Sturdy oak wood for building',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+    wood_pine: {
+      id: 'wood_pine',
+      name: 'Pine Wood',
+      type: 'wood',
+      icon: '🌲',
+      description: 'Light pine wood',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+    wood_mystical: {
+      id: 'wood_mystical',
+      name: 'Mystical Wood',
+      type: 'wood',
+      icon: '✨',
+      description: 'Rare wood imbued with energy',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'rare'
+    },
+
+    // Stone
+    stone_common: {
+      id: 'stone_common',
+      name: 'Stone',
+      type: 'stone',
+      icon: '🪨',
+      description: 'Common building stone',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+    stone_marble: {
+      id: 'stone_marble',
+      name: 'Marble',
+      type: 'stone',
+      icon: '⬜',
+      description: 'Polished marble for fine construction',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'uncommon'
+    },
+    stone_obsidian: {
+      id: 'stone_obsidian',
+      name: 'Obsidian',
+      type: 'stone',
+      icon: '⬛',
+      description: 'Dark volcanic glass',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'rare'
+    },
+
+    // Crystal
+    crystal_clear: {
+      id: 'crystal_clear',
+      name: 'Clear Crystal',
+      type: 'crystal',
+      icon: '💎',
+      description: 'A pristine clear crystal',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'uncommon'
+    },
+    crystal_amethyst: {
+      id: 'crystal_amethyst',
+      name: 'Amethyst',
+      type: 'crystal',
+      icon: '💜',
+      description: 'A purple amethyst crystal',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'rare'
+    },
+    crystal_emerald: {
+      id: 'crystal_emerald',
+      name: 'Emerald',
+      type: 'crystal',
+      icon: '💚',
+      description: 'A vibrant green emerald',
+      stackable: true,
+      maxStack: 30,
+      rarity: 'legendary'
+    },
+
+    // Herbs
+    herb_mint: {
+      id: 'herb_mint',
+      name: 'Mint',
+      type: 'herbs',
+      icon: '🌿',
+      description: 'Refreshing mint leaves',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+    herb_sage: {
+      id: 'herb_sage',
+      name: 'Sage',
+      type: 'herbs',
+      icon: '🍃',
+      description: 'Aromatic sage for wisdom',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'uncommon'
+    },
+    herb_ginseng: {
+      id: 'herb_ginseng',
+      name: 'Ginseng',
+      type: 'herbs',
+      icon: '🌱',
+      description: 'Rare medicinal root',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'rare'
+    },
+    herb_lavender: {
+      id: 'herb_lavender',
+      name: 'Lavender',
+      type: 'herbs',
+      icon: '🪻',
+      description: 'Calming lavender flowers',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+
+    // Food
+    food_bread: {
+      id: 'food_bread',
+      name: 'Bread',
+      type: 'food',
+      icon: '🍞',
+      description: 'Fresh baked bread',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'common'
+    },
+    food_honey: {
+      id: 'food_honey',
+      name: 'Honey',
+      type: 'food',
+      icon: '🍯',
+      description: 'Sweet golden honey',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'uncommon'
+    },
+    food_mushroom: {
+      id: 'food_mushroom',
+      name: 'Mushroom',
+      type: 'food',
+      icon: '🍄',
+      description: 'Edible forest mushroom',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'common'
+    },
+    food_berry: {
+      id: 'food_berry',
+      name: 'Berries',
+      type: 'food',
+      icon: '🫐',
+      description: 'Sweet wild berries',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'common'
+    },
+
+    // Tools
+    tool_pickaxe: {
+      id: 'tool_pickaxe',
+      name: 'Pickaxe',
+      type: 'tools',
+      icon: '⛏️',
+      description: 'For mining stone and crystals',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'uncommon'
+    },
+    tool_axe: {
+      id: 'tool_axe',
+      name: 'Axe',
+      type: 'tools',
+      icon: '🪓',
+      description: 'For chopping wood',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'uncommon'
+    },
+    tool_shovel: {
+      id: 'tool_shovel',
+      name: 'Shovel',
+      type: 'tools',
+      icon: '🏗️',
+      description: 'For digging and planting',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'uncommon'
+    },
+    tool_hammer: {
+      id: 'tool_hammer',
+      name: 'Hammer',
+      type: 'tools',
+      icon: '🔨',
+      description: 'For crafting and building',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'uncommon'
+    },
+
+    // Crafted Items
+    item_workbench: {
+      id: 'item_workbench',
+      name: 'Workbench',
+      type: 'crafted_items',
+      icon: '🛠️',
+      description: 'Essential crafting station',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'uncommon'
+    },
+    item_fountain: {
+      id: 'item_fountain',
+      name: 'Fountain',
+      type: 'crafted_items',
+      icon: '⛲',
+      description: 'Decorative water fountain',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'rare'
+    },
+    item_lantern: {
+      id: 'item_lantern',
+      name: 'Lantern',
+      type: 'crafted_items',
+      icon: '🏮',
+      description: 'Provides light in darkness',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'uncommon'
+    },
+    item_statue: {
+      id: 'item_statue',
+      name: 'Crystal Statue',
+      type: 'crafted_items',
+      icon: '🗿',
+      description: 'A magnificent crystal statue',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'legendary'
+    },
+
+    // Potions
+    potion_healing: {
+      id: 'potion_healing',
+      name: 'Healing Potion',
+      type: 'potions',
+      icon: '🧪',
+      description: 'Restores health and warmth',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'uncommon'
+    },
+    potion_energy: {
+      id: 'potion_energy',
+      name: 'Energy Potion',
+      type: 'potions',
+      icon: '⚡',
+      description: 'Boosts movement speed',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'uncommon'
+    },
+    potion_wisdom: {
+      id: 'potion_wisdom',
+      name: 'Wisdom Potion',
+      type: 'potions',
+      icon: '🔮',
+      description: 'Enhances learning and insight',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'rare'
+    },
+
+    // Knowledge Items (Athenaeum)
+    item_scroll: {
+      id: 'item_scroll',
+      name: 'Ancient Scroll',
+      type: 'knowledge',
+      icon: '📜',
+      description: 'Contains ancient wisdom',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'uncommon'
+    },
+    item_book: {
+      id: 'item_book',
+      name: 'Knowledge Book',
+      type: 'knowledge',
+      icon: '📖',
+      description: 'A book of collected knowledge',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'rare'
+    },
+
+    // Arena Trophies
+    item_trophy: {
+      id: 'item_trophy',
+      name: 'Trophy',
+      type: 'trophies',
+      icon: '🏆',
+      description: 'A mark of victory',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'rare'
+    }
+  };
+
+  // ========================================================================
+  // CRAFTING RECIPES
+  // ========================================================================
+
+  const RECIPES = [
+    // Basic Tools
+    {
+      id: 'craft_pickaxe',
+      name: 'Craft Pickaxe',
+      output: { itemId: 'tool_pickaxe', count: 1 },
+      requirements: [
+        { itemId: 'wood_oak', count: 3 },
+        { itemId: 'stone_common', count: 5 }
+      ],
+      sparkReward: 15
+    },
+    {
+      id: 'craft_axe',
+      name: 'Craft Axe',
+      output: { itemId: 'tool_axe', count: 1 },
+      requirements: [
+        { itemId: 'wood_oak', count: 3 },
+        { itemId: 'stone_common', count: 4 }
+      ],
+      sparkReward: 15
+    },
+    {
+      id: 'craft_shovel',
+      name: 'Craft Shovel',
+      output: { itemId: 'tool_shovel', count: 1 },
+      requirements: [
+        { itemId: 'wood_oak', count: 2 },
+        { itemId: 'stone_common', count: 3 }
+      ],
+      sparkReward: 12
+    },
+    {
+      id: 'craft_hammer',
+      name: 'Craft Hammer',
+      output: { itemId: 'tool_hammer', count: 1 },
+      requirements: [
+        { itemId: 'wood_oak', count: 2 },
+        { itemId: 'stone_common', count: 6 }
+      ],
+      sparkReward: 15
+    },
+
+    // Crafting Stations
+    {
+      id: 'craft_workbench',
+      name: 'Craft Workbench',
+      output: { itemId: 'item_workbench', count: 1 },
+      requirements: [
+        { itemId: 'wood_oak', count: 8 },
+        { itemId: 'stone_common', count: 4 }
+      ],
+      sparkReward: 25
+    },
+
+    // Decorations
+    {
+      id: 'craft_fountain',
+      name: 'Craft Fountain',
+      output: { itemId: 'item_fountain', count: 1 },
+      requirements: [
+        { itemId: 'stone_marble', count: 12 },
+        { itemId: 'crystal_clear', count: 3 }
+      ],
+      sparkReward: 40
+    },
+    {
+      id: 'craft_lantern',
+      name: 'Craft Lantern',
+      output: { itemId: 'item_lantern', count: 1 },
+      requirements: [
+        { itemId: 'wood_oak', count: 2 },
+        { itemId: 'crystal_clear', count: 1 }
+      ],
+      sparkReward: 10
+    },
+    {
+      id: 'craft_statue',
+      name: 'Craft Crystal Statue',
+      output: { itemId: 'item_statue', count: 1 },
+      requirements: [
+        { itemId: 'stone_marble', count: 10 },
+        { itemId: 'crystal_amethyst', count: 5 },
+        { itemId: 'crystal_emerald', count: 2 }
+      ],
+      sparkReward: 100
+    },
+
+    // Potions
+    {
+      id: 'craft_healing_potion',
+      name: 'Brew Healing Potion',
+      output: { itemId: 'potion_healing', count: 1 },
+      requirements: [
+        { itemId: 'herb_mint', count: 3 },
+        { itemId: 'crystal_clear', count: 1 }
+      ],
+      sparkReward: 20
+    },
+    {
+      id: 'craft_energy_potion',
+      name: 'Brew Energy Potion',
+      output: { itemId: 'potion_energy', count: 1 },
+      requirements: [
+        { itemId: 'herb_lavender', count: 2 },
+        { itemId: 'food_honey', count: 1 }
+      ],
+      sparkReward: 20
+    },
+    {
+      id: 'craft_wisdom_potion',
+      name: 'Brew Wisdom Potion',
+      output: { itemId: 'potion_wisdom', count: 1 },
+      requirements: [
+        { itemId: 'herb_sage', count: 3 },
+        { itemId: 'herb_ginseng', count: 2 },
+        { itemId: 'crystal_amethyst', count: 1 }
+      ],
+      sparkReward: 35
+    },
+
+    // Food Crafting
+    {
+      id: 'craft_bread',
+      name: 'Bake Bread',
+      output: { itemId: 'food_bread', count: 2 },
+      requirements: [
+        { itemId: 'seed_wildflower', count: 10 }
+      ],
+      sparkReward: 8
+    },
+
+    // Advanced Materials
+    {
+      id: 'refine_marble',
+      name: 'Refine Marble',
+      output: { itemId: 'stone_marble', count: 2 },
+      requirements: [
+        { itemId: 'stone_common', count: 5 }
+      ],
+      sparkReward: 10
+    },
+    {
+      id: 'craft_mystical_wood',
+      name: 'Infuse Mystical Wood',
+      output: { itemId: 'wood_mystical', count: 1 },
+      requirements: [
+        { itemId: 'wood_oak', count: 5 },
+        { itemId: 'crystal_clear', count: 2 }
+      ],
+      sparkReward: 30
+    },
+
+    // Knowledge Crafting
+    {
+      id: 'craft_book',
+      name: 'Bind Knowledge Book',
+      output: { itemId: 'item_book', count: 1 },
+      requirements: [
+        { itemId: 'item_scroll', count: 5 },
+        { itemId: 'wood_oak', count: 2 }
+      ],
+      sparkReward: 25
+    },
+
+    // Planting
+    {
+      id: 'plant_lotus',
+      name: 'Plant Lotus Seeds',
+      output: { itemId: 'flower_lotus', count: 1 },
+      requirements: [
+        { itemId: 'seed_lotus', count: 3 }
+      ],
+      sparkReward: 15
+    },
+    {
+      id: 'plant_flowers',
+      name: 'Plant Wildflowers',
+      output: { itemId: 'flower_sunflower', count: 3 },
+      requirements: [
+        { itemId: 'seed_wildflower', count: 5 }
+      ],
+      sparkReward: 8
+    }
+  ];
+
+  // ========================================================================
+  // PLAYER INVENTORY MANAGEMENT
+  // ========================================================================
+
+  /**
+   * Create a new inventory for a player
+   * @returns {Object} Inventory with 20 slots
+   */
+  function createInventory() {
+    return {
+      slots: new Array(20).fill(null),
+      quickBar: [0, 1, 2, 3, 4] // Indices of slots shown in quick bar
+    };
+  }
+
+  /**
+   * Add item to inventory
+   * @param {Object} inventory - Player inventory
+   * @param {string} itemId - Item ID from catalog
+   * @param {number} count - How many to add
+   * @returns {Object} {success: boolean, added: number, message: string}
+   */
+  function addItem(inventory, itemId, count = 1) {
+    const itemData = ITEM_CATALOG[itemId];
+    if (!itemData) {
+      return { success: false, added: 0, message: 'Unknown item' };
+    }
+
+    let remaining = count;
+
+    // If stackable, try to add to existing stacks first
+    if (itemData.stackable) {
+      for (let i = 0; i < inventory.slots.length; i++) {
+        const slot = inventory.slots[i];
+        if (slot && slot.itemId === itemId) {
+          const canAdd = Math.min(remaining, itemData.maxStack - slot.count);
+          slot.count += canAdd;
+          remaining -= canAdd;
+          if (remaining <= 0) {
+            return { success: true, added: count, message: `Added ${count} ${itemData.name}` };
+          }
+        }
+      }
+    }
+
+    // Add to empty slots
+    for (let i = 0; i < inventory.slots.length; i++) {
+      if (inventory.slots[i] === null) {
+        const stackSize = itemData.stackable ? Math.min(remaining, itemData.maxStack) : 1;
+        inventory.slots[i] = {
+          itemId: itemId,
+          count: stackSize
+        };
+        remaining -= stackSize;
+        if (remaining <= 0) {
+          return { success: true, added: count, message: `Added ${count} ${itemData.name}` };
+        }
+      }
+    }
+
+    // Inventory full
+    const added = count - remaining;
+    if (added > 0) {
+      return { success: true, added: added, message: `Added ${added} ${itemData.name} (inventory full)` };
+    }
+    return { success: false, added: 0, message: 'Inventory full' };
+  }
+
+  /**
+   * Remove item from inventory
+   * @param {Object} inventory - Player inventory
+   * @param {string} itemId - Item ID
+   * @param {number} count - How many to remove
+   * @returns {Object} {success: boolean, removed: number}
+   */
+  function removeItem(inventory, itemId, count = 1) {
+    let remaining = count;
+
+    for (let i = 0; i < inventory.slots.length; i++) {
+      const slot = inventory.slots[i];
+      if (slot && slot.itemId === itemId) {
+        const removeCount = Math.min(remaining, slot.count);
+        slot.count -= removeCount;
+        remaining -= removeCount;
+
+        if (slot.count <= 0) {
+          inventory.slots[i] = null;
+        }
+
+        if (remaining <= 0) {
+          return { success: true, removed: count };
+        }
+      }
+    }
+
+    const removed = count - remaining;
+    return { success: removed > 0, removed: removed };
+  }
+
+  /**
+   * Check if player has item
+   * @param {Object} inventory - Player inventory
+   * @param {string} itemId - Item ID
+   * @param {number} count - Required count
+   * @returns {boolean}
+   */
+  function hasItem(inventory, itemId, count = 1) {
+    return getItemCount(inventory, itemId) >= count;
+  }
+
+  /**
+   * Get total count of an item
+   * @param {Object} inventory - Player inventory
+   * @param {string} itemId - Item ID
+   * @returns {number} Total count
+   */
+  function getItemCount(inventory, itemId) {
+    let total = 0;
+    for (const slot of inventory.slots) {
+      if (slot && slot.itemId === itemId) {
+        total += slot.count;
+      }
+    }
+    return total;
+  }
+
+  /**
+   * Get inventory as readable array
+   * @param {Object} inventory - Player inventory
+   * @returns {Array} Array of {itemId, name, icon, count, rarity}
+   */
+  function getInventory(inventory) {
+    return inventory.slots.map(slot => {
+      if (!slot) return null;
+      const itemData = ITEM_CATALOG[slot.itemId];
+      return {
+        itemId: slot.itemId,
+        name: itemData.name,
+        icon: itemData.icon,
+        description: itemData.description,
+        count: slot.count,
+        rarity: itemData.rarity,
+        type: itemData.type
+      };
+    });
+  }
+
+  /**
+   * Check if recipe can be crafted
+   * @param {Object} inventory - Player inventory
+   * @param {Object} recipe - Recipe object
+   * @returns {boolean}
+   */
+  function canCraft(inventory, recipe) {
+    for (const req of recipe.requirements) {
+      if (!hasItem(inventory, req.itemId, req.count)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Craft an item from recipe
+   * @param {Object} inventory - Player inventory
+   * @param {string} recipeId - Recipe ID
+   * @returns {Object} {success: boolean, output?: Object, sparkEarned?: number, message: string}
+   */
+  function craftItem(inventory, recipeId) {
+    const recipe = RECIPES.find(r => r.id === recipeId);
+    if (!recipe) {
+      return { success: false, message: 'Unknown recipe' };
+    }
+
+    if (!canCraft(inventory, recipe)) {
+      return { success: false, message: 'Missing required materials' };
+    }
+
+    // Remove requirements
+    for (const req of recipe.requirements) {
+      removeItem(inventory, req.itemId, req.count);
+    }
+
+    // Add output
+    const result = addItem(inventory, recipe.output.itemId, recipe.output.count);
+
+    if (result.success) {
+      return {
+        success: true,
+        output: recipe.output,
+        sparkEarned: recipe.sparkReward,
+        message: `Crafted ${recipe.name}!`
+      };
+    } else {
+      // Rare case: crafted but couldn't add to inventory
+      return {
+        success: false,
+        message: 'Crafted but inventory full (materials consumed!)'
+      };
+    }
+  }
+
+  /**
+   * Get all available recipes (that player can craft right now)
+   * @param {Object} inventory - Player inventory
+   * @returns {Array} Array of craftable recipes
+   */
+  function getAvailableRecipes(inventory) {
+    return RECIPES.filter(recipe => canCraft(inventory, recipe));
+  }
+
+  /**
+   * Get all recipes (whether craftable or not)
+   * @returns {Array} All recipes
+   */
+  function getAllRecipes() {
+    return RECIPES;
+  }
+
+  /**
+   * Get item data from catalog
+   * @param {string} itemId - Item ID
+   * @returns {Object|null} Item data or null
+   */
+  function getItemData(itemId) {
+    return ITEM_CATALOG[itemId] || null;
+  }
+
+  // Export public API
+  exports.ITEM_CATALOG = ITEM_CATALOG;
+  exports.RECIPES = RECIPES;
+  exports.createInventory = createInventory;
+  exports.addItem = addItem;
+  exports.removeItem = removeItem;
+  exports.hasItem = hasItem;
+  exports.getItemCount = getItemCount;
+  exports.getInventory = getInventory;
+  exports.canCraft = canCraft;
+  exports.craftItem = craftItem;
+  exports.getAvailableRecipes = getAvailableRecipes;
+  exports.getAllRecipes = getAllRecipes;
+  exports.getItemData = getItemData;
+
+})(typeof module !== 'undefined' ? module.exports : (window.Inventory = {}));
 
 
 // state.js
@@ -3275,6 +4586,956 @@ html, body {
 })(typeof module !== 'undefined' ? module.exports : (window.Creation = {}));
 
 
+// quests.js
+/**
+ * ZION Quest/Mission System
+ * Complete quest system for NPC interactions with progression tracking
+ */
+
+(function(exports) {
+  'use strict';
+
+  // Quest database - 25 quests across 8 zones
+  const QUEST_DATABASE = {
+    // === NEXUS QUESTS (2) ===
+    quest_nexus_001: {
+      id: 'quest_nexus_001',
+      title: 'Welcome to ZION',
+      description: 'Explore the Nexus and speak to 3 different citizens',
+      giverNpcId: 'ai_citizen_001',
+      type: 'social',
+      objectives: [
+        { type: 'talk_npcs', count: 3, current: 0 }
+      ],
+      rewards: { spark: 25, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Welcome, traveler! To truly understand ZION, you must connect with its people. Speak to three different citizens and learn their stories.",
+        progress: "You've spoken with {current} citizens so far. Talk to {remaining} more.",
+        complete: "Wonderful! You're beginning to understand what makes ZION special. Here's some Spark for your curiosity."
+      },
+      status: 'available'
+    },
+
+    quest_nexus_002: {
+      id: 'quest_nexus_002',
+      title: 'Journey Begins',
+      description: 'Visit any 3 different zones in ZION',
+      giverNpcId: 'ai_citizen_007',
+      type: 'explore',
+      objectives: [
+        { type: 'visit_zones', zones: [], required: 3, current: 0 }
+      ],
+      rewards: { spark: 50, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: ['quest_nexus_001'],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "ZION is vast and full of wonders. Visit three different zones to broaden your horizons.",
+        progress: "You've explored {current} zones. Discover {remaining} more!",
+        complete: "Excellent exploration! Each zone has its own character. This Spark will fuel your continued journey."
+      },
+      status: 'available'
+    },
+
+    // === GARDENS QUESTS (5) ===
+    quest_gardens_001: {
+      id: 'quest_gardens_001',
+      title: 'The Gardener\'s Request',
+      description: 'Gather 3 sunflowers for Willow the Gardener',
+      giverNpcId: 'ai_citizen_013',
+      type: 'gather',
+      objectives: [
+        { type: 'collect', item: 'sunflower', count: 3, current: 0 }
+      ],
+      rewards: { spark: 30, items: [{ id: 'rare_seed', count: 1 }] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Hello traveler! My garden needs sunflowers. Could you gather 3 for me? They grow near the pond.",
+        progress: "Still looking for those sunflowers? You need {remaining} more.",
+        complete: "Wonderful! These are beautiful. Here, take this rare seed as thanks."
+      },
+      status: 'available'
+    },
+
+    quest_gardens_002: {
+      id: 'quest_gardens_002',
+      title: 'Moonflower Cultivation',
+      description: 'Help plant 5 moonflower seeds in the Gardens',
+      giverNpcId: 'ai_citizen_019',
+      type: 'craft',
+      objectives: [
+        { type: 'plant', item: 'moonflower_seed', count: 5, current: 0 }
+      ],
+      rewards: { spark: 40, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Moonflowers bloom only at night and bring tranquility to the Gardens. Will you help me plant 5 seeds?",
+        progress: "You've planted {current} moonflower seeds. {remaining} more to go!",
+        complete: "Perfect! In time, these will create a beautiful nighttime display. Thank you."
+      },
+      status: 'available'
+    },
+
+    quest_gardens_003: {
+      id: 'quest_gardens_003',
+      title: 'Herbal Remedy',
+      description: 'Collect 4 healing herbs from the Gardens',
+      giverNpcId: 'ai_citizen_025',
+      type: 'gather',
+      objectives: [
+        { type: 'collect', item: 'healing_herb', count: 4, current: 0 }
+      ],
+      rewards: { spark: 35, items: [{ id: 'health_potion', count: 2 }] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: 0,
+      dialogue: {
+        offer: "I'm preparing remedies for the community. Could you gather 4 healing herbs? They have purple flowers.",
+        progress: "You have {current} herbs. I need {remaining} more for the remedy.",
+        complete: "Excellent! These will help many people. Take these health potions for your troubles."
+      },
+      status: 'available'
+    },
+
+    quest_gardens_004: {
+      id: 'quest_gardens_004',
+      title: 'The Secret Garden',
+      description: 'Find the hidden meditation spot in the Gardens',
+      giverNpcId: 'ai_citizen_031',
+      type: 'explore',
+      objectives: [
+        { type: 'discover', location: 'gardens_secret_spot', current: 0 }
+      ],
+      rewards: { spark: 60, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Deep within the Gardens lies a secret meditation spot. Few have found it. Will you seek it out?",
+        progress: "Keep searching. Listen for the sound of wind chimes...",
+        complete: "You found it! That place holds special energy. May it bring you peace."
+      },
+      status: 'available'
+    },
+
+    quest_gardens_005: {
+      id: 'quest_gardens_005',
+      title: 'Water the Wilds',
+      description: 'Deliver water from the Gardens fountain to a Wilds gardener',
+      giverNpcId: 'ai_citizen_037',
+      type: 'deliver',
+      objectives: [
+        { type: 'deliver', item: 'water_bucket', npcId: 'ai_citizen_043', current: 0 }
+      ],
+      rewards: { spark: 45, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Our friends in the Wilds need fresh water from our fountain. Can you deliver this bucket to them?",
+        progress: "The water is still fresh. Find the gardener in the Wilds!",
+        complete: "Thank you! This water will help their wild gardens flourish."
+      },
+      status: 'available'
+    },
+
+    // === WILDS QUESTS (4) ===
+    quest_wilds_001: {
+      id: 'quest_wilds_001',
+      title: 'Wild Observations',
+      description: 'Observe 5 different wildlife species in the Wilds',
+      giverNpcId: 'ai_citizen_043',
+      type: 'explore',
+      objectives: [
+        { type: 'observe', category: 'wildlife', count: 5, current: 0 }
+      ],
+      rewards: { spark: 50, items: [{ id: 'field_journal', count: 1 }] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "The Wilds are teeming with life! Observe 5 different species and document your findings.",
+        progress: "You've observed {current} species. {remaining} more to discover!",
+        complete: "Fascinating observations! Take this field journal to record your future discoveries."
+      },
+      status: 'available'
+    },
+
+    quest_wilds_002: {
+      id: 'quest_wilds_002',
+      title: 'Rare Resource Hunt',
+      description: 'Find 2 pieces of rare amber in the Wilds',
+      giverNpcId: 'ai_citizen_049',
+      type: 'gather',
+      objectives: [
+        { type: 'collect', item: 'wild_amber', count: 2, current: 0 }
+      ],
+      rewards: { spark: 70, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Ancient amber can be found in the deepest parts of the Wilds. Bring me 2 pieces - they're invaluable!",
+        progress: "Amber is rare. You have {current}, need {remaining} more.",
+        complete: "Incredible! This amber is perfect. Your effort is greatly appreciated."
+      },
+      status: 'available'
+    },
+
+    quest_wilds_003: {
+      id: 'quest_wilds_003',
+      title: 'Trail Blazer',
+      description: 'Mark 3 new trail markers in unexplored areas',
+      giverNpcId: 'ai_citizen_055',
+      type: 'explore',
+      objectives: [
+        { type: 'place_marker', count: 3, current: 0 }
+      ],
+      rewards: { spark: 55, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Help expand our trail network! Place 3 markers in unexplored areas of the Wilds.",
+        progress: "You've placed {current} markers. {remaining} more needed!",
+        complete: "Excellent work! These trails will help many travelers."
+      },
+      status: 'available'
+    },
+
+    quest_wilds_004: {
+      id: 'quest_wilds_004',
+      title: 'Ecosystem Balance',
+      description: 'Help maintain balance by planting 6 native seeds',
+      giverNpcId: 'ai_citizen_061',
+      type: 'craft',
+      objectives: [
+        { type: 'plant', item: 'native_seed', count: 6, current: 0 }
+      ],
+      rewards: { spark: 65, items: [{ id: 'nature_compass', count: 1 }] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "The Wilds ecosystem needs our care. Plant 6 native seeds to restore balance.",
+        progress: "You've planted {current} seeds. The ecosystem needs {remaining} more.",
+        complete: "Perfect! Nature thanks you. Take this compass - it attunes to natural energy."
+      },
+      status: 'available'
+    },
+
+    // === ATHENAEUM QUESTS (3) ===
+    quest_athenaeum_001: {
+      id: 'quest_athenaeum_001',
+      title: 'Knowledge Seeker',
+      description: 'Read 3 different scrolls in the Athenaeum',
+      giverNpcId: 'ai_citizen_067',
+      type: 'social',
+      objectives: [
+        { type: 'read', item: 'scroll', count: 3, current: 0 }
+      ],
+      rewards: { spark: 40, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Knowledge is power. Read 3 different scrolls from our collection to expand your understanding.",
+        progress: "You've read {current} scrolls. {remaining} more await your eyes.",
+        complete: "Excellent! Knowledge shared is knowledge multiplied. Well done."
+      },
+      status: 'available'
+    },
+
+    quest_athenaeum_002: {
+      id: 'quest_athenaeum_002',
+      title: 'The Scholar\'s Circle',
+      description: 'Speak with 4 scholars to gather ancient wisdom',
+      giverNpcId: 'ai_citizen_073',
+      type: 'social',
+      objectives: [
+        { type: 'talk_scholars', count: 4, current: 0 }
+      ],
+      rewards: { spark: 50, items: [{ id: 'wisdom_tome', count: 1 }] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "The scholars here each hold unique wisdom. Speak with 4 of them to broaden your perspective.",
+        progress: "You've consulted {current} scholars. Seek out {remaining} more.",
+        complete: "Wonderful! You've gathered great wisdom. This tome will serve you well."
+      },
+      status: 'available'
+    },
+
+    quest_athenaeum_003: {
+      id: 'quest_athenaeum_003',
+      title: 'Lost Manuscript',
+      description: 'Find the lost manuscript hidden somewhere in the Athenaeum',
+      giverNpcId: 'ai_citizen_079',
+      type: 'explore',
+      objectives: [
+        { type: 'discover', location: 'athenaeum_manuscript', current: 0 }
+      ],
+      rewards: { spark: 80, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "A valuable manuscript was misplaced generations ago. Can you find it? Check between the oldest shelves.",
+        progress: "The manuscript is still out there. Keep searching the archives...",
+        complete: "You found it! This is priceless. Thank you for preserving our history."
+      },
+      status: 'available'
+    },
+
+    // === STUDIO QUESTS (3) ===
+    quest_studio_001: {
+      id: 'quest_studio_001',
+      title: 'Artist\'s First Brush',
+      description: 'Create your first artwork in the Studio',
+      giverNpcId: 'ai_citizen_085',
+      type: 'craft',
+      objectives: [
+        { type: 'create', item: 'artwork', count: 1, current: 0 }
+      ],
+      rewards: { spark: 35, items: [{ id: 'paint_set', count: 1 }] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Everyone has creativity within them. Create your first artwork here in the Studio!",
+        progress: "Let your imagination flow. Your first artwork awaits creation!",
+        complete: "Beautiful! Art is a journey. This paint set will help you continue yours."
+      },
+      status: 'available'
+    },
+
+    quest_studio_002: {
+      id: 'quest_studio_002',
+      title: 'Musical Composition',
+      description: 'Compose a piece of music with 3 instruments',
+      giverNpcId: 'ai_citizen_091',
+      type: 'craft',
+      objectives: [
+        { type: 'compose', instruments: 3, current: 0 }
+      ],
+      rewards: { spark: 55, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Music speaks what words cannot. Compose a piece using at least 3 different instruments!",
+        progress: "You've incorporated {current} instruments. Add {remaining} more!",
+        complete: "Magnificent! Your music adds beauty to ZION. Keep composing!"
+      },
+      status: 'available'
+    },
+
+    quest_studio_003: {
+      id: 'quest_studio_003',
+      title: 'The Collaborative Mural',
+      description: 'Contribute to the community mural with 5 brush strokes',
+      giverNpcId: 'ai_citizen_097',
+      type: 'craft',
+      objectives: [
+        { type: 'paint_mural', count: 5, current: 0 }
+      ],
+      rewards: { spark: 45, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "The community mural represents all of us. Add your 5 brush strokes to become part of ZION's story!",
+        progress: "You've added {current} strokes. {remaining} more will complete your contribution!",
+        complete: "Perfect! Your marks are now part of our shared legacy. Thank you."
+      },
+      status: 'available'
+    },
+
+    // === AGORA QUESTS (3) ===
+    quest_agora_001: {
+      id: 'quest_agora_001',
+      title: 'Market Day Delivery',
+      description: 'Deliver goods to 3 different merchants in the Agora',
+      giverNpcId: 'ai_citizen_003',
+      type: 'deliver',
+      objectives: [
+        { type: 'deliver_merchants', count: 3, current: 0 }
+      ],
+      rewards: { spark: 40, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Market day is busy! Can you deliver these packages to 3 different merchants for me?",
+        progress: "You've delivered to {current} merchants. {remaining} more to go!",
+        complete: "Wonderful! You've helped keep commerce flowing. Thank you!"
+      },
+      status: 'available'
+    },
+
+    quest_agora_002: {
+      id: 'quest_agora_002',
+      title: 'The Trading Game',
+      description: 'Complete 2 successful trades with other players',
+      giverNpcId: 'ai_citizen_009',
+      type: 'social',
+      objectives: [
+        { type: 'trade', count: 2, current: 0 }
+      ],
+      rewards: { spark: 60, items: [{ id: 'merchant_badge', count: 1 }] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Trade is the foundation of community. Complete 2 successful trades with others!",
+        progress: "You've completed {current} trades. {remaining} more to go!",
+        complete: "Excellent trading! Take this merchant badge as recognition of your skills."
+      },
+      status: 'available'
+    },
+
+    quest_agora_003: {
+      id: 'quest_agora_003',
+      title: 'Supply and Demand',
+      description: 'Gather market data by speaking to 5 merchants',
+      giverNpcId: 'ai_citizen_015',
+      type: 'social',
+      objectives: [
+        { type: 'talk_merchants', count: 5, current: 0 }
+      ],
+      rewards: { spark: 50, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Help me understand the market! Speak with 5 merchants about their current needs.",
+        progress: "You've surveyed {current} merchants. {remaining} more to survey!",
+        complete: "Perfect data! This will help optimize our market. Thank you!"
+      },
+      status: 'available'
+    },
+
+    // === COMMONS QUESTS (3) ===
+    quest_commons_001: {
+      id: 'quest_commons_001',
+      title: 'Community Building',
+      description: 'Contribute 5 building materials to the Commons project',
+      giverNpcId: 'ai_citizen_021',
+      type: 'gather',
+      objectives: [
+        { type: 'contribute', item: 'building_material', count: 5, current: 0 }
+      ],
+      rewards: { spark: 55, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: 0,
+      dialogue: {
+        offer: "We're building something wonderful for everyone! Contribute 5 building materials to help!",
+        progress: "You've contributed {current} materials. We need {remaining} more!",
+        complete: "Thank you! Your contribution makes our community stronger!"
+      },
+      status: 'available'
+    },
+
+    quest_commons_002: {
+      id: 'quest_commons_002',
+      title: 'The Gathering',
+      description: 'Attend a community gathering with at least 3 other players',
+      giverNpcId: 'ai_citizen_027',
+      type: 'social',
+      objectives: [
+        { type: 'attend_gathering', players: 3, current: 0 }
+      ],
+      rewards: { spark: 70, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Community is about togetherness. Join a gathering with at least 3 other people!",
+        progress: "The gathering needs {remaining} more participants!",
+        complete: "What a wonderful gathering! Community is our greatest strength."
+      },
+      status: 'available'
+    },
+
+    quest_commons_003: {
+      id: 'quest_commons_003',
+      title: 'Helping Hands',
+      description: 'Help 4 different citizens with their daily tasks',
+      giverNpcId: 'ai_citizen_033',
+      type: 'social',
+      objectives: [
+        { type: 'help_citizens', count: 4, current: 0 }
+      ],
+      rewards: { spark: 65, items: [{ id: 'helper_ribbon', count: 1 }] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Many people need assistance. Help 4 different citizens with their tasks!",
+        progress: "You've helped {current} citizens. {remaining} more need your help!",
+        complete: "You're a true helper! Wear this ribbon with pride."
+      },
+      status: 'available'
+    },
+
+    // === ARENA QUESTS (2) ===
+    quest_arena_001: {
+      id: 'quest_arena_001',
+      title: 'Training Day',
+      description: 'Complete 3 training exercises in the Arena',
+      giverNpcId: 'ai_citizen_039',
+      type: 'craft',
+      objectives: [
+        { type: 'train', count: 3, current: 0 }
+      ],
+      rewards: { spark: 45, items: [] },
+      requiredLevel: 0,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Physical and mental training keeps us sharp! Complete 3 training exercises!",
+        progress: "You've completed {current} exercises. {remaining} more to go!",
+        complete: "Well done! Regular training builds character and strength."
+      },
+      status: 'available'
+    },
+
+    quest_arena_002: {
+      id: 'quest_arena_002',
+      title: 'Champion\'s Path',
+      description: 'Achieve a perfect score in an Arena challenge',
+      giverNpcId: 'ai_citizen_045',
+      type: 'craft',
+      objectives: [
+        { type: 'perfect_score', current: 0 }
+      ],
+      rewards: { spark: 100, items: [{ id: 'champion_medal', count: 1 }] },
+      requiredLevel: 0,
+      prerequisiteQuests: ['quest_arena_001'],
+      repeatable: false,
+      timeLimit: 0,
+      dialogue: {
+        offer: "Only the dedicated achieve perfection. Score perfectly in an Arena challenge!",
+        progress: "Perfection requires focus and practice. Keep training!",
+        complete: "Incredible! You've achieved perfection. This medal marks your mastery."
+      },
+      status: 'available'
+    }
+  };
+
+  // Player quest state storage
+  const playerQuestStates = new Map(); // playerId -> { activeQuests: [], completedQuests: [], turnedInQuests: [] }
+  const MAX_ACTIVE_QUESTS = 5;
+
+  /**
+   * Initialize quest system for a player
+   * @param {string} playerId
+   */
+  function initPlayerQuests(playerId) {
+    if (!playerQuestStates.has(playerId)) {
+      playerQuestStates.set(playerId, {
+        activeQuests: [],
+        completedQuests: [],
+        turnedInQuests: []
+      });
+    }
+  }
+
+  /**
+   * Get all quests available to a player (based on level, prerequisites)
+   * @param {string} playerId
+   * @param {object} playerData - {level, position, etc.}
+   * @returns {Array} Available quests
+   */
+  function getAvailableQuests(playerId, playerData) {
+    initPlayerQuests(playerId);
+    const state = playerQuestStates.get(playerId);
+
+    const available = [];
+    for (const questId in QUEST_DATABASE) {
+      const quest = QUEST_DATABASE[questId];
+
+      // Skip if already active or turned in (unless repeatable)
+      if (state.activeQuests.find(q => q.id === questId)) continue;
+      if (!quest.repeatable && state.turnedInQuests.includes(questId)) continue;
+
+      // Check level requirement
+      if (quest.requiredLevel > (playerData.level || 0)) continue;
+
+      // Check prerequisites
+      let prereqsMet = true;
+      for (const prereqId of quest.prerequisiteQuests) {
+        if (!state.turnedInQuests.includes(prereqId)) {
+          prereqsMet = false;
+          break;
+        }
+      }
+      if (!prereqsMet) continue;
+
+      available.push(Object.assign({}, quest));
+    }
+
+    return available;
+  }
+
+  /**
+   * Accept a quest
+   * @param {string} playerId
+   * @param {string} questId
+   * @returns {object} {success: boolean, message: string, quest?: object}
+   */
+  function acceptQuest(playerId, questId) {
+    initPlayerQuests(playerId);
+    const state = playerQuestStates.get(playerId);
+
+    // Check if quest exists
+    if (!QUEST_DATABASE[questId]) {
+      return { success: false, message: 'Quest not found' };
+    }
+
+    // Check if already active
+    if (state.activeQuests.find(q => q.id === questId)) {
+      return { success: false, message: 'Quest already active' };
+    }
+
+    // Check active quest limit
+    if (state.activeQuests.length >= MAX_ACTIVE_QUESTS) {
+      return { success: false, message: 'Too many active quests (max 5)' };
+    }
+
+    // Clone quest with fresh objectives
+    const quest = JSON.parse(JSON.stringify(QUEST_DATABASE[questId]));
+    quest.status = 'active';
+    quest.startTime = Date.now();
+
+    state.activeQuests.push(quest);
+
+    return { success: true, message: 'Quest accepted', quest: quest };
+  }
+
+  /**
+   * Update quest progress based on player action
+   * @param {string} playerId
+   * @param {string} eventType - 'collect', 'talk_npc', 'visit_zone', etc.
+   * @param {object} eventData - Event-specific data
+   * @returns {Array} Quests that were updated
+   */
+  function updateQuestProgress(playerId, eventType, eventData) {
+    initPlayerQuests(playerId);
+    const state = playerQuestStates.get(playerId);
+    const updatedQuests = [];
+
+    for (const quest of state.activeQuests) {
+      let questUpdated = false;
+
+      for (const objective of quest.objectives) {
+        // Match event type to objective type
+        let match = false;
+
+        switch (objective.type) {
+          case 'collect':
+            match = eventType === 'collect' && eventData.item === objective.item;
+            break;
+          case 'talk_npcs':
+          case 'talk_scholars':
+          case 'talk_merchants':
+            match = eventType === 'talk_npc';
+            break;
+          case 'visit_zones':
+            match = eventType === 'visit_zone';
+            if (match && !objective.zones.includes(eventData.zone)) {
+              objective.zones.push(eventData.zone);
+            }
+            break;
+          case 'deliver':
+            match = eventType === 'deliver' && eventData.npcId === objective.npcId;
+            break;
+          case 'plant':
+            match = eventType === 'plant' && eventData.item === objective.item;
+            break;
+          case 'create':
+          case 'compose':
+          case 'paint_mural':
+          case 'train':
+            match = eventType === objective.type;
+            break;
+          case 'trade':
+            match = eventType === 'trade';
+            break;
+          case 'deliver_merchants':
+            match = eventType === 'deliver_merchant';
+            break;
+          case 'contribute':
+            match = eventType === 'contribute' && eventData.item === objective.item;
+            break;
+          case 'discover':
+            match = eventType === 'discover' && eventData.location === objective.location;
+            break;
+          case 'observe':
+            match = eventType === 'observe' && eventData.category === objective.category;
+            break;
+          case 'place_marker':
+            match = eventType === 'place_marker';
+            break;
+          case 'read':
+            match = eventType === 'read' && eventData.item === objective.item;
+            break;
+          case 'attend_gathering':
+            match = eventType === 'attend_gathering';
+            break;
+          case 'help_citizens':
+            match = eventType === 'help_citizen';
+            break;
+          case 'perfect_score':
+            match = eventType === 'perfect_score';
+            break;
+        }
+
+        if (match) {
+          // Increment progress
+          if (objective.type === 'visit_zones') {
+            objective.current = objective.zones.length;
+          } else {
+            objective.current = Math.min(objective.current + (eventData.amount || 1), objective.count || 1);
+          }
+          questUpdated = true;
+        }
+      }
+
+      // Check if quest is complete
+      if (questUpdated) {
+        const allComplete = quest.objectives.every(obj => {
+          if (obj.required !== undefined) return obj.current >= obj.required;
+          if (obj.count !== undefined) return obj.current >= obj.count;
+          return obj.current >= 1;
+        });
+
+        if (allComplete) {
+          quest.status = 'complete';
+          state.completedQuests.push(quest.id);
+        }
+
+        updatedQuests.push(quest);
+      }
+    }
+
+    return updatedQuests;
+  }
+
+  /**
+   * Complete a quest and award rewards
+   * @param {string} playerId
+   * @param {string} questId
+   * @param {object} gameState - Game state for awarding Spark
+   * @returns {object} {success: boolean, rewards?: object}
+   */
+  function completeQuest(playerId, questId, gameState) {
+    initPlayerQuests(playerId);
+    const state = playerQuestStates.get(playerId);
+
+    // Find quest in active quests
+    const questIndex = state.activeQuests.findIndex(q => q.id === questId);
+    if (questIndex === -1) {
+      return { success: false, message: 'Quest not active' };
+    }
+
+    const quest = state.activeQuests[questIndex];
+
+    // Check if complete
+    if (quest.status !== 'complete') {
+      return { success: false, message: 'Quest objectives not complete' };
+    }
+
+    // Award Spark via Economy module
+    if (quest.rewards.spark > 0 && gameState && window.Economy) {
+      window.Economy.earnSpark(gameState, playerId, quest.rewards.spark);
+    }
+
+    // Award items (inventory system would handle this - for now just return them)
+    const rewards = {
+      spark: quest.rewards.spark,
+      items: quest.rewards.items
+    };
+
+    // Mark quest as turned in
+    if (!state.turnedInQuests.includes(questId)) {
+      state.turnedInQuests.push(questId);
+    }
+
+    // Remove from active quests
+    state.activeQuests.splice(questIndex, 1);
+
+    return { success: true, rewards: rewards, quest: quest };
+  }
+
+  /**
+   * Get all active quests for a player
+   * @param {string} playerId
+   * @returns {Array} Active quests
+   */
+  function getActiveQuests(playerId) {
+    initPlayerQuests(playerId);
+    const state = playerQuestStates.get(playerId);
+    return state.activeQuests.slice();
+  }
+
+  /**
+   * Get quest log (all quests with status)
+   * @param {string} playerId
+   * @returns {object} {active: [], completed: [], available: []}
+   */
+  function getQuestLog(playerId, playerData) {
+    initPlayerQuests(playerId);
+    const state = playerQuestStates.get(playerId);
+
+    return {
+      active: state.activeQuests.slice(),
+      completed: state.completedQuests.slice(),
+      available: getAvailableQuests(playerId, playerData || {})
+    };
+  }
+
+  /**
+   * Get dialogue for a quest based on status
+   * @param {string} questId
+   * @param {string} status - 'offer', 'progress', 'complete'
+   * @param {object} quest - Quest object (for progress interpolation)
+   * @returns {string} Dialogue text
+   */
+  function getQuestDialogue(questId, status, quest) {
+    const questTemplate = QUEST_DATABASE[questId];
+    if (!questTemplate || !questTemplate.dialogue[status]) {
+      return '';
+    }
+
+    let dialogue = questTemplate.dialogue[status];
+
+    // Interpolate progress variables
+    if (quest && status === 'progress') {
+      const objective = quest.objectives[0]; // Use first objective for now
+      if (objective) {
+        const required = objective.required || objective.count || 1;
+        const remaining = required - objective.current;
+        dialogue = dialogue.replace('{current}', objective.current);
+        dialogue = dialogue.replace('{remaining}', remaining);
+      }
+    }
+
+    return dialogue;
+  }
+
+  /**
+   * Get quests offered by a specific NPC
+   * @param {string} npcId
+   * @param {string} playerId
+   * @returns {Array} Quests from this NPC
+   */
+  function getNpcQuests(npcId, playerId) {
+    initPlayerQuests(playerId);
+    const state = playerQuestStates.get(playerId);
+
+    const npcQuests = [];
+
+    for (const questId in QUEST_DATABASE) {
+      const quest = QUEST_DATABASE[questId];
+      if (quest.giverNpcId !== npcId) continue;
+
+      // Check if active
+      const activeQuest = state.activeQuests.find(q => q.id === questId);
+      if (activeQuest) {
+        npcQuests.push({ quest: activeQuest, state: activeQuest.status });
+        continue;
+      }
+
+      // Check if available
+      if (!quest.repeatable && state.turnedInQuests.includes(questId)) {
+        continue; // Already completed, not repeatable
+      }
+
+      // Check prerequisites
+      let available = true;
+      for (const prereqId of quest.prerequisiteQuests) {
+        if (!state.turnedInQuests.includes(prereqId)) {
+          available = false;
+          break;
+        }
+      }
+
+      if (available) {
+        npcQuests.push({ quest: Object.assign({}, quest), state: 'available' });
+      }
+    }
+
+    return npcQuests;
+  }
+
+  /**
+   * Abandon a quest
+   * @param {string} playerId
+   * @param {string} questId
+   * @returns {object} {success: boolean}
+   */
+  function abandonQuest(playerId, questId) {
+    initPlayerQuests(playerId);
+    const state = playerQuestStates.get(playerId);
+
+    const questIndex = state.activeQuests.findIndex(q => q.id === questId);
+    if (questIndex === -1) {
+      return { success: false, message: 'Quest not active' };
+    }
+
+    state.activeQuests.splice(questIndex, 1);
+    return { success: true };
+  }
+
+  // Export public API
+  exports.getAvailableQuests = getAvailableQuests;
+  exports.acceptQuest = acceptQuest;
+  exports.updateQuestProgress = updateQuestProgress;
+  exports.completeQuest = completeQuest;
+  exports.getActiveQuests = getActiveQuests;
+  exports.getQuestLog = getQuestLog;
+  exports.getQuestDialogue = getQuestDialogue;
+  exports.getNpcQuests = getNpcQuests;
+  exports.abandonQuest = abandonQuest;
+  exports.initPlayerQuests = initPlayerQuests;
+
+})(typeof module !== 'undefined' ? module.exports : (window.Quests = {}));
+
+
 // competition.js
 (function(exports) {
 
@@ -4675,6 +6936,790 @@ html, body {
   }
 
   // ========================================
+  // LANDMARK GENERATORS
+  // ========================================
+
+  function createLandmark(type, scale) {
+    scale = scale || 1;
+    const group = new THREE.Group();
+    group.name = 'landmark_' + type;
+
+    switch(type) {
+      case 'fountain':
+        const basinMat = new THREE.MeshLambertMaterial({ color: 0x8899aa });
+        const waterMat = new THREE.MeshLambertMaterial({
+          color: 0x4488cc,
+          transparent: true,
+          opacity: 0.7
+        });
+        const pillarMat = new THREE.MeshLambertMaterial({ color: 0xaabbcc });
+
+        // Circular basin
+        const basin = new THREE.Mesh(
+          new THREE.CylinderGeometry(2 * scale, 2.2 * scale, 0.6 * scale, 16),
+          basinMat
+        );
+        basin.position.y = 0.3 * scale;
+        group.add(basin);
+
+        // Water surface inside basin
+        const water = new THREE.Mesh(
+          new THREE.CylinderGeometry(1.8 * scale, 1.8 * scale, 0.1 * scale, 16),
+          waterMat
+        );
+        water.position.y = 0.5 * scale;
+        group.add(water);
+
+        // Central pillar
+        const centerPillar = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.2 * scale, 0.3 * scale, 2 * scale, 8),
+          pillarMat
+        );
+        centerPillar.position.y = 1.3 * scale;
+        group.add(centerPillar);
+
+        // Top bowl
+        const topBowl = new THREE.Mesh(
+          new THREE.SphereGeometry(0.5 * scale, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+          basinMat
+        );
+        topBowl.position.y = 2.3 * scale;
+        topBowl.rotation.x = Math.PI;
+        group.add(topBowl);
+
+        // Water drop effect (small glowing sphere)
+        const dropMat = new THREE.MeshLambertMaterial({
+          color: 0x88ccff,
+          emissive: 0x2266aa,
+          emissiveIntensity: 0.4
+        });
+        const drop = new THREE.Mesh(
+          new THREE.SphereGeometry(0.15 * scale, 8, 6),
+          dropMat
+        );
+        drop.position.y = 2.5 * scale;
+        drop.name = 'waterDrop';
+        group.add(drop);
+
+        group.userData.animationType = 'fountain';
+        break;
+
+      case 'obelisk':
+        const obeliskMat = new THREE.MeshLambertMaterial({ color: 0x334455 });
+        const runeMat = new THREE.MeshLambertMaterial({
+          color: 0x88aaff,
+          emissive: 0x4466cc,
+          emissiveIntensity: 0.6
+        });
+
+        // Tall tapered column
+        const obelisk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.3 * scale, 0.6 * scale, 5 * scale, 4),
+          obeliskMat
+        );
+        obelisk.position.y = 2.5 * scale;
+        group.add(obelisk);
+
+        // Glowing rune rings
+        for (let i = 0; i < 3; i++) {
+          const rune = new THREE.Mesh(
+            new THREE.TorusGeometry(0.45 * scale, 0.04 * scale, 6, 12),
+            runeMat
+          );
+          rune.position.y = (1.5 + i * 1.2) * scale;
+          rune.rotation.x = Math.PI / 2;
+          group.add(rune);
+        }
+
+        // Pyramidal top
+        const top = new THREE.Mesh(
+          new THREE.ConeGeometry(0.35 * scale, 0.6 * scale, 4),
+          obeliskMat
+        );
+        top.position.y = 5.3 * scale;
+        group.add(top);
+
+        // Glowing tip
+        const tipMat = new THREE.MeshLambertMaterial({
+          color: 0xaaccff,
+          emissive: 0x6688ff,
+          emissiveIntensity: 1.0
+        });
+        const tip = new THREE.Mesh(
+          new THREE.SphereGeometry(0.12 * scale, 8, 6),
+          tipMat
+        );
+        tip.position.y = 5.7 * scale;
+        group.add(tip);
+
+        group.userData.animationType = 'pulse';
+        group.userData.pulseSpeed = 1.5;
+        break;
+
+      case 'statue':
+        const stoneMat = new THREE.MeshLambertMaterial({ color: 0x999999 });
+        const pedestalMat = new THREE.MeshLambertMaterial({ color: 0x777777 });
+
+        // Pedestal
+        const pedestal = new THREE.Mesh(
+          new THREE.BoxGeometry(1.2 * scale, 0.8 * scale, 1.2 * scale),
+          pedestalMat
+        );
+        pedestal.position.y = 0.4 * scale;
+        group.add(pedestal);
+
+        // Body (torso)
+        const torso = new THREE.Mesh(
+          new THREE.BoxGeometry(0.7 * scale, 1.2 * scale, 0.4 * scale),
+          stoneMat
+        );
+        torso.position.y = 1.8 * scale;
+        group.add(torso);
+
+        // Head
+        const head = new THREE.Mesh(
+          new THREE.SphereGeometry(0.25 * scale, 8, 6),
+          stoneMat
+        );
+        head.position.y = 2.7 * scale;
+        group.add(head);
+
+        // Arms reaching out
+        const leftArm = new THREE.Mesh(
+          new THREE.BoxGeometry(0.8 * scale, 0.2 * scale, 0.2 * scale),
+          stoneMat
+        );
+        leftArm.position.set(-0.7 * scale, 2.0 * scale, 0);
+        leftArm.rotation.z = Math.PI / 6;
+        group.add(leftArm);
+
+        const rightArm = new THREE.Mesh(
+          new THREE.BoxGeometry(0.8 * scale, 0.2 * scale, 0.2 * scale),
+          stoneMat
+        );
+        rightArm.position.set(0.7 * scale, 2.0 * scale, 0);
+        rightArm.rotation.z = -Math.PI / 6;
+        group.add(rightArm);
+        break;
+
+      case 'campfire':
+        const logMat = new THREE.MeshLambertMaterial({ color: 0x4a3020 });
+        const fireMat = new THREE.MeshLambertMaterial({
+          color: 0xff6600,
+          emissive: 0xff4400,
+          emissiveIntensity: 0.9
+        });
+        const emberMat = new THREE.MeshLambertMaterial({
+          color: 0xff2200,
+          emissive: 0xff0000,
+          emissiveIntensity: 0.7
+        });
+
+        // Ring of stones
+        for (let i = 0; i < 8; i++) {
+          const stone = new THREE.Mesh(
+            new THREE.SphereGeometry(0.15 * scale, 6, 4),
+            new THREE.MeshLambertMaterial({ color: 0x666666 })
+          );
+          const angle = (i / 8) * Math.PI * 2;
+          stone.position.x = Math.cos(angle) * 0.6 * scale;
+          stone.position.z = Math.sin(angle) * 0.6 * scale;
+          stone.position.y = 0.1 * scale;
+          stone.scale.y = 0.7;
+          group.add(stone);
+        }
+
+        // Logs in triangle pattern
+        for (let i = 0; i < 3; i++) {
+          const log = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.08 * scale, 0.1 * scale, 1 * scale, 6),
+            logMat
+          );
+          const angle = (i / 3) * Math.PI * 2;
+          log.position.x = Math.cos(angle) * 0.2 * scale;
+          log.position.z = Math.sin(angle) * 0.2 * scale;
+          log.position.y = 0.15 * scale;
+          log.rotation.z = Math.PI / 2;
+          log.rotation.y = angle;
+          group.add(log);
+        }
+
+        // Fire core (will be animated)
+        const fireCore = new THREE.Mesh(
+          new THREE.ConeGeometry(0.25 * scale, 0.8 * scale, 6),
+          fireMat
+        );
+        fireCore.position.y = 0.5 * scale;
+        fireCore.name = 'fireCore';
+        group.add(fireCore);
+
+        // Inner flame
+        const innerFlame = new THREE.Mesh(
+          new THREE.ConeGeometry(0.15 * scale, 0.5 * scale, 5),
+          new THREE.MeshLambertMaterial({
+            color: 0xffaa00,
+            emissive: 0xff8800,
+            emissiveIntensity: 1.0
+          })
+        );
+        innerFlame.position.y = 0.55 * scale;
+        innerFlame.name = 'innerFlame';
+        group.add(innerFlame);
+
+        // Embers
+        for (let i = 0; i < 5; i++) {
+          const ember = new THREE.Mesh(
+            new THREE.SphereGeometry(0.04 * scale, 4, 4),
+            emberMat
+          );
+          ember.position.x = (Math.random() - 0.5) * 0.4 * scale;
+          ember.position.z = (Math.random() - 0.5) * 0.4 * scale;
+          ember.position.y = 0.2 * scale;
+          group.add(ember);
+        }
+
+        // Point light for fire glow
+        const fireLight = new THREE.PointLight(0xff6622, 2, 15);
+        fireLight.position.y = 0.8 * scale;
+        group.add(fireLight);
+
+        group.userData.animationType = 'flicker';
+        group.userData.flickerSpeed = 8;
+        break;
+
+      case 'portal_ring':
+        const ringMat = new THREE.MeshLambertMaterial({
+          color: 0x8866ff,
+          emissive: 0x4422cc,
+          emissiveIntensity: 0.8
+        });
+        const frameMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
+
+        // Stone frame pillars
+        const leftPillar = new THREE.Mesh(
+          new THREE.BoxGeometry(0.4 * scale, 4 * scale, 0.4 * scale),
+          frameMat
+        );
+        leftPillar.position.set(-1.5 * scale, 2 * scale, 0);
+        group.add(leftPillar);
+
+        const rightPillar = new THREE.Mesh(
+          new THREE.BoxGeometry(0.4 * scale, 4 * scale, 0.4 * scale),
+          frameMat
+        );
+        rightPillar.position.set(1.5 * scale, 2 * scale, 0);
+        group.add(rightPillar);
+
+        // Arch top
+        const arch = new THREE.Mesh(
+          new THREE.TorusGeometry(1.5 * scale, 0.2 * scale, 8, 12, Math.PI),
+          frameMat
+        );
+        arch.position.y = 4 * scale;
+        group.add(arch);
+
+        // Glowing inner ring
+        const innerRing = new THREE.Mesh(
+          new THREE.TorusGeometry(1.2 * scale, 0.08 * scale, 8, 24),
+          ringMat
+        );
+        innerRing.position.y = 2.5 * scale;
+        innerRing.name = 'portalRing';
+        group.add(innerRing);
+
+        // Swirling energy center (flat disc)
+        const portalCenter = new THREE.Mesh(
+          new THREE.CircleGeometry(1.1 * scale, 16),
+          new THREE.MeshLambertMaterial({
+            color: 0xaa88ff,
+            emissive: 0x6644cc,
+            emissiveIntensity: 0.6,
+            transparent: true,
+            opacity: 0.5,
+            side: THREE.DoubleSide
+          })
+        );
+        portalCenter.position.y = 2.5 * scale;
+        portalCenter.name = 'portalCenter';
+        group.add(portalCenter);
+
+        group.userData.animationType = 'portal';
+        group.userData.spinSpeed = 0.5;
+        break;
+
+      case 'signpost':
+        const postMat = new THREE.MeshLambertMaterial({ color: 0x6b4226 });
+        const signMat = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
+
+        // Post
+        const signPost = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.06 * scale, 0.08 * scale, 2.5 * scale, 6),
+          postMat
+        );
+        signPost.position.y = 1.25 * scale;
+        group.add(signPost);
+
+        // Directional signs (angled boards)
+        const signAngles = [0, Math.PI / 3, -Math.PI / 4];
+        const signColors = [0x9b7924, 0x8b6914, 0x7b5904];
+        signAngles.forEach(function(angle, i) {
+          var signBoard = new THREE.Mesh(
+            new THREE.BoxGeometry(0.8 * scale, 0.2 * scale, 0.05 * scale),
+            new THREE.MeshLambertMaterial({ color: signColors[i] })
+          );
+          signBoard.position.y = (2.0 - i * 0.35) * scale;
+          signBoard.position.x = 0.3 * scale;
+          signBoard.rotation.y = angle;
+          group.add(signBoard);
+        });
+        break;
+
+      case 'gazebo':
+        const gazeboWoodMat = new THREE.MeshLambertMaterial({ color: 0xc9a96e });
+        const gazeboRoofMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+
+        // Floor platform
+        const floor = new THREE.Mesh(
+          new THREE.CylinderGeometry(2.5 * scale, 2.5 * scale, 0.2 * scale, 8),
+          gazeboWoodMat
+        );
+        floor.position.y = 0.3 * scale;
+        group.add(floor);
+
+        // 6 pillars
+        for (let i = 0; i < 6; i++) {
+          const gazeboPillar = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1 * scale, 0.1 * scale, 2.5 * scale, 6),
+            gazeboWoodMat
+          );
+          const pAngle = (i / 6) * Math.PI * 2;
+          gazeboPillar.position.x = Math.cos(pAngle) * 2.2 * scale;
+          gazeboPillar.position.z = Math.sin(pAngle) * 2.2 * scale;
+          gazeboPillar.position.y = 1.55 * scale;
+          group.add(gazeboPillar);
+        }
+
+        // Conical roof
+        const gazeboRoof = new THREE.Mesh(
+          new THREE.ConeGeometry(3 * scale, 1.5 * scale, 8),
+          gazeboRoofMat
+        );
+        gazeboRoof.position.y = 3.6 * scale;
+        group.add(gazeboRoof);
+
+        // Railing sections between pillars
+        for (let i = 0; i < 6; i++) {
+          if (i === 0) continue; // Leave one gap for entrance
+          const a1 = (i / 6) * Math.PI * 2;
+          const a2 = ((i + 1) / 6) * Math.PI * 2;
+          const midAngle = (a1 + a2) / 2;
+          const railing = new THREE.Mesh(
+            new THREE.BoxGeometry(1.5 * scale, 0.1 * scale, 0.08 * scale),
+            gazeboWoodMat
+          );
+          railing.position.x = Math.cos(midAngle) * 2.2 * scale;
+          railing.position.z = Math.sin(midAngle) * 2.2 * scale;
+          railing.position.y = 0.8 * scale;
+          railing.rotation.y = midAngle + Math.PI / 2;
+          group.add(railing);
+        }
+        break;
+    }
+
+    return group;
+  }
+
+  // ========================================
+  // RESOURCE NODE GENERATORS
+  // ========================================
+
+  function createResourceNode(type, scale) {
+    scale = scale || 1;
+    const group = new THREE.Group();
+    group.name = 'resource_' + type;
+    group.userData.isResource = true;
+    group.userData.resourceType = type;
+
+    switch(type) {
+      case 'ore_vein':
+        const oreMat = new THREE.MeshLambertMaterial({ color: 0x8a7b6b });
+        const oreGlintMat = new THREE.MeshLambertMaterial({
+          color: 0xccaa66,
+          emissive: 0x886622,
+          emissiveIntensity: 0.4
+        });
+
+        // Base rock
+        const oreRock = new THREE.Mesh(
+          new THREE.DodecahedronGeometry(0.7 * scale, 0),
+          oreMat
+        );
+        oreRock.position.y = 0.4 * scale;
+        oreRock.scale.y = 0.6;
+        group.add(oreRock);
+
+        // Metallic veins (small shiny patches)
+        for (let i = 0; i < 4; i++) {
+          const vein = new THREE.Mesh(
+            new THREE.SphereGeometry(0.12 * scale, 6, 4),
+            oreGlintMat
+          );
+          const angle = (i / 4) * Math.PI * 2 + Math.random();
+          vein.position.x = Math.cos(angle) * 0.4 * scale;
+          vein.position.z = Math.sin(angle) * 0.4 * scale;
+          vein.position.y = (0.3 + Math.random() * 0.3) * scale;
+          group.add(vein);
+        }
+
+        group.userData.animationType = 'pulse';
+        group.userData.pulseSpeed = 0.8;
+        break;
+
+      case 'crystal_cluster':
+        const crystalColors = [0x88aaff, 0xaa88ff, 0x66ccff, 0xcc88ff];
+
+        // Several upward-pointing crystals
+        for (let i = 0; i < 5; i++) {
+          const crystalHeight = (0.5 + Math.random() * 1.0) * scale;
+          const crystalRadius = (0.08 + Math.random() * 0.12) * scale;
+          const crystal = new THREE.Mesh(
+            new THREE.ConeGeometry(crystalRadius, crystalHeight, 6),
+            new THREE.MeshLambertMaterial({
+              color: crystalColors[i % crystalColors.length],
+              emissive: crystalColors[i % crystalColors.length],
+              emissiveIntensity: 0.3,
+              transparent: true,
+              opacity: 0.85
+            })
+          );
+          const angle = (i / 5) * Math.PI * 2;
+          const rad = 0.2 * scale;
+          crystal.position.x = Math.cos(angle) * rad;
+          crystal.position.z = Math.sin(angle) * rad;
+          crystal.position.y = crystalHeight / 2;
+          // Slight random tilt
+          crystal.rotation.x = (Math.random() - 0.5) * 0.3;
+          crystal.rotation.z = (Math.random() - 0.5) * 0.3;
+          group.add(crystal);
+        }
+
+        // Glow light
+        const crystalLight = new THREE.PointLight(0x8888ff, 0.8, 8);
+        crystalLight.position.y = 0.5 * scale;
+        group.add(crystalLight);
+
+        group.userData.animationType = 'pulse';
+        group.userData.pulseSpeed = 1.2;
+        break;
+
+      case 'herb_patch':
+        const stemMat = new THREE.MeshLambertMaterial({ color: 0x2d7a2d });
+        const flowerColors = [0xff88aa, 0xffaa44, 0xaa88ff, 0x88ffaa];
+
+        // Cluster of small herb plants
+        for (let i = 0; i < 6; i++) {
+          const stem = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02 * scale, 0.02 * scale, 0.4 * scale, 4),
+            stemMat
+          );
+          const angle = (i / 6) * Math.PI * 2;
+          const rad = 0.3 * scale;
+          stem.position.x = Math.cos(angle) * rad;
+          stem.position.z = Math.sin(angle) * rad;
+          stem.position.y = 0.2 * scale;
+          group.add(stem);
+
+          // Tiny flower/leaf at top
+          const flower = new THREE.Mesh(
+            new THREE.SphereGeometry(0.06 * scale, 6, 4),
+            new THREE.MeshLambertMaterial({ color: flowerColors[i % flowerColors.length] })
+          );
+          flower.position.x = stem.position.x;
+          flower.position.z = stem.position.z;
+          flower.position.y = 0.42 * scale;
+          group.add(flower);
+        }
+
+        // Ground cover leaves
+        const leafMat = new THREE.MeshLambertMaterial({ color: 0x3a8a3a });
+        const leafGround = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.5 * scale, 0.5 * scale, 0.05 * scale, 8),
+          leafMat
+        );
+        leafGround.position.y = 0.02 * scale;
+        group.add(leafGround);
+
+        group.userData.animationType = 'sway';
+        group.userData.swayAmount = 0.03;
+        group.userData.swaySpeed = 1.5;
+        break;
+
+      case 'flower_bed':
+        const fStemMat = new THREE.MeshLambertMaterial({ color: 0x2d7a2d });
+        const petalColors = [0xff4488, 0xff88cc, 0xffaa66, 0xffff44, 0xff6644];
+
+        // Flowers in a cluster
+        for (let i = 0; i < 8; i++) {
+          const fStem = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.015 * scale, 0.02 * scale, 0.5 * scale, 4),
+            fStemMat
+          );
+          const angle = Math.random() * Math.PI * 2;
+          const rad = Math.random() * 0.5 * scale;
+          fStem.position.x = Math.cos(angle) * rad;
+          fStem.position.z = Math.sin(angle) * rad;
+          fStem.position.y = 0.25 * scale;
+          // Slight random lean
+          fStem.rotation.x = (Math.random() - 0.5) * 0.15;
+          fStem.rotation.z = (Math.random() - 0.5) * 0.15;
+          group.add(fStem);
+
+          // Flower head (small sphere cluster)
+          const flowerHead = new THREE.Mesh(
+            new THREE.SphereGeometry(0.08 * scale, 6, 4),
+            new THREE.MeshLambertMaterial({
+              color: petalColors[Math.floor(Math.random() * petalColors.length)]
+            })
+          );
+          flowerHead.position.set(fStem.position.x, 0.52 * scale, fStem.position.z);
+          group.add(flowerHead);
+        }
+
+        group.userData.animationType = 'sway';
+        group.userData.swayAmount = 0.02;
+        group.userData.swaySpeed = 2;
+        break;
+
+      case 'wood_pile':
+        const woodMat = new THREE.MeshLambertMaterial({ color: 0x6b4226 });
+        const barkMat = new THREE.MeshLambertMaterial({ color: 0x4a3018 });
+
+        // Stack of logs
+        var logCount = 0;
+        for (let row = 0; row < 3; row++) {
+          var logsInRow = 3 - row;
+          for (let i = 0; i < logsInRow; i++) {
+            const log = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.12 * scale, 0.12 * scale, 1.0 * scale, 6),
+              row % 2 === 0 ? woodMat : barkMat
+            );
+            log.rotation.z = Math.PI / 2;
+            log.position.x = (i - (logsInRow - 1) / 2) * 0.26 * scale;
+            log.position.y = (0.12 + row * 0.22) * scale;
+            log.position.z = ((logCount % 2) * 0.05 - 0.025) * scale;
+            group.add(log);
+            logCount++;
+          }
+        }
+        break;
+    }
+
+    return group;
+  }
+
+  // ========================================
+  // MORE CREATURE GENERATORS
+  // ========================================
+
+  function createWildlife(type) {
+    const group = new THREE.Group();
+    group.name = 'wildlife_' + type;
+
+    switch(type) {
+      case 'deer':
+        const deerBodyMat = new THREE.MeshLambertMaterial({ color: 0xb8860b });
+        const deerLegMat = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
+
+        // Body
+        const deerBody = new THREE.Mesh(
+          new THREE.BoxGeometry(0.4, 0.35, 0.8),
+          deerBodyMat
+        );
+        deerBody.position.y = 0.7;
+        group.add(deerBody);
+
+        // Head
+        const deerHead = new THREE.Mesh(
+          new THREE.BoxGeometry(0.2, 0.2, 0.25),
+          deerBodyMat
+        );
+        deerHead.position.set(0, 0.95, 0.4);
+        group.add(deerHead);
+
+        // Antlers
+        const antlerMat = new THREE.MeshLambertMaterial({ color: 0xd2b48c });
+        for (let side = -1; side <= 1; side += 2) {
+          const antler = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, 0.3, 4),
+            antlerMat
+          );
+          antler.position.set(side * 0.1, 1.15, 0.4);
+          antler.rotation.z = side * Math.PI / 6;
+          group.add(antler);
+
+          // Antler branch
+          const branch = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.015, 0.015, 0.15, 4),
+            antlerMat
+          );
+          branch.position.set(side * 0.2, 1.25, 0.4);
+          branch.rotation.z = side * Math.PI / 4;
+          group.add(branch);
+        }
+
+        // Legs
+        var legPositions = [
+          { x: -0.12, z: 0.25 }, { x: 0.12, z: 0.25 },
+          { x: -0.12, z: -0.25 }, { x: 0.12, z: -0.25 }
+        ];
+        legPositions.forEach(function(pos) {
+          var leg = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.035, 0.03, 0.5, 6),
+            deerLegMat
+          );
+          leg.position.set(pos.x, 0.3, pos.z);
+          group.add(leg);
+        });
+
+        // Tail (small white triangle)
+        const tailMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        const deerTail = new THREE.Mesh(
+          new THREE.ConeGeometry(0.05, 0.1, 4),
+          tailMat
+        );
+        deerTail.position.set(0, 0.75, -0.45);
+        deerTail.rotation.x = -Math.PI / 4;
+        group.add(deerTail);
+
+        group.userData.animationType = 'idle_look';
+        group.scale.set(1.5, 1.5, 1.5);
+        break;
+
+      case 'rabbit':
+        const rabbitMat = new THREE.MeshLambertMaterial({ color: 0xd2b48c });
+
+        // Body
+        const rabbitBody = new THREE.Mesh(
+          new THREE.SphereGeometry(0.15, 8, 6),
+          rabbitMat
+        );
+        rabbitBody.position.y = 0.2;
+        rabbitBody.scale.z = 1.3;
+        group.add(rabbitBody);
+
+        // Head
+        const rabbitHead = new THREE.Mesh(
+          new THREE.SphereGeometry(0.1, 8, 6),
+          rabbitMat
+        );
+        rabbitHead.position.set(0, 0.3, 0.15);
+        group.add(rabbitHead);
+
+        // Ears
+        const earMat = new THREE.MeshLambertMaterial({ color: 0xc4a882 });
+        for (let side = -1; side <= 1; side += 2) {
+          const ear = new THREE.Mesh(
+            new THREE.BoxGeometry(0.03, 0.15, 0.05),
+            earMat
+          );
+          ear.position.set(side * 0.05, 0.45, 0.15);
+          ear.rotation.z = side * 0.2;
+          group.add(ear);
+        }
+
+        // Fluffy tail
+        const puffTail = new THREE.Mesh(
+          new THREE.SphereGeometry(0.06, 6, 4),
+          new THREE.MeshLambertMaterial({ color: 0xeeeeee })
+        );
+        puffTail.position.set(0, 0.2, -0.2);
+        group.add(puffTail);
+
+        group.userData.animationType = 'hop';
+        group.userData.hopInterval = 3;
+        group.userData.hopTimer = Math.random() * 3;
+        break;
+
+      case 'firefly':
+        const ffBodyMat = new THREE.MeshLambertMaterial({ color: 0x333300 });
+        const ffGlowMat = new THREE.MeshLambertMaterial({
+          color: 0xffff44,
+          emissive: 0xaacc00,
+          emissiveIntensity: 1.0
+        });
+
+        // Tiny body
+        const ffBody = new THREE.Mesh(
+          new THREE.SphereGeometry(0.03, 6, 4),
+          ffBodyMat
+        );
+        group.add(ffBody);
+
+        // Glowing abdomen
+        const ffGlow = new THREE.Mesh(
+          new THREE.SphereGeometry(0.04, 6, 4),
+          ffGlowMat
+        );
+        ffGlow.position.z = -0.04;
+        ffGlow.name = 'glow';
+        group.add(ffGlow);
+
+        // Tiny point light
+        const ffLight = new THREE.PointLight(0xaacc00, 0.5, 4);
+        ffLight.position.z = -0.04;
+        group.add(ffLight);
+
+        group.userData.animationType = 'float';
+        group.userData.floatSpeed = 0.5 + Math.random() * 0.5;
+        group.userData.floatRadius = 1 + Math.random() * 2;
+        group.userData.floatAngle = Math.random() * Math.PI * 2;
+        group.userData.floatHeight = 1.5 + Math.random();
+        break;
+
+      case 'frog':
+        const frogMat = new THREE.MeshLambertMaterial({ color: 0x228b22 });
+        const frogEyeMat = new THREE.MeshLambertMaterial({ color: 0xffff00 });
+
+        // Body
+        const frogBody = new THREE.Mesh(
+          new THREE.SphereGeometry(0.12, 8, 6),
+          frogMat
+        );
+        frogBody.position.y = 0.1;
+        frogBody.scale.y = 0.7;
+        frogBody.scale.z = 1.2;
+        group.add(frogBody);
+
+        // Eyes (protruding)
+        for (let side = -1; side <= 1; side += 2) {
+          const eye = new THREE.Mesh(
+            new THREE.SphereGeometry(0.04, 6, 4),
+            frogEyeMat
+          );
+          eye.position.set(side * 0.06, 0.18, 0.08);
+          group.add(eye);
+        }
+
+        // Back legs
+        for (let side = -1; side <= 1; side += 2) {
+          const backLeg = new THREE.Mesh(
+            new THREE.BoxGeometry(0.04, 0.04, 0.15),
+            frogMat
+          );
+          backLeg.position.set(side * 0.1, 0.05, -0.12);
+          group.add(backLeg);
+        }
+
+        group.userData.animationType = 'hop';
+        group.userData.hopInterval = 5;
+        group.userData.hopTimer = Math.random() * 5;
+        break;
+    }
+
+    return group;
+  }
+
+  // ========================================
   // ANIMATION SYSTEM
   // ========================================
 
@@ -4744,6 +7789,116 @@ html, body {
         const spinSpeed = model.userData.spinSpeed || 0.5;
         model.rotation.y += deltaTime * spinSpeed;
         break;
+
+      case 'pulse':
+        // Pulsating glow (scale throb)
+        var pulseSpeed = model.userData.pulseSpeed || 1.5;
+        var pulseVal = 1 + Math.sin(worldTime * pulseSpeed) * 0.08;
+        model.scale.set(pulseVal, pulseVal, pulseVal);
+        break;
+
+      case 'flicker':
+        // Fire flicker animation
+        var flickerSpeed = model.userData.flickerSpeed || 8;
+        var fireCore = model.getObjectByName('fireCore');
+        var innerFlame = model.getObjectByName('innerFlame');
+        if (fireCore) {
+          fireCore.scale.x = 0.8 + Math.sin(worldTime * flickerSpeed) * 0.3;
+          fireCore.scale.z = 0.8 + Math.cos(worldTime * flickerSpeed * 1.3) * 0.3;
+          fireCore.scale.y = 0.9 + Math.sin(worldTime * flickerSpeed * 0.7) * 0.2;
+          fireCore.position.y = 0.5 + Math.sin(worldTime * flickerSpeed * 1.1) * 0.05;
+        }
+        if (innerFlame) {
+          innerFlame.scale.x = 0.7 + Math.cos(worldTime * flickerSpeed * 1.5) * 0.4;
+          innerFlame.scale.z = 0.7 + Math.sin(worldTime * flickerSpeed * 0.9) * 0.4;
+          innerFlame.rotation.y += deltaTime * 2;
+        }
+        break;
+
+      case 'fountain':
+        // Water drop bouncing animation
+        var waterDrop = model.getObjectByName('waterDrop');
+        if (waterDrop) {
+          var fountainCycle = worldTime * 2;
+          var dropPhase = fountainCycle % 2;
+          if (dropPhase < 1) {
+            waterDrop.position.y = 2.5 + dropPhase * 0.5;
+            waterDrop.scale.set(1, 1, 1);
+          } else {
+            waterDrop.position.y = 3.0 - (dropPhase - 1) * 0.8;
+            var shrink = 1 - (dropPhase - 1) * 0.5;
+            waterDrop.scale.set(shrink, shrink, shrink);
+          }
+        }
+        break;
+
+      case 'portal':
+        // Rotating portal ring + wobbling center
+        var portalRing = model.getObjectByName('portalRing');
+        var portalCenter = model.getObjectByName('portalCenter');
+        if (portalRing) {
+          portalRing.rotation.z += deltaTime * 0.5;
+        }
+        if (portalCenter) {
+          portalCenter.rotation.z -= deltaTime * 0.3;
+          var opacity = 0.3 + Math.sin(worldTime * 1.5) * 0.2;
+          if (portalCenter.material) {
+            portalCenter.material.opacity = opacity;
+          }
+        }
+        break;
+
+      case 'float':
+        // Floating in a gentle path (for fireflies)
+        var floatSpeed = model.userData.floatSpeed || 0.5;
+        var floatRadius = model.userData.floatRadius || 2;
+        var floatHeight = model.userData.floatHeight || 2;
+
+        model.userData.floatAngle = (model.userData.floatAngle || 0) + deltaTime * floatSpeed;
+        var fAngle = model.userData.floatAngle;
+
+        if (model.userData.floatCenterX === undefined) {
+          model.userData.floatCenterX = model.position.x;
+          model.userData.floatCenterZ = model.position.z;
+        }
+
+        model.position.x = model.userData.floatCenterX + Math.cos(fAngle) * floatRadius;
+        model.position.z = model.userData.floatCenterZ + Math.sin(fAngle * 0.7) * floatRadius;
+        model.position.y = floatHeight + Math.sin(fAngle * 1.3) * 0.5;
+        break;
+
+      case 'hop':
+        // Occasional hopping for rabbits/frogs
+        model.userData.hopTimer = (model.userData.hopTimer || 0) - deltaTime;
+        if (model.userData.hopTimer <= 0) {
+          model.userData.hopTimer = model.userData.hopInterval || 3;
+          model.userData.isHopping = true;
+          model.userData.hopPhase = 0;
+          // Pick random direction
+          model.userData.hopDirX = (Math.random() - 0.5) * 2;
+          model.userData.hopDirZ = (Math.random() - 0.5) * 2;
+        }
+        if (model.userData.isHopping) {
+          model.userData.hopPhase += deltaTime * 4;
+          if (model.userData.hopPhase < Math.PI) {
+            var hopHeight = Math.sin(model.userData.hopPhase) * 0.3;
+            if (model.userData.baseHopY === undefined) {
+              model.userData.baseHopY = model.position.y;
+            }
+            model.position.y = model.userData.baseHopY + hopHeight;
+            model.position.x += model.userData.hopDirX * deltaTime;
+            model.position.z += model.userData.hopDirZ * deltaTime;
+          } else {
+            model.position.y = model.userData.baseHopY || model.position.y;
+            model.userData.isHopping = false;
+          }
+        }
+        break;
+
+      case 'idle_look':
+        // Gentle head turning for deer
+        model.rotation.y = Math.sin(worldTime * 0.3) * 0.3;
+        break;
     }
   }
 
@@ -4756,6 +7911,9 @@ html, body {
   exports.createBuilding = createBuilding;
   exports.createFurniture = createFurniture;
   exports.createCreature = createCreature;
+  exports.createLandmark = createLandmark;
+  exports.createResourceNode = createResourceNode;
+  exports.createWildlife = createWildlife;
   exports.animateModel = animateModel;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Models = {}));
@@ -8022,6 +11180,265 @@ html, body {
   }
 
   // ========================================================================
+  // HARVESTABLE RESOURCE NODES
+  // ========================================================================
+
+  var resourceNodes = [];
+
+  function initResourceNodes(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    addZoneResources(sceneCtx.scene, 'gardens', [
+      { itemId: 'flower_rose', count: 8, radius: 30 },
+      { itemId: 'flower_tulip', count: 10, radius: 35 },
+      { itemId: 'flower_sunflower', count: 12, radius: 40 },
+      { itemId: 'herb_lavender', count: 8, radius: 28 },
+      { itemId: 'seed_wildflower', count: 6, radius: 25 }
+    ]);
+
+    addZoneResources(sceneCtx.scene, 'wilds', [
+      { itemId: 'wood_oak', count: 15, radius: 45 },
+      { itemId: 'wood_pine', count: 12, radius: 50 },
+      { itemId: 'stone_common', count: 10, radius: 40 },
+      { itemId: 'herb_ginseng', count: 5, radius: 35 },
+      { itemId: 'crystal_clear', count: 4, radius: 30 },
+      { itemId: 'food_mushroom', count: 8, radius: 38 },
+      { itemId: 'food_berry', count: 10, radius: 42 }
+    ]);
+
+    addZoneResources(sceneCtx.scene, 'nexus', [
+      { itemId: 'crystal_clear', count: 6, radius: 25 },
+      { itemId: 'crystal_amethyst', count: 4, radius: 20 }
+    ]);
+
+    addZoneResources(sceneCtx.scene, 'studio', [
+      { itemId: 'wood_mystical', count: 3, radius: 25 },
+      { itemId: 'crystal_clear', count: 5, radius: 22 }
+    ]);
+
+    addZoneResources(sceneCtx.scene, 'commons', [
+      { itemId: 'wood_oak', count: 8, radius: 25 },
+      { itemId: 'stone_common', count: 6, radius: 23 }
+    ]);
+
+    addZoneResources(sceneCtx.scene, 'athenaeum', [
+      { itemId: 'item_scroll', count: 10, radius: 28 }
+    ]);
+
+    addZoneResources(sceneCtx.scene, 'arena', [
+      { itemId: 'item_trophy', count: 2, radius: 20 }
+    ]);
+  }
+
+  function addZoneResources(scene, zoneId, resources) {
+    var zone = ZONES[zoneId];
+    if (!zone) return;
+
+    resources.forEach(function(res) {
+      for (var i = 0; i < res.count; i++) {
+        var angle = seededRandom(zoneId.charCodeAt(0), i, res.itemId.charCodeAt(0)) * Math.PI * 2;
+        var dist = seededRandom(zoneId.charCodeAt(1), i, res.itemId.charCodeAt(1)) * res.radius;
+        var x = zone.cx + Math.cos(angle) * dist;
+        var z = zone.cz + Math.sin(angle) * dist;
+
+        var onPath = false;
+        for (var pz in ZONES) {
+          if (pz === 'nexus') continue;
+          if (pointToSegDist(x, z, ZONES.nexus.cx, ZONES.nexus.cz, ZONES[pz].cx, ZONES[pz].cz) < 5) {
+            onPath = true;
+            break;
+          }
+        }
+        if (onPath) continue;
+
+        var distFromCenter = Math.sqrt((x - zone.cx) * (x - zone.cx) + (z - zone.cz) * (z - zone.cz));
+        if (distFromCenter < zone.radius * 0.3) continue;
+
+        var y = terrainHeight(x, z);
+        createResourceNode(scene, x, y, z, res.itemId, zoneId);
+      }
+    });
+  }
+
+  function createResourceNode(scene, x, y, z, itemId, zone) {
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+    if (!Inventory) return;
+
+    var itemData = Inventory.getItemData(itemId);
+    if (!itemData) return;
+
+    var nodeGroup = new THREE.Group();
+    var nodeMesh;
+
+    if (itemData.type === 'wood') {
+      var stumpGeo = new THREE.CylinderGeometry(0.4, 0.5, 1.2, 8);
+      var stumpMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+      nodeMesh = new THREE.Mesh(stumpGeo, stumpMat);
+      nodeMesh.position.y = 0.6;
+      nodeGroup.add(nodeMesh);
+
+      var leavesGeo = new THREE.SphereGeometry(0.5, 6, 6);
+      var leavesMat = new THREE.MeshStandardMaterial({ color: 0x4CAF50, transparent: true, opacity: 0.7 });
+      var leaves = new THREE.Mesh(leavesGeo, leavesMat);
+      leaves.position.y = 1.4;
+      nodeGroup.add(leaves);
+
+    } else if (itemData.type === 'stone') {
+      var rockGeo = new THREE.DodecahedronGeometry(0.6, 0);
+      var rockMat = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.9 });
+      nodeMesh = new THREE.Mesh(rockGeo, rockMat);
+      nodeMesh.position.y = 0.4;
+      nodeMesh.rotation.set(Math.random(), Math.random(), Math.random());
+      nodeGroup.add(nodeMesh);
+
+    } else if (itemData.type === 'crystal') {
+      var crystalGeo = new THREE.OctahedronGeometry(0.5, 0);
+      var crystalColor = itemId === 'crystal_amethyst' ? 0x9C27B0 : (itemId === 'crystal_emerald' ? 0x4CAF50 : 0x00BCD4);
+      var crystalMat = new THREE.MeshStandardMaterial({
+        color: crystalColor,
+        emissive: crystalColor,
+        emissiveIntensity: 0.3,
+        transparent: true,
+        opacity: 0.8
+      });
+      nodeMesh = new THREE.Mesh(crystalGeo, crystalMat);
+      nodeMesh.position.y = 0.7;
+      nodeGroup.add(nodeMesh);
+
+      var glowGeo = new THREE.SphereGeometry(0.3, 8, 8);
+      var glowMat = new THREE.MeshBasicMaterial({ color: crystalColor, transparent: true, opacity: 0.3 });
+      var glow = new THREE.Mesh(glowGeo, glowMat);
+      glow.position.y = 0.7;
+      nodeGroup.add(glow);
+
+      animatedObjects.push({ mesh: nodeMesh, type: 'crystal', params: { speed: 0.3, baseY: 0.7 } });
+
+    } else if (itemData.type === 'flowers' || itemData.type === 'herbs') {
+      var flowerGeo = new THREE.SphereGeometry(0.3, 6, 6);
+      var flowerColors = {
+        flower_rose: 0xFF1744, flower_tulip: 0xE91E63, flower_sunflower: 0xFFEB3B,
+        flower_lotus: 0xE1BEE7, flower_cherry: 0xF8BBD0,
+        herb_mint: 0x4CAF50, herb_sage: 0x66BB6A, herb_ginseng: 0xA1887F, herb_lavender: 0xCE93D8
+      };
+      var flowerColor = flowerColors[itemId] || 0x4CAF50;
+      var flowerMat = new THREE.MeshStandardMaterial({ color: flowerColor });
+      nodeMesh = new THREE.Mesh(flowerGeo, flowerMat);
+      nodeMesh.position.y = 0.3;
+      nodeGroup.add(nodeMesh);
+
+      var stemGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.4, 4);
+      var stemMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
+      var stem = new THREE.Mesh(stemGeo, stemMat);
+      stem.position.y = 0.15;
+      nodeGroup.add(stem);
+
+    } else if (itemData.type === 'seeds') {
+      var seedGeo = new THREE.SphereGeometry(0.2, 6, 6);
+      var seedMat = new THREE.MeshStandardMaterial({ color: 0x8D6E63 });
+      nodeMesh = new THREE.Mesh(seedGeo, seedMat);
+      nodeMesh.position.y = 0.2;
+      nodeGroup.add(nodeMesh);
+
+    } else if (itemData.type === 'food') {
+      var foodGeo = new THREE.SphereGeometry(0.25, 6, 6);
+      var foodColors = { food_mushroom: 0xD32F2F, food_berry: 0x7B1FA2 };
+      var foodColor = foodColors[itemId] || 0x8D6E63;
+      var foodMat = new THREE.MeshStandardMaterial({ color: foodColor });
+      nodeMesh = new THREE.Mesh(foodGeo, foodMat);
+      nodeMesh.position.y = 0.25;
+      nodeGroup.add(nodeMesh);
+
+    } else if (itemData.type === 'knowledge') {
+      var scrollGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.5, 8);
+      var scrollMat = new THREE.MeshStandardMaterial({ color: 0xFFF8DC });
+      nodeMesh = new THREE.Mesh(scrollGeo, scrollMat);
+      nodeMesh.position.y = 0.3;
+      nodeMesh.rotation.z = Math.PI / 2;
+      nodeGroup.add(nodeMesh);
+
+    } else if (itemData.type === 'trophies') {
+      var trophyGeo = new THREE.SphereGeometry(0.3, 8, 8);
+      var trophyMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.8, roughness: 0.2 });
+      nodeMesh = new THREE.Mesh(trophyGeo, trophyMat);
+      nodeMesh.position.y = 0.5;
+      nodeGroup.add(nodeMesh);
+
+      var baseGeo = new THREE.CylinderGeometry(0.2, 0.25, 0.3, 8);
+      var baseMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+      var base = new THREE.Mesh(baseGeo, baseMat);
+      base.position.y = 0.15;
+      nodeGroup.add(base);
+
+    } else {
+      var genGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+      var genMat = new THREE.MeshStandardMaterial({ color: 0xBDBDBD });
+      nodeMesh = new THREE.Mesh(genGeo, genMat);
+      nodeMesh.position.y = 0.2;
+      nodeGroup.add(nodeMesh);
+    }
+
+    nodeGroup.position.set(x, y, z);
+    nodeGroup.userData.isResource = true;
+    nodeGroup.userData.itemId = itemId;
+    nodeGroup.userData.depleted = false;
+    nodeGroup.userData.respawnTime = 0;
+    nodeGroup.userData.zone = zone;
+    nodeGroup.userData.nodeMesh = nodeMesh;
+
+    scene.add(nodeGroup);
+    resourceNodes.push(nodeGroup);
+  }
+
+  function updateResourceNodes(deltaTime) {
+    var currentTime = Date.now();
+
+    resourceNodes.forEach(function(node) {
+      if (node.userData.depleted) {
+        if (currentTime >= node.userData.respawnTime) {
+          node.userData.depleted = false;
+          node.visible = true;
+
+          if (node.userData.nodeMesh && node.userData.nodeMesh.material) {
+            node.userData.nodeMesh.material.opacity = 1.0;
+            node.userData.nodeMesh.material.transparent = false;
+          }
+        }
+      }
+    });
+  }
+
+  function harvestResource(node) {
+    if (!node || !node.userData || !node.userData.isResource) return null;
+    if (node.userData.depleted) return null;
+
+    var itemId = node.userData.itemId;
+
+    node.userData.depleted = true;
+    node.userData.respawnTime = Date.now() + (30000 + Math.random() * 30000);
+
+    if (node.userData.nodeMesh && node.userData.nodeMesh.material) {
+      node.userData.nodeMesh.material.opacity = 0.3;
+      node.userData.nodeMesh.material.transparent = true;
+    }
+
+    return itemId;
+  }
+
+  function getResourceNodeAtMouse(raycaster, camera, mouseX, mouseY) {
+    raycaster.setFromCamera({ x: mouseX, y: mouseY }, camera);
+
+    var intersects = raycaster.intersectObjects(resourceNodes, true);
+    if (intersects.length > 0) {
+      var obj = intersects[0].object;
+      while (obj && !obj.userData.isResource) {
+        obj = obj.parent;
+      }
+      return obj && obj.userData.isResource ? obj : null;
+    }
+    return null;
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -8050,6 +11467,10 @@ html, body {
   exports.updateWater = updateWater;
   exports.initSkybox = initSkybox;
   exports.updateSkybox = updateSkybox;
+  exports.initResourceNodes = initResourceNodes;
+  exports.updateResourceNodes = updateResourceNodes;
+  exports.harvestResource = harvestResource;
+  exports.getResourceNodeAtMouse = getResourceNodeAtMouse;
   exports.ZONES = ZONES;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));
@@ -8149,6 +11570,49 @@ html, body {
         if (!chatMode) {
           if (callbacks.onAction) {
             callbacks.onAction('interact', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'i':
+      case 'I':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleInventory', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'c':
+      case 'C':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleCrafting', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('useQuickSlot', { slot: parseInt(e.key) - 1 });
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'j':
+      case 'J':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggle_quest_log', {});
           }
           e.preventDefault();
         }
@@ -9172,6 +12636,581 @@ html, body {
     minimapCtx.globalAlpha = 1.0;
   }
 
+  // ========================================================================
+  // QUEST SYSTEM UI
+  // ========================================================================
+
+  var questTrackerEl = null;
+  var questLogEl = null;
+  var questOfferEl = null;
+
+  /**
+   * Initialize quest tracker (top-right, below minimap)
+   */
+  function initQuestTracker() {
+    if (typeof document === 'undefined') return;
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    questTrackerEl = document.createElement('div');
+    questTrackerEl.id = 'quest-tracker';
+    questTrackerEl.style.cssText = 'position:absolute;top:470px;right:20px;background:rgba(10,14,26,0.85);' +
+      'border-left:3px solid #d4af37;border-radius:8px;padding:12px;min-width:220px;max-width:300px;' +
+      'font-size:12px;pointer-events:auto;max-height:250px;overflow-y:auto;';
+    questTrackerEl.innerHTML = '<div style="font-weight:bold;color:#d4af37;margin-bottom:6px;font-size:13px;">Active Quests</div>';
+    hud.appendChild(questTrackerEl);
+  }
+
+  /**
+   * Update quest tracker with active quests
+   * @param {Array} activeQuests - Array of active quest objects
+   */
+  function updateQuestTracker(activeQuests) {
+    if (!questTrackerEl) return;
+
+    if (activeQuests.length === 0) {
+      questTrackerEl.innerHTML = '<div style="font-weight:bold;color:#d4af37;margin-bottom:6px;font-size:13px;">Active Quests</div>' +
+        '<div style="color:#888;font-style:italic;font-size:11px;">No active quests</div>';
+      return;
+    }
+
+    var html = '<div style="font-weight:bold;color:#d4af37;margin-bottom:6px;font-size:13px;">Active Quests</div>';
+
+    activeQuests.forEach(function(quest) {
+      var obj = quest.objectives[0]; // Show first objective
+      var required = obj.required || obj.count || 1;
+      var progress = obj.current + '/' + required;
+      var progressPercent = Math.round((obj.current / required) * 100);
+      var statusColor = quest.status === 'complete' ? '#4f4' : '#fff';
+
+      html += '<div style="margin-bottom:10px;padding:6px;background:rgba(0,0,0,0.3);border-radius:4px;">' +
+        '<div style="font-weight:bold;color:' + statusColor + ';font-size:11px;margin-bottom:3px;">' + quest.title + '</div>' +
+        '<div style="color:#aaa;font-size:10px;margin-bottom:4px;">' + progress + '</div>' +
+        '<div style="width:100%;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;overflow:hidden;">' +
+        '<div style="width:' + progressPercent + '%;height:100%;background:#d4af37;"></div></div>' +
+        '</div>';
+    });
+
+    questTrackerEl.innerHTML = html;
+  }
+
+  /**
+   * Show quest log panel (press J to toggle)
+   */
+  function showQuestLog(questLog, playerId) {
+    if (typeof document === 'undefined') return;
+    hideQuestLog(); // Remove existing if any
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    questLogEl = document.createElement('div');
+    questLogEl.id = 'quest-log-panel';
+    questLogEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #d4af37;border-radius:12px;' +
+      'padding:20px;width:600px;max-height:70vh;overflow-y:auto;pointer-events:auto;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);z-index:200;';
+
+    var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+      '<div style="font-size:24px;font-weight:bold;color:#d4af37;">Quest Log</div>' +
+      '<div style="cursor:pointer;font-size:20px;color:#888;padding:4px 8px;" onclick="window.HUD.hideQuestLog()">✕</div></div>';
+
+    // Active quests section
+    html += '<div style="margin-bottom:20px;">' +
+      '<div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:10px;border-bottom:1px solid #d4af37;padding-bottom:4px;">Active Quests (' + questLog.active.length + '/5)</div>';
+
+    if (questLog.active.length === 0) {
+      html += '<div style="color:#888;font-style:italic;font-size:13px;padding:10px;">No active quests. Speak to NPCs to find new quests!</div>';
+    } else {
+      questLog.active.forEach(function(quest) {
+        var obj = quest.objectives[0];
+        var required = obj.required || obj.count || 1;
+        var progress = obj.current + '/' + required;
+        var statusText = quest.status === 'complete' ? '<span style="color:#4f4;">✓ Ready to turn in</span>' : '<span style="color:#fa4;">In Progress</span>';
+
+        html += '<div style="margin-bottom:12px;padding:12px;background:rgba(0,0,0,0.3);border-radius:6px;border-left:3px solid #d4af37;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;">' +
+          '<div style="font-weight:bold;color:#fff;font-size:14px;">' + quest.title + '</div>' +
+          '<div style="font-size:11px;">' + statusText + '</div></div>' +
+          '<div style="color:#aaa;font-size:12px;margin-bottom:6px;">' + quest.description + '</div>' +
+          '<div style="color:#888;font-size:11px;">Progress: ' + progress + '</div>' +
+          '<div style="margin-top:6px;font-size:11px;color:#d4af37;">Reward: ' + quest.rewards.spark + ' Spark' +
+          (quest.rewards.items.length > 0 ? ' + items' : '') + '</div>' +
+          '<div style="margin-top:8px;text-align:right;">' +
+          '<span style="cursor:pointer;font-size:11px;color:#f44;text-decoration:underline;" onclick="window.HUD.abandonQuestFromLog(\'' + playerId + '\',\'' + quest.id + '\')">Abandon</span>' +
+          '</div></div>';
+      });
+    }
+    html += '</div>';
+
+    // Available quests section
+    html += '<div style="margin-bottom:20px;">' +
+      '<div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:10px;border-bottom:1px solid #d4af37;padding-bottom:4px;">Available Quests (' + questLog.available.length + ')</div>';
+
+    if (questLog.available.length === 0) {
+      html += '<div style="color:#888;font-style:italic;font-size:13px;padding:10px;">No new quests available. Complete prerequisites or explore more zones!</div>';
+    } else {
+      questLog.available.slice(0, 10).forEach(function(quest) {
+        html += '<div style="margin-bottom:12px;padding:12px;background:rgba(0,0,0,0.2);border-radius:6px;border-left:3px solid #888;">' +
+          '<div style="font-weight:bold;color:#fff;font-size:14px;margin-bottom:6px;">' + quest.title + '</div>' +
+          '<div style="color:#aaa;font-size:12px;margin-bottom:6px;">' + quest.description + '</div>' +
+          '<div style="font-size:11px;color:#d4af37;">Reward: ' + quest.rewards.spark + ' Spark' +
+          (quest.rewards.items.length > 0 ? ' + items' : '') + '</div>' +
+          '<div style="margin-top:8px;color:#888;font-size:10px;">Find quest giver to accept</div></div>';
+      });
+    }
+    html += '</div>';
+
+    // Completed quests section
+    html += '<div>' +
+      '<div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:10px;border-bottom:1px solid #d4af37;padding-bottom:4px;">Completed (' + questLog.completed.length + ')</div>';
+
+    if (questLog.completed.length === 0) {
+      html += '<div style="color:#888;font-style:italic;font-size:13px;padding:10px;">No completed quests yet.</div>';
+    } else {
+      html += '<div style="color:#4f4;font-size:12px;padding:10px;">You have completed ' + questLog.completed.length + ' quests!</div>';
+    }
+    html += '</div>';
+
+    html += '<div style="text-align:center;margin-top:16px;font-size:11px;color:#666;">Press J to close</div>';
+
+    questLogEl.innerHTML = html;
+    hud.appendChild(questLogEl);
+  }
+
+  /**
+   * Hide quest log panel
+   */
+  function hideQuestLog() {
+    if (questLogEl && questLogEl.parentNode) {
+      questLogEl.parentNode.removeChild(questLogEl);
+      questLogEl = null;
+    }
+  }
+
+  /**
+   * Show quest offer dialog from NPC
+   * @param {object} quest - Quest object
+   * @param {object} npc - NPC data {name, archetype}
+   */
+  function showQuestOffer(quest, npc, playerId) {
+    if (typeof document === 'undefined') return;
+    hideQuestOffer(); // Remove existing
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    questOfferEl = document.createElement('div');
+    questOfferEl.id = 'quest-offer-dialog';
+    questOfferEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #d4af37;border-radius:12px;' +
+      'padding:20px;width:500px;pointer-events:auto;box-shadow:0 8px 32px rgba(0,0,0,0.8);z-index:300;';
+
+    var questDialogue = quest.dialogue && quest.dialogue.offer ? quest.dialogue.offer : quest.description;
+
+    var html = '<div style="font-size:20px;font-weight:bold;color:#d4af37;margin-bottom:12px;">New Quest</div>' +
+      '<div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:8px;">' + quest.title + '</div>' +
+      '<div style="color:#aaa;font-size:13px;margin-bottom:12px;font-style:italic;">"' + questDialogue + '"</div>' +
+      '<div style="color:#ccc;font-size:12px;margin-bottom:8px;">' + quest.description + '</div>' +
+      '<div style="padding:10px;background:rgba(0,0,0,0.3);border-radius:6px;margin-bottom:16px;">' +
+      '<div style="font-size:12px;color:#d4af37;margin-bottom:4px;">Rewards:</div>' +
+      '<div style="font-size:13px;color:#fff;">• ' + quest.rewards.spark + ' Spark</div>';
+
+    if (quest.rewards.items.length > 0) {
+      quest.rewards.items.forEach(function(item) {
+        html += '<div style="font-size:13px;color:#fff;">• ' + item.count + 'x ' + item.id + '</div>';
+      });
+    }
+
+    html += '</div>' +
+      '<div style="display:flex;gap:12px;justify-content:center;">' +
+      '<button onclick="window.HUD.acceptQuestFromOffer(\'' + playerId + '\',\'' + quest.id + '\')" style="' +
+      'padding:10px 24px;background:#d4af37;color:#000;border:none;border-radius:6px;' +
+      'font-weight:bold;font-size:14px;cursor:pointer;">Accept Quest</button>' +
+      '<button onclick="window.HUD.hideQuestOffer()" style="' +
+      'padding:10px 24px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid #666;border-radius:6px;' +
+      'font-size:14px;cursor:pointer;">Decline</button></div>';
+
+    questOfferEl.innerHTML = html;
+    hud.appendChild(questOfferEl);
+  }
+
+  /**
+   * Hide quest offer dialog
+   */
+  function hideQuestOffer() {
+    if (questOfferEl && questOfferEl.parentNode) {
+      questOfferEl.parentNode.removeChild(questOfferEl);
+      questOfferEl = null;
+    }
+  }
+
+  /**
+   * Show quest complete notification
+   * @param {object} quest - Completed quest
+   * @param {object} rewards - Rewards {spark, items}
+   */
+  function showQuestComplete(quest, rewards) {
+    if (!notificationContainer) return;
+    if (typeof document === 'undefined') return;
+
+    var notification = document.createElement('div');
+    notification.style.cssText = 'background:linear-gradient(135deg,rgba(212,175,55,0.9),rgba(255,215,0,0.9));' +
+      'border-left:4px solid #d4af37;border-radius:8px;padding:16px 20px;margin-bottom:10px;' +
+      'animation:slideIn 0.3s ease-out;pointer-events:auto;box-shadow:0 4px 12px rgba(212,175,55,0.4);';
+
+    var html = '<div style="font-size:18px;font-weight:bold;color:#000;margin-bottom:6px;">Quest Complete!</div>' +
+      '<div style="font-size:14px;color:#111;margin-bottom:8px;">' + quest.title + '</div>' +
+      '<div style="font-size:12px;color:#222;">+ ' + rewards.spark + ' Spark';
+
+    if (rewards.items && rewards.items.length > 0) {
+      html += ' + ' + rewards.items.length + ' item(s)';
+    }
+
+    html += '</div>';
+    notification.innerHTML = html;
+
+    notificationContainer.appendChild(notification);
+
+    // Auto-remove after 6 seconds
+    setTimeout(function() {
+      notification.style.animation = 'slideOut 0.3s ease-in';
+      setTimeout(function() {
+        notification.remove();
+      }, 300);
+    }, 6000);
+  }
+
+  /**
+   * Show quest objective progress update
+   * @param {string} text - Progress text (e.g., "+1/3 Sunflowers")
+   */
+  function showQuestProgress(text) {
+    if (!notificationContainer) return;
+    if (typeof document === 'undefined') return;
+
+    var notification = document.createElement('div');
+    notification.style.cssText = 'background:rgba(212,175,55,0.3);border-left:3px solid #d4af37;' +
+      'border-radius:6px;padding:8px 12px;margin-bottom:8px;animation:slideIn 0.3s ease-out;' +
+      'pointer-events:auto;font-size:13px;color:#d4af37;font-weight:bold;';
+    notification.textContent = text;
+
+    notificationContainer.appendChild(notification);
+
+    // Auto-remove after 3 seconds
+    setTimeout(function() {
+      notification.style.animation = 'slideOut 0.3s ease-in';
+      setTimeout(function() {
+        notification.remove();
+      }, 300);
+    }, 3000);
+  }
+
+  /**
+   * Accept quest from offer dialog (called by inline onclick)
+   */
+  function acceptQuestFromOffer(playerId, questId) {
+    if (window.Quests) {
+      var result = window.Quests.acceptQuest(playerId, questId);
+      if (result.success) {
+        showNotification('Quest accepted: ' + result.quest.title, 'success');
+        hideQuestOffer();
+      } else {
+        showNotification('Cannot accept quest: ' + result.message, 'error');
+      }
+    }
+  }
+
+  /**
+   * Abandon quest from log (called by inline onclick)
+   */
+  function abandonQuestFromLog(playerId, questId) {
+    if (window.Quests) {
+      var result = window.Quests.abandonQuest(playerId, questId);
+      if (result.success) {
+        showNotification('Quest abandoned', 'info');
+        hideQuestLog();
+      }
+    }
+  }
+
+  // ========================================================================
+  // INVENTORY PANEL
+  // ========================================================================
+
+  var inventoryPanel = null;
+  var inventoryVisible = false;
+
+  function initInventoryPanel() {
+    if (typeof document === 'undefined') return;
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    inventoryPanel = document.createElement('div');
+    inventoryPanel.id = 'inventory-panel';
+    inventoryPanel.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #4af;border-radius:12px;' +
+      'padding:20px;min-width:500px;pointer-events:auto;display:none;' +
+      'box-shadow:0 4px 20px rgba(0,0,0,0.8);z-index:200;';
+
+    var header = '<div style="font-size:20px;font-weight:bold;margin-bottom:15px;text-align:center;color:#4af;">Inventory</div>';
+    var slotsGrid = '<div id="inventory-slots" style="display:grid;grid-template-columns:repeat(5,90px);gap:8px;margin-bottom:15px;"></div>';
+    var closeBtn = '<div style="text-align:center;"><button id="close-inventory" style="padding:8px 20px;background:#4af;border:none;border-radius:4px;color:#000;font-weight:bold;cursor:pointer;">Close (I)</button></div>';
+
+    inventoryPanel.innerHTML = header + slotsGrid + closeBtn;
+    hud.appendChild(inventoryPanel);
+
+    document.getElementById('close-inventory').addEventListener('click', function() {
+      hideInventoryPanel();
+    });
+  }
+
+  function toggleInventoryPanel() {
+    if (inventoryVisible) {
+      hideInventoryPanel();
+    } else {
+      showInventoryPanel();
+    }
+  }
+
+  function showInventoryPanel() {
+    if (!inventoryPanel) initInventoryPanel();
+    inventoryPanel.style.display = 'block';
+    inventoryVisible = true;
+  }
+
+  function hideInventoryPanel() {
+    if (inventoryPanel) inventoryPanel.style.display = 'none';
+    inventoryVisible = false;
+  }
+
+  function updateInventoryDisplay(inventory) {
+    if (!inventoryPanel || !inventory) return;
+
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+    if (!Inventory) return;
+
+    var slotsDiv = document.getElementById('inventory-slots');
+    if (!slotsDiv) return;
+
+    var items = Inventory.getInventory(inventory);
+    slotsDiv.innerHTML = '';
+
+    items.forEach(function(item, idx) {
+      var slot = document.createElement('div');
+      slot.style.cssText = 'background:rgba(255,255,255,0.1);border:2px solid #555;border-radius:6px;' +
+        'padding:10px;text-align:center;min-height:70px;position:relative;cursor:pointer;';
+
+      if (item) {
+        var rarityColors = { common: '#aaa', uncommon: '#4af', rare: '#f4a', legendary: '#fa4' };
+        var borderColor = rarityColors[item.rarity] || '#555';
+        slot.style.borderColor = borderColor;
+
+        slot.innerHTML = '<div style="font-size:32px;margin-bottom:4px;">' + item.icon + '</div>' +
+          '<div style="font-size:11px;color:#ccc;">' + item.name + '</div>' +
+          '<div style="position:absolute;top:4px;right:6px;background:#000;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:bold;">' + item.count + '</div>';
+
+        slot.title = item.description + '\\n' + item.rarity.toUpperCase();
+      } else {
+        slot.innerHTML = '<div style="color:#444;padding-top:20px;">Empty</div>';
+      }
+
+      slotsDiv.appendChild(slot);
+    });
+  }
+
+  // ========================================================================
+  // CRAFTING PANEL
+  // ========================================================================
+
+  var craftingPanel = null;
+  var craftingVisible = false;
+  var onCraftCallback = null;
+
+  function initCraftingPanel(onCraft) {
+    if (typeof document === 'undefined') return;
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    onCraftCallback = onCraft;
+
+    craftingPanel = document.createElement('div');
+    craftingPanel.id = 'crafting-panel';
+    craftingPanel.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #fa4;border-radius:12px;' +
+      'padding:20px;min-width:600px;max-height:70vh;overflow-y:auto;pointer-events:auto;display:none;' +
+      'box-shadow:0 4px 20px rgba(0,0,0,0.8);z-index:200;';
+
+    var header = '<div style="font-size:20px;font-weight:bold;margin-bottom:15px;text-align:center;color:#fa4;">Crafting</div>';
+    var recipeList = '<div id="recipe-list"></div>';
+    var closeBtn = '<div style="text-align:center;margin-top:15px;"><button id="close-crafting" style="padding:8px 20px;background:#fa4;border:none;border-radius:4px;color:#000;font-weight:bold;cursor:pointer;">Close (C)</button></div>';
+
+    craftingPanel.innerHTML = header + recipeList + closeBtn;
+    hud.appendChild(craftingPanel);
+
+    document.getElementById('close-crafting').addEventListener('click', function() {
+      hideCraftingPanel();
+    });
+  }
+
+  function toggleCraftingPanel() {
+    if (craftingVisible) {
+      hideCraftingPanel();
+    } else {
+      showCraftingPanel();
+    }
+  }
+
+  function showCraftingPanel() {
+    if (!craftingPanel) initCraftingPanel();
+    craftingPanel.style.display = 'block';
+    craftingVisible = true;
+  }
+
+  function hideCraftingPanel() {
+    if (craftingPanel) craftingPanel.style.display = 'none';
+    craftingVisible = false;
+  }
+
+  function updateCraftingDisplay(inventory) {
+    if (!craftingPanel || !inventory) return;
+
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+    if (!Inventory) return;
+
+    var listDiv = document.getElementById('recipe-list');
+    if (!listDiv) return;
+
+    var allRecipes = Inventory.getAllRecipes();
+    listDiv.innerHTML = '';
+
+    allRecipes.forEach(function(recipe) {
+      var canCraft = Inventory.canCraft(inventory, recipe);
+      var outputItem = Inventory.getItemData(recipe.output.itemId);
+
+      var recipeDiv = document.createElement('div');
+      recipeDiv.style.cssText = 'background:rgba(255,255,255,0.05);border:1px solid ' + (canCraft ? '#4f4' : '#555') + ';' +
+        'border-radius:6px;padding:12px;margin-bottom:10px;';
+
+      var title = '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:' + (canCraft ? '#4f4' : '#888') + ';">' +
+        (outputItem ? outputItem.icon + ' ' : '') + recipe.name + '</div>';
+
+      var reqs = '<div style="font-size:12px;color:#aaa;margin-bottom:8px;">Requires: ';
+      recipe.requirements.forEach(function(req, i) {
+        var reqItem = Inventory.getItemData(req.itemId);
+        var hasCount = Inventory.getItemCount(inventory, req.itemId);
+        var hasEnough = hasCount >= req.count;
+        reqs += (i > 0 ? ', ' : '') + '<span style="color:' + (hasEnough ? '#4f4' : '#f44') + ';">' +
+          (reqItem ? reqItem.icon + ' ' : '') + req.count + ' ' + (reqItem ? reqItem.name : req.itemId) + '</span>';
+      });
+      reqs += '</div>';
+
+      var reward = '<div style="font-size:11px;color:#ffa500;margin-bottom:8px;">Spark Reward: ' + recipe.sparkReward + '</div>';
+
+      var craftBtn = '';
+      if (canCraft) {
+        craftBtn = '<button class="craft-btn" data-recipe="' + recipe.id + '" style="padding:6px 15px;background:#4f4;border:none;border-radius:4px;color:#000;font-weight:bold;cursor:pointer;">Craft</button>';
+      } else {
+        craftBtn = '<button disabled style="padding:6px 15px;background:#333;border:none;border-radius:4px;color:#666;cursor:not-allowed;">Cannot Craft</button>';
+      }
+
+      recipeDiv.innerHTML = title + reqs + reward + craftBtn;
+      listDiv.appendChild(recipeDiv);
+    });
+
+    var craftBtns = document.querySelectorAll('.craft-btn');
+    craftBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var recipeId = this.getAttribute('data-recipe');
+        if (onCraftCallback) {
+          onCraftCallback(recipeId);
+        }
+      });
+    });
+  }
+
+  // ========================================================================
+  // QUICK BAR
+  // ========================================================================
+
+  var quickBarEl = null;
+
+  function initQuickBar() {
+    if (typeof document === 'undefined') return;
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    quickBarEl = document.createElement('div');
+    quickBarEl.id = 'quick-bar';
+    quickBarEl.style.cssText = 'position:absolute;bottom:70px;left:50%;transform:translateX(-50%);' +
+      'display:flex;gap:8px;pointer-events:none;';
+
+    for (var i = 0; i < 5; i++) {
+      var slot = document.createElement('div');
+      slot.className = 'quick-slot';
+      slot.style.cssText = 'background:rgba(0,0,0,0.7);border:2px solid #555;border-radius:6px;' +
+        'padding:8px;width:60px;height:60px;text-align:center;position:relative;';
+
+      var keyLabel = '<div style="position:absolute;top:2px;left:4px;font-size:10px;color:#888;">' + (i + 1) + '</div>';
+      slot.innerHTML = keyLabel + '<div class="quick-content" style="font-size:28px;margin-top:8px;">-</div>';
+
+      quickBarEl.appendChild(slot);
+    }
+
+    hud.appendChild(quickBarEl);
+  }
+
+  function updateQuickBar(inventory) {
+    if (!quickBarEl || !inventory) return;
+
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+    if (!Inventory) return;
+
+    var items = Inventory.getInventory(inventory);
+    var quickSlots = quickBarEl.querySelectorAll('.quick-slot');
+
+    inventory.quickBar.forEach(function(slotIdx, qbIdx) {
+      if (qbIdx >= quickSlots.length) return;
+
+      var item = items[slotIdx];
+      var contentDiv = quickSlots[qbIdx].querySelector('.quick-content');
+
+      if (item) {
+        contentDiv.innerHTML = item.icon;
+        quickSlots[qbIdx].title = item.name + ' (' + item.count + ')';
+      } else {
+        contentDiv.innerHTML = '-';
+        quickSlots[qbIdx].title = 'Empty';
+      }
+    });
+  }
+
+  // ========================================================================
+  // ITEM PICKUP NOTIFICATION
+  // ========================================================================
+
+  function showItemPickup(itemName, count, icon) {
+    if (!notificationContainer) return;
+    if (typeof document === 'undefined') return;
+
+    var pickup = document.createElement('div');
+    pickup.style.cssText = 'background:rgba(0,200,0,0.8);border-left:4px solid #0f0;border-radius:4px;' +
+      'padding:10px 15px;margin-bottom:10px;animation:slideIn 0.3s ease-out;' +
+      'pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,0.3);font-size:14px;';
+
+    pickup.innerHTML = '<span style="font-size:20px;margin-right:8px;">' + (icon || '+') + '</span>' +
+      '<span style="font-weight:bold;">+' + count + ' ' + itemName + '</span>';
+
+    notificationContainer.appendChild(pickup);
+
+    setTimeout(function() {
+      pickup.style.animation = 'slideOut 0.3s ease-in';
+      setTimeout(function() {
+        pickup.remove();
+      }, 300);
+    }, 2000);
+  }
+
   // Export public API
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
@@ -9190,6 +13229,29 @@ html, body {
   exports.showNPCDialog = showNPCDialog;
   exports.hideNPCDialog = hideNPCDialog;
   exports.updateMinimapNPCs = updateMinimapNPCs;
+  exports.initQuestTracker = initQuestTracker;
+  exports.updateQuestTracker = updateQuestTracker;
+  exports.showQuestLog = showQuestLog;
+  exports.hideQuestLog = hideQuestLog;
+  exports.showQuestOffer = showQuestOffer;
+  exports.hideQuestOffer = hideQuestOffer;
+  exports.showQuestComplete = showQuestComplete;
+  exports.showQuestProgress = showQuestProgress;
+  exports.acceptQuestFromOffer = acceptQuestFromOffer;
+  exports.abandonQuestFromLog = abandonQuestFromLog;
+  exports.initInventoryPanel = initInventoryPanel;
+  exports.toggleInventoryPanel = toggleInventoryPanel;
+  exports.showInventoryPanel = showInventoryPanel;
+  exports.hideInventoryPanel = hideInventoryPanel;
+  exports.updateInventoryDisplay = updateInventoryDisplay;
+  exports.initCraftingPanel = initCraftingPanel;
+  exports.toggleCraftingPanel = toggleCraftingPanel;
+  exports.showCraftingPanel = showCraftingPanel;
+  exports.hideCraftingPanel = hideCraftingPanel;
+  exports.updateCraftingDisplay = updateCraftingDisplay;
+  exports.initQuickBar = initQuickBar;
+  exports.updateQuickBar = updateQuickBar;
+  exports.showItemPickup = showItemPickup;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));
 
@@ -13936,6 +17998,253 @@ html, body {
   };
 
   // ============================================================================
+  // ZONE-SPECIFIC DIALOGUES (shared across archetypes)
+  // ============================================================================
+
+  var ZONE_DIALOGUES = {
+    nexus: [
+      "The Nexus hums with energy today.",
+      "Everyone passes through here eventually.",
+      "The heart of ZION beats strong.",
+      "New faces arrive every day. The world grows.",
+      "I love the way all paths converge here."
+    ],
+    gardens: [
+      "The gardens are especially beautiful today.",
+      "Can you smell the jasmine? Heavenly.",
+      "Everything grows so well here.",
+      "The gardeners have been busy. Look at those blooms!",
+      "I always feel peaceful in the gardens."
+    ],
+    wilds: [
+      "Stay alert out here. The wilds are unpredictable.",
+      "I've heard there are rare plants deep in these woods.",
+      "The frontier calls to the adventurous.",
+      "Few venture this far. You're brave.",
+      "The wilds hold secrets waiting to be found."
+    ],
+    athenaeum: [
+      "Knowledge fills these halls.",
+      "The scrolls here contain ancient wisdom.",
+      "Quiet, please. Some are studying.",
+      "Have you read the founding texts? Fascinating.",
+      "Learning never ends in the Athenaeum."
+    ],
+    studio: [
+      "Creativity fills the air here.",
+      "I love watching the artists at work.",
+      "The Studio inspires everyone who enters.",
+      "Art gives meaning to our world.",
+      "Have you seen the latest sculptures?"
+    ],
+    agora: [
+      "The market is bustling today!",
+      "Good deals to be found if you look.",
+      "The Agora never sleeps.",
+      "Trade is the lifeblood of any community.",
+      "I heard a merchant just got rare goods."
+    ],
+    commons: [
+      "The Commons feel like home.",
+      "Community is what we build here.",
+      "I love what everyone has contributed.",
+      "The workshops are always busy.",
+      "Building together is building forever."
+    ],
+    arena: [
+      "The Arena pulses with competitive spirit!",
+      "Friendly competition makes us all stronger.",
+      "Champions are made here!",
+      "The crowd's energy is incredible.",
+      "May the best challenger win!"
+    ]
+  };
+
+  // ============================================================================
+  // INTER-ARCHETYPE REACTION DIALOGUES
+  // ============================================================================
+
+  var ARCHETYPE_REACTIONS = {
+    gardener: {
+      musician: "Your music makes my flowers bloom brighter!",
+      builder: "Could you build a trellis for my vines?",
+      healer: "I have herbs that might help your remedies.",
+      artist: "Please paint my garden someday!",
+      merchant: "I have fresh produce for your stall.",
+      storyteller: "The oldest oak has stories to tell...",
+      explorer: "Did you find any rare seeds on your travels?",
+      teacher: "Will you teach the children about botany?",
+      philosopher: "What do you think plants dream about?"
+    },
+    builder: {
+      gardener: "Plant something by my new building?",
+      musician: "I need good acoustics in this hall I'm building.",
+      healer: "I'm building a new healing pavilion.",
+      artist: "Want to design the facade?",
+      merchant: "I need materials. What do you have?",
+      storyteller: "This wall needs an engraved legend.",
+      explorer: "Found any interesting stone quarries?",
+      teacher: "I could build a lecture hall for you.",
+      philosopher: "Is the perfect building possible?"
+    },
+    storyteller: {
+      gardener: "Tell me the legend of the first seed.",
+      musician: "Would you accompany my tale with music?",
+      builder: "Every building you make is a story in stone.",
+      healer: "Healing stories are the most powerful.",
+      artist: "Illustrate my latest tale?",
+      merchant: "Stories from distant lands to trade?",
+      explorer: "You must have incredible tales to share!",
+      teacher: "Let's teach through storytelling!",
+      philosopher: "What is truth in a story?"
+    },
+    merchant: {
+      gardener: "Fresh flowers always sell well.",
+      musician: "You draw crowds! Set up near my stall?",
+      builder: "I have timber and nails you'll need.",
+      healer: "Healing potions sell for good Spark!",
+      artist: "Your art would fetch a premium.",
+      storyteller: "Stories attract customers. Perfect partnership!",
+      explorer: "Bring me exotic goods from your travels!",
+      teacher: "Education about quality helps sales.",
+      philosopher: "What is the true value of Spark?"
+    },
+    explorer: {
+      gardener: "I found strange plants in the deep wilds!",
+      musician: "The acoustics in that cave were amazing.",
+      builder: "There are ancient ruins to the north!",
+      healer: "I found rare medicinal moss on the cliff face.",
+      artist: "The vista from the eastern ridge is breathtaking.",
+      storyteller: "I discovered something the legends speak of!",
+      merchant: "I've got rare finds from the frontier.",
+      teacher: "The wilds teach lessons no book can.",
+      philosopher: "Exploration is philosophy in motion."
+    },
+    teacher: {
+      gardener: "Botany class begins with your garden.",
+      musician: "Music theory is fascinating, isn't it?",
+      builder: "Architecture has much to teach us.",
+      healer: "Medical knowledge saves lives.",
+      artist: "Art history is endlessly rich.",
+      storyteller: "Oral tradition preserves culture.",
+      merchant: "Economics drives civilization.",
+      explorer: "Geography shapes destiny.",
+      philosopher: "Every discipline leads to the same questions."
+    },
+    musician: {
+      gardener: "Your garden hums with life—I'll write it a song!",
+      builder: "The rhythm of your hammer inspires me.",
+      healer: "Healing harmonics are real. I've studied them.",
+      artist: "Music and art—the twin souls of creation.",
+      storyteller: "Let me compose a soundtrack for your tale!",
+      merchant: "I'll play for customers if you share the Spark!",
+      explorer: "Every land has its own song waiting to be heard.",
+      teacher: "Music is the universal language, yes?",
+      philosopher: "What is sound, really, but structured silence?"
+    },
+    healer: {
+      gardener: "Your herbs are essential to my practice.",
+      musician: "Music heals wounds no salve can reach.",
+      builder: "A healthy body builds a strong world.",
+      artist: "Beauty is healing in visual form.",
+      storyteller: "Stories can heal the soul.",
+      merchant: "I need supplies—got any healing crystals?",
+      explorer: "Stay safe out there. I'll be here if you're hurt.",
+      teacher: "Prevention is the best medicine.",
+      philosopher: "What does it mean to be truly well?"
+    },
+    philosopher: {
+      gardener: "Growth is the fundamental urge of all things.",
+      musician: "If music is math made beautiful, what is beauty?",
+      builder: "We build to defy entropy. A noble endeavor.",
+      healer: "Is perfect health the absence of illness, or something more?",
+      artist: "Does art reveal truth or create it?",
+      storyteller: "Stories shape how we see reality itself.",
+      merchant: "Value is a collective hallucination, isn't it?",
+      explorer: "The greatest journey is inward.",
+      teacher: "Can we truly teach, or merely point the way?"
+    },
+    artist: {
+      gardener: "Nature is the greatest artist.",
+      musician: "Our arts are siblings—let's collaborate!",
+      builder: "Architecture is art that shelters.",
+      healer: "I want to paint the act of healing.",
+      storyteller: "Every story paints pictures in the mind.",
+      merchant: "Does commerce diminish art or elevate it?",
+      explorer: "The landscapes you describe—I must see them!",
+      teacher: "Teach me that technique you mentioned.",
+      philosopher: "Art is philosophy made visible."
+    }
+  };
+
+  // ============================================================================
+  // QUEST HOOK DIALOGUES (NPCs hint at available tasks)
+  // ============================================================================
+
+  var QUEST_HOOKS = {
+    gardener: [
+      "I could use help gathering sunflowers for the festival...",
+      "The moonflower seeds need planting. Know anyone interested?",
+      "A rare bloom was spotted in the Wilds. I wish I could go look...",
+      "My herb garden needs tending while I research new species."
+    ],
+    builder: [
+      "The bridge near the commons needs repair. Volunteers?",
+      "I'm designing a new gazebo but need special stone...",
+      "Someone left materials scattered at the construction site.",
+      "The old tower could use reinforcement. Big project, good Spark."
+    ],
+    storyteller: [
+      "I'm collecting tales from each zone. Want to help gather them?",
+      "A lost manuscript was last seen in the Athenaeum depths...",
+      "The founding stories are fading from memory. Help preserve them?",
+      "I need someone to interview the elder NPCs for my chronicle."
+    ],
+    merchant: [
+      "I'm missing a delivery from the gardens. Could you check?",
+      "A rare gem went missing from my inventory...",
+      "I need someone to scout prices in the other zones.",
+      "Big trade deal coming up. I need rare materials."
+    ],
+    explorer: [
+      "There's an unmapped cave system I've been wanting to explore.",
+      "Strange lights in the wilds at night—want to investigate?",
+      "The ancient markers near the arena need documenting.",
+      "I found tracks of something unusual. Help me follow them?"
+    ],
+    teacher: [
+      "I need specimens from each zone for my natural history class.",
+      "Can you deliver these lesson scrolls to students in the commons?",
+      "My research requires a crystal from the studio caves.",
+      "Help me set up the outdoor classroom by the gardens."
+    ],
+    musician: [
+      "I'm organizing a concert but need instruments gathered.",
+      "The acoustics stone in the arena was chipped. Find a replacement?",
+      "I hear the wilds have singing crystals. Bring me one!",
+      "Help me spread word of tonight's performance to all zones."
+    ],
+    healer: [
+      "I'm running low on moonpetal herbs. The gardens might have some.",
+      "A traveler fell ill—I need crystal dust from the studio.",
+      "Help me set up healing stations across the zones.",
+      "Rare medicinal moss grows on the arena stones. Can you gather some?"
+    ],
+    philosopher: [
+      "Debate me on the nature of ZION. I'll reward good arguments!",
+      "Find the three wisdom stones hidden across the zones.",
+      "Carry this sealed question to the storyteller and bring back the answer.",
+      "I seek the meaning of the ancient symbols on the obelisk."
+    ],
+    artist: [
+      "I need pigments from rare flowers in the gardens.",
+      "Inspiration! Go sketch the view from three different zones.",
+      "The mural in the commons needs restoration help.",
+      "Find the legendary canvas stone in the wilds for me."
+    ]
+  };
+
+  // ============================================================================
   // MOOD SYSTEM
   // ============================================================================
 
@@ -14169,10 +18478,37 @@ html, body {
 
   function getDialogue(memory, context, npcName) {
     var archetype = memory.archetype;
+    var categoryKey = context.category || 'idle_observation';
+
+    // Handle special dynamic categories
+    if (categoryKey === 'archetype_reaction') {
+      var reactions = ARCHETYPE_REACTIONS[archetype];
+      if (reactions && context.targetArchetype && reactions[context.targetArchetype]) {
+        var dialogue = reactions[context.targetArchetype];
+        return dialogue.replace('{name}', npcName);
+      }
+      categoryKey = 'idle_observation'; // Fallback
+    }
+
+    if (categoryKey === 'zone_observation') {
+      var zoneDlgs = ZONE_DIALOGUES[context.zone];
+      if (zoneDlgs && zoneDlgs.length > 0) {
+        return zoneDlgs[Math.floor(Math.random() * zoneDlgs.length)];
+      }
+      categoryKey = 'idle_observation'; // Fallback
+    }
+
+    if (categoryKey === 'quest_hook') {
+      var hooks = QUEST_HOOKS[archetype];
+      if (hooks && hooks.length > 0) {
+        return hooks[Math.floor(Math.random() * hooks.length)];
+      }
+      categoryKey = 'idle_observation'; // Fallback
+    }
+
     var dialogues = CONTEXTUAL_DIALOGUES[archetype];
     if (!dialogues) return null;
 
-    var categoryKey = context.category || 'idle_observation';
     var category = dialogues[categoryKey];
     if (!category || category.length === 0) {
       category = dialogues.idle_observation || [];
@@ -14241,6 +18577,24 @@ html, body {
       } else if (player.isHarvesting) {
         return { category: 'player_harvesting' };
       }
+    }
+
+    // Inter-archetype reaction (NPC meets another archetype NPC)
+    if (perception.nearbyNPCs.length > 0 && Math.random() < 0.25) {
+      var nearbyNpc = perception.nearbyNPCs[0];
+      if (nearbyNpc.archetype && nearbyNpc.archetype !== memory.archetype) {
+        return { category: 'archetype_reaction', targetArchetype: nearbyNpc.archetype };
+      }
+    }
+
+    // Zone-specific observations
+    if (perception.currentZone && Math.random() < 0.3) {
+      return { category: 'zone_observation', zone: perception.currentZone };
+    }
+
+    // Quest hook (occasionally hint at available tasks)
+    if (Math.random() < 0.08) {
+      return { category: 'quest_hook' };
     }
 
     // Location-based
@@ -14794,6 +19148,9 @@ html, body {
   exports.ARCHETYPE_DRIVES = ARCHETYPE_DRIVES;
   exports.DAILY_SCHEDULE = DAILY_SCHEDULE;
   exports.MOODS = MOODS;
+  exports.ZONE_DIALOGUES = ZONE_DIALOGUES;
+  exports.ARCHETYPE_REACTIONS = ARCHETYPE_REACTIONS;
+  exports.QUEST_HOOKS = QUEST_HOOKS;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NpcAI = {}));
 
@@ -14831,10 +19188,12 @@ html, body {
   let npcMeshes = new Map(); // id -> THREE.Group
   let chatBubbles = new Map(); // id -> { mesh, timer }
   let emoteSprites = new Map(); // id -> {sprite, currentEmote, timer, opacity}
+  let questIndicators = new Map(); // id -> {sprite, type} - quest marker sprites
   let activityParticles = []; // {mesh, timer, velocity, startY}
   let particleSpawnTimers = new Map(); // id -> timer (throttle particle spawn)
   let pendingEvents = []; // events to broadcast to all NPCs
   let npcUpdateFrame = 0; // frame counter for staggered updates
+  let lastPlayerIdForQuests = null; // Track player ID for quest indicators
 
   // Seeded random number generator
   function seededRandom(seed) {
@@ -15420,6 +19779,141 @@ html, body {
       map: texture,
       transparent: true,
       opacity: 1.0
+    });
+  }
+
+  /**
+   * Create quest indicator sprite
+   * @param {string} indicatorType - 'available', 'active', 'complete'
+   * @param {object} THREE
+   * @returns {THREE.Sprite}
+   */
+  function createQuestIndicator(indicatorType, THREE) {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    canvas.width = 64;
+    canvas.height = 64;
+
+    ctx.clearRect(0, 0, 64, 64);
+
+    var cx = 32, cy = 32;
+
+    switch (indicatorType) {
+      case 'available':
+        // Yellow exclamation mark
+        ctx.fillStyle = '#FFD700';
+        ctx.strokeStyle = '#DAA520';
+        ctx.lineWidth = 2;
+        ctx.fillRect(28, 18, 8, 18);
+        ctx.strokeRect(28, 18, 8, 18);
+        ctx.beginPath();
+        ctx.arc(32, 42, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        break;
+
+      case 'active':
+        // Grey question mark
+        ctx.fillStyle = '#AAAAAA';
+        ctx.strokeStyle = '#888888';
+        ctx.lineWidth = 2;
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.strokeText('?', 32, 32);
+        ctx.fillText('?', 32, 32);
+        break;
+
+      case 'complete':
+        // Green question mark
+        ctx.fillStyle = '#00FF00';
+        ctx.strokeStyle = '#00CC00';
+        ctx.lineWidth = 2;
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.strokeText('?', 32, 32);
+        ctx.fillText('?', 32, 32);
+        break;
+    }
+
+    var texture = new THREE.CanvasTexture(canvas);
+    var material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+    var sprite = new THREE.Sprite(material);
+    sprite.scale.set(0.6, 0.6, 1);
+    sprite.position.y = 2.2; // Above NPC head
+
+    return sprite;
+  }
+
+  /**
+   * Update quest indicators for NPCs
+   * @param {string} playerId - Player ID for quest state
+   * @param {object} playerPos - Player position (for proximity check)
+   */
+  function updateQuestIndicators(playerId, playerPos) {
+    var THREE = window.THREE;
+    var Quests = typeof window !== 'undefined' ? window.Quests : null;
+    if (!THREE || !Quests || !playerId) return;
+
+    lastPlayerIdForQuests = playerId;
+
+    npcAgents.forEach(function(agent) {
+      var mesh = npcMeshes.get(agent.id);
+      if (!mesh) return;
+
+      // Only update indicators for NPCs within 50 units
+      if (playerPos) {
+        var dx = agent.position.x - playerPos.x;
+        var dz = agent.position.z - playerPos.z;
+        if (Math.sqrt(dx * dx + dz * dz) > 50) {
+          // Remove indicator if too far
+          var existing = questIndicators.get(agent.id);
+          if (existing) {
+            mesh.remove(existing.sprite);
+            questIndicators.delete(agent.id);
+          }
+          return;
+        }
+      }
+
+      // Get quest state for this NPC
+      var npcQuests = Quests.getNpcQuests(agent.id, playerId);
+      var indicatorType = null;
+
+      if (npcQuests.length > 0) {
+        var questInfo = npcQuests[0]; // Use first quest
+        if (questInfo.state === 'available') {
+          indicatorType = 'available';
+        } else if (questInfo.state === 'active') {
+          indicatorType = 'active';
+        } else if (questInfo.state === 'complete') {
+          indicatorType = 'complete';
+        }
+      }
+
+      // Update or remove indicator
+      var existing = questIndicators.get(agent.id);
+
+      if (indicatorType === null) {
+        // No quest, remove indicator
+        if (existing) {
+          mesh.remove(existing.sprite);
+          questIndicators.delete(agent.id);
+        }
+      } else {
+        // Need indicator
+        if (!existing || existing.type !== indicatorType) {
+          // Remove old indicator
+          if (existing) {
+            mesh.remove(existing.sprite);
+          }
+          // Create new indicator
+          var sprite = createQuestIndicator(indicatorType, THREE);
+          mesh.add(sprite);
+          questIndicators.set(agent.id, { sprite: sprite, type: indicatorType });
+        }
+      }
     });
   }
 
@@ -16505,9 +20999,10 @@ html, body {
 
   /**
    * Interact with an NPC — triggers greeting dialogue and returns response
-   * @returns {object|null} - {name, message, archetype}
+   * Includes quest system integration
+   * @returns {object|null} - {name, message, archetype, hasQuest, questInfo}
    */
-  function interactWithNPC(worldX, worldZ) {
+  function interactWithNPC(worldX, worldZ, playerId) {
     var nearest = findNearestNPC(worldX, worldZ, 8);
     if (!nearest) return null;
 
@@ -16515,6 +21010,19 @@ html, body {
     var seed = Date.now() * 0.001 + agent.id.charCodeAt(0);
     var brain = npcBrains.get(agent.id);
     var message, mood, activity, familiarity;
+
+    // Check for quests from this NPC
+    var Quests = typeof window !== 'undefined' ? window.Quests : null;
+    var questInfo = null;
+    var hasQuest = false;
+
+    if (Quests && playerId) {
+      var npcQuests = Quests.getNpcQuests(agent.id, playerId);
+      if (npcQuests.length > 0) {
+        hasQuest = true;
+        questInfo = npcQuests[0]; // Return first quest for now
+      }
+    }
 
     if (brain && NpcAI) {
       // Use AI brain for contextual dialogue
@@ -16533,19 +21041,30 @@ html, body {
       if (NpcAI.handleEvent) {
         NpcAI.handleEvent(brain.memory, {
           type: 'player_interact',
-          playerId: 'player',
+          playerId: playerId || 'player',
           description: 'Player interacted directly'
         });
       }
       // Increase familiarity
       if (brain.memory && brain.memory.playerFamiliarity) {
-        var pKey = Object.keys(brain.memory.playerFamiliarity)[0] || 'player';
+        var pKey = Object.keys(brain.memory.playerFamiliarity)[0] || (playerId || 'player');
         brain.memory.playerFamiliarity[pKey] = Math.min(100, (brain.memory.playerFamiliarity[pKey] || 0) + 5);
         familiarity = Math.round(brain.memory.playerFamiliarity[pKey]);
       }
     }
 
-    // Fallback to random message if no AI dialogue
+    // Use quest dialogue if available
+    if (questInfo && questInfo.quest && questInfo.quest.dialogue) {
+      if (questInfo.state === 'available') {
+        message = questInfo.quest.dialogue.offer;
+      } else if (questInfo.state === 'active') {
+        message = Quests.getQuestDialogue(questInfo.quest.id, 'progress', questInfo.quest);
+      } else if (questInfo.state === 'complete') {
+        message = questInfo.quest.dialogue.complete || 'Quest complete! Return to turn it in.';
+      }
+    }
+
+    // Fallback to random message if no quest dialogue
     if (!message) {
       var messages = ARCHETYPE_MESSAGES[agent.archetype] || ['Hello there.'];
       message = randomChoice(messages, seed);
@@ -16565,7 +21084,9 @@ html, body {
       mood: mood || 'neutral',
       activity: activity || '',
       familiarity: familiarity || 0,
-      id: agent.id
+      id: agent.id,
+      hasQuest: hasQuest,
+      questInfo: questInfo
     };
   }
 
@@ -16643,6 +21164,7 @@ html, body {
   exports.getNPCMood = getNPCMood;
   exports.getNPCGoal = getNPCGoal;
   exports.getNPCActivity = getNPCActivity;
+  exports.updateQuestIndicators = updateQuestIndicators;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));
 
@@ -16656,6 +21178,7 @@ html, body {
   const State = typeof require !== 'undefined' ? require('./state') : window.State;
   const Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
   const Economy = typeof require !== 'undefined' ? require('./economy') : window.Economy;
+  const Inventory = typeof require !== 'undefined' ? require('./inventory') : window.Inventory;
   const Intentions = typeof require !== 'undefined' ? require('./intentions') : window.Intentions;
   const Social = typeof require !== 'undefined' ? require('./social') : window.Social;
   const Creation = typeof require !== 'undefined' ? require('./creation') : window.Creation;
@@ -16670,6 +21193,7 @@ html, body {
   const XR = typeof require !== 'undefined' ? require('./xr') : window.XR;
   const Audio = typeof require !== 'undefined' ? require('./audio') : window.Audio;
   const NPCs = typeof require !== 'undefined' ? require('./npcs') : window.NPCs;
+  const Quests = typeof require !== 'undefined' ? require('./quests') : window.Quests;
 
   // Game state
   let gameState = null;
@@ -16690,6 +21214,9 @@ html, body {
   let cameraDistance = 18;  // distance from player
   let isDragging = false;
   let lastMouseX = 0, lastMouseY = 0;
+  let playerInventory = null;
+  let economyLedger = null;
+  let raycaster = null;
 
   // Platform detection
   let platform = 'desktop';
@@ -16761,6 +21288,25 @@ html, body {
       State.addPlayer(gameState, localPlayer);
     }
 
+    // Initialize economy ledger
+    if (Economy) {
+      economyLedger = Economy.createLedger();
+      economyLedger.balances[username] = 1000;
+    }
+
+    // Initialize inventory
+    if (Inventory) {
+      playerInventory = Inventory.createInventory();
+      Inventory.addItem(playerInventory, 'wood_oak', 5);
+      Inventory.addItem(playerInventory, 'stone_common', 5);
+      Inventory.addItem(playerInventory, 'seed_wildflower', 3);
+    }
+
+    // Initialize raycaster for clicking
+    if (typeof THREE !== 'undefined') {
+      raycaster = new THREE.Raycaster();
+    }
+
     // Initialize network
     if (Network) {
       const peerId = `zion-${username}-${Date.now()}`;
@@ -16812,6 +21358,11 @@ html, body {
         if (World.initSkybox) {
           World.initSkybox(sceneContext);
         }
+
+        // Initialize resource nodes for harvesting
+        if (World.initResourceNodes) {
+          World.initResourceNodes(sceneContext);
+        }
       }
     }
 
@@ -16827,11 +21378,39 @@ html, body {
         HUD.initToolbar();
       }
 
+      // Initialize quest tracker
+      if (HUD.initQuestTracker) {
+        HUD.initQuestTracker();
+      }
+
+      // Initialize inventory panel
+      if (HUD.initInventoryPanel) {
+        HUD.initInventoryPanel();
+      }
+
+      // Initialize crafting panel with craft callback
+      if (HUD.initCraftingPanel) {
+        HUD.initCraftingPanel(function(recipeId) {
+          handleCraft(recipeId);
+        });
+      }
+
+      // Initialize quick bar
+      if (HUD.initQuickBar) {
+        HUD.initQuickBar();
+      }
+
       // Add chat input
       HUD.addChatInput((text) => {
         handleLocalAction('chat', { message: text });
         HUD.hideChatInput();
       });
+    }
+
+    // Initialize quest system for local player
+    if (Quests) {
+      Quests.initPlayerQuests(username);
+      console.log('Quest system initialized for player:', username);
     }
 
     // Initialize input
@@ -17097,6 +21676,16 @@ html, body {
                 }});
               }
             }
+
+            // Update quest progress for zone visits
+            if (Quests) {
+              var updated = Quests.updateQuestProgress(localPlayer.id, 'visit_zone', { zone: currentZone });
+              if (updated.length > 0 && HUD) {
+                updated.forEach(function(quest) {
+                  HUD.showQuestProgress('Quest progress: ' + quest.title);
+                });
+              }
+            }
           }
         }
 
@@ -17252,6 +21841,11 @@ html, body {
         World.updateAnimations(sceneContext, deltaTime, worldTime);
       }
 
+      // Update resource nodes (respawning)
+      if (World.updateResourceNodes) {
+        World.updateResourceNodes(deltaTime);
+      }
+
       // Update player animations (walk/run/idle)
       if (World.updatePlayerAnimations) {
         World.updatePlayerAnimations(sceneContext, deltaTime);
@@ -17328,6 +21922,17 @@ html, body {
       // Update chat
       const messages = Social ? Social.getRecentMessages(gameState) : [];
       HUD.updateChat(messages);
+
+      // Update quest tracker (every few frames)
+      if (Quests && HUD.updateQuestTracker && npcUpdateFrame % 30 === 0) {
+        var activeQuests = Quests.getActiveQuests(localPlayer.id);
+        HUD.updateQuestTracker(activeQuests);
+      }
+
+      // Update quest indicators on NPCs (every few frames)
+      if (Quests && NPCs && NPCs.updateQuestIndicators && npcUpdateFrame % 60 === 0) {
+        NPCs.updateQuestIndicators(localPlayer.id, localPlayer.position);
+      }
     }
 
     // Check for break reminder (every 30 minutes)
@@ -17580,6 +22185,85 @@ html, body {
   }
 
   /**
+   * Handle resource node harvesting
+   */
+  function handleResourceHarvest(node) {
+    if (!World || !Inventory || !playerInventory) return;
+
+    var itemId = World.harvestResource(node);
+    if (!itemId) {
+      if (HUD) HUD.showNotification('Resource already depleted', 'warning');
+      return;
+    }
+
+    var itemData = Inventory.getItemData(itemId);
+    if (!itemData) return;
+
+    var result = Inventory.addItem(playerInventory, itemId, 1);
+    if (result.success) {
+      if (HUD) {
+        HUD.showItemPickup(itemData.name, 1, itemData.icon);
+        HUD.updateInventoryDisplay(playerInventory);
+        HUD.updateQuickBar(playerInventory);
+      }
+
+      if (economyLedger && Economy) {
+        var sparkEarned = Economy.earnSpark(economyLedger, localPlayer.id, 'harvest', { complexity: 0.5 });
+        if (localPlayer) {
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          if (HUD) HUD.updatePlayerInfo(localPlayer);
+        }
+      }
+
+      if (Quests) {
+        var updated = Quests.updateQuestProgress(localPlayer.id, 'collect', { item: itemId, amount: 1 });
+        if (updated.length > 0 && HUD) {
+          updated.forEach(function(quest) {
+            HUD.showQuestProgress('Quest progress: ' + quest.title);
+          });
+        }
+      }
+
+      if (Audio) Audio.playSound('harvest');
+    } else {
+      if (HUD) HUD.showNotification(result.message, 'warning');
+    }
+  }
+
+  /**
+   * Handle crafting
+   */
+  function handleCraft(recipeId) {
+    if (!Inventory || !playerInventory) return;
+
+    var result = Inventory.craftItem(playerInventory, recipeId);
+    if (result.success) {
+      if (HUD) {
+        HUD.showNotification(result.message, 'success');
+        HUD.updateInventoryDisplay(playerInventory);
+        HUD.updateCraftingDisplay(playerInventory);
+        HUD.updateQuickBar(playerInventory);
+      }
+
+      if (economyLedger && Economy && result.sparkEarned) {
+        Economy.earnSpark(economyLedger, localPlayer.id, 'craft', { complexity: result.sparkEarned / 50 });
+        if (localPlayer) {
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          if (HUD) HUD.updatePlayerInfo(localPlayer);
+        }
+      }
+
+      if (Quests) {
+        Quests.updateQuestProgress(localPlayer.id, 'craft', { item: result.output.itemId, amount: result.output.count });
+      }
+
+      if (Audio) Audio.playSound('build');
+    } else {
+      if (HUD) HUD.showNotification(result.message, 'error');
+    }
+  }
+
+  /**
    * Handle local action (created by this client)
    */
   function handleLocalAction(type, payload) {
@@ -17606,7 +22290,7 @@ html, body {
       case 'interact':
         // Check for nearby NPCs first
         if (NPCs && NPCs.interactWithNPC && localPlayer) {
-          var npcResponse = NPCs.interactWithNPC(localPlayer.position.x, localPlayer.position.z);
+          var npcResponse = NPCs.interactWithNPC(localPlayer.position.x, localPlayer.position.z, localPlayer.id);
           if (npcResponse) {
             // Show rich NPC interaction dialog
             if (HUD && HUD.showNPCDialog) {
@@ -17614,6 +22298,31 @@ html, body {
             } else if (HUD) {
               HUD.showNotification(npcResponse.name + ': "' + npcResponse.message + '"', 'info');
             }
+
+            // Handle quest interactions
+            if (Quests && npcResponse.questInfo) {
+              var questInfo = npcResponse.questInfo;
+
+              if (questInfo.state === 'available') {
+                // Show quest offer dialog
+                if (HUD && HUD.showQuestOffer) {
+                  HUD.showQuestOffer(questInfo.quest, { name: npcResponse.name, archetype: npcResponse.archetype }, localPlayer.id);
+                }
+              } else if (questInfo.state === 'complete') {
+                // Turn in quest
+                var result = Quests.completeQuest(localPlayer.id, questInfo.quest.id, gameState);
+                if (result.success && HUD) {
+                  HUD.showQuestComplete(result.quest, result.rewards);
+                  // Update player spark display
+                  localPlayer.spark += result.rewards.spark;
+                  HUD.updatePlayerInfo(localPlayer);
+                }
+              }
+
+              // Update quest progress for NPC interaction
+              Quests.updateQuestProgress(localPlayer.id, 'talk_npc', { npcId: npcResponse.id });
+            }
+
             if (Audio) Audio.playSound('chat');
             // Broadcast player interaction to other NPCs
             if (NPCs.broadcastEvent) {
@@ -17627,6 +22336,15 @@ html, body {
         }
         // No NPC nearby — try harvesting
         msg = Protocol.create.harvest(localPlayer.id, 10);
+        // Update quest progress for harvest
+        if (Quests) {
+          var updated = Quests.updateQuestProgress(localPlayer.id, 'collect', { item: 'resource', amount: 1 });
+          if (updated.length > 0 && HUD) {
+            updated.forEach(function(quest) {
+              HUD.showQuestProgress('Quest progress: ' + quest.title);
+            });
+          }
+        }
         // Broadcast harvest action to NPCs
         if (NPCs && NPCs.broadcastEvent) {
           NPCs.broadcastEvent({ type: 'player_action', data: {
@@ -17636,9 +22354,45 @@ html, body {
         }
         break;
 
+      case 'toggle_quest_log':
+        // Toggle quest log panel
+        if (HUD && Quests && localPlayer) {
+          var questLogEl = document.getElementById('quest-log-panel');
+          if (questLogEl) {
+            HUD.hideQuestLog();
+          } else {
+            var questLog = Quests.getQuestLog(localPlayer.id, { level: 0 });
+            HUD.showQuestLog(questLog, localPlayer.id);
+          }
+        }
+        break;
+
+      case 'toggleInventory':
+        if (HUD && playerInventory) {
+          HUD.toggleInventoryPanel();
+          HUD.updateInventoryDisplay(playerInventory);
+        }
+        break;
+
+      case 'toggleCrafting':
+        if (HUD && playerInventory) {
+          HUD.toggleCraftingPanel();
+          HUD.updateCraftingDisplay(playerInventory);
+        }
+        break;
+
+      case 'useQuickSlot':
+        console.log('Use quick slot:', payload.slot);
+        break;
+
       case 'click':
-        // Raycasting for object selection would go here
-        console.log('Click at:', payload);
+        // Raycasting for resource node harvesting
+        if (raycaster && sceneContext && sceneContext.camera && World) {
+          var node = World.getResourceNodeAtMouse(raycaster, sceneContext.camera, payload.x, payload.y);
+          if (node) {
+            handleResourceHarvest(node);
+          }
+        }
         break;
 
       default:

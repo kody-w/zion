@@ -767,6 +767,253 @@
   };
 
   // ============================================================================
+  // ZONE-SPECIFIC DIALOGUES (shared across archetypes)
+  // ============================================================================
+
+  var ZONE_DIALOGUES = {
+    nexus: [
+      "The Nexus hums with energy today.",
+      "Everyone passes through here eventually.",
+      "The heart of ZION beats strong.",
+      "New faces arrive every day. The world grows.",
+      "I love the way all paths converge here."
+    ],
+    gardens: [
+      "The gardens are especially beautiful today.",
+      "Can you smell the jasmine? Heavenly.",
+      "Everything grows so well here.",
+      "The gardeners have been busy. Look at those blooms!",
+      "I always feel peaceful in the gardens."
+    ],
+    wilds: [
+      "Stay alert out here. The wilds are unpredictable.",
+      "I've heard there are rare plants deep in these woods.",
+      "The frontier calls to the adventurous.",
+      "Few venture this far. You're brave.",
+      "The wilds hold secrets waiting to be found."
+    ],
+    athenaeum: [
+      "Knowledge fills these halls.",
+      "The scrolls here contain ancient wisdom.",
+      "Quiet, please. Some are studying.",
+      "Have you read the founding texts? Fascinating.",
+      "Learning never ends in the Athenaeum."
+    ],
+    studio: [
+      "Creativity fills the air here.",
+      "I love watching the artists at work.",
+      "The Studio inspires everyone who enters.",
+      "Art gives meaning to our world.",
+      "Have you seen the latest sculptures?"
+    ],
+    agora: [
+      "The market is bustling today!",
+      "Good deals to be found if you look.",
+      "The Agora never sleeps.",
+      "Trade is the lifeblood of any community.",
+      "I heard a merchant just got rare goods."
+    ],
+    commons: [
+      "The Commons feel like home.",
+      "Community is what we build here.",
+      "I love what everyone has contributed.",
+      "The workshops are always busy.",
+      "Building together is building forever."
+    ],
+    arena: [
+      "The Arena pulses with competitive spirit!",
+      "Friendly competition makes us all stronger.",
+      "Champions are made here!",
+      "The crowd's energy is incredible.",
+      "May the best challenger win!"
+    ]
+  };
+
+  // ============================================================================
+  // INTER-ARCHETYPE REACTION DIALOGUES
+  // ============================================================================
+
+  var ARCHETYPE_REACTIONS = {
+    gardener: {
+      musician: "Your music makes my flowers bloom brighter!",
+      builder: "Could you build a trellis for my vines?",
+      healer: "I have herbs that might help your remedies.",
+      artist: "Please paint my garden someday!",
+      merchant: "I have fresh produce for your stall.",
+      storyteller: "The oldest oak has stories to tell...",
+      explorer: "Did you find any rare seeds on your travels?",
+      teacher: "Will you teach the children about botany?",
+      philosopher: "What do you think plants dream about?"
+    },
+    builder: {
+      gardener: "Plant something by my new building?",
+      musician: "I need good acoustics in this hall I'm building.",
+      healer: "I'm building a new healing pavilion.",
+      artist: "Want to design the facade?",
+      merchant: "I need materials. What do you have?",
+      storyteller: "This wall needs an engraved legend.",
+      explorer: "Found any interesting stone quarries?",
+      teacher: "I could build a lecture hall for you.",
+      philosopher: "Is the perfect building possible?"
+    },
+    storyteller: {
+      gardener: "Tell me the legend of the first seed.",
+      musician: "Would you accompany my tale with music?",
+      builder: "Every building you make is a story in stone.",
+      healer: "Healing stories are the most powerful.",
+      artist: "Illustrate my latest tale?",
+      merchant: "Stories from distant lands to trade?",
+      explorer: "You must have incredible tales to share!",
+      teacher: "Let's teach through storytelling!",
+      philosopher: "What is truth in a story?"
+    },
+    merchant: {
+      gardener: "Fresh flowers always sell well.",
+      musician: "You draw crowds! Set up near my stall?",
+      builder: "I have timber and nails you'll need.",
+      healer: "Healing potions sell for good Spark!",
+      artist: "Your art would fetch a premium.",
+      storyteller: "Stories attract customers. Perfect partnership!",
+      explorer: "Bring me exotic goods from your travels!",
+      teacher: "Education about quality helps sales.",
+      philosopher: "What is the true value of Spark?"
+    },
+    explorer: {
+      gardener: "I found strange plants in the deep wilds!",
+      musician: "The acoustics in that cave were amazing.",
+      builder: "There are ancient ruins to the north!",
+      healer: "I found rare medicinal moss on the cliff face.",
+      artist: "The vista from the eastern ridge is breathtaking.",
+      storyteller: "I discovered something the legends speak of!",
+      merchant: "I've got rare finds from the frontier.",
+      teacher: "The wilds teach lessons no book can.",
+      philosopher: "Exploration is philosophy in motion."
+    },
+    teacher: {
+      gardener: "Botany class begins with your garden.",
+      musician: "Music theory is fascinating, isn't it?",
+      builder: "Architecture has much to teach us.",
+      healer: "Medical knowledge saves lives.",
+      artist: "Art history is endlessly rich.",
+      storyteller: "Oral tradition preserves culture.",
+      merchant: "Economics drives civilization.",
+      explorer: "Geography shapes destiny.",
+      philosopher: "Every discipline leads to the same questions."
+    },
+    musician: {
+      gardener: "Your garden hums with life—I'll write it a song!",
+      builder: "The rhythm of your hammer inspires me.",
+      healer: "Healing harmonics are real. I've studied them.",
+      artist: "Music and art—the twin souls of creation.",
+      storyteller: "Let me compose a soundtrack for your tale!",
+      merchant: "I'll play for customers if you share the Spark!",
+      explorer: "Every land has its own song waiting to be heard.",
+      teacher: "Music is the universal language, yes?",
+      philosopher: "What is sound, really, but structured silence?"
+    },
+    healer: {
+      gardener: "Your herbs are essential to my practice.",
+      musician: "Music heals wounds no salve can reach.",
+      builder: "A healthy body builds a strong world.",
+      artist: "Beauty is healing in visual form.",
+      storyteller: "Stories can heal the soul.",
+      merchant: "I need supplies—got any healing crystals?",
+      explorer: "Stay safe out there. I'll be here if you're hurt.",
+      teacher: "Prevention is the best medicine.",
+      philosopher: "What does it mean to be truly well?"
+    },
+    philosopher: {
+      gardener: "Growth is the fundamental urge of all things.",
+      musician: "If music is math made beautiful, what is beauty?",
+      builder: "We build to defy entropy. A noble endeavor.",
+      healer: "Is perfect health the absence of illness, or something more?",
+      artist: "Does art reveal truth or create it?",
+      storyteller: "Stories shape how we see reality itself.",
+      merchant: "Value is a collective hallucination, isn't it?",
+      explorer: "The greatest journey is inward.",
+      teacher: "Can we truly teach, or merely point the way?"
+    },
+    artist: {
+      gardener: "Nature is the greatest artist.",
+      musician: "Our arts are siblings—let's collaborate!",
+      builder: "Architecture is art that shelters.",
+      healer: "I want to paint the act of healing.",
+      storyteller: "Every story paints pictures in the mind.",
+      merchant: "Does commerce diminish art or elevate it?",
+      explorer: "The landscapes you describe—I must see them!",
+      teacher: "Teach me that technique you mentioned.",
+      philosopher: "Art is philosophy made visible."
+    }
+  };
+
+  // ============================================================================
+  // QUEST HOOK DIALOGUES (NPCs hint at available tasks)
+  // ============================================================================
+
+  var QUEST_HOOKS = {
+    gardener: [
+      "I could use help gathering sunflowers for the festival...",
+      "The moonflower seeds need planting. Know anyone interested?",
+      "A rare bloom was spotted in the Wilds. I wish I could go look...",
+      "My herb garden needs tending while I research new species."
+    ],
+    builder: [
+      "The bridge near the commons needs repair. Volunteers?",
+      "I'm designing a new gazebo but need special stone...",
+      "Someone left materials scattered at the construction site.",
+      "The old tower could use reinforcement. Big project, good Spark."
+    ],
+    storyteller: [
+      "I'm collecting tales from each zone. Want to help gather them?",
+      "A lost manuscript was last seen in the Athenaeum depths...",
+      "The founding stories are fading from memory. Help preserve them?",
+      "I need someone to interview the elder NPCs for my chronicle."
+    ],
+    merchant: [
+      "I'm missing a delivery from the gardens. Could you check?",
+      "A rare gem went missing from my inventory...",
+      "I need someone to scout prices in the other zones.",
+      "Big trade deal coming up. I need rare materials."
+    ],
+    explorer: [
+      "There's an unmapped cave system I've been wanting to explore.",
+      "Strange lights in the wilds at night—want to investigate?",
+      "The ancient markers near the arena need documenting.",
+      "I found tracks of something unusual. Help me follow them?"
+    ],
+    teacher: [
+      "I need specimens from each zone for my natural history class.",
+      "Can you deliver these lesson scrolls to students in the commons?",
+      "My research requires a crystal from the studio caves.",
+      "Help me set up the outdoor classroom by the gardens."
+    ],
+    musician: [
+      "I'm organizing a concert but need instruments gathered.",
+      "The acoustics stone in the arena was chipped. Find a replacement?",
+      "I hear the wilds have singing crystals. Bring me one!",
+      "Help me spread word of tonight's performance to all zones."
+    ],
+    healer: [
+      "I'm running low on moonpetal herbs. The gardens might have some.",
+      "A traveler fell ill—I need crystal dust from the studio.",
+      "Help me set up healing stations across the zones.",
+      "Rare medicinal moss grows on the arena stones. Can you gather some?"
+    ],
+    philosopher: [
+      "Debate me on the nature of ZION. I'll reward good arguments!",
+      "Find the three wisdom stones hidden across the zones.",
+      "Carry this sealed question to the storyteller and bring back the answer.",
+      "I seek the meaning of the ancient symbols on the obelisk."
+    ],
+    artist: [
+      "I need pigments from rare flowers in the gardens.",
+      "Inspiration! Go sketch the view from three different zones.",
+      "The mural in the commons needs restoration help.",
+      "Find the legendary canvas stone in the wilds for me."
+    ]
+  };
+
+  // ============================================================================
   // MOOD SYSTEM
   // ============================================================================
 
@@ -1000,10 +1247,37 @@
 
   function getDialogue(memory, context, npcName) {
     var archetype = memory.archetype;
+    var categoryKey = context.category || 'idle_observation';
+
+    // Handle special dynamic categories
+    if (categoryKey === 'archetype_reaction') {
+      var reactions = ARCHETYPE_REACTIONS[archetype];
+      if (reactions && context.targetArchetype && reactions[context.targetArchetype]) {
+        var dialogue = reactions[context.targetArchetype];
+        return dialogue.replace('{name}', npcName);
+      }
+      categoryKey = 'idle_observation'; // Fallback
+    }
+
+    if (categoryKey === 'zone_observation') {
+      var zoneDlgs = ZONE_DIALOGUES[context.zone];
+      if (zoneDlgs && zoneDlgs.length > 0) {
+        return zoneDlgs[Math.floor(Math.random() * zoneDlgs.length)];
+      }
+      categoryKey = 'idle_observation'; // Fallback
+    }
+
+    if (categoryKey === 'quest_hook') {
+      var hooks = QUEST_HOOKS[archetype];
+      if (hooks && hooks.length > 0) {
+        return hooks[Math.floor(Math.random() * hooks.length)];
+      }
+      categoryKey = 'idle_observation'; // Fallback
+    }
+
     var dialogues = CONTEXTUAL_DIALOGUES[archetype];
     if (!dialogues) return null;
 
-    var categoryKey = context.category || 'idle_observation';
     var category = dialogues[categoryKey];
     if (!category || category.length === 0) {
       category = dialogues.idle_observation || [];
@@ -1072,6 +1346,24 @@
       } else if (player.isHarvesting) {
         return { category: 'player_harvesting' };
       }
+    }
+
+    // Inter-archetype reaction (NPC meets another archetype NPC)
+    if (perception.nearbyNPCs.length > 0 && Math.random() < 0.25) {
+      var nearbyNpc = perception.nearbyNPCs[0];
+      if (nearbyNpc.archetype && nearbyNpc.archetype !== memory.archetype) {
+        return { category: 'archetype_reaction', targetArchetype: nearbyNpc.archetype };
+      }
+    }
+
+    // Zone-specific observations
+    if (perception.currentZone && Math.random() < 0.3) {
+      return { category: 'zone_observation', zone: perception.currentZone };
+    }
+
+    // Quest hook (occasionally hint at available tasks)
+    if (Math.random() < 0.08) {
+      return { category: 'quest_hook' };
     }
 
     // Location-based
@@ -1625,5 +1917,8 @@
   exports.ARCHETYPE_DRIVES = ARCHETYPE_DRIVES;
   exports.DAILY_SCHEDULE = DAILY_SCHEDULE;
   exports.MOODS = MOODS;
+  exports.ZONE_DIALOGUES = ZONE_DIALOGUES;
+  exports.ARCHETYPE_REACTIONS = ARCHETYPE_REACTIONS;
+  exports.QUEST_HOOKS = QUEST_HOOKS;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NpcAI = {}));

@@ -30,10 +30,12 @@
   let npcMeshes = new Map(); // id -> THREE.Group
   let chatBubbles = new Map(); // id -> { mesh, timer }
   let emoteSprites = new Map(); // id -> {sprite, currentEmote, timer, opacity}
+  let questIndicators = new Map(); // id -> {sprite, type} - quest marker sprites
   let activityParticles = []; // {mesh, timer, velocity, startY}
   let particleSpawnTimers = new Map(); // id -> timer (throttle particle spawn)
   let pendingEvents = []; // events to broadcast to all NPCs
   let npcUpdateFrame = 0; // frame counter for staggered updates
+  let lastPlayerIdForQuests = null; // Track player ID for quest indicators
 
   // Seeded random number generator
   function seededRandom(seed) {
@@ -619,6 +621,141 @@
       map: texture,
       transparent: true,
       opacity: 1.0
+    });
+  }
+
+  /**
+   * Create quest indicator sprite
+   * @param {string} indicatorType - 'available', 'active', 'complete'
+   * @param {object} THREE
+   * @returns {THREE.Sprite}
+   */
+  function createQuestIndicator(indicatorType, THREE) {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    canvas.width = 64;
+    canvas.height = 64;
+
+    ctx.clearRect(0, 0, 64, 64);
+
+    var cx = 32, cy = 32;
+
+    switch (indicatorType) {
+      case 'available':
+        // Yellow exclamation mark
+        ctx.fillStyle = '#FFD700';
+        ctx.strokeStyle = '#DAA520';
+        ctx.lineWidth = 2;
+        ctx.fillRect(28, 18, 8, 18);
+        ctx.strokeRect(28, 18, 8, 18);
+        ctx.beginPath();
+        ctx.arc(32, 42, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        break;
+
+      case 'active':
+        // Grey question mark
+        ctx.fillStyle = '#AAAAAA';
+        ctx.strokeStyle = '#888888';
+        ctx.lineWidth = 2;
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.strokeText('?', 32, 32);
+        ctx.fillText('?', 32, 32);
+        break;
+
+      case 'complete':
+        // Green question mark
+        ctx.fillStyle = '#00FF00';
+        ctx.strokeStyle = '#00CC00';
+        ctx.lineWidth = 2;
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.strokeText('?', 32, 32);
+        ctx.fillText('?', 32, 32);
+        break;
+    }
+
+    var texture = new THREE.CanvasTexture(canvas);
+    var material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+    var sprite = new THREE.Sprite(material);
+    sprite.scale.set(0.6, 0.6, 1);
+    sprite.position.y = 2.2; // Above NPC head
+
+    return sprite;
+  }
+
+  /**
+   * Update quest indicators for NPCs
+   * @param {string} playerId - Player ID for quest state
+   * @param {object} playerPos - Player position (for proximity check)
+   */
+  function updateQuestIndicators(playerId, playerPos) {
+    var THREE = window.THREE;
+    var Quests = typeof window !== 'undefined' ? window.Quests : null;
+    if (!THREE || !Quests || !playerId) return;
+
+    lastPlayerIdForQuests = playerId;
+
+    npcAgents.forEach(function(agent) {
+      var mesh = npcMeshes.get(agent.id);
+      if (!mesh) return;
+
+      // Only update indicators for NPCs within 50 units
+      if (playerPos) {
+        var dx = agent.position.x - playerPos.x;
+        var dz = agent.position.z - playerPos.z;
+        if (Math.sqrt(dx * dx + dz * dz) > 50) {
+          // Remove indicator if too far
+          var existing = questIndicators.get(agent.id);
+          if (existing) {
+            mesh.remove(existing.sprite);
+            questIndicators.delete(agent.id);
+          }
+          return;
+        }
+      }
+
+      // Get quest state for this NPC
+      var npcQuests = Quests.getNpcQuests(agent.id, playerId);
+      var indicatorType = null;
+
+      if (npcQuests.length > 0) {
+        var questInfo = npcQuests[0]; // Use first quest
+        if (questInfo.state === 'available') {
+          indicatorType = 'available';
+        } else if (questInfo.state === 'active') {
+          indicatorType = 'active';
+        } else if (questInfo.state === 'complete') {
+          indicatorType = 'complete';
+        }
+      }
+
+      // Update or remove indicator
+      var existing = questIndicators.get(agent.id);
+
+      if (indicatorType === null) {
+        // No quest, remove indicator
+        if (existing) {
+          mesh.remove(existing.sprite);
+          questIndicators.delete(agent.id);
+        }
+      } else {
+        // Need indicator
+        if (!existing || existing.type !== indicatorType) {
+          // Remove old indicator
+          if (existing) {
+            mesh.remove(existing.sprite);
+          }
+          // Create new indicator
+          var sprite = createQuestIndicator(indicatorType, THREE);
+          mesh.add(sprite);
+          questIndicators.set(agent.id, { sprite: sprite, type: indicatorType });
+        }
+      }
     });
   }
 
@@ -1704,9 +1841,10 @@
 
   /**
    * Interact with an NPC — triggers greeting dialogue and returns response
-   * @returns {object|null} - {name, message, archetype}
+   * Includes quest system integration
+   * @returns {object|null} - {name, message, archetype, hasQuest, questInfo}
    */
-  function interactWithNPC(worldX, worldZ) {
+  function interactWithNPC(worldX, worldZ, playerId) {
     var nearest = findNearestNPC(worldX, worldZ, 8);
     if (!nearest) return null;
 
@@ -1714,6 +1852,19 @@
     var seed = Date.now() * 0.001 + agent.id.charCodeAt(0);
     var brain = npcBrains.get(agent.id);
     var message, mood, activity, familiarity;
+
+    // Check for quests from this NPC
+    var Quests = typeof window !== 'undefined' ? window.Quests : null;
+    var questInfo = null;
+    var hasQuest = false;
+
+    if (Quests && playerId) {
+      var npcQuests = Quests.getNpcQuests(agent.id, playerId);
+      if (npcQuests.length > 0) {
+        hasQuest = true;
+        questInfo = npcQuests[0]; // Return first quest for now
+      }
+    }
 
     if (brain && NpcAI) {
       // Use AI brain for contextual dialogue
@@ -1732,19 +1883,30 @@
       if (NpcAI.handleEvent) {
         NpcAI.handleEvent(brain.memory, {
           type: 'player_interact',
-          playerId: 'player',
+          playerId: playerId || 'player',
           description: 'Player interacted directly'
         });
       }
       // Increase familiarity
       if (brain.memory && brain.memory.playerFamiliarity) {
-        var pKey = Object.keys(brain.memory.playerFamiliarity)[0] || 'player';
+        var pKey = Object.keys(brain.memory.playerFamiliarity)[0] || (playerId || 'player');
         brain.memory.playerFamiliarity[pKey] = Math.min(100, (brain.memory.playerFamiliarity[pKey] || 0) + 5);
         familiarity = Math.round(brain.memory.playerFamiliarity[pKey]);
       }
     }
 
-    // Fallback to random message if no AI dialogue
+    // Use quest dialogue if available
+    if (questInfo && questInfo.quest && questInfo.quest.dialogue) {
+      if (questInfo.state === 'available') {
+        message = questInfo.quest.dialogue.offer;
+      } else if (questInfo.state === 'active') {
+        message = Quests.getQuestDialogue(questInfo.quest.id, 'progress', questInfo.quest);
+      } else if (questInfo.state === 'complete') {
+        message = questInfo.quest.dialogue.complete || 'Quest complete! Return to turn it in.';
+      }
+    }
+
+    // Fallback to random message if no quest dialogue
     if (!message) {
       var messages = ARCHETYPE_MESSAGES[agent.archetype] || ['Hello there.'];
       message = randomChoice(messages, seed);
@@ -1764,7 +1926,9 @@
       mood: mood || 'neutral',
       activity: activity || '',
       familiarity: familiarity || 0,
-      id: agent.id
+      id: agent.id,
+      hasQuest: hasQuest,
+      questInfo: questInfo
     };
   }
 
@@ -1842,5 +2006,6 @@
   exports.getNPCMood = getNPCMood;
   exports.getNPCGoal = getNPCGoal;
   exports.getNPCActivity = getNPCActivity;
+  exports.updateQuestIndicators = updateQuestIndicators;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));
