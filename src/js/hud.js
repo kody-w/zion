@@ -6038,6 +6038,739 @@
     }
   }
 
+  // ========================================================================
+  // FISHING MINIGAME UI
+  // ========================================================================
+
+  let fishingUIActive = false;
+  let fishingCallback = null;
+
+  /**
+   * Show fishing UI with casting and reeling mechanics
+   * @param {string} zoneId - Current zone for fish type determination
+   * @param {Function} onResult - Callback with result {success: boolean, fish?: Object}
+   */
+  function showFishingUI(zoneId, onResult) {
+    if (!hudContainer || fishingUIActive) return;
+    if (typeof document === 'undefined') return;
+
+    fishingUIActive = true;
+    fishingCallback = onResult;
+
+    // Create fishing overlay with ocean theme
+    const fishingOverlay = document.createElement('div');
+    fishingOverlay.id = 'fishing-ui';
+    fishingOverlay.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(0, 50, 100, 0.3) 0%, rgba(0, 100, 150, 0.5) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      pointer-events: auto;
+    `;
+
+    // Fishing panel
+    const fishingPanel = document.createElement('div');
+    fishingPanel.style.cssText = `
+      background: linear-gradient(135deg, rgba(0, 80, 140, 0.95) 0%, rgba(0, 120, 180, 0.95) 100%);
+      border: 3px solid rgba(100, 200, 255, 0.8);
+      border-radius: 15px;
+      padding: 40px;
+      min-width: 400px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(0, 150, 255, 0.5), inset 0 0 50px rgba(0, 100, 200, 0.3);
+      animation: wave-effect 3s ease-in-out infinite;
+    `;
+
+    // Add wave animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes wave-effect {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
+      }
+      @keyframes ripple {
+        0% { transform: scale(0.8); opacity: 1; }
+        100% { transform: scale(1.5); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Fishing icon
+    const fishingIcon = document.createElement('div');
+    fishingIcon.style.cssText = `
+      font-size: 64px;
+      margin-bottom: 20px;
+      animation: ripple 2s ease-out infinite;
+    `;
+    fishingIcon.textContent = '🎣';
+    fishingPanel.appendChild(fishingIcon);
+
+    // Status text
+    const statusText = document.createElement('div');
+    statusText.style.cssText = `
+      font-size: 24px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(0, 200, 255, 0.8);
+      margin-bottom: 20px;
+    `;
+    statusText.textContent = 'Casting...';
+    fishingPanel.appendChild(statusText);
+
+    // Subtext
+    const subText = document.createElement('div');
+    subText.style.cssText = `
+      font-size: 16px;
+      color: rgba(200, 240, 255, 0.9);
+      margin-top: 10px;
+    `;
+    subText.textContent = 'Wait for a bite...';
+    fishingPanel.appendChild(subText);
+
+    fishingOverlay.appendChild(fishingPanel);
+    hudContainer.appendChild(fishingOverlay);
+
+    // Random casting time (2-5 seconds)
+    const castTime = 2000 + Math.random() * 3000;
+
+    setTimeout(() => {
+      if (!document.getElementById('fishing-ui')) return;
+
+      // Fish on! Show reeling prompt
+      statusText.textContent = 'FISH ON!';
+      statusText.style.color = '#ffff00';
+      statusText.style.fontSize = '32px';
+      subText.textContent = 'Press E to reel in!';
+      subText.style.color = '#ffff00';
+      fishingIcon.textContent = '🐟';
+
+      let caughtFish = false;
+      const reelWindow = 1500; // 1.5 second window to press E
+
+      // Listen for E key
+      const reelHandler = (e) => {
+        if (e.key === 'e' || e.key === 'E') {
+          caughtFish = true;
+          document.removeEventListener('keydown', reelHandler);
+
+          // Determine caught fish based on zone
+          const fishResult = determineCatch(zoneId);
+
+          statusText.textContent = `Caught ${fishResult.name}!`;
+          statusText.style.color = '#4f4';
+          subText.textContent = `+${fishResult.value} Spark`;
+          fishingIcon.textContent = fishResult.icon;
+
+          setTimeout(() => {
+            hideFishingUI();
+            if (fishingCallback) {
+              fishingCallback({ success: true, fish: fishResult });
+            }
+          }, 2000);
+        }
+      };
+
+      document.addEventListener('keydown', reelHandler);
+
+      // Miss window timeout
+      setTimeout(() => {
+        if (!caughtFish) {
+          document.removeEventListener('keydown', reelHandler);
+          statusText.textContent = 'The fish got away...';
+          statusText.style.color = '#f44';
+          subText.textContent = 'Try again!';
+          fishingIcon.textContent = '💨';
+
+          setTimeout(() => {
+            hideFishingUI();
+            if (fishingCallback) {
+              fishingCallback({ success: false });
+            }
+          }, 2000);
+        }
+      }, reelWindow);
+    }, castTime);
+  }
+
+  /**
+   * Determine what fish was caught based on zone
+   * @param {string} zoneId - Current zone
+   * @returns {Object} Fish data {id, name, icon, value, rarity}
+   */
+  function determineCatch(zoneId) {
+    const zoneFishTables = {
+      gardens: {
+        common: [
+          { id: 'fish_common', name: 'Common Carp', icon: '🐟', value: 5, rarity: 'common' },
+          { id: 'fish_sunfish', name: 'Sunfish', icon: '☀️', value: 8, rarity: 'common' }
+        ],
+        uncommon: [
+          { id: 'fish_rare', name: 'Rainbow Trout', icon: '🐠', value: 15, rarity: 'uncommon' },
+          { id: 'fish_crystal_trout', name: 'Crystal Trout', icon: '💎', value: 40, rarity: 'rare' }
+        ],
+        rare: [
+          { id: 'fish_golden', name: 'Golden Koi', icon: '🟡', value: 50, rarity: 'rare' }
+        ]
+      },
+      wilds: {
+        common: [
+          { id: 'fish_common', name: 'Common Carp', icon: '🐟', value: 5, rarity: 'common' }
+        ],
+        uncommon: [
+          { id: 'fish_shadow_bass', name: 'Shadow Bass', icon: '🌑', value: 18, rarity: 'uncommon' },
+          { id: 'fish_silver_eel', name: 'Silver Eel', icon: '🐍', value: 20, rarity: 'uncommon' }
+        ],
+        rare: [
+          { id: 'fish_starfish', name: 'Star Cod', icon: '⭐', value: 35, rarity: 'rare' },
+          { id: 'fish_dragonfish', name: 'Dragonfish', icon: '🐉', value: 100, rarity: 'legendary' }
+        ]
+      },
+      commons: {
+        common: [
+          { id: 'fish_common', name: 'Common Carp', icon: '🐟', value: 5, rarity: 'common' }
+        ],
+        uncommon: [
+          { id: 'fish_rare', name: 'Rainbow Trout', icon: '🐠', value: 15, rarity: 'uncommon' },
+          { id: 'fish_sunfish', name: 'Sunfish', icon: '☀️', value: 8, rarity: 'common' }
+        ],
+        rare: [
+          { id: 'fish_moonfish', name: 'Moonfish', icon: '🌙', value: 25, rarity: 'uncommon' }
+        ]
+      },
+      agora: {
+        common: [
+          { id: 'fish_common', name: 'Common Carp', icon: '🐟', value: 5, rarity: 'common' }
+        ],
+        uncommon: [
+          { id: 'fish_rare', name: 'Rainbow Trout', icon: '🐠', value: 15, rarity: 'uncommon' }
+        ],
+        rare: [
+          { id: 'fish_golden', name: 'Golden Koi', icon: '🟡', value: 50, rarity: 'rare' }
+        ]
+      }
+    };
+
+    // Default to commons if zone not found
+    const table = zoneFishTables[zoneId] || zoneFishTables.commons;
+
+    // Roll for rarity: 70% common, 25% uncommon, 5% rare
+    const roll = Math.random();
+    let pool;
+    if (roll < 0.05 && table.rare && table.rare.length > 0) {
+      pool = table.rare;
+    } else if (roll < 0.30 && table.uncommon && table.uncommon.length > 0) {
+      pool = table.uncommon;
+    } else {
+      pool = table.common;
+    }
+
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  /**
+   * Hide fishing UI
+   */
+  function hideFishingUI() {
+    const fishingUI = document.getElementById('fishing-ui');
+    if (fishingUI) {
+      fishingUI.remove();
+    }
+    fishingUIActive = false;
+    fishingCallback = null;
+  }
+
+  /**
+   * Show fish caught notification
+   * @param {string} fishName - Name of the fish
+   * @param {number} value - Spark value
+   */
+  function showFishCaughtNotification(fishName, value) {
+    if (!notificationContainer) return;
+    if (typeof document === 'undefined') return;
+
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      background: linear-gradient(135deg, rgba(0, 120, 200, 0.95) 0%, rgba(0, 180, 255, 0.95) 100%);
+      border: 2px solid rgba(100, 220, 255, 0.9);
+      border-radius: 10px;
+      padding: 20px 30px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 20px rgba(0, 150, 255, 0.6);
+      animation: slideIn 0.3s ease-out, slideOut 0.3s ease-in 2.7s;
+      pointer-events: auto;
+      text-align: center;
+    `;
+
+    const fishIcon = document.createElement('div');
+    fishIcon.style.cssText = `
+      font-size: 48px;
+      margin-bottom: 10px;
+    `;
+    fishIcon.textContent = '🎣';
+    notification.appendChild(fishIcon);
+
+    const fishText = document.createElement('div');
+    fishText.style.cssText = `
+      font-size: 20px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(0, 200, 255, 0.8);
+      margin-bottom: 5px;
+    `;
+    fishText.textContent = `Caught ${fishName}!`;
+    notification.appendChild(fishText);
+
+    const valueText = document.createElement('div');
+    valueText.style.cssText = `
+      font-size: 16px;
+      color: #ffff00;
+      text-shadow: 0 0 8px rgba(255, 255, 0, 0.6);
+    `;
+    valueText.textContent = `+${value} Spark`;
+    notification.appendChild(valueText);
+
+    notificationContainer.appendChild(notification);
+
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.remove();
+      }
+    }, 3000);
+  }
+
+  // ========================================================================
+  // PET PANEL
+  // ========================================================================
+
+  var petPanel = null;
+
+  function showPetPanel(playerId, currentZone) {
+    if (typeof document === 'undefined') return;
+
+    var Pets = typeof window !== 'undefined' ? window.Pets : null;
+    if (!Pets) {
+      console.warn('Pets module not available');
+      return;
+    }
+
+    // Toggle if already open
+    if (petPanel) {
+      hidePetPanel();
+      return;
+    }
+
+    var pet = Pets.getPlayerPet(playerId);
+
+    var panel = document.createElement('div');
+    panel.className = 'pet-panel';
+
+    // Header
+    var header = document.createElement('h2');
+    header.textContent = pet ? 'My Companion' : 'Adopt a Companion';
+    panel.appendChild(header);
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = 'position:absolute;top:15px;right:15px;width:30px;height:30px;' +
+      'background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.3);' +
+      'border-radius:50%;font-size:20px;cursor:pointer;transition:all 0.2s;';
+    closeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218,165,32,0.3)';
+      this.style.borderColor = '#DAA520';
+    };
+    closeBtn.onmouseout = function() {
+      this.style.background = 'rgba(255,255,255,0.1)';
+      this.style.borderColor = 'rgba(255,255,255,0.3)';
+    };
+    closeBtn.onclick = hidePetPanel;
+    panel.appendChild(closeBtn);
+
+    if (pet) {
+      // Show current pet info
+      showCurrentPetInfo(panel, pet, playerId, Pets);
+    } else {
+      // Show available pets to adopt
+      showAdoptionList(panel, playerId, currentZone, Pets);
+    }
+
+    document.body.appendChild(panel);
+    petPanel = panel;
+
+    // Close on Escape
+    var escapeHandler = function(e) {
+      if (e.key === 'Escape') {
+        hidePetPanel();
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    panel.escapeHandler = escapeHandler;
+  }
+
+  function showCurrentPetInfo(panel, pet, playerId, Pets) {
+    var petTypeData = Pets.getPetTypeData(pet.type);
+    var mood = Pets.getPetMood(pet);
+    var moodEmoji = Pets.getMoodEmoji(mood);
+    var bonus = Pets.getPetBonus(playerId);
+
+    // Pet display section
+    var petDisplay = document.createElement('div');
+    petDisplay.style.cssText = 'text-align:center;margin-bottom:20px;padding:20px;' +
+      'background:rgba(255,255,255,0.03);border-radius:8px;';
+
+    // Pet icon
+    var petIcon = document.createElement('div');
+    petIcon.textContent = petTypeData.icon;
+    petIcon.style.cssText = 'font-size:64px;margin-bottom:10px;';
+    petDisplay.appendChild(petIcon);
+
+    // Pet name
+    var petName = document.createElement('div');
+    petName.textContent = pet.name;
+    petName.style.cssText = 'font-size:1.2rem;color:#DAA520;font-weight:bold;margin-bottom:5px;';
+    petDisplay.appendChild(petName);
+
+    // Pet type
+    var petType = document.createElement('div');
+    petType.textContent = petTypeData.name;
+    petType.style.cssText = 'font-size:0.9rem;color:#B8B0A8;margin-bottom:5px;';
+    petDisplay.appendChild(petType);
+
+    // Pet mood
+    var petMoodDisplay = document.createElement('div');
+    petMoodDisplay.textContent = moodEmoji + ' ' + mood.charAt(0).toUpperCase() + mood.slice(1);
+    petMoodDisplay.style.cssText = 'font-size:0.9rem;color:#E8E0D8;margin-top:10px;';
+    petDisplay.appendChild(petMoodDisplay);
+
+    panel.appendChild(petDisplay);
+
+    // Stats section
+    var statsSection = document.createElement('div');
+    statsSection.style.cssText = 'margin-bottom:20px;';
+
+    // Mood bar
+    var moodLabel = document.createElement('div');
+    moodLabel.textContent = 'Mood: ' + Math.round(pet.mood) + '/100';
+    moodLabel.style.cssText = 'color:#E8E0D8;font-size:0.85rem;margin-bottom:4px;';
+    statsSection.appendChild(moodLabel);
+
+    var moodBar = createProgressBar(pet.mood, '#DAA520');
+    statsSection.appendChild(moodBar);
+
+    // Hunger bar
+    var hungerLabel = document.createElement('div');
+    hungerLabel.textContent = 'Hunger: ' + Math.round(pet.hunger) + '/100';
+    hungerLabel.style.cssText = 'color:#E8E0D8;font-size:0.85rem;margin-bottom:4px;margin-top:12px;';
+    statsSection.appendChild(hungerLabel);
+
+    var hungerBar = createProgressBar(pet.hunger, pet.hunger > 60 ? '#e74c3c' : '#3498db');
+    statsSection.appendChild(hungerBar);
+
+    // Bond bar
+    var bondLabel = document.createElement('div');
+    bondLabel.textContent = 'Bond: ' + Math.round(pet.bond) + '/100';
+    bondLabel.style.cssText = 'color:#E8E0D8;font-size:0.85rem;margin-bottom:4px;margin-top:12px;';
+    statsSection.appendChild(bondLabel);
+
+    var bondBar = createProgressBar(pet.bond, '#2ecc71');
+    statsSection.appendChild(bondBar);
+
+    panel.appendChild(statsSection);
+
+    // Bonus display
+    if (bonus && bonus.value > 0) {
+      var bonusDisplay = document.createElement('div');
+      bonusDisplay.textContent = 'Bonus: ' + bonus.description;
+      bonusDisplay.style.cssText = 'color:#2ecc71;font-size:0.85rem;margin-bottom:20px;' +
+        'padding:8px;background:rgba(46,204,113,0.1);border-radius:4px;text-align:center;';
+      panel.appendChild(bonusDisplay);
+    }
+
+    // Actions section
+    var actionsSection = document.createElement('div');
+    actionsSection.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
+
+    // Feed button
+    var feedBtn = document.createElement('button');
+    feedBtn.textContent = 'Feed';
+    feedBtn.className = 'pet-action-btn';
+    feedBtn.onclick = function() {
+      showFeedMenu(playerId, Pets);
+    };
+    actionsSection.appendChild(feedBtn);
+
+    // Rename button
+    var renameBtn = document.createElement('button');
+    renameBtn.textContent = 'Rename';
+    renameBtn.className = 'pet-action-btn';
+    renameBtn.onclick = function() {
+      var newName = prompt('Enter new name for ' + pet.name + ':');
+      if (newName && newName.trim()) {
+        if (Pets.renamePet(playerId, newName.trim())) {
+          showNotification('Pet renamed to ' + newName.trim());
+          hidePetPanel();
+        }
+      }
+    };
+    actionsSection.appendChild(renameBtn);
+
+    panel.appendChild(actionsSection);
+
+    // Release button (dangerous action)
+    var releaseBtn = document.createElement('button');
+    releaseBtn.textContent = 'Release to Wild';
+    releaseBtn.className = 'pet-release-btn';
+    releaseBtn.onclick = function() {
+      if (confirm('Are you sure you want to release ' + pet.name + '? This cannot be undone.')) {
+        if (Pets.releasePet(playerId)) {
+          showNotification(pet.name + ' has been released to the wild');
+          hidePetPanel();
+        }
+      }
+    };
+    panel.appendChild(releaseBtn);
+  }
+
+  function showAdoptionList(panel, playerId, currentZone, Pets) {
+    var availablePets = Pets.getAvailablePets(currentZone || 'commons');
+
+    // Info text
+    var infoText = document.createElement('div');
+    infoText.textContent = 'Choose a companion to adopt in this zone:';
+    infoText.style.cssText = 'color:#B8B0A8;font-size:0.9rem;margin-bottom:16px;';
+    panel.appendChild(infoText);
+
+    if (availablePets.length === 0) {
+      var noPets = document.createElement('div');
+      noPets.textContent = 'No pets available in this zone. Try exploring other areas!';
+      noPets.style.cssText = 'color:#E8E0D8;text-align:center;padding:20px;';
+      panel.appendChild(noPets);
+      return;
+    }
+
+    // Pet list
+    availablePets.forEach(function(petType) {
+      var petRow = document.createElement('div');
+      petRow.className = 'pet-adoption-row';
+      petRow.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;' +
+        'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);' +
+        'border-radius:8px;margin-bottom:8px;transition:all 0.2s;cursor:pointer;';
+
+      petRow.onmouseover = function() {
+        this.style.borderColor = 'rgba(218,165,32,0.5)';
+        this.style.background = 'rgba(218,165,32,0.1)';
+      };
+      petRow.onmouseout = function() {
+        this.style.borderColor = 'rgba(255,255,255,0.1)';
+        this.style.background = 'rgba(255,255,255,0.03)';
+      };
+
+      // Pet icon
+      var icon = document.createElement('div');
+      icon.textContent = petType.icon;
+      icon.style.cssText = 'font-size:32px;width:40px;text-align:center;';
+      petRow.appendChild(icon);
+
+      // Pet info
+      var info = document.createElement('div');
+      info.style.cssText = 'flex:1;';
+
+      var name = document.createElement('div');
+      name.textContent = petType.name;
+      name.style.cssText = 'color:#E8E0D8;font-size:0.95rem;font-weight:bold;margin-bottom:2px;';
+      info.appendChild(name);
+
+      var desc = document.createElement('div');
+      desc.textContent = petType.description;
+      desc.style.cssText = 'color:#B8B0A8;font-size:0.75rem;margin-bottom:4px;';
+      info.appendChild(desc);
+
+      var rarity = document.createElement('div');
+      rarity.textContent = petType.rarity.charAt(0).toUpperCase() + petType.rarity.slice(1);
+      var rarityColor = petType.rarity === 'legendary' ? '#f39c12' :
+                        petType.rarity === 'rare' ? '#3498db' :
+                        petType.rarity === 'uncommon' ? '#2ecc71' : '#95a5a6';
+      rarity.style.cssText = 'color:' + rarityColor + ';font-size:0.7rem;';
+      info.appendChild(rarity);
+
+      petRow.appendChild(info);
+
+      // Adopt button
+      var adoptBtn = document.createElement('button');
+      adoptBtn.textContent = 'Adopt';
+      adoptBtn.className = 'pet-adopt-btn';
+      adoptBtn.onclick = function(e) {
+        e.stopPropagation();
+        var petName = prompt('Choose a name for your ' + petType.name + ':');
+        if (petName && petName.trim()) {
+          var adoptedPet = Pets.adoptPet(playerId, petType.id, petName.trim());
+          if (adoptedPet) {
+            showPetAdoptNotification(petName.trim(), petType);
+            hidePetPanel();
+          } else {
+            alert('Could not adopt pet. You may already have a companion.');
+          }
+        }
+      };
+      petRow.appendChild(adoptBtn);
+
+      panel.appendChild(petRow);
+    });
+  }
+
+  function showFeedMenu(playerId, Pets) {
+    if (!petPanel) return;
+
+    // Simple food selection
+    var foods = ['berry', 'fish', 'mushroom', 'bread', 'treat'];
+    var foodEmojis = {
+      'berry': '🫐',
+      'fish': '🐟',
+      'mushroom': '🍄',
+      'bread': '🍞',
+      'treat': '🍪'
+    };
+
+    var feedMenu = document.createElement('div');
+    feedMenu.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(15,12,10,0.98);border:2px solid #DAA520;border-radius:12px;' +
+      'padding:20px;z-index:1200;min-width:250px;';
+
+    var title = document.createElement('h3');
+    title.textContent = 'Choose Food';
+    title.style.cssText = 'color:#DAA520;margin:0 0 16px;text-align:center;';
+    feedMenu.appendChild(title);
+
+    foods.forEach(function(food) {
+      var foodBtn = document.createElement('button');
+      foodBtn.textContent = foodEmojis[food] + ' ' + food.charAt(0).toUpperCase() + food.slice(1);
+      foodBtn.className = 'pet-food-btn';
+      foodBtn.style.cssText = 'display:block;width:100%;padding:10px;margin-bottom:8px;' +
+        'background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);' +
+        'border-radius:6px;color:#E8E0D8;cursor:pointer;transition:all 0.2s;';
+
+      foodBtn.onmouseover = function() {
+        this.style.background = 'rgba(218,165,32,0.2)';
+        this.style.borderColor = '#DAA520';
+      };
+      foodBtn.onmouseout = function() {
+        this.style.background = 'rgba(255,255,255,0.1)';
+        this.style.borderColor = 'rgba(255,255,255,0.2)';
+      };
+
+      foodBtn.onclick = function() {
+        var result = Pets.feedPet(playerId, food);
+        if (result.success) {
+          showNotification(result.message);
+          document.body.removeChild(feedMenu);
+          hidePetPanel();
+        }
+      };
+      feedMenu.appendChild(foodBtn);
+    });
+
+    var cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'pet-food-btn';
+    cancelBtn.style.cssText = 'display:block;width:100%;padding:10px;' +
+      'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);' +
+      'border-radius:6px;color:#B8B0A8;cursor:pointer;';
+    cancelBtn.onclick = function() {
+      document.body.removeChild(feedMenu);
+    };
+    feedMenu.appendChild(cancelBtn);
+
+    document.body.appendChild(feedMenu);
+  }
+
+  function createProgressBar(value, color) {
+    var container = document.createElement('div');
+    container.style.cssText = 'width:100%;height:8px;background:rgba(255,255,255,0.1);' +
+      'border-radius:4px;overflow:hidden;';
+
+    var fill = document.createElement('div');
+    fill.style.cssText = 'height:100%;background:' + color + ';border-radius:4px;' +
+      'transition:width 0.5s ease;width:' + value + '%;';
+
+    container.appendChild(fill);
+    return container;
+  }
+
+  function hidePetPanel() {
+    if (!petPanel) return;
+    if (petPanel.escapeHandler) {
+      document.removeEventListener('keydown', petPanel.escapeHandler);
+    }
+    document.body.removeChild(petPanel);
+    petPanel = null;
+  }
+
+  function showPetAdoptNotification(petName, petType) {
+    if (typeof document === 'undefined') return;
+
+    var notification = document.createElement('div');
+    notification.className = 'pet-adopt-notification';
+    notification.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:linear-gradient(135deg,rgba(25,20,15,0.95),rgba(35,28,18,0.95));' +
+      'border:2px solid #DAA520;border-radius:16px;padding:30px 40px;text-align:center;' +
+      'z-index:2000;animation:petAdoptReveal 0.5s ease-out,petAdoptFade 4s ease-in-out;' +
+      'box-shadow:0 0 40px rgba(218,165,32,0.4);pointer-events:none;';
+
+    // Add keyframes if not already present
+    var styleId = 'pet-adopt-animations';
+    if (!document.getElementById(styleId)) {
+      var style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        @keyframes petAdoptReveal {
+          0% { transform: translate(-50%,-50%) scale(0.6); opacity: 0; }
+          60% { transform: translate(-50%,-50%) scale(1.05); }
+          100% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+        }
+        @keyframes petAdoptFade {
+          0%, 80% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    var icon = document.createElement('div');
+    icon.textContent = petType.icon;
+    icon.style.cssText = 'font-size:64px;margin-bottom:16px;';
+    notification.appendChild(icon);
+
+    var title = document.createElement('div');
+    title.textContent = 'Companion Adopted!';
+    title.style.cssText = 'font-size:0.9rem;color:#DAA520;text-transform:uppercase;' +
+      'letter-spacing:0.15em;margin-bottom:8px;';
+    notification.appendChild(title);
+
+    var name = document.createElement('div');
+    name.textContent = petName;
+    name.style.cssText = 'font-size:1.5rem;color:#E8E0D8;font-weight:bold;margin-bottom:4px;';
+    notification.appendChild(name);
+
+    var typeName = document.createElement('div');
+    typeName.textContent = petType.name;
+    typeName.style.cssText = 'font-size:1rem;color:#B8B0A8;';
+    notification.appendChild(typeName);
+
+    document.body.appendChild(notification);
+
+    setTimeout(function() {
+      if (notification.parentNode) {
+        document.body.removeChild(notification);
+      }
+    }, 4000);
+  }
+
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
   exports.updateChat = updateChat;
@@ -6138,5 +6871,11 @@
   exports.updateReputationDisplay = updateReputationDisplay;
   exports.showAchievementPanel = showAchievementPanel;
   exports.hideAchievementPanel = hideAchievementPanel;
+  exports.showFishingUI = showFishingUI;
+  exports.hideFishingUI = hideFishingUI;
+  exports.showFishCaughtNotification = showFishCaughtNotification;
+  exports.showPetPanel = showPetPanel;
+  exports.hidePetPanel = hidePetPanel;
+  exports.showPetAdoptNotification = showPetAdoptNotification;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));

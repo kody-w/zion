@@ -31,6 +31,8 @@ JS_FILES = [
     'audio.js',
     'npc_ai.js',
     'npcs.js',
+    'seasons.js',
+    'pets.js',
     'main.js'
 ]
 

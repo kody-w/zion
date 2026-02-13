@@ -282,6 +282,36 @@
           e.preventDefault();
         }
         break;
+
+      case 'q':
+      case 'Q':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('togglePetPanel', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'x':
+      case 'X':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('startFishing', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'z':
+      case 'Z':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleHousing', {});
+          }
+          e.preventDefault();
+        }
+        break;
     }
 
     // Emote hotkeys: F+Number

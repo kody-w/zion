@@ -25,6 +25,8 @@
   const Quests = typeof require !== 'undefined' ? require('./quests') : window.Quests;
   const Mentoring = typeof require !== 'undefined' ? require('./mentoring') : window.Mentoring;
   const Guilds = typeof require !== 'undefined' ? require('./guilds') : window.Guilds;
+  const Seasons = typeof require !== 'undefined' ? require('./seasons') : window.Seasons;
+  const Pets = typeof require !== 'undefined' ? require('./pets') : window.Pets;
 
   // Game state
   let gameState = null;
@@ -71,6 +73,18 @@
   // Economic event tracking
   let currentEconomicEvent = null;
   let lastEventCheck = 0;
+
+  // Seasonal event tracking
+  let currentSeason = null;
+  let lastSeasonCheck = 0;
+  let SEASON_CHECK_INTERVAL = 60000; // Check season every 60s
+
+  // Pet tracking
+  let lastPetUpdate = 0;
+  let PET_UPDATE_INTERVAL = 30000; // Update pet every 30s
+
+  // Fishing state
+  let isFishing = false;
 
   // Warmth tracking (GPS-based outdoor play bonus)
   let gpsHistory = [];
@@ -426,6 +440,12 @@
 
     // Initialize economic event display
     updateEconomicEvent();
+
+    // Initialize seasonal event display
+    initSeasonalEvent();
+
+    // Initialize pet system - restore saved pet
+    initPetSystem(username);
 
     // Send join message
     joinWorld();
@@ -1080,6 +1100,18 @@
     if (nowMs - lastEventCheck > 30000) {
       lastEventCheck = nowMs;
       updateEconomicEvent();
+    }
+
+    // Update seasonal event periodically
+    if (nowMs - lastSeasonCheck > SEASON_CHECK_INTERVAL) {
+      lastSeasonCheck = nowMs;
+      updateSeasonalEvent();
+    }
+
+    // Update pet status periodically
+    if (nowMs - lastPetUpdate > PET_UPDATE_INTERVAL) {
+      lastPetUpdate = nowMs;
+      updatePetStatus();
     }
 
     // Request next frame
@@ -2063,6 +2095,16 @@
         }
       }
 
+      // Apply seasonal bonus to harvest
+      var harvestSeasonBonus = getSeasonalBonus('garden');
+      if (harvestSeasonBonus > 1.0 && Economy && economyLedger) {
+        var bonusSpark = Math.round((harvestSeasonBonus - 1.0) * 5);
+        if (bonusSpark > 0) {
+          Economy.earnSpark(economyLedger, localPlayer.id, 'harvest', { complexity: 0.1 });
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+        }
+      }
+
       // Track harvest achievement
       trackAchievement('harvest', { item: itemId, zone: currentZone });
 
@@ -2859,6 +2901,20 @@
         }
         break;
 
+      case 'startFishing':
+        startFishing();
+        break;
+
+      case 'togglePetPanel':
+        if (HUD && HUD.showPetPanel) {
+          HUD.showPetPanel(localPlayer.id, currentZone);
+        }
+        break;
+
+      case 'toggleHousing':
+        showHousingPanel();
+        break;
+
       default:
         console.log('Unknown local action:', type);
     }
@@ -3152,6 +3208,278 @@
       var bannerEl = document.getElementById('economic-event-banner');
       if (bannerEl) bannerEl.style.display = 'none';
     }
+  }
+
+  /**
+   * Initialize seasonal event display
+   */
+  function initSeasonalEvent() {
+    if (!Seasons) return;
+    currentSeason = Seasons.getCurrentSeason();
+    if (!currentSeason) return;
+
+    var colors = Seasons.getSeasonalColors();
+    var daysLeft = Seasons.getDaysUntilSeasonEnd();
+
+    // Create seasonal banner
+    if (typeof document !== 'undefined') {
+      var banner = document.getElementById('seasonal-banner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'seasonal-banner';
+        banner.className = 'seasonal-banner season-' + currentSeason.id;
+        document.body.appendChild(banner);
+      }
+      banner.innerHTML = '<div class="seasonal-banner-title">' + currentSeason.festival + '</div>' +
+        '<div class="seasonal-banner-desc">' + currentSeason.description + '</div>' +
+        '<div class="seasonal-banner-countdown">' + daysLeft + ' days remaining</div>';
+      banner.style.display = 'block';
+
+      // Auto-hide after 8 seconds
+      setTimeout(function() {
+        if (banner) banner.style.display = 'none';
+      }, 8000);
+    }
+
+    // Apply seasonal NPC greetings
+    if (NPCs && Seasons.getSeasonalGreeting) {
+      console.log('Season: ' + currentSeason.name + ' — ' + Seasons.getSeasonalGreeting());
+    }
+  }
+
+  /**
+   * Update seasonal event (check for season change)
+   */
+  function updateSeasonalEvent() {
+    if (!Seasons) return;
+    var newSeason = Seasons.getCurrentSeason();
+    if (newSeason && (!currentSeason || currentSeason.id !== newSeason.id)) {
+      currentSeason = newSeason;
+      if (HUD) {
+        HUD.showNotification('A new season has arrived: ' + newSeason.name + '!', 'success');
+      }
+      initSeasonalEvent(); // Refresh banner
+    }
+  }
+
+  /**
+   * Get seasonal bonus for an activity
+   */
+  function getSeasonalBonus(activity) {
+    if (!Seasons || !Seasons.getSeasonBonus) return 1.0;
+    return Seasons.getSeasonBonus(activity);
+  }
+
+  /**
+   * Initialize pet system
+   */
+  function initPetSystem(playerId) {
+    if (!Pets) return;
+
+    // Check if player has a saved pet
+    var savedData = Auth && Auth.loadPlayerData ? Auth.loadPlayerData() : null;
+    if (savedData && savedData.pet) {
+      // Restore pet from saved data - pets module stores internally
+      console.log('Pet system initialized');
+    }
+  }
+
+  /**
+   * Update pet status (hunger, mood decay)
+   */
+  function updatePetStatus() {
+    if (!Pets || !localPlayer) return;
+    var pet = Pets.getPlayerPet(localPlayer.id);
+    if (!pet) return;
+
+    // Update pet simulation
+    Pets.updatePet(localPlayer.id, PET_UPDATE_INTERVAL / 1000);
+
+    // Get pet bonus and apply
+    var bonus = Pets.getPetBonus(localPlayer.id);
+    if (bonus && bonus.value > 0) {
+      localPlayer.petBonus = bonus;
+    }
+
+    // Check pet mood for notifications
+    var mood = Pets.getPetMood(pet);
+    if (mood === 'sad' && pet.hunger > 70) {
+      if (HUD) {
+        HUD.showNotification(pet.name + ' is hungry! Feed your companion.', 'warning');
+      }
+    }
+  }
+
+  /**
+   * Start fishing minigame
+   */
+  function startFishing() {
+    if (isFishing || !HUD || !HUD.showFishingUI) return;
+
+    // Check if current zone allows fishing
+    var fishableZones = ['gardens', 'commons', 'wilds', 'nexus', 'agora'];
+    if (fishableZones.indexOf(currentZone) === -1) {
+      if (HUD) HUD.showNotification('You cannot fish here.', 'warning');
+      return;
+    }
+
+    isFishing = true;
+    if (Audio) Audio.playSound('harvest');
+
+    HUD.showFishingUI(currentZone, function(result) {
+      isFishing = false;
+      if (result && result.success && result.fish) {
+        // Add fish to inventory
+        if (Inventory && playerInventory) {
+          Inventory.addItem(playerInventory, result.fish.id, 1);
+          if (HUD && HUD.updateInventoryDisplay) {
+            HUD.updateInventoryDisplay(playerInventory);
+          }
+        }
+        // Award Spark
+        var sparkAmount = result.fish.value || 5;
+        var seasonBonus = getSeasonalBonus('harvest');
+        sparkAmount = Math.round(sparkAmount * seasonBonus);
+        if (economyLedger && Economy) {
+          Economy.earnSpark(economyLedger, localPlayer.id, sparkAmount, 'fishing');
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+        }
+        if (HUD && HUD.showFishCaughtNotification) {
+          HUD.showFishCaughtNotification(result.fish.name, sparkAmount);
+        }
+        trackAchievement('harvest', { type: 'fishing', fish: result.fish.id });
+        addRecentActivity('Caught: ' + result.fish.name);
+      }
+    });
+  }
+
+  /**
+   * Show housing panel for player
+   */
+  function showHousingPanel() {
+    if (!Creation || !HUD || typeof document === 'undefined') return;
+
+    var existingPanel = document.getElementById('housing-panel');
+    if (existingPanel) {
+      existingPanel.remove();
+      return;
+    }
+
+    var panel = document.createElement('div');
+    panel.id = 'housing-panel';
+    panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(15,12,10,0.95);border:1px solid rgba(218,165,32,0.3);border-radius:12px;' +
+      'padding:24px;min-width:400px;max-width:550px;max-height:70vh;overflow-y:auto;z-index:1100;' +
+      'backdrop-filter:blur(10px);color:#E8E0D8;font-family:Georgia,serif;';
+
+    var playerPlot = Creation.getPlayerPlot ? Creation.getPlayerPlot(localPlayer.id) : null;
+
+    // Header
+    var header = document.createElement('h2');
+    header.textContent = playerPlot ? 'My Home — ' + playerPlot.name : 'Housing — Claim a Plot';
+    header.style.cssText = 'color:#DAA520;margin:0 0 16px;font-size:1.2rem;';
+    panel.appendChild(header);
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '\u00d7';
+    closeBtn.style.cssText = 'position:absolute;top:12px;right:12px;width:30px;height:30px;' +
+      'background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.2);' +
+      'border-radius:50%;font-size:18px;cursor:pointer;';
+    closeBtn.onclick = function() { panel.remove(); };
+    panel.appendChild(closeBtn);
+
+    if (playerPlot) {
+      // Show owned plot info
+      var plotInfo = document.createElement('div');
+      plotInfo.style.cssText = 'margin-bottom:16px;padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;';
+      plotInfo.innerHTML = '<div style="color:#B8B0A8;font-size:0.85rem;">Plot ' + playerPlot.id +
+        ' (' + playerPlot.bounds.x1 + ',' + playerPlot.bounds.z1 + ')</div>' +
+        '<div style="color:#E8E0D8;font-size:0.9rem;margin-top:4px;">Furniture: ' +
+        playerPlot.furniture.length + '/' + 20 + '</div>';
+      panel.appendChild(plotInfo);
+
+      // Furniture list
+      var furnitureTypes = Creation.FURNITURE_TYPES || {};
+      var furnitureHeader = document.createElement('div');
+      furnitureHeader.textContent = 'Add Furniture';
+      furnitureHeader.style.cssText = 'color:#DAA520;font-size:0.9rem;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;';
+      panel.appendChild(furnitureHeader);
+
+      Object.keys(furnitureTypes).forEach(function(fType) {
+        var ft = furnitureTypes[fType];
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px;' +
+          'background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:4px;' +
+          'border:1px solid rgba(255,255,255,0.05);cursor:pointer;transition:all 0.2s;';
+        row.onmouseover = function() { this.style.borderColor = 'rgba(218,165,32,0.3)'; };
+        row.onmouseout = function() { this.style.borderColor = 'rgba(255,255,255,0.05)'; };
+        row.innerHTML = '<span style="font-size:1.3rem;">' + ft.icon + '</span>' +
+          '<span style="flex:1;color:#E8E0D8;font-size:0.85rem;">' + ft.name + '</span>' +
+          '<span style="color:#DAA520;font-size:0.8rem;">' + ft.cost + ' Spark</span>';
+        row.onclick = function() {
+          var result = Creation.placeFurniture(localPlayer.id, fType, 5, 5);
+          if (result && result.success) {
+            HUD.showNotification('Placed ' + ft.name + ' in your home!', 'success');
+            panel.remove();
+          } else {
+            HUD.showNotification(result ? result.error : 'Cannot place furniture', 'warning');
+          }
+        };
+        panel.appendChild(row);
+      });
+    } else {
+      // Show available plots
+      var plots = Creation.getAvailablePlots ? Creation.getAvailablePlots() : [];
+      if (plots.length === 0) {
+        var noPlots = document.createElement('div');
+        noPlots.textContent = 'No plots available. Visit The Commons zone to find housing.';
+        noPlots.style.cssText = 'color:#B8B0A8;text-align:center;padding:20px;';
+        panel.appendChild(noPlots);
+      } else {
+        var infoText = document.createElement('div');
+        infoText.textContent = 'Available plots in The Commons (' + plots.length + ' open):';
+        infoText.style.cssText = 'color:#B8B0A8;font-size:0.85rem;margin-bottom:12px;';
+        panel.appendChild(infoText);
+
+        plots.slice(0, 8).forEach(function(plot) {
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;' +
+            'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);' +
+            'border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all 0.2s;';
+          row.onmouseover = function() { this.style.borderColor = 'rgba(218,165,32,0.4)'; };
+          row.onmouseout = function() { this.style.borderColor = 'rgba(255,255,255,0.08)'; };
+          row.innerHTML = '<span style="font-size:1.3rem;">🏠</span>' +
+            '<span style="flex:1;color:#E8E0D8;font-size:0.9rem;">Plot ' + plot.id + '</span>' +
+            '<span style="color:#B8B0A8;font-size:0.75rem;">(' + plot.bounds.x1 + ', ' + plot.bounds.z1 + ')</span>';
+          row.onclick = function() {
+            var plotName = prompt('Name your home:');
+            if (plotName && plotName.trim()) {
+              var result = Creation.claimPlot(localPlayer.id, plot.id, plotName.trim());
+              if (result && result.success) {
+                HUD.showNotification('You claimed a plot: ' + plotName.trim() + '!', 'success');
+                trackAchievement('build', { type: 'housing' });
+                panel.remove();
+              } else {
+                HUD.showNotification(result ? result.error : 'Cannot claim plot', 'warning');
+              }
+            }
+          };
+          panel.appendChild(row);
+        });
+      }
+    }
+
+    document.body.appendChild(panel);
+
+    // Close on Escape
+    var escHandler = function(e) {
+      if (e.key === 'Escape') {
+        panel.remove();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
   }
 
   // Export public API

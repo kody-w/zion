@@ -1448,6 +1448,117 @@
   font-weight: 500;
 }
 
+/* Pet Panel */
+.pet-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(15, 12, 10, 0.95);
+  border: 1px solid rgba(218, 165, 32, 0.3);
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 420px;
+  max-width: 550px;
+  max-height: 70vh;
+  overflow-y: auto;
+  z-index: 1100;
+  backdrop-filter: blur(10px);
+  animation: panelSlideIn 0.3s ease;
+}
+
+.pet-panel h2 {
+  color: var(--color-gold);
+  margin: 0 0 16px;
+  font-size: 1.2rem;
+  font-family: var(--font-main);
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.pet-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pet-panel::-webkit-scrollbar-thumb {
+  background: rgba(218, 165, 32, 0.3);
+  border-radius: 3px;
+}
+
+.pet-action-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: rgba(218, 165, 32, 0.2);
+  border: 1px solid rgba(218, 165, 32, 0.5);
+  border-radius: 6px;
+  color: var(--color-gold);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pet-action-btn:hover {
+  background: rgba(218, 165, 32, 0.3);
+  border-color: var(--color-gold);
+  transform: translateY(-1px);
+}
+
+.pet-action-btn:active {
+  transform: translateY(0);
+}
+
+.pet-release-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: 6px;
+  color: #e74c3c;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pet-release-btn:hover {
+  background: rgba(231, 76, 60, 0.2);
+  border-color: #e74c3c;
+}
+
+.pet-adopt-btn {
+  padding: 8px 16px;
+  background: rgba(46, 204, 113, 0.2);
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  border-radius: 6px;
+  color: #2ecc71;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.pet-adopt-btn:hover {
+  background: rgba(46, 204, 113, 0.3);
+  border-color: #2ecc71;
+  transform: scale(1.05);
+}
+
+.pet-adoption-row {
+  transition: all 0.2s ease;
+}
+
+.pet-adoption-row:hover .pet-adopt-btn {
+  background: rgba(46, 204, 113, 0.3);
+}
+
+/* Pet Adopt Notification */
+.pet-adopt-notification {
+  font-family: var(--font-main);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .chat-panel {
@@ -1471,6 +1582,11 @@
     padding: 8px 12px;
     font-size: 12px;
   }
+
+  .pet-panel {
+    min-width: 320px;
+    max-width: 90vw;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1486,4 +1602,161 @@
   .zone-label {
     font-size: var(--font-size-lg);
   }
+
+  .pet-panel {
+    min-width: 280px;
+    padding: 16px;
+  }
+}
+
+/* Seasonal Event Banner */
+.seasonal-banner {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-sm) var(--space-xl);
+  background: linear-gradient(90deg, transparent, rgba(218, 165, 32, 0.15), transparent);
+  backdrop-filter: blur(8px);
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  border: 1px solid rgba(218, 165, 32, 0.3);
+  border-top: none;
+  text-align: center;
+  z-index: var(--z-hud);
+  pointer-events: none;
+  min-width: 300px;
+  animation: seasonalBannerFadeIn 1s ease;
+  transition: all 0.5s ease;
+}
+
+.seasonal-banner-title {
+  font-family: var(--font-main);
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.seasonal-banner-desc {
+  font-size: var(--font-size-xs);
+  opacity: 0.9;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.seasonal-banner-countdown {
+  font-size: var(--font-size-xs);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+@keyframes seasonalBannerFadeIn {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Seasonal Item Badge */
+.seasonal-item-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-round);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: bold;
+  pointer-events: none;
+  animation: seasonalBadgePulse 2s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes seasonalBadgePulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+/* Season-specific styles */
+.season-spring {
+  background: linear-gradient(90deg, transparent, rgba(248, 180, 200, 0.2), transparent);
+  border-color: rgba(248, 180, 200, 0.4);
+}
+
+.season-spring .seasonal-banner-title {
+  color: #f8b4c8;
+}
+
+.season-spring .seasonal-banner-desc,
+.season-spring .seasonal-banner-countdown {
+  color: #7db37d;
+}
+
+.season-spring .seasonal-item-badge {
+  background: #f8b4c8;
+  color: #7db37d;
+  border-color: #ffd4e5;
+}
+
+.season-summer {
+  background: linear-gradient(90deg, transparent, rgba(240, 192, 64, 0.2), transparent);
+  border-color: rgba(240, 192, 64, 0.4);
+}
+
+.season-summer .seasonal-banner-title {
+  color: #f0c040;
+}
+
+.season-summer .seasonal-banner-desc,
+.season-summer .seasonal-banner-countdown {
+  color: #ff8c42;
+}
+
+.season-summer .seasonal-item-badge {
+  background: #f0c040;
+  color: #ff8c42;
+  border-color: #ffe080;
+}
+
+.season-autumn {
+  background: linear-gradient(90deg, transparent, rgba(212, 160, 64, 0.2), transparent);
+  border-color: rgba(212, 160, 64, 0.4);
+}
+
+.season-autumn .seasonal-banner-title {
+  color: #d4a040;
+}
+
+.season-autumn .seasonal-banner-desc,
+.season-autumn .seasonal-banner-countdown {
+  color: #8b4513;
+}
+
+.season-autumn .seasonal-item-badge {
+  background: #d4a040;
+  color: #8b4513;
+  border-color: #e8b860;
+}
+
+.season-winter {
+  background: linear-gradient(90deg, transparent, rgba(128, 192, 224, 0.2), transparent);
+  border-color: rgba(128, 192, 224, 0.4);
+}
+
+.season-winter .seasonal-banner-title {
+  color: #80c0e0;
+}
+
+.season-winter .seasonal-banner-desc,
+.season-winter .seasonal-banner-countdown {
+  color: #e8e8ff;
+}
+
+.season-winter .seasonal-item-badge {
+  background: #80c0e0;
+  color: #0a0a14;
+  border-color: #a0d4f0;
 }

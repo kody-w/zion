@@ -729,6 +729,244 @@
       stackable: true,
       maxStack: 30,
       rarity: 'rare'
+    },
+
+    // === FISHING GEAR ===
+    tool_fishing_rod: {
+      id: 'tool_fishing_rod',
+      name: 'Fishing Rod',
+      type: 'tools',
+      icon: '🎣',
+      description: 'A sturdy rod for catching fish',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'uncommon'
+    },
+    bait_worm: {
+      id: 'bait_worm',
+      name: 'Worm Bait',
+      type: 'bait',
+      icon: '🪱',
+      description: 'Simple worm bait for fishing',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+    bait_cricket: {
+      id: 'bait_cricket',
+      name: 'Cricket Bait',
+      type: 'bait',
+      icon: '🦗',
+      description: 'Live cricket bait for better catches',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'uncommon'
+    },
+
+    // === FISH ===
+    fish_common: {
+      id: 'fish_common',
+      name: 'Common Carp',
+      type: 'fish',
+      icon: '🐟',
+      description: 'A simple freshwater fish',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'common',
+      value: 5
+    },
+    fish_rare: {
+      id: 'fish_rare',
+      name: 'Rainbow Trout',
+      type: 'fish',
+      icon: '🐠',
+      description: 'A beautiful rainbow-colored fish',
+      stackable: true,
+      maxStack: 30,
+      rarity: 'uncommon',
+      value: 15
+    },
+    fish_golden: {
+      id: 'fish_golden',
+      name: 'Golden Koi',
+      type: 'fish',
+      icon: '🟡',
+      description: 'A rare golden fish of legend',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'rare',
+      value: 50
+    },
+    fish_silver_eel: {
+      id: 'fish_silver_eel',
+      name: 'Silver Eel',
+      type: 'fish',
+      icon: '🐍',
+      description: 'A sleek silver eel from deep waters',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'uncommon',
+      value: 20
+    },
+    fish_crystal_trout: {
+      id: 'fish_crystal_trout',
+      name: 'Crystal Trout',
+      type: 'fish',
+      icon: '💎',
+      description: 'A mystical fish with translucent scales',
+      stackable: true,
+      maxStack: 15,
+      rarity: 'rare',
+      value: 40
+    },
+    fish_shadow_bass: {
+      id: 'fish_shadow_bass',
+      name: 'Shadow Bass',
+      type: 'fish',
+      icon: '🌑',
+      description: 'A dark mysterious bass from the depths',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'uncommon',
+      value: 18
+    },
+    fish_sunfish: {
+      id: 'fish_sunfish',
+      name: 'Sunfish',
+      type: 'fish',
+      icon: '☀️',
+      description: 'A bright cheerful sunfish',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'common',
+      value: 8
+    },
+    fish_moonfish: {
+      id: 'fish_moonfish',
+      name: 'Moonfish',
+      type: 'fish',
+      icon: '🌙',
+      description: 'A pale nocturnal fish',
+      stackable: true,
+      maxStack: 30,
+      rarity: 'uncommon',
+      value: 25
+    },
+    fish_starfish: {
+      id: 'fish_starfish',
+      name: 'Star Cod',
+      type: 'fish',
+      icon: '⭐',
+      description: 'A fish with star-like markings',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'rare',
+      value: 35
+    },
+    fish_dragonfish: {
+      id: 'fish_dragonfish',
+      name: 'Dragonfish',
+      type: 'fish',
+      icon: '🐉',
+      description: 'An extremely rare and powerful fish',
+      stackable: true,
+      maxStack: 5,
+      rarity: 'legendary',
+      value: 100
+    },
+
+    // === COOKING INGREDIENTS ===
+    ingredient_rice: {
+      id: 'ingredient_rice',
+      name: 'Rice',
+      type: 'ingredients',
+      icon: '🍚',
+      description: 'Grains of white rice',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+    ingredient_flour: {
+      id: 'ingredient_flour',
+      name: 'Flour',
+      type: 'ingredients',
+      icon: '🌾',
+      description: 'Ground wheat flour',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+    ingredient_egg: {
+      id: 'ingredient_egg',
+      name: 'Egg',
+      type: 'ingredients',
+      icon: '🥚',
+      description: 'A fresh egg',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'common'
+    },
+    ingredient_water: {
+      id: 'ingredient_water',
+      name: 'Water',
+      type: 'ingredients',
+      icon: '💧',
+      description: 'Clean fresh water',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+
+    // === COOKED FISH DISHES ===
+    food_grilled_fish: {
+      id: 'food_grilled_fish',
+      name: 'Grilled Fish',
+      type: 'food',
+      icon: '🍖',
+      description: 'A perfectly grilled fish fillet',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'common'
+    },
+    food_fish_stew: {
+      id: 'food_fish_stew',
+      name: 'Fish Stew',
+      type: 'food',
+      icon: '🍲',
+      description: 'A hearty fish stew with herbs',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'uncommon'
+    },
+    food_sushi_roll: {
+      id: 'food_sushi_roll',
+      name: 'Sushi Roll',
+      type: 'food',
+      icon: '🍣',
+      description: 'Delicate fish wrapped in rice',
+      stackable: true,
+      maxStack: 15,
+      rarity: 'uncommon'
+    },
+    food_fish_pie: {
+      id: 'food_fish_pie',
+      name: 'Fish Pie',
+      type: 'food',
+      icon: '🥧',
+      description: 'A savory fish pie with flaky crust',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'uncommon'
+    },
+    food_luxury_sashimi: {
+      id: 'food_luxury_sashimi',
+      name: 'Luxury Sashimi',
+      type: 'food',
+      icon: '🍱',
+      description: 'Premium sashimi made from rare fish',
+      stackable: true,
+      maxStack: 5,
+      rarity: 'rare'
     }
   };
 
@@ -1166,6 +1404,73 @@
         { itemId: 'herb_lavender', count: 2 }
       ],
       sparkReward: 12
+    },
+
+    // Fishing Gear
+    {
+      id: 'craft_fishing_rod',
+      name: 'Craft Fishing Rod',
+      output: { itemId: 'tool_fishing_rod', count: 1 },
+      requirements: [
+        { itemId: 'wood_oak', count: 4 },
+        { itemId: 'cloth_silk', count: 2 }
+      ],
+      sparkReward: 18
+    },
+
+    // Fish Cooking Recipes
+    {
+      id: 'cook_grilled_fish',
+      name: 'Grill Fish',
+      output: { itemId: 'food_grilled_fish', count: 1 },
+      requirements: [
+        { itemId: 'fish_common', count: 1 },
+        { itemId: 'wood_oak', count: 1 }
+      ],
+      sparkReward: 10
+    },
+    {
+      id: 'cook_fish_stew',
+      name: 'Cook Fish Stew',
+      output: { itemId: 'food_fish_stew', count: 1 },
+      requirements: [
+        { itemId: 'fish_common', count: 2 },
+        { itemId: 'herb_mint', count: 1 },
+        { itemId: 'ingredient_water', count: 1 }
+      ],
+      sparkReward: 15
+    },
+    {
+      id: 'cook_sushi_roll',
+      name: 'Make Sushi Roll',
+      output: { itemId: 'food_sushi_roll', count: 2 },
+      requirements: [
+        { itemId: 'fish_rare', count: 1 },
+        { itemId: 'ingredient_rice', count: 3 }
+      ],
+      sparkReward: 20
+    },
+    {
+      id: 'cook_fish_pie',
+      name: 'Bake Fish Pie',
+      output: { itemId: 'food_fish_pie', count: 1 },
+      requirements: [
+        { itemId: 'fish_common', count: 2 },
+        { itemId: 'ingredient_flour', count: 2 },
+        { itemId: 'ingredient_egg', count: 1 }
+      ],
+      sparkReward: 25
+    },
+    {
+      id: 'cook_luxury_sashimi',
+      name: 'Prepare Luxury Sashimi',
+      output: { itemId: 'food_luxury_sashimi', count: 1 },
+      requirements: [
+        { itemId: 'fish_golden', count: 1 },
+        { itemId: 'ingredient_rice', count: 2 },
+        { itemId: 'herb_sage', count: 1 }
+      ],
+      sparkReward: 50
     }
   ];
 
@@ -1180,9 +1485,9 @@
       rare: ['item_scroll']
     },
     gardens: {
-      common: ['seed_wildflower', 'herb_mint', 'herb_lavender', 'food_berry', 'cloth_wool'],
-      uncommon: ['flower_rose', 'flower_tulip', 'flower_cherry', 'herb_sage', 'food_honey'],
-      rare: ['seed_lotus', 'herb_ginseng', 'flower_lotus', 'rare_feather']
+      common: ['seed_wildflower', 'herb_mint', 'herb_lavender', 'food_berry', 'cloth_wool', 'fish_common', 'fish_sunfish', 'bait_worm'],
+      uncommon: ['flower_rose', 'flower_tulip', 'flower_cherry', 'herb_sage', 'food_honey', 'fish_rare', 'fish_crystal_trout', 'bait_cricket'],
+      rare: ['seed_lotus', 'herb_ginseng', 'flower_lotus', 'rare_feather', 'fish_golden']
     },
     athenaeum: {
       common: ['item_scroll', 'stone_common', 'herb_sage'],
@@ -1195,19 +1500,19 @@
       rare: ['crystal_clear', 'metal_silver', 'rare_pearl']
     },
     wilds: {
-      common: ['wood_oak', 'wood_pine', 'stone_common', 'food_mushroom', 'food_berry', 'gear_rope'],
-      uncommon: ['herb_ginseng', 'stone_marble', 'metal_copper', 'rare_fossil'],
-      rare: ['wood_mystical', 'stone_obsidian', 'crystal_emerald', 'rare_starfragment']
+      common: ['wood_oak', 'wood_pine', 'stone_common', 'food_mushroom', 'food_berry', 'gear_rope', 'fish_common', 'bait_worm'],
+      uncommon: ['herb_ginseng', 'stone_marble', 'metal_copper', 'rare_fossil', 'fish_shadow_bass', 'fish_silver_eel', 'bait_cricket'],
+      rare: ['wood_mystical', 'stone_obsidian', 'crystal_emerald', 'rare_starfragment', 'fish_starfish', 'fish_dragonfish']
     },
     agora: {
-      common: ['cloth_wool', 'food_bread', 'metal_copper'],
-      uncommon: ['cloth_silk', 'metal_silver', 'food_honey'],
-      rare: ['metal_gold', 'rare_pearl']
+      common: ['cloth_wool', 'food_bread', 'metal_copper', 'ingredient_rice', 'ingredient_flour', 'ingredient_egg', 'ingredient_water'],
+      uncommon: ['cloth_silk', 'metal_silver', 'food_honey', 'fish_rare'],
+      rare: ['metal_gold', 'rare_pearl', 'fish_golden']
     },
     commons: {
-      common: ['wood_oak', 'stone_common', 'cloth_wool', 'seed_wildflower'],
-      uncommon: ['stone_marble', 'metal_copper', 'flower_sunflower'],
-      rare: ['crystal_clear', 'metal_silver']
+      common: ['wood_oak', 'stone_common', 'cloth_wool', 'seed_wildflower', 'fish_common', 'bait_worm'],
+      uncommon: ['stone_marble', 'metal_copper', 'flower_sunflower', 'fish_rare', 'fish_sunfish'],
+      rare: ['crystal_clear', 'metal_silver', 'fish_moonfish']
     },
     arena: {
       common: ['stone_common', 'metal_copper', 'food_mushroom'],

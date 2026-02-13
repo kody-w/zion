@@ -398,6 +398,174 @@
     };
   }
 
+  // ========================================================================
+  // PLAYER HOUSING SYSTEM — Claim plots in Commons, place furniture
+  // ========================================================================
+
+  var PLOT_SIZE = 10; // 10x10 area
+  var MAX_FURNITURE_PER_PLOT = 20;
+  var HOUSING_ZONE = 'commons'; // Only Commons allows housing plots
+
+  // Available plots in Commons zone (arranged in a grid)
+  var PLOT_GRID = [];
+  (function initPlotGrid() {
+    // 5x4 grid of plots starting at Commons zone center offset
+    var baseX = 140, baseZ = 170;
+    for (var row = 0; row < 4; row++) {
+      for (var col = 0; col < 5; col++) {
+        PLOT_GRID.push({
+          id: 'plot_' + row + '_' + col,
+          x: baseX + col * (PLOT_SIZE + 4),
+          z: baseZ + row * (PLOT_SIZE + 4),
+          row: row,
+          col: col
+        });
+      }
+    }
+  })();
+
+  // Player plots: playerId -> { plotId, furniture[], name, claimedAt }
+  var playerPlots = {};
+
+  // Furniture types available for housing
+  var FURNITURE_TYPES = {
+    bed: { name: 'Bed', icon: '&#128716;', cost: 25, description: 'A cozy place to rest' },
+    table: { name: 'Table', icon: '&#128207;', cost: 15, description: 'A sturdy wooden table' },
+    chair: { name: 'Chair', icon: '&#129681;', cost: 10, description: 'A comfortable chair' },
+    bookshelf: { name: 'Bookshelf', icon: '&#128218;', cost: 30, description: 'Stores your favorite books' },
+    lamp: { name: 'Lamp', icon: '&#128161;', cost: 12, description: 'Warm ambient light' },
+    rug: { name: 'Rug', icon: '&#129531;', cost: 18, description: 'A decorative rug' },
+    plant_pot: { name: 'Potted Plant', icon: '&#127793;', cost: 8, description: 'A cheerful houseplant' },
+    fireplace: { name: 'Fireplace', icon: '&#128293;', cost: 40, description: 'Warm and inviting' },
+    painting: { name: 'Painting', icon: '&#128444;', cost: 20, description: 'Art for your walls' },
+    chest: { name: 'Storage Chest', icon: '&#128230;', cost: 22, description: 'Store your treasures' },
+    fountain_small: { name: 'Small Fountain', icon: '&#9970;', cost: 35, description: 'A soothing water feature' },
+    banner: { name: 'Banner', icon: '&#127988;', cost: 15, description: 'Show your colors' }
+  };
+
+  /**
+   * Get available plots (unclaimed)
+   * @returns {Array} List of available plot positions
+   */
+  function getAvailablePlots() {
+    var claimed = {};
+    Object.keys(playerPlots).forEach(function(pid) {
+      claimed[playerPlots[pid].plotId] = true;
+    });
+    return PLOT_GRID.filter(function(plot) {
+      return !claimed[plot.id];
+    });
+  }
+
+  /**
+   * Claim a plot for a player
+   * @param {string} playerId - Player claiming the plot
+   * @param {string} plotId - Plot to claim
+   * @param {string} plotName - Name for the plot (e.g., "Kody's Cottage")
+   * @returns {Object} Result with success, error, or plot data
+   */
+  function claimPlot(playerId, plotId, plotName) {
+    // Check if player already has a plot
+    if (playerPlots[playerId]) {
+      return { success: false, error: 'You already have a plot. Release it first.' };
+    }
+    // Check if plot exists and is unclaimed
+    var plotDef = PLOT_GRID.find(function(p) { return p.id === plotId; });
+    if (!plotDef) {
+      return { success: false, error: 'Plot not found' };
+    }
+    var alreadyClaimed = Object.keys(playerPlots).some(function(pid) {
+      return playerPlots[pid].plotId === plotId;
+    });
+    if (alreadyClaimed) {
+      return { success: false, error: 'Plot already claimed by another player' };
+    }
+
+    playerPlots[playerId] = {
+      plotId: plotId,
+      name: plotName || playerId + "'s Plot",
+      furniture: [],
+      claimedAt: Date.now(),
+      position: { x: plotDef.x, z: plotDef.z },
+      size: PLOT_SIZE
+    };
+    return { success: true, plot: playerPlots[playerId] };
+  }
+
+  /**
+   * Get a player's plot
+   */
+  function getPlayerPlot(playerId) {
+    return playerPlots[playerId] || null;
+  }
+
+  /**
+   * Place furniture on a player's plot
+   */
+  function placeFurniture(playerId, furnitureType, localX, localZ) {
+    var plot = playerPlots[playerId];
+    if (!plot) return { success: false, error: 'You don\'t have a plot' };
+    if (!FURNITURE_TYPES[furnitureType]) return { success: false, error: 'Unknown furniture type' };
+    if (plot.furniture.length >= MAX_FURNITURE_PER_PLOT) {
+      return { success: false, error: 'Plot is full (max ' + MAX_FURNITURE_PER_PLOT + ' items)' };
+    }
+    // Clamp to plot bounds
+    localX = Math.max(0, Math.min(PLOT_SIZE - 1, localX || 0));
+    localZ = Math.max(0, Math.min(PLOT_SIZE - 1, localZ || 0));
+
+    var item = {
+      id: 'furn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      type: furnitureType,
+      localX: localX,
+      localZ: localZ,
+      placedAt: Date.now()
+    };
+    plot.furniture.push(item);
+    return { success: true, item: item, cost: FURNITURE_TYPES[furnitureType].cost };
+  }
+
+  /**
+   * Remove furniture from a player's plot
+   */
+  function removeFurniture(playerId, furnitureId) {
+    var plot = playerPlots[playerId];
+    if (!plot) return { success: false, error: 'You don\'t have a plot' };
+    var idx = plot.furniture.findIndex(function(f) { return f.id === furnitureId; });
+    if (idx === -1) return { success: false, error: 'Furniture not found' };
+    plot.furniture.splice(idx, 1);
+    return { success: true };
+  }
+
+  /**
+   * Release a player's plot
+   */
+  function releasePlot(playerId) {
+    if (!playerPlots[playerId]) return { success: false, error: 'You don\'t have a plot' };
+    delete playerPlots[playerId];
+    return { success: true };
+  }
+
+  /**
+   * Get plot at world position (check if player is standing on a plot)
+   */
+  function getPlotAtPosition(worldX, worldZ) {
+    for (var pid in playerPlots) {
+      var plot = playerPlots[pid];
+      if (worldX >= plot.position.x && worldX <= plot.position.x + PLOT_SIZE &&
+          worldZ >= plot.position.z && worldZ <= plot.position.z + PLOT_SIZE) {
+        return { playerId: pid, plot: plot };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Get all claimed plots (for minimap/world rendering)
+   */
+  function getAllPlots() {
+    return playerPlots;
+  }
+
   // Exports
   exports.PLANT_SPECIES = PLANT_SPECIES;
   exports.RECIPES = RECIPES;
@@ -412,5 +580,15 @@
   exports.getArtworks = getArtworks;
   exports.getArtworksByPlayer = getArtworksByPlayer;
   exports.featureArtwork = featureArtwork;
+  exports.FURNITURE_TYPES = FURNITURE_TYPES;
+  exports.PLOT_GRID = PLOT_GRID;
+  exports.getAvailablePlots = getAvailablePlots;
+  exports.claimPlot = claimPlot;
+  exports.getPlayerPlot = getPlayerPlot;
+  exports.placeFurniture = placeFurniture;
+  exports.removeFurniture = removeFurniture;
+  exports.releasePlot = releasePlot;
+  exports.getPlotAtPosition = getPlotAtPosition;
+  exports.getAllPlots = getAllPlots;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Creation = {}));

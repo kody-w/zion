@@ -3225,6 +3225,46 @@
     if (sceneCtx.ambientLight) {
       var ambientIntensity = 0.3 + sunIntensity * 0.4;
       sceneCtx.ambientLight.intensity = ambientIntensity;
+      // Tint ambient light by time of day
+      var ambientColor;
+      if (normalizedTime < 0.2) {
+        // Night: cool blue tint
+        ambientColor = 0x334466;
+      } else if (normalizedTime < 0.3) {
+        // Dawn: warm amber
+        var dt = (normalizedTime - 0.2) / 0.1;
+        ambientColor = lerpColor(0x334466, 0xffcc88, dt);
+      } else if (normalizedTime < 0.7) {
+        // Day: warm white
+        var dt = (normalizedTime - 0.3) / 0.4;
+        ambientColor = lerpColor(0xffcc88, 0xeeeedd, Math.min(dt * 2, 1.0));
+      } else if (normalizedTime < 0.8) {
+        // Dusk: warm orange
+        var dt = (normalizedTime - 0.7) / 0.1;
+        ambientColor = lerpColor(0xeeeedd, 0xff9966, dt);
+      } else {
+        // Evening to night: fade to blue
+        var dt = (normalizedTime - 0.8) / 0.2;
+        ambientColor = lerpColor(0xff9966, 0x334466, dt);
+      }
+      sceneCtx.ambientLight.color.setHex(ambientColor);
+    }
+
+    // Tint directional light (sunlight) color by time of day
+    if (sceneCtx.directionalLight) {
+      var sunColor;
+      if (normalizedTime < 0.25) {
+        sunColor = lerpColor(0x443355, 0xff8844, normalizedTime / 0.25);
+      } else if (normalizedTime < 0.45) {
+        sunColor = lerpColor(0xff8844, 0xffffff, (normalizedTime - 0.25) / 0.2);
+      } else if (normalizedTime < 0.55) {
+        sunColor = 0xffffff; // Bright noon
+      } else if (normalizedTime < 0.75) {
+        sunColor = lerpColor(0xffffff, 0xff6633, (normalizedTime - 0.55) / 0.2);
+      } else {
+        sunColor = lerpColor(0xff6633, 0x443355, (normalizedTime - 0.75) / 0.25);
+      }
+      sceneCtx.directionalLight.color.setHex(sunColor);
     }
   }
 

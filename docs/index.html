@@ -1645,6 +1645,117 @@ html, body {
   font-weight: 500;
 }
 
+/* Pet Panel */
+.pet-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(15, 12, 10, 0.95);
+  border: 1px solid rgba(218, 165, 32, 0.3);
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 420px;
+  max-width: 550px;
+  max-height: 70vh;
+  overflow-y: auto;
+  z-index: 1100;
+  backdrop-filter: blur(10px);
+  animation: panelSlideIn 0.3s ease;
+}
+
+.pet-panel h2 {
+  color: var(--color-gold);
+  margin: 0 0 16px;
+  font-size: 1.2rem;
+  font-family: var(--font-main);
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.pet-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pet-panel::-webkit-scrollbar-thumb {
+  background: rgba(218, 165, 32, 0.3);
+  border-radius: 3px;
+}
+
+.pet-action-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: rgba(218, 165, 32, 0.2);
+  border: 1px solid rgba(218, 165, 32, 0.5);
+  border-radius: 6px;
+  color: var(--color-gold);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pet-action-btn:hover {
+  background: rgba(218, 165, 32, 0.3);
+  border-color: var(--color-gold);
+  transform: translateY(-1px);
+}
+
+.pet-action-btn:active {
+  transform: translateY(0);
+}
+
+.pet-release-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: 6px;
+  color: #e74c3c;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pet-release-btn:hover {
+  background: rgba(231, 76, 60, 0.2);
+  border-color: #e74c3c;
+}
+
+.pet-adopt-btn {
+  padding: 8px 16px;
+  background: rgba(46, 204, 113, 0.2);
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  border-radius: 6px;
+  color: #2ecc71;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.pet-adopt-btn:hover {
+  background: rgba(46, 204, 113, 0.3);
+  border-color: #2ecc71;
+  transform: scale(1.05);
+}
+
+.pet-adoption-row {
+  transition: all 0.2s ease;
+}
+
+.pet-adoption-row:hover .pet-adopt-btn {
+  background: rgba(46, 204, 113, 0.3);
+}
+
+/* Pet Adopt Notification */
+.pet-adopt-notification {
+  font-family: var(--font-main);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .chat-panel {
@@ -1668,6 +1779,11 @@ html, body {
     padding: 8px 12px;
     font-size: 12px;
   }
+
+  .pet-panel {
+    min-width: 320px;
+    max-width: 90vw;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1683,6 +1799,163 @@ html, body {
   .zone-label {
     font-size: var(--font-size-lg);
   }
+
+  .pet-panel {
+    min-width: 280px;
+    padding: 16px;
+  }
+}
+
+/* Seasonal Event Banner */
+.seasonal-banner {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-sm) var(--space-xl);
+  background: linear-gradient(90deg, transparent, rgba(218, 165, 32, 0.15), transparent);
+  backdrop-filter: blur(8px);
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  border: 1px solid rgba(218, 165, 32, 0.3);
+  border-top: none;
+  text-align: center;
+  z-index: var(--z-hud);
+  pointer-events: none;
+  min-width: 300px;
+  animation: seasonalBannerFadeIn 1s ease;
+  transition: all 0.5s ease;
+}
+
+.seasonal-banner-title {
+  font-family: var(--font-main);
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.seasonal-banner-desc {
+  font-size: var(--font-size-xs);
+  opacity: 0.9;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.seasonal-banner-countdown {
+  font-size: var(--font-size-xs);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+@keyframes seasonalBannerFadeIn {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Seasonal Item Badge */
+.seasonal-item-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-round);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: bold;
+  pointer-events: none;
+  animation: seasonalBadgePulse 2s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes seasonalBadgePulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+/* Season-specific styles */
+.season-spring {
+  background: linear-gradient(90deg, transparent, rgba(248, 180, 200, 0.2), transparent);
+  border-color: rgba(248, 180, 200, 0.4);
+}
+
+.season-spring .seasonal-banner-title {
+  color: #f8b4c8;
+}
+
+.season-spring .seasonal-banner-desc,
+.season-spring .seasonal-banner-countdown {
+  color: #7db37d;
+}
+
+.season-spring .seasonal-item-badge {
+  background: #f8b4c8;
+  color: #7db37d;
+  border-color: #ffd4e5;
+}
+
+.season-summer {
+  background: linear-gradient(90deg, transparent, rgba(240, 192, 64, 0.2), transparent);
+  border-color: rgba(240, 192, 64, 0.4);
+}
+
+.season-summer .seasonal-banner-title {
+  color: #f0c040;
+}
+
+.season-summer .seasonal-banner-desc,
+.season-summer .seasonal-banner-countdown {
+  color: #ff8c42;
+}
+
+.season-summer .seasonal-item-badge {
+  background: #f0c040;
+  color: #ff8c42;
+  border-color: #ffe080;
+}
+
+.season-autumn {
+  background: linear-gradient(90deg, transparent, rgba(212, 160, 64, 0.2), transparent);
+  border-color: rgba(212, 160, 64, 0.4);
+}
+
+.season-autumn .seasonal-banner-title {
+  color: #d4a040;
+}
+
+.season-autumn .seasonal-banner-desc,
+.season-autumn .seasonal-banner-countdown {
+  color: #8b4513;
+}
+
+.season-autumn .seasonal-item-badge {
+  background: #d4a040;
+  color: #8b4513;
+  border-color: #e8b860;
+}
+
+.season-winter {
+  background: linear-gradient(90deg, transparent, rgba(128, 192, 224, 0.2), transparent);
+  border-color: rgba(128, 192, 224, 0.4);
+}
+
+.season-winter .seasonal-banner-title {
+  color: #80c0e0;
+}
+
+.season-winter .seasonal-banner-desc,
+.season-winter .seasonal-banner-countdown {
+  color: #e8e8ff;
+}
+
+.season-winter .seasonal-item-badge {
+  background: #80c0e0;
+  color: #0a0a14;
+  border-color: #a0d4f0;
 }
 
 
@@ -1992,7 +2265,7 @@ html, body {
         <span style="color:var(--color-text-muted); font-size:0.75rem; letter-spacing:0.1em;">or</span>
         <button class="login-btn" id="login-btn" style="width:100%;"
           onclick="Auth.initiateOAuth()">Enter with GitHub</button>
-        <p style="color:rgba(160,151,142,0.5); font-size:0.65rem; margin-top:1rem;">WASD move / E interact / B build / M map / F emote / H governance / J quests / G guild / K skills</p>
+        <p style="color:rgba(160,151,142,0.5); font-size:0.65rem; margin-top:1rem;">WASD move / E interact / B build / M map / F emote / X fish / Q pet / Z housing / J quests / G guild</p>
       </div>
     </div>
 
@@ -2024,6 +2297,9 @@ html, body {
       <div class="control-row"><span class="control-key">U</span><span class="control-desc">Auctions</span></div>
       <div class="control-row"><span class="control-key">N</span><span class="control-desc">Compose</span></div>
       <div class="control-row"><span class="control-key">P</span><span class="control-desc">Profile</span></div>
+      <div class="control-row"><span class="control-key">Q</span><span class="control-desc">Pet</span></div>
+      <div class="control-row"><span class="control-key">X</span><span class="control-desc">Fish</span></div>
+      <div class="control-row"><span class="control-key">Z</span><span class="control-desc">Housing</span></div>
       <div class="control-row"><span class="control-key">Enter</span><span class="control-desc">Chat</span></div>
       <div class="control-row"><span class="control-key">Esc</span><span class="control-desc">Settings</span></div>
     </div>
@@ -4230,6 +4506,244 @@ html, body {
       stackable: true,
       maxStack: 30,
       rarity: 'rare'
+    },
+
+    // === FISHING GEAR ===
+    tool_fishing_rod: {
+      id: 'tool_fishing_rod',
+      name: 'Fishing Rod',
+      type: 'tools',
+      icon: '🎣',
+      description: 'A sturdy rod for catching fish',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'uncommon'
+    },
+    bait_worm: {
+      id: 'bait_worm',
+      name: 'Worm Bait',
+      type: 'bait',
+      icon: '🪱',
+      description: 'Simple worm bait for fishing',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+    bait_cricket: {
+      id: 'bait_cricket',
+      name: 'Cricket Bait',
+      type: 'bait',
+      icon: '🦗',
+      description: 'Live cricket bait for better catches',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'uncommon'
+    },
+
+    // === FISH ===
+    fish_common: {
+      id: 'fish_common',
+      name: 'Common Carp',
+      type: 'fish',
+      icon: '🐟',
+      description: 'A simple freshwater fish',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'common',
+      value: 5
+    },
+    fish_rare: {
+      id: 'fish_rare',
+      name: 'Rainbow Trout',
+      type: 'fish',
+      icon: '🐠',
+      description: 'A beautiful rainbow-colored fish',
+      stackable: true,
+      maxStack: 30,
+      rarity: 'uncommon',
+      value: 15
+    },
+    fish_golden: {
+      id: 'fish_golden',
+      name: 'Golden Koi',
+      type: 'fish',
+      icon: '🟡',
+      description: 'A rare golden fish of legend',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'rare',
+      value: 50
+    },
+    fish_silver_eel: {
+      id: 'fish_silver_eel',
+      name: 'Silver Eel',
+      type: 'fish',
+      icon: '🐍',
+      description: 'A sleek silver eel from deep waters',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'uncommon',
+      value: 20
+    },
+    fish_crystal_trout: {
+      id: 'fish_crystal_trout',
+      name: 'Crystal Trout',
+      type: 'fish',
+      icon: '💎',
+      description: 'A mystical fish with translucent scales',
+      stackable: true,
+      maxStack: 15,
+      rarity: 'rare',
+      value: 40
+    },
+    fish_shadow_bass: {
+      id: 'fish_shadow_bass',
+      name: 'Shadow Bass',
+      type: 'fish',
+      icon: '🌑',
+      description: 'A dark mysterious bass from the depths',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'uncommon',
+      value: 18
+    },
+    fish_sunfish: {
+      id: 'fish_sunfish',
+      name: 'Sunfish',
+      type: 'fish',
+      icon: '☀️',
+      description: 'A bright cheerful sunfish',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'common',
+      value: 8
+    },
+    fish_moonfish: {
+      id: 'fish_moonfish',
+      name: 'Moonfish',
+      type: 'fish',
+      icon: '🌙',
+      description: 'A pale nocturnal fish',
+      stackable: true,
+      maxStack: 30,
+      rarity: 'uncommon',
+      value: 25
+    },
+    fish_starfish: {
+      id: 'fish_starfish',
+      name: 'Star Cod',
+      type: 'fish',
+      icon: '⭐',
+      description: 'A fish with star-like markings',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'rare',
+      value: 35
+    },
+    fish_dragonfish: {
+      id: 'fish_dragonfish',
+      name: 'Dragonfish',
+      type: 'fish',
+      icon: '🐉',
+      description: 'An extremely rare and powerful fish',
+      stackable: true,
+      maxStack: 5,
+      rarity: 'legendary',
+      value: 100
+    },
+
+    // === COOKING INGREDIENTS ===
+    ingredient_rice: {
+      id: 'ingredient_rice',
+      name: 'Rice',
+      type: 'ingredients',
+      icon: '🍚',
+      description: 'Grains of white rice',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+    ingredient_flour: {
+      id: 'ingredient_flour',
+      name: 'Flour',
+      type: 'ingredients',
+      icon: '🌾',
+      description: 'Ground wheat flour',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+    ingredient_egg: {
+      id: 'ingredient_egg',
+      name: 'Egg',
+      type: 'ingredients',
+      icon: '🥚',
+      description: 'A fresh egg',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'common'
+    },
+    ingredient_water: {
+      id: 'ingredient_water',
+      name: 'Water',
+      type: 'ingredients',
+      icon: '💧',
+      description: 'Clean fresh water',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+
+    // === COOKED FISH DISHES ===
+    food_grilled_fish: {
+      id: 'food_grilled_fish',
+      name: 'Grilled Fish',
+      type: 'food',
+      icon: '🍖',
+      description: 'A perfectly grilled fish fillet',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'common'
+    },
+    food_fish_stew: {
+      id: 'food_fish_stew',
+      name: 'Fish Stew',
+      type: 'food',
+      icon: '🍲',
+      description: 'A hearty fish stew with herbs',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'uncommon'
+    },
+    food_sushi_roll: {
+      id: 'food_sushi_roll',
+      name: 'Sushi Roll',
+      type: 'food',
+      icon: '🍣',
+      description: 'Delicate fish wrapped in rice',
+      stackable: true,
+      maxStack: 15,
+      rarity: 'uncommon'
+    },
+    food_fish_pie: {
+      id: 'food_fish_pie',
+      name: 'Fish Pie',
+      type: 'food',
+      icon: '🥧',
+      description: 'A savory fish pie with flaky crust',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'uncommon'
+    },
+    food_luxury_sashimi: {
+      id: 'food_luxury_sashimi',
+      name: 'Luxury Sashimi',
+      type: 'food',
+      icon: '🍱',
+      description: 'Premium sashimi made from rare fish',
+      stackable: true,
+      maxStack: 5,
+      rarity: 'rare'
     }
   };
 
@@ -4667,6 +5181,73 @@ html, body {
         { itemId: 'herb_lavender', count: 2 }
       ],
       sparkReward: 12
+    },
+
+    // Fishing Gear
+    {
+      id: 'craft_fishing_rod',
+      name: 'Craft Fishing Rod',
+      output: { itemId: 'tool_fishing_rod', count: 1 },
+      requirements: [
+        { itemId: 'wood_oak', count: 4 },
+        { itemId: 'cloth_silk', count: 2 }
+      ],
+      sparkReward: 18
+    },
+
+    // Fish Cooking Recipes
+    {
+      id: 'cook_grilled_fish',
+      name: 'Grill Fish',
+      output: { itemId: 'food_grilled_fish', count: 1 },
+      requirements: [
+        { itemId: 'fish_common', count: 1 },
+        { itemId: 'wood_oak', count: 1 }
+      ],
+      sparkReward: 10
+    },
+    {
+      id: 'cook_fish_stew',
+      name: 'Cook Fish Stew',
+      output: { itemId: 'food_fish_stew', count: 1 },
+      requirements: [
+        { itemId: 'fish_common', count: 2 },
+        { itemId: 'herb_mint', count: 1 },
+        { itemId: 'ingredient_water', count: 1 }
+      ],
+      sparkReward: 15
+    },
+    {
+      id: 'cook_sushi_roll',
+      name: 'Make Sushi Roll',
+      output: { itemId: 'food_sushi_roll', count: 2 },
+      requirements: [
+        { itemId: 'fish_rare', count: 1 },
+        { itemId: 'ingredient_rice', count: 3 }
+      ],
+      sparkReward: 20
+    },
+    {
+      id: 'cook_fish_pie',
+      name: 'Bake Fish Pie',
+      output: { itemId: 'food_fish_pie', count: 1 },
+      requirements: [
+        { itemId: 'fish_common', count: 2 },
+        { itemId: 'ingredient_flour', count: 2 },
+        { itemId: 'ingredient_egg', count: 1 }
+      ],
+      sparkReward: 25
+    },
+    {
+      id: 'cook_luxury_sashimi',
+      name: 'Prepare Luxury Sashimi',
+      output: { itemId: 'food_luxury_sashimi', count: 1 },
+      requirements: [
+        { itemId: 'fish_golden', count: 1 },
+        { itemId: 'ingredient_rice', count: 2 },
+        { itemId: 'herb_sage', count: 1 }
+      ],
+      sparkReward: 50
     }
   ];
 
@@ -4681,9 +5262,9 @@ html, body {
       rare: ['item_scroll']
     },
     gardens: {
-      common: ['seed_wildflower', 'herb_mint', 'herb_lavender', 'food_berry', 'cloth_wool'],
-      uncommon: ['flower_rose', 'flower_tulip', 'flower_cherry', 'herb_sage', 'food_honey'],
-      rare: ['seed_lotus', 'herb_ginseng', 'flower_lotus', 'rare_feather']
+      common: ['seed_wildflower', 'herb_mint', 'herb_lavender', 'food_berry', 'cloth_wool', 'fish_common', 'fish_sunfish', 'bait_worm'],
+      uncommon: ['flower_rose', 'flower_tulip', 'flower_cherry', 'herb_sage', 'food_honey', 'fish_rare', 'fish_crystal_trout', 'bait_cricket'],
+      rare: ['seed_lotus', 'herb_ginseng', 'flower_lotus', 'rare_feather', 'fish_golden']
     },
     athenaeum: {
       common: ['item_scroll', 'stone_common', 'herb_sage'],
@@ -4696,19 +5277,19 @@ html, body {
       rare: ['crystal_clear', 'metal_silver', 'rare_pearl']
     },
     wilds: {
-      common: ['wood_oak', 'wood_pine', 'stone_common', 'food_mushroom', 'food_berry', 'gear_rope'],
-      uncommon: ['herb_ginseng', 'stone_marble', 'metal_copper', 'rare_fossil'],
-      rare: ['wood_mystical', 'stone_obsidian', 'crystal_emerald', 'rare_starfragment']
+      common: ['wood_oak', 'wood_pine', 'stone_common', 'food_mushroom', 'food_berry', 'gear_rope', 'fish_common', 'bait_worm'],
+      uncommon: ['herb_ginseng', 'stone_marble', 'metal_copper', 'rare_fossil', 'fish_shadow_bass', 'fish_silver_eel', 'bait_cricket'],
+      rare: ['wood_mystical', 'stone_obsidian', 'crystal_emerald', 'rare_starfragment', 'fish_starfish', 'fish_dragonfish']
     },
     agora: {
-      common: ['cloth_wool', 'food_bread', 'metal_copper'],
-      uncommon: ['cloth_silk', 'metal_silver', 'food_honey'],
-      rare: ['metal_gold', 'rare_pearl']
+      common: ['cloth_wool', 'food_bread', 'metal_copper', 'ingredient_rice', 'ingredient_flour', 'ingredient_egg', 'ingredient_water'],
+      uncommon: ['cloth_silk', 'metal_silver', 'food_honey', 'fish_rare'],
+      rare: ['metal_gold', 'rare_pearl', 'fish_golden']
     },
     commons: {
-      common: ['wood_oak', 'stone_common', 'cloth_wool', 'seed_wildflower'],
-      uncommon: ['stone_marble', 'metal_copper', 'flower_sunflower'],
-      rare: ['crystal_clear', 'metal_silver']
+      common: ['wood_oak', 'stone_common', 'cloth_wool', 'seed_wildflower', 'fish_common', 'bait_worm'],
+      uncommon: ['stone_marble', 'metal_copper', 'flower_sunflower', 'fish_rare', 'fish_sunfish'],
+      rare: ['crystal_clear', 'metal_silver', 'fish_moonfish']
     },
     arena: {
       common: ['stone_common', 'metal_copper', 'food_mushroom'],
@@ -7827,6 +8408,174 @@ html, body {
     };
   }
 
+  // ========================================================================
+  // PLAYER HOUSING SYSTEM — Claim plots in Commons, place furniture
+  // ========================================================================
+
+  var PLOT_SIZE = 10; // 10x10 area
+  var MAX_FURNITURE_PER_PLOT = 20;
+  var HOUSING_ZONE = 'commons'; // Only Commons allows housing plots
+
+  // Available plots in Commons zone (arranged in a grid)
+  var PLOT_GRID = [];
+  (function initPlotGrid() {
+    // 5x4 grid of plots starting at Commons zone center offset
+    var baseX = 140, baseZ = 170;
+    for (var row = 0; row < 4; row++) {
+      for (var col = 0; col < 5; col++) {
+        PLOT_GRID.push({
+          id: 'plot_' + row + '_' + col,
+          x: baseX + col * (PLOT_SIZE + 4),
+          z: baseZ + row * (PLOT_SIZE + 4),
+          row: row,
+          col: col
+        });
+      }
+    }
+  })();
+
+  // Player plots: playerId -> { plotId, furniture[], name, claimedAt }
+  var playerPlots = {};
+
+  // Furniture types available for housing
+  var FURNITURE_TYPES = {
+    bed: { name: 'Bed', icon: '&#128716;', cost: 25, description: 'A cozy place to rest' },
+    table: { name: 'Table', icon: '&#128207;', cost: 15, description: 'A sturdy wooden table' },
+    chair: { name: 'Chair', icon: '&#129681;', cost: 10, description: 'A comfortable chair' },
+    bookshelf: { name: 'Bookshelf', icon: '&#128218;', cost: 30, description: 'Stores your favorite books' },
+    lamp: { name: 'Lamp', icon: '&#128161;', cost: 12, description: 'Warm ambient light' },
+    rug: { name: 'Rug', icon: '&#129531;', cost: 18, description: 'A decorative rug' },
+    plant_pot: { name: 'Potted Plant', icon: '&#127793;', cost: 8, description: 'A cheerful houseplant' },
+    fireplace: { name: 'Fireplace', icon: '&#128293;', cost: 40, description: 'Warm and inviting' },
+    painting: { name: 'Painting', icon: '&#128444;', cost: 20, description: 'Art for your walls' },
+    chest: { name: 'Storage Chest', icon: '&#128230;', cost: 22, description: 'Store your treasures' },
+    fountain_small: { name: 'Small Fountain', icon: '&#9970;', cost: 35, description: 'A soothing water feature' },
+    banner: { name: 'Banner', icon: '&#127988;', cost: 15, description: 'Show your colors' }
+  };
+
+  /**
+   * Get available plots (unclaimed)
+   * @returns {Array} List of available plot positions
+   */
+  function getAvailablePlots() {
+    var claimed = {};
+    Object.keys(playerPlots).forEach(function(pid) {
+      claimed[playerPlots[pid].plotId] = true;
+    });
+    return PLOT_GRID.filter(function(plot) {
+      return !claimed[plot.id];
+    });
+  }
+
+  /**
+   * Claim a plot for a player
+   * @param {string} playerId - Player claiming the plot
+   * @param {string} plotId - Plot to claim
+   * @param {string} plotName - Name for the plot (e.g., "Kody's Cottage")
+   * @returns {Object} Result with success, error, or plot data
+   */
+  function claimPlot(playerId, plotId, plotName) {
+    // Check if player already has a plot
+    if (playerPlots[playerId]) {
+      return { success: false, error: 'You already have a plot. Release it first.' };
+    }
+    // Check if plot exists and is unclaimed
+    var plotDef = PLOT_GRID.find(function(p) { return p.id === plotId; });
+    if (!plotDef) {
+      return { success: false, error: 'Plot not found' };
+    }
+    var alreadyClaimed = Object.keys(playerPlots).some(function(pid) {
+      return playerPlots[pid].plotId === plotId;
+    });
+    if (alreadyClaimed) {
+      return { success: false, error: 'Plot already claimed by another player' };
+    }
+
+    playerPlots[playerId] = {
+      plotId: plotId,
+      name: plotName || playerId + "'s Plot",
+      furniture: [],
+      claimedAt: Date.now(),
+      position: { x: plotDef.x, z: plotDef.z },
+      size: PLOT_SIZE
+    };
+    return { success: true, plot: playerPlots[playerId] };
+  }
+
+  /**
+   * Get a player's plot
+   */
+  function getPlayerPlot(playerId) {
+    return playerPlots[playerId] || null;
+  }
+
+  /**
+   * Place furniture on a player's plot
+   */
+  function placeFurniture(playerId, furnitureType, localX, localZ) {
+    var plot = playerPlots[playerId];
+    if (!plot) return { success: false, error: 'You don\'t have a plot' };
+    if (!FURNITURE_TYPES[furnitureType]) return { success: false, error: 'Unknown furniture type' };
+    if (plot.furniture.length >= MAX_FURNITURE_PER_PLOT) {
+      return { success: false, error: 'Plot is full (max ' + MAX_FURNITURE_PER_PLOT + ' items)' };
+    }
+    // Clamp to plot bounds
+    localX = Math.max(0, Math.min(PLOT_SIZE - 1, localX || 0));
+    localZ = Math.max(0, Math.min(PLOT_SIZE - 1, localZ || 0));
+
+    var item = {
+      id: 'furn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      type: furnitureType,
+      localX: localX,
+      localZ: localZ,
+      placedAt: Date.now()
+    };
+    plot.furniture.push(item);
+    return { success: true, item: item, cost: FURNITURE_TYPES[furnitureType].cost };
+  }
+
+  /**
+   * Remove furniture from a player's plot
+   */
+  function removeFurniture(playerId, furnitureId) {
+    var plot = playerPlots[playerId];
+    if (!plot) return { success: false, error: 'You don\'t have a plot' };
+    var idx = plot.furniture.findIndex(function(f) { return f.id === furnitureId; });
+    if (idx === -1) return { success: false, error: 'Furniture not found' };
+    plot.furniture.splice(idx, 1);
+    return { success: true };
+  }
+
+  /**
+   * Release a player's plot
+   */
+  function releasePlot(playerId) {
+    if (!playerPlots[playerId]) return { success: false, error: 'You don\'t have a plot' };
+    delete playerPlots[playerId];
+    return { success: true };
+  }
+
+  /**
+   * Get plot at world position (check if player is standing on a plot)
+   */
+  function getPlotAtPosition(worldX, worldZ) {
+    for (var pid in playerPlots) {
+      var plot = playerPlots[pid];
+      if (worldX >= plot.position.x && worldX <= plot.position.x + PLOT_SIZE &&
+          worldZ >= plot.position.z && worldZ <= plot.position.z + PLOT_SIZE) {
+        return { playerId: pid, plot: plot };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Get all claimed plots (for minimap/world rendering)
+   */
+  function getAllPlots() {
+    return playerPlots;
+  }
+
   // Exports
   exports.PLANT_SPECIES = PLANT_SPECIES;
   exports.RECIPES = RECIPES;
@@ -7841,6 +8590,16 @@ html, body {
   exports.getArtworks = getArtworks;
   exports.getArtworksByPlayer = getArtworksByPlayer;
   exports.featureArtwork = featureArtwork;
+  exports.FURNITURE_TYPES = FURNITURE_TYPES;
+  exports.PLOT_GRID = PLOT_GRID;
+  exports.getAvailablePlots = getAvailablePlots;
+  exports.claimPlot = claimPlot;
+  exports.getPlayerPlot = getPlayerPlot;
+  exports.placeFurniture = placeFurniture;
+  exports.removeFurniture = removeFurniture;
+  exports.releasePlot = releasePlot;
+  exports.getPlotAtPosition = getPlotAtPosition;
+  exports.getAllPlots = getAllPlots;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Creation = {}));
 
@@ -18606,6 +19365,46 @@ html, body {
     if (sceneCtx.ambientLight) {
       var ambientIntensity = 0.3 + sunIntensity * 0.4;
       sceneCtx.ambientLight.intensity = ambientIntensity;
+      // Tint ambient light by time of day
+      var ambientColor;
+      if (normalizedTime < 0.2) {
+        // Night: cool blue tint
+        ambientColor = 0x334466;
+      } else if (normalizedTime < 0.3) {
+        // Dawn: warm amber
+        var dt = (normalizedTime - 0.2) / 0.1;
+        ambientColor = lerpColor(0x334466, 0xffcc88, dt);
+      } else if (normalizedTime < 0.7) {
+        // Day: warm white
+        var dt = (normalizedTime - 0.3) / 0.4;
+        ambientColor = lerpColor(0xffcc88, 0xeeeedd, Math.min(dt * 2, 1.0));
+      } else if (normalizedTime < 0.8) {
+        // Dusk: warm orange
+        var dt = (normalizedTime - 0.7) / 0.1;
+        ambientColor = lerpColor(0xeeeedd, 0xff9966, dt);
+      } else {
+        // Evening to night: fade to blue
+        var dt = (normalizedTime - 0.8) / 0.2;
+        ambientColor = lerpColor(0xff9966, 0x334466, dt);
+      }
+      sceneCtx.ambientLight.color.setHex(ambientColor);
+    }
+
+    // Tint directional light (sunlight) color by time of day
+    if (sceneCtx.directionalLight) {
+      var sunColor;
+      if (normalizedTime < 0.25) {
+        sunColor = lerpColor(0x443355, 0xff8844, normalizedTime / 0.25);
+      } else if (normalizedTime < 0.45) {
+        sunColor = lerpColor(0xff8844, 0xffffff, (normalizedTime - 0.25) / 0.2);
+      } else if (normalizedTime < 0.55) {
+        sunColor = 0xffffff; // Bright noon
+      } else if (normalizedTime < 0.75) {
+        sunColor = lerpColor(0xffffff, 0xff6633, (normalizedTime - 0.55) / 0.2);
+      } else {
+        sunColor = lerpColor(0xff6633, 0x443355, (normalizedTime - 0.75) / 0.25);
+      }
+      sceneCtx.directionalLight.color.setHex(sunColor);
     }
   }
 
@@ -20894,6 +21693,36 @@ html, body {
           // R key rotates build preview
           if (callbacks.onBuild) {
             callbacks.onBuild({ action: 'rotate' });
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'q':
+      case 'Q':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('togglePetPanel', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'x':
+      case 'X':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('startFishing', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'z':
+      case 'Z':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleHousing', {});
           }
           e.preventDefault();
         }
@@ -27237,6 +28066,739 @@ html, body {
     }
   }
 
+  // ========================================================================
+  // FISHING MINIGAME UI
+  // ========================================================================
+
+  let fishingUIActive = false;
+  let fishingCallback = null;
+
+  /**
+   * Show fishing UI with casting and reeling mechanics
+   * @param {string} zoneId - Current zone for fish type determination
+   * @param {Function} onResult - Callback with result {success: boolean, fish?: Object}
+   */
+  function showFishingUI(zoneId, onResult) {
+    if (!hudContainer || fishingUIActive) return;
+    if (typeof document === 'undefined') return;
+
+    fishingUIActive = true;
+    fishingCallback = onResult;
+
+    // Create fishing overlay with ocean theme
+    const fishingOverlay = document.createElement('div');
+    fishingOverlay.id = 'fishing-ui';
+    fishingOverlay.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(0, 50, 100, 0.3) 0%, rgba(0, 100, 150, 0.5) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      pointer-events: auto;
+    `;
+
+    // Fishing panel
+    const fishingPanel = document.createElement('div');
+    fishingPanel.style.cssText = `
+      background: linear-gradient(135deg, rgba(0, 80, 140, 0.95) 0%, rgba(0, 120, 180, 0.95) 100%);
+      border: 3px solid rgba(100, 200, 255, 0.8);
+      border-radius: 15px;
+      padding: 40px;
+      min-width: 400px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(0, 150, 255, 0.5), inset 0 0 50px rgba(0, 100, 200, 0.3);
+      animation: wave-effect 3s ease-in-out infinite;
+    `;
+
+    // Add wave animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes wave-effect {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
+      }
+      @keyframes ripple {
+        0% { transform: scale(0.8); opacity: 1; }
+        100% { transform: scale(1.5); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Fishing icon
+    const fishingIcon = document.createElement('div');
+    fishingIcon.style.cssText = `
+      font-size: 64px;
+      margin-bottom: 20px;
+      animation: ripple 2s ease-out infinite;
+    `;
+    fishingIcon.textContent = '🎣';
+    fishingPanel.appendChild(fishingIcon);
+
+    // Status text
+    const statusText = document.createElement('div');
+    statusText.style.cssText = `
+      font-size: 24px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(0, 200, 255, 0.8);
+      margin-bottom: 20px;
+    `;
+    statusText.textContent = 'Casting...';
+    fishingPanel.appendChild(statusText);
+
+    // Subtext
+    const subText = document.createElement('div');
+    subText.style.cssText = `
+      font-size: 16px;
+      color: rgba(200, 240, 255, 0.9);
+      margin-top: 10px;
+    `;
+    subText.textContent = 'Wait for a bite...';
+    fishingPanel.appendChild(subText);
+
+    fishingOverlay.appendChild(fishingPanel);
+    hudContainer.appendChild(fishingOverlay);
+
+    // Random casting time (2-5 seconds)
+    const castTime = 2000 + Math.random() * 3000;
+
+    setTimeout(() => {
+      if (!document.getElementById('fishing-ui')) return;
+
+      // Fish on! Show reeling prompt
+      statusText.textContent = 'FISH ON!';
+      statusText.style.color = '#ffff00';
+      statusText.style.fontSize = '32px';
+      subText.textContent = 'Press E to reel in!';
+      subText.style.color = '#ffff00';
+      fishingIcon.textContent = '🐟';
+
+      let caughtFish = false;
+      const reelWindow = 1500; // 1.5 second window to press E
+
+      // Listen for E key
+      const reelHandler = (e) => {
+        if (e.key === 'e' || e.key === 'E') {
+          caughtFish = true;
+          document.removeEventListener('keydown', reelHandler);
+
+          // Determine caught fish based on zone
+          const fishResult = determineCatch(zoneId);
+
+          statusText.textContent = `Caught ${fishResult.name}!`;
+          statusText.style.color = '#4f4';
+          subText.textContent = `+${fishResult.value} Spark`;
+          fishingIcon.textContent = fishResult.icon;
+
+          setTimeout(() => {
+            hideFishingUI();
+            if (fishingCallback) {
+              fishingCallback({ success: true, fish: fishResult });
+            }
+          }, 2000);
+        }
+      };
+
+      document.addEventListener('keydown', reelHandler);
+
+      // Miss window timeout
+      setTimeout(() => {
+        if (!caughtFish) {
+          document.removeEventListener('keydown', reelHandler);
+          statusText.textContent = 'The fish got away...';
+          statusText.style.color = '#f44';
+          subText.textContent = 'Try again!';
+          fishingIcon.textContent = '💨';
+
+          setTimeout(() => {
+            hideFishingUI();
+            if (fishingCallback) {
+              fishingCallback({ success: false });
+            }
+          }, 2000);
+        }
+      }, reelWindow);
+    }, castTime);
+  }
+
+  /**
+   * Determine what fish was caught based on zone
+   * @param {string} zoneId - Current zone
+   * @returns {Object} Fish data {id, name, icon, value, rarity}
+   */
+  function determineCatch(zoneId) {
+    const zoneFishTables = {
+      gardens: {
+        common: [
+          { id: 'fish_common', name: 'Common Carp', icon: '🐟', value: 5, rarity: 'common' },
+          { id: 'fish_sunfish', name: 'Sunfish', icon: '☀️', value: 8, rarity: 'common' }
+        ],
+        uncommon: [
+          { id: 'fish_rare', name: 'Rainbow Trout', icon: '🐠', value: 15, rarity: 'uncommon' },
+          { id: 'fish_crystal_trout', name: 'Crystal Trout', icon: '💎', value: 40, rarity: 'rare' }
+        ],
+        rare: [
+          { id: 'fish_golden', name: 'Golden Koi', icon: '🟡', value: 50, rarity: 'rare' }
+        ]
+      },
+      wilds: {
+        common: [
+          { id: 'fish_common', name: 'Common Carp', icon: '🐟', value: 5, rarity: 'common' }
+        ],
+        uncommon: [
+          { id: 'fish_shadow_bass', name: 'Shadow Bass', icon: '🌑', value: 18, rarity: 'uncommon' },
+          { id: 'fish_silver_eel', name: 'Silver Eel', icon: '🐍', value: 20, rarity: 'uncommon' }
+        ],
+        rare: [
+          { id: 'fish_starfish', name: 'Star Cod', icon: '⭐', value: 35, rarity: 'rare' },
+          { id: 'fish_dragonfish', name: 'Dragonfish', icon: '🐉', value: 100, rarity: 'legendary' }
+        ]
+      },
+      commons: {
+        common: [
+          { id: 'fish_common', name: 'Common Carp', icon: '🐟', value: 5, rarity: 'common' }
+        ],
+        uncommon: [
+          { id: 'fish_rare', name: 'Rainbow Trout', icon: '🐠', value: 15, rarity: 'uncommon' },
+          { id: 'fish_sunfish', name: 'Sunfish', icon: '☀️', value: 8, rarity: 'common' }
+        ],
+        rare: [
+          { id: 'fish_moonfish', name: 'Moonfish', icon: '🌙', value: 25, rarity: 'uncommon' }
+        ]
+      },
+      agora: {
+        common: [
+          { id: 'fish_common', name: 'Common Carp', icon: '🐟', value: 5, rarity: 'common' }
+        ],
+        uncommon: [
+          { id: 'fish_rare', name: 'Rainbow Trout', icon: '🐠', value: 15, rarity: 'uncommon' }
+        ],
+        rare: [
+          { id: 'fish_golden', name: 'Golden Koi', icon: '🟡', value: 50, rarity: 'rare' }
+        ]
+      }
+    };
+
+    // Default to commons if zone not found
+    const table = zoneFishTables[zoneId] || zoneFishTables.commons;
+
+    // Roll for rarity: 70% common, 25% uncommon, 5% rare
+    const roll = Math.random();
+    let pool;
+    if (roll < 0.05 && table.rare && table.rare.length > 0) {
+      pool = table.rare;
+    } else if (roll < 0.30 && table.uncommon && table.uncommon.length > 0) {
+      pool = table.uncommon;
+    } else {
+      pool = table.common;
+    }
+
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  /**
+   * Hide fishing UI
+   */
+  function hideFishingUI() {
+    const fishingUI = document.getElementById('fishing-ui');
+    if (fishingUI) {
+      fishingUI.remove();
+    }
+    fishingUIActive = false;
+    fishingCallback = null;
+  }
+
+  /**
+   * Show fish caught notification
+   * @param {string} fishName - Name of the fish
+   * @param {number} value - Spark value
+   */
+  function showFishCaughtNotification(fishName, value) {
+    if (!notificationContainer) return;
+    if (typeof document === 'undefined') return;
+
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      background: linear-gradient(135deg, rgba(0, 120, 200, 0.95) 0%, rgba(0, 180, 255, 0.95) 100%);
+      border: 2px solid rgba(100, 220, 255, 0.9);
+      border-radius: 10px;
+      padding: 20px 30px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 20px rgba(0, 150, 255, 0.6);
+      animation: slideIn 0.3s ease-out, slideOut 0.3s ease-in 2.7s;
+      pointer-events: auto;
+      text-align: center;
+    `;
+
+    const fishIcon = document.createElement('div');
+    fishIcon.style.cssText = `
+      font-size: 48px;
+      margin-bottom: 10px;
+    `;
+    fishIcon.textContent = '🎣';
+    notification.appendChild(fishIcon);
+
+    const fishText = document.createElement('div');
+    fishText.style.cssText = `
+      font-size: 20px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(0, 200, 255, 0.8);
+      margin-bottom: 5px;
+    `;
+    fishText.textContent = `Caught ${fishName}!`;
+    notification.appendChild(fishText);
+
+    const valueText = document.createElement('div');
+    valueText.style.cssText = `
+      font-size: 16px;
+      color: #ffff00;
+      text-shadow: 0 0 8px rgba(255, 255, 0, 0.6);
+    `;
+    valueText.textContent = `+${value} Spark`;
+    notification.appendChild(valueText);
+
+    notificationContainer.appendChild(notification);
+
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.remove();
+      }
+    }, 3000);
+  }
+
+  // ========================================================================
+  // PET PANEL
+  // ========================================================================
+
+  var petPanel = null;
+
+  function showPetPanel(playerId, currentZone) {
+    if (typeof document === 'undefined') return;
+
+    var Pets = typeof window !== 'undefined' ? window.Pets : null;
+    if (!Pets) {
+      console.warn('Pets module not available');
+      return;
+    }
+
+    // Toggle if already open
+    if (petPanel) {
+      hidePetPanel();
+      return;
+    }
+
+    var pet = Pets.getPlayerPet(playerId);
+
+    var panel = document.createElement('div');
+    panel.className = 'pet-panel';
+
+    // Header
+    var header = document.createElement('h2');
+    header.textContent = pet ? 'My Companion' : 'Adopt a Companion';
+    panel.appendChild(header);
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = 'position:absolute;top:15px;right:15px;width:30px;height:30px;' +
+      'background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.3);' +
+      'border-radius:50%;font-size:20px;cursor:pointer;transition:all 0.2s;';
+    closeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218,165,32,0.3)';
+      this.style.borderColor = '#DAA520';
+    };
+    closeBtn.onmouseout = function() {
+      this.style.background = 'rgba(255,255,255,0.1)';
+      this.style.borderColor = 'rgba(255,255,255,0.3)';
+    };
+    closeBtn.onclick = hidePetPanel;
+    panel.appendChild(closeBtn);
+
+    if (pet) {
+      // Show current pet info
+      showCurrentPetInfo(panel, pet, playerId, Pets);
+    } else {
+      // Show available pets to adopt
+      showAdoptionList(panel, playerId, currentZone, Pets);
+    }
+
+    document.body.appendChild(panel);
+    petPanel = panel;
+
+    // Close on Escape
+    var escapeHandler = function(e) {
+      if (e.key === 'Escape') {
+        hidePetPanel();
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    panel.escapeHandler = escapeHandler;
+  }
+
+  function showCurrentPetInfo(panel, pet, playerId, Pets) {
+    var petTypeData = Pets.getPetTypeData(pet.type);
+    var mood = Pets.getPetMood(pet);
+    var moodEmoji = Pets.getMoodEmoji(mood);
+    var bonus = Pets.getPetBonus(playerId);
+
+    // Pet display section
+    var petDisplay = document.createElement('div');
+    petDisplay.style.cssText = 'text-align:center;margin-bottom:20px;padding:20px;' +
+      'background:rgba(255,255,255,0.03);border-radius:8px;';
+
+    // Pet icon
+    var petIcon = document.createElement('div');
+    petIcon.textContent = petTypeData.icon;
+    petIcon.style.cssText = 'font-size:64px;margin-bottom:10px;';
+    petDisplay.appendChild(petIcon);
+
+    // Pet name
+    var petName = document.createElement('div');
+    petName.textContent = pet.name;
+    petName.style.cssText = 'font-size:1.2rem;color:#DAA520;font-weight:bold;margin-bottom:5px;';
+    petDisplay.appendChild(petName);
+
+    // Pet type
+    var petType = document.createElement('div');
+    petType.textContent = petTypeData.name;
+    petType.style.cssText = 'font-size:0.9rem;color:#B8B0A8;margin-bottom:5px;';
+    petDisplay.appendChild(petType);
+
+    // Pet mood
+    var petMoodDisplay = document.createElement('div');
+    petMoodDisplay.textContent = moodEmoji + ' ' + mood.charAt(0).toUpperCase() + mood.slice(1);
+    petMoodDisplay.style.cssText = 'font-size:0.9rem;color:#E8E0D8;margin-top:10px;';
+    petDisplay.appendChild(petMoodDisplay);
+
+    panel.appendChild(petDisplay);
+
+    // Stats section
+    var statsSection = document.createElement('div');
+    statsSection.style.cssText = 'margin-bottom:20px;';
+
+    // Mood bar
+    var moodLabel = document.createElement('div');
+    moodLabel.textContent = 'Mood: ' + Math.round(pet.mood) + '/100';
+    moodLabel.style.cssText = 'color:#E8E0D8;font-size:0.85rem;margin-bottom:4px;';
+    statsSection.appendChild(moodLabel);
+
+    var moodBar = createProgressBar(pet.mood, '#DAA520');
+    statsSection.appendChild(moodBar);
+
+    // Hunger bar
+    var hungerLabel = document.createElement('div');
+    hungerLabel.textContent = 'Hunger: ' + Math.round(pet.hunger) + '/100';
+    hungerLabel.style.cssText = 'color:#E8E0D8;font-size:0.85rem;margin-bottom:4px;margin-top:12px;';
+    statsSection.appendChild(hungerLabel);
+
+    var hungerBar = createProgressBar(pet.hunger, pet.hunger > 60 ? '#e74c3c' : '#3498db');
+    statsSection.appendChild(hungerBar);
+
+    // Bond bar
+    var bondLabel = document.createElement('div');
+    bondLabel.textContent = 'Bond: ' + Math.round(pet.bond) + '/100';
+    bondLabel.style.cssText = 'color:#E8E0D8;font-size:0.85rem;margin-bottom:4px;margin-top:12px;';
+    statsSection.appendChild(bondLabel);
+
+    var bondBar = createProgressBar(pet.bond, '#2ecc71');
+    statsSection.appendChild(bondBar);
+
+    panel.appendChild(statsSection);
+
+    // Bonus display
+    if (bonus && bonus.value > 0) {
+      var bonusDisplay = document.createElement('div');
+      bonusDisplay.textContent = 'Bonus: ' + bonus.description;
+      bonusDisplay.style.cssText = 'color:#2ecc71;font-size:0.85rem;margin-bottom:20px;' +
+        'padding:8px;background:rgba(46,204,113,0.1);border-radius:4px;text-align:center;';
+      panel.appendChild(bonusDisplay);
+    }
+
+    // Actions section
+    var actionsSection = document.createElement('div');
+    actionsSection.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
+
+    // Feed button
+    var feedBtn = document.createElement('button');
+    feedBtn.textContent = 'Feed';
+    feedBtn.className = 'pet-action-btn';
+    feedBtn.onclick = function() {
+      showFeedMenu(playerId, Pets);
+    };
+    actionsSection.appendChild(feedBtn);
+
+    // Rename button
+    var renameBtn = document.createElement('button');
+    renameBtn.textContent = 'Rename';
+    renameBtn.className = 'pet-action-btn';
+    renameBtn.onclick = function() {
+      var newName = prompt('Enter new name for ' + pet.name + ':');
+      if (newName && newName.trim()) {
+        if (Pets.renamePet(playerId, newName.trim())) {
+          showNotification('Pet renamed to ' + newName.trim());
+          hidePetPanel();
+        }
+      }
+    };
+    actionsSection.appendChild(renameBtn);
+
+    panel.appendChild(actionsSection);
+
+    // Release button (dangerous action)
+    var releaseBtn = document.createElement('button');
+    releaseBtn.textContent = 'Release to Wild';
+    releaseBtn.className = 'pet-release-btn';
+    releaseBtn.onclick = function() {
+      if (confirm('Are you sure you want to release ' + pet.name + '? This cannot be undone.')) {
+        if (Pets.releasePet(playerId)) {
+          showNotification(pet.name + ' has been released to the wild');
+          hidePetPanel();
+        }
+      }
+    };
+    panel.appendChild(releaseBtn);
+  }
+
+  function showAdoptionList(panel, playerId, currentZone, Pets) {
+    var availablePets = Pets.getAvailablePets(currentZone || 'commons');
+
+    // Info text
+    var infoText = document.createElement('div');
+    infoText.textContent = 'Choose a companion to adopt in this zone:';
+    infoText.style.cssText = 'color:#B8B0A8;font-size:0.9rem;margin-bottom:16px;';
+    panel.appendChild(infoText);
+
+    if (availablePets.length === 0) {
+      var noPets = document.createElement('div');
+      noPets.textContent = 'No pets available in this zone. Try exploring other areas!';
+      noPets.style.cssText = 'color:#E8E0D8;text-align:center;padding:20px;';
+      panel.appendChild(noPets);
+      return;
+    }
+
+    // Pet list
+    availablePets.forEach(function(petType) {
+      var petRow = document.createElement('div');
+      petRow.className = 'pet-adoption-row';
+      petRow.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;' +
+        'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);' +
+        'border-radius:8px;margin-bottom:8px;transition:all 0.2s;cursor:pointer;';
+
+      petRow.onmouseover = function() {
+        this.style.borderColor = 'rgba(218,165,32,0.5)';
+        this.style.background = 'rgba(218,165,32,0.1)';
+      };
+      petRow.onmouseout = function() {
+        this.style.borderColor = 'rgba(255,255,255,0.1)';
+        this.style.background = 'rgba(255,255,255,0.03)';
+      };
+
+      // Pet icon
+      var icon = document.createElement('div');
+      icon.textContent = petType.icon;
+      icon.style.cssText = 'font-size:32px;width:40px;text-align:center;';
+      petRow.appendChild(icon);
+
+      // Pet info
+      var info = document.createElement('div');
+      info.style.cssText = 'flex:1;';
+
+      var name = document.createElement('div');
+      name.textContent = petType.name;
+      name.style.cssText = 'color:#E8E0D8;font-size:0.95rem;font-weight:bold;margin-bottom:2px;';
+      info.appendChild(name);
+
+      var desc = document.createElement('div');
+      desc.textContent = petType.description;
+      desc.style.cssText = 'color:#B8B0A8;font-size:0.75rem;margin-bottom:4px;';
+      info.appendChild(desc);
+
+      var rarity = document.createElement('div');
+      rarity.textContent = petType.rarity.charAt(0).toUpperCase() + petType.rarity.slice(1);
+      var rarityColor = petType.rarity === 'legendary' ? '#f39c12' :
+                        petType.rarity === 'rare' ? '#3498db' :
+                        petType.rarity === 'uncommon' ? '#2ecc71' : '#95a5a6';
+      rarity.style.cssText = 'color:' + rarityColor + ';font-size:0.7rem;';
+      info.appendChild(rarity);
+
+      petRow.appendChild(info);
+
+      // Adopt button
+      var adoptBtn = document.createElement('button');
+      adoptBtn.textContent = 'Adopt';
+      adoptBtn.className = 'pet-adopt-btn';
+      adoptBtn.onclick = function(e) {
+        e.stopPropagation();
+        var petName = prompt('Choose a name for your ' + petType.name + ':');
+        if (petName && petName.trim()) {
+          var adoptedPet = Pets.adoptPet(playerId, petType.id, petName.trim());
+          if (adoptedPet) {
+            showPetAdoptNotification(petName.trim(), petType);
+            hidePetPanel();
+          } else {
+            alert('Could not adopt pet. You may already have a companion.');
+          }
+        }
+      };
+      petRow.appendChild(adoptBtn);
+
+      panel.appendChild(petRow);
+    });
+  }
+
+  function showFeedMenu(playerId, Pets) {
+    if (!petPanel) return;
+
+    // Simple food selection
+    var foods = ['berry', 'fish', 'mushroom', 'bread', 'treat'];
+    var foodEmojis = {
+      'berry': '🫐',
+      'fish': '🐟',
+      'mushroom': '🍄',
+      'bread': '🍞',
+      'treat': '🍪'
+    };
+
+    var feedMenu = document.createElement('div');
+    feedMenu.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(15,12,10,0.98);border:2px solid #DAA520;border-radius:12px;' +
+      'padding:20px;z-index:1200;min-width:250px;';
+
+    var title = document.createElement('h3');
+    title.textContent = 'Choose Food';
+    title.style.cssText = 'color:#DAA520;margin:0 0 16px;text-align:center;';
+    feedMenu.appendChild(title);
+
+    foods.forEach(function(food) {
+      var foodBtn = document.createElement('button');
+      foodBtn.textContent = foodEmojis[food] + ' ' + food.charAt(0).toUpperCase() + food.slice(1);
+      foodBtn.className = 'pet-food-btn';
+      foodBtn.style.cssText = 'display:block;width:100%;padding:10px;margin-bottom:8px;' +
+        'background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);' +
+        'border-radius:6px;color:#E8E0D8;cursor:pointer;transition:all 0.2s;';
+
+      foodBtn.onmouseover = function() {
+        this.style.background = 'rgba(218,165,32,0.2)';
+        this.style.borderColor = '#DAA520';
+      };
+      foodBtn.onmouseout = function() {
+        this.style.background = 'rgba(255,255,255,0.1)';
+        this.style.borderColor = 'rgba(255,255,255,0.2)';
+      };
+
+      foodBtn.onclick = function() {
+        var result = Pets.feedPet(playerId, food);
+        if (result.success) {
+          showNotification(result.message);
+          document.body.removeChild(feedMenu);
+          hidePetPanel();
+        }
+      };
+      feedMenu.appendChild(foodBtn);
+    });
+
+    var cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'pet-food-btn';
+    cancelBtn.style.cssText = 'display:block;width:100%;padding:10px;' +
+      'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);' +
+      'border-radius:6px;color:#B8B0A8;cursor:pointer;';
+    cancelBtn.onclick = function() {
+      document.body.removeChild(feedMenu);
+    };
+    feedMenu.appendChild(cancelBtn);
+
+    document.body.appendChild(feedMenu);
+  }
+
+  function createProgressBar(value, color) {
+    var container = document.createElement('div');
+    container.style.cssText = 'width:100%;height:8px;background:rgba(255,255,255,0.1);' +
+      'border-radius:4px;overflow:hidden;';
+
+    var fill = document.createElement('div');
+    fill.style.cssText = 'height:100%;background:' + color + ';border-radius:4px;' +
+      'transition:width 0.5s ease;width:' + value + '%;';
+
+    container.appendChild(fill);
+    return container;
+  }
+
+  function hidePetPanel() {
+    if (!petPanel) return;
+    if (petPanel.escapeHandler) {
+      document.removeEventListener('keydown', petPanel.escapeHandler);
+    }
+    document.body.removeChild(petPanel);
+    petPanel = null;
+  }
+
+  function showPetAdoptNotification(petName, petType) {
+    if (typeof document === 'undefined') return;
+
+    var notification = document.createElement('div');
+    notification.className = 'pet-adopt-notification';
+    notification.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:linear-gradient(135deg,rgba(25,20,15,0.95),rgba(35,28,18,0.95));' +
+      'border:2px solid #DAA520;border-radius:16px;padding:30px 40px;text-align:center;' +
+      'z-index:2000;animation:petAdoptReveal 0.5s ease-out,petAdoptFade 4s ease-in-out;' +
+      'box-shadow:0 0 40px rgba(218,165,32,0.4);pointer-events:none;';
+
+    // Add keyframes if not already present
+    var styleId = 'pet-adopt-animations';
+    if (!document.getElementById(styleId)) {
+      var style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        @keyframes petAdoptReveal {
+          0% { transform: translate(-50%,-50%) scale(0.6); opacity: 0; }
+          60% { transform: translate(-50%,-50%) scale(1.05); }
+          100% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+        }
+        @keyframes petAdoptFade {
+          0%, 80% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    var icon = document.createElement('div');
+    icon.textContent = petType.icon;
+    icon.style.cssText = 'font-size:64px;margin-bottom:16px;';
+    notification.appendChild(icon);
+
+    var title = document.createElement('div');
+    title.textContent = 'Companion Adopted!';
+    title.style.cssText = 'font-size:0.9rem;color:#DAA520;text-transform:uppercase;' +
+      'letter-spacing:0.15em;margin-bottom:8px;';
+    notification.appendChild(title);
+
+    var name = document.createElement('div');
+    name.textContent = petName;
+    name.style.cssText = 'font-size:1.5rem;color:#E8E0D8;font-weight:bold;margin-bottom:4px;';
+    notification.appendChild(name);
+
+    var typeName = document.createElement('div');
+    typeName.textContent = petType.name;
+    typeName.style.cssText = 'font-size:1rem;color:#B8B0A8;';
+    notification.appendChild(typeName);
+
+    document.body.appendChild(notification);
+
+    setTimeout(function() {
+      if (notification.parentNode) {
+        document.body.removeChild(notification);
+      }
+    }, 4000);
+  }
+
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
   exports.updateChat = updateChat;
@@ -27337,6 +28899,12 @@ html, body {
   exports.updateReputationDisplay = updateReputationDisplay;
   exports.showAchievementPanel = showAchievementPanel;
   exports.hideAchievementPanel = hideAchievementPanel;
+  exports.showFishingUI = showFishingUI;
+  exports.hideFishingUI = hideFishingUI;
+  exports.showFishCaughtNotification = showFishCaughtNotification;
+  exports.showPetPanel = showPetPanel;
+  exports.hidePetPanel = hidePetPanel;
+  exports.showPetAdoptNotification = showPetAdoptNotification;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));
 
@@ -37065,6 +38633,881 @@ html, body {
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));
 
 
+// seasons.js
+(function(exports) {
+  // Seasonal events system based on real-world date
+
+  // Season definitions with date ranges
+  const SEASONS = {
+    spring: {
+      id: 'spring',
+      name: 'Spring',
+      description: 'A time of renewal and growth',
+      startMonth: 2, // March (0-indexed)
+      endMonth: 4,   // May
+      festival: {
+        name: 'Bloom Festival',
+        description: 'Cherry blossoms fill the air with petals of hope',
+        theme: 'flower'
+      },
+      colors: {
+        primary: '#f8b4c8',
+        secondary: '#7db37d',
+        accent: '#ffd4e5',
+        ambient: '#ffe8f0'
+      },
+      bonus: {
+        activity: 'garden',
+        multiplier: 1.25,
+        description: 'Garden yields increased'
+      }
+    },
+    summer: {
+      id: 'summer',
+      name: 'Summer',
+      description: 'The warmth of endless days',
+      startMonth: 5, // June
+      endMonth: 7,   // August
+      festival: {
+        name: 'Sun Festival',
+        description: 'Golden light dances with fireflies at dusk',
+        theme: 'sun'
+      },
+      colors: {
+        primary: '#f0c040',
+        secondary: '#ff8c42',
+        accent: '#ffe080',
+        ambient: '#fff4d4'
+      },
+      bonus: {
+        activity: 'exploration',
+        multiplier: 1.25,
+        description: 'Exploration rewards increased'
+      }
+    },
+    autumn: {
+      id: 'autumn',
+      name: 'Autumn',
+      description: 'The season of abundance and reflection',
+      startMonth: 8,  // September
+      endMonth: 10,   // November
+      festival: {
+        name: 'Harvest Festival',
+        description: 'Leaves fall like amber rain, celebrating the bounty',
+        theme: 'harvest'
+      },
+      colors: {
+        primary: '#d4a040',
+        secondary: '#8b4513',
+        accent: '#e8b860',
+        ambient: '#f0e0c0'
+      },
+      bonus: {
+        activity: 'crafting',
+        multiplier: 1.25,
+        description: 'Crafting rewards increased'
+      }
+    },
+    winter: {
+      id: 'winter',
+      name: 'Winter',
+      description: 'A time of wonder and togetherness',
+      startMonth: 11, // December (wraps to Feb)
+      endMonth: 1,    // February
+      festival: {
+        name: 'Star Festival',
+        description: 'Snowflakes drift beneath starlit skies',
+        theme: 'star'
+      },
+      colors: {
+        primary: '#80c0e0',
+        secondary: '#e8e8ff',
+        accent: '#a0d4f0',
+        ambient: '#e0f0ff'
+      },
+      bonus: {
+        activity: 'social',
+        multiplier: 1.25,
+        description: 'Social rewards increased'
+      }
+    }
+  };
+
+  // Seasonal items available per season
+  const SEASONAL_ITEMS = {
+    spring: [
+      {
+        id: 'cherry_blossom',
+        name: 'Cherry Blossom',
+        description: 'Delicate pink petals from the sacred trees',
+        rarity: 'rare',
+        type: 'decoration'
+      },
+      {
+        id: 'spring_bouquet',
+        name: 'Spring Bouquet',
+        description: 'A vibrant arrangement of seasonal flowers',
+        rarity: 'uncommon',
+        type: 'gift'
+      },
+      {
+        id: 'rainbow_seed',
+        name: 'Rainbow Seed',
+        description: 'A magical seed that blooms in seven colors',
+        rarity: 'legendary',
+        type: 'consumable'
+      }
+    ],
+    summer: [
+      {
+        id: 'sun_crystal',
+        name: 'Sun Crystal',
+        description: 'Captures the warmth and light of summer',
+        rarity: 'rare',
+        type: 'material'
+      },
+      {
+        id: 'firefly_jar',
+        name: 'Firefly Jar',
+        description: 'A gentle glow to light your path',
+        rarity: 'uncommon',
+        type: 'decoration'
+      },
+      {
+        id: 'tropical_fruit',
+        name: 'Tropical Fruit',
+        description: 'Sweet and refreshing, bursting with flavor',
+        rarity: 'common',
+        type: 'consumable'
+      }
+    ],
+    autumn: [
+      {
+        id: 'golden_leaf',
+        name: 'Golden Leaf',
+        description: 'Preserved in its moment of perfect beauty',
+        rarity: 'rare',
+        type: 'material'
+      },
+      {
+        id: 'pumpkin',
+        name: 'Harvest Pumpkin',
+        description: 'A symbol of the season\'s abundance',
+        rarity: 'uncommon',
+        type: 'decoration'
+      },
+      {
+        id: 'maple_syrup',
+        name: 'Maple Syrup',
+        description: 'Sweet nectar from ancient trees',
+        rarity: 'common',
+        type: 'consumable'
+      }
+    ],
+    winter: [
+      {
+        id: 'snowglobe',
+        name: 'Snowglobe',
+        description: 'A miniature winter wonderland',
+        rarity: 'rare',
+        type: 'decoration'
+      },
+      {
+        id: 'star_ornament',
+        name: 'Star Ornament',
+        description: 'Handcrafted decoration that sparkles like the night sky',
+        rarity: 'uncommon',
+        type: 'decoration'
+      },
+      {
+        id: 'hot_cocoa',
+        name: 'Hot Cocoa',
+        description: 'Warm comfort in a cup',
+        rarity: 'common',
+        type: 'consumable'
+      }
+    ]
+  };
+
+  // Decoration configurations per zone and season
+  const SEASONAL_DECORATIONS = {
+    spring: {
+      town: [
+        { type: 'cherry_tree', count: 8, positions: 'random' },
+        { type: 'flower_bed', count: 12, positions: 'pathways' },
+        { type: 'blossom_arch', count: 2, positions: 'entrances' }
+      ],
+      forest: [
+        { type: 'wildflower_patch', count: 15, positions: 'random' },
+        { type: 'butterfly_spawn', count: 6, positions: 'clearings' }
+      ],
+      plains: [
+        { type: 'tulip_field', count: 10, positions: 'random' },
+        { type: 'rainbow_garden', count: 3, positions: 'special' }
+      ]
+    },
+    summer: {
+      town: [
+        { type: 'lantern_string', count: 10, positions: 'overhead' },
+        { type: 'sun_banner', count: 6, positions: 'buildings' },
+        { type: 'fountain_glow', count: 2, positions: 'center' }
+      ],
+      forest: [
+        { type: 'firefly_cluster', count: 20, positions: 'random' },
+        { type: 'sun_shaft', count: 8, positions: 'canopy_breaks' }
+      ],
+      plains: [
+        { type: 'sunflower_field', count: 12, positions: 'random' },
+        { type: 'heat_shimmer', count: 5, positions: 'distance' }
+      ]
+    },
+    autumn: {
+      town: [
+        { type: 'hay_bale', count: 8, positions: 'random' },
+        { type: 'harvest_wreath', count: 10, positions: 'doors' },
+        { type: 'corn_stalk', count: 6, positions: 'corners' }
+      ],
+      forest: [
+        { type: 'mushroom_circle', count: 5, positions: 'random' },
+        { type: 'leaf_pile', count: 12, positions: 'clearings' }
+      ],
+      plains: [
+        { type: 'scarecrow', count: 4, positions: 'fields' },
+        { type: 'wheat_sheaf', count: 10, positions: 'random' }
+      ]
+    },
+    winter: {
+      town: [
+        { type: 'star_decoration', count: 15, positions: 'random' },
+        { type: 'ice_sculpture', count: 4, positions: 'plazas' },
+        { type: 'warm_light', count: 20, positions: 'windows' }
+      ],
+      forest: [
+        { type: 'frost_crystal', count: 12, positions: 'random' },
+        { type: 'snow_drift', count: 8, positions: 'ground' }
+      ],
+      plains: [
+        { type: 'frozen_pond', count: 2, positions: 'special' },
+        { type: 'icicle_cluster', count: 6, positions: 'rock_formations' }
+      ]
+    }
+  };
+
+  // Particle system configurations per season
+  const SEASONAL_PARTICLES = {
+    spring: {
+      type: 'cherry_blossom',
+      count: 100,
+      color: '#ffc0db',
+      size: 0.3,
+      speed: 0.02,
+      drift: true,
+      swirl: true,
+      gravity: 0.001
+    },
+    summer: {
+      type: 'firefly',
+      count: 60,
+      color: '#ffff80',
+      size: 0.2,
+      speed: 0.015,
+      glow: true,
+      pulse: true,
+      gravity: 0
+    },
+    autumn: {
+      type: 'falling_leaf',
+      count: 80,
+      color: '#d4a040',
+      size: 0.4,
+      speed: 0.025,
+      drift: true,
+      spin: true,
+      gravity: 0.002
+    },
+    winter: {
+      type: 'snowflake',
+      count: 120,
+      color: '#ffffff',
+      size: 0.25,
+      speed: 0.01,
+      drift: true,
+      sparkle: true,
+      gravity: 0.0015
+    }
+  };
+
+  // NPC greetings per season
+  const SEASONAL_GREETINGS = {
+    spring: [
+      'The flowers are beautiful this season!',
+      'Can you feel the renewal in the air?',
+      'Perfect weather for the Bloom Festival!',
+      'Spring brings such wonderful energy!'
+    ],
+    summer: [
+      'Another glorious sunny day!',
+      'The fireflies will be out tonight!',
+      'Perfect season for adventure!',
+      'The Sun Festival lights up everything!'
+    ],
+    autumn: [
+      'The harvest has been bountiful this year!',
+      'Don\'t the leaves look magnificent?',
+      'Time to gather and give thanks!',
+      'The Harvest Festival begins soon!'
+    ],
+    winter: [
+      'Stay warm out there, traveler!',
+      'The stars shine brightest in winter!',
+      'What a magical time of year!',
+      'The Star Festival brings us together!'
+    ]
+  };
+
+  /**
+   * Get the current season based on real-world date
+   * @returns {Object} Current season data
+   */
+  function getCurrentSeason() {
+    const now = new Date();
+    const month = now.getMonth(); // 0-indexed (0 = January)
+
+    // Check each season
+    for (const seasonKey in SEASONS) {
+      const season = SEASONS[seasonKey];
+
+      // Handle winter's wrap-around (Dec, Jan, Feb)
+      if (season.id === 'winter') {
+        if (month >= season.startMonth || month <= season.endMonth) {
+          return season;
+        }
+      } else {
+        if (month >= season.startMonth && month <= season.endMonth) {
+          return season;
+        }
+      }
+    }
+
+    // Fallback to spring
+    return SEASONS.spring;
+  }
+
+  /**
+   * Get seasonal items available during current season
+   * @returns {Array} Array of seasonal items
+   */
+  function getSeasonalItems() {
+    const season = getCurrentSeason();
+    return SEASONAL_ITEMS[season.id] || [];
+  }
+
+  /**
+   * Get seasonal decorations for a specific zone
+   * @param {string} zone - Zone name (town, forest, plains)
+   * @returns {Array} Array of decoration configurations
+   */
+  function getSeasonalDecorations(zone) {
+    const season = getCurrentSeason();
+    const decorations = SEASONAL_DECORATIONS[season.id];
+    return decorations[zone] || [];
+  }
+
+  /**
+   * Get particle configuration for current season
+   * @returns {Object} Particle system configuration
+   */
+  function getSeasonalParticles() {
+    const season = getCurrentSeason();
+    return SEASONAL_PARTICLES[season.id];
+  }
+
+  /**
+   * Get season bonus multiplier for an activity
+   * @param {string} activity - Activity type (garden, exploration, crafting, social)
+   * @returns {number} Multiplier (1.0 for no bonus, 1.25 for seasonal bonus)
+   */
+  function getSeasonBonus(activity) {
+    const season = getCurrentSeason();
+    if (season.bonus.activity === activity) {
+      return season.bonus.multiplier;
+    }
+    return 1.0;
+  }
+
+  /**
+   * Get days remaining until season ends
+   * @returns {number} Days until season changes
+   */
+  function getDaysUntilSeasonEnd() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const season = getCurrentSeason();
+
+    let endDate;
+
+    // Handle winter's wrap-around
+    if (season.id === 'winter') {
+      if (currentMonth === 11) {
+        // December - end is Feb 28/29 next year
+        const nextYear = currentYear + 1;
+        const isLeapYear = (nextYear % 4 === 0 && nextYear % 100 !== 0) || (nextYear % 400 === 0);
+        endDate = new Date(nextYear, 1, isLeapYear ? 29 : 28, 23, 59, 59);
+      } else {
+        // Jan or Feb
+        const isLeapYear = (currentYear % 4 === 0 && currentYear % 100 !== 0) || (currentYear % 400 === 0);
+        endDate = new Date(currentYear, 1, isLeapYear ? 29 : 28, 23, 59, 59);
+      }
+    } else {
+      // For other seasons, get last day of end month
+      endDate = new Date(currentYear, season.endMonth + 1, 0, 23, 59, 59);
+    }
+
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const daysRemaining = Math.ceil((endDate - now) / msPerDay);
+
+    return Math.max(0, daysRemaining);
+  }
+
+  /**
+   * Get a random seasonal greeting for NPCs
+   * @returns {string} Seasonal greeting text
+   */
+  function getSeasonalGreeting() {
+    const season = getCurrentSeason();
+    const greetings = SEASONAL_GREETINGS[season.id];
+    return greetings[Math.floor(Math.random() * greetings.length)];
+  }
+
+  /**
+   * Get color scheme for current season
+   * @returns {Object} Color palette with primary, secondary, accent, ambient
+   */
+  function getSeasonalColors() {
+    const season = getCurrentSeason();
+    return season.colors;
+  }
+
+  // Export all functions and data
+  exports.SEASONS = SEASONS;
+  exports.SEASONAL_ITEMS = SEASONAL_ITEMS;
+  exports.SEASONAL_DECORATIONS = SEASONAL_DECORATIONS;
+  exports.SEASONAL_PARTICLES = SEASONAL_PARTICLES;
+  exports.SEASONAL_GREETINGS = SEASONAL_GREETINGS;
+  exports.getCurrentSeason = getCurrentSeason;
+  exports.getSeasonalItems = getSeasonalItems;
+  exports.getSeasonalDecorations = getSeasonalDecorations;
+  exports.getSeasonalParticles = getSeasonalParticles;
+  exports.getSeasonBonus = getSeasonBonus;
+  exports.getDaysUntilSeasonEnd = getDaysUntilSeasonEnd;
+  exports.getSeasonalGreeting = getSeasonalGreeting;
+  exports.getSeasonalColors = getSeasonalColors;
+
+})(typeof module !== 'undefined' ? module.exports : (window.Seasons = {}));
+
+
+// pets.js
+(function(exports) {
+  // Pet companion system for ZION MMO
+
+  // Pet type definitions with zones and rarities
+  const PET_TYPES = [
+    {
+      id: 'cat',
+      name: 'Mystic Cat',
+      description: 'A wise feline companion that brings good fortune to trades',
+      icon: '🐱',
+      zone: 'commons',
+      rarity: 'common',
+      bonus: { type: 'trade_luck', value: 2 }
+    },
+    {
+      id: 'fox',
+      name: 'Spirit Fox',
+      description: 'A clever fox with enhanced senses for discovering hidden places',
+      icon: '🦊',
+      zone: 'wilds',
+      rarity: 'uncommon',
+      bonus: { type: 'discovery_range', value: 2 }
+    },
+    {
+      id: 'owl',
+      name: 'Ancient Owl',
+      description: 'A scholarly owl that helps unlock hidden lore',
+      icon: '🦉',
+      zone: 'athenaeum',
+      rarity: 'uncommon',
+      bonus: { type: 'lore_unlock', value: 2 }
+    },
+    {
+      id: 'butterfly',
+      name: 'Crystal Butterfly',
+      description: 'A delicate butterfly that enhances garden growth',
+      icon: '🦋',
+      zone: 'gardens',
+      rarity: 'common',
+      bonus: { type: 'garden_growth', value: 2 }
+    },
+    {
+      id: 'rabbit',
+      name: 'Moon Rabbit',
+      description: 'A gentle rabbit that brings peace and faster crafting',
+      icon: '🐰',
+      zone: 'gardens',
+      rarity: 'common',
+      bonus: { type: 'craft_speed', value: 2 }
+    },
+    {
+      id: 'frog',
+      name: 'Jade Frog',
+      description: 'A lucky frog that attracts rare resources',
+      icon: '🐸',
+      zone: 'wilds',
+      rarity: 'uncommon',
+      bonus: { type: 'rare_resources', value: 2 }
+    },
+    {
+      id: 'firefly',
+      name: 'Ember Firefly',
+      description: 'A glowing firefly that illuminates hidden paths',
+      icon: '🪲',
+      zone: 'wilds',
+      rarity: 'rare',
+      bonus: { type: 'vision_range', value: 3 }
+    },
+    {
+      id: 'wolf_pup',
+      name: 'Shadow Wolf Pup',
+      description: 'A loyal wolf pup that boosts stamina and endurance',
+      icon: '🐺',
+      zone: 'wilds',
+      rarity: 'rare',
+      bonus: { type: 'stamina', value: 3 }
+    },
+    {
+      id: 'phoenix_chick',
+      name: 'Phoenix Chick',
+      description: 'A rare phoenix chick that grants resilience and renewal',
+      icon: '🐦',
+      zone: 'athenaeum',
+      rarity: 'legendary',
+      bonus: { type: 'resilience', value: 5 }
+    },
+    {
+      id: 'turtle',
+      name: 'Ancient Turtle',
+      description: 'A wise turtle that increases meditation effectiveness',
+      icon: '🐢',
+      zone: 'gardens',
+      rarity: 'rare',
+      bonus: { type: 'meditation', value: 3 }
+    }
+  ];
+
+  // Pet state storage (in real game, this would be in database)
+  const playerPets = {};
+
+  // Pet care constants
+  const PET_CONSTANTS = {
+    HUNGER_DECAY_RATE: 1, // hunger increases by 1 per minute
+    MOOD_DECAY_RATE: 0.5, // mood decreases by 0.5 per minute
+    BOND_GAIN_RATE: 0.2, // bond increases by 0.2 when feeding/caring
+    HUNGER_THRESHOLD_HAPPY: 30, // below 30 hunger = happy
+    HUNGER_THRESHOLD_CONTENT: 60, // 30-60 = content
+    MOOD_THRESHOLD_ECSTATIC: 90,
+    MOOD_THRESHOLD_HAPPY: 70,
+    MOOD_THRESHOLD_CONTENT: 50,
+    MOOD_THRESHOLD_HUNGRY: 30
+  };
+
+  /**
+   * Get pet types available in a specific zone
+   * @param {string} zone - Zone identifier (commons, wilds, athenaeum, gardens)
+   * @returns {Array} Array of pet types available in this zone
+   */
+  function getAvailablePets(zone) {
+    return PET_TYPES.filter(pet => pet.zone === zone);
+  }
+
+  /**
+   * Adopt a new pet
+   * @param {string} playerId - Player identifier
+   * @param {string} petType - Pet type id from PET_TYPES
+   * @param {string} petName - Custom name for the pet
+   * @returns {Object|null} Pet object or null if failed
+   */
+  function adoptPet(playerId, petType, petName) {
+    if (!playerId || !petType || !petName) {
+      console.error('Invalid adoption parameters');
+      return null;
+    }
+
+    // Check if player already has a pet
+    if (playerPets[playerId]) {
+      console.warn('Player already has a pet. Release current pet first.');
+      return null;
+    }
+
+    // Find pet type
+    const petTypeData = PET_TYPES.find(p => p.id === petType);
+    if (!petTypeData) {
+      console.error('Invalid pet type:', petType);
+      return null;
+    }
+
+    // Create pet state
+    const pet = {
+      id: generatePetId(),
+      type: petType,
+      name: petName,
+      mood: 100, // Start happy
+      hunger: 0, // Start well-fed
+      bond: 0, // Build bond over time
+      adopted_at: Date.now(),
+      last_updated: Date.now()
+    };
+
+    playerPets[playerId] = pet;
+    return pet;
+  }
+
+  /**
+   * Get player's current pet
+   * @param {string} playerId - Player identifier
+   * @returns {Object|null} Pet object or null if no pet
+   */
+  function getPlayerPet(playerId) {
+    return playerPets[playerId] || null;
+  }
+
+  /**
+   * Feed the pet
+   * @param {string} playerId - Player identifier
+   * @param {string} foodItem - Food item type
+   * @returns {Object} Result object with success, message, and updated pet
+   */
+  function feedPet(playerId, foodItem) {
+    const pet = playerPets[playerId];
+    if (!pet) {
+      return { success: false, message: 'No pet to feed' };
+    }
+
+    // Food effectiveness
+    const foodEffects = {
+      'berry': { hunger: -20, mood: 5 },
+      'fish': { hunger: -30, mood: 10 },
+      'mushroom': { hunger: -15, mood: 3 },
+      'bread': { hunger: -25, mood: 7 },
+      'treat': { hunger: -10, mood: 15 },
+      'default': { hunger: -10, mood: 5 }
+    };
+
+    const effect = foodEffects[foodItem] || foodEffects['default'];
+
+    // Update pet state
+    pet.hunger = Math.max(0, pet.hunger + effect.hunger);
+    pet.mood = Math.min(100, pet.mood + effect.mood);
+    pet.bond = Math.min(100, pet.bond + PET_CONSTANTS.BOND_GAIN_RATE);
+    pet.last_updated = Date.now();
+
+    return {
+      success: true,
+      message: `${pet.name} enjoyed the ${foodItem}!`,
+      pet: pet
+    };
+  }
+
+  /**
+   * Update pet state over time (hunger/mood decay)
+   * @param {string} playerId - Player identifier
+   * @param {number} deltaTime - Time elapsed in milliseconds
+   * @returns {Object|null} Updated pet or null
+   */
+  function updatePet(playerId, deltaTime) {
+    const pet = playerPets[playerId];
+    if (!pet) return null;
+
+    const minutesElapsed = deltaTime / 60000; // Convert ms to minutes
+
+    // Update hunger (increases over time)
+    pet.hunger = Math.min(100, pet.hunger + (PET_CONSTANTS.HUNGER_DECAY_RATE * minutesElapsed));
+
+    // Update mood (decreases over time, faster if hungry)
+    let moodDecay = PET_CONSTANTS.MOOD_DECAY_RATE * minutesElapsed;
+    if (pet.hunger > PET_CONSTANTS.HUNGER_THRESHOLD_CONTENT) {
+      moodDecay *= 2; // Mood decays faster when hungry
+    }
+    pet.mood = Math.max(0, pet.mood - moodDecay);
+
+    // Bond increases slightly over time (passive bonding)
+    if (pet.hunger < PET_CONSTANTS.HUNGER_THRESHOLD_HAPPY && pet.mood > PET_CONSTANTS.MOOD_THRESHOLD_CONTENT) {
+      pet.bond = Math.min(100, pet.bond + (0.1 * minutesElapsed));
+    }
+
+    pet.last_updated = Date.now();
+    return pet;
+  }
+
+  /**
+   * Get passive bonus from pet based on type and bond level
+   * @param {string} playerId - Player identifier
+   * @returns {Object|null} Bonus object with type and value, or null
+   */
+  function getPetBonus(playerId) {
+    const pet = playerPets[playerId];
+    if (!pet) return null;
+
+    const petType = PET_TYPES.find(p => p.id === pet.type);
+    if (!petType) return null;
+
+    // Bonus scales with bond level
+    const bondMultiplier = pet.bond / 100;
+    const bonusValue = petType.bonus.value * bondMultiplier;
+
+    return {
+      type: petType.bonus.type,
+      value: bonusValue,
+      description: getBonusDescription(petType.bonus.type, bonusValue)
+    };
+  }
+
+  /**
+   * Rename pet
+   * @param {string} playerId - Player identifier
+   * @param {string} newName - New pet name
+   * @returns {boolean} Success status
+   */
+  function renamePet(playerId, newName) {
+    const pet = playerPets[playerId];
+    if (!pet || !newName) return false;
+
+    pet.name = newName;
+    return true;
+  }
+
+  /**
+   * Release pet back to the wild
+   * @param {string} playerId - Player identifier
+   * @returns {boolean} Success status
+   */
+  function releasePet(playerId) {
+    if (!playerPets[playerId]) return false;
+    delete playerPets[playerId];
+    return true;
+  }
+
+  /**
+   * Get pet mood description
+   * @param {Object} pet - Pet object
+   * @returns {string} Mood description
+   */
+  function getPetMood(pet) {
+    if (!pet) return 'unknown';
+
+    if (pet.hunger > 70) {
+      return 'starving';
+    } else if (pet.hunger > 50) {
+      return 'hungry';
+    }
+
+    if (pet.mood >= PET_CONSTANTS.MOOD_THRESHOLD_ECSTATIC) {
+      return 'ecstatic';
+    } else if (pet.mood >= PET_CONSTANTS.MOOD_THRESHOLD_HAPPY) {
+      return 'happy';
+    } else if (pet.mood >= PET_CONSTANTS.MOOD_THRESHOLD_CONTENT) {
+      return 'content';
+    } else if (pet.mood >= PET_CONSTANTS.MOOD_THRESHOLD_HUNGRY) {
+      return 'sad';
+    } else {
+      return 'depressed';
+    }
+  }
+
+  /**
+   * Get mood emoji indicator
+   * @param {string} mood - Mood string
+   * @returns {string} Emoji representing mood
+   */
+  function getMoodEmoji(mood) {
+    const moodEmojis = {
+      'ecstatic': '😄',
+      'happy': '😊',
+      'content': '🙂',
+      'sad': '😟',
+      'hungry': '😫',
+      'starving': '😵',
+      'depressed': '😢',
+      'unknown': '😐'
+    };
+    return moodEmojis[mood] || moodEmojis['unknown'];
+  }
+
+  /**
+   * Get bonus description
+   * @param {string} bonusType - Type of bonus
+   * @param {number} value - Bonus value
+   * @returns {string} Description
+   */
+  function getBonusDescription(bonusType, value) {
+    const descriptions = {
+      'trade_luck': `+${value.toFixed(1)}% trade success`,
+      'discovery_range': `+${value.toFixed(1)}% discovery radius`,
+      'lore_unlock': `+${value.toFixed(1)}% lore unlock chance`,
+      'garden_growth': `+${value.toFixed(1)}% garden growth rate`,
+      'craft_speed': `+${value.toFixed(1)}% crafting speed`,
+      'rare_resources': `+${value.toFixed(1)}% rare resource chance`,
+      'vision_range': `+${value.toFixed(1)}% vision range`,
+      'stamina': `+${value.toFixed(1)}% stamina`,
+      'resilience': `+${value.toFixed(1)}% resilience`,
+      'meditation': `+${value.toFixed(1)}% meditation effectiveness`
+    };
+    return descriptions[bonusType] || 'Unknown bonus';
+  }
+
+  /**
+   * Generate unique pet ID
+   * @returns {string} Unique ID
+   */
+  function generatePetId() {
+    return 'pet_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  }
+
+  /**
+   * Get all pet types
+   * @returns {Array} All pet types
+   */
+  function getAllPetTypes() {
+    return PET_TYPES;
+  }
+
+  /**
+   * Get pet type data
+   * @param {string} petTypeId - Pet type ID
+   * @returns {Object|null} Pet type data or null
+   */
+  function getPetTypeData(petTypeId) {
+    return PET_TYPES.find(p => p.id === petTypeId) || null;
+  }
+
+  // Export public API
+  exports.PET_TYPES = PET_TYPES;
+  exports.getAvailablePets = getAvailablePets;
+  exports.adoptPet = adoptPet;
+  exports.getPlayerPet = getPlayerPet;
+  exports.feedPet = feedPet;
+  exports.updatePet = updatePet;
+  exports.getPetBonus = getPetBonus;
+  exports.renamePet = renamePet;
+  exports.releasePet = releasePet;
+  exports.getPetMood = getPetMood;
+  exports.getMoodEmoji = getMoodEmoji;
+  exports.getAllPetTypes = getAllPetTypes;
+  exports.getPetTypeData = getPetTypeData;
+
+})(typeof module !== 'undefined' ? module.exports : (window.Pets = {}));
+
+
 // main.js
 (function(exports) {
   // Main entry point and game loop orchestrator
@@ -37093,6 +39536,8 @@ html, body {
   const Quests = typeof require !== 'undefined' ? require('./quests') : window.Quests;
   const Mentoring = typeof require !== 'undefined' ? require('./mentoring') : window.Mentoring;
   const Guilds = typeof require !== 'undefined' ? require('./guilds') : window.Guilds;
+  const Seasons = typeof require !== 'undefined' ? require('./seasons') : window.Seasons;
+  const Pets = typeof require !== 'undefined' ? require('./pets') : window.Pets;
 
   // Game state
   let gameState = null;
@@ -37139,6 +39584,18 @@ html, body {
   // Economic event tracking
   let currentEconomicEvent = null;
   let lastEventCheck = 0;
+
+  // Seasonal event tracking
+  let currentSeason = null;
+  let lastSeasonCheck = 0;
+  let SEASON_CHECK_INTERVAL = 60000; // Check season every 60s
+
+  // Pet tracking
+  let lastPetUpdate = 0;
+  let PET_UPDATE_INTERVAL = 30000; // Update pet every 30s
+
+  // Fishing state
+  let isFishing = false;
 
   // Warmth tracking (GPS-based outdoor play bonus)
   let gpsHistory = [];
@@ -37494,6 +39951,12 @@ html, body {
 
     // Initialize economic event display
     updateEconomicEvent();
+
+    // Initialize seasonal event display
+    initSeasonalEvent();
+
+    // Initialize pet system - restore saved pet
+    initPetSystem(username);
 
     // Send join message
     joinWorld();
@@ -38148,6 +40611,18 @@ html, body {
     if (nowMs - lastEventCheck > 30000) {
       lastEventCheck = nowMs;
       updateEconomicEvent();
+    }
+
+    // Update seasonal event periodically
+    if (nowMs - lastSeasonCheck > SEASON_CHECK_INTERVAL) {
+      lastSeasonCheck = nowMs;
+      updateSeasonalEvent();
+    }
+
+    // Update pet status periodically
+    if (nowMs - lastPetUpdate > PET_UPDATE_INTERVAL) {
+      lastPetUpdate = nowMs;
+      updatePetStatus();
     }
 
     // Request next frame
@@ -39131,6 +41606,16 @@ html, body {
         }
       }
 
+      // Apply seasonal bonus to harvest
+      var harvestSeasonBonus = getSeasonalBonus('garden');
+      if (harvestSeasonBonus > 1.0 && Economy && economyLedger) {
+        var bonusSpark = Math.round((harvestSeasonBonus - 1.0) * 5);
+        if (bonusSpark > 0) {
+          Economy.earnSpark(economyLedger, localPlayer.id, 'harvest', { complexity: 0.1 });
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+        }
+      }
+
       // Track harvest achievement
       trackAchievement('harvest', { item: itemId, zone: currentZone });
 
@@ -39927,6 +42412,20 @@ html, body {
         }
         break;
 
+      case 'startFishing':
+        startFishing();
+        break;
+
+      case 'togglePetPanel':
+        if (HUD && HUD.showPetPanel) {
+          HUD.showPetPanel(localPlayer.id, currentZone);
+        }
+        break;
+
+      case 'toggleHousing':
+        showHousingPanel();
+        break;
+
       default:
         console.log('Unknown local action:', type);
     }
@@ -40220,6 +42719,278 @@ html, body {
       var bannerEl = document.getElementById('economic-event-banner');
       if (bannerEl) bannerEl.style.display = 'none';
     }
+  }
+
+  /**
+   * Initialize seasonal event display
+   */
+  function initSeasonalEvent() {
+    if (!Seasons) return;
+    currentSeason = Seasons.getCurrentSeason();
+    if (!currentSeason) return;
+
+    var colors = Seasons.getSeasonalColors();
+    var daysLeft = Seasons.getDaysUntilSeasonEnd();
+
+    // Create seasonal banner
+    if (typeof document !== 'undefined') {
+      var banner = document.getElementById('seasonal-banner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'seasonal-banner';
+        banner.className = 'seasonal-banner season-' + currentSeason.id;
+        document.body.appendChild(banner);
+      }
+      banner.innerHTML = '<div class="seasonal-banner-title">' + currentSeason.festival + '</div>' +
+        '<div class="seasonal-banner-desc">' + currentSeason.description + '</div>' +
+        '<div class="seasonal-banner-countdown">' + daysLeft + ' days remaining</div>';
+      banner.style.display = 'block';
+
+      // Auto-hide after 8 seconds
+      setTimeout(function() {
+        if (banner) banner.style.display = 'none';
+      }, 8000);
+    }
+
+    // Apply seasonal NPC greetings
+    if (NPCs && Seasons.getSeasonalGreeting) {
+      console.log('Season: ' + currentSeason.name + ' — ' + Seasons.getSeasonalGreeting());
+    }
+  }
+
+  /**
+   * Update seasonal event (check for season change)
+   */
+  function updateSeasonalEvent() {
+    if (!Seasons) return;
+    var newSeason = Seasons.getCurrentSeason();
+    if (newSeason && (!currentSeason || currentSeason.id !== newSeason.id)) {
+      currentSeason = newSeason;
+      if (HUD) {
+        HUD.showNotification('A new season has arrived: ' + newSeason.name + '!', 'success');
+      }
+      initSeasonalEvent(); // Refresh banner
+    }
+  }
+
+  /**
+   * Get seasonal bonus for an activity
+   */
+  function getSeasonalBonus(activity) {
+    if (!Seasons || !Seasons.getSeasonBonus) return 1.0;
+    return Seasons.getSeasonBonus(activity);
+  }
+
+  /**
+   * Initialize pet system
+   */
+  function initPetSystem(playerId) {
+    if (!Pets) return;
+
+    // Check if player has a saved pet
+    var savedData = Auth && Auth.loadPlayerData ? Auth.loadPlayerData() : null;
+    if (savedData && savedData.pet) {
+      // Restore pet from saved data - pets module stores internally
+      console.log('Pet system initialized');
+    }
+  }
+
+  /**
+   * Update pet status (hunger, mood decay)
+   */
+  function updatePetStatus() {
+    if (!Pets || !localPlayer) return;
+    var pet = Pets.getPlayerPet(localPlayer.id);
+    if (!pet) return;
+
+    // Update pet simulation
+    Pets.updatePet(localPlayer.id, PET_UPDATE_INTERVAL / 1000);
+
+    // Get pet bonus and apply
+    var bonus = Pets.getPetBonus(localPlayer.id);
+    if (bonus && bonus.value > 0) {
+      localPlayer.petBonus = bonus;
+    }
+
+    // Check pet mood for notifications
+    var mood = Pets.getPetMood(pet);
+    if (mood === 'sad' && pet.hunger > 70) {
+      if (HUD) {
+        HUD.showNotification(pet.name + ' is hungry! Feed your companion.', 'warning');
+      }
+    }
+  }
+
+  /**
+   * Start fishing minigame
+   */
+  function startFishing() {
+    if (isFishing || !HUD || !HUD.showFishingUI) return;
+
+    // Check if current zone allows fishing
+    var fishableZones = ['gardens', 'commons', 'wilds', 'nexus', 'agora'];
+    if (fishableZones.indexOf(currentZone) === -1) {
+      if (HUD) HUD.showNotification('You cannot fish here.', 'warning');
+      return;
+    }
+
+    isFishing = true;
+    if (Audio) Audio.playSound('harvest');
+
+    HUD.showFishingUI(currentZone, function(result) {
+      isFishing = false;
+      if (result && result.success && result.fish) {
+        // Add fish to inventory
+        if (Inventory && playerInventory) {
+          Inventory.addItem(playerInventory, result.fish.id, 1);
+          if (HUD && HUD.updateInventoryDisplay) {
+            HUD.updateInventoryDisplay(playerInventory);
+          }
+        }
+        // Award Spark
+        var sparkAmount = result.fish.value || 5;
+        var seasonBonus = getSeasonalBonus('harvest');
+        sparkAmount = Math.round(sparkAmount * seasonBonus);
+        if (economyLedger && Economy) {
+          Economy.earnSpark(economyLedger, localPlayer.id, sparkAmount, 'fishing');
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+        }
+        if (HUD && HUD.showFishCaughtNotification) {
+          HUD.showFishCaughtNotification(result.fish.name, sparkAmount);
+        }
+        trackAchievement('harvest', { type: 'fishing', fish: result.fish.id });
+        addRecentActivity('Caught: ' + result.fish.name);
+      }
+    });
+  }
+
+  /**
+   * Show housing panel for player
+   */
+  function showHousingPanel() {
+    if (!Creation || !HUD || typeof document === 'undefined') return;
+
+    var existingPanel = document.getElementById('housing-panel');
+    if (existingPanel) {
+      existingPanel.remove();
+      return;
+    }
+
+    var panel = document.createElement('div');
+    panel.id = 'housing-panel';
+    panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(15,12,10,0.95);border:1px solid rgba(218,165,32,0.3);border-radius:12px;' +
+      'padding:24px;min-width:400px;max-width:550px;max-height:70vh;overflow-y:auto;z-index:1100;' +
+      'backdrop-filter:blur(10px);color:#E8E0D8;font-family:Georgia,serif;';
+
+    var playerPlot = Creation.getPlayerPlot ? Creation.getPlayerPlot(localPlayer.id) : null;
+
+    // Header
+    var header = document.createElement('h2');
+    header.textContent = playerPlot ? 'My Home — ' + playerPlot.name : 'Housing — Claim a Plot';
+    header.style.cssText = 'color:#DAA520;margin:0 0 16px;font-size:1.2rem;';
+    panel.appendChild(header);
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '\u00d7';
+    closeBtn.style.cssText = 'position:absolute;top:12px;right:12px;width:30px;height:30px;' +
+      'background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.2);' +
+      'border-radius:50%;font-size:18px;cursor:pointer;';
+    closeBtn.onclick = function() { panel.remove(); };
+    panel.appendChild(closeBtn);
+
+    if (playerPlot) {
+      // Show owned plot info
+      var plotInfo = document.createElement('div');
+      plotInfo.style.cssText = 'margin-bottom:16px;padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;';
+      plotInfo.innerHTML = '<div style="color:#B8B0A8;font-size:0.85rem;">Plot ' + playerPlot.id +
+        ' (' + playerPlot.bounds.x1 + ',' + playerPlot.bounds.z1 + ')</div>' +
+        '<div style="color:#E8E0D8;font-size:0.9rem;margin-top:4px;">Furniture: ' +
+        playerPlot.furniture.length + '/' + 20 + '</div>';
+      panel.appendChild(plotInfo);
+
+      // Furniture list
+      var furnitureTypes = Creation.FURNITURE_TYPES || {};
+      var furnitureHeader = document.createElement('div');
+      furnitureHeader.textContent = 'Add Furniture';
+      furnitureHeader.style.cssText = 'color:#DAA520;font-size:0.9rem;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;';
+      panel.appendChild(furnitureHeader);
+
+      Object.keys(furnitureTypes).forEach(function(fType) {
+        var ft = furnitureTypes[fType];
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px;' +
+          'background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:4px;' +
+          'border:1px solid rgba(255,255,255,0.05);cursor:pointer;transition:all 0.2s;';
+        row.onmouseover = function() { this.style.borderColor = 'rgba(218,165,32,0.3)'; };
+        row.onmouseout = function() { this.style.borderColor = 'rgba(255,255,255,0.05)'; };
+        row.innerHTML = '<span style="font-size:1.3rem;">' + ft.icon + '</span>' +
+          '<span style="flex:1;color:#E8E0D8;font-size:0.85rem;">' + ft.name + '</span>' +
+          '<span style="color:#DAA520;font-size:0.8rem;">' + ft.cost + ' Spark</span>';
+        row.onclick = function() {
+          var result = Creation.placeFurniture(localPlayer.id, fType, 5, 5);
+          if (result && result.success) {
+            HUD.showNotification('Placed ' + ft.name + ' in your home!', 'success');
+            panel.remove();
+          } else {
+            HUD.showNotification(result ? result.error : 'Cannot place furniture', 'warning');
+          }
+        };
+        panel.appendChild(row);
+      });
+    } else {
+      // Show available plots
+      var plots = Creation.getAvailablePlots ? Creation.getAvailablePlots() : [];
+      if (plots.length === 0) {
+        var noPlots = document.createElement('div');
+        noPlots.textContent = 'No plots available. Visit The Commons zone to find housing.';
+        noPlots.style.cssText = 'color:#B8B0A8;text-align:center;padding:20px;';
+        panel.appendChild(noPlots);
+      } else {
+        var infoText = document.createElement('div');
+        infoText.textContent = 'Available plots in The Commons (' + plots.length + ' open):';
+        infoText.style.cssText = 'color:#B8B0A8;font-size:0.85rem;margin-bottom:12px;';
+        panel.appendChild(infoText);
+
+        plots.slice(0, 8).forEach(function(plot) {
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;' +
+            'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);' +
+            'border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all 0.2s;';
+          row.onmouseover = function() { this.style.borderColor = 'rgba(218,165,32,0.4)'; };
+          row.onmouseout = function() { this.style.borderColor = 'rgba(255,255,255,0.08)'; };
+          row.innerHTML = '<span style="font-size:1.3rem;">🏠</span>' +
+            '<span style="flex:1;color:#E8E0D8;font-size:0.9rem;">Plot ' + plot.id + '</span>' +
+            '<span style="color:#B8B0A8;font-size:0.75rem;">(' + plot.bounds.x1 + ', ' + plot.bounds.z1 + ')</span>';
+          row.onclick = function() {
+            var plotName = prompt('Name your home:');
+            if (plotName && plotName.trim()) {
+              var result = Creation.claimPlot(localPlayer.id, plot.id, plotName.trim());
+              if (result && result.success) {
+                HUD.showNotification('You claimed a plot: ' + plotName.trim() + '!', 'success');
+                trackAchievement('build', { type: 'housing' });
+                panel.remove();
+              } else {
+                HUD.showNotification(result ? result.error : 'Cannot claim plot', 'warning');
+              }
+            }
+          };
+          panel.appendChild(row);
+        });
+      }
+    }
+
+    document.body.appendChild(panel);
+
+    // Close on Escape
+    var escHandler = function(e) {
+      if (e.key === 'Escape') {
+        panel.remove();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
   }
 
   // Export public API
