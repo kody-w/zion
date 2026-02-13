@@ -1430,6 +1430,65 @@ html, body {
 .stat-bar-fill.energy { background: linear-gradient(90deg, #4caf50, #8bc34a); }
 .stat-bar-fill.social { background: linear-gradient(90deg, #2196f3, #03a9f4); }
 
+/* NPC Shop */
+#npc-shop-panel::-webkit-scrollbar { width: 6px; }
+#npc-shop-panel::-webkit-scrollbar-track { background: transparent; }
+#npc-shop-panel::-webkit-scrollbar-thumb { background: rgba(218,165,32,0.3); border-radius: 3px; }
+
+/* Guild Panel */
+.guild-panel { animation: slideIn 0.3s ease-out; }
+.guild-member-row {
+  display: flex; align-items: center; padding: 6px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.2s;
+}
+.guild-member-row:hover { background: rgba(255,255,255,0.05); }
+
+/* Skills Panel */
+.skill-row {
+  display: flex; align-items: center; padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.skill-bar {
+  flex: 1; height: 6px; background: rgba(255,255,255,0.08);
+  border-radius: 3px; overflow: hidden; margin: 0 10px;
+}
+.skill-bar-fill {
+  height: 100%; border-radius: 3px; transition: width 0.5s ease;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+}
+
+/* Discovery Popup */
+.discovery-popup {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+  background: rgba(10,14,26,0.95); border: 2px solid var(--color-gold);
+  border-radius: 16px; padding: 24px 32px; text-align: center;
+  animation: discoveryReveal 0.5s ease-out forwards;
+  z-index: 10000; pointer-events: auto;
+}
+@keyframes discoveryReveal {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+  60% { transform: translate(-50%, -50%) scale(1.05); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Lore Book */
+.lore-entry {
+  padding: 12px 16px; margin-bottom: 8px;
+  background: rgba(255,255,255,0.03); border-radius: 8px;
+  border-left: 3px solid rgba(147,112,219,0.5);
+  transition: background 0.2s;
+}
+.lore-entry:hover { background: rgba(255,255,255,0.06); }
+.lore-entry.unread { border-left-color: var(--color-gold); }
+
+/* Warmth indicator */
+.warmth-indicator {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; color: #ff9800; padding: 2px 6px;
+  background: rgba(255,152,0,0.1); border-radius: 4px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .chat-panel {
@@ -1767,7 +1826,7 @@ html, body {
         <span style="color:var(--color-text-muted); font-size:0.75rem; letter-spacing:0.1em;">or</span>
         <button class="login-btn" id="login-btn" style="width:100%;"
           onclick="Auth.initiateOAuth()">Enter with GitHub</button>
-        <p style="color:rgba(160,151,142,0.5); font-size:0.65rem; margin-top:1rem;">WASD move / E interact / B build / M map / F emote / J quests</p>
+        <p style="color:rgba(160,151,142,0.5); font-size:0.65rem; margin-top:1rem;">WASD move / E interact / B build / M map / F emote / J quests / G guild / K skills</p>
       </div>
     </div>
 
@@ -1790,6 +1849,11 @@ html, body {
       <div class="control-row"><span class="control-key">B</span><span class="control-desc">Build</span></div>
       <div class="control-row"><span class="control-key">M</span><span class="control-desc">Map</span></div>
       <div class="control-row"><span class="control-key">F</span><span class="control-desc">Emotes</span></div>
+      <div class="control-row"><span class="control-key">G</span><span class="control-desc">Guild</span></div>
+      <div class="control-row"><span class="control-key">K</span><span class="control-desc">Skills</span></div>
+      <div class="control-row"><span class="control-key">L</span><span class="control-desc">Lore Book</span></div>
+      <div class="control-row"><span class="control-key">V</span><span class="control-desc">Discoveries</span></div>
+      <div class="control-row"><span class="control-key">N</span><span class="control-desc">Compose</span></div>
       <div class="control-row"><span class="control-key">P</span><span class="control-desc">Profile</span></div>
       <div class="control-row"><span class="control-key">Enter</span><span class="control-desc">Chat</span></div>
       <div class="control-row"><span class="control-key">Esc</span><span class="control-desc">Settings</span></div>
@@ -5993,29 +6057,143 @@ html, body {
     };
   }
 
+  // Compose types configuration
+  const COMPOSE_TYPES = {
+    poem: { name: 'Poem', maxLength: 500, sparkReward: [5, 20] },
+    song: { name: 'Song', maxLength: 300, sparkReward: [10, 30] },
+    story: { name: 'Short Story', maxLength: 1000, sparkReward: [10, 40] },
+    painting: { name: 'Painting', sparkReward: [5, 25] },
+    sculpture: { name: 'Sculpture', sparkReward: [10, 35] },
+    mural: { name: 'Mural', sparkReward: [15, 50] }
+  };
+
   // Handle artistic composition
   function handleCompose(msg, state) {
-    const composition = {
-      id: generateId(),
-      type: 'composition',
-      medium: msg.payload.medium || 'text',
-      content: msg.payload.content || '',
-      creator: msg.from,
-      position: msg.payload.position || {x: 0, y: 0, z: 0},
-      zone: msg.payload.zone || 'default',
-      ts: Date.now()
-    };
+    const composeType = msg.payload.composeType || 'poem';
+    const title = msg.payload.title || 'Untitled';
+    const content = msg.payload.content || '';
 
-    if (!state.structures) {
-      state.structures = [];
+    if (!COMPOSE_TYPES[composeType]) {
+      return {
+        success: false,
+        error: 'Invalid compose type'
+      };
     }
 
-    state.structures.push(composition);
+    const typeData = COMPOSE_TYPES[composeType];
+
+    // Check max length for text-based types
+    if (typeData.maxLength && content.length > typeData.maxLength) {
+      return {
+        success: false,
+        error: 'Content exceeds maximum length of ' + typeData.maxLength + ' characters'
+      };
+    }
+
+    const artwork = {
+      id: generateId(),
+      creator: msg.from,
+      type: composeType,
+      title: title,
+      content: content,
+      zone: msg.payload.zone || 'default',
+      position: msg.payload.position || {x: 0, y: 0, z: 0},
+      ts: Date.now(),
+      likes: 0,
+      featured: false,
+      likedBy: []
+    };
+
+    if (!state.artworks) {
+      state.artworks = [];
+    }
+
+    state.artworks.push(artwork);
+
+    // Calculate spark reward
+    const sparkMin = typeData.sparkReward[0];
+    const sparkMax = typeData.sparkReward[1];
+    const sparkReward = Math.floor(sparkMin + Math.random() * (sparkMax - sparkMin));
 
     return {
       success: true,
       state: state,
-      composition: composition
+      artwork: artwork,
+      sparkReward: sparkReward
+    };
+  }
+
+  // Like an artwork
+  function likeArtwork(artworkId, playerId, state) {
+    if (!state.artworks) {
+      return { success: false, error: 'No artworks found' };
+    }
+
+    const artwork = state.artworks.find(function(a) { return a.id === artworkId; });
+    if (!artwork) {
+      return { success: false, error: 'Artwork not found' };
+    }
+
+    if (!artwork.likedBy) {
+      artwork.likedBy = [];
+    }
+
+    // Check if already liked
+    if (artwork.likedBy.indexOf(playerId) !== -1) {
+      return { success: false, error: 'Already liked this artwork' };
+    }
+
+    artwork.likedBy.push(playerId);
+    artwork.likes = artwork.likedBy.length;
+
+    return {
+      success: true,
+      artwork: artwork,
+      totalLikes: artwork.likes
+    };
+  }
+
+  // Get artworks in a zone
+  function getArtworks(state, zone) {
+    if (!state.artworks) return [];
+
+    return state.artworks.filter(function(a) {
+      return !zone || a.zone === zone;
+    });
+  }
+
+  // Get artworks by player
+  function getArtworksByPlayer(state, playerId) {
+    if (!state.artworks) return [];
+
+    return state.artworks.filter(function(a) {
+      return a.creator === playerId;
+    });
+  }
+
+  // Feature an artwork (most liked in zone)
+  function featureArtwork(artworkId, state) {
+    if (!state.artworks) {
+      return { success: false, error: 'No artworks found' };
+    }
+
+    const artwork = state.artworks.find(function(a) { return a.id === artworkId; });
+    if (!artwork) {
+      return { success: false, error: 'Artwork not found' };
+    }
+
+    // Unfeature all other artworks in the same zone
+    state.artworks.forEach(function(a) {
+      if (a.zone === artwork.zone && a.id !== artworkId) {
+        a.featured = false;
+      }
+    });
+
+    artwork.featured = true;
+
+    return {
+      success: true,
+      artwork: artwork
     };
   }
 
@@ -6023,11 +6201,16 @@ html, body {
   exports.PLANT_SPECIES = PLANT_SPECIES;
   exports.RECIPES = RECIPES;
   exports.STRUCTURE_TYPES = STRUCTURE_TYPES;
+  exports.COMPOSE_TYPES = COMPOSE_TYPES;
   exports.handleBuild = handleBuild;
   exports.handlePlant = handlePlant;
   exports.handleHarvest = handleHarvest;
   exports.handleCraft = handleCraft;
   exports.handleCompose = handleCompose;
+  exports.likeArtwork = likeArtwork;
+  exports.getArtworks = getArtworks;
+  exports.getArtworksByPlayer = getArtworksByPlayer;
+  exports.featureArtwork = featureArtwork;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Creation = {}));
 
@@ -7441,6 +7624,199 @@ html, body {
     );
   }
 
+  // Spectator tracking
+  var spectators = {}; // competitionId → [playerIds]
+
+  // Join as spectator
+  function joinAsSpectator(competitionId, playerId, state) {
+    if (!state.competitions || state.competitions.length === 0) {
+      return { success: false, error: 'No competitions found' };
+    }
+
+    var competition = state.competitions.find(function(c) {
+      return c.id === competitionId;
+    });
+
+    if (!competition) {
+      return { success: false, error: 'Competition not found' };
+    }
+
+    if (competition.status !== 'active') {
+      return { success: false, error: 'Competition is not active' };
+    }
+
+    if (!spectators[competitionId]) {
+      spectators[competitionId] = [];
+    }
+
+    if (spectators[competitionId].indexOf(playerId) === -1) {
+      spectators[competitionId].push(playerId);
+    }
+
+    return { success: true, competition: competition };
+  }
+
+  // Leave spectator
+  function leaveSpectator(competitionId, playerId) {
+    if (!spectators[competitionId]) return;
+
+    var index = spectators[competitionId].indexOf(playerId);
+    if (index !== -1) {
+      spectators[competitionId].splice(index, 1);
+    }
+
+    // Clean up empty spectator lists
+    if (spectators[competitionId].length === 0) {
+      delete spectators[competitionId];
+    }
+  }
+
+  // Get spectators
+  function getSpectators(competitionId) {
+    return spectators[competitionId] || [];
+  }
+
+  // Get active competitions
+  function getActiveCompetitions(state) {
+    if (!state.competitions || state.competitions.length === 0) {
+      return [];
+    }
+
+    return state.competitions
+      .filter(function(c) { return c.status === 'active'; })
+      .map(function(c) {
+        return {
+          id: c.id,
+          type: c.type,
+          players: c.players,
+          startedAt: c.startedAt,
+          spectatorCount: spectators[c.id] ? spectators[c.id].length : 0
+        };
+      });
+  }
+
+  // Broadcast to spectators
+  function broadcastToSpectators(competitionId, eventType, data) {
+    var spectatorList = spectators[competitionId] || [];
+
+    return {
+      type: 'spectator_event',
+      competitionId: competitionId,
+      eventType: eventType,
+      data: data,
+      spectators: spectatorList,
+      timestamp: Date.now()
+    };
+  }
+
+  // Get competition leaderboard
+  function getCompetitionLeaderboard(state) {
+    if (!state.competitions || state.competitions.length === 0) {
+      return [];
+    }
+
+    var playerStats = {};
+
+    state.competitions
+      .filter(function(c) { return c.status === 'completed'; })
+      .forEach(function(comp) {
+        comp.players.forEach(function(playerId) {
+          if (!playerStats[playerId]) {
+            playerStats[playerId] = { playerId: playerId, wins: 0, losses: 0, total: 0 };
+          }
+
+          if (comp.winner === playerId) {
+            playerStats[playerId].wins++;
+          } else {
+            playerStats[playerId].losses++;
+          }
+          playerStats[playerId].total++;
+        });
+      });
+
+    return Object.values(playerStats).sort(function(a, b) {
+      return b.wins - a.wins;
+    });
+  }
+
+  // Race Competition Type
+  function createRace(organizerId, checkpoints, zone, state) {
+    var raceId = generateId();
+    var race = {
+      id: raceId,
+      type: 'race',
+      organizer: organizerId,
+      checkpoints: checkpoints,
+      zone: zone,
+      participants: [],
+      progress: {}, // playerId → { checkpointIndex, time }
+      status: 'waiting',
+      createdAt: Date.now()
+    };
+
+    if (!state.competitions) {
+      state.competitions = [];
+    }
+
+    state.competitions.push(race);
+
+    return {
+      success: true,
+      race: race,
+      state: state
+    };
+  }
+
+  // Check race progress
+  function checkRaceProgress(competitionId, playerId, position) {
+    // This function would be called in the game loop to check if player reached a checkpoint
+    // Returns updated progress information
+
+    return {
+      checkpointHit: false,
+      finished: false,
+      currentCheckpoint: 0,
+      time: 0
+    };
+  }
+
+  // Get race standings
+  function getRaceStandings(competitionId, state) {
+    if (!state.competitions) {
+      return [];
+    }
+
+    var race = state.competitions.find(function(c) {
+      return c.id === competitionId && c.type === 'race';
+    });
+
+    if (!race || !race.progress) {
+      return [];
+    }
+
+    var standings = Object.keys(race.progress).map(function(playerId) {
+      var progress = race.progress[playerId];
+      return {
+        playerId: playerId,
+        checkpointIndex: progress.checkpointIndex || 0,
+        time: progress.time || 0,
+        finished: progress.finished || false
+      };
+    });
+
+    // Sort by checkpoint progress (descending) then by time (ascending)
+    standings.sort(function(a, b) {
+      if (a.finished && !b.finished) return -1;
+      if (!a.finished && b.finished) return 1;
+      if (a.checkpointIndex !== b.checkpointIndex) {
+        return b.checkpointIndex - a.checkpointIndex;
+      }
+      return a.time - b.time;
+    });
+
+    return standings;
+  }
+
   // Exports
   exports.COMPETITION_TYPES = COMPETITION_TYPES;
   exports.SPARK_AWARDS = SPARK_AWARDS;
@@ -7449,6 +7825,15 @@ html, body {
   exports.handleForfeit = handleForfeit;
   exports.handleScore = handleScore;
   exports.getPendingChallenges = getPendingChallenges;
+  exports.joinAsSpectator = joinAsSpectator;
+  exports.leaveSpectator = leaveSpectator;
+  exports.getSpectators = getSpectators;
+  exports.getActiveCompetitions = getActiveCompetitions;
+  exports.broadcastToSpectators = broadcastToSpectators;
+  exports.getCompetitionLeaderboard = getCompetitionLeaderboard;
+  exports.createRace = createRace;
+  exports.checkRaceProgress = checkRaceProgress;
+  exports.getRaceStandings = getRaceStandings;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Competition = {}));
 
@@ -7656,6 +8041,48 @@ html, body {
     };
   }
 
+  // Get all discoveries for a player
+  function getDiscoveries(playerId, state) {
+    if (!state || !state.discoveries) {
+      return [];
+    }
+
+    return state.discoveries.filter(function(d) {
+      return d.discoverer === playerId;
+    }).map(function(d) {
+      // Map rarity number to rarity name
+      var rarityName = 'common';
+      if (d.rarity >= 0.9) rarityName = 'legendary';
+      else if (d.rarity >= 0.7) rarityName = 'epic';
+      else if (d.rarity >= 0.5) rarityName = 'rare';
+      else if (d.rarity >= 0.3) rarityName = 'uncommon';
+
+      return {
+        name: d.type.charAt(0).toUpperCase() + d.type.slice(1),
+        description: d.description,
+        zone: d.zone,
+        rarity: rarityName,
+        timestamp: d.ts
+      };
+    });
+  }
+
+  // Get discovered zones for a player
+  function getDiscoveredZones(playerId, state) {
+    if (!state || !state.discoveries) {
+      return ['default'];
+    }
+
+    var zones = {};
+    state.discoveries.forEach(function(d) {
+      if (d.discoverer === playerId) {
+        zones[d.zone] = true;
+      }
+    });
+
+    return Object.keys(zones);
+  }
+
   // Exports
   exports.DISCOVERY_TYPES = DISCOVERY_TYPES;
   exports.BASE_RARITY = BASE_RARITY;
@@ -7663,6 +8090,8 @@ html, body {
   exports.handleInspect = handleInspect;
   exports.isDuplicate = isDuplicate;
   exports.calculateRarity = calculateRarity;
+  exports.getDiscoveries = getDiscoveries;
+  exports.getDiscoveredZones = getDiscoveredZones;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Exploration = {}));
 
@@ -7834,6 +8263,45 @@ html, body {
     return 1.0 + (warmth / 1000);
   }
 
+  /**
+   * Get speed from GPS position (for AR safety - pause at driving speed)
+   * @param {Object} prev - Previous GPS point {lat, lon, ts}
+   * @param {Object} curr - Current GPS point {lat, lon, ts}
+   * @returns {number} Speed in km/h
+   */
+  function getSpeed(prev, curr) {
+    if (!prev || !curr || !prev.ts || !curr.ts) return 0;
+    var dist = haversineDistance(prev.lat, prev.lon, curr.lat, curr.lon);
+    var hours = (curr.ts - prev.ts) / (1000 * 60 * 60);
+    if (hours <= 0) return 0;
+    return dist / hours;
+  }
+
+  /**
+   * Check if player is moving too fast for AR mode (driving)
+   * @param {Array} recentGPS - Last 3+ GPS points
+   * @returns {boolean} true if driving speed detected
+   */
+  function isDrivingSpeed(recentGPS) {
+    if (!recentGPS || recentGPS.length < 2) return false;
+    var last = recentGPS[recentGPS.length - 1];
+    var prev = recentGPS[recentGPS.length - 2];
+    return getSpeed(prev, last) > 30; // 30 km/h threshold
+  }
+
+  /**
+   * Get warmth tier label
+   * @param {number} warmth - Warmth value 0-100
+   * @returns {string} Tier label
+   */
+  function getWarmthTier(warmth) {
+    if (warmth >= 80) return 'Sunwalker';
+    if (warmth >= 50) return 'Wanderer';
+    if (warmth >= 20) return 'Stroller';
+    if (warmth > 0) return 'Newcomer';
+    return 'Indoor';
+  }
+
   // Exports
   exports.ANCHOR_TYPES = ANCHOR_TYPES;
   exports.createAnchor = createAnchor;
@@ -7841,8 +8309,1262 @@ html, body {
   exports.calculateWarmth = calculateWarmth;
   exports.getWarmthBonus = getWarmthBonus;
   exports.haversineDistance = haversineDistance;
+  exports.getSpeed = getSpeed;
+  exports.isDrivingSpeed = isDrivingSpeed;
+  exports.getWarmthTier = getWarmthTier;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Physical = {}));
+
+
+// guilds.js
+(function(exports) {
+  'use strict';
+
+  // Guild/Association system for ZION MMO
+  // Implements community formation per ZION Constitution §2.3 and §5.4
+
+  // State storage
+  var guilds = [];
+  var invites = [];
+  var guildMessages = [];
+  var nextGuildId = 1;
+  var nextInviteId = 1;
+  var nextMessageId = 1;
+
+  // Guild level thresholds
+  var LEVEL_THRESHOLDS = [
+    { level: 1, xp: 0, maxMembers: 20 },
+    { level: 2, xp: 500, maxMembers: 30 },
+    { level: 3, xp: 1500, maxMembers: 40 },
+    { level: 4, xp: 3000, maxMembers: 50 },
+    { level: 5, xp: 6000, maxMembers: 60 }
+  ];
+
+  // Constants
+  var GUILD_CREATION_COST = 100;
+  var INVITE_EXPIRY_MS = 3600000; // 1 hour
+
+  /**
+   * Initialize guilds system with saved data
+   * @param {object} existingData - Previously saved guild data
+   */
+  function initGuilds(existingData) {
+    if (!existingData) return;
+
+    guilds = existingData.guilds || [];
+    invites = existingData.invites || [];
+    guildMessages = existingData.guildMessages || [];
+    nextGuildId = existingData.nextGuildId || 1;
+    nextInviteId = existingData.nextInviteId || 1;
+    nextMessageId = existingData.nextMessageId || 1;
+
+    console.log('Guilds initialized:', guilds.length, 'guilds');
+  }
+
+  /**
+   * Get guilds state for saving
+   * @returns {object} - Serializable guild state
+   */
+  function getGuildsState() {
+    return {
+      guilds: guilds,
+      invites: invites,
+      guildMessages: guildMessages,
+      nextGuildId: nextGuildId,
+      nextInviteId: nextInviteId,
+      nextMessageId: nextMessageId
+    };
+  }
+
+  /**
+   * Create a new guild
+   * @param {string} playerId - Founder player ID
+   * @param {string} name - Guild name
+   * @param {string} tag - Guild tag (3-5 chars)
+   * @param {string} type - Guild type: 'guild'|'garden'|'studio'|'community'
+   * @param {string} description - Guild description
+   * @returns {object} - { success: boolean, guild?: object, error?: string }
+   */
+  function createGuild(playerId, name, tag, type, description) {
+    // Validate parameters
+    if (!playerId || !name || !tag || !type) {
+      return { success: false, error: 'Missing required parameters' };
+    }
+
+    if (tag.length < 3 || tag.length > 5) {
+      return { success: false, error: 'Tag must be 3-5 characters' };
+    }
+
+    if (['guild', 'garden', 'studio', 'community'].indexOf(type) === -1) {
+      return { success: false, error: 'Invalid guild type' };
+    }
+
+    // Check if player already in a guild
+    var existingGuild = getPlayerGuild(playerId);
+    if (existingGuild) {
+      return { success: false, error: 'Already in a guild' };
+    }
+
+    // Check if guild name or tag already exists
+    var nameExists = guilds.some(function(g) { return g.name === name; });
+    var tagExists = guilds.some(function(g) { return g.tag === tag; });
+
+    if (nameExists) {
+      return { success: false, error: 'Guild name already taken' };
+    }
+
+    if (tagExists) {
+      return { success: false, error: 'Guild tag already taken' };
+    }
+
+    // Create guild
+    var guild = {
+      id: 'guild_' + (nextGuildId++),
+      name: name,
+      tag: tag,
+      description: description || '',
+      founder: playerId,
+      leaders: [playerId],
+      members: [{
+        playerId: playerId,
+        role: 'leader',
+        joinedAt: Date.now()
+      }],
+      createdAt: Date.now(),
+      zone: 'nexus', // Default home zone
+      type: type,
+      banner: {
+        primaryColor: '#FFD700',
+        secondaryColor: '#4A4A4A',
+        icon: 'star'
+      },
+      treasury: 0,
+      level: 1,
+      xp: 0,
+      maxMembers: 20,
+      settings: {
+        open: true,
+        minLevel: 0
+      },
+      activities: []
+    };
+
+    guilds.push(guild);
+
+    // Log activity
+    addActivity(guild.id, playerId + ' founded the ' + type);
+
+    return {
+      success: true,
+      guild: guild,
+      cost: GUILD_CREATION_COST
+    };
+  }
+
+  /**
+   * Disband a guild
+   * @param {string} guildId - Guild ID
+   * @param {string} playerId - Player ID (must be founder)
+   * @returns {object} - { success: boolean, error?: string }
+   */
+  function disbandGuild(guildId, playerId) {
+    var guild = getGuild(guildId);
+    if (!guild) {
+      return { success: false, error: 'Guild not found' };
+    }
+
+    if (guild.founder !== playerId) {
+      return { success: false, error: 'Only founder can disband guild' };
+    }
+
+    // Remove guild
+    guilds = guilds.filter(function(g) { return g.id !== guildId; });
+
+    // Remove invites
+    invites = invites.filter(function(i) { return i.guildId !== guildId; });
+
+    // Remove messages
+    guildMessages = guildMessages.filter(function(m) { return m.guildId !== guildId; });
+
+    return { success: true };
+  }
+
+  /**
+   * Invite player to guild
+   * @param {string} guildId - Guild ID
+   * @param {string} inviterId - Inviter player ID
+   * @param {string} targetId - Target player ID
+   * @returns {object} - { success: boolean, invite?: object, error?: string }
+   */
+  function inviteToGuild(guildId, inviterId, targetId) {
+    var guild = getGuild(guildId);
+    if (!guild) {
+      return { success: false, error: 'Guild not found' };
+    }
+
+    // Check inviter has permission
+    var inviterMember = guild.members.find(function(m) { return m.playerId === inviterId; });
+    if (!inviterMember || (inviterMember.role !== 'leader' && inviterMember.role !== 'officer')) {
+      return { success: false, error: 'No permission to invite' };
+    }
+
+    // Check target not already in guild
+    var targetInGuild = guild.members.some(function(m) { return m.playerId === targetId; });
+    if (targetInGuild) {
+      return { success: false, error: 'Player already in guild' };
+    }
+
+    // Check target not in another guild
+    var targetGuild = getPlayerGuild(targetId);
+    if (targetGuild) {
+      return { success: false, error: 'Player already in another guild' };
+    }
+
+    // Check guild not full
+    if (guild.members.length >= guild.maxMembers) {
+      return { success: false, error: 'Guild is full' };
+    }
+
+    // Check if invite already exists
+    var existingInvite = invites.find(function(i) {
+      return i.guildId === guildId && i.targetId === targetId && i.status === 'pending';
+    });
+
+    if (existingInvite) {
+      return { success: false, error: 'Invite already sent' };
+    }
+
+    // Create invite
+    var invite = {
+      id: 'invite_' + (nextInviteId++),
+      guildId: guildId,
+      guildName: guild.name,
+      guildTag: guild.tag,
+      inviterId: inviterId,
+      targetId: targetId,
+      status: 'pending',
+      createdAt: Date.now(),
+      expiresAt: Date.now() + INVITE_EXPIRY_MS
+    };
+
+    invites.push(invite);
+
+    return { success: true, invite: invite };
+  }
+
+  /**
+   * Accept guild invite
+   * @param {string} inviteId - Invite ID
+   * @param {string} playerId - Player ID
+   * @returns {object} - { success: boolean, guild?: object, error?: string }
+   */
+  function acceptInvite(inviteId, playerId) {
+    var invite = invites.find(function(i) { return i.id === inviteId; });
+    if (!invite) {
+      return { success: false, error: 'Invite not found' };
+    }
+
+    if (invite.targetId !== playerId) {
+      return { success: false, error: 'Invite not for this player' };
+    }
+
+    if (invite.status !== 'pending') {
+      return { success: false, error: 'Invite already responded to' };
+    }
+
+    if (Date.now() > invite.expiresAt) {
+      invite.status = 'expired';
+      return { success: false, error: 'Invite expired' };
+    }
+
+    var guild = getGuild(invite.guildId);
+    if (!guild) {
+      return { success: false, error: 'Guild no longer exists' };
+    }
+
+    // Check player not in another guild
+    var playerGuild = getPlayerGuild(playerId);
+    if (playerGuild) {
+      return { success: false, error: 'Already in a guild' };
+    }
+
+    // Check guild not full
+    if (guild.members.length >= guild.maxMembers) {
+      return { success: false, error: 'Guild is full' };
+    }
+
+    // Add member
+    guild.members.push({
+      playerId: playerId,
+      role: 'member',
+      joinedAt: Date.now()
+    });
+
+    invite.status = 'accepted';
+
+    // Log activity
+    addActivity(guild.id, playerId + ' joined the guild');
+
+    return { success: true, guild: guild };
+  }
+
+  /**
+   * Decline guild invite
+   * @param {string} inviteId - Invite ID
+   * @param {string} playerId - Player ID
+   * @returns {object} - { success: boolean, error?: string }
+   */
+  function declineInvite(inviteId, playerId) {
+    var invite = invites.find(function(i) { return i.id === inviteId; });
+    if (!invite) {
+      return { success: false, error: 'Invite not found' };
+    }
+
+    if (invite.targetId !== playerId) {
+      return { success: false, error: 'Invite not for this player' };
+    }
+
+    if (invite.status !== 'pending') {
+      return { success: false, error: 'Invite already responded to' };
+    }
+
+    invite.status = 'declined';
+
+    return { success: true };
+  }
+
+  /**
+   * Leave guild
+   * @param {string} guildId - Guild ID
+   * @param {string} playerId - Player ID
+   * @returns {object} - { success: boolean, error?: string }
+   */
+  function leaveGuild(guildId, playerId) {
+    var guild = getGuild(guildId);
+    if (!guild) {
+      return { success: false, error: 'Guild not found' };
+    }
+
+    var memberIndex = guild.members.findIndex(function(m) { return m.playerId === playerId; });
+    if (memberIndex === -1) {
+      return { success: false, error: 'Not a member of this guild' };
+    }
+
+    // Founder cannot leave (must disband)
+    if (guild.founder === playerId) {
+      return { success: false, error: 'Founder must disband guild instead' };
+    }
+
+    // Remove member
+    guild.members.splice(memberIndex, 1);
+
+    // Remove from leaders if applicable
+    guild.leaders = guild.leaders.filter(function(id) { return id !== playerId; });
+
+    // Log activity
+    addActivity(guild.id, playerId + ' left the guild');
+
+    return { success: true };
+  }
+
+  /**
+   * Kick member from guild
+   * @param {string} guildId - Guild ID
+   * @param {string} kickerId - Kicker player ID
+   * @param {string} targetId - Target player ID
+   * @returns {object} - { success: boolean, error?: string }
+   */
+  function kickMember(guildId, kickerId, targetId) {
+    var guild = getGuild(guildId);
+    if (!guild) {
+      return { success: false, error: 'Guild not found' };
+    }
+
+    // Check kicker has permission
+    var kickerMember = guild.members.find(function(m) { return m.playerId === kickerId; });
+    if (!kickerMember || (kickerMember.role !== 'leader' && kickerMember.role !== 'officer')) {
+      return { success: false, error: 'No permission to kick' };
+    }
+
+    // Cannot kick founder
+    if (guild.founder === targetId) {
+      return { success: false, error: 'Cannot kick founder' };
+    }
+
+    // Cannot kick self
+    if (kickerId === targetId) {
+      return { success: false, error: 'Cannot kick yourself' };
+    }
+
+    var targetMember = guild.members.find(function(m) { return m.playerId === targetId; });
+    if (!targetMember) {
+      return { success: false, error: 'Player not in guild' };
+    }
+
+    // Officers cannot kick other officers or leaders
+    if (kickerMember.role === 'officer' && (targetMember.role === 'officer' || targetMember.role === 'leader')) {
+      return { success: false, error: 'Insufficient permission' };
+    }
+
+    // Remove member
+    guild.members = guild.members.filter(function(m) { return m.playerId !== targetId; });
+
+    // Remove from leaders if applicable
+    guild.leaders = guild.leaders.filter(function(id) { return id !== targetId; });
+
+    // Log activity
+    addActivity(guild.id, targetId + ' was kicked from guild');
+
+    return { success: true };
+  }
+
+  /**
+   * Promote/demote member
+   * @param {string} guildId - Guild ID
+   * @param {string} promoterId - Promoter player ID
+   * @param {string} targetId - Target player ID
+   * @param {string} newRole - New role: 'leader'|'officer'|'member'
+   * @returns {object} - { success: boolean, error?: string }
+   */
+  function promoteRole(guildId, promoterId, targetId, newRole) {
+    var guild = getGuild(guildId);
+    if (!guild) {
+      return { success: false, error: 'Guild not found' };
+    }
+
+    if (['leader', 'officer', 'member'].indexOf(newRole) === -1) {
+      return { success: false, error: 'Invalid role' };
+    }
+
+    // Only leaders can promote
+    var promoterMember = guild.members.find(function(m) { return m.playerId === promoterId; });
+    if (!promoterMember || promoterMember.role !== 'leader') {
+      return { success: false, error: 'Only leaders can promote' };
+    }
+
+    // Cannot change founder's role
+    if (guild.founder === targetId && newRole !== 'leader') {
+      return { success: false, error: 'Cannot demote founder' };
+    }
+
+    var targetMember = guild.members.find(function(m) { return m.playerId === targetId; });
+    if (!targetMember) {
+      return { success: false, error: 'Player not in guild' };
+    }
+
+    var oldRole = targetMember.role;
+    targetMember.role = newRole;
+
+    // Update leaders array
+    if (newRole === 'leader' && guild.leaders.indexOf(targetId) === -1) {
+      guild.leaders.push(targetId);
+    } else if (newRole !== 'leader' && guild.leaders.indexOf(targetId) !== -1) {
+      guild.leaders = guild.leaders.filter(function(id) { return id !== targetId; });
+    }
+
+    // Log activity
+    addActivity(guild.id, targetId + ' promoted from ' + oldRole + ' to ' + newRole);
+
+    return { success: true };
+  }
+
+  /**
+   * Get guild by ID
+   * @param {string} guildId - Guild ID
+   * @returns {object|null} - Guild data or null
+   */
+  function getGuild(guildId) {
+    return guilds.find(function(g) { return g.id === guildId; }) || null;
+  }
+
+  /**
+   * Get player's guild
+   * @param {string} playerId - Player ID
+   * @returns {object|null} - Guild data or null
+   */
+  function getPlayerGuild(playerId) {
+    return guilds.find(function(g) {
+      return g.members.some(function(m) { return m.playerId === playerId; });
+    }) || null;
+  }
+
+  /**
+   * Get guild members with details
+   * @param {string} guildId - Guild ID
+   * @returns {array} - Array of member objects
+   */
+  function getGuildMembers(guildId) {
+    var guild = getGuild(guildId);
+    if (!guild) return [];
+
+    return guild.members.map(function(m) {
+      return {
+        playerId: m.playerId,
+        role: m.role,
+        joinedAt: m.joinedAt,
+        online: false // Would be populated by game state
+      };
+    });
+  }
+
+  /**
+   * Search guilds by name
+   * @param {string} query - Search query
+   * @returns {array} - Matching guilds
+   */
+  function searchGuilds(query) {
+    var lowerQuery = query.toLowerCase();
+    return guilds.filter(function(g) {
+      return g.name.toLowerCase().indexOf(lowerQuery) !== -1 ||
+             g.tag.toLowerCase().indexOf(lowerQuery) !== -1;
+    });
+  }
+
+  /**
+   * Get guilds by type
+   * @param {string} type - Guild type
+   * @returns {array} - Guilds of that type
+   */
+  function getGuildsByType(type) {
+    return guilds.filter(function(g) { return g.type === type; });
+  }
+
+  /**
+   * Deposit to guild treasury
+   * @param {string} guildId - Guild ID
+   * @param {string} playerId - Player ID
+   * @param {number} amount - Amount to deposit
+   * @returns {object} - { success: boolean, error?: string }
+   */
+  function depositToTreasury(guildId, playerId, amount) {
+    var guild = getGuild(guildId);
+    if (!guild) {
+      return { success: false, error: 'Guild not found' };
+    }
+
+    var member = guild.members.find(function(m) { return m.playerId === playerId; });
+    if (!member) {
+      return { success: false, error: 'Not a member of this guild' };
+    }
+
+    if (amount <= 0) {
+      return { success: false, error: 'Invalid amount' };
+    }
+
+    guild.treasury += amount;
+
+    // Log activity
+    addActivity(guild.id, playerId + ' deposited ' + amount + ' Spark to treasury');
+
+    return { success: true };
+  }
+
+  /**
+   * Withdraw from guild treasury
+   * @param {string} guildId - Guild ID
+   * @param {string} playerId - Player ID (must be leader)
+   * @param {number} amount - Amount to withdraw
+   * @returns {object} - { success: boolean, error?: string }
+   */
+  function withdrawFromTreasury(guildId, playerId, amount) {
+    var guild = getGuild(guildId);
+    if (!guild) {
+      return { success: false, error: 'Guild not found' };
+    }
+
+    var member = guild.members.find(function(m) { return m.playerId === playerId; });
+    if (!member || member.role !== 'leader') {
+      return { success: false, error: 'Only leaders can withdraw' };
+    }
+
+    if (amount <= 0) {
+      return { success: false, error: 'Invalid amount' };
+    }
+
+    if (guild.treasury < amount) {
+      return { success: false, error: 'Insufficient treasury funds' };
+    }
+
+    guild.treasury -= amount;
+
+    // Log activity
+    addActivity(guild.id, playerId + ' withdrew ' + amount + ' Spark from treasury');
+
+    return { success: true };
+  }
+
+  /**
+   * Add XP to guild
+   * @param {string} guildId - Guild ID
+   * @param {number} amount - XP amount
+   * @param {string} activity - Activity description
+   * @returns {object} - { success: boolean, leveledUp: boolean, newLevel?: number }
+   */
+  function addGuildXP(guildId, amount, activity) {
+    var guild = getGuild(guildId);
+    if (!guild) {
+      return { success: false, leveledUp: false };
+    }
+
+    guild.xp += amount;
+
+    // Check for level up
+    var newLevel = calculateLevel(guild.xp);
+    var leveledUp = newLevel > guild.level;
+
+    if (leveledUp) {
+      guild.level = newLevel;
+      var threshold = LEVEL_THRESHOLDS.find(function(t) { return t.level === newLevel; });
+      if (threshold) {
+        guild.maxMembers = threshold.maxMembers;
+      }
+
+      // Log activity
+      addActivity(guild.id, 'Guild reached level ' + newLevel + '!');
+    }
+
+    // Log XP activity
+    if (activity) {
+      addActivity(guild.id, activity + ' (+' + amount + ' XP)');
+    }
+
+    return {
+      success: true,
+      leveledUp: leveledUp,
+      newLevel: leveledUp ? newLevel : undefined
+    };
+  }
+
+  /**
+   * Calculate guild level from XP
+   * @param {number} xp - Total XP
+   * @returns {number} - Guild level
+   */
+  function calculateLevel(xp) {
+    for (var i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
+      if (xp >= LEVEL_THRESHOLDS[i].xp) {
+        return LEVEL_THRESHOLDS[i].level;
+      }
+    }
+    return 1;
+  }
+
+  /**
+   * Get guild leaderboard
+   * @returns {array} - Top guilds sorted by XP
+   */
+  function getGuildLeaderboard() {
+    return guilds
+      .slice()
+      .sort(function(a, b) { return b.xp - a.xp; })
+      .slice(0, 10)
+      .map(function(g) {
+        return {
+          id: g.id,
+          name: g.name,
+          tag: g.tag,
+          type: g.type,
+          level: g.level,
+          xp: g.xp,
+          memberCount: g.members.length
+        };
+      });
+  }
+
+  /**
+   * Set guild banner
+   * @param {string} guildId - Guild ID
+   * @param {string} playerId - Player ID (must be leader)
+   * @param {object} banner - Banner config { primaryColor, secondaryColor, icon }
+   * @returns {object} - { success: boolean, error?: string }
+   */
+  function setGuildBanner(guildId, playerId, banner) {
+    var guild = getGuild(guildId);
+    if (!guild) {
+      return { success: false, error: 'Guild not found' };
+    }
+
+    var member = guild.members.find(function(m) { return m.playerId === playerId; });
+    if (!member || member.role !== 'leader') {
+      return { success: false, error: 'Only leaders can change banner' };
+    }
+
+    guild.banner = banner;
+
+    // Log activity
+    addActivity(guild.id, 'Guild banner updated');
+
+    return { success: true };
+  }
+
+  /**
+   * Get guild activities
+   * @param {string} guildId - Guild ID
+   * @param {number} limit - Max number of activities
+   * @returns {array} - Activity log
+   */
+  function getGuildActivities(guildId, limit) {
+    var guild = getGuild(guildId);
+    if (!guild) return [];
+
+    var activities = guild.activities.slice();
+    if (limit) {
+      activities = activities.slice(-limit);
+    }
+
+    return activities.reverse(); // Most recent first
+  }
+
+  /**
+   * Send guild message
+   * @param {string} guildId - Guild ID
+   * @param {string} playerId - Sender player ID
+   * @param {string} text - Message text
+   * @returns {object} - { success: boolean, message?: object, error?: string }
+   */
+  function sendGuildMessage(guildId, playerId, text) {
+    var guild = getGuild(guildId);
+    if (!guild) {
+      return { success: false, error: 'Guild not found' };
+    }
+
+    var member = guild.members.find(function(m) { return m.playerId === playerId; });
+    if (!member) {
+      return { success: false, error: 'Not a member of this guild' };
+    }
+
+    var message = {
+      id: 'msg_' + (nextMessageId++),
+      guildId: guildId,
+      playerId: playerId,
+      text: text,
+      timestamp: Date.now()
+    };
+
+    guildMessages.push(message);
+
+    return { success: true, message: message };
+  }
+
+  /**
+   * Get guild messages
+   * @param {string} guildId - Guild ID
+   * @param {number} limit - Max number of messages
+   * @returns {array} - Messages
+   */
+  function getGuildMessages(guildId, limit) {
+    var messages = guildMessages.filter(function(m) { return m.guildId === guildId; });
+
+    if (limit) {
+      messages = messages.slice(-limit);
+    }
+
+    return messages;
+  }
+
+  /**
+   * Add activity to guild log
+   * @param {string} guildId - Guild ID
+   * @param {string} activity - Activity description
+   */
+  function addActivity(guildId, activity) {
+    var guild = getGuild(guildId);
+    if (!guild) return;
+
+    guild.activities.push({
+      timestamp: Date.now(),
+      text: activity
+    });
+
+    // Keep only last 50 activities
+    if (guild.activities.length > 50) {
+      guild.activities = guild.activities.slice(-50);
+    }
+  }
+
+  /**
+   * Get pending invites for player
+   * @param {string} playerId - Player ID
+   * @returns {array} - Pending invites
+   */
+  function getPendingInvites(playerId) {
+    return invites.filter(function(i) {
+      return i.targetId === playerId &&
+             i.status === 'pending' &&
+             Date.now() <= i.expiresAt;
+    });
+  }
+
+  /**
+   * Update guild settings
+   * @param {string} guildId - Guild ID
+   * @param {string} playerId - Player ID (must be leader)
+   * @param {object} settings - Settings to update
+   * @returns {object} - { success: boolean, error?: string }
+   */
+  function updateGuildSettings(guildId, playerId, settings) {
+    var guild = getGuild(guildId);
+    if (!guild) {
+      return { success: false, error: 'Guild not found' };
+    }
+
+    var member = guild.members.find(function(m) { return m.playerId === playerId; });
+    if (!member || member.role !== 'leader') {
+      return { success: false, error: 'Only leaders can update settings' };
+    }
+
+    // Update allowed settings
+    if (settings.hasOwnProperty('open')) {
+      guild.settings.open = settings.open;
+    }
+    if (settings.hasOwnProperty('minLevel')) {
+      guild.settings.minLevel = settings.minLevel;
+    }
+
+    return { success: true };
+  }
+
+  // Export public API
+  exports.initGuilds = initGuilds;
+  exports.getGuildsState = getGuildsState;
+  exports.createGuild = createGuild;
+  exports.disbandGuild = disbandGuild;
+  exports.inviteToGuild = inviteToGuild;
+  exports.acceptInvite = acceptInvite;
+  exports.declineInvite = declineInvite;
+  exports.leaveGuild = leaveGuild;
+  exports.kickMember = kickMember;
+  exports.promoteRole = promoteRole;
+  exports.getGuild = getGuild;
+  exports.getPlayerGuild = getPlayerGuild;
+  exports.getGuildMembers = getGuildMembers;
+  exports.searchGuilds = searchGuilds;
+  exports.getGuildsByType = getGuildsByType;
+  exports.depositToTreasury = depositToTreasury;
+  exports.withdrawFromTreasury = withdrawFromTreasury;
+  exports.addGuildXP = addGuildXP;
+  exports.getGuildLeaderboard = getGuildLeaderboard;
+  exports.setGuildBanner = setGuildBanner;
+  exports.getGuildActivities = getGuildActivities;
+  exports.sendGuildMessage = sendGuildMessage;
+  exports.getGuildMessages = getGuildMessages;
+  exports.getPendingInvites = getPendingInvites;
+  exports.updateGuildSettings = updateGuildSettings;
+
+})(typeof module !== 'undefined' ? module.exports : (window.Guilds = {}));
+
+
+// mentoring.js
+(function(exports) {
+  'use strict';
+
+  // ============================================================================
+  // SKILL TREE CONFIGURATION
+  // ============================================================================
+
+  var SKILLS = {
+    gardening: {
+      name: 'Gardening',
+      levels: ['Seedling', 'Sprout', 'Gardener', 'Botanist', 'Grove Master'],
+      xpPerLevel: [0, 100, 300, 600, 1000]
+    },
+    crafting: {
+      name: 'Crafting',
+      levels: ['Novice', 'Apprentice', 'Journeyman', 'Artisan', 'Master Crafter'],
+      xpPerLevel: [0, 100, 300, 600, 1000]
+    },
+    building: {
+      name: 'Building',
+      levels: ['Laborer', 'Builder', 'Architect', 'Engineer', 'Grand Architect'],
+      xpPerLevel: [0, 100, 300, 600, 1000]
+    },
+    exploration: {
+      name: 'Exploration',
+      levels: ['Wanderer', 'Scout', 'Explorer', 'Pathfinder', 'Cartographer'],
+      xpPerLevel: [0, 100, 300, 600, 1000]
+    },
+    trading: {
+      name: 'Trading',
+      levels: ['Haggler', 'Merchant', 'Trader', 'Mogul', 'Trade Baron'],
+      xpPerLevel: [0, 100, 300, 600, 1000]
+    },
+    social: {
+      name: 'Social',
+      levels: ['Shy', 'Friendly', 'Sociable', 'Diplomat', 'Ambassador'],
+      xpPerLevel: [0, 100, 300, 600, 1000]
+    },
+    combat: {
+      name: 'Combat',
+      levels: ['Brawler', 'Fighter', 'Warrior', 'Champion', 'Arena Legend'],
+      xpPerLevel: [0, 100, 300, 600, 1000]
+    },
+    lore: {
+      name: 'Lore',
+      levels: ['Curious', 'Student', 'Scholar', 'Sage', 'Lorekeeper'],
+      xpPerLevel: [0, 100, 300, 600, 1000]
+    }
+  };
+
+  // NPC archetype to skill mapping
+  var NPC_TEACHING_SPECIALTIES = {
+    farmer: 'gardening',
+    gardener: 'gardening',
+    artisan: 'crafting',
+    creator: 'crafting',
+    builder: 'building',
+    architect: 'building',
+    explorer: 'exploration',
+    ranger: 'exploration',
+    merchant: 'trading',
+    trader: 'trading',
+    diplomat: 'social',
+    storyteller: 'social',
+    warrior: 'combat',
+    guardian: 'combat',
+    scholar: 'lore',
+    sage: 'lore'
+  };
+
+  // ============================================================================
+  // STATE MANAGEMENT
+  // ============================================================================
+
+  var playerSkills = {}; // playerId -> { skillName: { xp, level, levelName } }
+  var mentorships = {}; // mentorshipId -> mentorship object
+  var mentorshipOffers = {}; // offerId -> offer object
+  var npcLessons = {}; // lessonId -> lesson object
+  var mentorshipIdCounter = 0;
+  var offerIdCounter = 0;
+  var lessonIdCounter = 0;
+
+  // ============================================================================
+  // UTILITY FUNCTIONS
+  // ============================================================================
+
+  function generateId(prefix) {
+    return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  }
+
+  function getSkillLevel(xp, skill) {
+    if (!SKILLS[skill]) return 0;
+    var thresholds = SKILLS[skill].xpPerLevel;
+    for (var i = thresholds.length - 1; i >= 0; i--) {
+      if (xp >= thresholds[i]) return i;
+    }
+    return 0;
+  }
+
+  function getLevelName(level, skill) {
+    if (!SKILLS[skill] || level < 0 || level >= SKILLS[skill].levels.length) {
+      return 'Unknown';
+    }
+    return SKILLS[skill].levels[level];
+  }
+
+  // ============================================================================
+  // PLAYER SKILLS
+  // ============================================================================
+
+  function initPlayerSkills(playerId) {
+    if (playerSkills[playerId]) return playerSkills[playerId];
+
+    playerSkills[playerId] = {};
+    for (var skillName in SKILLS) {
+      playerSkills[playerId][skillName] = {
+        xp: 0,
+        level: 0,
+        levelName: SKILLS[skillName].levels[0]
+      };
+    }
+    return playerSkills[playerId];
+  }
+
+  function getPlayerSkills(playerId) {
+    if (!playerSkills[playerId]) {
+      initPlayerSkills(playerId);
+    }
+    return playerSkills[playerId];
+  }
+
+  function addSkillXP(playerId, skill, amount) {
+    if (!SKILLS[skill]) {
+      return { success: false, error: 'Invalid skill' };
+    }
+
+    if (!playerSkills[playerId]) {
+      initPlayerSkills(playerId);
+    }
+
+    var skillData = playerSkills[playerId][skill];
+    var oldLevel = skillData.level;
+    skillData.xp += amount;
+
+    var newLevel = getSkillLevel(skillData.xp, skill);
+    var leveledUp = newLevel > oldLevel;
+
+    if (leveledUp) {
+      skillData.level = newLevel;
+      skillData.levelName = getLevelName(newLevel, skill);
+    }
+
+    return {
+      success: true,
+      newXP: skillData.xp,
+      leveledUp: leveledUp,
+      newLevel: newLevel,
+      newLevelName: skillData.levelName
+    };
+  }
+
+  function getSkillLevelNum(playerId, skill) {
+    if (!playerSkills[playerId] || !SKILLS[skill]) {
+      return 0;
+    }
+    return playerSkills[playerId][skill].level;
+  }
+
+  // ============================================================================
+  // MENTORSHIP SYSTEM
+  // ============================================================================
+
+  function offerMentorship(mentorId, menteeId, skill) {
+    if (!SKILLS[skill]) {
+      return { success: false, error: 'Invalid skill' };
+    }
+
+    var mentorLevel = getSkillLevelNum(mentorId, skill);
+    if (mentorLevel < 2) {
+      return {
+        success: false,
+        error: 'Mentor must be at least level 2 in ' + SKILLS[skill].name
+      };
+    }
+
+    var offerId = generateId('offer');
+    var offer = {
+      id: offerId,
+      mentorId: mentorId,
+      menteeId: menteeId,
+      skill: skill,
+      timestamp: Date.now()
+    };
+
+    mentorshipOffers[offerId] = offer;
+
+    return {
+      success: true,
+      offer: offer
+    };
+  }
+
+  function acceptMentorship(offerId) {
+    var offer = mentorshipOffers[offerId];
+    if (!offer) {
+      return { success: false, error: 'Offer not found' };
+    }
+
+    var mentorshipId = generateId('mentorship');
+    var mentorship = {
+      id: mentorshipId,
+      mentorId: offer.mentorId,
+      menteeId: offer.menteeId,
+      skill: offer.skill,
+      stepsCompleted: 0,
+      totalSteps: 5,
+      startedAt: Date.now()
+    };
+
+    mentorships[mentorshipId] = mentorship;
+    delete mentorshipOffers[offerId];
+
+    return {
+      success: true,
+      mentorship: mentorship
+    };
+  }
+
+  function declineMentorship(offerId) {
+    if (mentorshipOffers[offerId]) {
+      delete mentorshipOffers[offerId];
+    }
+  }
+
+  function completeLessonStep(mentorshipId) {
+    var mentorship = mentorships[mentorshipId];
+    if (!mentorship) {
+      return { success: false, error: 'Mentorship not found' };
+    }
+
+    if (mentorship.stepsCompleted >= mentorship.totalSteps) {
+      return { success: false, error: 'Mentorship already completed' };
+    }
+
+    mentorship.stepsCompleted++;
+    var progress = mentorship.stepsCompleted / mentorship.totalSteps;
+    var completed = mentorship.stepsCompleted >= mentorship.totalSteps;
+
+    // Grant XP to mentee
+    addSkillXP(mentorship.menteeId, mentorship.skill, 20);
+
+    // Spark reward for mentor (5-10 per step, 50 bonus on completion)
+    var sparkReward = Math.floor(5 + Math.random() * 5);
+    if (completed) {
+      sparkReward += 50;
+    }
+
+    return {
+      success: true,
+      progress: progress,
+      stepsCompleted: mentorship.stepsCompleted,
+      totalSteps: mentorship.totalSteps,
+      completed: completed,
+      sparkReward: sparkReward,
+      mentorship: mentorship
+    };
+  }
+
+  function getActiveMentorships(playerId) {
+    var result = [];
+    for (var id in mentorships) {
+      var m = mentorships[id];
+      if (m.mentorId === playerId || m.menteeId === playerId) {
+        result.push(m);
+      }
+    }
+    return result;
+  }
+
+  function getMentorshipProgress(mentorshipId) {
+    var mentorship = mentorships[mentorshipId];
+    if (!mentorship) {
+      return null;
+    }
+
+    return {
+      stepsCompleted: mentorship.stepsCompleted,
+      totalSteps: mentorship.totalSteps,
+      skill: mentorship.skill,
+      mentor: mentorship.mentorId,
+      mentee: mentorship.menteeId
+    };
+  }
+
+  function cancelMentorship(mentorshipId, playerId) {
+    var mentorship = mentorships[mentorshipId];
+    if (!mentorship) {
+      return { success: false, error: 'Mentorship not found' };
+    }
+
+    if (mentorship.mentorId !== playerId && mentorship.menteeId !== playerId) {
+      return { success: false, error: 'Not part of this mentorship' };
+    }
+
+    delete mentorships[mentorshipId];
+    return { success: true };
+  }
+
+  // ============================================================================
+  // NPC TEACHING SYSTEM
+  // ============================================================================
+
+  function canNPCTeach(npcArchetype, skill) {
+    if (!SKILLS[skill]) return false;
+    return NPC_TEACHING_SPECIALTIES[npcArchetype] === skill;
+  }
+
+  function startNPCLesson(playerId, npcId, npcArchetype, skill) {
+    if (!canNPCTeach(npcArchetype, skill)) {
+      return {
+        success: false,
+        error: 'This NPC cannot teach ' + SKILLS[skill].name
+      };
+    }
+
+    var lessonId = generateId('lesson');
+    var lesson = {
+      id: lessonId,
+      playerId: playerId,
+      npcId: npcId,
+      npcArchetype: npcArchetype,
+      skill: skill,
+      startedAt: Date.now()
+    };
+
+    npcLessons[lessonId] = lesson;
+
+    return {
+      success: true,
+      lesson: lesson
+    };
+  }
+
+  function completeNPCLesson(lessonId) {
+    var lesson = npcLessons[lessonId];
+    if (!lesson) {
+      return { success: false, error: 'Lesson not found' };
+    }
+
+    var xpGained = 15;
+    addSkillXP(lesson.playerId, lesson.skill, xpGained);
+
+    var sparkCost = Math.floor(5 + Math.random() * 10);
+
+    delete npcLessons[lessonId];
+
+    return {
+      success: true,
+      xpGained: xpGained,
+      sparkCost: sparkCost,
+      skill: lesson.skill
+    };
+  }
+
+  // ============================================================================
+  // STATE PERSISTENCE
+  // ============================================================================
+
+  function initMentoring(existingData) {
+    if (existingData) {
+      playerSkills = existingData.playerSkills || {};
+      mentorships = existingData.mentorships || {};
+      mentorshipOffers = existingData.mentorshipOffers || {};
+      npcLessons = existingData.npcLessons || {};
+    }
+  }
+
+  function getMentoringState() {
+    return {
+      playerSkills: playerSkills,
+      mentorships: mentorships,
+      mentorshipOffers: mentorshipOffers,
+      npcLessons: npcLessons
+    };
+  }
+
+  // ============================================================================
+  // EXPORTS
+  // ============================================================================
+
+  exports.SKILLS = SKILLS;
+  exports.NPC_TEACHING_SPECIALTIES = NPC_TEACHING_SPECIALTIES;
+  exports.initPlayerSkills = initPlayerSkills;
+  exports.getPlayerSkills = getPlayerSkills;
+  exports.addSkillXP = addSkillXP;
+  exports.getSkillLevel = getSkillLevelNum;
+  exports.offerMentorship = offerMentorship;
+  exports.acceptMentorship = acceptMentorship;
+  exports.declineMentorship = declineMentorship;
+  exports.completeLessonStep = completeLessonStep;
+  exports.getActiveMentorships = getActiveMentorships;
+  exports.getMentorshipProgress = getMentorshipProgress;
+  exports.cancelMentorship = cancelMentorship;
+  exports.canNPCTeach = canNPCTeach;
+  exports.startNPCLesson = startNPCLesson;
+  exports.completeNPCLesson = completeNPCLesson;
+  exports.initMentoring = initMentoring;
+  exports.getMentoringState = getMentoringState;
+
+})(typeof module !== 'undefined' ? module.exports : (window.Mentoring = {}));
 
 
 // models.js
@@ -14955,8 +16677,19 @@ html, body {
       rotation: buildRotation
     };
     placedBuildings.push(placement);
+    lastPlacedMesh = structure;
 
     return placement;
+  }
+
+  var lastPlacedMesh = null;
+
+  function removeLastPlaced(sceneCtx) {
+    if (lastPlacedMesh && sceneCtx && sceneCtx.scene) {
+      sceneCtx.scene.remove(lastPlacedMesh);
+      placedBuildings.pop();
+      lastPlacedMesh = null;
+    }
   }
 
   function updateBuildPreview(sceneCtx, mouseX, mouseY, camera) {
@@ -15284,6 +17017,7 @@ html, body {
   exports.exitBuildMode = exitBuildMode;
   exports.setBuildType = setBuildType;
   exports.confirmPlacement = confirmPlacement;
+  exports.removeLastPlaced = removeLastPlaced;
   exports.updateBuildPreview = updateBuildPreview;
   exports.rotateBuildPreview = rotateBuildPreview;
   exports.getBuildMode = getBuildMode;
@@ -15486,6 +17220,56 @@ html, body {
         if (!chatMode) {
           if (callbacks.onAction) {
             callbacks.onAction('toggleProfile', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'k':
+      case 'K':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleSkills', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'n':
+      case 'N':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleCompose', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'g':
+      case 'G':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleGuild', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'l':
+      case 'L':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleLoreBook', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'v':
+      case 'V':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleDiscoveryLog', {});
           }
           e.preventDefault();
         }
@@ -16413,6 +18197,8 @@ html, body {
 
   var npcDialogEl = null;
   var npcDialogTimer = null;
+  var npcActionCallback = null;
+  var npcShopPanel = null;
 
   // Archetype colors for NPC portraits
   var ARCHETYPE_COLORS_HUD = {
@@ -16499,14 +18285,47 @@ html, body {
       '</div>' +
       '<span style="font-size:10px;color:#666;">' + familiarity + '%</span></div>';
 
-    // Close hint
-    var closeHint = '<div style="text-align:center;font-size:10px;color:#555;margin-top:8px;">Press E to interact again | ESC to close</div>';
+    // Action buttons row
+    var actionBtns = '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">';
+    // Trade button (merchants/traders show prominently)
+    var isMerchant = npcData.archetype === 'merchant' || npcData.archetype === 'trader' ||
+                     npcData.archetype === 'artisan' || npcData.archetype === 'farmer';
+    actionBtns += '<button class="npc-action-btn" data-action="trade" style="flex:1;padding:6px 10px;' +
+      'background:rgba(218,165,32,0.15);border:1px solid rgba(218,165,32,0.4);border-radius:6px;' +
+      'color:#daa520;font-size:11px;cursor:pointer;transition:background 0.2s;"' +
+      (isMerchant ? ' data-primary="true"' : '') + '>&#128176; Trade</button>';
+    // Learn button (scholars/sages)
+    actionBtns += '<button class="npc-action-btn" data-action="learn" style="flex:1;padding:6px 10px;' +
+      'background:rgba(100,149,237,0.15);border:1px solid rgba(100,149,237,0.4);border-radius:6px;' +
+      'color:#6495ed;font-size:11px;cursor:pointer;transition:background 0.2s;">&#128218; Learn</button>';
+    // Lore button
+    actionBtns += '<button class="npc-action-btn" data-action="lore" style="flex:1;padding:6px 10px;' +
+      'background:rgba(147,112,219,0.15);border:1px solid rgba(147,112,219,0.4);border-radius:6px;' +
+      'color:#9370db;font-size:11px;cursor:pointer;transition:background 0.2s;">&#128220; Lore</button>';
+    actionBtns += '</div>';
 
-    npcDialogEl.innerHTML = header + activityBar + dialogue + famBar + closeHint;
+    // Close hint
+    var closeHint = '<div style="text-align:center;font-size:10px;color:#555;margin-top:8px;">Click an action or ESC to close</div>';
+
+    npcDialogEl.innerHTML = header + activityBar + dialogue + famBar + actionBtns + closeHint;
+
+    // Wire up action button clicks
+    var buttons = npcDialogEl.querySelectorAll('.npc-action-btn');
+    buttons.forEach(function(btn) {
+      btn.addEventListener('mouseover', function() { btn.style.background = 'rgba(255,255,255,0.15)'; });
+      btn.addEventListener('mouseout', function() { btn.style.background = ''; });
+      btn.addEventListener('click', function() {
+        var action = btn.getAttribute('data-action');
+        if (npcActionCallback) {
+          npcActionCallback(action, npcData);
+        }
+      });
+    });
+
     hud.appendChild(npcDialogEl);
 
-    // Auto-hide after 8 seconds
-    npcDialogTimer = setTimeout(function() { hideNPCDialog(); }, 8000);
+    // Auto-hide after 15 seconds (longer since there are actions now)
+    npcDialogTimer = setTimeout(function() { hideNPCDialog(); }, 15000);
   }
 
   /**
@@ -16520,6 +18339,100 @@ html, body {
     if (npcDialogEl && npcDialogEl.parentNode) {
       npcDialogEl.parentNode.removeChild(npcDialogEl);
       npcDialogEl = null;
+    }
+  }
+
+  /**
+   * Set callback for NPC dialog action buttons
+   * @param {function} callback - function(action, npcData)
+   */
+  function setNPCActionCallback(callback) {
+    npcActionCallback = callback;
+  }
+
+  /**
+   * Show NPC shop panel
+   * @param {object} npcData - NPC info
+   * @param {Array} items - [{id, name, price, description, icon}]
+   * @param {number} playerSpark - Player's current Spark balance
+   * @param {function} onBuy - callback(itemId)
+   */
+  function showNPCShop(npcData, items, playerSpark, onBuy) {
+    if (typeof document === 'undefined') return;
+    hideNPCShop();
+    hideNPCDialog();
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    var color = ARCHETYPE_COLORS_HUD[npcData.archetype] || '#888';
+
+    npcShopPanel = document.createElement('div');
+    npcShopPanel.id = 'npc-shop-panel';
+    npcShopPanel.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid ' + color + ';border-radius:12px;' +
+      'padding:20px;min-width:400px;max-width:500px;max-height:70vh;pointer-events:auto;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.7);animation:slideIn 0.3s ease-out;overflow-y:auto;';
+
+    var header = '<div style="display:flex;align-items:center;margin-bottom:14px;padding-bottom:10px;' +
+      'border-bottom:1px solid rgba(255,255,255,0.1);">' +
+      '<div style="font-size:18px;font-weight:bold;color:#fff;flex:1;">&#128176; ' +
+      (npcData.name || 'Shop') + '\'s Wares</div>' +
+      '<div style="font-size:13px;color:#daa520;">Your Spark: ' + (playerSpark || 0) + '</div></div>';
+
+    var itemList = '';
+    if (!items || items.length === 0) {
+      itemList = '<div style="text-align:center;color:#888;padding:20px;">No items for sale right now.</div>';
+    } else {
+      items.forEach(function(item) {
+        var canAfford = playerSpark >= item.price;
+        itemList += '<div style="display:flex;align-items:center;padding:10px;margin-bottom:6px;' +
+          'background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.08);">' +
+          '<div style="font-size:24px;margin-right:12px;">' + (item.icon || '&#128230;') + '</div>' +
+          '<div style="flex:1;">' +
+          '<div style="font-size:13px;color:#fff;">' + item.name + '</div>' +
+          '<div style="font-size:11px;color:#888;">' + (item.description || '') + '</div>' +
+          '</div>' +
+          '<div style="text-align:right;margin-left:12px;">' +
+          '<div style="font-size:12px;color:#daa520;margin-bottom:4px;">' + item.price + ' Spark</div>' +
+          '<button class="npc-shop-buy-btn" data-item-id="' + item.id + '" style="padding:4px 12px;' +
+          'background:' + (canAfford ? 'rgba(218,165,32,0.2)' : 'rgba(100,100,100,0.2)') + ';' +
+          'border:1px solid ' + (canAfford ? 'rgba(218,165,32,0.5)' : 'rgba(100,100,100,0.3)') + ';' +
+          'border-radius:4px;color:' + (canAfford ? '#daa520' : '#666') + ';font-size:11px;cursor:' +
+          (canAfford ? 'pointer' : 'not-allowed') + ';"' +
+          (canAfford ? '' : ' disabled') + '>Buy</button>' +
+          '</div></div>';
+      });
+    }
+
+    var closeBtn = '<div style="text-align:center;margin-top:12px;">' +
+      '<button id="npc-shop-close" style="padding:6px 24px;background:rgba(255,255,255,0.08);' +
+      'border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#aaa;font-size:12px;cursor:pointer;">Close Shop</button></div>';
+
+    npcShopPanel.innerHTML = header + itemList + closeBtn;
+    hud.appendChild(npcShopPanel);
+
+    // Wire buy buttons
+    npcShopPanel.querySelectorAll('.npc-shop-buy-btn').forEach(function(btn) {
+      if (!btn.disabled) {
+        btn.addEventListener('click', function() {
+          var itemId = btn.getAttribute('data-item-id');
+          if (onBuy) onBuy(itemId);
+        });
+      }
+    });
+
+    // Wire close button
+    var closeEl = npcShopPanel.querySelector('#npc-shop-close');
+    if (closeEl) {
+      closeEl.addEventListener('click', function() { hideNPCShop(); });
+    }
+  }
+
+  function hideNPCShop() {
+    if (npcShopPanel && npcShopPanel.parentNode) {
+      npcShopPanel.parentNode.removeChild(npcShopPanel);
+      npcShopPanel = null;
     }
   }
 
@@ -18732,6 +20645,1719 @@ html, body {
     return minutes + 'm';
   }
 
+  // Discovery Log Panel
+  var discoveryLogPanel = null;
+
+  function showDiscoveryLog(discoveries) {
+    if (discoveryLogPanel) return;
+
+    var panel = document.createElement('div');
+    panel.id = 'discovery-log-overlay';
+    panel.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+
+    var content = document.createElement('div');
+    content.style.cssText = `
+      width: 80%;
+      max-width: 900px;
+      height: 80%;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 12px;
+      padding: 30px;
+      overflow-y: auto;
+      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+      border: 2px solid #3a506b;
+    `;
+
+    var header = document.createElement('div');
+    header.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #3a506b;
+    `;
+
+    var title = document.createElement('h2');
+    title.textContent = 'Discovery Log';
+    title.style.cssText = `
+      margin: 0;
+      color: #e0e0e0;
+      font-size: 28px;
+      font-family: system-ui, sans-serif;
+      font-weight: 600;
+    `;
+
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = 'X';
+    closeBtn.style.cssText = `
+      background: #c0392b;
+      border: none;
+      color: white;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+    `;
+    closeBtn.onclick = hideDiscoveryLog;
+
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    content.appendChild(header);
+
+    // Group discoveries by zone
+    var discoveryByZone = {};
+    var totalDiscoveries = 0;
+    if (discoveries && discoveries.length > 0) {
+      discoveries.forEach(function(disc) {
+        var zone = disc.zone || 'Unknown';
+        if (!discoveryByZone[zone]) {
+          discoveryByZone[zone] = [];
+        }
+        discoveryByZone[zone].push(disc);
+        totalDiscoveries++;
+      });
+    }
+
+    // Display discoveries by zone
+    Object.keys(discoveryByZone).forEach(function(zone) {
+      var zoneSection = document.createElement('div');
+      zoneSection.style.cssText = `
+        margin-bottom: 30px;
+      `;
+
+      var zoneHeader = document.createElement('div');
+      zoneHeader.textContent = zone + ' (' + discoveryByZone[zone].length + ' discoveries)';
+      zoneHeader.style.cssText = `
+        color: #5dade2;
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        font-family: system-ui, sans-serif;
+      `;
+      zoneSection.appendChild(zoneHeader);
+
+      discoveryByZone[zone].forEach(function(disc) {
+        var rarityColors = {
+          common: '#ffffff',
+          uncommon: '#1eff00',
+          rare: '#0070dd',
+          epic: '#a335ee',
+          legendary: '#ff8000'
+        };
+        var color = rarityColors[disc.rarity] || '#ffffff';
+
+        var discItem = document.createElement('div');
+        discItem.style.cssText = `
+          background: rgba(255, 255, 255, 0.05);
+          border-left: 4px solid ` + color + `;
+          padding: 12px 15px;
+          margin-bottom: 10px;
+          border-radius: 6px;
+        `;
+
+        var discName = document.createElement('div');
+        discName.textContent = disc.name;
+        discName.style.cssText = `
+          color: ` + color + `;
+          font-size: 16px;
+          font-weight: 600;
+          margin-bottom: 5px;
+          font-family: system-ui, sans-serif;
+        `;
+
+        var discDesc = document.createElement('div');
+        discDesc.textContent = disc.description || 'No description available';
+        discDesc.style.cssText = `
+          color: #b0b0b0;
+          font-size: 14px;
+          margin-bottom: 5px;
+          font-family: system-ui, sans-serif;
+        `;
+
+        var discMeta = document.createElement('div');
+        discMeta.textContent = 'Discovered: ' + (disc.timestamp ? new Date(disc.timestamp).toLocaleDateString() : 'Unknown');
+        discMeta.style.cssText = `
+          color: #808080;
+          font-size: 12px;
+          font-style: italic;
+          font-family: system-ui, sans-serif;
+        `;
+
+        discItem.appendChild(discName);
+        discItem.appendChild(discDesc);
+        discItem.appendChild(discMeta);
+        zoneSection.appendChild(discItem);
+      });
+
+      content.appendChild(zoneSection);
+    });
+
+    if (totalDiscoveries === 0) {
+      var emptyMsg = document.createElement('div');
+      emptyMsg.textContent = 'No discoveries yet. Explore the world to find new locations, creatures, and secrets!';
+      emptyMsg.style.cssText = `
+        color: #a0a0a0;
+        font-size: 16px;
+        text-align: center;
+        margin-top: 50px;
+        font-family: system-ui, sans-serif;
+      `;
+      content.appendChild(emptyMsg);
+    }
+
+    panel.appendChild(content);
+    document.body.appendChild(panel);
+    discoveryLogPanel = panel;
+
+    // Close on Escape
+    var escapeHandler = function(e) {
+      if (e.key === 'Escape') {
+        hideDiscoveryLog();
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    panel.escapeHandler = escapeHandler;
+  }
+
+  function hideDiscoveryLog() {
+    if (!discoveryLogPanel) return;
+    if (discoveryLogPanel.escapeHandler) {
+      document.removeEventListener('keydown', discoveryLogPanel.escapeHandler);
+    }
+    document.body.removeChild(discoveryLogPanel);
+    discoveryLogPanel = null;
+  }
+
+  // Lore Book Panel
+  var loreBookPanel = null;
+
+  function showLoreBook(loreEntries) {
+    if (loreBookPanel) return;
+
+    var panel = document.createElement('div');
+    panel.id = 'lore-book-overlay';
+    panel.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+
+    var content = document.createElement('div');
+    content.style.cssText = `
+      width: 80%;
+      max-width: 900px;
+      height: 80%;
+      background: linear-gradient(135deg, #2c1810 0%, #1a0f08 100%);
+      border-radius: 12px;
+      padding: 30px;
+      overflow-y: auto;
+      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+      border: 2px solid #8b4513;
+    `;
+
+    var header = document.createElement('div');
+    header.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #8b4513;
+    `;
+
+    var title = document.createElement('h2');
+    title.textContent = 'Lore Book';
+    title.style.cssText = `
+      margin: 0;
+      color: #f4e4c1;
+      font-size: 28px;
+      font-family: Georgia, serif;
+      font-weight: 600;
+    `;
+
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = 'X';
+    closeBtn.style.cssText = `
+      background: #c0392b;
+      border: none;
+      color: white;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+    `;
+    closeBtn.onclick = hideLoreBook;
+
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    content.appendChild(header);
+
+    // Organize lore by chapter
+    var chapters = {
+      'The Founding': [],
+      'The Zones': [],
+      'The People': [],
+      'The Economy': [],
+      'The Federation': []
+    };
+
+    if (loreEntries && loreEntries.length > 0) {
+      loreEntries.forEach(function(entry) {
+        var chapter = entry.chapter || 'The Founding';
+        if (chapters[chapter]) {
+          chapters[chapter].push(entry);
+        }
+      });
+    }
+
+    // Display lore by chapter
+    Object.keys(chapters).forEach(function(chapterName) {
+      if (chapters[chapterName].length === 0) return;
+
+      var chapterSection = document.createElement('div');
+      chapterSection.style.cssText = `
+        margin-bottom: 30px;
+      `;
+
+      var chapterHeader = document.createElement('div');
+      chapterHeader.textContent = chapterName;
+      chapterHeader.style.cssText = `
+        color: #d4af37;
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        font-family: Georgia, serif;
+      `;
+      chapterSection.appendChild(chapterHeader);
+
+      chapters[chapterName].forEach(function(entry) {
+        var entryItem = document.createElement('div');
+        entryItem.style.cssText = `
+          background: rgba(244, 228, 193, 0.05);
+          border-left: 4px solid #d4af37;
+          padding: 15px;
+          margin-bottom: 15px;
+          border-radius: 6px;
+          position: relative;
+        `;
+
+        if (entry.unread) {
+          var unreadIndicator = document.createElement('div');
+          unreadIndicator.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #d4af37;
+            box-shadow: 0 0 10px #d4af37;
+          `;
+          entryItem.appendChild(unreadIndicator);
+        }
+
+        var entryTitle = document.createElement('div');
+        entryTitle.textContent = entry.title;
+        entryTitle.style.cssText = `
+          color: #f4e4c1;
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 10px;
+          font-family: Georgia, serif;
+        `;
+
+        var entryText = document.createElement('div');
+        entryText.textContent = entry.text || 'No content available';
+        entryText.style.cssText = `
+          color: #c8b896;
+          font-size: 14px;
+          line-height: 1.6;
+          font-family: Georgia, serif;
+        `;
+
+        entryItem.appendChild(entryTitle);
+        entryItem.appendChild(entryText);
+        chapterSection.appendChild(entryItem);
+      });
+
+      content.appendChild(chapterSection);
+    });
+
+    panel.appendChild(content);
+    document.body.appendChild(panel);
+    loreBookPanel = panel;
+
+    // Close on Escape
+    var escapeHandler = function(e) {
+      if (e.key === 'Escape') {
+        hideLoreBook();
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    panel.escapeHandler = escapeHandler;
+  }
+
+  function hideLoreBook() {
+    if (!loreBookPanel) return;
+    if (loreBookPanel.escapeHandler) {
+      document.removeEventListener('keydown', loreBookPanel.escapeHandler);
+    }
+    document.body.removeChild(loreBookPanel);
+    loreBookPanel = null;
+  }
+
+  // Achievement Toast
+  function showAchievementToast(achievement) {
+    var toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #d4af37 0%, #c5a028 100%);
+      border: 3px solid #ffd700;
+      border-radius: 10px;
+      padding: 20px 30px;
+      min-width: 350px;
+      box-shadow: 0 0 30px rgba(212, 175, 55, 0.6);
+      z-index: 10001;
+      transition: top 0.5s ease;
+    `;
+
+    var header = document.createElement('div');
+    header.textContent = 'ACHIEVEMENT UNLOCKED';
+    header.style.cssText = `
+      color: #1a1a1a;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 8px;
+      font-family: system-ui, sans-serif;
+      letter-spacing: 1px;
+    `;
+
+    var achievementName = document.createElement('div');
+    achievementName.textContent = achievement.name || 'Unknown Achievement';
+    achievementName.style.cssText = `
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 5px;
+      font-family: system-ui, sans-serif;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    `;
+
+    var achievementDesc = document.createElement('div');
+    achievementDesc.textContent = achievement.description || '';
+    achievementDesc.style.cssText = `
+      color: #f5f5f5;
+      font-size: 14px;
+      text-align: center;
+      font-family: system-ui, sans-serif;
+    `;
+
+    toast.appendChild(header);
+    toast.appendChild(achievementName);
+    toast.appendChild(achievementDesc);
+    document.body.appendChild(toast);
+
+    // Animate in
+    setTimeout(function() {
+      toast.style.top = '20px';
+    }, 10);
+
+    // Fade out and remove after 5 seconds
+    setTimeout(function() {
+      toast.style.transition = 'top 0.5s ease, opacity 0.5s ease';
+      toast.style.opacity = '0';
+      toast.style.top = '-100px';
+      setTimeout(function() {
+        if (toast.parentNode) {
+          document.body.removeChild(toast);
+        }
+      }, 500);
+    }, 5000);
+  }
+
+  // Discovery Popup
+  function showDiscoveryPopup(discovery) {
+    var popup = document.createElement('div');
+    popup.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 3px solid #5dade2;
+      border-radius: 12px;
+      padding: 30px;
+      min-width: 400px;
+      box-shadow: 0 0 50px rgba(93, 173, 226, 0.6);
+      z-index: 10001;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+    `;
+
+    var header = document.createElement('div');
+    header.textContent = 'NEW DISCOVERY';
+    header.style.cssText = `
+      color: #ffd700;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 15px;
+      font-family: system-ui, sans-serif;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    `;
+
+    var rarityColors = {
+      common: '#ffffff',
+      uncommon: '#1eff00',
+      rare: '#0070dd',
+      epic: '#a335ee',
+      legendary: '#ff8000'
+    };
+    var color = rarityColors[discovery.rarity] || '#ffffff';
+
+    var discoveryName = document.createElement('div');
+    discoveryName.textContent = discovery.name || 'Unknown Discovery';
+    discoveryName.style.cssText = `
+      color: ` + color + `;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 10px;
+      font-family: system-ui, sans-serif;
+      text-shadow: 0 0 10px ` + color + `;
+    `;
+
+    var discoveryDesc = document.createElement('div');
+    discoveryDesc.textContent = discovery.description || '';
+    discoveryDesc.style.cssText = `
+      color: #e0e0e0;
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 15px;
+      line-height: 1.5;
+      font-family: system-ui, sans-serif;
+    `;
+
+    var rewardText = document.createElement('div');
+    rewardText.textContent = '+ ' + (discovery.sparkReward || 0) + ' Spark';
+    rewardText.style.cssText = `
+      color: #ffd700;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      font-family: system-ui, sans-serif;
+    `;
+
+    popup.appendChild(header);
+    popup.appendChild(discoveryName);
+    popup.appendChild(discoveryDesc);
+    popup.appendChild(rewardText);
+    document.body.appendChild(popup);
+
+    // Animate in
+    setTimeout(function() {
+      popup.style.transform = 'translate(-50%, -50%) scale(1)';
+      popup.style.opacity = '1';
+    }, 10);
+
+    // Auto-close after 4 seconds
+    setTimeout(function() {
+      popup.style.transform = 'translate(-50%, -50%) scale(0)';
+      popup.style.opacity = '0';
+      setTimeout(function() {
+        if (popup.parentNode) {
+          document.body.removeChild(popup);
+        }
+      }, 300);
+    }, 4000);
+
+    // Click to close
+    popup.onclick = function() {
+      popup.style.transform = 'translate(-50%, -50%) scale(0)';
+      popup.style.opacity = '0';
+      setTimeout(function() {
+        if (popup.parentNode) {
+          document.body.removeChild(popup);
+        }
+      }, 300);
+    };
+  }
+
+  // ============================================================================
+  // SKILLS PANEL
+  // ============================================================================
+
+  var skillsPanel = null;
+
+  function showSkillsPanel(skillsData) {
+    if (skillsPanel) return;
+
+    var panel = document.createElement('div');
+    panel.id = 'skills-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, rgba(20, 25, 35, 0.98), rgba(30, 35, 45, 0.98));
+      border: 2px solid rgba(100, 150, 255, 0.3);
+      border-radius: 12px;
+      padding: 25px;
+      width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 10000;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      font-family: system-ui, sans-serif;
+      pointer-events: auto;
+    `;
+
+    var header = document.createElement('div');
+    header.innerHTML = '<h2 style="margin: 0 0 20px 0; color: #fff; font-size: 24px;">Skills</h2>';
+    panel.appendChild(header);
+
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      cursor: pointer;
+    `;
+    closeBtn.onclick = hideSkillsPanel;
+    panel.appendChild(closeBtn);
+
+    for (var skillName in skillsData) {
+      var skill = skillsData[skillName];
+      var skillDiv = document.createElement('div');
+      skillDiv.style.cssText = `
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+      `;
+
+      var skillHeader = document.createElement('div');
+      skillHeader.innerHTML = `
+        <span style="color: #4af; font-weight: bold; font-size: 16px;">${skillName.charAt(0).toUpperCase() + skillName.slice(1)}</span>
+        <span style="color: #888; float: right;">${skill.levelName} (Level ${skill.level})</span>
+      `;
+      skillDiv.appendChild(skillHeader);
+
+      var xpBar = document.createElement('div');
+      xpBar.style.cssText = `
+        margin-top: 8px;
+        width: 100%;
+        height: 20px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+      `;
+
+      var nextLevelXP = 1000;
+      var currentLevelXP = 0;
+      if (typeof window !== 'undefined' && window.Mentoring && window.Mentoring.SKILLS) {
+        var skillConfig = window.Mentoring.SKILLS[skillName];
+        if (skillConfig && skill.level < skillConfig.xpPerLevel.length - 1) {
+          nextLevelXP = skillConfig.xpPerLevel[skill.level + 1];
+          currentLevelXP = skillConfig.xpPerLevel[skill.level];
+        }
+      }
+
+      var xpProgress = skill.xp - currentLevelXP;
+      var xpNeeded = nextLevelXP - currentLevelXP;
+      var progressPercent = skill.level >= 4 ? 100 : Math.min(100, (xpProgress / xpNeeded) * 100);
+
+      var xpFill = document.createElement('div');
+      xpFill.style.cssText = `
+        width: ${progressPercent}%;
+        height: 100%;
+        background: linear-gradient(90deg, #4af, #a8f);
+        transition: width 0.3s ease;
+      `;
+      xpBar.appendChild(xpFill);
+
+      var xpText = document.createElement('div');
+      xpText.textContent = skill.level >= 4 ? 'MAX LEVEL' : skill.xp + ' / ' + nextLevelXP + ' XP';
+      xpText.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 11px;
+        font-weight: bold;
+      `;
+      xpBar.appendChild(xpText);
+
+      skillDiv.appendChild(xpBar);
+      panel.appendChild(skillDiv);
+    }
+
+    document.body.appendChild(panel);
+    skillsPanel = panel;
+  }
+
+  function hideSkillsPanel() {
+    if (!skillsPanel) return;
+    document.body.removeChild(skillsPanel);
+    skillsPanel = null;
+  }
+
+  // ============================================================================
+  // MENTOR OFFER PANEL
+  // ============================================================================
+
+  var mentorOfferPanel = null;
+
+  function showMentorOffer(offerData, acceptCallback, declineCallback) {
+    if (mentorOfferPanel) return;
+
+    var panel = document.createElement('div');
+    panel.id = 'mentor-offer-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, rgba(20, 25, 35, 0.98), rgba(30, 35, 45, 0.98));
+      border: 2px solid rgba(255, 200, 100, 0.5);
+      border-radius: 12px;
+      padding: 25px;
+      width: 400px;
+      z-index: 10001;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      pointer-events: auto;
+    `;
+
+    panel.innerHTML = `
+      <h3 style="color: #ffa500; margin: 0 0 15px 0;">Mentorship Offer</h3>
+      <p style="color: #fff; margin-bottom: 10px;">
+        <strong>${offerData.mentorId}</strong> wants to mentor you in <strong>${offerData.skill}</strong>
+      </p>
+      <p style="color: #888; font-size: 13px; margin-bottom: 20px;">
+        Complete 5 lesson steps to gain XP and unlock advanced techniques.
+      </p>
+    `;
+
+    var buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = 'display: flex; gap: 10px; justify-content: center;';
+
+    var acceptBtn = document.createElement('button');
+    acceptBtn.textContent = 'Accept';
+    acceptBtn.style.cssText = `
+      padding: 10px 24px;
+      background: linear-gradient(135deg, #4af, #a8f);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    `;
+    acceptBtn.onclick = function() {
+      acceptCallback(offerData.id);
+      document.body.removeChild(mentorOfferPanel);
+      mentorOfferPanel = null;
+    };
+
+    var declineBtn = document.createElement('button');
+    declineBtn.textContent = 'Decline';
+    declineBtn.style.cssText = `
+      padding: 10px 24px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      cursor: pointer;
+    `;
+    declineBtn.onclick = function() {
+      declineCallback(offerData.id);
+      document.body.removeChild(mentorOfferPanel);
+      mentorOfferPanel = null;
+    };
+
+    buttonContainer.appendChild(acceptBtn);
+    buttonContainer.appendChild(declineBtn);
+    panel.appendChild(buttonContainer);
+
+    document.body.appendChild(panel);
+    mentorOfferPanel = panel;
+  }
+
+  // ============================================================================
+  // LESSON PROGRESS PANEL
+  // ============================================================================
+
+  var lessonProgressPanel = null;
+
+  function showLessonProgress(mentorshipData) {
+    if (lessonProgressPanel) {
+      document.body.removeChild(lessonProgressPanel);
+      lessonProgressPanel = null;
+    }
+
+    var panel = document.createElement('div');
+    panel.id = 'lesson-progress-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 120px;
+      right: 20px;
+      background: rgba(20, 25, 35, 0.95);
+      border: 2px solid rgba(255, 200, 100, 0.5);
+      border-radius: 8px;
+      padding: 15px;
+      width: 300px;
+      z-index: 9999;
+      font-family: system-ui, sans-serif;
+      pointer-events: auto;
+    `;
+
+    var progress = mentorshipData.stepsCompleted / mentorshipData.totalSteps;
+    var progressPercent = Math.round(progress * 100);
+
+    panel.innerHTML = `
+      <h4 style="color: #ffa500; margin: 0 0 10px 0; font-size: 14px;">Mentorship Progress</h4>
+      <p style="color: #fff; font-size: 13px; margin: 5px 0;">
+        <strong>${mentorshipData.skill}</strong>
+      </p>
+      <p style="color: #888; font-size: 12px; margin: 5px 0;">
+        Steps: ${mentorshipData.stepsCompleted} / ${mentorshipData.totalSteps}
+      </p>
+      <div style="width: 100%; height: 16px; background: rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; margin-top: 8px;">
+        <div style="width: ${progressPercent}%; height: 100%; background: linear-gradient(90deg, #ffa500, #ffcc00);"></div>
+      </div>
+    `;
+
+    document.body.appendChild(panel);
+    lessonProgressPanel = panel;
+  }
+
+  // ============================================================================
+  // COMPOSE PANEL
+  // ============================================================================
+
+  var composePanel = null;
+
+  function showComposePanel(composeCallback) {
+    if (composePanel) return;
+
+    var panel = document.createElement('div');
+    panel.id = 'compose-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, rgba(20, 25, 35, 0.98), rgba(30, 35, 45, 0.98));
+      border: 2px solid rgba(150, 100, 255, 0.5);
+      border-radius: 12px;
+      padding: 25px;
+      width: 500px;
+      z-index: 10000;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      font-family: system-ui, sans-serif;
+      pointer-events: auto;
+    `;
+
+    var header = document.createElement('div');
+    header.innerHTML = '<h2 style="margin: 0 0 20px 0; color: #a8f; font-size: 24px;">Create Artwork</h2>';
+    panel.appendChild(header);
+
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      cursor: pointer;
+    `;
+    closeBtn.onclick = hideComposePanel;
+    panel.appendChild(closeBtn);
+
+    var form = document.createElement('div');
+
+    var typeLabel = document.createElement('label');
+    typeLabel.textContent = 'Type:';
+    typeLabel.style.cssText = 'display: block; color: #fff; margin-bottom: 5px; font-size: 14px;';
+    form.appendChild(typeLabel);
+
+    var typeSelect = document.createElement('select');
+    typeSelect.id = 'compose-type-select';
+    typeSelect.style.cssText = `
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      font-size: 14px;
+    `;
+
+    var composeTypes = ['poem', 'song', 'story', 'painting', 'sculpture', 'mural'];
+    composeTypes.forEach(function(type) {
+      var option = document.createElement('option');
+      option.value = type;
+      option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+      typeSelect.appendChild(option);
+    });
+    form.appendChild(typeSelect);
+
+    var titleLabel = document.createElement('label');
+    titleLabel.textContent = 'Title:';
+    titleLabel.style.cssText = 'display: block; color: #fff; margin-bottom: 5px; font-size: 14px;';
+    form.appendChild(titleLabel);
+
+    var titleInput = document.createElement('input');
+    titleInput.id = 'compose-title-input';
+    titleInput.type = 'text';
+    titleInput.placeholder = 'Enter title...';
+    titleInput.style.cssText = `
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      font-size: 14px;
+    `;
+    form.appendChild(titleInput);
+
+    var contentLabel = document.createElement('label');
+    contentLabel.textContent = 'Content:';
+    contentLabel.style.cssText = 'display: block; color: #fff; margin-bottom: 5px; font-size: 14px;';
+    form.appendChild(contentLabel);
+
+    var contentTextarea = document.createElement('textarea');
+    contentTextarea.id = 'compose-content-textarea';
+    contentTextarea.placeholder = 'Write your masterpiece...';
+    contentTextarea.rows = 8;
+    contentTextarea.style.cssText = `
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      font-size: 14px;
+      resize: vertical;
+      font-family: inherit;
+    `;
+    form.appendChild(contentTextarea);
+
+    var submitBtn = document.createElement('button');
+    submitBtn.textContent = 'Create';
+    submitBtn.style.cssText = `
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #a8f, #4af);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+    `;
+    submitBtn.onclick = function() {
+      var type = typeSelect.value;
+      var title = titleInput.value.trim();
+      var content = contentTextarea.value.trim();
+
+      if (!title) {
+        showNotification('Please enter a title', 'warning');
+        return;
+      }
+
+      if (!content) {
+        showNotification('Please enter content', 'warning');
+        return;
+      }
+
+      composeCallback({ type: type, title: title, content: content });
+      hideComposePanel();
+    };
+    form.appendChild(submitBtn);
+
+    panel.appendChild(form);
+    document.body.appendChild(panel);
+    composePanel = panel;
+  }
+
+  function hideComposePanel() {
+    if (!composePanel) return;
+    document.body.removeChild(composePanel);
+    composePanel = null;
+  }
+
+  // Guild Panel
+  var guildPanel = null;
+  var guildCreatePanel = null;
+  var guildInvitePanel = null;
+
+  function showGuildPanel(guildData, playerData) {
+    if (guildPanel) {
+      hideGuildPanel();
+      return;
+    }
+
+    var panel = document.createElement('div');
+    panel.id = 'guild-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px;
+      max-height: 80vh;
+      background: rgba(26, 26, 26, 0.95);
+      border: 2px solid rgba(218, 165, 32, 0.5);
+      border-radius: 8px;
+      z-index: 300;
+      overflow-y: auto;
+      pointer-events: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      padding: 25px;
+    `;
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 35px;
+      height: 35px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #E8E0D8;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    `;
+    closeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.3)';
+      this.style.borderColor = '#DAA520';
+      this.style.color = '#DAA520';
+    };
+    closeBtn.onmouseout = function() {
+      this.style.background = 'rgba(255, 255, 255, 0.1)';
+      this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+      this.style.color = '#E8E0D8';
+    };
+    closeBtn.onclick = hideGuildPanel;
+    panel.appendChild(closeBtn);
+
+    // Header
+    var header = document.createElement('div');
+    header.style.cssText = `
+      margin-bottom: 25px;
+      border-bottom: 2px solid rgba(218, 165, 32, 0.3);
+      padding-bottom: 15px;
+    `;
+
+    var title = document.createElement('h2');
+    title.textContent = '[' + guildData.tag + '] ' + guildData.name;
+    title.style.cssText = `
+      color: #DAA520;
+      font-size: 28px;
+      font-family: system-ui, sans-serif;
+      margin: 0 0 8px 0;
+      font-weight: bold;
+    `;
+    header.appendChild(title);
+
+    var subtitle = document.createElement('div');
+    subtitle.textContent = guildData.type.charAt(0).toUpperCase() + guildData.type.slice(1) +
+                          ' • Level ' + guildData.level + ' • ' + guildData.members.length + '/' +
+                          guildData.maxMembers + ' members';
+    subtitle.style.cssText = `
+      color: #A0978E;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+    header.appendChild(subtitle);
+
+    if (guildData.description) {
+      var desc = document.createElement('div');
+      desc.textContent = guildData.description;
+      desc.style.cssText = `
+        color: #D4C5B3;
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+        margin-top: 12px;
+        font-style: italic;
+      `;
+      header.appendChild(desc);
+    }
+
+    panel.appendChild(header);
+
+    // Stats section
+    var statsGrid = document.createElement('div');
+    statsGrid.style.cssText = `
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 25px;
+    `;
+
+    var stats = [
+      { label: 'Treasury', value: guildData.treasury + ' Spark' },
+      { label: 'Guild XP', value: guildData.xp },
+      { label: 'Home Zone', value: guildData.zone }
+    ];
+
+    stats.forEach(function(stat) {
+      var statBox = document.createElement('div');
+      statBox.style.cssText = `
+        background: rgba(218, 165, 32, 0.1);
+        border: 1px solid rgba(218, 165, 32, 0.3);
+        border-radius: 6px;
+        padding: 12px;
+        text-align: center;
+      `;
+
+      var statLabel = document.createElement('div');
+      statLabel.textContent = stat.label;
+      statLabel.style.cssText = `
+        color: #A0978E;
+        font-size: 12px;
+        font-family: system-ui, sans-serif;
+        margin-bottom: 5px;
+      `;
+      statBox.appendChild(statLabel);
+
+      var statValue = document.createElement('div');
+      statValue.textContent = stat.value;
+      statValue.style.cssText = `
+        color: #DAA520;
+        font-size: 18px;
+        font-family: system-ui, sans-serif;
+        font-weight: bold;
+      `;
+      statBox.appendChild(statValue);
+
+      statsGrid.appendChild(statBox);
+    });
+
+    panel.appendChild(statsGrid);
+
+    // Members section
+    var membersSection = document.createElement('div');
+    membersSection.style.cssText = `
+      margin-bottom: 25px;
+    `;
+
+    var membersTitle = document.createElement('h3');
+    membersTitle.textContent = 'Members';
+    membersTitle.style.cssText = `
+      color: #DAA520;
+      font-size: 18px;
+      font-family: system-ui, sans-serif;
+      margin: 0 0 12px 0;
+      font-weight: bold;
+    `;
+    membersSection.appendChild(membersTitle);
+
+    var membersList = document.createElement('div');
+    membersList.style.cssText = `
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      padding: 10px;
+    `;
+
+    guildData.members.forEach(function(member) {
+      var memberItem = document.createElement('div');
+      memberItem.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        margin-bottom: 5px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+      `;
+
+      var memberInfo = document.createElement('div');
+      memberInfo.style.cssText = `
+        color: #E8E0D8;
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+      `;
+      memberInfo.textContent = member.playerId + (member.playerId === playerData.id ? ' (You)' : '');
+      memberItem.appendChild(memberInfo);
+
+      var roleTag = document.createElement('span');
+      roleTag.textContent = member.role.toUpperCase();
+      roleTag.style.cssText = `
+        color: ${member.role === 'leader' ? '#FFD700' : member.role === 'officer' ? '#C0C0C0' : '#8B7355'};
+        font-size: 11px;
+        font-family: system-ui, sans-serif;
+        font-weight: bold;
+        padding: 3px 8px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 3px;
+      `;
+      memberItem.appendChild(roleTag);
+
+      membersList.appendChild(memberItem);
+    });
+
+    membersSection.appendChild(membersList);
+    panel.appendChild(membersSection);
+
+    // Activities section
+    var activitiesSection = document.createElement('div');
+    activitiesSection.style.cssText = `
+      margin-bottom: 15px;
+    `;
+
+    var activitiesTitle = document.createElement('h3');
+    activitiesTitle.textContent = 'Recent Activity';
+    activitiesTitle.style.cssText = `
+      color: #DAA520;
+      font-size: 18px;
+      font-family: system-ui, sans-serif;
+      margin: 0 0 12px 0;
+      font-weight: bold;
+    `;
+    activitiesSection.appendChild(activitiesTitle);
+
+    var activitiesList = document.createElement('div');
+    activitiesList.style.cssText = `
+      max-height: 150px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      padding: 10px;
+    `;
+
+    var activities = guildData.activities.slice(-10).reverse();
+    activities.forEach(function(activity) {
+      var activityItem = document.createElement('div');
+      activityItem.textContent = '• ' + activity.text;
+      activityItem.style.cssText = `
+        color: #A0978E;
+        font-size: 13px;
+        font-family: system-ui, sans-serif;
+        padding: 4px 0;
+        line-height: 1.4;
+      `;
+      activitiesList.appendChild(activityItem);
+    });
+
+    if (activities.length === 0) {
+      var noActivity = document.createElement('div');
+      noActivity.textContent = 'No recent activity';
+      noActivity.style.cssText = `
+        color: #6B6B6B;
+        font-size: 13px;
+        font-family: system-ui, sans-serif;
+        font-style: italic;
+        text-align: center;
+        padding: 20px;
+      `;
+      activitiesList.appendChild(noActivity);
+    }
+
+    activitiesSection.appendChild(activitiesList);
+    panel.appendChild(activitiesSection);
+
+    // Action buttons
+    var actionsDiv = document.createElement('div');
+    actionsDiv.style.cssText = `
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    `;
+
+    var leaveBtn = document.createElement('button');
+    leaveBtn.textContent = 'Leave Guild';
+    leaveBtn.style.cssText = `
+      flex: 1;
+      padding: 12px;
+      background: rgba(139, 0, 0, 0.6);
+      color: #E8E0D8;
+      border: 2px solid rgba(255, 69, 0, 0.5);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    `;
+    leaveBtn.onmouseover = function() {
+      this.style.background = 'rgba(139, 0, 0, 0.8)';
+      this.style.borderColor = '#FF4500';
+    };
+    leaveBtn.onmouseout = function() {
+      this.style.background = 'rgba(139, 0, 0, 0.6)';
+      this.style.borderColor = 'rgba(255, 69, 0, 0.5)';
+    };
+    leaveBtn.onclick = function() {
+      if (confirm('Are you sure you want to leave the guild?')) {
+        if (window.handleGuildAction) {
+          window.handleGuildAction('leave', guildData.id);
+        }
+        hideGuildPanel();
+      }
+    };
+    actionsDiv.appendChild(leaveBtn);
+
+    panel.appendChild(actionsDiv);
+
+    document.body.appendChild(panel);
+    guildPanel = panel;
+  }
+
+  function hideGuildPanel() {
+    if (!guildPanel) return;
+    document.body.removeChild(guildPanel);
+    guildPanel = null;
+  }
+
+  function showGuildCreate(callback) {
+    if (guildCreatePanel) {
+      hideGuildCreate();
+      return;
+    }
+
+    var panel = document.createElement('div');
+    panel.id = 'guild-create-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      background: rgba(26, 26, 26, 0.95);
+      border: 2px solid rgba(218, 165, 32, 0.5);
+      border-radius: 8px;
+      z-index: 300;
+      pointer-events: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      padding: 25px;
+    `;
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 35px;
+      height: 35px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #E8E0D8;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    `;
+    closeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.3)';
+      this.style.borderColor = '#DAA520';
+      this.style.color = '#DAA520';
+    };
+    closeBtn.onmouseout = function() {
+      this.style.background = 'rgba(255, 255, 255, 0.1)';
+      this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+      this.style.color = '#E8E0D8';
+    };
+    closeBtn.onclick = hideGuildCreate;
+    panel.appendChild(closeBtn);
+
+    // Title
+    var title = document.createElement('h2');
+    title.textContent = 'Create Guild';
+    title.style.cssText = `
+      color: #DAA520;
+      font-size: 24px;
+      font-family: system-ui, sans-serif;
+      margin: 0 0 20px 0;
+      font-weight: bold;
+    `;
+    panel.appendChild(title);
+
+    // Form
+    var form = document.createElement('div');
+    form.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    `;
+
+    // Guild name input
+    var nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Guild Name';
+    nameLabel.style.cssText = `
+      color: #D4C5B3;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+    `;
+    form.appendChild(nameLabel);
+
+    var nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = 'Enter guild name';
+    nameInput.maxLength = 30;
+    nameInput.style.cssText = `
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(218, 165, 32, 0.3);
+      border-radius: 6px;
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+    form.appendChild(nameInput);
+
+    // Guild tag input
+    var tagLabel = document.createElement('label');
+    tagLabel.textContent = 'Guild Tag (3-5 characters)';
+    tagLabel.style.cssText = `
+      color: #D4C5B3;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+    `;
+    form.appendChild(tagLabel);
+
+    var tagInput = document.createElement('input');
+    tagInput.type = 'text';
+    tagInput.placeholder = 'e.g., ZON';
+    tagInput.maxLength = 5;
+    tagInput.style.cssText = `
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(218, 165, 32, 0.3);
+      border-radius: 6px;
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      text-transform: uppercase;
+    `;
+    form.appendChild(tagInput);
+
+    // Guild type select
+    var typeLabel = document.createElement('label');
+    typeLabel.textContent = 'Type';
+    typeLabel.style.cssText = `
+      color: #D4C5B3;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+    `;
+    form.appendChild(typeLabel);
+
+    var typeSelect = document.createElement('select');
+    typeSelect.style.cssText = `
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(218, 165, 32, 0.3);
+      border-radius: 6px;
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+
+    ['guild', 'garden', 'studio', 'community'].forEach(function(type) {
+      var option = document.createElement('option');
+      option.value = type;
+      option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+      typeSelect.appendChild(option);
+    });
+
+    form.appendChild(typeSelect);
+
+    // Description textarea
+    var descLabel = document.createElement('label');
+    descLabel.textContent = 'Description (optional)';
+    descLabel.style.cssText = `
+      color: #D4C5B3;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+    `;
+    form.appendChild(descLabel);
+
+    var descInput = document.createElement('textarea');
+    descInput.placeholder = 'Describe your guild...';
+    descInput.maxLength = 200;
+    descInput.rows = 3;
+    descInput.style.cssText = `
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(218, 165, 32, 0.3);
+      border-radius: 6px;
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      resize: vertical;
+    `;
+    form.appendChild(descInput);
+
+    // Cost notice
+    var costNotice = document.createElement('div');
+    costNotice.textContent = 'Cost: 100 Spark';
+    costNotice.style.cssText = `
+      color: #DAA520;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      text-align: center;
+      padding: 10px;
+      background: rgba(218, 165, 32, 0.1);
+      border-radius: 6px;
+    `;
+    form.appendChild(costNotice);
+
+    // Create button
+    var createBtn = document.createElement('button');
+    createBtn.textContent = 'Create Guild';
+    createBtn.style.cssText = `
+      padding: 12px;
+      background: rgba(218, 165, 32, 0.3);
+      color: #E8E0D8;
+      border: 2px solid rgba(218, 165, 32, 0.5);
+      border-radius: 6px;
+      font-size: 16px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    `;
+    createBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.5)';
+      this.style.borderColor = '#DAA520';
+    };
+    createBtn.onmouseout = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.3)';
+      this.style.borderColor = 'rgba(218, 165, 32, 0.5)';
+    };
+    createBtn.onclick = function() {
+      var name = nameInput.value.trim();
+      var tag = tagInput.value.trim().toUpperCase();
+      var type = typeSelect.value;
+      var description = descInput.value.trim();
+
+      if (!name || !tag) {
+        alert('Please enter guild name and tag');
+        return;
+      }
+
+      if (tag.length < 3 || tag.length > 5) {
+        alert('Tag must be 3-5 characters');
+        return;
+      }
+
+      if (callback) {
+        callback({ name: name, tag: tag, type: type, description: description });
+      }
+
+      hideGuildCreate();
+    };
+    form.appendChild(createBtn);
+
+    panel.appendChild(form);
+
+    document.body.appendChild(panel);
+    guildCreatePanel = panel;
+  }
+
+  function hideGuildCreate() {
+    if (!guildCreatePanel) return;
+    document.body.removeChild(guildCreatePanel);
+    guildCreatePanel = null;
+  }
+
+  function showGuildInvite(inviteData, callback) {
+    if (guildInvitePanel) return;
+
+    var panel = document.createElement('div');
+    panel.id = 'guild-invite-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 350px;
+      background: rgba(26, 26, 26, 0.95);
+      border: 2px solid rgba(218, 165, 32, 0.5);
+      border-radius: 8px;
+      z-index: 400;
+      pointer-events: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      padding: 20px;
+    `;
+
+    // Title
+    var title = document.createElement('h3');
+    title.textContent = 'Guild Invitation';
+    title.style.cssText = `
+      color: #DAA520;
+      font-size: 18px;
+      font-family: system-ui, sans-serif;
+      margin: 0 0 12px 0;
+      font-weight: bold;
+    `;
+    panel.appendChild(title);
+
+    // Message
+    var message = document.createElement('div');
+    message.textContent = 'You have been invited to join [' + inviteData.guildTag + '] ' + inviteData.guildName;
+    message.style.cssText = `
+      color: #D4C5B3;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    `;
+    panel.appendChild(message);
+
+    // Buttons
+    var buttonsDiv = document.createElement('div');
+    buttonsDiv.style.cssText = `
+      display: flex;
+      gap: 10px;
+    `;
+
+    var acceptBtn = document.createElement('button');
+    acceptBtn.textContent = 'Accept';
+    acceptBtn.style.cssText = `
+      flex: 1;
+      padding: 10px;
+      background: rgba(34, 139, 34, 0.6);
+      color: #E8E0D8;
+      border: 2px solid rgba(34, 139, 34, 0.8);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    `;
+    acceptBtn.onmouseover = function() {
+      this.style.background = 'rgba(34, 139, 34, 0.8)';
+    };
+    acceptBtn.onmouseout = function() {
+      this.style.background = 'rgba(34, 139, 34, 0.6)';
+    };
+    acceptBtn.onclick = function() {
+      if (callback) {
+        callback('accept', inviteData);
+      }
+      document.body.removeChild(panel);
+      guildInvitePanel = null;
+    };
+    buttonsDiv.appendChild(acceptBtn);
+
+    var declineBtn = document.createElement('button');
+    declineBtn.textContent = 'Decline';
+    declineBtn.style.cssText = `
+      flex: 1;
+      padding: 10px;
+      background: rgba(139, 0, 0, 0.6);
+      color: #E8E0D8;
+      border: 2px solid rgba(255, 69, 0, 0.5);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    `;
+    declineBtn.onmouseover = function() {
+      this.style.background = 'rgba(139, 0, 0, 0.8)';
+    };
+    declineBtn.onmouseout = function() {
+      this.style.background = 'rgba(139, 0, 0, 0.6)';
+    };
+    declineBtn.onclick = function() {
+      if (callback) {
+        callback('decline', inviteData);
+      }
+      document.body.removeChild(panel);
+      guildInvitePanel = null;
+    };
+    buttonsDiv.appendChild(declineBtn);
+
+    panel.appendChild(buttonsDiv);
+
+    document.body.appendChild(panel);
+    guildInvitePanel = panel;
+  }
+
+  function updateGuildTag(tag) {
+    var playerNameEl = document.getElementById('player-name');
+    if (playerNameEl && tag) {
+      var currentName = playerNameEl.textContent;
+      // Remove existing tag if present
+      currentName = currentName.replace(/\[.*?\]\s*/, '');
+      playerNameEl.textContent = '[' + tag + '] ' + currentName;
+    }
+  }
+
   // Export public API
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
@@ -18749,6 +22375,9 @@ html, body {
   exports.updateTimeWeather = updateTimeWeather;
   exports.showNPCDialog = showNPCDialog;
   exports.hideNPCDialog = hideNPCDialog;
+  exports.setNPCActionCallback = setNPCActionCallback;
+  exports.showNPCShop = showNPCShop;
+  exports.hideNPCShop = hideNPCShop;
   exports.updateMinimapNPCs = updateMinimapNPCs;
   exports.initQuestTracker = initQuestTracker;
   exports.updateQuestTracker = updateQuestTracker;
@@ -18795,6 +22424,24 @@ html, body {
   exports.getSettings = getSettings;
   exports.showPlayerProfile = showPlayerProfile;
   exports.hidePlayerProfile = hidePlayerProfile;
+  exports.showDiscoveryLog = showDiscoveryLog;
+  exports.hideDiscoveryLog = hideDiscoveryLog;
+  exports.showLoreBook = showLoreBook;
+  exports.hideLoreBook = hideLoreBook;
+  exports.showAchievementToast = showAchievementToast;
+  exports.showDiscoveryPopup = showDiscoveryPopup;
+  exports.showSkillsPanel = showSkillsPanel;
+  exports.hideSkillsPanel = hideSkillsPanel;
+  exports.showMentorOffer = showMentorOffer;
+  exports.showLessonProgress = showLessonProgress;
+  exports.showComposePanel = showComposePanel;
+  exports.hideComposePanel = hideComposePanel;
+  exports.showGuildPanel = showGuildPanel;
+  exports.hideGuildPanel = hideGuildPanel;
+  exports.showGuildCreate = showGuildCreate;
+  exports.hideGuildCreate = hideGuildCreate;
+  exports.showGuildInvite = showGuildInvite;
+  exports.updateGuildTag = updateGuildTag;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));
 
@@ -28277,6 +31924,8 @@ html, body {
   const Audio = typeof require !== 'undefined' ? require('./audio') : window.Audio;
   const NPCs = typeof require !== 'undefined' ? require('./npcs') : window.NPCs;
   const Quests = typeof require !== 'undefined' ? require('./quests') : window.Quests;
+  const Mentoring = typeof require !== 'undefined' ? require('./mentoring') : window.Mentoring;
+  const Guilds = typeof require !== 'undefined' ? require('./guilds') : window.Guilds;
 
   // Game state
   let gameState = null;
@@ -28311,6 +31960,11 @@ html, body {
   // Play time tracking
   let playTimeSeconds = 0;
   let recentActivities = [];
+
+  // Warmth tracking (GPS-based outdoor play bonus)
+  let gpsHistory = [];
+  let gpsWatchId = null;
+  let lastWarmthUpdate = 0;
 
   // Platform detection
   let platform = 'desktop';
@@ -28535,6 +32189,13 @@ html, body {
       console.log('Trading system initialized');
     }
 
+    // Set up NPC dialog action handler
+    if (HUD && HUD.setNPCActionCallback) {
+      HUD.setNPCActionCallback(function(action, npcData) {
+        handleNPCAction(action, npcData);
+      });
+    }
+
     // Initialize input
     if (Input) {
       Input.initInput({
@@ -28602,6 +32263,28 @@ html, body {
 
     // Record play start time
     playStartTime = Date.now();
+
+    // Start GPS tracking for Warmth (only if geolocation available)
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      try {
+        gpsWatchId = navigator.geolocation.watchPosition(function(pos) {
+          gpsHistory.push({
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude,
+            ts: Date.now()
+          });
+          // Keep only last 100 points
+          if (gpsHistory.length > 100) {
+            gpsHistory = gpsHistory.slice(-100);
+          }
+        }, function() {
+          // Geolocation denied or unavailable - game works fine without it
+          console.log('Geolocation not available - Warmth bonus disabled');
+        }, { enableHighAccuracy: false, maximumAge: 30000, timeout: 10000 });
+      } catch (e) {
+        // Silently ignore - warmth is optional
+      }
+    }
 
     console.log('Game systems initialized');
   }
@@ -28822,6 +32505,13 @@ html, body {
             console.log('Entered zone:', currentZone);
             // Track activity
             addRecentActivity('Entered ' + currentZone);
+
+            if (Mentoring) {
+              var xpResult = Mentoring.addSkillXP(localPlayer.id, 'exploration', 8);
+              if (xpResult.leveledUp && HUD) {
+                HUD.showNotification('Exploration skill increased to ' + xpResult.newLevelName, 'success');
+              }
+            }
 
             if (HUD) {
               HUD.updateZoneLabel(currentZone);
@@ -29135,6 +32825,18 @@ html, body {
         NPCs.updateQuestIndicators(localPlayer.id, localPlayer.position);
       }
 
+      // Update Warmth from GPS movement (every 5 seconds)
+      var now = Date.now();
+      if (now - lastWarmthUpdate > 5000 && Physical && gpsHistory.length >= 2) {
+        lastWarmthUpdate = now;
+        var newWarmth = Physical.calculateWarmth(gpsHistory);
+        if (localPlayer && newWarmth !== localPlayer.warmth) {
+          localPlayer.warmth = newWarmth;
+          // Warmth bonus applies to harvest yields and discovery rates
+          // This is cosmetic-adjacent per constitution - minor 1-10% bonus
+        }
+      }
+
       // Update FPS display if debug mode is enabled
       if (showDebug && typeof document !== 'undefined') {
         var fpsElement = document.getElementById('fps-counter');
@@ -29245,6 +32947,12 @@ html, body {
       case 'emote':
         handleEmoteMessage(msg);
         break;
+      case 'discover':
+        handleDiscoverMessage(msg);
+        break;
+      case 'score':
+        handleScoreMessage(msg);
+        break;
       default:
         console.log('Unknown message type:', msg.type);
     }
@@ -29268,6 +32976,97 @@ html, body {
     if (HUD && HUD.showEmoteBubble) {
       HUD.showEmoteBubble(msg.from, msg.payload.emoteType);
     }
+  }
+
+  /**
+   * Handle discover message
+   */
+  function handleDiscoverMessage(msg) {
+    if (!Exploration || !gameState) return;
+
+    var result = Exploration.handleDiscover(msg, gameState);
+    if (result.success) {
+      // Update game state
+      gameState = result.state;
+
+      // If this is the local player, show discovery popup and update spark
+      if (msg.from === localPlayer.id) {
+        if (HUD && HUD.showDiscoveryPopup) {
+          var discoveryData = {
+            name: result.discovery.type.charAt(0).toUpperCase() + result.discovery.type.slice(1),
+            description: result.discovery.description,
+            rarity: getRarityName(result.discovery.rarity),
+            sparkReward: result.sparkAwarded
+          };
+          HUD.showDiscoveryPopup(discoveryData);
+        }
+
+        // Award spark
+        if (economyLedger && Economy && result.sparkAwarded) {
+          Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: result.discovery.rarity });
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          if (HUD) HUD.updatePlayerInfo(localPlayer);
+        }
+
+        // Track activity
+        addRecentActivity('Discovered a ' + result.discovery.type);
+
+        if (Audio) Audio.playSound('warp');
+      }
+    }
+  }
+
+  /**
+   * Handle score message for competitions
+   */
+  function handleScoreMessage(msg) {
+    if (!Competition || !gameState) return;
+
+    var result = Competition.handleScore(msg, gameState);
+    if (result.success) {
+      gameState = result.state;
+
+      // Broadcast to spectators if any
+      if (Competition.getSpectators) {
+        var spectators = Competition.getSpectators(result.competition.id);
+        if (spectators.length > 0 && Competition.broadcastToSpectators) {
+          Competition.broadcastToSpectators(
+            result.competition.id,
+            'score_update',
+            {
+              playerId: msg.from,
+              score: msg.payload.score,
+              competition: result.competition
+            }
+          );
+        }
+      }
+
+      // If competition ended, award spark to winner
+      if (result.winner && result.sparkAward) {
+        if (result.winner === localPlayer.id) {
+          if (HUD) {
+            HUD.showNotification('You won the competition! +' + result.sparkAward + ' Spark', 'success');
+          }
+          if (economyLedger && Economy) {
+            Economy.earnSpark(economyLedger, localPlayer.id, 'competition', { complexity: 1.0 });
+            localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+            if (HUD) HUD.updatePlayerInfo(localPlayer);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Convert rarity number to name
+   */
+  function getRarityName(rarity) {
+    if (rarity >= 0.9) return 'legendary';
+    if (rarity >= 0.7) return 'epic';
+    if (rarity >= 0.5) return 'rare';
+    if (rarity >= 0.3) return 'uncommon';
+    return 'common';
   }
 
   /**
@@ -29512,6 +33311,14 @@ html, body {
         HUD.hideTradeWindow();
         HUD.showTradeComplete(msg.from);
         if (Audio) Audio.playSound('trade');
+
+        if (Mentoring) {
+          var xpResult = Mentoring.addSkillXP(localPlayer.id, 'trading', 15);
+          if (xpResult.leveledUp && HUD) {
+            HUD.showNotification('Trading skill increased to ' + xpResult.newLevelName, 'success');
+          }
+        }
+
         // Update inventory display
         if (HUD.updateInventoryDisplay && playerInventory) {
           HUD.updateInventoryDisplay(playerInventory);
@@ -29598,6 +33405,128 @@ html, body {
     );
   }
 
+  // NPC shop inventories by archetype
+  var NPC_SHOP_ITEMS = {
+    merchant: [
+      { id: 'torch', name: 'Torch', price: 8, description: 'Lights the way', icon: '&#128294;' },
+      { id: 'rope', name: 'Rope', price: 12, description: 'Useful for climbing and building', icon: '&#129526;' },
+      { id: 'compass', name: 'Compass', price: 20, description: 'Helps with navigation', icon: '&#129517;' },
+      { id: 'map_fragment', name: 'Map Fragment', price: 15, description: 'Reveals hidden areas', icon: '&#128506;' },
+      { id: 'potion_energy', name: 'Energy Potion', price: 25, description: 'Restores energy', icon: '&#129514;' }
+    ],
+    trader: [
+      { id: 'rare_seed', name: 'Rare Seed', price: 30, description: 'Grows into a rare plant', icon: '&#127793;' },
+      { id: 'crystal_shard', name: 'Crystal Shard', price: 40, description: 'A glowing fragment', icon: '&#128142;' },
+      { id: 'ancient_coin', name: 'Ancient Coin', price: 50, description: 'A relic from the founding', icon: '&#129689;' }
+    ],
+    farmer: [
+      { id: 'wheat_seed', name: 'Wheat Seeds', price: 5, description: 'Basic crop seeds', icon: '&#127806;' },
+      { id: 'flower_seed', name: 'Flower Seeds', price: 8, description: 'Decorative flowers', icon: '&#127804;' },
+      { id: 'herb_seed', name: 'Herb Seeds', price: 10, description: 'Medicinal herbs', icon: '&#127807;' },
+      { id: 'fertilizer', name: 'Fertilizer', price: 15, description: 'Speeds up growth', icon: '&#128169;' }
+    ],
+    artisan: [
+      { id: 'paint_set', name: 'Paint Set', price: 20, description: 'For creating art', icon: '&#127912;' },
+      { id: 'chisel', name: 'Chisel', price: 15, description: 'For sculpting stone', icon: '&#128296;' },
+      { id: 'loom_thread', name: 'Loom Thread', price: 12, description: 'For weaving', icon: '&#129525;' },
+      { id: 'golden_frame', name: 'Golden Frame', price: 35, description: 'Display art beautifully', icon: '&#128444;' }
+    ]
+  };
+
+  /**
+   * Handle NPC dialog action button clicks
+   */
+  function handleNPCAction(action, npcData) {
+    if (!npcData || !localPlayer) return;
+
+    switch (action) {
+      case 'trade':
+        var shopItems = NPC_SHOP_ITEMS[npcData.archetype] || NPC_SHOP_ITEMS.merchant;
+        if (HUD && HUD.showNPCShop) {
+          HUD.showNPCShop(npcData, shopItems, localPlayer.spark, function onBuyItem(itemId) {
+            var item = shopItems.find(function(i) { return i.id === itemId; });
+            if (!item) return;
+            if (localPlayer.spark < item.price) {
+              if (HUD) HUD.showNotification('Not enough Spark!', 'error');
+              return;
+            }
+            if (economyLedger && Economy) {
+              var result = Economy.spendSpark(economyLedger, localPlayer.id, item.price);
+              if (!result.success) {
+                if (HUD) HUD.showNotification('Transaction failed', 'error');
+                return;
+              }
+              localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+            } else {
+              localPlayer.spark -= item.price;
+            }
+            if (Inventory && playerInventory) {
+              Inventory.addItem(playerInventory, item.id, 1);
+              if (HUD) {
+                HUD.showItemPickup(item.name, 1, item.icon);
+                HUD.updateInventoryDisplay(playerInventory);
+              }
+            }
+            if (HUD) {
+              HUD.updatePlayerInfo(localPlayer);
+              HUD.showNotification('Bought ' + item.name + ' for ' + item.price + ' Spark', 'success');
+            }
+            if (Audio) Audio.playSound('trade');
+            // Refresh shop with updated balance
+            HUD.showNPCShop(npcData, shopItems, localPlayer.spark, onBuyItem);
+            addRecentActivity('Bought ' + item.name + ' from ' + npcData.name);
+          });
+        }
+        break;
+
+      case 'learn':
+        if (HUD) {
+          var teachingMsg = '';
+          if (typeof NPC_AI !== 'undefined' && NPC_AI.getTeaching) {
+            var teaching = NPC_AI.getTeaching(npcData.archetype, {});
+            if (teaching) {
+              teachingMsg = npcData.name + ' teaches you about ' + teaching.topic + ': "' + teaching.description + '"';
+              if (Economy && economyLedger) {
+                Economy.earnSpark(economyLedger, localPlayer.id, 'teach', { complexity: 0.5 });
+                localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+                HUD.updatePlayerInfo(localPlayer);
+              }
+            } else {
+              teachingMsg = npcData.name + ' has nothing more to teach you right now.';
+            }
+          } else {
+            teachingMsg = npcData.name + ' shares some wisdom with you.';
+            if (Economy && economyLedger) {
+              Economy.earnSpark(economyLedger, localPlayer.id, 'teach', { complexity: 0.3 });
+              localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+              HUD.updatePlayerInfo(localPlayer);
+            }
+          }
+          HUD.showNotification(teachingMsg, 'info');
+          addRecentActivity('Learned from ' + npcData.name);
+        }
+        break;
+
+      case 'lore':
+        if (HUD) {
+          var loreMsg = '';
+          if (typeof NPC_AI !== 'undefined' && NPC_AI.getLore) {
+            var lore = NPC_AI.getLore(npcData.archetype, {});
+            if (lore) {
+              loreMsg = npcData.name + ' tells you: "' + lore + '"';
+            } else {
+              loreMsg = npcData.name + ' has shared all their stories with you.';
+            }
+          } else {
+            loreMsg = npcData.name + ' tells you a tale of the founding of ZION.';
+          }
+          HUD.showNotification(loreMsg, 'info');
+          addRecentActivity('Heard lore from ' + npcData.name);
+        }
+        break;
+    }
+  }
+
   /**
    * Handle resource node harvesting
    */
@@ -29622,10 +33551,23 @@ html, body {
       }
 
       if (economyLedger && Economy) {
-        var sparkEarned = Economy.earnSpark(economyLedger, localPlayer.id, 'harvest', { complexity: 0.5 });
+        // Apply Warmth bonus to harvest yields (minor, cosmetic-adjacent per §5.3)
+        var harvestComplexity = 0.5;
+        if (Physical && localPlayer.warmth > 0) {
+          var warmthBonus = Physical.getWarmthBonus(localPlayer.warmth);
+          harvestComplexity = Math.min(1.0, harvestComplexity * warmthBonus);
+        }
+        var sparkEarned = Economy.earnSpark(economyLedger, localPlayer.id, 'harvest', { complexity: harvestComplexity });
         if (localPlayer) {
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+        }
+      }
+
+      if (Mentoring) {
+        var xpResult = Mentoring.addSkillXP(localPlayer.id, 'gardening', 5);
+        if (xpResult.leveledUp && HUD) {
+          HUD.showNotification('Gardening skill increased to ' + xpResult.newLevelName, 'success');
         }
       }
 
@@ -29670,6 +33612,13 @@ html, body {
         }
       }
 
+      if (Mentoring) {
+        var xpResult = Mentoring.addSkillXP(localPlayer.id, 'crafting', 10);
+        if (xpResult.leveledUp && HUD) {
+          HUD.showNotification('Crafting skill increased to ' + xpResult.newLevelName, 'success');
+        }
+      }
+
       if (Quests) {
         Quests.updateQuestProgress(localPlayer.id, 'craft', { item: result.output.itemId, amount: result.output.count });
       }
@@ -29681,6 +33630,123 @@ html, body {
   }
 
   /**
+   * Handle compose (artwork creation)
+   */
+  function handleGuildCreate(guildData) {
+    if (!Guilds || !localPlayer || !Economy || !economyLedger) return;
+
+    // Check if player has enough Spark
+    var balance = Economy.getBalance(economyLedger, localPlayer.id);
+    if (balance < 100) {
+      if (HUD) {
+        HUD.showNotification('Not enough Spark to create guild (need 100)', 'error');
+      }
+      return;
+    }
+
+    var result = Guilds.createGuild(
+      localPlayer.id,
+      guildData.name,
+      guildData.tag,
+      guildData.type,
+      guildData.description
+    );
+
+    if (result.success) {
+      // Deduct cost
+      Economy.debit(economyLedger, localPlayer.id, result.cost, 'Guild creation');
+
+      if (HUD) {
+        HUD.showNotification('Guild created: [' + guildData.tag + '] ' + guildData.name, 'success');
+        HUD.updateGuildTag(guildData.tag);
+
+        // Update player info to show new balance
+        localPlayer.spark = balance - result.cost;
+        HUD.updatePlayerInfo(localPlayer);
+
+        // Show guild panel
+        HUD.showGuildPanel(result.guild, { id: localPlayer.id });
+      }
+
+      addRecentActivity('Founded [' + guildData.tag + '] ' + guildData.name);
+    } else {
+      if (HUD) {
+        HUD.showNotification('Failed to create guild: ' + result.error, 'error');
+      }
+    }
+  }
+
+  // Global guild action handler for panel buttons
+  if (typeof window !== 'undefined') {
+    window.handleGuildAction = function(action, data) {
+      if (!Guilds || !localPlayer) return;
+
+      switch (action) {
+        case 'leave':
+          var result = Guilds.leaveGuild(data, localPlayer.id);
+          if (result.success) {
+            if (HUD) {
+              HUD.showNotification('You left the guild', 'info');
+              HUD.updateGuildTag('');
+            }
+            addRecentActivity('Left guild');
+          } else {
+            if (HUD) {
+              HUD.showNotification('Failed to leave guild: ' + result.error, 'error');
+            }
+          }
+          break;
+      }
+    };
+  }
+
+  function handleComposeAction(composeData) {
+    if (!Creation || !localPlayer) return;
+
+    var msg = {
+      type: 'compose',
+      from: localPlayer.id,
+      timestamp: Date.now(),
+      nonce: Math.random().toString(36).substr(2, 9),
+      payload: {
+        composeType: composeData.type,
+        title: composeData.title,
+        content: composeData.content,
+        zone: currentZone,
+        position: localPlayer.position
+      }
+    };
+
+    var result = Creation.handleCompose(msg, gameState);
+    if (result.success) {
+      if (HUD) {
+        HUD.showNotification('Created ' + composeData.type + ': ' + composeData.title, 'success');
+      }
+
+      if (economyLedger && Economy && result.sparkReward) {
+        Economy.earnSpark(economyLedger, localPlayer.id, 'compose', { complexity: result.sparkReward / 50 });
+        if (localPlayer) {
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          if (HUD) HUD.updatePlayerInfo(localPlayer);
+        }
+      }
+
+      if (Mentoring) {
+        var xpResult = Mentoring.addSkillXP(localPlayer.id, 'social', 15);
+        if (xpResult.leveledUp && HUD) {
+          HUD.showNotification('Social skill increased to ' + xpResult.newLevelName, 'success');
+        }
+      }
+
+      if (Audio) Audio.playSound('chat');
+
+      addRecentActivity('Created ' + composeData.type + ': ' + composeData.title);
+    } else {
+      if (HUD) HUD.showNotification(result.error, 'error');
+    }
+  }
+
+  /**
    * Handle build mode actions
    */
   var buildModeActive = false;
@@ -29688,6 +33754,10 @@ html, body {
     'bench', 'lantern', 'signpost', 'fence', 'planter',
     'campfire', 'archway', 'table', 'barrel', 'crate'
   ];
+  var BUILD_COSTS = {
+    bench: 15, lantern: 10, signpost: 5, fence: 8, planter: 12,
+    campfire: 20, archway: 30, table: 15, barrel: 10, crate: 8
+  };
 
   function handleBuildAction(data) {
     if (data.mode !== undefined) {
@@ -29724,11 +33794,65 @@ html, body {
             HUD.showNotification(result.error, 'error');
           }
         } else if (result) {
-          if (HUD && HUD.showNotification) {
-            HUD.showNotification('Structure placed: ' + result.type, 'success');
+          // Deduct Spark cost for building
+          var buildCost = BUILD_COSTS[result.type] || 10;
+          if (economyLedger && Economy) {
+            var spendResult = Economy.spendSpark(economyLedger, localPlayer.id, buildCost);
+            if (!spendResult.success) {
+              if (HUD && HUD.showNotification) {
+                HUD.showNotification('Not enough Spark! Need ' + buildCost + ' Spark to build ' + result.type, 'error');
+              }
+              // Remove the placed structure since we can't afford it
+              if (World && World.removeLastPlaced) {
+                World.removeLastPlaced(sceneContext);
+              }
+              return;
+            }
+            localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+            if (HUD) HUD.updatePlayerInfo(localPlayer);
           }
-          // TODO: Broadcast to network
-          // TODO: Deduct Spark cost
+
+          if (HUD && HUD.showNotification) {
+            HUD.showNotification('Built ' + result.type + ' (-' + buildCost + ' Spark)', 'success');
+          }
+
+          // Award building XP
+          if (Economy) {
+            Economy.earnSpark(economyLedger, localPlayer.id, 'build', { complexity: 0.3 });
+            localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          }
+
+          if (Mentoring) {
+            var xpResult = Mentoring.addSkillXP(localPlayer.id, 'building', 12);
+            if (xpResult.leveledUp && HUD) {
+              HUD.showNotification('Building skill increased to ' + xpResult.newLevelName, 'success');
+            }
+          }
+
+          // Broadcast to network
+          if (Network && Protocol) {
+            var buildMsg = Protocol.create.build(localPlayer.id, {
+              structureType: result.type,
+              position: result.position,
+              rotation: result.rotation || 0,
+              zone: currentZone
+            });
+            Network.broadcastMessage(buildMsg);
+          }
+
+          // Save structure to state
+          if (gameState) {
+            if (!gameState.structures) gameState.structures = [];
+            gameState.structures.push({
+              id: 'struct_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+              type: result.type,
+              position: result.position,
+              rotation: result.rotation || 0,
+              zone: currentZone,
+              builder: localPlayer.id,
+              ts: Date.now()
+            });
+          }
         }
       }
     } else if (data.action === 'rotate') {
@@ -29775,6 +33899,14 @@ html, body {
         }
 
         msg = Protocol.create.chat(localPlayer.id, message);
+
+        if (Mentoring) {
+          var xpResult = Mentoring.addSkillXP(localPlayer.id, 'social', 3);
+          if (xpResult.leveledUp && HUD) {
+            HUD.showNotification('Social skill increased to ' + xpResult.newLevelName, 'success');
+          }
+        }
+
         // Broadcast player chat to NPCs for reaction
         if (NPCs && NPCs.broadcastEvent) {
           NPCs.broadcastEvent({ type: 'player_action', data: {
@@ -29859,11 +33991,57 @@ html, body {
               questsCompleted: Quests ? Quests.getCompletedQuests(localPlayer.id).length : 0,
               questsActive: Quests ? Quests.getActiveQuests(localPlayer.id).length : 0,
               npcsMet: NPCs && NPCs.getMetNPCs ? NPCs.getMetNPCs(localPlayer.id).length : 0,
-              zonesDiscovered: Exploration ? Exploration.getDiscoveredZones(localPlayer.id).length : 1,
+              zonesDiscovered: Exploration ? Exploration.getDiscoveredZones(localPlayer.id, gameState).length : 1,
               structuresBuilt: Creation ? Creation.getPlayerStructures(localPlayer.id).length : 0,
               recentActivities: getRecentActivities()
             };
             HUD.showPlayerProfile(playerData);
+          }
+        }
+        break;
+
+      case 'toggleGuild':
+        if (HUD && Guilds && localPlayer) {
+          var guildPanelEl = document.getElementById('guild-panel');
+          if (guildPanelEl) {
+            HUD.hideGuildPanel();
+          } else {
+            var playerGuild = Guilds.getPlayerGuild(localPlayer.id);
+            if (playerGuild) {
+              HUD.showGuildPanel(playerGuild, { id: localPlayer.id });
+              // Update guild tag in HUD
+              HUD.updateGuildTag(playerGuild.tag);
+            } else {
+              // Show guild creation form if not in a guild
+              HUD.showGuildCreate(function(guildData) {
+                handleGuildCreate(guildData);
+              });
+            }
+          }
+        }
+        break;
+
+      case 'toggleSkills':
+        if (HUD && Mentoring && localPlayer) {
+          var skillsPanelEl = document.getElementById('skills-panel');
+          if (skillsPanelEl) {
+            HUD.hideSkillsPanel();
+          } else {
+            var skillsData = Mentoring.getPlayerSkills(localPlayer.id);
+            HUD.showSkillsPanel(skillsData);
+          }
+        }
+        break;
+
+      case 'toggleCompose':
+        if (HUD && Creation && localPlayer) {
+          var composePanelEl = document.getElementById('compose-panel');
+          if (composePanelEl) {
+            HUD.hideComposePanel();
+          } else {
+            HUD.showComposePanel(function(composeData) {
+              handleComposeAction(composeData);
+            });
           }
         }
         break;
@@ -29963,6 +34141,30 @@ html, body {
         if (HUD && playerInventory) {
           HUD.toggleCraftingPanel();
           HUD.updateCraftingDisplay(playerInventory);
+        }
+        break;
+
+      case 'toggleDiscoveryLog':
+        if (HUD && Exploration && localPlayer) {
+          var discoveryLogEl = document.getElementById('discovery-log-overlay');
+          if (discoveryLogEl) {
+            HUD.hideDiscoveryLog();
+          } else {
+            var discoveries = Exploration.getDiscoveries ? Exploration.getDiscoveries(localPlayer.id, gameState) : [];
+            HUD.showDiscoveryLog(discoveries);
+          }
+        }
+        break;
+
+      case 'toggleLoreBook':
+        if (HUD && localPlayer) {
+          var loreBookEl = document.getElementById('lore-book-overlay');
+          if (loreBookEl) {
+            HUD.hideLoreBook();
+          } else {
+            var loreEntries = [];
+            HUD.showLoreBook(loreEntries);
+          }
         }
         break;
 

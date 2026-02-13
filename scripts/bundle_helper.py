@@ -19,6 +19,8 @@ JS_FILES = [
     'competition.js',
     'exploration.js',
     'physical.js',
+    'guilds.js',
+    'mentoring.js',
     'models.js',
     'auth.js',
     'network.js',

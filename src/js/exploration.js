@@ -200,6 +200,48 @@
     };
   }
 
+  // Get all discoveries for a player
+  function getDiscoveries(playerId, state) {
+    if (!state || !state.discoveries) {
+      return [];
+    }
+
+    return state.discoveries.filter(function(d) {
+      return d.discoverer === playerId;
+    }).map(function(d) {
+      // Map rarity number to rarity name
+      var rarityName = 'common';
+      if (d.rarity >= 0.9) rarityName = 'legendary';
+      else if (d.rarity >= 0.7) rarityName = 'epic';
+      else if (d.rarity >= 0.5) rarityName = 'rare';
+      else if (d.rarity >= 0.3) rarityName = 'uncommon';
+
+      return {
+        name: d.type.charAt(0).toUpperCase() + d.type.slice(1),
+        description: d.description,
+        zone: d.zone,
+        rarity: rarityName,
+        timestamp: d.ts
+      };
+    });
+  }
+
+  // Get discovered zones for a player
+  function getDiscoveredZones(playerId, state) {
+    if (!state || !state.discoveries) {
+      return ['default'];
+    }
+
+    var zones = {};
+    state.discoveries.forEach(function(d) {
+      if (d.discoverer === playerId) {
+        zones[d.zone] = true;
+      }
+    });
+
+    return Object.keys(zones);
+  }
+
   // Exports
   exports.DISCOVERY_TYPES = DISCOVERY_TYPES;
   exports.BASE_RARITY = BASE_RARITY;
@@ -207,5 +249,7 @@
   exports.handleInspect = handleInspect;
   exports.isDuplicate = isDuplicate;
   exports.calculateRarity = calculateRarity;
+  exports.getDiscoveries = getDiscoveries;
+  exports.getDiscoveredZones = getDiscoveredZones;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Exploration = {}));

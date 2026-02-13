@@ -258,29 +258,143 @@
     };
   }
 
+  // Compose types configuration
+  const COMPOSE_TYPES = {
+    poem: { name: 'Poem', maxLength: 500, sparkReward: [5, 20] },
+    song: { name: 'Song', maxLength: 300, sparkReward: [10, 30] },
+    story: { name: 'Short Story', maxLength: 1000, sparkReward: [10, 40] },
+    painting: { name: 'Painting', sparkReward: [5, 25] },
+    sculpture: { name: 'Sculpture', sparkReward: [10, 35] },
+    mural: { name: 'Mural', sparkReward: [15, 50] }
+  };
+
   // Handle artistic composition
   function handleCompose(msg, state) {
-    const composition = {
-      id: generateId(),
-      type: 'composition',
-      medium: msg.payload.medium || 'text',
-      content: msg.payload.content || '',
-      creator: msg.from,
-      position: msg.payload.position || {x: 0, y: 0, z: 0},
-      zone: msg.payload.zone || 'default',
-      ts: Date.now()
-    };
+    const composeType = msg.payload.composeType || 'poem';
+    const title = msg.payload.title || 'Untitled';
+    const content = msg.payload.content || '';
 
-    if (!state.structures) {
-      state.structures = [];
+    if (!COMPOSE_TYPES[composeType]) {
+      return {
+        success: false,
+        error: 'Invalid compose type'
+      };
     }
 
-    state.structures.push(composition);
+    const typeData = COMPOSE_TYPES[composeType];
+
+    // Check max length for text-based types
+    if (typeData.maxLength && content.length > typeData.maxLength) {
+      return {
+        success: false,
+        error: 'Content exceeds maximum length of ' + typeData.maxLength + ' characters'
+      };
+    }
+
+    const artwork = {
+      id: generateId(),
+      creator: msg.from,
+      type: composeType,
+      title: title,
+      content: content,
+      zone: msg.payload.zone || 'default',
+      position: msg.payload.position || {x: 0, y: 0, z: 0},
+      ts: Date.now(),
+      likes: 0,
+      featured: false,
+      likedBy: []
+    };
+
+    if (!state.artworks) {
+      state.artworks = [];
+    }
+
+    state.artworks.push(artwork);
+
+    // Calculate spark reward
+    const sparkMin = typeData.sparkReward[0];
+    const sparkMax = typeData.sparkReward[1];
+    const sparkReward = Math.floor(sparkMin + Math.random() * (sparkMax - sparkMin));
 
     return {
       success: true,
       state: state,
-      composition: composition
+      artwork: artwork,
+      sparkReward: sparkReward
+    };
+  }
+
+  // Like an artwork
+  function likeArtwork(artworkId, playerId, state) {
+    if (!state.artworks) {
+      return { success: false, error: 'No artworks found' };
+    }
+
+    const artwork = state.artworks.find(function(a) { return a.id === artworkId; });
+    if (!artwork) {
+      return { success: false, error: 'Artwork not found' };
+    }
+
+    if (!artwork.likedBy) {
+      artwork.likedBy = [];
+    }
+
+    // Check if already liked
+    if (artwork.likedBy.indexOf(playerId) !== -1) {
+      return { success: false, error: 'Already liked this artwork' };
+    }
+
+    artwork.likedBy.push(playerId);
+    artwork.likes = artwork.likedBy.length;
+
+    return {
+      success: true,
+      artwork: artwork,
+      totalLikes: artwork.likes
+    };
+  }
+
+  // Get artworks in a zone
+  function getArtworks(state, zone) {
+    if (!state.artworks) return [];
+
+    return state.artworks.filter(function(a) {
+      return !zone || a.zone === zone;
+    });
+  }
+
+  // Get artworks by player
+  function getArtworksByPlayer(state, playerId) {
+    if (!state.artworks) return [];
+
+    return state.artworks.filter(function(a) {
+      return a.creator === playerId;
+    });
+  }
+
+  // Feature an artwork (most liked in zone)
+  function featureArtwork(artworkId, state) {
+    if (!state.artworks) {
+      return { success: false, error: 'No artworks found' };
+    }
+
+    const artwork = state.artworks.find(function(a) { return a.id === artworkId; });
+    if (!artwork) {
+      return { success: false, error: 'Artwork not found' };
+    }
+
+    // Unfeature all other artworks in the same zone
+    state.artworks.forEach(function(a) {
+      if (a.zone === artwork.zone && a.id !== artworkId) {
+        a.featured = false;
+      }
+    });
+
+    artwork.featured = true;
+
+    return {
+      success: true,
+      artwork: artwork
     };
   }
 
@@ -288,10 +402,15 @@
   exports.PLANT_SPECIES = PLANT_SPECIES;
   exports.RECIPES = RECIPES;
   exports.STRUCTURE_TYPES = STRUCTURE_TYPES;
+  exports.COMPOSE_TYPES = COMPOSE_TYPES;
   exports.handleBuild = handleBuild;
   exports.handlePlant = handlePlant;
   exports.handleHarvest = handleHarvest;
   exports.handleCraft = handleCraft;
   exports.handleCompose = handleCompose;
+  exports.likeArtwork = likeArtwork;
+  exports.getArtworks = getArtworks;
+  exports.getArtworksByPlayer = getArtworksByPlayer;
+  exports.featureArtwork = featureArtwork;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Creation = {}));

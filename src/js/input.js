@@ -192,6 +192,56 @@
         }
         break;
 
+      case 'k':
+      case 'K':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleSkills', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'n':
+      case 'N':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleCompose', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'g':
+      case 'G':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleGuild', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'l':
+      case 'L':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleLoreBook', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'v':
+      case 'V':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleDiscoveryLog', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
       case 'r':
       case 'R':
         if (!chatMode && buildMode) {

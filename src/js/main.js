@@ -23,6 +23,8 @@
   const Audio = typeof require !== 'undefined' ? require('./audio') : window.Audio;
   const NPCs = typeof require !== 'undefined' ? require('./npcs') : window.NPCs;
   const Quests = typeof require !== 'undefined' ? require('./quests') : window.Quests;
+  const Mentoring = typeof require !== 'undefined' ? require('./mentoring') : window.Mentoring;
+  const Guilds = typeof require !== 'undefined' ? require('./guilds') : window.Guilds;
 
   // Game state
   let gameState = null;
@@ -57,6 +59,11 @@
   // Play time tracking
   let playTimeSeconds = 0;
   let recentActivities = [];
+
+  // Warmth tracking (GPS-based outdoor play bonus)
+  let gpsHistory = [];
+  let gpsWatchId = null;
+  let lastWarmthUpdate = 0;
 
   // Platform detection
   let platform = 'desktop';
@@ -281,6 +288,13 @@
       console.log('Trading system initialized');
     }
 
+    // Set up NPC dialog action handler
+    if (HUD && HUD.setNPCActionCallback) {
+      HUD.setNPCActionCallback(function(action, npcData) {
+        handleNPCAction(action, npcData);
+      });
+    }
+
     // Initialize input
     if (Input) {
       Input.initInput({
@@ -348,6 +362,28 @@
 
     // Record play start time
     playStartTime = Date.now();
+
+    // Start GPS tracking for Warmth (only if geolocation available)
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      try {
+        gpsWatchId = navigator.geolocation.watchPosition(function(pos) {
+          gpsHistory.push({
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude,
+            ts: Date.now()
+          });
+          // Keep only last 100 points
+          if (gpsHistory.length > 100) {
+            gpsHistory = gpsHistory.slice(-100);
+          }
+        }, function() {
+          // Geolocation denied or unavailable - game works fine without it
+          console.log('Geolocation not available - Warmth bonus disabled');
+        }, { enableHighAccuracy: false, maximumAge: 30000, timeout: 10000 });
+      } catch (e) {
+        // Silently ignore - warmth is optional
+      }
+    }
 
     console.log('Game systems initialized');
   }
@@ -568,6 +604,13 @@
             console.log('Entered zone:', currentZone);
             // Track activity
             addRecentActivity('Entered ' + currentZone);
+
+            if (Mentoring) {
+              var xpResult = Mentoring.addSkillXP(localPlayer.id, 'exploration', 8);
+              if (xpResult.leveledUp && HUD) {
+                HUD.showNotification('Exploration skill increased to ' + xpResult.newLevelName, 'success');
+              }
+            }
 
             if (HUD) {
               HUD.updateZoneLabel(currentZone);
@@ -881,6 +924,18 @@
         NPCs.updateQuestIndicators(localPlayer.id, localPlayer.position);
       }
 
+      // Update Warmth from GPS movement (every 5 seconds)
+      var now = Date.now();
+      if (now - lastWarmthUpdate > 5000 && Physical && gpsHistory.length >= 2) {
+        lastWarmthUpdate = now;
+        var newWarmth = Physical.calculateWarmth(gpsHistory);
+        if (localPlayer && newWarmth !== localPlayer.warmth) {
+          localPlayer.warmth = newWarmth;
+          // Warmth bonus applies to harvest yields and discovery rates
+          // This is cosmetic-adjacent per constitution - minor 1-10% bonus
+        }
+      }
+
       // Update FPS display if debug mode is enabled
       if (showDebug && typeof document !== 'undefined') {
         var fpsElement = document.getElementById('fps-counter');
@@ -991,6 +1046,12 @@
       case 'emote':
         handleEmoteMessage(msg);
         break;
+      case 'discover':
+        handleDiscoverMessage(msg);
+        break;
+      case 'score':
+        handleScoreMessage(msg);
+        break;
       default:
         console.log('Unknown message type:', msg.type);
     }
@@ -1014,6 +1075,97 @@
     if (HUD && HUD.showEmoteBubble) {
       HUD.showEmoteBubble(msg.from, msg.payload.emoteType);
     }
+  }
+
+  /**
+   * Handle discover message
+   */
+  function handleDiscoverMessage(msg) {
+    if (!Exploration || !gameState) return;
+
+    var result = Exploration.handleDiscover(msg, gameState);
+    if (result.success) {
+      // Update game state
+      gameState = result.state;
+
+      // If this is the local player, show discovery popup and update spark
+      if (msg.from === localPlayer.id) {
+        if (HUD && HUD.showDiscoveryPopup) {
+          var discoveryData = {
+            name: result.discovery.type.charAt(0).toUpperCase() + result.discovery.type.slice(1),
+            description: result.discovery.description,
+            rarity: getRarityName(result.discovery.rarity),
+            sparkReward: result.sparkAwarded
+          };
+          HUD.showDiscoveryPopup(discoveryData);
+        }
+
+        // Award spark
+        if (economyLedger && Economy && result.sparkAwarded) {
+          Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: result.discovery.rarity });
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          if (HUD) HUD.updatePlayerInfo(localPlayer);
+        }
+
+        // Track activity
+        addRecentActivity('Discovered a ' + result.discovery.type);
+
+        if (Audio) Audio.playSound('warp');
+      }
+    }
+  }
+
+  /**
+   * Handle score message for competitions
+   */
+  function handleScoreMessage(msg) {
+    if (!Competition || !gameState) return;
+
+    var result = Competition.handleScore(msg, gameState);
+    if (result.success) {
+      gameState = result.state;
+
+      // Broadcast to spectators if any
+      if (Competition.getSpectators) {
+        var spectators = Competition.getSpectators(result.competition.id);
+        if (spectators.length > 0 && Competition.broadcastToSpectators) {
+          Competition.broadcastToSpectators(
+            result.competition.id,
+            'score_update',
+            {
+              playerId: msg.from,
+              score: msg.payload.score,
+              competition: result.competition
+            }
+          );
+        }
+      }
+
+      // If competition ended, award spark to winner
+      if (result.winner && result.sparkAward) {
+        if (result.winner === localPlayer.id) {
+          if (HUD) {
+            HUD.showNotification('You won the competition! +' + result.sparkAward + ' Spark', 'success');
+          }
+          if (economyLedger && Economy) {
+            Economy.earnSpark(economyLedger, localPlayer.id, 'competition', { complexity: 1.0 });
+            localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+            if (HUD) HUD.updatePlayerInfo(localPlayer);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Convert rarity number to name
+   */
+  function getRarityName(rarity) {
+    if (rarity >= 0.9) return 'legendary';
+    if (rarity >= 0.7) return 'epic';
+    if (rarity >= 0.5) return 'rare';
+    if (rarity >= 0.3) return 'uncommon';
+    return 'common';
   }
 
   /**
@@ -1258,6 +1410,14 @@
         HUD.hideTradeWindow();
         HUD.showTradeComplete(msg.from);
         if (Audio) Audio.playSound('trade');
+
+        if (Mentoring) {
+          var xpResult = Mentoring.addSkillXP(localPlayer.id, 'trading', 15);
+          if (xpResult.leveledUp && HUD) {
+            HUD.showNotification('Trading skill increased to ' + xpResult.newLevelName, 'success');
+          }
+        }
+
         // Update inventory display
         if (HUD.updateInventoryDisplay && playerInventory) {
           HUD.updateInventoryDisplay(playerInventory);
@@ -1344,6 +1504,128 @@
     );
   }
 
+  // NPC shop inventories by archetype
+  var NPC_SHOP_ITEMS = {
+    merchant: [
+      { id: 'torch', name: 'Torch', price: 8, description: 'Lights the way', icon: '&#128294;' },
+      { id: 'rope', name: 'Rope', price: 12, description: 'Useful for climbing and building', icon: '&#129526;' },
+      { id: 'compass', name: 'Compass', price: 20, description: 'Helps with navigation', icon: '&#129517;' },
+      { id: 'map_fragment', name: 'Map Fragment', price: 15, description: 'Reveals hidden areas', icon: '&#128506;' },
+      { id: 'potion_energy', name: 'Energy Potion', price: 25, description: 'Restores energy', icon: '&#129514;' }
+    ],
+    trader: [
+      { id: 'rare_seed', name: 'Rare Seed', price: 30, description: 'Grows into a rare plant', icon: '&#127793;' },
+      { id: 'crystal_shard', name: 'Crystal Shard', price: 40, description: 'A glowing fragment', icon: '&#128142;' },
+      { id: 'ancient_coin', name: 'Ancient Coin', price: 50, description: 'A relic from the founding', icon: '&#129689;' }
+    ],
+    farmer: [
+      { id: 'wheat_seed', name: 'Wheat Seeds', price: 5, description: 'Basic crop seeds', icon: '&#127806;' },
+      { id: 'flower_seed', name: 'Flower Seeds', price: 8, description: 'Decorative flowers', icon: '&#127804;' },
+      { id: 'herb_seed', name: 'Herb Seeds', price: 10, description: 'Medicinal herbs', icon: '&#127807;' },
+      { id: 'fertilizer', name: 'Fertilizer', price: 15, description: 'Speeds up growth', icon: '&#128169;' }
+    ],
+    artisan: [
+      { id: 'paint_set', name: 'Paint Set', price: 20, description: 'For creating art', icon: '&#127912;' },
+      { id: 'chisel', name: 'Chisel', price: 15, description: 'For sculpting stone', icon: '&#128296;' },
+      { id: 'loom_thread', name: 'Loom Thread', price: 12, description: 'For weaving', icon: '&#129525;' },
+      { id: 'golden_frame', name: 'Golden Frame', price: 35, description: 'Display art beautifully', icon: '&#128444;' }
+    ]
+  };
+
+  /**
+   * Handle NPC dialog action button clicks
+   */
+  function handleNPCAction(action, npcData) {
+    if (!npcData || !localPlayer) return;
+
+    switch (action) {
+      case 'trade':
+        var shopItems = NPC_SHOP_ITEMS[npcData.archetype] || NPC_SHOP_ITEMS.merchant;
+        if (HUD && HUD.showNPCShop) {
+          HUD.showNPCShop(npcData, shopItems, localPlayer.spark, function onBuyItem(itemId) {
+            var item = shopItems.find(function(i) { return i.id === itemId; });
+            if (!item) return;
+            if (localPlayer.spark < item.price) {
+              if (HUD) HUD.showNotification('Not enough Spark!', 'error');
+              return;
+            }
+            if (economyLedger && Economy) {
+              var result = Economy.spendSpark(economyLedger, localPlayer.id, item.price);
+              if (!result.success) {
+                if (HUD) HUD.showNotification('Transaction failed', 'error');
+                return;
+              }
+              localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+            } else {
+              localPlayer.spark -= item.price;
+            }
+            if (Inventory && playerInventory) {
+              Inventory.addItem(playerInventory, item.id, 1);
+              if (HUD) {
+                HUD.showItemPickup(item.name, 1, item.icon);
+                HUD.updateInventoryDisplay(playerInventory);
+              }
+            }
+            if (HUD) {
+              HUD.updatePlayerInfo(localPlayer);
+              HUD.showNotification('Bought ' + item.name + ' for ' + item.price + ' Spark', 'success');
+            }
+            if (Audio) Audio.playSound('trade');
+            // Refresh shop with updated balance
+            HUD.showNPCShop(npcData, shopItems, localPlayer.spark, onBuyItem);
+            addRecentActivity('Bought ' + item.name + ' from ' + npcData.name);
+          });
+        }
+        break;
+
+      case 'learn':
+        if (HUD) {
+          var teachingMsg = '';
+          if (typeof NPC_AI !== 'undefined' && NPC_AI.getTeaching) {
+            var teaching = NPC_AI.getTeaching(npcData.archetype, {});
+            if (teaching) {
+              teachingMsg = npcData.name + ' teaches you about ' + teaching.topic + ': "' + teaching.description + '"';
+              if (Economy && economyLedger) {
+                Economy.earnSpark(economyLedger, localPlayer.id, 'teach', { complexity: 0.5 });
+                localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+                HUD.updatePlayerInfo(localPlayer);
+              }
+            } else {
+              teachingMsg = npcData.name + ' has nothing more to teach you right now.';
+            }
+          } else {
+            teachingMsg = npcData.name + ' shares some wisdom with you.';
+            if (Economy && economyLedger) {
+              Economy.earnSpark(economyLedger, localPlayer.id, 'teach', { complexity: 0.3 });
+              localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+              HUD.updatePlayerInfo(localPlayer);
+            }
+          }
+          HUD.showNotification(teachingMsg, 'info');
+          addRecentActivity('Learned from ' + npcData.name);
+        }
+        break;
+
+      case 'lore':
+        if (HUD) {
+          var loreMsg = '';
+          if (typeof NPC_AI !== 'undefined' && NPC_AI.getLore) {
+            var lore = NPC_AI.getLore(npcData.archetype, {});
+            if (lore) {
+              loreMsg = npcData.name + ' tells you: "' + lore + '"';
+            } else {
+              loreMsg = npcData.name + ' has shared all their stories with you.';
+            }
+          } else {
+            loreMsg = npcData.name + ' tells you a tale of the founding of ZION.';
+          }
+          HUD.showNotification(loreMsg, 'info');
+          addRecentActivity('Heard lore from ' + npcData.name);
+        }
+        break;
+    }
+  }
+
   /**
    * Handle resource node harvesting
    */
@@ -1368,10 +1650,23 @@
       }
 
       if (economyLedger && Economy) {
-        var sparkEarned = Economy.earnSpark(economyLedger, localPlayer.id, 'harvest', { complexity: 0.5 });
+        // Apply Warmth bonus to harvest yields (minor, cosmetic-adjacent per §5.3)
+        var harvestComplexity = 0.5;
+        if (Physical && localPlayer.warmth > 0) {
+          var warmthBonus = Physical.getWarmthBonus(localPlayer.warmth);
+          harvestComplexity = Math.min(1.0, harvestComplexity * warmthBonus);
+        }
+        var sparkEarned = Economy.earnSpark(economyLedger, localPlayer.id, 'harvest', { complexity: harvestComplexity });
         if (localPlayer) {
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+        }
+      }
+
+      if (Mentoring) {
+        var xpResult = Mentoring.addSkillXP(localPlayer.id, 'gardening', 5);
+        if (xpResult.leveledUp && HUD) {
+          HUD.showNotification('Gardening skill increased to ' + xpResult.newLevelName, 'success');
         }
       }
 
@@ -1416,6 +1711,13 @@
         }
       }
 
+      if (Mentoring) {
+        var xpResult = Mentoring.addSkillXP(localPlayer.id, 'crafting', 10);
+        if (xpResult.leveledUp && HUD) {
+          HUD.showNotification('Crafting skill increased to ' + xpResult.newLevelName, 'success');
+        }
+      }
+
       if (Quests) {
         Quests.updateQuestProgress(localPlayer.id, 'craft', { item: result.output.itemId, amount: result.output.count });
       }
@@ -1427,6 +1729,123 @@
   }
 
   /**
+   * Handle compose (artwork creation)
+   */
+  function handleGuildCreate(guildData) {
+    if (!Guilds || !localPlayer || !Economy || !economyLedger) return;
+
+    // Check if player has enough Spark
+    var balance = Economy.getBalance(economyLedger, localPlayer.id);
+    if (balance < 100) {
+      if (HUD) {
+        HUD.showNotification('Not enough Spark to create guild (need 100)', 'error');
+      }
+      return;
+    }
+
+    var result = Guilds.createGuild(
+      localPlayer.id,
+      guildData.name,
+      guildData.tag,
+      guildData.type,
+      guildData.description
+    );
+
+    if (result.success) {
+      // Deduct cost
+      Economy.debit(economyLedger, localPlayer.id, result.cost, 'Guild creation');
+
+      if (HUD) {
+        HUD.showNotification('Guild created: [' + guildData.tag + '] ' + guildData.name, 'success');
+        HUD.updateGuildTag(guildData.tag);
+
+        // Update player info to show new balance
+        localPlayer.spark = balance - result.cost;
+        HUD.updatePlayerInfo(localPlayer);
+
+        // Show guild panel
+        HUD.showGuildPanel(result.guild, { id: localPlayer.id });
+      }
+
+      addRecentActivity('Founded [' + guildData.tag + '] ' + guildData.name);
+    } else {
+      if (HUD) {
+        HUD.showNotification('Failed to create guild: ' + result.error, 'error');
+      }
+    }
+  }
+
+  // Global guild action handler for panel buttons
+  if (typeof window !== 'undefined') {
+    window.handleGuildAction = function(action, data) {
+      if (!Guilds || !localPlayer) return;
+
+      switch (action) {
+        case 'leave':
+          var result = Guilds.leaveGuild(data, localPlayer.id);
+          if (result.success) {
+            if (HUD) {
+              HUD.showNotification('You left the guild', 'info');
+              HUD.updateGuildTag('');
+            }
+            addRecentActivity('Left guild');
+          } else {
+            if (HUD) {
+              HUD.showNotification('Failed to leave guild: ' + result.error, 'error');
+            }
+          }
+          break;
+      }
+    };
+  }
+
+  function handleComposeAction(composeData) {
+    if (!Creation || !localPlayer) return;
+
+    var msg = {
+      type: 'compose',
+      from: localPlayer.id,
+      timestamp: Date.now(),
+      nonce: Math.random().toString(36).substr(2, 9),
+      payload: {
+        composeType: composeData.type,
+        title: composeData.title,
+        content: composeData.content,
+        zone: currentZone,
+        position: localPlayer.position
+      }
+    };
+
+    var result = Creation.handleCompose(msg, gameState);
+    if (result.success) {
+      if (HUD) {
+        HUD.showNotification('Created ' + composeData.type + ': ' + composeData.title, 'success');
+      }
+
+      if (economyLedger && Economy && result.sparkReward) {
+        Economy.earnSpark(economyLedger, localPlayer.id, 'compose', { complexity: result.sparkReward / 50 });
+        if (localPlayer) {
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          if (HUD) HUD.updatePlayerInfo(localPlayer);
+        }
+      }
+
+      if (Mentoring) {
+        var xpResult = Mentoring.addSkillXP(localPlayer.id, 'social', 15);
+        if (xpResult.leveledUp && HUD) {
+          HUD.showNotification('Social skill increased to ' + xpResult.newLevelName, 'success');
+        }
+      }
+
+      if (Audio) Audio.playSound('chat');
+
+      addRecentActivity('Created ' + composeData.type + ': ' + composeData.title);
+    } else {
+      if (HUD) HUD.showNotification(result.error, 'error');
+    }
+  }
+
+  /**
    * Handle build mode actions
    */
   var buildModeActive = false;
@@ -1434,6 +1853,10 @@
     'bench', 'lantern', 'signpost', 'fence', 'planter',
     'campfire', 'archway', 'table', 'barrel', 'crate'
   ];
+  var BUILD_COSTS = {
+    bench: 15, lantern: 10, signpost: 5, fence: 8, planter: 12,
+    campfire: 20, archway: 30, table: 15, barrel: 10, crate: 8
+  };
 
   function handleBuildAction(data) {
     if (data.mode !== undefined) {
@@ -1470,11 +1893,65 @@
             HUD.showNotification(result.error, 'error');
           }
         } else if (result) {
-          if (HUD && HUD.showNotification) {
-            HUD.showNotification('Structure placed: ' + result.type, 'success');
+          // Deduct Spark cost for building
+          var buildCost = BUILD_COSTS[result.type] || 10;
+          if (economyLedger && Economy) {
+            var spendResult = Economy.spendSpark(economyLedger, localPlayer.id, buildCost);
+            if (!spendResult.success) {
+              if (HUD && HUD.showNotification) {
+                HUD.showNotification('Not enough Spark! Need ' + buildCost + ' Spark to build ' + result.type, 'error');
+              }
+              // Remove the placed structure since we can't afford it
+              if (World && World.removeLastPlaced) {
+                World.removeLastPlaced(sceneContext);
+              }
+              return;
+            }
+            localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+            if (HUD) HUD.updatePlayerInfo(localPlayer);
           }
-          // TODO: Broadcast to network
-          // TODO: Deduct Spark cost
+
+          if (HUD && HUD.showNotification) {
+            HUD.showNotification('Built ' + result.type + ' (-' + buildCost + ' Spark)', 'success');
+          }
+
+          // Award building XP
+          if (Economy) {
+            Economy.earnSpark(economyLedger, localPlayer.id, 'build', { complexity: 0.3 });
+            localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          }
+
+          if (Mentoring) {
+            var xpResult = Mentoring.addSkillXP(localPlayer.id, 'building', 12);
+            if (xpResult.leveledUp && HUD) {
+              HUD.showNotification('Building skill increased to ' + xpResult.newLevelName, 'success');
+            }
+          }
+
+          // Broadcast to network
+          if (Network && Protocol) {
+            var buildMsg = Protocol.create.build(localPlayer.id, {
+              structureType: result.type,
+              position: result.position,
+              rotation: result.rotation || 0,
+              zone: currentZone
+            });
+            Network.broadcastMessage(buildMsg);
+          }
+
+          // Save structure to state
+          if (gameState) {
+            if (!gameState.structures) gameState.structures = [];
+            gameState.structures.push({
+              id: 'struct_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+              type: result.type,
+              position: result.position,
+              rotation: result.rotation || 0,
+              zone: currentZone,
+              builder: localPlayer.id,
+              ts: Date.now()
+            });
+          }
         }
       }
     } else if (data.action === 'rotate') {
@@ -1521,6 +1998,14 @@
         }
 
         msg = Protocol.create.chat(localPlayer.id, message);
+
+        if (Mentoring) {
+          var xpResult = Mentoring.addSkillXP(localPlayer.id, 'social', 3);
+          if (xpResult.leveledUp && HUD) {
+            HUD.showNotification('Social skill increased to ' + xpResult.newLevelName, 'success');
+          }
+        }
+
         // Broadcast player chat to NPCs for reaction
         if (NPCs && NPCs.broadcastEvent) {
           NPCs.broadcastEvent({ type: 'player_action', data: {
@@ -1605,11 +2090,57 @@
               questsCompleted: Quests ? Quests.getCompletedQuests(localPlayer.id).length : 0,
               questsActive: Quests ? Quests.getActiveQuests(localPlayer.id).length : 0,
               npcsMet: NPCs && NPCs.getMetNPCs ? NPCs.getMetNPCs(localPlayer.id).length : 0,
-              zonesDiscovered: Exploration ? Exploration.getDiscoveredZones(localPlayer.id).length : 1,
+              zonesDiscovered: Exploration ? Exploration.getDiscoveredZones(localPlayer.id, gameState).length : 1,
               structuresBuilt: Creation ? Creation.getPlayerStructures(localPlayer.id).length : 0,
               recentActivities: getRecentActivities()
             };
             HUD.showPlayerProfile(playerData);
+          }
+        }
+        break;
+
+      case 'toggleGuild':
+        if (HUD && Guilds && localPlayer) {
+          var guildPanelEl = document.getElementById('guild-panel');
+          if (guildPanelEl) {
+            HUD.hideGuildPanel();
+          } else {
+            var playerGuild = Guilds.getPlayerGuild(localPlayer.id);
+            if (playerGuild) {
+              HUD.showGuildPanel(playerGuild, { id: localPlayer.id });
+              // Update guild tag in HUD
+              HUD.updateGuildTag(playerGuild.tag);
+            } else {
+              // Show guild creation form if not in a guild
+              HUD.showGuildCreate(function(guildData) {
+                handleGuildCreate(guildData);
+              });
+            }
+          }
+        }
+        break;
+
+      case 'toggleSkills':
+        if (HUD && Mentoring && localPlayer) {
+          var skillsPanelEl = document.getElementById('skills-panel');
+          if (skillsPanelEl) {
+            HUD.hideSkillsPanel();
+          } else {
+            var skillsData = Mentoring.getPlayerSkills(localPlayer.id);
+            HUD.showSkillsPanel(skillsData);
+          }
+        }
+        break;
+
+      case 'toggleCompose':
+        if (HUD && Creation && localPlayer) {
+          var composePanelEl = document.getElementById('compose-panel');
+          if (composePanelEl) {
+            HUD.hideComposePanel();
+          } else {
+            HUD.showComposePanel(function(composeData) {
+              handleComposeAction(composeData);
+            });
           }
         }
         break;
@@ -1709,6 +2240,30 @@
         if (HUD && playerInventory) {
           HUD.toggleCraftingPanel();
           HUD.updateCraftingDisplay(playerInventory);
+        }
+        break;
+
+      case 'toggleDiscoveryLog':
+        if (HUD && Exploration && localPlayer) {
+          var discoveryLogEl = document.getElementById('discovery-log-overlay');
+          if (discoveryLogEl) {
+            HUD.hideDiscoveryLog();
+          } else {
+            var discoveries = Exploration.getDiscoveries ? Exploration.getDiscoveries(localPlayer.id, gameState) : [];
+            HUD.showDiscoveryLog(discoveries);
+          }
+        }
+        break;
+
+      case 'toggleLoreBook':
+        if (HUD && localPlayer) {
+          var loreBookEl = document.getElementById('lore-book-overlay');
+          if (loreBookEl) {
+            HUD.hideLoreBook();
+          } else {
+            var loreEntries = [];
+            HUD.showLoreBook(loreEntries);
+          }
         }
         break;
 

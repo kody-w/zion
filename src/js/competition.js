@@ -224,6 +224,199 @@
     );
   }
 
+  // Spectator tracking
+  var spectators = {}; // competitionId → [playerIds]
+
+  // Join as spectator
+  function joinAsSpectator(competitionId, playerId, state) {
+    if (!state.competitions || state.competitions.length === 0) {
+      return { success: false, error: 'No competitions found' };
+    }
+
+    var competition = state.competitions.find(function(c) {
+      return c.id === competitionId;
+    });
+
+    if (!competition) {
+      return { success: false, error: 'Competition not found' };
+    }
+
+    if (competition.status !== 'active') {
+      return { success: false, error: 'Competition is not active' };
+    }
+
+    if (!spectators[competitionId]) {
+      spectators[competitionId] = [];
+    }
+
+    if (spectators[competitionId].indexOf(playerId) === -1) {
+      spectators[competitionId].push(playerId);
+    }
+
+    return { success: true, competition: competition };
+  }
+
+  // Leave spectator
+  function leaveSpectator(competitionId, playerId) {
+    if (!spectators[competitionId]) return;
+
+    var index = spectators[competitionId].indexOf(playerId);
+    if (index !== -1) {
+      spectators[competitionId].splice(index, 1);
+    }
+
+    // Clean up empty spectator lists
+    if (spectators[competitionId].length === 0) {
+      delete spectators[competitionId];
+    }
+  }
+
+  // Get spectators
+  function getSpectators(competitionId) {
+    return spectators[competitionId] || [];
+  }
+
+  // Get active competitions
+  function getActiveCompetitions(state) {
+    if (!state.competitions || state.competitions.length === 0) {
+      return [];
+    }
+
+    return state.competitions
+      .filter(function(c) { return c.status === 'active'; })
+      .map(function(c) {
+        return {
+          id: c.id,
+          type: c.type,
+          players: c.players,
+          startedAt: c.startedAt,
+          spectatorCount: spectators[c.id] ? spectators[c.id].length : 0
+        };
+      });
+  }
+
+  // Broadcast to spectators
+  function broadcastToSpectators(competitionId, eventType, data) {
+    var spectatorList = spectators[competitionId] || [];
+
+    return {
+      type: 'spectator_event',
+      competitionId: competitionId,
+      eventType: eventType,
+      data: data,
+      spectators: spectatorList,
+      timestamp: Date.now()
+    };
+  }
+
+  // Get competition leaderboard
+  function getCompetitionLeaderboard(state) {
+    if (!state.competitions || state.competitions.length === 0) {
+      return [];
+    }
+
+    var playerStats = {};
+
+    state.competitions
+      .filter(function(c) { return c.status === 'completed'; })
+      .forEach(function(comp) {
+        comp.players.forEach(function(playerId) {
+          if (!playerStats[playerId]) {
+            playerStats[playerId] = { playerId: playerId, wins: 0, losses: 0, total: 0 };
+          }
+
+          if (comp.winner === playerId) {
+            playerStats[playerId].wins++;
+          } else {
+            playerStats[playerId].losses++;
+          }
+          playerStats[playerId].total++;
+        });
+      });
+
+    return Object.values(playerStats).sort(function(a, b) {
+      return b.wins - a.wins;
+    });
+  }
+
+  // Race Competition Type
+  function createRace(organizerId, checkpoints, zone, state) {
+    var raceId = generateId();
+    var race = {
+      id: raceId,
+      type: 'race',
+      organizer: organizerId,
+      checkpoints: checkpoints,
+      zone: zone,
+      participants: [],
+      progress: {}, // playerId → { checkpointIndex, time }
+      status: 'waiting',
+      createdAt: Date.now()
+    };
+
+    if (!state.competitions) {
+      state.competitions = [];
+    }
+
+    state.competitions.push(race);
+
+    return {
+      success: true,
+      race: race,
+      state: state
+    };
+  }
+
+  // Check race progress
+  function checkRaceProgress(competitionId, playerId, position) {
+    // This function would be called in the game loop to check if player reached a checkpoint
+    // Returns updated progress information
+
+    return {
+      checkpointHit: false,
+      finished: false,
+      currentCheckpoint: 0,
+      time: 0
+    };
+  }
+
+  // Get race standings
+  function getRaceStandings(competitionId, state) {
+    if (!state.competitions) {
+      return [];
+    }
+
+    var race = state.competitions.find(function(c) {
+      return c.id === competitionId && c.type === 'race';
+    });
+
+    if (!race || !race.progress) {
+      return [];
+    }
+
+    var standings = Object.keys(race.progress).map(function(playerId) {
+      var progress = race.progress[playerId];
+      return {
+        playerId: playerId,
+        checkpointIndex: progress.checkpointIndex || 0,
+        time: progress.time || 0,
+        finished: progress.finished || false
+      };
+    });
+
+    // Sort by checkpoint progress (descending) then by time (ascending)
+    standings.sort(function(a, b) {
+      if (a.finished && !b.finished) return -1;
+      if (!a.finished && b.finished) return 1;
+      if (a.checkpointIndex !== b.checkpointIndex) {
+        return b.checkpointIndex - a.checkpointIndex;
+      }
+      return a.time - b.time;
+    });
+
+    return standings;
+  }
+
   // Exports
   exports.COMPETITION_TYPES = COMPETITION_TYPES;
   exports.SPARK_AWARDS = SPARK_AWARDS;
@@ -232,5 +425,14 @@
   exports.handleForfeit = handleForfeit;
   exports.handleScore = handleScore;
   exports.getPendingChallenges = getPendingChallenges;
+  exports.joinAsSpectator = joinAsSpectator;
+  exports.leaveSpectator = leaveSpectator;
+  exports.getSpectators = getSpectators;
+  exports.getActiveCompetitions = getActiveCompetitions;
+  exports.broadcastToSpectators = broadcastToSpectators;
+  exports.getCompetitionLeaderboard = getCompetitionLeaderboard;
+  exports.createRace = createRace;
+  exports.checkRaceProgress = checkRaceProgress;
+  exports.getRaceStandings = getRaceStandings;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Competition = {}));

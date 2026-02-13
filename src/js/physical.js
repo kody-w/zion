@@ -164,6 +164,45 @@
     return 1.0 + (warmth / 1000);
   }
 
+  /**
+   * Get speed from GPS position (for AR safety - pause at driving speed)
+   * @param {Object} prev - Previous GPS point {lat, lon, ts}
+   * @param {Object} curr - Current GPS point {lat, lon, ts}
+   * @returns {number} Speed in km/h
+   */
+  function getSpeed(prev, curr) {
+    if (!prev || !curr || !prev.ts || !curr.ts) return 0;
+    var dist = haversineDistance(prev.lat, prev.lon, curr.lat, curr.lon);
+    var hours = (curr.ts - prev.ts) / (1000 * 60 * 60);
+    if (hours <= 0) return 0;
+    return dist / hours;
+  }
+
+  /**
+   * Check if player is moving too fast for AR mode (driving)
+   * @param {Array} recentGPS - Last 3+ GPS points
+   * @returns {boolean} true if driving speed detected
+   */
+  function isDrivingSpeed(recentGPS) {
+    if (!recentGPS || recentGPS.length < 2) return false;
+    var last = recentGPS[recentGPS.length - 1];
+    var prev = recentGPS[recentGPS.length - 2];
+    return getSpeed(prev, last) > 30; // 30 km/h threshold
+  }
+
+  /**
+   * Get warmth tier label
+   * @param {number} warmth - Warmth value 0-100
+   * @returns {string} Tier label
+   */
+  function getWarmthTier(warmth) {
+    if (warmth >= 80) return 'Sunwalker';
+    if (warmth >= 50) return 'Wanderer';
+    if (warmth >= 20) return 'Stroller';
+    if (warmth > 0) return 'Newcomer';
+    return 'Indoor';
+  }
+
   // Exports
   exports.ANCHOR_TYPES = ANCHOR_TYPES;
   exports.createAnchor = createAnchor;
@@ -171,5 +210,8 @@
   exports.calculateWarmth = calculateWarmth;
   exports.getWarmthBonus = getWarmthBonus;
   exports.haversineDistance = haversineDistance;
+  exports.getSpeed = getSpeed;
+  exports.isDrivingSpeed = isDrivingSpeed;
+  exports.getWarmthTier = getWarmthTier;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Physical = {}));

@@ -3936,8 +3936,19 @@
       rotation: buildRotation
     };
     placedBuildings.push(placement);
+    lastPlacedMesh = structure;
 
     return placement;
+  }
+
+  var lastPlacedMesh = null;
+
+  function removeLastPlaced(sceneCtx) {
+    if (lastPlacedMesh && sceneCtx && sceneCtx.scene) {
+      sceneCtx.scene.remove(lastPlacedMesh);
+      placedBuildings.pop();
+      lastPlacedMesh = null;
+    }
   }
 
   function updateBuildPreview(sceneCtx, mouseX, mouseY, camera) {
@@ -4265,6 +4276,7 @@
   exports.exitBuildMode = exitBuildMode;
   exports.setBuildType = setBuildType;
   exports.confirmPlacement = confirmPlacement;
+  exports.removeLastPlaced = removeLastPlaced;
   exports.updateBuildPreview = updateBuildPreview;
   exports.rotateBuildPreview = rotateBuildPreview;
   exports.getBuildMode = getBuildMode;

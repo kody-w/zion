@@ -611,6 +611,8 @@
 
   var npcDialogEl = null;
   var npcDialogTimer = null;
+  var npcActionCallback = null;
+  var npcShopPanel = null;
 
   // Archetype colors for NPC portraits
   var ARCHETYPE_COLORS_HUD = {
@@ -697,14 +699,47 @@
       '</div>' +
       '<span style="font-size:10px;color:#666;">' + familiarity + '%</span></div>';
 
-    // Close hint
-    var closeHint = '<div style="text-align:center;font-size:10px;color:#555;margin-top:8px;">Press E to interact again | ESC to close</div>';
+    // Action buttons row
+    var actionBtns = '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">';
+    // Trade button (merchants/traders show prominently)
+    var isMerchant = npcData.archetype === 'merchant' || npcData.archetype === 'trader' ||
+                     npcData.archetype === 'artisan' || npcData.archetype === 'farmer';
+    actionBtns += '<button class="npc-action-btn" data-action="trade" style="flex:1;padding:6px 10px;' +
+      'background:rgba(218,165,32,0.15);border:1px solid rgba(218,165,32,0.4);border-radius:6px;' +
+      'color:#daa520;font-size:11px;cursor:pointer;transition:background 0.2s;"' +
+      (isMerchant ? ' data-primary="true"' : '') + '>&#128176; Trade</button>';
+    // Learn button (scholars/sages)
+    actionBtns += '<button class="npc-action-btn" data-action="learn" style="flex:1;padding:6px 10px;' +
+      'background:rgba(100,149,237,0.15);border:1px solid rgba(100,149,237,0.4);border-radius:6px;' +
+      'color:#6495ed;font-size:11px;cursor:pointer;transition:background 0.2s;">&#128218; Learn</button>';
+    // Lore button
+    actionBtns += '<button class="npc-action-btn" data-action="lore" style="flex:1;padding:6px 10px;' +
+      'background:rgba(147,112,219,0.15);border:1px solid rgba(147,112,219,0.4);border-radius:6px;' +
+      'color:#9370db;font-size:11px;cursor:pointer;transition:background 0.2s;">&#128220; Lore</button>';
+    actionBtns += '</div>';
 
-    npcDialogEl.innerHTML = header + activityBar + dialogue + famBar + closeHint;
+    // Close hint
+    var closeHint = '<div style="text-align:center;font-size:10px;color:#555;margin-top:8px;">Click an action or ESC to close</div>';
+
+    npcDialogEl.innerHTML = header + activityBar + dialogue + famBar + actionBtns + closeHint;
+
+    // Wire up action button clicks
+    var buttons = npcDialogEl.querySelectorAll('.npc-action-btn');
+    buttons.forEach(function(btn) {
+      btn.addEventListener('mouseover', function() { btn.style.background = 'rgba(255,255,255,0.15)'; });
+      btn.addEventListener('mouseout', function() { btn.style.background = ''; });
+      btn.addEventListener('click', function() {
+        var action = btn.getAttribute('data-action');
+        if (npcActionCallback) {
+          npcActionCallback(action, npcData);
+        }
+      });
+    });
+
     hud.appendChild(npcDialogEl);
 
-    // Auto-hide after 8 seconds
-    npcDialogTimer = setTimeout(function() { hideNPCDialog(); }, 8000);
+    // Auto-hide after 15 seconds (longer since there are actions now)
+    npcDialogTimer = setTimeout(function() { hideNPCDialog(); }, 15000);
   }
 
   /**
@@ -718,6 +753,100 @@
     if (npcDialogEl && npcDialogEl.parentNode) {
       npcDialogEl.parentNode.removeChild(npcDialogEl);
       npcDialogEl = null;
+    }
+  }
+
+  /**
+   * Set callback for NPC dialog action buttons
+   * @param {function} callback - function(action, npcData)
+   */
+  function setNPCActionCallback(callback) {
+    npcActionCallback = callback;
+  }
+
+  /**
+   * Show NPC shop panel
+   * @param {object} npcData - NPC info
+   * @param {Array} items - [{id, name, price, description, icon}]
+   * @param {number} playerSpark - Player's current Spark balance
+   * @param {function} onBuy - callback(itemId)
+   */
+  function showNPCShop(npcData, items, playerSpark, onBuy) {
+    if (typeof document === 'undefined') return;
+    hideNPCShop();
+    hideNPCDialog();
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    var color = ARCHETYPE_COLORS_HUD[npcData.archetype] || '#888';
+
+    npcShopPanel = document.createElement('div');
+    npcShopPanel.id = 'npc-shop-panel';
+    npcShopPanel.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid ' + color + ';border-radius:12px;' +
+      'padding:20px;min-width:400px;max-width:500px;max-height:70vh;pointer-events:auto;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.7);animation:slideIn 0.3s ease-out;overflow-y:auto;';
+
+    var header = '<div style="display:flex;align-items:center;margin-bottom:14px;padding-bottom:10px;' +
+      'border-bottom:1px solid rgba(255,255,255,0.1);">' +
+      '<div style="font-size:18px;font-weight:bold;color:#fff;flex:1;">&#128176; ' +
+      (npcData.name || 'Shop') + '\'s Wares</div>' +
+      '<div style="font-size:13px;color:#daa520;">Your Spark: ' + (playerSpark || 0) + '</div></div>';
+
+    var itemList = '';
+    if (!items || items.length === 0) {
+      itemList = '<div style="text-align:center;color:#888;padding:20px;">No items for sale right now.</div>';
+    } else {
+      items.forEach(function(item) {
+        var canAfford = playerSpark >= item.price;
+        itemList += '<div style="display:flex;align-items:center;padding:10px;margin-bottom:6px;' +
+          'background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.08);">' +
+          '<div style="font-size:24px;margin-right:12px;">' + (item.icon || '&#128230;') + '</div>' +
+          '<div style="flex:1;">' +
+          '<div style="font-size:13px;color:#fff;">' + item.name + '</div>' +
+          '<div style="font-size:11px;color:#888;">' + (item.description || '') + '</div>' +
+          '</div>' +
+          '<div style="text-align:right;margin-left:12px;">' +
+          '<div style="font-size:12px;color:#daa520;margin-bottom:4px;">' + item.price + ' Spark</div>' +
+          '<button class="npc-shop-buy-btn" data-item-id="' + item.id + '" style="padding:4px 12px;' +
+          'background:' + (canAfford ? 'rgba(218,165,32,0.2)' : 'rgba(100,100,100,0.2)') + ';' +
+          'border:1px solid ' + (canAfford ? 'rgba(218,165,32,0.5)' : 'rgba(100,100,100,0.3)') + ';' +
+          'border-radius:4px;color:' + (canAfford ? '#daa520' : '#666') + ';font-size:11px;cursor:' +
+          (canAfford ? 'pointer' : 'not-allowed') + ';"' +
+          (canAfford ? '' : ' disabled') + '>Buy</button>' +
+          '</div></div>';
+      });
+    }
+
+    var closeBtn = '<div style="text-align:center;margin-top:12px;">' +
+      '<button id="npc-shop-close" style="padding:6px 24px;background:rgba(255,255,255,0.08);' +
+      'border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#aaa;font-size:12px;cursor:pointer;">Close Shop</button></div>';
+
+    npcShopPanel.innerHTML = header + itemList + closeBtn;
+    hud.appendChild(npcShopPanel);
+
+    // Wire buy buttons
+    npcShopPanel.querySelectorAll('.npc-shop-buy-btn').forEach(function(btn) {
+      if (!btn.disabled) {
+        btn.addEventListener('click', function() {
+          var itemId = btn.getAttribute('data-item-id');
+          if (onBuy) onBuy(itemId);
+        });
+      }
+    });
+
+    // Wire close button
+    var closeEl = npcShopPanel.querySelector('#npc-shop-close');
+    if (closeEl) {
+      closeEl.addEventListener('click', function() { hideNPCShop(); });
+    }
+  }
+
+  function hideNPCShop() {
+    if (npcShopPanel && npcShopPanel.parentNode) {
+      npcShopPanel.parentNode.removeChild(npcShopPanel);
+      npcShopPanel = null;
     }
   }
 
@@ -2930,6 +3059,1719 @@
     return minutes + 'm';
   }
 
+  // Discovery Log Panel
+  var discoveryLogPanel = null;
+
+  function showDiscoveryLog(discoveries) {
+    if (discoveryLogPanel) return;
+
+    var panel = document.createElement('div');
+    panel.id = 'discovery-log-overlay';
+    panel.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+
+    var content = document.createElement('div');
+    content.style.cssText = `
+      width: 80%;
+      max-width: 900px;
+      height: 80%;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 12px;
+      padding: 30px;
+      overflow-y: auto;
+      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+      border: 2px solid #3a506b;
+    `;
+
+    var header = document.createElement('div');
+    header.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #3a506b;
+    `;
+
+    var title = document.createElement('h2');
+    title.textContent = 'Discovery Log';
+    title.style.cssText = `
+      margin: 0;
+      color: #e0e0e0;
+      font-size: 28px;
+      font-family: system-ui, sans-serif;
+      font-weight: 600;
+    `;
+
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = 'X';
+    closeBtn.style.cssText = `
+      background: #c0392b;
+      border: none;
+      color: white;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+    `;
+    closeBtn.onclick = hideDiscoveryLog;
+
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    content.appendChild(header);
+
+    // Group discoveries by zone
+    var discoveryByZone = {};
+    var totalDiscoveries = 0;
+    if (discoveries && discoveries.length > 0) {
+      discoveries.forEach(function(disc) {
+        var zone = disc.zone || 'Unknown';
+        if (!discoveryByZone[zone]) {
+          discoveryByZone[zone] = [];
+        }
+        discoveryByZone[zone].push(disc);
+        totalDiscoveries++;
+      });
+    }
+
+    // Display discoveries by zone
+    Object.keys(discoveryByZone).forEach(function(zone) {
+      var zoneSection = document.createElement('div');
+      zoneSection.style.cssText = `
+        margin-bottom: 30px;
+      `;
+
+      var zoneHeader = document.createElement('div');
+      zoneHeader.textContent = zone + ' (' + discoveryByZone[zone].length + ' discoveries)';
+      zoneHeader.style.cssText = `
+        color: #5dade2;
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        font-family: system-ui, sans-serif;
+      `;
+      zoneSection.appendChild(zoneHeader);
+
+      discoveryByZone[zone].forEach(function(disc) {
+        var rarityColors = {
+          common: '#ffffff',
+          uncommon: '#1eff00',
+          rare: '#0070dd',
+          epic: '#a335ee',
+          legendary: '#ff8000'
+        };
+        var color = rarityColors[disc.rarity] || '#ffffff';
+
+        var discItem = document.createElement('div');
+        discItem.style.cssText = `
+          background: rgba(255, 255, 255, 0.05);
+          border-left: 4px solid ` + color + `;
+          padding: 12px 15px;
+          margin-bottom: 10px;
+          border-radius: 6px;
+        `;
+
+        var discName = document.createElement('div');
+        discName.textContent = disc.name;
+        discName.style.cssText = `
+          color: ` + color + `;
+          font-size: 16px;
+          font-weight: 600;
+          margin-bottom: 5px;
+          font-family: system-ui, sans-serif;
+        `;
+
+        var discDesc = document.createElement('div');
+        discDesc.textContent = disc.description || 'No description available';
+        discDesc.style.cssText = `
+          color: #b0b0b0;
+          font-size: 14px;
+          margin-bottom: 5px;
+          font-family: system-ui, sans-serif;
+        `;
+
+        var discMeta = document.createElement('div');
+        discMeta.textContent = 'Discovered: ' + (disc.timestamp ? new Date(disc.timestamp).toLocaleDateString() : 'Unknown');
+        discMeta.style.cssText = `
+          color: #808080;
+          font-size: 12px;
+          font-style: italic;
+          font-family: system-ui, sans-serif;
+        `;
+
+        discItem.appendChild(discName);
+        discItem.appendChild(discDesc);
+        discItem.appendChild(discMeta);
+        zoneSection.appendChild(discItem);
+      });
+
+      content.appendChild(zoneSection);
+    });
+
+    if (totalDiscoveries === 0) {
+      var emptyMsg = document.createElement('div');
+      emptyMsg.textContent = 'No discoveries yet. Explore the world to find new locations, creatures, and secrets!';
+      emptyMsg.style.cssText = `
+        color: #a0a0a0;
+        font-size: 16px;
+        text-align: center;
+        margin-top: 50px;
+        font-family: system-ui, sans-serif;
+      `;
+      content.appendChild(emptyMsg);
+    }
+
+    panel.appendChild(content);
+    document.body.appendChild(panel);
+    discoveryLogPanel = panel;
+
+    // Close on Escape
+    var escapeHandler = function(e) {
+      if (e.key === 'Escape') {
+        hideDiscoveryLog();
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    panel.escapeHandler = escapeHandler;
+  }
+
+  function hideDiscoveryLog() {
+    if (!discoveryLogPanel) return;
+    if (discoveryLogPanel.escapeHandler) {
+      document.removeEventListener('keydown', discoveryLogPanel.escapeHandler);
+    }
+    document.body.removeChild(discoveryLogPanel);
+    discoveryLogPanel = null;
+  }
+
+  // Lore Book Panel
+  var loreBookPanel = null;
+
+  function showLoreBook(loreEntries) {
+    if (loreBookPanel) return;
+
+    var panel = document.createElement('div');
+    panel.id = 'lore-book-overlay';
+    panel.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+
+    var content = document.createElement('div');
+    content.style.cssText = `
+      width: 80%;
+      max-width: 900px;
+      height: 80%;
+      background: linear-gradient(135deg, #2c1810 0%, #1a0f08 100%);
+      border-radius: 12px;
+      padding: 30px;
+      overflow-y: auto;
+      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+      border: 2px solid #8b4513;
+    `;
+
+    var header = document.createElement('div');
+    header.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #8b4513;
+    `;
+
+    var title = document.createElement('h2');
+    title.textContent = 'Lore Book';
+    title.style.cssText = `
+      margin: 0;
+      color: #f4e4c1;
+      font-size: 28px;
+      font-family: Georgia, serif;
+      font-weight: 600;
+    `;
+
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = 'X';
+    closeBtn.style.cssText = `
+      background: #c0392b;
+      border: none;
+      color: white;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+    `;
+    closeBtn.onclick = hideLoreBook;
+
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    content.appendChild(header);
+
+    // Organize lore by chapter
+    var chapters = {
+      'The Founding': [],
+      'The Zones': [],
+      'The People': [],
+      'The Economy': [],
+      'The Federation': []
+    };
+
+    if (loreEntries && loreEntries.length > 0) {
+      loreEntries.forEach(function(entry) {
+        var chapter = entry.chapter || 'The Founding';
+        if (chapters[chapter]) {
+          chapters[chapter].push(entry);
+        }
+      });
+    }
+
+    // Display lore by chapter
+    Object.keys(chapters).forEach(function(chapterName) {
+      if (chapters[chapterName].length === 0) return;
+
+      var chapterSection = document.createElement('div');
+      chapterSection.style.cssText = `
+        margin-bottom: 30px;
+      `;
+
+      var chapterHeader = document.createElement('div');
+      chapterHeader.textContent = chapterName;
+      chapterHeader.style.cssText = `
+        color: #d4af37;
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        font-family: Georgia, serif;
+      `;
+      chapterSection.appendChild(chapterHeader);
+
+      chapters[chapterName].forEach(function(entry) {
+        var entryItem = document.createElement('div');
+        entryItem.style.cssText = `
+          background: rgba(244, 228, 193, 0.05);
+          border-left: 4px solid #d4af37;
+          padding: 15px;
+          margin-bottom: 15px;
+          border-radius: 6px;
+          position: relative;
+        `;
+
+        if (entry.unread) {
+          var unreadIndicator = document.createElement('div');
+          unreadIndicator.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #d4af37;
+            box-shadow: 0 0 10px #d4af37;
+          `;
+          entryItem.appendChild(unreadIndicator);
+        }
+
+        var entryTitle = document.createElement('div');
+        entryTitle.textContent = entry.title;
+        entryTitle.style.cssText = `
+          color: #f4e4c1;
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 10px;
+          font-family: Georgia, serif;
+        `;
+
+        var entryText = document.createElement('div');
+        entryText.textContent = entry.text || 'No content available';
+        entryText.style.cssText = `
+          color: #c8b896;
+          font-size: 14px;
+          line-height: 1.6;
+          font-family: Georgia, serif;
+        `;
+
+        entryItem.appendChild(entryTitle);
+        entryItem.appendChild(entryText);
+        chapterSection.appendChild(entryItem);
+      });
+
+      content.appendChild(chapterSection);
+    });
+
+    panel.appendChild(content);
+    document.body.appendChild(panel);
+    loreBookPanel = panel;
+
+    // Close on Escape
+    var escapeHandler = function(e) {
+      if (e.key === 'Escape') {
+        hideLoreBook();
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    panel.escapeHandler = escapeHandler;
+  }
+
+  function hideLoreBook() {
+    if (!loreBookPanel) return;
+    if (loreBookPanel.escapeHandler) {
+      document.removeEventListener('keydown', loreBookPanel.escapeHandler);
+    }
+    document.body.removeChild(loreBookPanel);
+    loreBookPanel = null;
+  }
+
+  // Achievement Toast
+  function showAchievementToast(achievement) {
+    var toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #d4af37 0%, #c5a028 100%);
+      border: 3px solid #ffd700;
+      border-radius: 10px;
+      padding: 20px 30px;
+      min-width: 350px;
+      box-shadow: 0 0 30px rgba(212, 175, 55, 0.6);
+      z-index: 10001;
+      transition: top 0.5s ease;
+    `;
+
+    var header = document.createElement('div');
+    header.textContent = 'ACHIEVEMENT UNLOCKED';
+    header.style.cssText = `
+      color: #1a1a1a;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 8px;
+      font-family: system-ui, sans-serif;
+      letter-spacing: 1px;
+    `;
+
+    var achievementName = document.createElement('div');
+    achievementName.textContent = achievement.name || 'Unknown Achievement';
+    achievementName.style.cssText = `
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 5px;
+      font-family: system-ui, sans-serif;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    `;
+
+    var achievementDesc = document.createElement('div');
+    achievementDesc.textContent = achievement.description || '';
+    achievementDesc.style.cssText = `
+      color: #f5f5f5;
+      font-size: 14px;
+      text-align: center;
+      font-family: system-ui, sans-serif;
+    `;
+
+    toast.appendChild(header);
+    toast.appendChild(achievementName);
+    toast.appendChild(achievementDesc);
+    document.body.appendChild(toast);
+
+    // Animate in
+    setTimeout(function() {
+      toast.style.top = '20px';
+    }, 10);
+
+    // Fade out and remove after 5 seconds
+    setTimeout(function() {
+      toast.style.transition = 'top 0.5s ease, opacity 0.5s ease';
+      toast.style.opacity = '0';
+      toast.style.top = '-100px';
+      setTimeout(function() {
+        if (toast.parentNode) {
+          document.body.removeChild(toast);
+        }
+      }, 500);
+    }, 5000);
+  }
+
+  // Discovery Popup
+  function showDiscoveryPopup(discovery) {
+    var popup = document.createElement('div');
+    popup.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 3px solid #5dade2;
+      border-radius: 12px;
+      padding: 30px;
+      min-width: 400px;
+      box-shadow: 0 0 50px rgba(93, 173, 226, 0.6);
+      z-index: 10001;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+    `;
+
+    var header = document.createElement('div');
+    header.textContent = 'NEW DISCOVERY';
+    header.style.cssText = `
+      color: #ffd700;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 15px;
+      font-family: system-ui, sans-serif;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    `;
+
+    var rarityColors = {
+      common: '#ffffff',
+      uncommon: '#1eff00',
+      rare: '#0070dd',
+      epic: '#a335ee',
+      legendary: '#ff8000'
+    };
+    var color = rarityColors[discovery.rarity] || '#ffffff';
+
+    var discoveryName = document.createElement('div');
+    discoveryName.textContent = discovery.name || 'Unknown Discovery';
+    discoveryName.style.cssText = `
+      color: ` + color + `;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 10px;
+      font-family: system-ui, sans-serif;
+      text-shadow: 0 0 10px ` + color + `;
+    `;
+
+    var discoveryDesc = document.createElement('div');
+    discoveryDesc.textContent = discovery.description || '';
+    discoveryDesc.style.cssText = `
+      color: #e0e0e0;
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 15px;
+      line-height: 1.5;
+      font-family: system-ui, sans-serif;
+    `;
+
+    var rewardText = document.createElement('div');
+    rewardText.textContent = '+ ' + (discovery.sparkReward || 0) + ' Spark';
+    rewardText.style.cssText = `
+      color: #ffd700;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      font-family: system-ui, sans-serif;
+    `;
+
+    popup.appendChild(header);
+    popup.appendChild(discoveryName);
+    popup.appendChild(discoveryDesc);
+    popup.appendChild(rewardText);
+    document.body.appendChild(popup);
+
+    // Animate in
+    setTimeout(function() {
+      popup.style.transform = 'translate(-50%, -50%) scale(1)';
+      popup.style.opacity = '1';
+    }, 10);
+
+    // Auto-close after 4 seconds
+    setTimeout(function() {
+      popup.style.transform = 'translate(-50%, -50%) scale(0)';
+      popup.style.opacity = '0';
+      setTimeout(function() {
+        if (popup.parentNode) {
+          document.body.removeChild(popup);
+        }
+      }, 300);
+    }, 4000);
+
+    // Click to close
+    popup.onclick = function() {
+      popup.style.transform = 'translate(-50%, -50%) scale(0)';
+      popup.style.opacity = '0';
+      setTimeout(function() {
+        if (popup.parentNode) {
+          document.body.removeChild(popup);
+        }
+      }, 300);
+    };
+  }
+
+  // ============================================================================
+  // SKILLS PANEL
+  // ============================================================================
+
+  var skillsPanel = null;
+
+  function showSkillsPanel(skillsData) {
+    if (skillsPanel) return;
+
+    var panel = document.createElement('div');
+    panel.id = 'skills-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, rgba(20, 25, 35, 0.98), rgba(30, 35, 45, 0.98));
+      border: 2px solid rgba(100, 150, 255, 0.3);
+      border-radius: 12px;
+      padding: 25px;
+      width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 10000;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      font-family: system-ui, sans-serif;
+      pointer-events: auto;
+    `;
+
+    var header = document.createElement('div');
+    header.innerHTML = '<h2 style="margin: 0 0 20px 0; color: #fff; font-size: 24px;">Skills</h2>';
+    panel.appendChild(header);
+
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      cursor: pointer;
+    `;
+    closeBtn.onclick = hideSkillsPanel;
+    panel.appendChild(closeBtn);
+
+    for (var skillName in skillsData) {
+      var skill = skillsData[skillName];
+      var skillDiv = document.createElement('div');
+      skillDiv.style.cssText = `
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+      `;
+
+      var skillHeader = document.createElement('div');
+      skillHeader.innerHTML = `
+        <span style="color: #4af; font-weight: bold; font-size: 16px;">${skillName.charAt(0).toUpperCase() + skillName.slice(1)}</span>
+        <span style="color: #888; float: right;">${skill.levelName} (Level ${skill.level})</span>
+      `;
+      skillDiv.appendChild(skillHeader);
+
+      var xpBar = document.createElement('div');
+      xpBar.style.cssText = `
+        margin-top: 8px;
+        width: 100%;
+        height: 20px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+      `;
+
+      var nextLevelXP = 1000;
+      var currentLevelXP = 0;
+      if (typeof window !== 'undefined' && window.Mentoring && window.Mentoring.SKILLS) {
+        var skillConfig = window.Mentoring.SKILLS[skillName];
+        if (skillConfig && skill.level < skillConfig.xpPerLevel.length - 1) {
+          nextLevelXP = skillConfig.xpPerLevel[skill.level + 1];
+          currentLevelXP = skillConfig.xpPerLevel[skill.level];
+        }
+      }
+
+      var xpProgress = skill.xp - currentLevelXP;
+      var xpNeeded = nextLevelXP - currentLevelXP;
+      var progressPercent = skill.level >= 4 ? 100 : Math.min(100, (xpProgress / xpNeeded) * 100);
+
+      var xpFill = document.createElement('div');
+      xpFill.style.cssText = `
+        width: ${progressPercent}%;
+        height: 100%;
+        background: linear-gradient(90deg, #4af, #a8f);
+        transition: width 0.3s ease;
+      `;
+      xpBar.appendChild(xpFill);
+
+      var xpText = document.createElement('div');
+      xpText.textContent = skill.level >= 4 ? 'MAX LEVEL' : skill.xp + ' / ' + nextLevelXP + ' XP';
+      xpText.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 11px;
+        font-weight: bold;
+      `;
+      xpBar.appendChild(xpText);
+
+      skillDiv.appendChild(xpBar);
+      panel.appendChild(skillDiv);
+    }
+
+    document.body.appendChild(panel);
+    skillsPanel = panel;
+  }
+
+  function hideSkillsPanel() {
+    if (!skillsPanel) return;
+    document.body.removeChild(skillsPanel);
+    skillsPanel = null;
+  }
+
+  // ============================================================================
+  // MENTOR OFFER PANEL
+  // ============================================================================
+
+  var mentorOfferPanel = null;
+
+  function showMentorOffer(offerData, acceptCallback, declineCallback) {
+    if (mentorOfferPanel) return;
+
+    var panel = document.createElement('div');
+    panel.id = 'mentor-offer-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, rgba(20, 25, 35, 0.98), rgba(30, 35, 45, 0.98));
+      border: 2px solid rgba(255, 200, 100, 0.5);
+      border-radius: 12px;
+      padding: 25px;
+      width: 400px;
+      z-index: 10001;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      pointer-events: auto;
+    `;
+
+    panel.innerHTML = `
+      <h3 style="color: #ffa500; margin: 0 0 15px 0;">Mentorship Offer</h3>
+      <p style="color: #fff; margin-bottom: 10px;">
+        <strong>${offerData.mentorId}</strong> wants to mentor you in <strong>${offerData.skill}</strong>
+      </p>
+      <p style="color: #888; font-size: 13px; margin-bottom: 20px;">
+        Complete 5 lesson steps to gain XP and unlock advanced techniques.
+      </p>
+    `;
+
+    var buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = 'display: flex; gap: 10px; justify-content: center;';
+
+    var acceptBtn = document.createElement('button');
+    acceptBtn.textContent = 'Accept';
+    acceptBtn.style.cssText = `
+      padding: 10px 24px;
+      background: linear-gradient(135deg, #4af, #a8f);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    `;
+    acceptBtn.onclick = function() {
+      acceptCallback(offerData.id);
+      document.body.removeChild(mentorOfferPanel);
+      mentorOfferPanel = null;
+    };
+
+    var declineBtn = document.createElement('button');
+    declineBtn.textContent = 'Decline';
+    declineBtn.style.cssText = `
+      padding: 10px 24px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      cursor: pointer;
+    `;
+    declineBtn.onclick = function() {
+      declineCallback(offerData.id);
+      document.body.removeChild(mentorOfferPanel);
+      mentorOfferPanel = null;
+    };
+
+    buttonContainer.appendChild(acceptBtn);
+    buttonContainer.appendChild(declineBtn);
+    panel.appendChild(buttonContainer);
+
+    document.body.appendChild(panel);
+    mentorOfferPanel = panel;
+  }
+
+  // ============================================================================
+  // LESSON PROGRESS PANEL
+  // ============================================================================
+
+  var lessonProgressPanel = null;
+
+  function showLessonProgress(mentorshipData) {
+    if (lessonProgressPanel) {
+      document.body.removeChild(lessonProgressPanel);
+      lessonProgressPanel = null;
+    }
+
+    var panel = document.createElement('div');
+    panel.id = 'lesson-progress-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 120px;
+      right: 20px;
+      background: rgba(20, 25, 35, 0.95);
+      border: 2px solid rgba(255, 200, 100, 0.5);
+      border-radius: 8px;
+      padding: 15px;
+      width: 300px;
+      z-index: 9999;
+      font-family: system-ui, sans-serif;
+      pointer-events: auto;
+    `;
+
+    var progress = mentorshipData.stepsCompleted / mentorshipData.totalSteps;
+    var progressPercent = Math.round(progress * 100);
+
+    panel.innerHTML = `
+      <h4 style="color: #ffa500; margin: 0 0 10px 0; font-size: 14px;">Mentorship Progress</h4>
+      <p style="color: #fff; font-size: 13px; margin: 5px 0;">
+        <strong>${mentorshipData.skill}</strong>
+      </p>
+      <p style="color: #888; font-size: 12px; margin: 5px 0;">
+        Steps: ${mentorshipData.stepsCompleted} / ${mentorshipData.totalSteps}
+      </p>
+      <div style="width: 100%; height: 16px; background: rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; margin-top: 8px;">
+        <div style="width: ${progressPercent}%; height: 100%; background: linear-gradient(90deg, #ffa500, #ffcc00);"></div>
+      </div>
+    `;
+
+    document.body.appendChild(panel);
+    lessonProgressPanel = panel;
+  }
+
+  // ============================================================================
+  // COMPOSE PANEL
+  // ============================================================================
+
+  var composePanel = null;
+
+  function showComposePanel(composeCallback) {
+    if (composePanel) return;
+
+    var panel = document.createElement('div');
+    panel.id = 'compose-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, rgba(20, 25, 35, 0.98), rgba(30, 35, 45, 0.98));
+      border: 2px solid rgba(150, 100, 255, 0.5);
+      border-radius: 12px;
+      padding: 25px;
+      width: 500px;
+      z-index: 10000;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      font-family: system-ui, sans-serif;
+      pointer-events: auto;
+    `;
+
+    var header = document.createElement('div');
+    header.innerHTML = '<h2 style="margin: 0 0 20px 0; color: #a8f; font-size: 24px;">Create Artwork</h2>';
+    panel.appendChild(header);
+
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      cursor: pointer;
+    `;
+    closeBtn.onclick = hideComposePanel;
+    panel.appendChild(closeBtn);
+
+    var form = document.createElement('div');
+
+    var typeLabel = document.createElement('label');
+    typeLabel.textContent = 'Type:';
+    typeLabel.style.cssText = 'display: block; color: #fff; margin-bottom: 5px; font-size: 14px;';
+    form.appendChild(typeLabel);
+
+    var typeSelect = document.createElement('select');
+    typeSelect.id = 'compose-type-select';
+    typeSelect.style.cssText = `
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      font-size: 14px;
+    `;
+
+    var composeTypes = ['poem', 'song', 'story', 'painting', 'sculpture', 'mural'];
+    composeTypes.forEach(function(type) {
+      var option = document.createElement('option');
+      option.value = type;
+      option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+      typeSelect.appendChild(option);
+    });
+    form.appendChild(typeSelect);
+
+    var titleLabel = document.createElement('label');
+    titleLabel.textContent = 'Title:';
+    titleLabel.style.cssText = 'display: block; color: #fff; margin-bottom: 5px; font-size: 14px;';
+    form.appendChild(titleLabel);
+
+    var titleInput = document.createElement('input');
+    titleInput.id = 'compose-title-input';
+    titleInput.type = 'text';
+    titleInput.placeholder = 'Enter title...';
+    titleInput.style.cssText = `
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      font-size: 14px;
+    `;
+    form.appendChild(titleInput);
+
+    var contentLabel = document.createElement('label');
+    contentLabel.textContent = 'Content:';
+    contentLabel.style.cssText = 'display: block; color: #fff; margin-bottom: 5px; font-size: 14px;';
+    form.appendChild(contentLabel);
+
+    var contentTextarea = document.createElement('textarea');
+    contentTextarea.id = 'compose-content-textarea';
+    contentTextarea.placeholder = 'Write your masterpiece...';
+    contentTextarea.rows = 8;
+    contentTextarea.style.cssText = `
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      font-size: 14px;
+      resize: vertical;
+      font-family: inherit;
+    `;
+    form.appendChild(contentTextarea);
+
+    var submitBtn = document.createElement('button');
+    submitBtn.textContent = 'Create';
+    submitBtn.style.cssText = `
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #a8f, #4af);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+    `;
+    submitBtn.onclick = function() {
+      var type = typeSelect.value;
+      var title = titleInput.value.trim();
+      var content = contentTextarea.value.trim();
+
+      if (!title) {
+        showNotification('Please enter a title', 'warning');
+        return;
+      }
+
+      if (!content) {
+        showNotification('Please enter content', 'warning');
+        return;
+      }
+
+      composeCallback({ type: type, title: title, content: content });
+      hideComposePanel();
+    };
+    form.appendChild(submitBtn);
+
+    panel.appendChild(form);
+    document.body.appendChild(panel);
+    composePanel = panel;
+  }
+
+  function hideComposePanel() {
+    if (!composePanel) return;
+    document.body.removeChild(composePanel);
+    composePanel = null;
+  }
+
+  // Guild Panel
+  var guildPanel = null;
+  var guildCreatePanel = null;
+  var guildInvitePanel = null;
+
+  function showGuildPanel(guildData, playerData) {
+    if (guildPanel) {
+      hideGuildPanel();
+      return;
+    }
+
+    var panel = document.createElement('div');
+    panel.id = 'guild-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px;
+      max-height: 80vh;
+      background: rgba(26, 26, 26, 0.95);
+      border: 2px solid rgba(218, 165, 32, 0.5);
+      border-radius: 8px;
+      z-index: 300;
+      overflow-y: auto;
+      pointer-events: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      padding: 25px;
+    `;
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 35px;
+      height: 35px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #E8E0D8;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    `;
+    closeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.3)';
+      this.style.borderColor = '#DAA520';
+      this.style.color = '#DAA520';
+    };
+    closeBtn.onmouseout = function() {
+      this.style.background = 'rgba(255, 255, 255, 0.1)';
+      this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+      this.style.color = '#E8E0D8';
+    };
+    closeBtn.onclick = hideGuildPanel;
+    panel.appendChild(closeBtn);
+
+    // Header
+    var header = document.createElement('div');
+    header.style.cssText = `
+      margin-bottom: 25px;
+      border-bottom: 2px solid rgba(218, 165, 32, 0.3);
+      padding-bottom: 15px;
+    `;
+
+    var title = document.createElement('h2');
+    title.textContent = '[' + guildData.tag + '] ' + guildData.name;
+    title.style.cssText = `
+      color: #DAA520;
+      font-size: 28px;
+      font-family: system-ui, sans-serif;
+      margin: 0 0 8px 0;
+      font-weight: bold;
+    `;
+    header.appendChild(title);
+
+    var subtitle = document.createElement('div');
+    subtitle.textContent = guildData.type.charAt(0).toUpperCase() + guildData.type.slice(1) +
+                          ' • Level ' + guildData.level + ' • ' + guildData.members.length + '/' +
+                          guildData.maxMembers + ' members';
+    subtitle.style.cssText = `
+      color: #A0978E;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+    header.appendChild(subtitle);
+
+    if (guildData.description) {
+      var desc = document.createElement('div');
+      desc.textContent = guildData.description;
+      desc.style.cssText = `
+        color: #D4C5B3;
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+        margin-top: 12px;
+        font-style: italic;
+      `;
+      header.appendChild(desc);
+    }
+
+    panel.appendChild(header);
+
+    // Stats section
+    var statsGrid = document.createElement('div');
+    statsGrid.style.cssText = `
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 25px;
+    `;
+
+    var stats = [
+      { label: 'Treasury', value: guildData.treasury + ' Spark' },
+      { label: 'Guild XP', value: guildData.xp },
+      { label: 'Home Zone', value: guildData.zone }
+    ];
+
+    stats.forEach(function(stat) {
+      var statBox = document.createElement('div');
+      statBox.style.cssText = `
+        background: rgba(218, 165, 32, 0.1);
+        border: 1px solid rgba(218, 165, 32, 0.3);
+        border-radius: 6px;
+        padding: 12px;
+        text-align: center;
+      `;
+
+      var statLabel = document.createElement('div');
+      statLabel.textContent = stat.label;
+      statLabel.style.cssText = `
+        color: #A0978E;
+        font-size: 12px;
+        font-family: system-ui, sans-serif;
+        margin-bottom: 5px;
+      `;
+      statBox.appendChild(statLabel);
+
+      var statValue = document.createElement('div');
+      statValue.textContent = stat.value;
+      statValue.style.cssText = `
+        color: #DAA520;
+        font-size: 18px;
+        font-family: system-ui, sans-serif;
+        font-weight: bold;
+      `;
+      statBox.appendChild(statValue);
+
+      statsGrid.appendChild(statBox);
+    });
+
+    panel.appendChild(statsGrid);
+
+    // Members section
+    var membersSection = document.createElement('div');
+    membersSection.style.cssText = `
+      margin-bottom: 25px;
+    `;
+
+    var membersTitle = document.createElement('h3');
+    membersTitle.textContent = 'Members';
+    membersTitle.style.cssText = `
+      color: #DAA520;
+      font-size: 18px;
+      font-family: system-ui, sans-serif;
+      margin: 0 0 12px 0;
+      font-weight: bold;
+    `;
+    membersSection.appendChild(membersTitle);
+
+    var membersList = document.createElement('div');
+    membersList.style.cssText = `
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      padding: 10px;
+    `;
+
+    guildData.members.forEach(function(member) {
+      var memberItem = document.createElement('div');
+      memberItem.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        margin-bottom: 5px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+      `;
+
+      var memberInfo = document.createElement('div');
+      memberInfo.style.cssText = `
+        color: #E8E0D8;
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+      `;
+      memberInfo.textContent = member.playerId + (member.playerId === playerData.id ? ' (You)' : '');
+      memberItem.appendChild(memberInfo);
+
+      var roleTag = document.createElement('span');
+      roleTag.textContent = member.role.toUpperCase();
+      roleTag.style.cssText = `
+        color: ${member.role === 'leader' ? '#FFD700' : member.role === 'officer' ? '#C0C0C0' : '#8B7355'};
+        font-size: 11px;
+        font-family: system-ui, sans-serif;
+        font-weight: bold;
+        padding: 3px 8px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 3px;
+      `;
+      memberItem.appendChild(roleTag);
+
+      membersList.appendChild(memberItem);
+    });
+
+    membersSection.appendChild(membersList);
+    panel.appendChild(membersSection);
+
+    // Activities section
+    var activitiesSection = document.createElement('div');
+    activitiesSection.style.cssText = `
+      margin-bottom: 15px;
+    `;
+
+    var activitiesTitle = document.createElement('h3');
+    activitiesTitle.textContent = 'Recent Activity';
+    activitiesTitle.style.cssText = `
+      color: #DAA520;
+      font-size: 18px;
+      font-family: system-ui, sans-serif;
+      margin: 0 0 12px 0;
+      font-weight: bold;
+    `;
+    activitiesSection.appendChild(activitiesTitle);
+
+    var activitiesList = document.createElement('div');
+    activitiesList.style.cssText = `
+      max-height: 150px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      padding: 10px;
+    `;
+
+    var activities = guildData.activities.slice(-10).reverse();
+    activities.forEach(function(activity) {
+      var activityItem = document.createElement('div');
+      activityItem.textContent = '• ' + activity.text;
+      activityItem.style.cssText = `
+        color: #A0978E;
+        font-size: 13px;
+        font-family: system-ui, sans-serif;
+        padding: 4px 0;
+        line-height: 1.4;
+      `;
+      activitiesList.appendChild(activityItem);
+    });
+
+    if (activities.length === 0) {
+      var noActivity = document.createElement('div');
+      noActivity.textContent = 'No recent activity';
+      noActivity.style.cssText = `
+        color: #6B6B6B;
+        font-size: 13px;
+        font-family: system-ui, sans-serif;
+        font-style: italic;
+        text-align: center;
+        padding: 20px;
+      `;
+      activitiesList.appendChild(noActivity);
+    }
+
+    activitiesSection.appendChild(activitiesList);
+    panel.appendChild(activitiesSection);
+
+    // Action buttons
+    var actionsDiv = document.createElement('div');
+    actionsDiv.style.cssText = `
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    `;
+
+    var leaveBtn = document.createElement('button');
+    leaveBtn.textContent = 'Leave Guild';
+    leaveBtn.style.cssText = `
+      flex: 1;
+      padding: 12px;
+      background: rgba(139, 0, 0, 0.6);
+      color: #E8E0D8;
+      border: 2px solid rgba(255, 69, 0, 0.5);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    `;
+    leaveBtn.onmouseover = function() {
+      this.style.background = 'rgba(139, 0, 0, 0.8)';
+      this.style.borderColor = '#FF4500';
+    };
+    leaveBtn.onmouseout = function() {
+      this.style.background = 'rgba(139, 0, 0, 0.6)';
+      this.style.borderColor = 'rgba(255, 69, 0, 0.5)';
+    };
+    leaveBtn.onclick = function() {
+      if (confirm('Are you sure you want to leave the guild?')) {
+        if (window.handleGuildAction) {
+          window.handleGuildAction('leave', guildData.id);
+        }
+        hideGuildPanel();
+      }
+    };
+    actionsDiv.appendChild(leaveBtn);
+
+    panel.appendChild(actionsDiv);
+
+    document.body.appendChild(panel);
+    guildPanel = panel;
+  }
+
+  function hideGuildPanel() {
+    if (!guildPanel) return;
+    document.body.removeChild(guildPanel);
+    guildPanel = null;
+  }
+
+  function showGuildCreate(callback) {
+    if (guildCreatePanel) {
+      hideGuildCreate();
+      return;
+    }
+
+    var panel = document.createElement('div');
+    panel.id = 'guild-create-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      background: rgba(26, 26, 26, 0.95);
+      border: 2px solid rgba(218, 165, 32, 0.5);
+      border-radius: 8px;
+      z-index: 300;
+      pointer-events: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      padding: 25px;
+    `;
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 35px;
+      height: 35px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #E8E0D8;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    `;
+    closeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.3)';
+      this.style.borderColor = '#DAA520';
+      this.style.color = '#DAA520';
+    };
+    closeBtn.onmouseout = function() {
+      this.style.background = 'rgba(255, 255, 255, 0.1)';
+      this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+      this.style.color = '#E8E0D8';
+    };
+    closeBtn.onclick = hideGuildCreate;
+    panel.appendChild(closeBtn);
+
+    // Title
+    var title = document.createElement('h2');
+    title.textContent = 'Create Guild';
+    title.style.cssText = `
+      color: #DAA520;
+      font-size: 24px;
+      font-family: system-ui, sans-serif;
+      margin: 0 0 20px 0;
+      font-weight: bold;
+    `;
+    panel.appendChild(title);
+
+    // Form
+    var form = document.createElement('div');
+    form.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    `;
+
+    // Guild name input
+    var nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Guild Name';
+    nameLabel.style.cssText = `
+      color: #D4C5B3;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+    `;
+    form.appendChild(nameLabel);
+
+    var nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = 'Enter guild name';
+    nameInput.maxLength = 30;
+    nameInput.style.cssText = `
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(218, 165, 32, 0.3);
+      border-radius: 6px;
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+    form.appendChild(nameInput);
+
+    // Guild tag input
+    var tagLabel = document.createElement('label');
+    tagLabel.textContent = 'Guild Tag (3-5 characters)';
+    tagLabel.style.cssText = `
+      color: #D4C5B3;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+    `;
+    form.appendChild(tagLabel);
+
+    var tagInput = document.createElement('input');
+    tagInput.type = 'text';
+    tagInput.placeholder = 'e.g., ZON';
+    tagInput.maxLength = 5;
+    tagInput.style.cssText = `
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(218, 165, 32, 0.3);
+      border-radius: 6px;
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      text-transform: uppercase;
+    `;
+    form.appendChild(tagInput);
+
+    // Guild type select
+    var typeLabel = document.createElement('label');
+    typeLabel.textContent = 'Type';
+    typeLabel.style.cssText = `
+      color: #D4C5B3;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+    `;
+    form.appendChild(typeLabel);
+
+    var typeSelect = document.createElement('select');
+    typeSelect.style.cssText = `
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(218, 165, 32, 0.3);
+      border-radius: 6px;
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+
+    ['guild', 'garden', 'studio', 'community'].forEach(function(type) {
+      var option = document.createElement('option');
+      option.value = type;
+      option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+      typeSelect.appendChild(option);
+    });
+
+    form.appendChild(typeSelect);
+
+    // Description textarea
+    var descLabel = document.createElement('label');
+    descLabel.textContent = 'Description (optional)';
+    descLabel.style.cssText = `
+      color: #D4C5B3;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+    `;
+    form.appendChild(descLabel);
+
+    var descInput = document.createElement('textarea');
+    descInput.placeholder = 'Describe your guild...';
+    descInput.maxLength = 200;
+    descInput.rows = 3;
+    descInput.style.cssText = `
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(218, 165, 32, 0.3);
+      border-radius: 6px;
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      resize: vertical;
+    `;
+    form.appendChild(descInput);
+
+    // Cost notice
+    var costNotice = document.createElement('div');
+    costNotice.textContent = 'Cost: 100 Spark';
+    costNotice.style.cssText = `
+      color: #DAA520;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      text-align: center;
+      padding: 10px;
+      background: rgba(218, 165, 32, 0.1);
+      border-radius: 6px;
+    `;
+    form.appendChild(costNotice);
+
+    // Create button
+    var createBtn = document.createElement('button');
+    createBtn.textContent = 'Create Guild';
+    createBtn.style.cssText = `
+      padding: 12px;
+      background: rgba(218, 165, 32, 0.3);
+      color: #E8E0D8;
+      border: 2px solid rgba(218, 165, 32, 0.5);
+      border-radius: 6px;
+      font-size: 16px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    `;
+    createBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.5)';
+      this.style.borderColor = '#DAA520';
+    };
+    createBtn.onmouseout = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.3)';
+      this.style.borderColor = 'rgba(218, 165, 32, 0.5)';
+    };
+    createBtn.onclick = function() {
+      var name = nameInput.value.trim();
+      var tag = tagInput.value.trim().toUpperCase();
+      var type = typeSelect.value;
+      var description = descInput.value.trim();
+
+      if (!name || !tag) {
+        alert('Please enter guild name and tag');
+        return;
+      }
+
+      if (tag.length < 3 || tag.length > 5) {
+        alert('Tag must be 3-5 characters');
+        return;
+      }
+
+      if (callback) {
+        callback({ name: name, tag: tag, type: type, description: description });
+      }
+
+      hideGuildCreate();
+    };
+    form.appendChild(createBtn);
+
+    panel.appendChild(form);
+
+    document.body.appendChild(panel);
+    guildCreatePanel = panel;
+  }
+
+  function hideGuildCreate() {
+    if (!guildCreatePanel) return;
+    document.body.removeChild(guildCreatePanel);
+    guildCreatePanel = null;
+  }
+
+  function showGuildInvite(inviteData, callback) {
+    if (guildInvitePanel) return;
+
+    var panel = document.createElement('div');
+    panel.id = 'guild-invite-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 350px;
+      background: rgba(26, 26, 26, 0.95);
+      border: 2px solid rgba(218, 165, 32, 0.5);
+      border-radius: 8px;
+      z-index: 400;
+      pointer-events: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      padding: 20px;
+    `;
+
+    // Title
+    var title = document.createElement('h3');
+    title.textContent = 'Guild Invitation';
+    title.style.cssText = `
+      color: #DAA520;
+      font-size: 18px;
+      font-family: system-ui, sans-serif;
+      margin: 0 0 12px 0;
+      font-weight: bold;
+    `;
+    panel.appendChild(title);
+
+    // Message
+    var message = document.createElement('div');
+    message.textContent = 'You have been invited to join [' + inviteData.guildTag + '] ' + inviteData.guildName;
+    message.style.cssText = `
+      color: #D4C5B3;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    `;
+    panel.appendChild(message);
+
+    // Buttons
+    var buttonsDiv = document.createElement('div');
+    buttonsDiv.style.cssText = `
+      display: flex;
+      gap: 10px;
+    `;
+
+    var acceptBtn = document.createElement('button');
+    acceptBtn.textContent = 'Accept';
+    acceptBtn.style.cssText = `
+      flex: 1;
+      padding: 10px;
+      background: rgba(34, 139, 34, 0.6);
+      color: #E8E0D8;
+      border: 2px solid rgba(34, 139, 34, 0.8);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    `;
+    acceptBtn.onmouseover = function() {
+      this.style.background = 'rgba(34, 139, 34, 0.8)';
+    };
+    acceptBtn.onmouseout = function() {
+      this.style.background = 'rgba(34, 139, 34, 0.6)';
+    };
+    acceptBtn.onclick = function() {
+      if (callback) {
+        callback('accept', inviteData);
+      }
+      document.body.removeChild(panel);
+      guildInvitePanel = null;
+    };
+    buttonsDiv.appendChild(acceptBtn);
+
+    var declineBtn = document.createElement('button');
+    declineBtn.textContent = 'Decline';
+    declineBtn.style.cssText = `
+      flex: 1;
+      padding: 10px;
+      background: rgba(139, 0, 0, 0.6);
+      color: #E8E0D8;
+      border: 2px solid rgba(255, 69, 0, 0.5);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    `;
+    declineBtn.onmouseover = function() {
+      this.style.background = 'rgba(139, 0, 0, 0.8)';
+    };
+    declineBtn.onmouseout = function() {
+      this.style.background = 'rgba(139, 0, 0, 0.6)';
+    };
+    declineBtn.onclick = function() {
+      if (callback) {
+        callback('decline', inviteData);
+      }
+      document.body.removeChild(panel);
+      guildInvitePanel = null;
+    };
+    buttonsDiv.appendChild(declineBtn);
+
+    panel.appendChild(buttonsDiv);
+
+    document.body.appendChild(panel);
+    guildInvitePanel = panel;
+  }
+
+  function updateGuildTag(tag) {
+    var playerNameEl = document.getElementById('player-name');
+    if (playerNameEl && tag) {
+      var currentName = playerNameEl.textContent;
+      // Remove existing tag if present
+      currentName = currentName.replace(/\[.*?\]\s*/, '');
+      playerNameEl.textContent = '[' + tag + '] ' + currentName;
+    }
+  }
+
   // Export public API
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
@@ -2947,6 +4789,9 @@
   exports.updateTimeWeather = updateTimeWeather;
   exports.showNPCDialog = showNPCDialog;
   exports.hideNPCDialog = hideNPCDialog;
+  exports.setNPCActionCallback = setNPCActionCallback;
+  exports.showNPCShop = showNPCShop;
+  exports.hideNPCShop = hideNPCShop;
   exports.updateMinimapNPCs = updateMinimapNPCs;
   exports.initQuestTracker = initQuestTracker;
   exports.updateQuestTracker = updateQuestTracker;
@@ -2993,5 +4838,23 @@
   exports.getSettings = getSettings;
   exports.showPlayerProfile = showPlayerProfile;
   exports.hidePlayerProfile = hidePlayerProfile;
+  exports.showDiscoveryLog = showDiscoveryLog;
+  exports.hideDiscoveryLog = hideDiscoveryLog;
+  exports.showLoreBook = showLoreBook;
+  exports.hideLoreBook = hideLoreBook;
+  exports.showAchievementToast = showAchievementToast;
+  exports.showDiscoveryPopup = showDiscoveryPopup;
+  exports.showSkillsPanel = showSkillsPanel;
+  exports.hideSkillsPanel = hideSkillsPanel;
+  exports.showMentorOffer = showMentorOffer;
+  exports.showLessonProgress = showLessonProgress;
+  exports.showComposePanel = showComposePanel;
+  exports.hideComposePanel = hideComposePanel;
+  exports.showGuildPanel = showGuildPanel;
+  exports.hideGuildPanel = hideGuildPanel;
+  exports.showGuildCreate = showGuildCreate;
+  exports.hideGuildCreate = hideGuildCreate;
+  exports.showGuildInvite = showGuildInvite;
+  exports.updateGuildTag = updateGuildTag;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));
