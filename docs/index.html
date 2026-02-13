@@ -18122,9 +18122,50 @@ html, body {
     portalLight.position.set(x, y + 3, z);
     scene.add(portalLight);
 
+    // Spinning particle rings around portal
+    var particleRings = [];
+    var ringCount = 2;
+    var particlesPerRing = 12;
+
+    for (var r = 0; r < ringCount; r++) {
+      var ringRadius = 2.8 + r * 0.4;
+      var ringParticles = [];
+
+      for (var p = 0; p < particlesPerRing; p++) {
+        var particleGeo = new THREE.SphereGeometry(0.08, 6, 6);
+        var particleMat = new THREE.MeshStandardMaterial({
+          color: 0x88ffff,
+          emissive: 0x44aaaa,
+          emissiveIntensity: 0.8
+        });
+        var particle = new THREE.Mesh(particleGeo, particleMat);
+        particle.castShadow = false;
+        scene.add(particle);
+
+        ringParticles.push({
+          mesh: particle,
+          angle: (p / particlesPerRing) * Math.PI * 2,
+          radius: ringRadius
+        });
+      }
+
+      particleRings.push({
+        particles: ringParticles,
+        speed: 0.001 + r * 0.0005,
+        direction: r % 2 === 0 ? 1 : -1
+      });
+    }
+
     animatedObjects.push({
       mesh: arch, type: 'portal',
-      params: { speed: 0.8, inner: inner }
+      params: {
+        speed: 0.8,
+        inner: inner,
+        particleRings: particleRings,
+        centerX: x,
+        centerY: y + 3,
+        centerZ: z
+      }
     });
 
     arch.userData.targetZone = targetZone;
@@ -19071,8 +19112,8 @@ html, body {
     var scene = new THREE.Scene();
     createSky(scene);
 
-    // Add distance fog for atmospheric depth
-    scene.fog = new THREE.Fog(0x87ceeb, 150, 500);
+    // Add exponential fog for atmospheric depth (matches weather system)
+    scene.fog = new THREE.FogExp2(0x87ceeb, 0.0012);
 
     var camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
     camera.position.set(0, 15, 25);
@@ -19354,6 +19395,8 @@ html, body {
 
     if (skyDome && skyDome.material) skyDome.material.color.setHex(skyColor);
     if (sceneCtx.scene && sceneCtx.scene.fog) sceneCtx.scene.fog.color.setHex(fogColor);
+    // Sync renderer background with fog to prevent visible horizon seam
+    if (sceneCtx.renderer) sceneCtx.renderer.setClearColor(fogColor);
     if (sceneCtx.directionalLight) {
       sceneCtx.directionalLight.intensity = Math.max(0.05, sunIntensity);
       sceneCtx.directionalLight.position.set(
@@ -19405,6 +19448,41 @@ html, body {
         sunColor = lerpColor(0xff6633, 0x443355, (normalizedTime - 0.75) / 0.25);
       }
       sceneCtx.directionalLight.color.setHex(sunColor);
+    }
+
+    // Dynamic fog density by time of day
+    if (sceneCtx.scene && sceneCtx.scene.fog && sceneCtx.scene.fog.density !== undefined) {
+      var baseDensity = 0.0012; // Clear daytime default
+      var timeFogMult = 1.0;
+
+      if (normalizedTime < 0.2) {
+        // Night: thicker fog, limited visibility
+        timeFogMult = 1.8;
+      } else if (normalizedTime < 0.28) {
+        // Dawn: misty transition (thickest — morning mist)
+        var dawnT = (normalizedTime - 0.2) / 0.08;
+        timeFogMult = 1.8 + dawnT * 0.5; // peaks at 2.3 during dawn
+      } else if (normalizedTime < 0.35) {
+        // Morning: mist burning off
+        var burnT = (normalizedTime - 0.28) / 0.07;
+        timeFogMult = 2.3 - burnT * 1.3; // fades from 2.3 to 1.0
+      } else if (normalizedTime < 0.7) {
+        // Daytime: clearest visibility
+        timeFogMult = 1.0;
+      } else if (normalizedTime < 0.8) {
+        // Dusk: golden haze
+        var duskT = (normalizedTime - 0.7) / 0.1;
+        timeFogMult = 1.0 + duskT * 0.5;
+      } else {
+        // Evening into night: fog thickens
+        var nightT = (normalizedTime - 0.8) / 0.2;
+        timeFogMult = 1.5 + nightT * 0.3;
+      }
+
+      // Only adjust fog if weather isn't overriding it
+      if (currentWeatherType === 'clear' || !currentWeatherType) {
+        sceneCtx.scene.fog.density = baseDensity * timeFogMult;
+      }
     }
   }
 
@@ -19490,6 +19568,19 @@ html, body {
           obj.mesh.rotation.z += deltaTime * (p.speed || 0.5);
           if (p.inner) {
             p.inner.material.opacity = 0.25 + Math.sin(time * 0.003) * 0.15;
+          }
+          // Animate particle rings
+          if (p.particleRings) {
+            for (var ri = 0; ri < p.particleRings.length; ri++) {
+              var ring = p.particleRings[ri];
+              for (var pi = 0; pi < ring.particles.length; pi++) {
+                var pData = ring.particles[pi];
+                pData.angle += ring.speed * ring.direction * deltaTime;
+                var px = p.centerX + Math.cos(pData.angle) * pData.radius;
+                var pz = p.centerZ + Math.sin(pData.angle) * pData.radius;
+                pData.mesh.position.set(px, p.centerY, pz);
+              }
+            }
           }
           break;
         case 'torch':
@@ -19937,8 +20028,11 @@ html, body {
     currentWeatherType = type;
 
     // Update fog based on weather
-    if (sceneCtx.scene.fog) {
+    if (sceneCtx.scene.fog && sceneCtx.scene.fog.density !== undefined) {
       switch (type) {
+        case 'storm':
+          sceneCtx.scene.fog.density = 0.0030;
+          break;
         case 'rain':
           sceneCtx.scene.fog.density = 0.0022;
           break;
@@ -22084,6 +22178,379 @@ html, body {
   }
 
   // ========================================================================
+  // ZONE TRANSITION EFFECTS
+  // ========================================================================
+
+  var zoneBoundaryParticles = [];
+  var fadeOverlay = null;
+
+  /**
+   * Screen fade transition effect
+   * @param {Function} callback - Function to call when screen is fully faded
+   */
+  function fadeTransition(callback) {
+    if (typeof document === 'undefined') {
+      if (callback) callback();
+      return;
+    }
+
+    // Create overlay if it doesn't exist
+    if (!fadeOverlay) {
+      fadeOverlay = document.createElement('div');
+      fadeOverlay.style.position = 'fixed';
+      fadeOverlay.style.top = '0';
+      fadeOverlay.style.left = '0';
+      fadeOverlay.style.width = '100%';
+      fadeOverlay.style.height = '100%';
+      fadeOverlay.style.backgroundColor = 'black';
+      fadeOverlay.style.opacity = '0';
+      fadeOverlay.style.pointerEvents = 'none';
+      fadeOverlay.style.zIndex = '9999';
+      fadeOverlay.style.transition = 'opacity 0.5s ease-in-out';
+      document.body.appendChild(fadeOverlay);
+    }
+
+    // Fade to black
+    fadeOverlay.style.opacity = '1';
+
+    // Call callback at peak fade
+    setTimeout(function() {
+      if (callback) callback();
+
+      // Fade back in
+      setTimeout(function() {
+        fadeOverlay.style.opacity = '0';
+      }, 50);
+    }, 500);
+  }
+
+  /**
+   * Create zone boundary particles
+   * @param {THREE.Scene} scene - The scene to add particles to
+   */
+  function createZoneBoundaryParticles(scene) {
+    if (!scene) return;
+
+    // Clear existing boundary particles
+    for (var i = 0; i < zoneBoundaryParticles.length; i++) {
+      scene.remove(zoneBoundaryParticles[i].mesh);
+    }
+    zoneBoundaryParticles = [];
+
+    // Create particles along zone boundaries
+    for (var zId in ZONES) {
+      var zone = ZONES[zId];
+      var particleCount = Math.floor(zone.radius / 3);
+
+      for (var i = 0; i < particleCount; i++) {
+        var angle = (i / particleCount) * Math.PI * 2;
+        var radius = zone.radius * 0.95;
+        var px = zone.cx + Math.cos(angle) * radius;
+        var pz = zone.cz + Math.sin(angle) * radius;
+        var py = terrainHeight(px, pz) + 2 + Math.random() * 3;
+
+        var particleGeo = new THREE.SphereGeometry(0.1, 6, 6);
+        var particleMat = new THREE.MeshStandardMaterial({
+          color: 0xffd700,
+          emissive: 0xffaa00,
+          emissiveIntensity: 0.6,
+          transparent: true,
+          opacity: 0.4
+        });
+        var particle = new THREE.Mesh(particleGeo, particleMat);
+        particle.position.set(px, py, pz);
+        particle.castShadow = false;
+        scene.add(particle);
+
+        zoneBoundaryParticles.push({
+          mesh: particle,
+          baseY: py,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.0005 + Math.random() * 0.0003
+        });
+      }
+    }
+  }
+
+  /**
+   * Update zone boundary particle animations
+   * @param {Number} time - World time in milliseconds
+   */
+  function updateZoneBoundaryParticles(time) {
+    for (var i = 0; i < zoneBoundaryParticles.length; i++) {
+      var p = zoneBoundaryParticles[i];
+      p.mesh.position.y = p.baseY + Math.sin(time * p.speed + p.phase) * 0.5;
+      p.mesh.material.opacity = 0.3 + Math.sin(time * p.speed * 2 + p.phase) * 0.15;
+    }
+  }
+
+  // ========================================================================
+  // WILDLIFE AND NATURE EFFECTS SYSTEM
+  // ========================================================================
+
+  var wildlifeData = {
+    butterflies: [],
+    fireflies: [],
+    birds: [],
+    fishJumpers: [],
+    initialized: false
+  };
+
+  /**
+   * Initialize wildlife systems
+   */
+  function initWildlife(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    var scene = sceneCtx.scene;
+
+    clearWildlife(scene);
+
+    // Butterflies in gardens zone
+    var gardensZ = ZONES.gardens;
+    var butterflyColors = [0xffff00, 0xffa500, 0x4169e1, 0xffffff, 0xff69b4];
+
+    for (var i = 0; i < 7; i++) {
+      var bfGeo = new THREE.BufferGeometry();
+      var bfVerts = new Float32Array([0,0,0, 0.3,0,0.2, 0,0,0.4]);
+      bfGeo.setAttribute('position', new THREE.BufferAttribute(bfVerts, 3));
+      var bfMat = new THREE.MeshBasicMaterial({
+        color: butterflyColors[i % butterflyColors.length],
+        side: THREE.DoubleSide
+      });
+      var bf = new THREE.Mesh(bfGeo, bfMat);
+      var angle = Math.random() * Math.PI * 2;
+      var radius = Math.random() * gardensZ.radius * 0.6;
+      bf.position.set(
+        gardensZ.cx + Math.cos(angle) * radius,
+        gardensZ.baseHeight + 1 + Math.random() * 2,
+        gardensZ.cz + Math.sin(angle) * radius
+      );
+      scene.add(bf);
+      wildlifeData.butterflies.push({
+        mesh: bf, time: Math.random() * 100,
+        speed: 0.5 + Math.random() * 0.5,
+        pathAngle: Math.random() * Math.PI * 2,
+        pathRadius: 10 + Math.random() * 15,
+        baseY: bf.position.y,
+        centerX: gardensZ.cx, centerZ: gardensZ.cz
+      });
+    }
+
+    // Fireflies across multiple zones
+    var ffZones = [
+      { zone: ZONES.gardens, count: 8 },
+      { zone: ZONES.wilds, count: 10 },
+      { zone: ZONES.commons, count: 4 },
+      { zone: ZONES.nexus, count: 3 }
+    ];
+    for (var zi = 0; zi < ffZones.length; zi++) {
+      var zInfo = ffZones[zi];
+      for (var fi = 0; fi < zInfo.count; fi++) {
+        var ffGeo = new THREE.SphereGeometry(0.15, 8, 8);
+        var ffMat = new THREE.MeshBasicMaterial({
+          color: 0xffff99, transparent: true, opacity: 0
+        });
+        var ff = new THREE.Mesh(ffGeo, ffMat);
+        var ffA = Math.random() * Math.PI * 2;
+        var ffR = Math.random() * zInfo.zone.radius * 0.7;
+        ff.position.set(
+          zInfo.zone.cx + Math.cos(ffA) * ffR,
+          zInfo.zone.baseHeight + 0.5 + Math.random() * 3,
+          zInfo.zone.cz + Math.sin(ffA) * ffR
+        );
+        scene.add(ff);
+        wildlifeData.fireflies.push({
+          mesh: ff, time: Math.random() * 100,
+          speed: 0.3 + Math.random() * 0.3,
+          pulseSpeed: 2 + Math.random() * 2,
+          baseY: ff.position.y,
+          driftAngle: Math.random() * Math.PI * 2
+        });
+      }
+    }
+
+    // Bird flocks (V-formations orbiting world)
+    for (var fli = 0; fli < 3; fli++) {
+      var flock = {
+        birds: [], centerAngle: (fli / 3) * Math.PI * 2,
+        orbitRadius: 200, speed: 0.1 + Math.random() * 0.05,
+        height: 40 + Math.random() * 20
+      };
+      var birdOffsets = [
+        {x:0,z:0}, {x:-2,z:-3}, {x:-4,z:-6}, {x:2,z:-3}, {x:4,z:-6}
+      ];
+      for (var bi = 0; bi < birdOffsets.length; bi++) {
+        var bGeo = new THREE.BufferGeometry();
+        var bVerts = new Float32Array([0,0,0, -0.4,0,0.3, 0.4,0,0.3]);
+        bGeo.setAttribute('position', new THREE.BufferAttribute(bVerts, 3));
+        var bMat = new THREE.MeshBasicMaterial({
+          color: 0x2c2c2c, side: THREE.DoubleSide
+        });
+        var bMesh = new THREE.Mesh(bGeo, bMat);
+        bMesh.position.y = flock.height;
+        scene.add(bMesh);
+        flock.birds.push({
+          mesh: bMesh, offsetX: birdOffsets[bi].x,
+          offsetZ: birdOffsets[bi].z, flapTime: Math.random() * 10
+        });
+      }
+      wildlifeData.birds.push(flock);
+    }
+
+    // Fish jumpers near water
+    for (var fsi = 0; fsi < 3; fsi++) {
+      var fGeo = new THREE.SphereGeometry(0.3, 8, 8);
+      var fMat = new THREE.MeshBasicMaterial({
+        color: 0x888888, transparent: true, opacity: 0
+      });
+      var fMesh = new THREE.Mesh(fGeo, fMat);
+      scene.add(fMesh);
+      wildlifeData.fishJumpers.push({
+        mesh: fMesh, jumping: false, jumpTime: 0, jumpDuration: 0,
+        startX: 0, startZ: 0, endX: 0, endZ: 0, waterHeight: 0,
+        nextJumpDelay: Math.random() * 5 + 3
+      });
+    }
+
+    wildlifeData.initialized = true;
+  }
+
+  /**
+   * Update wildlife animations
+   */
+  function updateWildlife(sceneCtx, deltaTime, worldTime) {
+    if (!wildlifeData.initialized || !sceneCtx) return;
+
+    var isNight = worldTime > 1080 || worldTime < 360;
+    var isDay = worldTime >= 360 && worldTime <= 1080;
+
+    // Butterflies (daytime, gardens)
+    for (var i = 0; i < wildlifeData.butterflies.length; i++) {
+      var bf = wildlifeData.butterflies[i];
+      bf.time += deltaTime * bf.speed;
+      bf.mesh.visible = isDay;
+      if (isDay) {
+        bf.pathAngle += deltaTime * 0.3;
+        var tx = bf.centerX + Math.cos(bf.pathAngle) * bf.pathRadius;
+        var tz = bf.centerZ + Math.sin(bf.pathAngle) * bf.pathRadius;
+        bf.mesh.position.x += (tx - bf.mesh.position.x) * 0.02;
+        bf.mesh.position.z += (tz - bf.mesh.position.z) * 0.02;
+        bf.mesh.position.y = bf.baseY + Math.sin(bf.time * 5) * 0.3;
+        bf.mesh.rotation.y = Math.sin(bf.time * 8) * 0.3;
+        bf.mesh.rotation.z = Math.sin(bf.time * 6) * 0.2;
+      }
+    }
+
+    // Fireflies (nighttime)
+    for (var fi = 0; fi < wildlifeData.fireflies.length; fi++) {
+      var ff = wildlifeData.fireflies[fi];
+      ff.time += deltaTime;
+      if (isNight) {
+        var pulse = 0.5 + Math.sin(ff.time * ff.pulseSpeed) * 0.5;
+        ff.mesh.material.opacity = pulse * 0.8;
+        ff.mesh.visible = true;
+        ff.driftAngle += deltaTime * 0.2;
+        ff.mesh.position.x += Math.cos(ff.driftAngle) * deltaTime * ff.speed;
+        ff.mesh.position.z += Math.sin(ff.driftAngle) * deltaTime * ff.speed;
+        ff.mesh.position.y = ff.baseY + Math.sin(ff.time * 0.5) * 0.5;
+      } else {
+        ff.mesh.material.opacity = 0;
+        ff.mesh.visible = false;
+      }
+    }
+
+    // Bird flocks (daytime)
+    for (var fli = 0; fli < wildlifeData.birds.length; fli++) {
+      var flock = wildlifeData.birds[fli];
+      flock.centerAngle += deltaTime * flock.speed;
+      var fcx = Math.cos(flock.centerAngle) * flock.orbitRadius;
+      var fcz = 150 + Math.sin(flock.centerAngle) * flock.orbitRadius;
+      for (var bi = 0; bi < flock.birds.length; bi++) {
+        var bd = flock.birds[bi];
+        bd.flapTime += deltaTime * 5;
+        bd.mesh.visible = isDay;
+        if (isDay) {
+          var fa = flock.centerAngle;
+          var rox = Math.cos(fa) * bd.offsetX - Math.sin(fa) * bd.offsetZ;
+          var roz = Math.sin(fa) * bd.offsetX + Math.cos(fa) * bd.offsetZ;
+          bd.mesh.position.set(fcx + rox, flock.height + Math.sin(bd.flapTime) * 0.5, fcz + roz);
+          bd.mesh.rotation.y = fa + Math.PI / 2;
+          bd.mesh.rotation.z = Math.sin(bd.flapTime * 2) * 0.1;
+        }
+      }
+    }
+
+    // Fish jumpers
+    if (waterBodies && waterBodies.length > 0) {
+      for (var fsi = 0; fsi < wildlifeData.fishJumpers.length; fsi++) {
+        var fish = wildlifeData.fishJumpers[fsi];
+        if (fish.jumping) {
+          fish.jumpTime += deltaTime;
+          var prog = fish.jumpTime / fish.jumpDuration;
+          if (prog >= 1) {
+            fish.jumping = false;
+            fish.mesh.material.opacity = 0;
+            fish.mesh.visible = false;
+            fish.nextJumpDelay = Math.random() * 8 + 5;
+          } else {
+            fish.mesh.position.x = fish.startX + (fish.endX - fish.startX) * prog;
+            fish.mesh.position.z = fish.startZ + (fish.endZ - fish.startZ) * prog;
+            fish.mesh.position.y = fish.waterHeight + Math.sin(prog * Math.PI) * 2;
+            fish.mesh.material.opacity = 1;
+            fish.mesh.visible = true;
+          }
+        } else {
+          fish.nextJumpDelay -= deltaTime;
+          if (fish.nextJumpDelay <= 0) {
+            var wb = waterBodies[Math.floor(Math.random() * waterBodies.length)];
+            var ja = Math.random() * Math.PI * 2;
+            var jr = Math.random() * 10;
+            fish.startX = wb.centerX + Math.cos(ja) * jr;
+            fish.startZ = wb.centerZ + Math.sin(ja) * jr;
+            fish.waterHeight = wb.height;
+            var jd = Math.random() * Math.PI * 2;
+            var jDist = 1 + Math.random() * 2;
+            fish.endX = fish.startX + Math.cos(jd) * jDist;
+            fish.endZ = fish.startZ + Math.sin(jd) * jDist;
+            fish.jumping = true;
+            fish.jumpTime = 0;
+            fish.jumpDuration = 0.8 + Math.random() * 0.4;
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Clear all wildlife from scene
+   */
+  function clearWildlife(scene) {
+    if (!scene) return;
+    var groups = ['butterflies', 'fireflies', 'fishJumpers'];
+    for (var g = 0; g < groups.length; g++) {
+      var arr = wildlifeData[groups[g]];
+      for (var i = 0; i < arr.length; i++) {
+        scene.remove(arr[i].mesh);
+        if (arr[i].mesh.geometry) arr[i].mesh.geometry.dispose();
+        if (arr[i].mesh.material) arr[i].mesh.material.dispose();
+      }
+    }
+    for (var fli = 0; fli < wildlifeData.birds.length; fli++) {
+      var flock = wildlifeData.birds[fli];
+      for (var bi = 0; bi < flock.birds.length; bi++) {
+        scene.remove(flock.birds[bi].mesh);
+        if (flock.birds[bi].mesh.geometry) flock.birds[bi].mesh.geometry.dispose();
+        if (flock.birds[bi].mesh.material) flock.birds[bi].mesh.material.dispose();
+      }
+    }
+    wildlifeData.butterflies = [];
+    wildlifeData.fireflies = [];
+    wildlifeData.birds = [];
+    wildlifeData.fishJumpers = [];
+    wildlifeData.initialized = false;
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -22138,6 +22605,12 @@ html, body {
   exports.updateInteractiveAnimations = updateInteractiveAnimations;
   exports.clearInteractiveObjects = clearInteractiveObjects;
   exports.getZoneInteractives = getZoneInteractives;
+  exports.fadeTransition = fadeTransition;
+  exports.createZoneBoundaryParticles = createZoneBoundaryParticles;
+  exports.updateZoneBoundaryParticles = updateZoneBoundaryParticles;
+  exports.initWildlife = initWildlife;
+  exports.updateWildlife = updateWildlife;
+  exports.clearWildlife = clearWildlife;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));
 
@@ -25632,200 +26105,269 @@ html, body {
   }
 
   // Player Profile Panel
-  let playerProfilePanel = null;
+  var playerProfilePanel = null;
 
-  function showPlayerProfile(playerData) {
+  function showProfilePanel(playerData, skillData, achievementData) {
     if (playerProfilePanel) {
-      hidePlayerProfile();
+      hideProfilePanel();
       return;
     }
 
     var panel = document.createElement('div');
     panel.id = 'player-profile-panel';
-    panel.style.cssText = `
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 350px;
-      height: 100%;
-      background: rgba(26, 26, 26, 0.95);
-      border-left: 2px solid rgba(218, 165, 32, 0.5);
-      z-index: 200;
-      overflow-y: auto;
-      pointer-events: auto;
-      box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
-    `;
+    panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(0,0,0,0.9);border:2px solid #d4af37;border-radius:12px;' +
+      'padding:0;width:700px;max-height:85vh;overflow-y:auto;pointer-events:auto;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);z-index:300;';
 
-    // Close button
-    var closeBtn = document.createElement('button');
-    closeBtn.textContent = '×';
-    closeBtn.style.cssText = `
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      width: 35px;
-      height: 35px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #E8E0D8;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      font-size: 24px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-    `;
-    closeBtn.onmouseover = function() {
-      this.style.background = 'rgba(218, 165, 32, 0.3)';
-      this.style.borderColor = '#DAA520';
-      this.style.color = '#DAA520';
-    };
-    closeBtn.onmouseout = function() {
-      this.style.background = 'rgba(255, 255, 255, 0.1)';
-      this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-      this.style.color = '#E8E0D8';
-    };
-    closeBtn.onclick = function() {
-      hidePlayerProfile();
-    };
-    panel.appendChild(closeBtn);
+    // Header with close button
+    var header = document.createElement('div');
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;' +
+      'padding:20px;background:rgba(212,175,55,0.1);border-bottom:1px solid #d4af37;';
+
+    var title = document.createElement('div');
+    title.textContent = 'Player Profile';
+    title.style.cssText = 'font-size:24px;font-weight:bold;color:#d4af37;';
+    header.appendChild(title);
+
+    var closeBtn = document.createElement('div');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'cursor:pointer;font-size:24px;color:#888;padding:0 8px;';
+    closeBtn.onmouseover = function() { this.style.color = '#d4af37'; };
+    closeBtn.onmouseout = function() { this.style.color = '#888'; };
+    closeBtn.onclick = function() { hideProfilePanel(); };
+    header.appendChild(closeBtn);
+
+    panel.appendChild(header);
 
     // Content container
     var content = document.createElement('div');
-    content.style.cssText = `
-      padding: 30px 25px;
-    `;
+    content.id = 'profile-content';
+    content.style.cssText = 'padding:20px;';
 
-    // Player header
-    var header = document.createElement('div');
-    header.style.cssText = `
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 2px solid rgba(218, 165, 32, 0.3);
-    `;
+    // Player info section with avatar
+    var playerInfoSection = document.createElement('div');
+    playerInfoSection.style.cssText = 'display:flex;align-items:center;margin-bottom:20px;' +
+      'padding-bottom:20px;border-bottom:1px solid rgba(212,175,55,0.3);';
 
-    var playerName = document.createElement('h2');
+    // Avatar (colored circle with initial)
+    var avatar = document.createElement('div');
+    var initial = (playerData.name || 'P').charAt(0).toUpperCase();
+    avatar.textContent = initial;
+    avatar.style.cssText = 'width:80px;height:80px;border-radius:50%;background:#d4af37;' +
+      'display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:bold;' +
+      'color:#000;margin-right:20px;';
+    playerInfoSection.appendChild(avatar);
+
+    // Player details
+    var playerDetails = document.createElement('div');
+    playerDetails.style.cssText = 'flex:1;';
+
+    var playerName = document.createElement('div');
     playerName.textContent = playerData.name || 'Player';
-    playerName.style.cssText = `
-      margin: 0 0 10px 0;
-      color: #DAA520;
-      font-size: 24px;
-      font-family: Georgia, serif;
-    `;
-    header.appendChild(playerName);
+    playerName.style.cssText = 'font-size:22px;font-weight:bold;color:#fff;margin-bottom:8px;';
+    playerDetails.appendChild(playerName);
 
-    var currentZone = document.createElement('div');
-    currentZone.textContent = 'Current Zone: ' + (playerData.zone || 'Unknown');
-    currentZone.style.cssText = `
-      color: #A0978E;
-      font-size: 14px;
-      font-family: system-ui, sans-serif;
-    `;
-    header.appendChild(currentZone);
+    var reputationTier = document.createElement('div');
+    var tier = playerData.reputationTier || 'Newcomer';
+    reputationTier.textContent = 'Reputation: ' + tier;
+    reputationTier.style.cssText = 'font-size:14px;color:#d4af37;margin-bottom:6px;';
+    playerDetails.appendChild(reputationTier);
 
-    content.appendChild(header);
+    var sparkBalance = document.createElement('div');
+    sparkBalance.innerHTML = '<span style="color:#d4af37;">✦</span> ' + (playerData.sparkBalance || 0) + ' Spark';
+    sparkBalance.style.cssText = 'font-size:16px;color:#fff;font-weight:bold;';
+    playerDetails.appendChild(sparkBalance);
 
-    // Stats section
+    playerInfoSection.appendChild(playerDetails);
+    content.appendChild(playerInfoSection);
+
+    // Skills section
+    var skillsSection = document.createElement('div');
+    skillsSection.id = 'profile-skills-section';
+    skillsSection.style.cssText = 'margin-bottom:20px;';
+
+    var skillsTitle = document.createElement('div');
+    skillsTitle.textContent = 'Skills';
+    skillsTitle.style.cssText = 'font-size:18px;font-weight:bold;color:#d4af37;margin-bottom:12px;';
+    skillsSection.appendChild(skillsTitle);
+
+    var skillNames = ['gardening', 'crafting', 'building', 'exploration', 'trading', 'social', 'combat', 'lore'];
+    var skillIcons = {
+      gardening: '🌱',
+      crafting: '🔨',
+      building: '🏗️',
+      exploration: '🗺️',
+      trading: '💰',
+      social: '👥',
+      combat: '⚔️',
+      lore: '📖'
+    };
+
+    skillNames.forEach(function(skillName) {
+      var skill = (skillData && skillData[skillName]) || { level: 1, xp: 0, xpToNext: 100 };
+      var skillDiv = document.createElement('div');
+      skillDiv.className = 'skill-row-' + skillName;
+      skillDiv.style.cssText = 'margin-bottom:14px;';
+
+      var skillHeader = document.createElement('div');
+      skillHeader.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:4px;';
+
+      var skillLabel = document.createElement('div');
+      var icon = skillIcons[skillName] || '⭐';
+      skillLabel.innerHTML = icon + ' ' + skillName.charAt(0).toUpperCase() + skillName.slice(1);
+      skillLabel.style.cssText = 'font-size:14px;color:#fff;font-weight:600;';
+      skillHeader.appendChild(skillLabel);
+
+      var skillLevel = document.createElement('div');
+      skillLevel.textContent = 'Level ' + skill.level;
+      skillLevel.style.cssText = 'font-size:13px;color:#d4af37;font-weight:bold;';
+      skillHeader.appendChild(skillLevel);
+
+      skillDiv.appendChild(skillHeader);
+
+      // Progress bar
+      var progressContainer = document.createElement('div');
+      progressContainer.style.cssText = 'width:100%;height:10px;background:rgba(255,255,255,0.1);' +
+        'border-radius:5px;overflow:hidden;position:relative;';
+
+      var progressFill = document.createElement('div');
+      var progressPercent = Math.min(100, (skill.xp / skill.xpToNext) * 100);
+      progressFill.style.cssText = 'height:100%;background:linear-gradient(90deg,#d4af37,#f4e4a6);' +
+        'border-radius:5px;width:' + progressPercent + '%;transition:width 0.3s ease;';
+      progressContainer.appendChild(progressFill);
+
+      var progressText = document.createElement('div');
+      progressText.textContent = skill.xp + ' / ' + skill.xpToNext + ' XP';
+      progressText.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;' +
+        'display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:bold;';
+      progressContainer.appendChild(progressText);
+
+      skillDiv.appendChild(progressContainer);
+      skillsSection.appendChild(skillDiv);
+    });
+
+    content.appendChild(skillsSection);
+
+    // Statistics section
     var statsSection = document.createElement('div');
-    statsSection.style.cssText = `
-      margin-bottom: 25px;
-    `;
+    statsSection.id = 'profile-stats-section';
+    statsSection.style.cssText = 'margin-bottom:20px;padding:15px;background:rgba(212,175,55,0.05);' +
+      'border-radius:8px;border:1px solid rgba(212,175,55,0.2);';
 
-    var statsTitle = document.createElement('h3');
+    var statsTitle = document.createElement('div');
     statsTitle.textContent = 'Statistics';
-    statsTitle.style.cssText = `
-      margin: 0 0 15px 0;
-      color: #E8E0D8;
-      font-size: 18px;
-      font-family: Georgia, serif;
-    `;
+    statsTitle.style.cssText = 'font-size:18px;font-weight:bold;color:#d4af37;margin-bottom:12px;';
     statsSection.appendChild(statsTitle);
 
+    var statsGrid = document.createElement('div');
+    statsGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;';
+
     var stats = [
-      { label: 'Spark Balance', value: (playerData.sparkBalance || 0) + ' ✦', color: '#DAA520' },
-      { label: 'Time Played', value: formatPlayTime(playerData.playTimeSeconds || 0), color: '#E8E0D8' },
-      { label: 'Items Collected', value: playerData.itemsCollected || 0, color: '#E8E0D8' },
-      { label: 'Quests Completed', value: playerData.questsCompleted || 0, color: '#E8E0D8' },
-      { label: 'Quests Active', value: playerData.questsActive || 0, color: '#E8E0D8' },
-      { label: 'NPCs Met', value: playerData.npcsMet || 0, color: '#E8E0D8' },
-      { label: 'Zones Discovered', value: playerData.zonesDiscovered || 0, color: '#E8E0D8' },
-      { label: 'Structures Built', value: playerData.structuresBuilt || 0, color: '#E8E0D8' }
+      { label: 'Quests Completed', value: playerData.questsCompleted || 0 },
+      { label: 'Discoveries Found', value: playerData.discoveriesFound || 0 },
+      { label: 'Items Crafted', value: playerData.itemsCrafted || 0 },
+      { label: 'Trades Completed', value: playerData.tradesCompleted || 0 },
+      { label: 'Time Played', value: formatPlayTime(playerData.playTimeSeconds || 0) }
     ];
 
     stats.forEach(function(stat) {
-      var statRow = document.createElement('div');
-      statRow.style.cssText = `
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        font-size: 14px;
-        font-family: system-ui, sans-serif;
-      `;
+      var statItem = document.createElement('div');
+      statItem.className = 'stat-' + stat.label.toLowerCase().replace(/ /g, '-');
+      statItem.style.cssText = 'padding:8px;background:rgba(0,0,0,0.3);border-radius:4px;';
 
-      var statLabel = document.createElement('span');
+      var statLabel = document.createElement('div');
       statLabel.textContent = stat.label;
-      statLabel.style.color = '#A0978E';
+      statLabel.style.cssText = 'font-size:11px;color:#888;margin-bottom:4px;';
+      statItem.appendChild(statLabel);
 
-      var statValue = document.createElement('span');
+      var statValue = document.createElement('div');
       statValue.textContent = stat.value;
-      statValue.style.cssText = `
-        color: ${stat.color};
-        font-weight: bold;
-      `;
+      statValue.style.cssText = 'font-size:16px;color:#fff;font-weight:bold;';
+      statItem.appendChild(statValue);
 
-      statRow.appendChild(statLabel);
-      statRow.appendChild(statValue);
-      statsSection.appendChild(statRow);
+      statsGrid.appendChild(statItem);
     });
 
+    statsSection.appendChild(statsGrid);
     content.appendChild(statsSection);
 
     // Recent Activity section
     var activitySection = document.createElement('div');
-    activitySection.style.cssText = `
-      margin-bottom: 25px;
-    `;
+    activitySection.id = 'profile-activity-section';
+    activitySection.style.cssText = 'margin-bottom:0;';
 
-    var activityTitle = document.createElement('h3');
+    var activityTitle = document.createElement('div');
     activityTitle.textContent = 'Recent Activity';
-    activityTitle.style.cssText = `
-      margin: 0 0 15px 0;
-      color: #E8E0D8;
-      font-size: 18px;
-      font-family: Georgia, serif;
-    `;
+    activityTitle.style.cssText = 'font-size:18px;font-weight:bold;color:#d4af37;margin-bottom:12px;';
     activitySection.appendChild(activityTitle);
 
-    var activities = playerData.recentActivities || [
-      'Started playing ZION'
-    ];
+    var activities = playerData.recentActivities || ['Started playing ZION'];
+    var activityList = document.createElement('div');
+    activityList.style.cssText = 'max-height:150px;overflow-y:auto;';
 
-    activities.slice(0, 5).forEach(function(activity) {
+    activities.slice(0, 10).forEach(function(activity) {
       var activityItem = document.createElement('div');
       activityItem.textContent = '• ' + activity;
-      activityItem.style.cssText = `
-        color: #A0978E;
-        font-size: 13px;
-        font-family: system-ui, sans-serif;
-        padding: 6px 0;
-        line-height: 1.5;
-      `;
-      activitySection.appendChild(activityItem);
+      activityItem.style.cssText = 'font-size:12px;color:#aaa;padding:4px 0;line-height:1.4;';
+      activityList.appendChild(activityItem);
     });
 
+    activitySection.appendChild(activityList);
     content.appendChild(activitySection);
+
+    // Close hint
+    var closeHint = document.createElement('div');
+    closeHint.textContent = 'Press P to close';
+    closeHint.style.cssText = 'text-align:center;margin-top:15px;font-size:11px;color:#666;';
+    content.appendChild(closeHint);
 
     panel.appendChild(content);
     document.body.appendChild(panel);
     playerProfilePanel = panel;
   }
 
-  function hidePlayerProfile() {
+  function hideProfilePanel() {
     if (!playerProfilePanel) return;
-    document.body.removeChild(playerProfilePanel);
+    if (playerProfilePanel.parentNode) {
+      playerProfilePanel.parentNode.removeChild(playerProfilePanel);
+    }
     playerProfilePanel = null;
+  }
+
+  function updateProfileStats(stats) {
+    if (!playerProfilePanel) return;
+
+    // Update statistics values
+    if (stats.questsCompleted !== undefined) {
+      var questsStat = playerProfilePanel.querySelector('.stat-quests-completed div:last-child');
+      if (questsStat) questsStat.textContent = stats.questsCompleted;
+    }
+    if (stats.discoveriesFound !== undefined) {
+      var discoveriesStat = playerProfilePanel.querySelector('.stat-discoveries-found div:last-child');
+      if (discoveriesStat) discoveriesStat.textContent = stats.discoveriesFound;
+    }
+    if (stats.itemsCrafted !== undefined) {
+      var craftedStat = playerProfilePanel.querySelector('.stat-items-crafted div:last-child');
+      if (craftedStat) craftedStat.textContent = stats.itemsCrafted;
+    }
+    if (stats.tradesCompleted !== undefined) {
+      var tradesStat = playerProfilePanel.querySelector('.stat-trades-completed div:last-child');
+      if (tradesStat) tradesStat.textContent = stats.tradesCompleted;
+    }
+    if (stats.playTimeSeconds !== undefined) {
+      var timeStat = playerProfilePanel.querySelector('.stat-time-played div:last-child');
+      if (timeStat) timeStat.textContent = formatPlayTime(stats.playTimeSeconds);
+    }
+  }
+
+  // Legacy function names for backward compatibility
+  function showPlayerProfile(playerData) {
+    showProfilePanel(playerData, null, null);
+  }
+
+  function hidePlayerProfile() {
+    hideProfilePanel();
   }
 
   function formatPlayTime(seconds) {
@@ -29845,6 +30387,9 @@ html, body {
   exports.getSettings = getSettings;
   exports.showPlayerProfile = showPlayerProfile;
   exports.hidePlayerProfile = hidePlayerProfile;
+  exports.showProfilePanel = showProfilePanel;
+  exports.hideProfilePanel = hideProfilePanel;
+  exports.updateProfileStats = updateProfileStats;
   exports.showDiscoveryLog = showDiscoveryLog;
   exports.hideDiscoveryLog = hideDiscoveryLog;
   exports.showLoreBook = showLoreBook;
@@ -37405,6 +37950,7 @@ html, body {
   let chatBubbles = new Map(); // id -> { mesh, timer }
   let emoteSprites = new Map(); // id -> {sprite, currentEmote, timer, opacity}
   let questIndicators = new Map(); // id -> {sprite, type} - quest marker sprites
+  let activityIndicators = new Map(); // id -> {mesh, currentActivity, rotationSpeed} - activity icon above head
   let activityParticles = []; // {mesh, timer, velocity, startY}
   let particleSpawnTimers = new Map(); // id -> timer (throttle particle spawn)
   let pendingEvents = []; // events to broadcast to all NPCs
@@ -37764,18 +38310,18 @@ html, body {
     ]
   };
 
-  // Archetype colors
+  // Archetype colors (body/clothing)
   const ARCHETYPE_COLORS = {
     gardener: 0x4CAF50,    // green
-    builder: 0x8D6E63,     // brown
-    storyteller: 0x9C27B0, // purple
-    merchant: 0xFFD700,    // gold
-    explorer: 0x00BCD4,    // teal
+    builder: 0xFF9800,     // orange
+    storyteller: 0xE91E63, // red
+    merchant: 0x8D6E63,    // brown
+    explorer: 0xD2B48C,    // tan
     teacher: 0x2196F3,     // blue
-    musician: 0xFF4081,    // pink
+    musician: 0x9C27B0,    // purple
     healer: 0xFFFFFF,      // white
     philosopher: 0x3F51B5, // indigo
-    artist: 0xFF9800       // orange
+    artist: 0xFF69B4       // pink
   };
 
   // Skin color for heads
@@ -38068,6 +38614,22 @@ html, body {
     group.userData.rightArm = rightArm;
     group.userData.leftLeg = leftLeg;
     group.userData.rightLeg = rightLeg;
+
+    // Add glow ring beneath NPC's feet
+    const glowGeometry = new THREE.CircleGeometry(0.35, 16);
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: 0.4,
+      side: THREE.DoubleSide
+    });
+    const glowRing = new THREE.Mesh(glowGeometry, glowMaterial);
+    glowRing.rotation.x = -Math.PI / 2; // Lay flat on ground
+    glowRing.position.y = 0.02; // Slightly above ground to prevent z-fighting
+    glowRing.castShadow = false;
+    glowRing.receiveShadow = false;
+    group.add(glowRing);
+    group.userData.glowRing = glowRing;
 
     // Add archetype-specific accessories
     addAccessories(group, archetype, color, THREE);
@@ -38510,6 +39072,62 @@ html, body {
   }
 
   /**
+   * Create activity indicator mesh (3D icon above NPC head)
+   * @param {string} activityState - 'working', 'talking', 'walking', 'idle'
+   * @param {object} THREE
+   * @returns {THREE.Mesh}
+   */
+  function createActivityIndicator(activityState, THREE) {
+    var geometry;
+    var material;
+    var mesh;
+
+    switch (activityState) {
+      case 'working':
+        // Small rotating orange cube
+        geometry = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+        material = new THREE.MeshBasicMaterial({ color: 0xFF8C00, transparent: true, opacity: 0.9 });
+        mesh = new THREE.Mesh(geometry, material);
+        mesh.userData.rotationSpeed = 2.0;
+        break;
+
+      case 'talking':
+      case 'socializing':
+        // White speech bubble (stretched sphere)
+        geometry = new THREE.SphereGeometry(0.1, 8, 8);
+        material = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.9 });
+        mesh = new THREE.Mesh(geometry, material);
+        mesh.scale.set(1.2, 0.8, 0.6);
+        mesh.userData.rotationSpeed = 0;
+        break;
+
+      case 'walking':
+        // Green arrow pointing forward (cone rotated)
+        geometry = new THREE.ConeGeometry(0.08, 0.2, 6);
+        material = new THREE.MeshBasicMaterial({ color: 0x00FF00, transparent: true, opacity: 0.9 });
+        mesh = new THREE.Mesh(geometry, material);
+        mesh.rotation.x = Math.PI / 2;
+        mesh.userData.rotationSpeed = 0;
+        break;
+
+      case 'idle':
+      default:
+        // Blue floating diamond (octahedron)
+        geometry = new THREE.OctahedronGeometry(0.1, 0);
+        material = new THREE.MeshBasicMaterial({ color: 0x00BFFF, transparent: true, opacity: 0.9 });
+        mesh = new THREE.Mesh(geometry, material);
+        mesh.userData.rotationSpeed = 1.0;
+        break;
+    }
+
+    mesh.position.y = 2.1; // Above NPC head, below name plate
+    mesh.castShadow = false;
+    mesh.receiveShadow = false;
+
+    return mesh;
+  }
+
+  /**
    * Update quest indicators for NPCs
    * @param {string} playerId - Player ID for quest state
    * @param {object} playerPos - Player position (for proximity check)
@@ -38684,6 +39302,56 @@ html, body {
         emoteData.sprite.material.opacity = emoteData.opacity;
       }
       emoteData.timer += 0.016; // ~60fps assumption
+    }
+  }
+
+  /**
+   * Update activity indicator for an NPC
+   * @param {object} agent - NPC agent
+   * @param {object} state - NPC state
+   * @param {object} mesh - NPC mesh
+   * @param {number} deltaTime - Time delta for animations
+   */
+  function updateActivityIndicator(agent, state, mesh, deltaTime) {
+    var THREE = window.THREE;
+    if (!THREE) return;
+
+    var desiredActivity = state.currentState;
+
+    // Get or create activity indicator data
+    var indicatorData = activityIndicators.get(agent.id);
+
+    // Update activity indicator if changed
+    if (desiredActivity !== (indicatorData ? indicatorData.currentActivity : null)) {
+      // Remove old mesh
+      if (indicatorData && indicatorData.mesh) {
+        mesh.remove(indicatorData.mesh);
+      }
+
+      // Create new mesh
+      var indicatorMesh = createActivityIndicator(desiredActivity, THREE);
+      if (indicatorMesh) {
+        mesh.add(indicatorMesh);
+
+        indicatorData = {
+          mesh: indicatorMesh,
+          currentActivity: desiredActivity,
+          bobTimer: 0
+        };
+        activityIndicators.set(agent.id, indicatorData);
+      }
+    }
+
+    // Animate the indicator (floating bob and rotation)
+    if (indicatorData && indicatorData.mesh) {
+      // Floating bob animation
+      indicatorData.bobTimer += deltaTime * 2.0;
+      indicatorData.mesh.position.y = 2.1 + Math.sin(indicatorData.bobTimer) * 0.08;
+
+      // Rotation animation (if applicable)
+      if (indicatorData.mesh.userData.rotationSpeed > 0) {
+        indicatorData.mesh.rotation.y += deltaTime * indicatorData.mesh.userData.rotationSpeed;
+      }
     }
   }
 
@@ -38866,24 +39534,31 @@ html, body {
       // Create detailed humanoid NPC
       const group = createHumanoidNPC(agent.archetype, THREE);
 
-      // Name label
+      // Name label with archetype subtitle
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       canvas.width = 256;
-      canvas.height = 64;
+      canvas.height = 96;
 
-      context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      context.fillStyle = 'rgba(0, 0, 0, 0.7)';
       context.fillRect(0, 0, canvas.width, canvas.height);
 
-      context.font = 'Bold 24px Arial';
+      // Draw name (larger and bolder)
+      context.font = 'Bold 32px Arial';
       context.fillStyle = 'white';
       context.textAlign = 'center';
-      context.fillText(agent.name, canvas.width / 2, 40);
+      context.fillText(agent.name, canvas.width / 2, 42);
+
+      // Draw archetype subtitle
+      context.font = '20px Arial';
+      context.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      var archetypeCapitalized = agent.archetype.charAt(0).toUpperCase() + agent.archetype.slice(1);
+      context.fillText(archetypeCapitalized, canvas.width / 2, 70);
 
       const labelTexture = new THREE.CanvasTexture(canvas);
       const labelMaterial = new THREE.SpriteMaterial({ map: labelTexture });
       const label = new THREE.Sprite(labelMaterial);
-      label.scale.set(2, 0.5, 1);
+      label.scale.set(2.5, 1.0, 1);
       label.position.y = 2.5;
       group.add(label);
 
@@ -39565,6 +40240,12 @@ html, body {
         mesh.position.y = Math.sin(time * 0.002) * 0.02;
         break;
     }
+
+    // Animate glow ring - subtle pulsing
+    if (userData.glowRing) {
+      var pulseFactor = Math.sin(time * 0.003) * 0.1 + 0.9;
+      userData.glowRing.material.opacity = 0.4 * pulseFactor;
+    }
   }
 
   /**
@@ -39626,6 +40307,9 @@ html, body {
 
           updateEmoteIndicator(agent, state, mesh, playerPos, decision);
 
+          // Update activity indicator
+          updateActivityIndicator(agent, state, mesh, deltaTime);
+
           // Spawn activity particles for working NPCs (throttled)
           if (state.currentState === 'working') {
             let spawnTimer = particleSpawnTimers.get(agent.id) || 0;
@@ -39643,6 +40327,12 @@ html, body {
           if (emoteData && emoteData.sprite) {
             mesh.remove(emoteData.sprite);
             emoteSprites.delete(agent.id);
+          }
+          // Also remove activity indicator
+          const indicatorData = activityIndicators.get(agent.id);
+          if (indicatorData && indicatorData.mesh) {
+            mesh.remove(indicatorData.mesh);
+            activityIndicators.delete(agent.id);
           }
         }
       }
@@ -41326,6 +42016,16 @@ html, body {
         if (World.spawnZoneInteractives) {
           World.spawnZoneInteractives(sceneContext, currentZone);
         }
+
+        // Initialize wildlife (butterflies, fireflies, birds, fish)
+        if (World.initWildlife) {
+          World.initWildlife(sceneContext);
+        }
+
+        // Create zone boundary particles (golden floating markers at zone edges)
+        if (World.createZoneBoundaryParticles && sceneContext.scene) {
+          World.createZoneBoundaryParticles(sceneContext.scene);
+        }
       }
     }
 
@@ -41760,6 +42460,14 @@ html, body {
             // Track activity
             addRecentActivity('Entered ' + currentZone);
 
+            // Screen fade transition effect
+            if (World && World.fadeTransition) {
+              World.fadeTransition(function() {
+                // This callback fires at peak fade - load new zone assets here
+                if (World.loadZone) World.loadZone(sceneContext, currentZone);
+              });
+            }
+
             if (Mentoring) {
               var xpResult = Mentoring.addSkillXP(localPlayer.id, 'exploration', 8);
               if (xpResult.leveledUp && HUD) {
@@ -42021,6 +42729,16 @@ html, body {
       }
       if (World.updateInteractiveHighlights && localPlayer) {
         World.updateInteractiveHighlights(localPlayer.position.x, localPlayer.position.z, 4);
+      }
+
+      // Update ambient wildlife (butterflies, fireflies, birds, fish)
+      if (World.updateWildlife) {
+        World.updateWildlife(sceneContext, deltaTime, worldTime);
+      }
+
+      // Update zone boundary particles (golden floating markers)
+      if (World.updateZoneBoundaryParticles) {
+        World.updateZoneBoundaryParticles(worldTime);
       }
 
       // Update build preview if in build mode
@@ -43755,9 +44473,10 @@ html, body {
 
       case 'toggleProfile':
         if (HUD && localPlayer) {
-          var profileEl = document.getElementById('player-profile-panel');
+          var profileEl = document.getElementById('player-profile-panel') || document.getElementById('profile-panel');
           if (profileEl) {
-            HUD.hidePlayerProfile();
+            if (HUD.hideProfilePanel) HUD.hideProfilePanel();
+            else if (HUD.hidePlayerProfile) HUD.hidePlayerProfile();
           } else {
             // Gather player stats
             var playerData = {
@@ -43771,9 +44490,22 @@ html, body {
               npcsMet: NPCs && NPCs.getMetNPCs ? NPCs.getMetNPCs(localPlayer.id).length : 0,
               zonesDiscovered: Exploration ? Exploration.getDiscoveredZones(localPlayer.id, gameState).length : 1,
               structuresBuilt: Creation ? Creation.getPlayerStructures(localPlayer.id).length : 0,
-              recentActivities: getRecentActivities()
+              recentActivities: getRecentActivities(),
+              reputationTier: Social && Social.getReputation ? Social.getReputation(localPlayer.id).tier : 'Newcomer'
             };
-            HUD.showPlayerProfile(playerData);
+
+            // Gather skill data
+            var skillData = {};
+            if (Mentoring && Mentoring.getPlayerSkills) {
+              skillData = Mentoring.getPlayerSkills(localPlayer.id);
+            }
+
+            // Use enhanced profile panel if available
+            if (HUD.showProfilePanel) {
+              HUD.showProfilePanel(playerData, skillData);
+            } else if (HUD.showPlayerProfile) {
+              HUD.showPlayerProfile(playerData);
+            }
           }
         }
         break;

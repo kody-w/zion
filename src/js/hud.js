@@ -2874,200 +2874,269 @@
   }
 
   // Player Profile Panel
-  let playerProfilePanel = null;
+  var playerProfilePanel = null;
 
-  function showPlayerProfile(playerData) {
+  function showProfilePanel(playerData, skillData, achievementData) {
     if (playerProfilePanel) {
-      hidePlayerProfile();
+      hideProfilePanel();
       return;
     }
 
     var panel = document.createElement('div');
     panel.id = 'player-profile-panel';
-    panel.style.cssText = `
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 350px;
-      height: 100%;
-      background: rgba(26, 26, 26, 0.95);
-      border-left: 2px solid rgba(218, 165, 32, 0.5);
-      z-index: 200;
-      overflow-y: auto;
-      pointer-events: auto;
-      box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
-    `;
+    panel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(0,0,0,0.9);border:2px solid #d4af37;border-radius:12px;' +
+      'padding:0;width:700px;max-height:85vh;overflow-y:auto;pointer-events:auto;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);z-index:300;';
 
-    // Close button
-    var closeBtn = document.createElement('button');
-    closeBtn.textContent = '×';
-    closeBtn.style.cssText = `
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      width: 35px;
-      height: 35px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #E8E0D8;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      font-size: 24px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-    `;
-    closeBtn.onmouseover = function() {
-      this.style.background = 'rgba(218, 165, 32, 0.3)';
-      this.style.borderColor = '#DAA520';
-      this.style.color = '#DAA520';
-    };
-    closeBtn.onmouseout = function() {
-      this.style.background = 'rgba(255, 255, 255, 0.1)';
-      this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-      this.style.color = '#E8E0D8';
-    };
-    closeBtn.onclick = function() {
-      hidePlayerProfile();
-    };
-    panel.appendChild(closeBtn);
+    // Header with close button
+    var header = document.createElement('div');
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;' +
+      'padding:20px;background:rgba(212,175,55,0.1);border-bottom:1px solid #d4af37;';
+
+    var title = document.createElement('div');
+    title.textContent = 'Player Profile';
+    title.style.cssText = 'font-size:24px;font-weight:bold;color:#d4af37;';
+    header.appendChild(title);
+
+    var closeBtn = document.createElement('div');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'cursor:pointer;font-size:24px;color:#888;padding:0 8px;';
+    closeBtn.onmouseover = function() { this.style.color = '#d4af37'; };
+    closeBtn.onmouseout = function() { this.style.color = '#888'; };
+    closeBtn.onclick = function() { hideProfilePanel(); };
+    header.appendChild(closeBtn);
+
+    panel.appendChild(header);
 
     // Content container
     var content = document.createElement('div');
-    content.style.cssText = `
-      padding: 30px 25px;
-    `;
+    content.id = 'profile-content';
+    content.style.cssText = 'padding:20px;';
 
-    // Player header
-    var header = document.createElement('div');
-    header.style.cssText = `
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 2px solid rgba(218, 165, 32, 0.3);
-    `;
+    // Player info section with avatar
+    var playerInfoSection = document.createElement('div');
+    playerInfoSection.style.cssText = 'display:flex;align-items:center;margin-bottom:20px;' +
+      'padding-bottom:20px;border-bottom:1px solid rgba(212,175,55,0.3);';
 
-    var playerName = document.createElement('h2');
+    // Avatar (colored circle with initial)
+    var avatar = document.createElement('div');
+    var initial = (playerData.name || 'P').charAt(0).toUpperCase();
+    avatar.textContent = initial;
+    avatar.style.cssText = 'width:80px;height:80px;border-radius:50%;background:#d4af37;' +
+      'display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:bold;' +
+      'color:#000;margin-right:20px;';
+    playerInfoSection.appendChild(avatar);
+
+    // Player details
+    var playerDetails = document.createElement('div');
+    playerDetails.style.cssText = 'flex:1;';
+
+    var playerName = document.createElement('div');
     playerName.textContent = playerData.name || 'Player';
-    playerName.style.cssText = `
-      margin: 0 0 10px 0;
-      color: #DAA520;
-      font-size: 24px;
-      font-family: Georgia, serif;
-    `;
-    header.appendChild(playerName);
+    playerName.style.cssText = 'font-size:22px;font-weight:bold;color:#fff;margin-bottom:8px;';
+    playerDetails.appendChild(playerName);
 
-    var currentZone = document.createElement('div');
-    currentZone.textContent = 'Current Zone: ' + (playerData.zone || 'Unknown');
-    currentZone.style.cssText = `
-      color: #A0978E;
-      font-size: 14px;
-      font-family: system-ui, sans-serif;
-    `;
-    header.appendChild(currentZone);
+    var reputationTier = document.createElement('div');
+    var tier = playerData.reputationTier || 'Newcomer';
+    reputationTier.textContent = 'Reputation: ' + tier;
+    reputationTier.style.cssText = 'font-size:14px;color:#d4af37;margin-bottom:6px;';
+    playerDetails.appendChild(reputationTier);
 
-    content.appendChild(header);
+    var sparkBalance = document.createElement('div');
+    sparkBalance.innerHTML = '<span style="color:#d4af37;">✦</span> ' + (playerData.sparkBalance || 0) + ' Spark';
+    sparkBalance.style.cssText = 'font-size:16px;color:#fff;font-weight:bold;';
+    playerDetails.appendChild(sparkBalance);
 
-    // Stats section
+    playerInfoSection.appendChild(playerDetails);
+    content.appendChild(playerInfoSection);
+
+    // Skills section
+    var skillsSection = document.createElement('div');
+    skillsSection.id = 'profile-skills-section';
+    skillsSection.style.cssText = 'margin-bottom:20px;';
+
+    var skillsTitle = document.createElement('div');
+    skillsTitle.textContent = 'Skills';
+    skillsTitle.style.cssText = 'font-size:18px;font-weight:bold;color:#d4af37;margin-bottom:12px;';
+    skillsSection.appendChild(skillsTitle);
+
+    var skillNames = ['gardening', 'crafting', 'building', 'exploration', 'trading', 'social', 'combat', 'lore'];
+    var skillIcons = {
+      gardening: '🌱',
+      crafting: '🔨',
+      building: '🏗️',
+      exploration: '🗺️',
+      trading: '💰',
+      social: '👥',
+      combat: '⚔️',
+      lore: '📖'
+    };
+
+    skillNames.forEach(function(skillName) {
+      var skill = (skillData && skillData[skillName]) || { level: 1, xp: 0, xpToNext: 100 };
+      var skillDiv = document.createElement('div');
+      skillDiv.className = 'skill-row-' + skillName;
+      skillDiv.style.cssText = 'margin-bottom:14px;';
+
+      var skillHeader = document.createElement('div');
+      skillHeader.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:4px;';
+
+      var skillLabel = document.createElement('div');
+      var icon = skillIcons[skillName] || '⭐';
+      skillLabel.innerHTML = icon + ' ' + skillName.charAt(0).toUpperCase() + skillName.slice(1);
+      skillLabel.style.cssText = 'font-size:14px;color:#fff;font-weight:600;';
+      skillHeader.appendChild(skillLabel);
+
+      var skillLevel = document.createElement('div');
+      skillLevel.textContent = 'Level ' + skill.level;
+      skillLevel.style.cssText = 'font-size:13px;color:#d4af37;font-weight:bold;';
+      skillHeader.appendChild(skillLevel);
+
+      skillDiv.appendChild(skillHeader);
+
+      // Progress bar
+      var progressContainer = document.createElement('div');
+      progressContainer.style.cssText = 'width:100%;height:10px;background:rgba(255,255,255,0.1);' +
+        'border-radius:5px;overflow:hidden;position:relative;';
+
+      var progressFill = document.createElement('div');
+      var progressPercent = Math.min(100, (skill.xp / skill.xpToNext) * 100);
+      progressFill.style.cssText = 'height:100%;background:linear-gradient(90deg,#d4af37,#f4e4a6);' +
+        'border-radius:5px;width:' + progressPercent + '%;transition:width 0.3s ease;';
+      progressContainer.appendChild(progressFill);
+
+      var progressText = document.createElement('div');
+      progressText.textContent = skill.xp + ' / ' + skill.xpToNext + ' XP';
+      progressText.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;' +
+        'display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:bold;';
+      progressContainer.appendChild(progressText);
+
+      skillDiv.appendChild(progressContainer);
+      skillsSection.appendChild(skillDiv);
+    });
+
+    content.appendChild(skillsSection);
+
+    // Statistics section
     var statsSection = document.createElement('div');
-    statsSection.style.cssText = `
-      margin-bottom: 25px;
-    `;
+    statsSection.id = 'profile-stats-section';
+    statsSection.style.cssText = 'margin-bottom:20px;padding:15px;background:rgba(212,175,55,0.05);' +
+      'border-radius:8px;border:1px solid rgba(212,175,55,0.2);';
 
-    var statsTitle = document.createElement('h3');
+    var statsTitle = document.createElement('div');
     statsTitle.textContent = 'Statistics';
-    statsTitle.style.cssText = `
-      margin: 0 0 15px 0;
-      color: #E8E0D8;
-      font-size: 18px;
-      font-family: Georgia, serif;
-    `;
+    statsTitle.style.cssText = 'font-size:18px;font-weight:bold;color:#d4af37;margin-bottom:12px;';
     statsSection.appendChild(statsTitle);
 
+    var statsGrid = document.createElement('div');
+    statsGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;';
+
     var stats = [
-      { label: 'Spark Balance', value: (playerData.sparkBalance || 0) + ' ✦', color: '#DAA520' },
-      { label: 'Time Played', value: formatPlayTime(playerData.playTimeSeconds || 0), color: '#E8E0D8' },
-      { label: 'Items Collected', value: playerData.itemsCollected || 0, color: '#E8E0D8' },
-      { label: 'Quests Completed', value: playerData.questsCompleted || 0, color: '#E8E0D8' },
-      { label: 'Quests Active', value: playerData.questsActive || 0, color: '#E8E0D8' },
-      { label: 'NPCs Met', value: playerData.npcsMet || 0, color: '#E8E0D8' },
-      { label: 'Zones Discovered', value: playerData.zonesDiscovered || 0, color: '#E8E0D8' },
-      { label: 'Structures Built', value: playerData.structuresBuilt || 0, color: '#E8E0D8' }
+      { label: 'Quests Completed', value: playerData.questsCompleted || 0 },
+      { label: 'Discoveries Found', value: playerData.discoveriesFound || 0 },
+      { label: 'Items Crafted', value: playerData.itemsCrafted || 0 },
+      { label: 'Trades Completed', value: playerData.tradesCompleted || 0 },
+      { label: 'Time Played', value: formatPlayTime(playerData.playTimeSeconds || 0) }
     ];
 
     stats.forEach(function(stat) {
-      var statRow = document.createElement('div');
-      statRow.style.cssText = `
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        font-size: 14px;
-        font-family: system-ui, sans-serif;
-      `;
+      var statItem = document.createElement('div');
+      statItem.className = 'stat-' + stat.label.toLowerCase().replace(/ /g, '-');
+      statItem.style.cssText = 'padding:8px;background:rgba(0,0,0,0.3);border-radius:4px;';
 
-      var statLabel = document.createElement('span');
+      var statLabel = document.createElement('div');
       statLabel.textContent = stat.label;
-      statLabel.style.color = '#A0978E';
+      statLabel.style.cssText = 'font-size:11px;color:#888;margin-bottom:4px;';
+      statItem.appendChild(statLabel);
 
-      var statValue = document.createElement('span');
+      var statValue = document.createElement('div');
       statValue.textContent = stat.value;
-      statValue.style.cssText = `
-        color: ${stat.color};
-        font-weight: bold;
-      `;
+      statValue.style.cssText = 'font-size:16px;color:#fff;font-weight:bold;';
+      statItem.appendChild(statValue);
 
-      statRow.appendChild(statLabel);
-      statRow.appendChild(statValue);
-      statsSection.appendChild(statRow);
+      statsGrid.appendChild(statItem);
     });
 
+    statsSection.appendChild(statsGrid);
     content.appendChild(statsSection);
 
     // Recent Activity section
     var activitySection = document.createElement('div');
-    activitySection.style.cssText = `
-      margin-bottom: 25px;
-    `;
+    activitySection.id = 'profile-activity-section';
+    activitySection.style.cssText = 'margin-bottom:0;';
 
-    var activityTitle = document.createElement('h3');
+    var activityTitle = document.createElement('div');
     activityTitle.textContent = 'Recent Activity';
-    activityTitle.style.cssText = `
-      margin: 0 0 15px 0;
-      color: #E8E0D8;
-      font-size: 18px;
-      font-family: Georgia, serif;
-    `;
+    activityTitle.style.cssText = 'font-size:18px;font-weight:bold;color:#d4af37;margin-bottom:12px;';
     activitySection.appendChild(activityTitle);
 
-    var activities = playerData.recentActivities || [
-      'Started playing ZION'
-    ];
+    var activities = playerData.recentActivities || ['Started playing ZION'];
+    var activityList = document.createElement('div');
+    activityList.style.cssText = 'max-height:150px;overflow-y:auto;';
 
-    activities.slice(0, 5).forEach(function(activity) {
+    activities.slice(0, 10).forEach(function(activity) {
       var activityItem = document.createElement('div');
       activityItem.textContent = '• ' + activity;
-      activityItem.style.cssText = `
-        color: #A0978E;
-        font-size: 13px;
-        font-family: system-ui, sans-serif;
-        padding: 6px 0;
-        line-height: 1.5;
-      `;
-      activitySection.appendChild(activityItem);
+      activityItem.style.cssText = 'font-size:12px;color:#aaa;padding:4px 0;line-height:1.4;';
+      activityList.appendChild(activityItem);
     });
 
+    activitySection.appendChild(activityList);
     content.appendChild(activitySection);
+
+    // Close hint
+    var closeHint = document.createElement('div');
+    closeHint.textContent = 'Press P to close';
+    closeHint.style.cssText = 'text-align:center;margin-top:15px;font-size:11px;color:#666;';
+    content.appendChild(closeHint);
 
     panel.appendChild(content);
     document.body.appendChild(panel);
     playerProfilePanel = panel;
   }
 
-  function hidePlayerProfile() {
+  function hideProfilePanel() {
     if (!playerProfilePanel) return;
-    document.body.removeChild(playerProfilePanel);
+    if (playerProfilePanel.parentNode) {
+      playerProfilePanel.parentNode.removeChild(playerProfilePanel);
+    }
     playerProfilePanel = null;
+  }
+
+  function updateProfileStats(stats) {
+    if (!playerProfilePanel) return;
+
+    // Update statistics values
+    if (stats.questsCompleted !== undefined) {
+      var questsStat = playerProfilePanel.querySelector('.stat-quests-completed div:last-child');
+      if (questsStat) questsStat.textContent = stats.questsCompleted;
+    }
+    if (stats.discoveriesFound !== undefined) {
+      var discoveriesStat = playerProfilePanel.querySelector('.stat-discoveries-found div:last-child');
+      if (discoveriesStat) discoveriesStat.textContent = stats.discoveriesFound;
+    }
+    if (stats.itemsCrafted !== undefined) {
+      var craftedStat = playerProfilePanel.querySelector('.stat-items-crafted div:last-child');
+      if (craftedStat) craftedStat.textContent = stats.itemsCrafted;
+    }
+    if (stats.tradesCompleted !== undefined) {
+      var tradesStat = playerProfilePanel.querySelector('.stat-trades-completed div:last-child');
+      if (tradesStat) tradesStat.textContent = stats.tradesCompleted;
+    }
+    if (stats.playTimeSeconds !== undefined) {
+      var timeStat = playerProfilePanel.querySelector('.stat-time-played div:last-child');
+      if (timeStat) timeStat.textContent = formatPlayTime(stats.playTimeSeconds);
+    }
+  }
+
+  // Legacy function names for backward compatibility
+  function showPlayerProfile(playerData) {
+    showProfilePanel(playerData, null, null);
+  }
+
+  function hidePlayerProfile() {
+    hideProfilePanel();
   }
 
   function formatPlayTime(seconds) {
@@ -7087,6 +7156,9 @@
   exports.getSettings = getSettings;
   exports.showPlayerProfile = showPlayerProfile;
   exports.hidePlayerProfile = hidePlayerProfile;
+  exports.showProfilePanel = showProfilePanel;
+  exports.hideProfilePanel = hideProfilePanel;
+  exports.updateProfileStats = updateProfileStats;
   exports.showDiscoveryLog = showDiscoveryLog;
   exports.hideDiscoveryLog = hideDiscoveryLog;
   exports.showLoreBook = showLoreBook;

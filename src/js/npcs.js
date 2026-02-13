@@ -31,6 +31,7 @@
   let chatBubbles = new Map(); // id -> { mesh, timer }
   let emoteSprites = new Map(); // id -> {sprite, currentEmote, timer, opacity}
   let questIndicators = new Map(); // id -> {sprite, type} - quest marker sprites
+  let activityIndicators = new Map(); // id -> {mesh, currentActivity, rotationSpeed} - activity icon above head
   let activityParticles = []; // {mesh, timer, velocity, startY}
   let particleSpawnTimers = new Map(); // id -> timer (throttle particle spawn)
   let pendingEvents = []; // events to broadcast to all NPCs
@@ -390,18 +391,18 @@
     ]
   };
 
-  // Archetype colors
+  // Archetype colors (body/clothing)
   const ARCHETYPE_COLORS = {
     gardener: 0x4CAF50,    // green
-    builder: 0x8D6E63,     // brown
-    storyteller: 0x9C27B0, // purple
-    merchant: 0xFFD700,    // gold
-    explorer: 0x00BCD4,    // teal
+    builder: 0xFF9800,     // orange
+    storyteller: 0xE91E63, // red
+    merchant: 0x8D6E63,    // brown
+    explorer: 0xD2B48C,    // tan
     teacher: 0x2196F3,     // blue
-    musician: 0xFF4081,    // pink
+    musician: 0x9C27B0,    // purple
     healer: 0xFFFFFF,      // white
     philosopher: 0x3F51B5, // indigo
-    artist: 0xFF9800       // orange
+    artist: 0xFF69B4       // pink
   };
 
   // Skin color for heads
@@ -694,6 +695,22 @@
     group.userData.rightArm = rightArm;
     group.userData.leftLeg = leftLeg;
     group.userData.rightLeg = rightLeg;
+
+    // Add glow ring beneath NPC's feet
+    const glowGeometry = new THREE.CircleGeometry(0.35, 16);
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: 0.4,
+      side: THREE.DoubleSide
+    });
+    const glowRing = new THREE.Mesh(glowGeometry, glowMaterial);
+    glowRing.rotation.x = -Math.PI / 2; // Lay flat on ground
+    glowRing.position.y = 0.02; // Slightly above ground to prevent z-fighting
+    glowRing.castShadow = false;
+    glowRing.receiveShadow = false;
+    group.add(glowRing);
+    group.userData.glowRing = glowRing;
 
     // Add archetype-specific accessories
     addAccessories(group, archetype, color, THREE);
@@ -1136,6 +1153,62 @@
   }
 
   /**
+   * Create activity indicator mesh (3D icon above NPC head)
+   * @param {string} activityState - 'working', 'talking', 'walking', 'idle'
+   * @param {object} THREE
+   * @returns {THREE.Mesh}
+   */
+  function createActivityIndicator(activityState, THREE) {
+    var geometry;
+    var material;
+    var mesh;
+
+    switch (activityState) {
+      case 'working':
+        // Small rotating orange cube
+        geometry = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+        material = new THREE.MeshBasicMaterial({ color: 0xFF8C00, transparent: true, opacity: 0.9 });
+        mesh = new THREE.Mesh(geometry, material);
+        mesh.userData.rotationSpeed = 2.0;
+        break;
+
+      case 'talking':
+      case 'socializing':
+        // White speech bubble (stretched sphere)
+        geometry = new THREE.SphereGeometry(0.1, 8, 8);
+        material = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.9 });
+        mesh = new THREE.Mesh(geometry, material);
+        mesh.scale.set(1.2, 0.8, 0.6);
+        mesh.userData.rotationSpeed = 0;
+        break;
+
+      case 'walking':
+        // Green arrow pointing forward (cone rotated)
+        geometry = new THREE.ConeGeometry(0.08, 0.2, 6);
+        material = new THREE.MeshBasicMaterial({ color: 0x00FF00, transparent: true, opacity: 0.9 });
+        mesh = new THREE.Mesh(geometry, material);
+        mesh.rotation.x = Math.PI / 2;
+        mesh.userData.rotationSpeed = 0;
+        break;
+
+      case 'idle':
+      default:
+        // Blue floating diamond (octahedron)
+        geometry = new THREE.OctahedronGeometry(0.1, 0);
+        material = new THREE.MeshBasicMaterial({ color: 0x00BFFF, transparent: true, opacity: 0.9 });
+        mesh = new THREE.Mesh(geometry, material);
+        mesh.userData.rotationSpeed = 1.0;
+        break;
+    }
+
+    mesh.position.y = 2.1; // Above NPC head, below name plate
+    mesh.castShadow = false;
+    mesh.receiveShadow = false;
+
+    return mesh;
+  }
+
+  /**
    * Update quest indicators for NPCs
    * @param {string} playerId - Player ID for quest state
    * @param {object} playerPos - Player position (for proximity check)
@@ -1310,6 +1383,56 @@
         emoteData.sprite.material.opacity = emoteData.opacity;
       }
       emoteData.timer += 0.016; // ~60fps assumption
+    }
+  }
+
+  /**
+   * Update activity indicator for an NPC
+   * @param {object} agent - NPC agent
+   * @param {object} state - NPC state
+   * @param {object} mesh - NPC mesh
+   * @param {number} deltaTime - Time delta for animations
+   */
+  function updateActivityIndicator(agent, state, mesh, deltaTime) {
+    var THREE = window.THREE;
+    if (!THREE) return;
+
+    var desiredActivity = state.currentState;
+
+    // Get or create activity indicator data
+    var indicatorData = activityIndicators.get(agent.id);
+
+    // Update activity indicator if changed
+    if (desiredActivity !== (indicatorData ? indicatorData.currentActivity : null)) {
+      // Remove old mesh
+      if (indicatorData && indicatorData.mesh) {
+        mesh.remove(indicatorData.mesh);
+      }
+
+      // Create new mesh
+      var indicatorMesh = createActivityIndicator(desiredActivity, THREE);
+      if (indicatorMesh) {
+        mesh.add(indicatorMesh);
+
+        indicatorData = {
+          mesh: indicatorMesh,
+          currentActivity: desiredActivity,
+          bobTimer: 0
+        };
+        activityIndicators.set(agent.id, indicatorData);
+      }
+    }
+
+    // Animate the indicator (floating bob and rotation)
+    if (indicatorData && indicatorData.mesh) {
+      // Floating bob animation
+      indicatorData.bobTimer += deltaTime * 2.0;
+      indicatorData.mesh.position.y = 2.1 + Math.sin(indicatorData.bobTimer) * 0.08;
+
+      // Rotation animation (if applicable)
+      if (indicatorData.mesh.userData.rotationSpeed > 0) {
+        indicatorData.mesh.rotation.y += deltaTime * indicatorData.mesh.userData.rotationSpeed;
+      }
     }
   }
 
@@ -1492,24 +1615,31 @@
       // Create detailed humanoid NPC
       const group = createHumanoidNPC(agent.archetype, THREE);
 
-      // Name label
+      // Name label with archetype subtitle
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       canvas.width = 256;
-      canvas.height = 64;
+      canvas.height = 96;
 
-      context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      context.fillStyle = 'rgba(0, 0, 0, 0.7)';
       context.fillRect(0, 0, canvas.width, canvas.height);
 
-      context.font = 'Bold 24px Arial';
+      // Draw name (larger and bolder)
+      context.font = 'Bold 32px Arial';
       context.fillStyle = 'white';
       context.textAlign = 'center';
-      context.fillText(agent.name, canvas.width / 2, 40);
+      context.fillText(agent.name, canvas.width / 2, 42);
+
+      // Draw archetype subtitle
+      context.font = '20px Arial';
+      context.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      var archetypeCapitalized = agent.archetype.charAt(0).toUpperCase() + agent.archetype.slice(1);
+      context.fillText(archetypeCapitalized, canvas.width / 2, 70);
 
       const labelTexture = new THREE.CanvasTexture(canvas);
       const labelMaterial = new THREE.SpriteMaterial({ map: labelTexture });
       const label = new THREE.Sprite(labelMaterial);
-      label.scale.set(2, 0.5, 1);
+      label.scale.set(2.5, 1.0, 1);
       label.position.y = 2.5;
       group.add(label);
 
@@ -2191,6 +2321,12 @@
         mesh.position.y = Math.sin(time * 0.002) * 0.02;
         break;
     }
+
+    // Animate glow ring - subtle pulsing
+    if (userData.glowRing) {
+      var pulseFactor = Math.sin(time * 0.003) * 0.1 + 0.9;
+      userData.glowRing.material.opacity = 0.4 * pulseFactor;
+    }
   }
 
   /**
@@ -2252,6 +2388,9 @@
 
           updateEmoteIndicator(agent, state, mesh, playerPos, decision);
 
+          // Update activity indicator
+          updateActivityIndicator(agent, state, mesh, deltaTime);
+
           // Spawn activity particles for working NPCs (throttled)
           if (state.currentState === 'working') {
             let spawnTimer = particleSpawnTimers.get(agent.id) || 0;
@@ -2269,6 +2408,12 @@
           if (emoteData && emoteData.sprite) {
             mesh.remove(emoteData.sprite);
             emoteSprites.delete(agent.id);
+          }
+          // Also remove activity indicator
+          const indicatorData = activityIndicators.get(agent.id);
+          if (indicatorData && indicatorData.mesh) {
+            mesh.remove(indicatorData.mesh);
+            activityIndicators.delete(agent.id);
           }
         }
       }

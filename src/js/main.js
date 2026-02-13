@@ -266,6 +266,16 @@
         if (World.spawnZoneInteractives) {
           World.spawnZoneInteractives(sceneContext, currentZone);
         }
+
+        // Initialize wildlife (butterflies, fireflies, birds, fish)
+        if (World.initWildlife) {
+          World.initWildlife(sceneContext);
+        }
+
+        // Create zone boundary particles (golden floating markers at zone edges)
+        if (World.createZoneBoundaryParticles && sceneContext.scene) {
+          World.createZoneBoundaryParticles(sceneContext.scene);
+        }
       }
     }
 
@@ -700,6 +710,14 @@
             // Track activity
             addRecentActivity('Entered ' + currentZone);
 
+            // Screen fade transition effect
+            if (World && World.fadeTransition) {
+              World.fadeTransition(function() {
+                // This callback fires at peak fade - load new zone assets here
+                if (World.loadZone) World.loadZone(sceneContext, currentZone);
+              });
+            }
+
             if (Mentoring) {
               var xpResult = Mentoring.addSkillXP(localPlayer.id, 'exploration', 8);
               if (xpResult.leveledUp && HUD) {
@@ -961,6 +979,16 @@
       }
       if (World.updateInteractiveHighlights && localPlayer) {
         World.updateInteractiveHighlights(localPlayer.position.x, localPlayer.position.z, 4);
+      }
+
+      // Update ambient wildlife (butterflies, fireflies, birds, fish)
+      if (World.updateWildlife) {
+        World.updateWildlife(sceneContext, deltaTime, worldTime);
+      }
+
+      // Update zone boundary particles (golden floating markers)
+      if (World.updateZoneBoundaryParticles) {
+        World.updateZoneBoundaryParticles(worldTime);
       }
 
       // Update build preview if in build mode
@@ -2695,9 +2723,10 @@
 
       case 'toggleProfile':
         if (HUD && localPlayer) {
-          var profileEl = document.getElementById('player-profile-panel');
+          var profileEl = document.getElementById('player-profile-panel') || document.getElementById('profile-panel');
           if (profileEl) {
-            HUD.hidePlayerProfile();
+            if (HUD.hideProfilePanel) HUD.hideProfilePanel();
+            else if (HUD.hidePlayerProfile) HUD.hidePlayerProfile();
           } else {
             // Gather player stats
             var playerData = {
@@ -2711,9 +2740,22 @@
               npcsMet: NPCs && NPCs.getMetNPCs ? NPCs.getMetNPCs(localPlayer.id).length : 0,
               zonesDiscovered: Exploration ? Exploration.getDiscoveredZones(localPlayer.id, gameState).length : 1,
               structuresBuilt: Creation ? Creation.getPlayerStructures(localPlayer.id).length : 0,
-              recentActivities: getRecentActivities()
+              recentActivities: getRecentActivities(),
+              reputationTier: Social && Social.getReputation ? Social.getReputation(localPlayer.id).tier : 'Newcomer'
             };
-            HUD.showPlayerProfile(playerData);
+
+            // Gather skill data
+            var skillData = {};
+            if (Mentoring && Mentoring.getPlayerSkills) {
+              skillData = Mentoring.getPlayerSkills(localPlayer.id);
+            }
+
+            // Use enhanced profile panel if available
+            if (HUD.showProfilePanel) {
+              HUD.showProfilePanel(playerData, skillData);
+            } else if (HUD.showPlayerProfile) {
+              HUD.showPlayerProfile(playerData);
+            }
           }
         }
         break;

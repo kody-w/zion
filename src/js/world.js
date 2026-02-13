@@ -1982,9 +1982,50 @@
     portalLight.position.set(x, y + 3, z);
     scene.add(portalLight);
 
+    // Spinning particle rings around portal
+    var particleRings = [];
+    var ringCount = 2;
+    var particlesPerRing = 12;
+
+    for (var r = 0; r < ringCount; r++) {
+      var ringRadius = 2.8 + r * 0.4;
+      var ringParticles = [];
+
+      for (var p = 0; p < particlesPerRing; p++) {
+        var particleGeo = new THREE.SphereGeometry(0.08, 6, 6);
+        var particleMat = new THREE.MeshStandardMaterial({
+          color: 0x88ffff,
+          emissive: 0x44aaaa,
+          emissiveIntensity: 0.8
+        });
+        var particle = new THREE.Mesh(particleGeo, particleMat);
+        particle.castShadow = false;
+        scene.add(particle);
+
+        ringParticles.push({
+          mesh: particle,
+          angle: (p / particlesPerRing) * Math.PI * 2,
+          radius: ringRadius
+        });
+      }
+
+      particleRings.push({
+        particles: ringParticles,
+        speed: 0.001 + r * 0.0005,
+        direction: r % 2 === 0 ? 1 : -1
+      });
+    }
+
     animatedObjects.push({
       mesh: arch, type: 'portal',
-      params: { speed: 0.8, inner: inner }
+      params: {
+        speed: 0.8,
+        inner: inner,
+        particleRings: particleRings,
+        centerX: x,
+        centerY: y + 3,
+        centerZ: z
+      }
     });
 
     arch.userData.targetZone = targetZone;
@@ -2931,8 +2972,8 @@
     var scene = new THREE.Scene();
     createSky(scene);
 
-    // Add distance fog for atmospheric depth
-    scene.fog = new THREE.Fog(0x87ceeb, 150, 500);
+    // Add exponential fog for atmospheric depth (matches weather system)
+    scene.fog = new THREE.FogExp2(0x87ceeb, 0.0012);
 
     var camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
     camera.position.set(0, 15, 25);
@@ -3214,6 +3255,8 @@
 
     if (skyDome && skyDome.material) skyDome.material.color.setHex(skyColor);
     if (sceneCtx.scene && sceneCtx.scene.fog) sceneCtx.scene.fog.color.setHex(fogColor);
+    // Sync renderer background with fog to prevent visible horizon seam
+    if (sceneCtx.renderer) sceneCtx.renderer.setClearColor(fogColor);
     if (sceneCtx.directionalLight) {
       sceneCtx.directionalLight.intensity = Math.max(0.05, sunIntensity);
       sceneCtx.directionalLight.position.set(
@@ -3265,6 +3308,41 @@
         sunColor = lerpColor(0xff6633, 0x443355, (normalizedTime - 0.75) / 0.25);
       }
       sceneCtx.directionalLight.color.setHex(sunColor);
+    }
+
+    // Dynamic fog density by time of day
+    if (sceneCtx.scene && sceneCtx.scene.fog && sceneCtx.scene.fog.density !== undefined) {
+      var baseDensity = 0.0012; // Clear daytime default
+      var timeFogMult = 1.0;
+
+      if (normalizedTime < 0.2) {
+        // Night: thicker fog, limited visibility
+        timeFogMult = 1.8;
+      } else if (normalizedTime < 0.28) {
+        // Dawn: misty transition (thickest — morning mist)
+        var dawnT = (normalizedTime - 0.2) / 0.08;
+        timeFogMult = 1.8 + dawnT * 0.5; // peaks at 2.3 during dawn
+      } else if (normalizedTime < 0.35) {
+        // Morning: mist burning off
+        var burnT = (normalizedTime - 0.28) / 0.07;
+        timeFogMult = 2.3 - burnT * 1.3; // fades from 2.3 to 1.0
+      } else if (normalizedTime < 0.7) {
+        // Daytime: clearest visibility
+        timeFogMult = 1.0;
+      } else if (normalizedTime < 0.8) {
+        // Dusk: golden haze
+        var duskT = (normalizedTime - 0.7) / 0.1;
+        timeFogMult = 1.0 + duskT * 0.5;
+      } else {
+        // Evening into night: fog thickens
+        var nightT = (normalizedTime - 0.8) / 0.2;
+        timeFogMult = 1.5 + nightT * 0.3;
+      }
+
+      // Only adjust fog if weather isn't overriding it
+      if (currentWeatherType === 'clear' || !currentWeatherType) {
+        sceneCtx.scene.fog.density = baseDensity * timeFogMult;
+      }
     }
   }
 
@@ -3350,6 +3428,19 @@
           obj.mesh.rotation.z += deltaTime * (p.speed || 0.5);
           if (p.inner) {
             p.inner.material.opacity = 0.25 + Math.sin(time * 0.003) * 0.15;
+          }
+          // Animate particle rings
+          if (p.particleRings) {
+            for (var ri = 0; ri < p.particleRings.length; ri++) {
+              var ring = p.particleRings[ri];
+              for (var pi = 0; pi < ring.particles.length; pi++) {
+                var pData = ring.particles[pi];
+                pData.angle += ring.speed * ring.direction * deltaTime;
+                var px = p.centerX + Math.cos(pData.angle) * pData.radius;
+                var pz = p.centerZ + Math.sin(pData.angle) * pData.radius;
+                pData.mesh.position.set(px, p.centerY, pz);
+              }
+            }
           }
           break;
         case 'torch':
@@ -3797,8 +3888,11 @@
     currentWeatherType = type;
 
     // Update fog based on weather
-    if (sceneCtx.scene.fog) {
+    if (sceneCtx.scene.fog && sceneCtx.scene.fog.density !== undefined) {
       switch (type) {
+        case 'storm':
+          sceneCtx.scene.fog.density = 0.0030;
+          break;
         case 'rain':
           sceneCtx.scene.fog.density = 0.0022;
           break;
@@ -5944,6 +6038,379 @@
   }
 
   // ========================================================================
+  // ZONE TRANSITION EFFECTS
+  // ========================================================================
+
+  var zoneBoundaryParticles = [];
+  var fadeOverlay = null;
+
+  /**
+   * Screen fade transition effect
+   * @param {Function} callback - Function to call when screen is fully faded
+   */
+  function fadeTransition(callback) {
+    if (typeof document === 'undefined') {
+      if (callback) callback();
+      return;
+    }
+
+    // Create overlay if it doesn't exist
+    if (!fadeOverlay) {
+      fadeOverlay = document.createElement('div');
+      fadeOverlay.style.position = 'fixed';
+      fadeOverlay.style.top = '0';
+      fadeOverlay.style.left = '0';
+      fadeOverlay.style.width = '100%';
+      fadeOverlay.style.height = '100%';
+      fadeOverlay.style.backgroundColor = 'black';
+      fadeOverlay.style.opacity = '0';
+      fadeOverlay.style.pointerEvents = 'none';
+      fadeOverlay.style.zIndex = '9999';
+      fadeOverlay.style.transition = 'opacity 0.5s ease-in-out';
+      document.body.appendChild(fadeOverlay);
+    }
+
+    // Fade to black
+    fadeOverlay.style.opacity = '1';
+
+    // Call callback at peak fade
+    setTimeout(function() {
+      if (callback) callback();
+
+      // Fade back in
+      setTimeout(function() {
+        fadeOverlay.style.opacity = '0';
+      }, 50);
+    }, 500);
+  }
+
+  /**
+   * Create zone boundary particles
+   * @param {THREE.Scene} scene - The scene to add particles to
+   */
+  function createZoneBoundaryParticles(scene) {
+    if (!scene) return;
+
+    // Clear existing boundary particles
+    for (var i = 0; i < zoneBoundaryParticles.length; i++) {
+      scene.remove(zoneBoundaryParticles[i].mesh);
+    }
+    zoneBoundaryParticles = [];
+
+    // Create particles along zone boundaries
+    for (var zId in ZONES) {
+      var zone = ZONES[zId];
+      var particleCount = Math.floor(zone.radius / 3);
+
+      for (var i = 0; i < particleCount; i++) {
+        var angle = (i / particleCount) * Math.PI * 2;
+        var radius = zone.radius * 0.95;
+        var px = zone.cx + Math.cos(angle) * radius;
+        var pz = zone.cz + Math.sin(angle) * radius;
+        var py = terrainHeight(px, pz) + 2 + Math.random() * 3;
+
+        var particleGeo = new THREE.SphereGeometry(0.1, 6, 6);
+        var particleMat = new THREE.MeshStandardMaterial({
+          color: 0xffd700,
+          emissive: 0xffaa00,
+          emissiveIntensity: 0.6,
+          transparent: true,
+          opacity: 0.4
+        });
+        var particle = new THREE.Mesh(particleGeo, particleMat);
+        particle.position.set(px, py, pz);
+        particle.castShadow = false;
+        scene.add(particle);
+
+        zoneBoundaryParticles.push({
+          mesh: particle,
+          baseY: py,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.0005 + Math.random() * 0.0003
+        });
+      }
+    }
+  }
+
+  /**
+   * Update zone boundary particle animations
+   * @param {Number} time - World time in milliseconds
+   */
+  function updateZoneBoundaryParticles(time) {
+    for (var i = 0; i < zoneBoundaryParticles.length; i++) {
+      var p = zoneBoundaryParticles[i];
+      p.mesh.position.y = p.baseY + Math.sin(time * p.speed + p.phase) * 0.5;
+      p.mesh.material.opacity = 0.3 + Math.sin(time * p.speed * 2 + p.phase) * 0.15;
+    }
+  }
+
+  // ========================================================================
+  // WILDLIFE AND NATURE EFFECTS SYSTEM
+  // ========================================================================
+
+  var wildlifeData = {
+    butterflies: [],
+    fireflies: [],
+    birds: [],
+    fishJumpers: [],
+    initialized: false
+  };
+
+  /**
+   * Initialize wildlife systems
+   */
+  function initWildlife(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    var scene = sceneCtx.scene;
+
+    clearWildlife(scene);
+
+    // Butterflies in gardens zone
+    var gardensZ = ZONES.gardens;
+    var butterflyColors = [0xffff00, 0xffa500, 0x4169e1, 0xffffff, 0xff69b4];
+
+    for (var i = 0; i < 7; i++) {
+      var bfGeo = new THREE.BufferGeometry();
+      var bfVerts = new Float32Array([0,0,0, 0.3,0,0.2, 0,0,0.4]);
+      bfGeo.setAttribute('position', new THREE.BufferAttribute(bfVerts, 3));
+      var bfMat = new THREE.MeshBasicMaterial({
+        color: butterflyColors[i % butterflyColors.length],
+        side: THREE.DoubleSide
+      });
+      var bf = new THREE.Mesh(bfGeo, bfMat);
+      var angle = Math.random() * Math.PI * 2;
+      var radius = Math.random() * gardensZ.radius * 0.6;
+      bf.position.set(
+        gardensZ.cx + Math.cos(angle) * radius,
+        gardensZ.baseHeight + 1 + Math.random() * 2,
+        gardensZ.cz + Math.sin(angle) * radius
+      );
+      scene.add(bf);
+      wildlifeData.butterflies.push({
+        mesh: bf, time: Math.random() * 100,
+        speed: 0.5 + Math.random() * 0.5,
+        pathAngle: Math.random() * Math.PI * 2,
+        pathRadius: 10 + Math.random() * 15,
+        baseY: bf.position.y,
+        centerX: gardensZ.cx, centerZ: gardensZ.cz
+      });
+    }
+
+    // Fireflies across multiple zones
+    var ffZones = [
+      { zone: ZONES.gardens, count: 8 },
+      { zone: ZONES.wilds, count: 10 },
+      { zone: ZONES.commons, count: 4 },
+      { zone: ZONES.nexus, count: 3 }
+    ];
+    for (var zi = 0; zi < ffZones.length; zi++) {
+      var zInfo = ffZones[zi];
+      for (var fi = 0; fi < zInfo.count; fi++) {
+        var ffGeo = new THREE.SphereGeometry(0.15, 8, 8);
+        var ffMat = new THREE.MeshBasicMaterial({
+          color: 0xffff99, transparent: true, opacity: 0
+        });
+        var ff = new THREE.Mesh(ffGeo, ffMat);
+        var ffA = Math.random() * Math.PI * 2;
+        var ffR = Math.random() * zInfo.zone.radius * 0.7;
+        ff.position.set(
+          zInfo.zone.cx + Math.cos(ffA) * ffR,
+          zInfo.zone.baseHeight + 0.5 + Math.random() * 3,
+          zInfo.zone.cz + Math.sin(ffA) * ffR
+        );
+        scene.add(ff);
+        wildlifeData.fireflies.push({
+          mesh: ff, time: Math.random() * 100,
+          speed: 0.3 + Math.random() * 0.3,
+          pulseSpeed: 2 + Math.random() * 2,
+          baseY: ff.position.y,
+          driftAngle: Math.random() * Math.PI * 2
+        });
+      }
+    }
+
+    // Bird flocks (V-formations orbiting world)
+    for (var fli = 0; fli < 3; fli++) {
+      var flock = {
+        birds: [], centerAngle: (fli / 3) * Math.PI * 2,
+        orbitRadius: 200, speed: 0.1 + Math.random() * 0.05,
+        height: 40 + Math.random() * 20
+      };
+      var birdOffsets = [
+        {x:0,z:0}, {x:-2,z:-3}, {x:-4,z:-6}, {x:2,z:-3}, {x:4,z:-6}
+      ];
+      for (var bi = 0; bi < birdOffsets.length; bi++) {
+        var bGeo = new THREE.BufferGeometry();
+        var bVerts = new Float32Array([0,0,0, -0.4,0,0.3, 0.4,0,0.3]);
+        bGeo.setAttribute('position', new THREE.BufferAttribute(bVerts, 3));
+        var bMat = new THREE.MeshBasicMaterial({
+          color: 0x2c2c2c, side: THREE.DoubleSide
+        });
+        var bMesh = new THREE.Mesh(bGeo, bMat);
+        bMesh.position.y = flock.height;
+        scene.add(bMesh);
+        flock.birds.push({
+          mesh: bMesh, offsetX: birdOffsets[bi].x,
+          offsetZ: birdOffsets[bi].z, flapTime: Math.random() * 10
+        });
+      }
+      wildlifeData.birds.push(flock);
+    }
+
+    // Fish jumpers near water
+    for (var fsi = 0; fsi < 3; fsi++) {
+      var fGeo = new THREE.SphereGeometry(0.3, 8, 8);
+      var fMat = new THREE.MeshBasicMaterial({
+        color: 0x888888, transparent: true, opacity: 0
+      });
+      var fMesh = new THREE.Mesh(fGeo, fMat);
+      scene.add(fMesh);
+      wildlifeData.fishJumpers.push({
+        mesh: fMesh, jumping: false, jumpTime: 0, jumpDuration: 0,
+        startX: 0, startZ: 0, endX: 0, endZ: 0, waterHeight: 0,
+        nextJumpDelay: Math.random() * 5 + 3
+      });
+    }
+
+    wildlifeData.initialized = true;
+  }
+
+  /**
+   * Update wildlife animations
+   */
+  function updateWildlife(sceneCtx, deltaTime, worldTime) {
+    if (!wildlifeData.initialized || !sceneCtx) return;
+
+    var isNight = worldTime > 1080 || worldTime < 360;
+    var isDay = worldTime >= 360 && worldTime <= 1080;
+
+    // Butterflies (daytime, gardens)
+    for (var i = 0; i < wildlifeData.butterflies.length; i++) {
+      var bf = wildlifeData.butterflies[i];
+      bf.time += deltaTime * bf.speed;
+      bf.mesh.visible = isDay;
+      if (isDay) {
+        bf.pathAngle += deltaTime * 0.3;
+        var tx = bf.centerX + Math.cos(bf.pathAngle) * bf.pathRadius;
+        var tz = bf.centerZ + Math.sin(bf.pathAngle) * bf.pathRadius;
+        bf.mesh.position.x += (tx - bf.mesh.position.x) * 0.02;
+        bf.mesh.position.z += (tz - bf.mesh.position.z) * 0.02;
+        bf.mesh.position.y = bf.baseY + Math.sin(bf.time * 5) * 0.3;
+        bf.mesh.rotation.y = Math.sin(bf.time * 8) * 0.3;
+        bf.mesh.rotation.z = Math.sin(bf.time * 6) * 0.2;
+      }
+    }
+
+    // Fireflies (nighttime)
+    for (var fi = 0; fi < wildlifeData.fireflies.length; fi++) {
+      var ff = wildlifeData.fireflies[fi];
+      ff.time += deltaTime;
+      if (isNight) {
+        var pulse = 0.5 + Math.sin(ff.time * ff.pulseSpeed) * 0.5;
+        ff.mesh.material.opacity = pulse * 0.8;
+        ff.mesh.visible = true;
+        ff.driftAngle += deltaTime * 0.2;
+        ff.mesh.position.x += Math.cos(ff.driftAngle) * deltaTime * ff.speed;
+        ff.mesh.position.z += Math.sin(ff.driftAngle) * deltaTime * ff.speed;
+        ff.mesh.position.y = ff.baseY + Math.sin(ff.time * 0.5) * 0.5;
+      } else {
+        ff.mesh.material.opacity = 0;
+        ff.mesh.visible = false;
+      }
+    }
+
+    // Bird flocks (daytime)
+    for (var fli = 0; fli < wildlifeData.birds.length; fli++) {
+      var flock = wildlifeData.birds[fli];
+      flock.centerAngle += deltaTime * flock.speed;
+      var fcx = Math.cos(flock.centerAngle) * flock.orbitRadius;
+      var fcz = 150 + Math.sin(flock.centerAngle) * flock.orbitRadius;
+      for (var bi = 0; bi < flock.birds.length; bi++) {
+        var bd = flock.birds[bi];
+        bd.flapTime += deltaTime * 5;
+        bd.mesh.visible = isDay;
+        if (isDay) {
+          var fa = flock.centerAngle;
+          var rox = Math.cos(fa) * bd.offsetX - Math.sin(fa) * bd.offsetZ;
+          var roz = Math.sin(fa) * bd.offsetX + Math.cos(fa) * bd.offsetZ;
+          bd.mesh.position.set(fcx + rox, flock.height + Math.sin(bd.flapTime) * 0.5, fcz + roz);
+          bd.mesh.rotation.y = fa + Math.PI / 2;
+          bd.mesh.rotation.z = Math.sin(bd.flapTime * 2) * 0.1;
+        }
+      }
+    }
+
+    // Fish jumpers
+    if (waterBodies && waterBodies.length > 0) {
+      for (var fsi = 0; fsi < wildlifeData.fishJumpers.length; fsi++) {
+        var fish = wildlifeData.fishJumpers[fsi];
+        if (fish.jumping) {
+          fish.jumpTime += deltaTime;
+          var prog = fish.jumpTime / fish.jumpDuration;
+          if (prog >= 1) {
+            fish.jumping = false;
+            fish.mesh.material.opacity = 0;
+            fish.mesh.visible = false;
+            fish.nextJumpDelay = Math.random() * 8 + 5;
+          } else {
+            fish.mesh.position.x = fish.startX + (fish.endX - fish.startX) * prog;
+            fish.mesh.position.z = fish.startZ + (fish.endZ - fish.startZ) * prog;
+            fish.mesh.position.y = fish.waterHeight + Math.sin(prog * Math.PI) * 2;
+            fish.mesh.material.opacity = 1;
+            fish.mesh.visible = true;
+          }
+        } else {
+          fish.nextJumpDelay -= deltaTime;
+          if (fish.nextJumpDelay <= 0) {
+            var wb = waterBodies[Math.floor(Math.random() * waterBodies.length)];
+            var ja = Math.random() * Math.PI * 2;
+            var jr = Math.random() * 10;
+            fish.startX = wb.centerX + Math.cos(ja) * jr;
+            fish.startZ = wb.centerZ + Math.sin(ja) * jr;
+            fish.waterHeight = wb.height;
+            var jd = Math.random() * Math.PI * 2;
+            var jDist = 1 + Math.random() * 2;
+            fish.endX = fish.startX + Math.cos(jd) * jDist;
+            fish.endZ = fish.startZ + Math.sin(jd) * jDist;
+            fish.jumping = true;
+            fish.jumpTime = 0;
+            fish.jumpDuration = 0.8 + Math.random() * 0.4;
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Clear all wildlife from scene
+   */
+  function clearWildlife(scene) {
+    if (!scene) return;
+    var groups = ['butterflies', 'fireflies', 'fishJumpers'];
+    for (var g = 0; g < groups.length; g++) {
+      var arr = wildlifeData[groups[g]];
+      for (var i = 0; i < arr.length; i++) {
+        scene.remove(arr[i].mesh);
+        if (arr[i].mesh.geometry) arr[i].mesh.geometry.dispose();
+        if (arr[i].mesh.material) arr[i].mesh.material.dispose();
+      }
+    }
+    for (var fli = 0; fli < wildlifeData.birds.length; fli++) {
+      var flock = wildlifeData.birds[fli];
+      for (var bi = 0; bi < flock.birds.length; bi++) {
+        scene.remove(flock.birds[bi].mesh);
+        if (flock.birds[bi].mesh.geometry) flock.birds[bi].mesh.geometry.dispose();
+        if (flock.birds[bi].mesh.material) flock.birds[bi].mesh.material.dispose();
+      }
+    }
+    wildlifeData.butterflies = [];
+    wildlifeData.fireflies = [];
+    wildlifeData.birds = [];
+    wildlifeData.fishJumpers = [];
+    wildlifeData.initialized = false;
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -5998,5 +6465,11 @@
   exports.updateInteractiveAnimations = updateInteractiveAnimations;
   exports.clearInteractiveObjects = clearInteractiveObjects;
   exports.getZoneInteractives = getZoneInteractives;
+  exports.fadeTransition = fadeTransition;
+  exports.createZoneBoundaryParticles = createZoneBoundaryParticles;
+  exports.updateZoneBoundaryParticles = updateZoneBoundaryParticles;
+  exports.initWildlife = initWildlife;
+  exports.updateWildlife = updateWildlife;
+  exports.clearWildlife = clearWildlife;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));
