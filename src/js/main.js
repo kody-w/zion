@@ -134,7 +134,12 @@
       sceneContext = World.initScene(container);
 
       if (sceneContext) {
+        // Load initial zone - positions player at nexus center
         World.loadZone(sceneContext, currentZone);
+        // Load initial chunks around player
+        if (World.updateChunks) {
+          World.updateChunks(sceneContext, localPlayer.position.x, localPlayer.position.z);
+        }
         World.addPlayer(sceneContext, username, localPlayer.position);
       }
     }
@@ -301,11 +306,47 @@
           Network.broadcastMessage(moveMsg);
         }
 
+        // Update world chunks around player position
+        if (World && World.updateChunks && sceneContext) {
+          World.updateChunks(sceneContext, localPlayer.position.x, localPlayer.position.z);
+        }
+
+        // Detect zone from player position
+        if (World && World.getZoneAtPosition) {
+          var detectedZone = World.getZoneAtPosition(localPlayer.position.x, localPlayer.position.z);
+          if (detectedZone !== currentZone) {
+            var oldZone = currentZone;
+            currentZone = detectedZone;
+            console.log('Entered zone:', currentZone);
+
+            if (HUD) {
+              HUD.updateZoneLabel(currentZone);
+              HUD.showNotification('Entered ' + currentZone.charAt(0).toUpperCase() + currentZone.slice(1), 'info');
+            }
+
+            if (Audio) {
+              Audio.playAmbient(currentZone);
+            }
+
+            if (NPCs) {
+              NPCs.reloadZoneNPCs(sceneContext, currentZone);
+            }
+          }
+        }
+
         // Footstep sounds
         footstepTimer += deltaTime;
         if (footstepTimer >= 0.4) {
-          if (Audio) {
-            Audio.playFootstep('grass');
+          // Determine footstep sound based on zone
+          var footstepTerrain = 'grass'; // default
+          if (currentZone === 'nexus' || currentZone === 'athenaeum') footstepTerrain = 'stone';
+          else if (currentZone === 'arena') footstepTerrain = 'sand';
+          else if (currentZone === 'agora' || currentZone === 'commons') footstepTerrain = 'wood';
+          else if (currentZone === 'gardens') footstepTerrain = 'grass';
+          else if (currentZone === 'wilds') footstepTerrain = 'grass';
+
+          if (Audio && Audio.playFootstep) {
+            Audio.playFootstep(footstepTerrain);
           }
           footstepTimer = 0;
         }
@@ -346,15 +387,21 @@
 
       // Camera follows player (third-person)
       if (sceneContext.camera && localPlayer) {
+        var terrainY = 0;
+        if (World && World.getTerrainHeight) {
+          terrainY = World.getTerrainHeight(localPlayer.position.x, localPlayer.position.z);
+        }
+        localPlayer.position.y = terrainY;
+
         var camOffsetX = localPlayer.position.x;
-        var camOffsetY = localPlayer.position.y + 12;
+        var camOffsetY = terrainY + 12;
         var camOffsetZ = localPlayer.position.z + 18;
         sceneContext.camera.position.lerp(
           new THREE.Vector3(camOffsetX, camOffsetY, camOffsetZ), 0.05
         );
         sceneContext.camera.lookAt(
           localPlayer.position.x,
-          localPlayer.position.y + 1,
+          terrainY + 1,
           localPlayer.position.z
         );
       }
@@ -572,12 +619,17 @@
     player.position = msg.payload.position;
 
     if (msg.from === localPlayer.id) {
-      // Local player warped
       currentZone = msg.payload.zone;
 
-      if (World && sceneContext) {
-        World.loadZone(sceneContext, currentZone);
-        World.addPlayer(sceneContext, localPlayer.id, localPlayer.position);
+      // Get zone center position from World
+      var zonePos = World.getZoneCenter ? World.getZoneCenter(currentZone) : {x: 0, z: 0};
+      localPlayer.position.x = zonePos.x;
+      localPlayer.position.z = zonePos.z;
+      localPlayer.position.y = 0;
+
+      // Update chunks for new position
+      if (World.updateChunks) {
+        World.updateChunks(sceneContext, localPlayer.position.x, localPlayer.position.z);
       }
 
       if (HUD) {

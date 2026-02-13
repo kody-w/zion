@@ -5,6 +5,18 @@
   // Embedded agents data (inlined to avoid fetch in single-file app)
   var EMBEDDED_AGENTS = AGENTS_PLACEHOLDER;
 
+  // Zone centers on unified world map
+  var ZONE_CENTERS = {
+    nexus: {x: 0, z: 0},
+    gardens: {x: 200, z: 30},
+    athenaeum: {x: 100, z: -220},
+    studio: {x: -200, z: -100},
+    wilds: {x: -30, z: 260},
+    agora: {x: -190, z: 120},
+    commons: {x: 170, z: 190},
+    arena: {x: 0, z: -240}
+  };
+
   // NPC data
   let npcAgents = [];
   let npcStates = new Map(); // id -> behavior state
@@ -422,12 +434,17 @@
       label.position.y = 2.5;
       group.add(label);
 
-      // Position NPC
+      // Position NPC - convert zone-relative to world coordinates
+      var zoneCenter = ZONE_CENTERS[agent.position.zone] || {x: 0, z: 0};
       group.position.set(
-        agent.position.x,
+        zoneCenter.x + agent.position.x,
         agent.position.y,
-        agent.position.z
+        zoneCenter.z + agent.position.z
       );
+
+      // Update agent position to world coordinates for movement calculations
+      agent.position.x += zoneCenter.x;
+      agent.position.z += zoneCenter.z;
 
       // Store reference
       npcMeshes.set(agent.id, group);
@@ -507,17 +524,26 @@
     // State-specific setup
     switch (newState) {
       case 'walking':
-        // Pick random nearby destination within zone bounds, avoiding center structures
+        // Pick random nearby destination within zone bounds
+        var zoneCenter = ZONE_CENTERS[agent.position.zone] || {x: 0, z: 0};
         var wAngle = seededRandom(seed + 2) * Math.PI * 2;
-        var wDist = 5 + seededRandom(seed + 3) * 15;
-        var destX = Math.max(-60, Math.min(60, agent.position.x + Math.cos(wAngle) * wDist));
-        var destZ = Math.max(-60, Math.min(60, agent.position.z + Math.sin(wAngle) * wDist));
-        // Keep away from center (fountain/main structure is within ~8 units of origin)
-        var centerDist = Math.sqrt(destX * destX + destZ * destZ);
+        var wDist = 5 + seededRandom(seed + 3) * 20;
+        var destX = agent.position.x + Math.cos(wAngle) * wDist;
+        var destZ = agent.position.z + Math.sin(wAngle) * wDist;
+        // Keep within zone radius (~60 units from zone center)
+        var zoneRadius = 60;
+        var dxFromCenter = destX - zoneCenter.x;
+        var dzFromCenter = destZ - zoneCenter.z;
+        var distFromCenter = Math.sqrt(dxFromCenter * dxFromCenter + dzFromCenter * dzFromCenter);
+        if (distFromCenter > zoneRadius) {
+          destX = zoneCenter.x + (dxFromCenter / distFromCenter) * zoneRadius;
+          destZ = zoneCenter.z + (dzFromCenter / distFromCenter) * zoneRadius;
+        }
+        // Keep away from zone center structure
+        var centerDist = Math.sqrt((destX - zoneCenter.x) * (destX - zoneCenter.x) + (destZ - zoneCenter.z) * (destZ - zoneCenter.z));
         if (centerDist < 10) {
-          // Push destination outward
-          destX = destX / centerDist * 12;
-          destZ = destZ / centerDist * 12;
+          destX = zoneCenter.x + (destX - zoneCenter.x) / centerDist * 12;
+          destZ = zoneCenter.z + (destZ - zoneCenter.z) / centerDist * 12;
         }
         state.destination = { x: destX, z: destZ };
         break;
@@ -528,11 +554,13 @@
         break;
 
       case 'socializing':
-        // Find nearby NPC in same zone
-        const nearby = npcAgents.filter(other =>
-          other.id !== agent.id &&
-          other.position.zone === agent.position.zone
-        );
+        // Find nearby NPCs by actual distance
+        const nearby = npcAgents.filter(other => {
+          if (other.id === agent.id) return false;
+          var dx = other.position.x - agent.position.x;
+          var dz = other.position.z - agent.position.z;
+          return Math.sqrt(dx * dx + dz * dz) < 50; // within 50 units
+        });
         if (nearby.length > 0) {
           state.targetNPC = randomChoice(nearby, seed + 4);
           state.destination = {
@@ -721,6 +749,13 @@
     mesh.position.x += (agent.position.x - mesh.position.x) * lerpFactor;
     mesh.position.z += (agent.position.z - mesh.position.z) * lerpFactor;
 
+    // Adjust Y to terrain height if World module available
+    var World = typeof window !== 'undefined' ? window.World : null;
+    if (World && World.getTerrainHeight) {
+      var terrainY = World.getTerrainHeight(mesh.position.x, mesh.position.z);
+      mesh.position.y = terrainY;
+    }
+
     // Update rotation (facing direction)
     if (state.currentState === 'walking' || state.currentState === 'socializing') {
       mesh.rotation.y = state.lookAngle;
@@ -836,17 +871,31 @@
   }
 
   /**
-   * Reload NPCs for current zone
+   * Reload NPCs for current zone (or by distance on unified world)
    */
-  function reloadZoneNPCs(sceneContext, currentZone) {
-    npcMeshes.forEach((mesh, agentId) => {
-      const agent = npcAgents.find(a => a.id === agentId);
-      if (agent) {
-        mesh.visible = (agent.position.zone === currentZone);
-      }
-    });
-
-    console.log(`Showing NPCs for zone: ${currentZone}`);
+  function reloadZoneNPCs(sceneContext, currentZone, playerPos) {
+    if (!playerPos) {
+      // Fallback: show all NPCs in current zone
+      npcMeshes.forEach((mesh, agentId) => {
+        const agent = npcAgents.find(a => a.id === agentId);
+        if (agent) {
+          mesh.visible = (agent.position.zone === currentZone);
+        }
+      });
+      console.log(`Showing NPCs for zone: ${currentZone}`);
+    } else {
+      // Show NPCs within 200 units of player
+      var viewDist = 200;
+      npcMeshes.forEach((mesh, agentId) => {
+        const agent = npcAgents.find(a => a.id === agentId);
+        if (agent) {
+          var dx = agent.position.x - playerPos.x;
+          var dz = agent.position.z - playerPos.z;
+          var dist = Math.sqrt(dx * dx + dz * dz);
+          mesh.visible = (dist < viewDist);
+        }
+      });
+    }
   }
 
   /**
