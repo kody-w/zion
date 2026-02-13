@@ -23,6 +23,7 @@ JS_FILES = [
     'hud.js',
     'xr.js',
     'audio.js',
+    'npcs.js',
     'main.js'
 ]
 

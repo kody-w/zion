@@ -19,6 +19,7 @@
   const HUD = typeof require !== 'undefined' ? require('./hud') : window.HUD;
   const XR = typeof require !== 'undefined' ? require('./xr') : window.XR;
   const Audio = typeof require !== 'undefined' ? require('./audio') : window.Audio;
+  const NPCs = typeof require !== 'undefined' ? require('./npcs') : window.NPCs;
 
   // Game state
   let gameState = null;
@@ -180,6 +181,11 @@
       Audio.playAmbient(currentZone);
     }
 
+    // Initialize AI citizens
+    if (NPCs) {
+      NPCs.initNPCs(null, gameState, sceneContext);
+    }
+
     // Send join message
     joinWorld();
 
@@ -304,6 +310,11 @@
     // Update world time (24-min day/night cycle = 1440 minutes in 24 real minutes)
     worldTime += deltaTime * 60; // 60x speed
     if (worldTime >= 1440) worldTime -= 1440;
+
+    // Update AI citizens
+    if (NPCs) {
+      NPCs.updateNPCs(sceneContext, gameState, deltaTime, worldTime);
+    }
 
     // Update rendering
     if (sceneContext && World) {
@@ -536,6 +547,10 @@
 
       if (Audio) {
         Audio.playAmbient(currentZone);
+      }
+
+      if (NPCs) {
+        NPCs.reloadZoneNPCs(sceneContext, currentZone);
       }
     }
 
