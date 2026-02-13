@@ -696,8 +696,8 @@
   }
 
   function getPlayers(state) {
-    if (!state) return {};
-    return state.players;
+    if (!state) return [];
+    return Object.values(state.players);
   }
 
   // Export public API
