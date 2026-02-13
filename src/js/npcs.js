@@ -20,12 +20,18 @@
   // NPC AI reference (loaded from npc_ai.js)
   var NpcAI = typeof window !== 'undefined' ? window.NpcAI : null;
 
+  // Scene context storage for particle system
+  var storedSceneContext = null;
+
   // NPC data
   let npcAgents = [];
   let npcStates = new Map(); // id -> behavior state
   let npcBrains = new Map(); // id -> NpcAI brain object
   let npcMeshes = new Map(); // id -> THREE.Group
   let chatBubbles = new Map(); // id -> { mesh, timer }
+  let emoteSprites = new Map(); // id -> {sprite, currentEmote, timer, opacity}
+  let activityParticles = []; // {mesh, timer, velocity, startY}
+  let particleSpawnTimers = new Map(); // id -> timer (throttle particle spawn)
   let pendingEvents = []; // events to broadcast to all NPCs
   let npcUpdateFrame = 0; // frame counter for staggered updates
 
@@ -370,6 +376,468 @@
   }
 
   /**
+   * Create emote sprite with canvas drawing
+   * @param {string} emoteType - Type of emote (heart, music, hammer, etc.)
+   * @returns {THREE.SpriteMaterial}
+   */
+  function createEmoteSprite(emoteType, THREE) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 64;
+    canvas.height = 64;
+
+    // Clear with transparency
+    ctx.clearRect(0, 0, 64, 64);
+
+    const cx = 32;
+    const cy = 32;
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    switch (emoteType) {
+      case 'heart':
+        // Pink heart - two arcs + triangle
+        ctx.fillStyle = '#FF69B4';
+        ctx.beginPath();
+        ctx.arc(24, 26, 8, Math.PI, 0, false);
+        ctx.arc(40, 26, 8, Math.PI, 0, false);
+        ctx.lineTo(32, 46);
+        ctx.closePath();
+        ctx.fill();
+        break;
+
+      case 'music':
+        // Blue music notes
+        ctx.fillStyle = '#4169E1';
+        ctx.strokeStyle = '#4169E1';
+        ctx.lineWidth = 2;
+        // First note
+        ctx.beginPath();
+        ctx.arc(22, 40, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(26, 40);
+        ctx.lineTo(26, 20);
+        ctx.stroke();
+        // Second note
+        ctx.beginPath();
+        ctx.arc(36, 42, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(40, 42);
+        ctx.lineTo(40, 22);
+        ctx.stroke();
+        // Beam
+        ctx.beginPath();
+        ctx.moveTo(26, 20);
+        ctx.lineTo(40, 22);
+        ctx.stroke();
+        break;
+
+      case 'hammer':
+        // Brown hammer
+        ctx.fillStyle = '#8B4513';
+        ctx.strokeStyle = '#654321';
+        ctx.lineWidth = 1;
+        // Handle
+        ctx.fillRect(28, 24, 4, 20);
+        ctx.strokeRect(28, 24, 4, 20);
+        // Head
+        ctx.fillRect(18, 20, 20, 8);
+        ctx.strokeRect(18, 20, 20, 8);
+        break;
+
+      case 'leaf':
+        // Green leaf
+        ctx.fillStyle = '#4CAF50';
+        ctx.strokeStyle = '#2E7D32';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.ellipse(32, 32, 10, 16, Math.PI / 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Center vein
+        ctx.beginPath();
+        ctx.moveTo(32, 18);
+        ctx.lineTo(32, 46);
+        ctx.stroke();
+        break;
+
+      case 'book':
+        // Purple book
+        ctx.fillStyle = '#9C27B0';
+        ctx.strokeStyle = '#6A1B9A';
+        ctx.lineWidth = 2;
+        ctx.fillRect(18, 22, 28, 20);
+        ctx.strokeRect(18, 22, 28, 20);
+        // Spine
+        ctx.beginPath();
+        ctx.moveTo(32, 22);
+        ctx.lineTo(32, 42);
+        ctx.stroke();
+        // Pages
+        ctx.strokeStyle = '#E1BEE7';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(20, 22);
+        ctx.lineTo(20, 42);
+        ctx.stroke();
+        break;
+
+      case 'star':
+        // Gold star
+        ctx.fillStyle = '#FFD700';
+        ctx.strokeStyle = '#DAA520';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+          const r = i % 2 === 0 ? 14 : 6;
+          const x = cx + r * Math.cos(angle);
+          const y = cy + r * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        break;
+
+      case 'zzz':
+        // Gray Zzz
+        ctx.fillStyle = '#888888';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText('Z', 18, 38);
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText('Z', 28, 30);
+        ctx.font = 'bold 10px Arial';
+        ctx.fillText('Z', 36, 24);
+        break;
+
+      case 'eye':
+        // Cyan eye
+        ctx.fillStyle = '#00BCD4';
+        ctx.strokeStyle = '#0097A7';
+        ctx.lineWidth = 2;
+        // Outer eye
+        ctx.beginPath();
+        ctx.ellipse(32, 32, 14, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Pupil
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(32, 32, 5, 0, Math.PI * 2);
+        ctx.fill();
+        // Highlight
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(30, 30, 2, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+
+      case '!':
+        // Yellow exclamation
+        ctx.fillStyle = '#FFD700';
+        ctx.strokeStyle = '#DAA520';
+        ctx.lineWidth = 1;
+        // Bar
+        ctx.fillRect(28, 18, 8, 18);
+        ctx.strokeRect(28, 18, 8, 18);
+        // Dot
+        ctx.beginPath();
+        ctx.arc(32, 42, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        break;
+
+      case '?':
+        // White question mark
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#CCCCCC';
+        ctx.lineWidth = 2;
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.strokeText('?', 32, 32);
+        ctx.fillText('?', 32, 32);
+        break;
+
+      case 'compass':
+        // Teal compass
+        ctx.strokeStyle = '#00BCD4';
+        ctx.fillStyle = '#00BCD4';
+        ctx.lineWidth = 2;
+        // Circle
+        ctx.beginPath();
+        ctx.arc(32, 32, 14, 0, Math.PI * 2);
+        ctx.stroke();
+        // N arrow
+        ctx.beginPath();
+        ctx.moveTo(32, 20);
+        ctx.lineTo(28, 28);
+        ctx.lineTo(32, 26);
+        ctx.lineTo(36, 28);
+        ctx.closePath();
+        ctx.fill();
+        // S indicator
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(32, 44, 2, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+
+      case 'coins':
+        // Gold coins
+        ctx.fillStyle = '#FFD700';
+        ctx.strokeStyle = '#DAA520';
+        ctx.lineWidth = 2;
+        // Back coin
+        ctx.beginPath();
+        ctx.arc(26, 34, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Middle coin
+        ctx.beginPath();
+        ctx.arc(34, 30, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Front coin
+        ctx.beginPath();
+        ctx.arc(30, 38, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        break;
+
+      default:
+        return null;
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    return new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 1.0
+    });
+  }
+
+  /**
+   * Update emote indicator for an NPC
+   * @param {object} agent - NPC agent
+   * @param {object} state - NPC state
+   * @param {object} mesh - NPC mesh
+   * @param {object} playerPos - Player position {x, z} or null
+   * @param {object} decision - AI decision (optional)
+   */
+  function updateEmoteIndicator(agent, state, mesh, playerPos, decision) {
+    const THREE = window.THREE;
+    if (!THREE) return;
+
+    let desiredEmote = null;
+
+    // Check player proximity first (highest priority)
+    if (playerPos) {
+      const dx = playerPos.x - agent.position.x;
+      const dz = playerPos.z - agent.position.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist < 8) {
+        desiredEmote = 'eye';
+      }
+    }
+
+    // Check AI decision overrides
+    if (decision && (decision.type === 'greet' || decision.type === 'react')) {
+      desiredEmote = '!';
+    }
+
+    // Otherwise, map state + archetype to emote
+    if (!desiredEmote) {
+      const currentState = state.currentState;
+      const archetype = agent.archetype;
+
+      if (currentState === 'idle' && archetype === 'philosopher') {
+        desiredEmote = '?';
+      } else if (currentState === 'walking') {
+        if (archetype === 'explorer') {
+          desiredEmote = 'compass';
+        }
+      } else if (currentState === 'working') {
+        switch (archetype) {
+          case 'gardener': desiredEmote = 'leaf'; break;
+          case 'builder': desiredEmote = 'hammer'; break;
+          case 'musician': desiredEmote = 'music'; break;
+          case 'teacher': desiredEmote = 'book'; break;
+          case 'merchant': desiredEmote = 'coins'; break;
+          case 'artist': desiredEmote = 'star'; break;
+          case 'storyteller': desiredEmote = 'book'; break;
+          case 'healer': desiredEmote = 'heart'; break;
+          case 'philosopher': desiredEmote = 'book'; break;
+          case 'explorer': desiredEmote = 'compass'; break;
+        }
+      } else if (currentState === 'talking' || currentState === 'socializing') {
+        desiredEmote = 'heart';
+      } else if (currentState === 'idle') {
+        // Check for rest-related state timer patterns (long idle = resting)
+        if (state.stateTimer > 10) {
+          desiredEmote = 'zzz';
+        }
+      }
+    }
+
+    // Get or create emote sprite data
+    let emoteData = emoteSprites.get(agent.id);
+
+    // Update emote if changed
+    if (desiredEmote !== (emoteData ? emoteData.currentEmote : null)) {
+      // Remove old sprite
+      if (emoteData && emoteData.sprite) {
+        mesh.remove(emoteData.sprite);
+      }
+
+      // Create new sprite if needed
+      if (desiredEmote) {
+        const material = createEmoteSprite(desiredEmote, THREE);
+        if (material) {
+          const sprite = new THREE.Sprite(material);
+          sprite.scale.set(0.5, 0.5, 1);
+          sprite.position.y = 2.8;
+          mesh.add(sprite);
+
+          emoteData = {
+            sprite: sprite,
+            currentEmote: desiredEmote,
+            opacity: 0,
+            timer: 0
+          };
+          emoteSprites.set(agent.id, emoteData);
+        }
+      } else {
+        // No emote, clear data
+        emoteSprites.delete(agent.id);
+        emoteData = null;
+      }
+    }
+
+    // Fade in/out animation
+    if (emoteData && emoteData.sprite) {
+      if (emoteData.opacity < 1.0) {
+        emoteData.opacity = Math.min(1.0, emoteData.opacity + 0.05);
+        emoteData.sprite.material.opacity = emoteData.opacity;
+      }
+      emoteData.timer += 0.016; // ~60fps assumption
+    }
+  }
+
+  /**
+   * Spawn activity particle near NPC
+   * @param {THREE.Group} npcMesh - NPC mesh
+   * @param {string} archetype - NPC archetype
+   * @param {THREE} THREE - Three.js library
+   */
+  function spawnActivityParticle(npcMesh, archetype, THREE) {
+    if (!THREE) return;
+    if (activityParticles.length >= 20) return; // Global particle limit
+
+    // Count particles for this NPC
+    const npcParticleCount = activityParticles.filter(p => p.npcId === npcMesh.userData.agentId).length;
+    if (npcParticleCount >= 3) return; // Per-NPC limit
+
+    // Determine particle color and type based on archetype
+    let color, size;
+    switch (archetype) {
+      case 'gardener':
+        color = 0x4CAF50; // green
+        size = 0.05;
+        break;
+      case 'builder':
+        color = 0x8D6E63; // brown
+        size = 0.06;
+        break;
+      case 'musician':
+        color = Math.random() > 0.5 ? 0x4169E1 : 0xFF69B4; // blue or pink
+        size = 0.04;
+        break;
+      case 'artist':
+        // Rainbow colors
+        const colors = [0xFF0000, 0xFF7F00, 0xFFFF00, 0x00FF00, 0x0000FF, 0x4B0082, 0x9400D3];
+        color = colors[Math.floor(Math.random() * colors.length)];
+        size = 0.05;
+        break;
+      case 'healer':
+        color = Math.random() > 0.5 ? 0xFFFFFF : 0xFFD700; // white or gold
+        size = 0.04;
+        break;
+      default:
+        return; // No particles for other archetypes
+    }
+
+    // Create particle geometry (reuse or create)
+    const geometry = new THREE.SphereGeometry(size, 6, 6);
+    const material = new THREE.MeshBasicMaterial({ color: color, transparent: true });
+    const particle = new THREE.Mesh(geometry, material);
+
+    // Position near NPC's hands (approximate)
+    const handOffset = Math.random() > 0.5 ? 0.3 : -0.3;
+    particle.position.set(
+      npcMesh.position.x + handOffset + (Math.random() - 0.5) * 0.2,
+      npcMesh.position.y + 1.0 + Math.random() * 0.2,
+      npcMesh.position.z + (Math.random() - 0.5) * 0.2
+    );
+
+    // Add to scene
+    if (storedSceneContext && storedSceneContext.scene) {
+      storedSceneContext.scene.add(particle);
+    } else {
+      return; // Can't add particle without scene
+    }
+
+    // Track particle
+    activityParticles.push({
+      mesh: particle,
+      timer: 2.0, // 2 second lifetime
+      velocity: {
+        x: (Math.random() - 0.5) * 0.1,
+        y: 0.3 + Math.random() * 0.2, // upward drift
+        z: (Math.random() - 0.5) * 0.1
+      },
+      startY: particle.position.y,
+      npcId: npcMesh.userData.agentId
+    });
+  }
+
+  /**
+   * Update activity particles
+   * @param {number} deltaTime - Frame delta time
+   */
+  function updateActivityParticles(deltaTime) {
+    if (!storedSceneContext || !storedSceneContext.scene) return;
+
+    for (let i = activityParticles.length - 1; i >= 0; i--) {
+      const particle = activityParticles[i];
+      particle.timer -= deltaTime;
+
+      if (particle.timer <= 0) {
+        // Remove particle
+        storedSceneContext.scene.remove(particle.mesh);
+        activityParticles.splice(i, 1);
+      } else {
+        // Update position
+        particle.mesh.position.x += particle.velocity.x * deltaTime;
+        particle.mesh.position.y += particle.velocity.y * deltaTime;
+        particle.mesh.position.z += particle.velocity.z * deltaTime;
+
+        // Fade out based on timer
+        const fadeProgress = particle.timer / 2.0;
+        particle.mesh.material.opacity = fadeProgress;
+
+        // Slow down upward velocity slightly over time
+        particle.velocity.y *= 0.98;
+      }
+    }
+  }
+
+  /**
    * Initialize NPCs
    */
   function initNPCs(agentsData, gameState, sceneContext) {
@@ -430,6 +898,9 @@
     const THREE = window.THREE;
     if (!THREE) return;
 
+    // Store scene context for particle system
+    storedSceneContext = sceneContext;
+
     npcAgents.forEach(agent => {
       // Create detailed humanoid NPC
       const group = createHumanoidNPC(agent.archetype, THREE);
@@ -466,6 +937,9 @@
       // Update agent position to world coordinates for movement calculations
       agent.position.x += zoneCenter.x;
       agent.position.z += zoneCenter.z;
+
+      // Store agent ID in mesh userData for particle system
+      group.userData.agentId = agent.id;
 
       // Store reference
       npcMeshes.set(agent.id, group);
@@ -583,6 +1057,8 @@
 
         // Execute decision
         if (decision) {
+          // Store decision in brain for emote system access
+          brain.lastDecision = decision;
           executeAIDecision(agent, state, decision, deltaTime);
         }
       } else {
@@ -596,10 +1072,11 @@
         updateNPCBehavior(agent, state, deltaTime, timeSeed + index);
       }
 
-      updateNPCVisual(agent, state, sceneContext, deltaTime);
+      updateNPCVisual(agent, state, sceneContext, deltaTime, playerPos);
     });
 
     updateChatBubbles(deltaTime);
+    updateActivityParticles(deltaTime);
   }
 
   /**
@@ -986,9 +1463,11 @@
   /**
    * Update NPC visual representation
    */
-  function updateNPCVisual(agent, state, sceneContext, deltaTime) {
+  function updateNPCVisual(agent, state, sceneContext, deltaTime, playerPos) {
     const mesh = npcMeshes.get(agent.id);
     if (!mesh) return;
+    const THREE = window.THREE;
+    if (!THREE) return;
 
     // Update position with smooth interpolation
     const lerpFactor = Math.min(deltaTime * 5, 1);
@@ -1009,6 +1488,50 @@
 
     // Apply procedural animations
     applyAnimations(mesh, state, agent);
+
+    // Update emote indicator (only for NPCs within 30 units of camera/player)
+    if (playerPos || sceneContext.camera) {
+      let checkPos = playerPos;
+      if (!checkPos && sceneContext.camera) {
+        checkPos = { x: sceneContext.camera.position.x, z: sceneContext.camera.position.z };
+      }
+
+      if (checkPos) {
+        const dx = checkPos.x - agent.position.x;
+        const dz = checkPos.z - agent.position.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+
+        if (dist < 30) {
+          // Get AI decision if available (from brain)
+          let decision = null;
+          const brain = npcBrains.get(agent.id);
+          if (brain && brain.lastDecision) {
+            decision = brain.lastDecision;
+          }
+
+          updateEmoteIndicator(agent, state, mesh, playerPos, decision);
+
+          // Spawn activity particles for working NPCs (throttled)
+          if (state.currentState === 'working') {
+            let spawnTimer = particleSpawnTimers.get(agent.id) || 0;
+            spawnTimer -= deltaTime;
+            if (spawnTimer <= 0) {
+              spawnActivityParticle(mesh, agent.archetype, THREE);
+              particleSpawnTimers.set(agent.id, 1.0); // 1 second throttle
+            } else {
+              particleSpawnTimers.set(agent.id, spawnTimer);
+            }
+          }
+        } else {
+          // Too far - remove emote sprite if exists
+          const emoteData = emoteSprites.get(agent.id);
+          if (emoteData && emoteData.sprite) {
+            mesh.remove(emoteData.sprite);
+            emoteSprites.delete(agent.id);
+          }
+        }
+      }
+    }
   }
 
   /**

@@ -11552,7 +11552,1597 @@ html, body {
    */
   function stopAll() {
     stopAmbient();
+    stopTimeAmbient();
+    stopWeatherAmbient();
+    stopZoneAmbient();
     // Individual sound effects stop themselves automatically
+  }
+
+  // ============================================================================
+  // TIME-OF-DAY AMBIENT LAYERS
+  // ============================================================================
+
+  let currentTimeAmbient = null;
+
+  /**
+   * Update ambient sounds based on time of day
+   * @param {string} timePeriod - dawn, morning, midday, afternoon, evening, night
+   */
+  function updateAmbientForTime(timePeriod) {
+    if (!audioContext || !masterGain) return;
+
+    // Resume context if needed
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    // Stop current time ambient
+    stopTimeAmbient();
+
+    try {
+      switch (timePeriod) {
+        case 'dawn':
+          currentTimeAmbient = playDawnAmbient();
+          break;
+        case 'morning':
+          currentTimeAmbient = playMorningAmbient();
+          break;
+        case 'midday':
+          currentTimeAmbient = playMiddayAmbient();
+          break;
+        case 'afternoon':
+          currentTimeAmbient = playAfternoonAmbient();
+          break;
+        case 'evening':
+          currentTimeAmbient = playEveningAmbient();
+          break;
+        case 'night':
+          currentTimeAmbient = playNightAmbient();
+          break;
+        default:
+          currentTimeAmbient = null;
+      }
+    } catch (err) {
+      console.error('Error updating time ambient:', err);
+    }
+  }
+
+  /**
+   * Stop current time-of-day ambient
+   */
+  function stopTimeAmbient() {
+    if (!currentTimeAmbient) return;
+
+    try {
+      if (currentTimeAmbient.oscillators && Array.isArray(currentTimeAmbient.oscillators)) {
+        currentTimeAmbient.oscillators.forEach(osc => {
+          if (osc && osc.stop) {
+            try { osc.stop(); } catch (e) {}
+          }
+        });
+      }
+
+      if (currentTimeAmbient.nodes && Array.isArray(currentTimeAmbient.nodes)) {
+        currentTimeAmbient.nodes.forEach(node => {
+          if (node) {
+            if (node.stop) {
+              try { node.stop(); } catch (e) {}
+            }
+            if (node.disconnect) {
+              try { node.disconnect(); } catch (e) {}
+            }
+          }
+        });
+      }
+
+      if (currentTimeAmbient.intervals && Array.isArray(currentTimeAmbient.intervals)) {
+        currentTimeAmbient.intervals.forEach(id => clearInterval(id));
+      }
+
+      if (currentTimeAmbient.timeouts && Array.isArray(currentTimeAmbient.timeouts)) {
+        currentTimeAmbient.timeouts.forEach(id => clearTimeout(id));
+      }
+
+      if (currentTimeAmbient.cleanup && typeof currentTimeAmbient.cleanup === 'function') {
+        currentTimeAmbient.cleanup();
+      }
+    } catch (err) {
+      console.error('Error stopping time ambient:', err);
+    }
+
+    currentTimeAmbient = null;
+  }
+
+  /**
+   * Dawn ambient (5-7): Bird chirps, gentle wind
+   */
+  function playDawnAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Gentle wind
+      const wind = createWhiteNoise();
+      if (wind) {
+        const windFilter = audioContext.createBiquadFilter();
+        const windGain = audioContext.createGain();
+
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 180;
+        windGain.gain.value = 0.02;
+
+        wind.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterGain);
+
+        nodes.push(wind, windFilter, windGain);
+      }
+
+      // Morning bird chirps - high frequency with fast attack/decay
+      function dawnChirp() {
+        if (!audioContext || !masterGain) return;
+
+        const bird = audioContext.createOscillator();
+        const birdGain = audioContext.createGain();
+
+        bird.type = 'sine';
+        bird.frequency.value = 800 + Math.random() * 1000;
+
+        const duration = 0.05 + Math.random() * 0.1;
+        birdGain.gain.value = 0.04;
+        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+        bird.connect(birdGain);
+        birdGain.connect(masterGain);
+
+        bird.start();
+        bird.stop(audioContext.currentTime + duration);
+
+        const nextChirp = setTimeout(dawnChirp, 800 + Math.random() * 2000);
+        timeouts.push(nextChirp);
+      }
+
+      for (let i = 0; i < 2; i++) {
+        const firstChirp = setTimeout(dawnChirp, Math.random() * 1000);
+        timeouts.push(firstChirp);
+      }
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in dawn ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Morning ambient (7-12): Active birds, gentle breeze, insect buzzes
+   */
+  function playMorningAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Gentle breeze
+      const breeze = createWhiteNoise();
+      if (breeze) {
+        const breezeFilter = audioContext.createBiquadFilter();
+        const breezeGain = audioContext.createGain();
+
+        breezeFilter.type = 'lowpass';
+        breezeFilter.frequency.value = 200;
+        breezeGain.gain.value = 0.025;
+
+        breeze.connect(breezeFilter);
+        breezeFilter.connect(breezeGain);
+        breezeGain.connect(masterGain);
+
+        nodes.push(breeze, breezeFilter, breezeGain);
+      }
+
+      // Active bird chorus
+      function morningChirp() {
+        if (!audioContext || !masterGain) return;
+
+        const bird = audioContext.createOscillator();
+        const birdGain = audioContext.createGain();
+
+        bird.type = 'sine';
+        bird.frequency.value = 700 + Math.random() * 1200;
+
+        const duration = 0.08 + Math.random() * 0.15;
+        birdGain.gain.value = 0.05;
+        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+        bird.connect(birdGain);
+        birdGain.connect(masterGain);
+
+        bird.start();
+        bird.stop(audioContext.currentTime + duration);
+
+        const nextChirp = setTimeout(morningChirp, 400 + Math.random() * 2500);
+        timeouts.push(nextChirp);
+      }
+
+      for (let i = 0; i < 3; i++) {
+        const firstChirp = setTimeout(morningChirp, Math.random() * 1500);
+        timeouts.push(firstChirp);
+      }
+
+      // Occasional insect buzzes
+      function buzz() {
+        if (!audioContext || !masterGain) return;
+
+        const insect = audioContext.createOscillator();
+        const insectGain = audioContext.createGain();
+
+        insect.type = 'sawtooth';
+        insect.frequency.value = 250 + Math.random() * 100;
+
+        insectGain.gain.value = 0.02;
+        insectGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+        insect.connect(insectGain);
+        insectGain.connect(masterGain);
+
+        insect.start();
+        insect.stop(audioContext.currentTime + 0.3);
+
+        const nextBuzz = setTimeout(buzz, 8000 + Math.random() * 12000);
+        timeouts.push(nextBuzz);
+      }
+
+      const firstBuzz = setTimeout(buzz, 5000);
+      timeouts.push(firstBuzz);
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in morning ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Midday ambient (12-14): Cicada-like sustained tones, warm breeze
+   */
+  function playMiddayAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const oscillators = [];
+    const timeouts = [];
+
+    try {
+      // Warm breeze
+      const breeze = createWhiteNoise();
+      if (breeze) {
+        const breezeFilter = audioContext.createBiquadFilter();
+        const breezeGain = audioContext.createGain();
+
+        breezeFilter.type = 'lowpass';
+        breezeFilter.frequency.value = 220;
+        breezeGain.gain.value = 0.03;
+
+        breeze.connect(breezeFilter);
+        breezeFilter.connect(breezeGain);
+        breezeGain.connect(masterGain);
+
+        nodes.push(breeze, breezeFilter, breezeGain);
+      }
+
+      // Cicada-like sustained tone with AM
+      const cicada = audioContext.createOscillator();
+      const cicadaAm = audioContext.createOscillator();
+      const cicadaAmGain = audioContext.createGain();
+      const cicadaGain = audioContext.createGain();
+
+      cicada.type = 'sine';
+      cicada.frequency.value = 3500 + Math.random() * 500;
+
+      cicadaAm.type = 'sine';
+      cicadaAm.frequency.value = 15 + Math.random() * 10;
+      cicadaAmGain.gain.value = 0.02;
+
+      cicadaGain.gain.value = 0.04;
+
+      cicadaAm.connect(cicadaAmGain);
+      cicadaAmGain.connect(cicadaGain.gain);
+
+      cicada.connect(cicadaGain);
+      cicadaGain.connect(masterGain);
+
+      cicada.start();
+      cicadaAm.start();
+
+      oscillators.push(cicada, cicadaAm);
+      nodes.push(cicadaAmGain, cicadaGain);
+
+      // Occasional bird (quieter in heat)
+      function middayChirp() {
+        if (!audioContext || !masterGain) return;
+
+        const bird = audioContext.createOscillator();
+        const birdGain = audioContext.createGain();
+
+        bird.type = 'sine';
+        bird.frequency.value = 600 + Math.random() * 800;
+
+        const duration = 0.1 + Math.random() * 0.15;
+        birdGain.gain.value = 0.03;
+        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+        bird.connect(birdGain);
+        birdGain.connect(masterGain);
+
+        bird.start();
+        bird.stop(audioContext.currentTime + duration);
+
+        const nextChirp = setTimeout(middayChirp, 3000 + Math.random() * 5000);
+        timeouts.push(nextChirp);
+      }
+
+      const firstChirp = setTimeout(middayChirp, 2000);
+      timeouts.push(firstChirp);
+
+      return { nodes, oscillators, timeouts };
+    } catch (err) {
+      console.error('Error in midday ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Afternoon ambient (14-18): Softer birds, rustling leaves
+   */
+  function playAfternoonAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Gentle breeze
+      const breeze = createWhiteNoise();
+      if (breeze) {
+        const breezeFilter = audioContext.createBiquadFilter();
+        const breezeGain = audioContext.createGain();
+
+        breezeFilter.type = 'lowpass';
+        breezeFilter.frequency.value = 190;
+        breezeGain.gain.value = 0.025;
+
+        breeze.connect(breezeFilter);
+        breezeFilter.connect(breezeGain);
+        breezeGain.connect(masterGain);
+
+        nodes.push(breeze, breezeFilter, breezeGain);
+      }
+
+      // Softer bird calls
+      function afternoonChirp() {
+        if (!audioContext || !masterGain) return;
+
+        const bird = audioContext.createOscillator();
+        const birdGain = audioContext.createGain();
+
+        bird.type = 'sine';
+        bird.frequency.value = 500 + Math.random() * 900;
+
+        const duration = 0.1 + Math.random() * 0.2;
+        birdGain.gain.value = 0.04;
+        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+        bird.connect(birdGain);
+        birdGain.connect(masterGain);
+
+        bird.start();
+        bird.stop(audioContext.currentTime + duration);
+
+        const nextChirp = setTimeout(afternoonChirp, 1500 + Math.random() * 4000);
+        timeouts.push(nextChirp);
+      }
+
+      for (let i = 0; i < 2; i++) {
+        const firstChirp = setTimeout(afternoonChirp, Math.random() * 2000);
+        timeouts.push(firstChirp);
+      }
+
+      // Rustling leaves
+      function rustle() {
+        if (!audioContext || !masterGain) return;
+
+        const noise = createWhiteNoise();
+        if (noise) {
+          const rustleFilter = audioContext.createBiquadFilter();
+          const rustleGain = audioContext.createGain();
+
+          rustleFilter.type = 'bandpass';
+          rustleFilter.frequency.value = 1800 + Math.random() * 400;
+          rustleFilter.Q.value = 2;
+
+          rustleGain.gain.value = 0.03;
+          rustleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+
+          noise.connect(rustleFilter);
+          rustleFilter.connect(rustleGain);
+          rustleGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (noise.stop) noise.stop();
+              if (rustleFilter.disconnect) rustleFilter.disconnect();
+              if (rustleGain.disconnect) rustleGain.disconnect();
+            } catch (e) {}
+          }, 450);
+        }
+
+        const nextRustle = setTimeout(rustle, 2500 + Math.random() * 3500);
+        timeouts.push(nextRustle);
+      }
+
+      const firstRustle = setTimeout(rustle, 1500);
+      timeouts.push(firstRustle);
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in afternoon ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Evening ambient (18-21): Cricket chirps, owl hoots, gentle wind
+   */
+  function playEveningAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const oscillators = [];
+    const timeouts = [];
+
+    try {
+      // Gentle wind
+      const wind = createWhiteNoise();
+      if (wind) {
+        const windFilter = audioContext.createBiquadFilter();
+        const windGain = audioContext.createGain();
+
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 170;
+        windGain.gain.value = 0.02;
+
+        wind.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterGain);
+
+        nodes.push(wind, windFilter, windGain);
+      }
+
+      // Cricket chirps - rapid oscillator pulses
+      const cricket = audioContext.createOscillator();
+      const cricketAm = audioContext.createOscillator();
+      const cricketAmGain = audioContext.createGain();
+      const cricketGain = audioContext.createGain();
+
+      cricket.type = 'sine';
+      cricket.frequency.value = 4000 + Math.random() * 500;
+
+      cricketAm.type = 'sine';
+      cricketAm.frequency.value = 18 + Math.random() * 8;
+      cricketAmGain.gain.value = 0.025;
+
+      cricketGain.gain.value = 0.03;
+
+      cricketAm.connect(cricketAmGain);
+      cricketAmGain.connect(cricketGain.gain);
+
+      cricket.connect(cricketGain);
+      cricketGain.connect(masterGain);
+
+      cricket.start();
+      cricketAm.start();
+
+      oscillators.push(cricket, cricketAm);
+      nodes.push(cricketAmGain, cricketGain);
+
+      // Owl hoots - low frequency with vibrato
+      function hoot() {
+        if (!audioContext || !masterGain) return;
+
+        const owl = audioContext.createOscillator();
+        const owlVibrato = audioContext.createOscillator();
+        const owlVibratoGain = audioContext.createGain();
+        const owlGain = audioContext.createGain();
+
+        owl.type = 'sine';
+        owl.frequency.value = 320;
+
+        owlVibrato.type = 'sine';
+        owlVibrato.frequency.value = 4;
+        owlVibratoGain.gain.value = 8;
+
+        owlGain.gain.value = 0.05;
+        owlGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+
+        owlVibrato.connect(owlVibratoGain);
+        owlVibratoGain.connect(owl.frequency);
+
+        owl.connect(owlGain);
+        owlGain.connect(masterGain);
+
+        owl.start();
+        owlVibrato.start();
+
+        owl.stop(audioContext.currentTime + 0.4);
+        owlVibrato.stop(audioContext.currentTime + 0.4);
+
+        const nextHoot = setTimeout(hoot, 12000 + Math.random() * 12000);
+        timeouts.push(nextHoot);
+      }
+
+      const firstHoot = setTimeout(hoot, 5000);
+      timeouts.push(firstHoot);
+
+      return { nodes, oscillators, timeouts };
+    } catch (err) {
+      console.error('Error in evening ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Night ambient (21-5): Deep crickets, occasional owl, quiet wind, distant howl
+   */
+  function playNightAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const oscillators = [];
+    const timeouts = [];
+
+    try {
+      // Very quiet wind
+      const wind = createWhiteNoise();
+      if (wind) {
+        const windFilter = audioContext.createBiquadFilter();
+        const windGain = audioContext.createGain();
+
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 150;
+        windGain.gain.value = 0.015;
+
+        wind.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterGain);
+
+        nodes.push(wind, windFilter, windGain);
+      }
+
+      // Deep crickets
+      const cricket = audioContext.createOscillator();
+      const cricketAm = audioContext.createOscillator();
+      const cricketAmGain = audioContext.createGain();
+      const cricketGain = audioContext.createGain();
+
+      cricket.type = 'sine';
+      cricket.frequency.value = 3500 + Math.random() * 300;
+
+      cricketAm.type = 'sine';
+      cricketAm.frequency.value = 15 + Math.random() * 5;
+      cricketAmGain.gain.value = 0.02;
+
+      cricketGain.gain.value = 0.025;
+
+      cricketAm.connect(cricketAmGain);
+      cricketAmGain.connect(cricketGain.gain);
+
+      cricket.connect(cricketGain);
+      cricketGain.connect(masterGain);
+
+      cricket.start();
+      cricketAm.start();
+
+      oscillators.push(cricket, cricketAm);
+      nodes.push(cricketAmGain, cricketGain);
+
+      // Occasional owl
+      function nightHoot() {
+        if (!audioContext || !masterGain) return;
+
+        const owl = audioContext.createOscillator();
+        const owlVibrato = audioContext.createOscillator();
+        const owlVibratoGain = audioContext.createGain();
+        const owlGain = audioContext.createGain();
+
+        owl.type = 'sine';
+        owl.frequency.value = 280;
+
+        owlVibrato.type = 'sine';
+        owlVibrato.frequency.value = 4;
+        owlVibratoGain.gain.value = 6;
+
+        owlGain.gain.value = 0.04;
+        owlGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+
+        owlVibrato.connect(owlVibratoGain);
+        owlVibratoGain.connect(owl.frequency);
+
+        owl.connect(owlGain);
+        owlGain.connect(masterGain);
+
+        owl.start();
+        owlVibrato.start();
+
+        owl.stop(audioContext.currentTime + 0.5);
+        owlVibrato.stop(audioContext.currentTime + 0.5);
+
+        const nextHoot = setTimeout(nightHoot, 18000 + Math.random() * 18000);
+        timeouts.push(nextHoot);
+      }
+
+      const firstHoot = setTimeout(nightHoot, 8000);
+      timeouts.push(firstHoot);
+
+      // Distant wolf-like howl (very rare)
+      function distantHowl() {
+        if (!audioContext || !masterGain) return;
+
+        const wolf = audioContext.createOscillator();
+        const wolfVibrato = audioContext.createOscillator();
+        const wolfVibratoGain = audioContext.createGain();
+        const wolfGain = audioContext.createGain();
+
+        wolf.type = 'sine';
+        wolf.frequency.value = 350;
+
+        wolfVibrato.type = 'sine';
+        wolfVibrato.frequency.value = 4;
+        wolfVibratoGain.gain.value = 10;
+
+        wolfGain.gain.value = 0.03;
+
+        wolfVibrato.connect(wolfVibratoGain);
+        wolfVibratoGain.connect(wolf.frequency);
+
+        wolf.connect(wolfGain);
+        wolfGain.connect(masterGain);
+
+        wolf.start();
+        wolfVibrato.start();
+
+        wolf.frequency.linearRampToValueAtTime(500, audioContext.currentTime + 1.2);
+        wolf.frequency.linearRampToValueAtTime(350, audioContext.currentTime + 2);
+        wolfGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2.5);
+
+        wolf.stop(audioContext.currentTime + 2.5);
+        wolfVibrato.stop(audioContext.currentTime + 2.5);
+
+        const nextHowl = setTimeout(distantHowl, 60000 + Math.random() * 60000);
+        timeouts.push(nextHowl);
+      }
+
+      const firstHowl = setTimeout(distantHowl, 30000);
+      timeouts.push(firstHowl);
+
+      return { nodes, oscillators, timeouts };
+    } catch (err) {
+      console.error('Error in night ambient:', err);
+      return null;
+    }
+  }
+
+  // ============================================================================
+  // WEATHER AMBIENT LAYERS
+  // ============================================================================
+
+  let currentWeatherAmbient = null;
+
+  /**
+   * Update ambient sounds based on weather
+   * @param {string} weather - clear, cloudy, rain, snow
+   */
+  function updateAmbientForWeather(weather) {
+    if (!audioContext || !masterGain) return;
+
+    // Resume context if needed
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    // Stop current weather ambient
+    stopWeatherAmbient();
+
+    try {
+      switch (weather) {
+        case 'clear':
+          // Normal ambient, no additional layer
+          currentWeatherAmbient = null;
+          break;
+        case 'cloudy':
+          currentWeatherAmbient = playCloudyAmbient();
+          break;
+        case 'rain':
+          currentWeatherAmbient = playRainAmbient();
+          break;
+        case 'snow':
+          currentWeatherAmbient = playSnowAmbient();
+          break;
+        default:
+          currentWeatherAmbient = null;
+      }
+    } catch (err) {
+      console.error('Error updating weather ambient:', err);
+    }
+  }
+
+  /**
+   * Stop current weather ambient
+   */
+  function stopWeatherAmbient() {
+    if (!currentWeatherAmbient) return;
+
+    try {
+      if (currentWeatherAmbient.oscillators && Array.isArray(currentWeatherAmbient.oscillators)) {
+        currentWeatherAmbient.oscillators.forEach(osc => {
+          if (osc && osc.stop) {
+            try { osc.stop(); } catch (e) {}
+          }
+        });
+      }
+
+      if (currentWeatherAmbient.nodes && Array.isArray(currentWeatherAmbient.nodes)) {
+        currentWeatherAmbient.nodes.forEach(node => {
+          if (node) {
+            if (node.stop) {
+              try { node.stop(); } catch (e) {}
+            }
+            if (node.disconnect) {
+              try { node.disconnect(); } catch (e) {}
+            }
+          }
+        });
+      }
+
+      if (currentWeatherAmbient.intervals && Array.isArray(currentWeatherAmbient.intervals)) {
+        currentWeatherAmbient.intervals.forEach(id => clearInterval(id));
+      }
+
+      if (currentWeatherAmbient.timeouts && Array.isArray(currentWeatherAmbient.timeouts)) {
+        currentWeatherAmbient.timeouts.forEach(id => clearTimeout(id));
+      }
+
+      if (currentWeatherAmbient.cleanup && typeof currentWeatherAmbient.cleanup === 'function') {
+        currentWeatherAmbient.cleanup();
+      }
+    } catch (err) {
+      console.error('Error stopping weather ambient:', err);
+    }
+
+    currentWeatherAmbient = null;
+  }
+
+  /**
+   * Cloudy ambient - gentle wind increase
+   */
+  function playCloudyAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+
+    try {
+      const wind = createWhiteNoise();
+      if (wind) {
+        const windFilter = audioContext.createBiquadFilter();
+        const windGain = audioContext.createGain();
+
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 200;
+        windGain.gain.value = 0.03;
+
+        wind.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterGain);
+
+        nodes.push(wind, windFilter, windGain);
+      }
+
+      return { nodes };
+    } catch (err) {
+      console.error('Error in cloudy ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Rain ambient - rain sound, occasional thunder
+   */
+  function playRainAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Rain sound - white noise filtered through bandpass at ~4000Hz
+      const rain = createWhiteNoise();
+      if (rain) {
+        const rainFilter = audioContext.createBiquadFilter();
+        const rainGain = audioContext.createGain();
+
+        rainFilter.type = 'bandpass';
+        rainFilter.frequency.value = 4000;
+        rainFilter.Q.value = 0.5;
+
+        rainGain.gain.value = 0.05;
+
+        rain.connect(rainFilter);
+        rainFilter.connect(rainGain);
+        rainGain.connect(masterGain);
+
+        nodes.push(rain, rainFilter, rainGain);
+      }
+
+      // Occasional thunder
+      function thunder() {
+        if (!audioContext || !masterGain) return;
+
+        const rumble = createWhiteNoise();
+        if (rumble) {
+          const rumbleFilter = audioContext.createBiquadFilter();
+          const rumbleGain = audioContext.createGain();
+
+          rumbleFilter.type = 'lowpass';
+          rumbleFilter.frequency.value = 80;
+
+          rumbleGain.gain.value = 0.08;
+          rumbleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2.5);
+
+          rumble.connect(rumbleFilter);
+          rumbleFilter.connect(rumbleGain);
+          rumbleGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (rumble.stop) rumble.stop();
+              if (rumbleFilter.disconnect) rumbleFilter.disconnect();
+              if (rumbleGain.disconnect) rumbleGain.disconnect();
+            } catch (e) {}
+          }, 3000);
+        }
+
+        const nextThunder = setTimeout(thunder, 25000 + Math.random() * 35000);
+        timeouts.push(nextThunder);
+      }
+
+      const firstThunder = setTimeout(thunder, 15000);
+      timeouts.push(firstThunder);
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in rain ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Snow ambient - very quiet, muffled ambient, soft wind
+   */
+  function playSnowAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+
+    try {
+      // Soft wind
+      const wind = createWhiteNoise();
+      if (wind) {
+        const windFilter = audioContext.createBiquadFilter();
+        const windGain = audioContext.createGain();
+
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 120;
+        windGain.gain.value = 0.015;
+
+        wind.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterGain);
+
+        nodes.push(wind, windFilter, windGain);
+      }
+
+      return { nodes };
+    } catch (err) {
+      console.error('Error in snow ambient:', err);
+      return null;
+    }
+  }
+
+  // ============================================================================
+  // ZONE-SPECIFIC ENHANCEMENTS
+  // ============================================================================
+
+  let currentZoneAmbient = null;
+
+  /**
+   * Set zone-specific ambient layer (on top of base ambient)
+   * @param {string} zone - Zone identifier
+   */
+  function setZoneAmbient(zone) {
+    if (!audioContext || !masterGain) return;
+
+    // Resume context if needed
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    // Stop current zone ambient
+    stopZoneAmbient();
+
+    try {
+      switch (zone) {
+        case 'nexus':
+          currentZoneAmbient = playNexusZoneLayer();
+          break;
+        case 'gardens':
+          currentZoneAmbient = playGardensZoneLayer();
+          break;
+        case 'athenaeum':
+          currentZoneAmbient = playAthenaeumZoneLayer();
+          break;
+        case 'studio':
+          currentZoneAmbient = playStudioZoneLayer();
+          break;
+        case 'wilds':
+          currentZoneAmbient = playWildsZoneLayer();
+          break;
+        case 'agora':
+          currentZoneAmbient = playAgoraZoneLayer();
+          break;
+        case 'commons':
+          currentZoneAmbient = playCommonsZoneLayer();
+          break;
+        case 'arena':
+          currentZoneAmbient = playArenaZoneLayer();
+          break;
+        default:
+          currentZoneAmbient = null;
+      }
+    } catch (err) {
+      console.error('Error setting zone ambient:', err);
+    }
+  }
+
+  /**
+   * Stop current zone ambient layer
+   */
+  function stopZoneAmbient() {
+    if (!currentZoneAmbient) return;
+
+    try {
+      if (currentZoneAmbient.oscillators && Array.isArray(currentZoneAmbient.oscillators)) {
+        currentZoneAmbient.oscillators.forEach(osc => {
+          if (osc && osc.stop) {
+            try { osc.stop(); } catch (e) {}
+          }
+        });
+      }
+
+      if (currentZoneAmbient.nodes && Array.isArray(currentZoneAmbient.nodes)) {
+        currentZoneAmbient.nodes.forEach(node => {
+          if (node) {
+            if (node.stop) {
+              try { node.stop(); } catch (e) {}
+            }
+            if (node.disconnect) {
+              try { node.disconnect(); } catch (e) {}
+            }
+          }
+        });
+      }
+
+      if (currentZoneAmbient.intervals && Array.isArray(currentZoneAmbient.intervals)) {
+        currentZoneAmbient.intervals.forEach(id => clearInterval(id));
+      }
+
+      if (currentZoneAmbient.timeouts && Array.isArray(currentZoneAmbient.timeouts)) {
+        currentZoneAmbient.timeouts.forEach(id => clearTimeout(id));
+      }
+
+      if (currentZoneAmbient.cleanup && typeof currentZoneAmbient.cleanup === 'function') {
+        currentZoneAmbient.cleanup();
+      }
+    } catch (err) {
+      console.error('Error stopping zone ambient:', err);
+    }
+
+    currentZoneAmbient = null;
+  }
+
+  /**
+   * Nexus zone layer - subtle crystalline resonance (high sine waves with slow LFO)
+   */
+  function playNexusZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const oscillators = [];
+    const nodes = [];
+
+    try {
+      const crystal = audioContext.createOscillator();
+      const lfo = audioContext.createOscillator();
+      const lfoGain = audioContext.createGain();
+      const crystalGain = audioContext.createGain();
+
+      crystal.type = 'sine';
+      crystal.frequency.value = 2000;
+
+      lfo.type = 'sine';
+      lfo.frequency.value = 0.15;
+      lfoGain.gain.value = 0.015;
+
+      crystalGain.gain.value = 0.02;
+
+      lfo.connect(lfoGain);
+      lfoGain.connect(crystalGain.gain);
+
+      crystal.connect(crystalGain);
+      crystalGain.connect(masterGain);
+
+      crystal.start();
+      lfo.start();
+
+      oscillators.push(crystal, lfo);
+      nodes.push(lfoGain, crystalGain);
+
+      return { oscillators, nodes };
+    } catch (err) {
+      console.error('Error in nexus zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Gardens zone layer - water trickling, more birds
+   */
+  function playGardensZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Water trickling - filtered noise with LFO
+      const water = createWhiteNoise();
+      if (water) {
+        const waterFilter = audioContext.createBiquadFilter();
+        const waterLfo = audioContext.createOscillator();
+        const waterLfoGain = audioContext.createGain();
+        const waterGain = audioContext.createGain();
+
+        waterFilter.type = 'highpass';
+        waterFilter.frequency.value = 2000;
+
+        waterLfo.type = 'sine';
+        waterLfo.frequency.value = 0.8;
+        waterLfoGain.gain.value = 50;
+
+        waterGain.gain.value = 0.03;
+
+        waterLfo.connect(waterLfoGain);
+        waterLfoGain.connect(waterFilter.frequency);
+
+        water.connect(waterFilter);
+        waterFilter.connect(waterGain);
+        waterGain.connect(masterGain);
+
+        waterLfo.start();
+
+        nodes.push(water, waterFilter, waterLfo, waterLfoGain, waterGain);
+      }
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in gardens zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Athenaeum zone layer - echo/reverb quality, page rustling
+   */
+  function playAthenaeumZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Page rustling - short noise bursts
+      function pageRustle() {
+        if (!audioContext || !masterGain) return;
+
+        const page = createWhiteNoise();
+        if (page) {
+          const pageFilter = audioContext.createBiquadFilter();
+          const pageGain = audioContext.createGain();
+
+          pageFilter.type = 'highpass';
+          pageFilter.frequency.value = 2500;
+
+          pageGain.gain.value = 0.02;
+          pageGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
+
+          page.connect(pageFilter);
+          pageFilter.connect(pageGain);
+          pageGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (page.stop) page.stop();
+              if (pageFilter.disconnect) pageFilter.disconnect();
+              if (pageGain.disconnect) pageGain.disconnect();
+            } catch (e) {}
+          }, 100);
+        }
+
+        const nextRustle = setTimeout(pageRustle, 10000 + Math.random() * 10000);
+        timeouts.push(nextRustle);
+      }
+
+      const firstRustle = setTimeout(pageRustle, 5000);
+      timeouts.push(firstRustle);
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in athenaeum zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Studio zone layer - creative sounds (random melodic tones, tapping)
+   */
+  function playStudioZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Random melodic tones
+      function creativeNote() {
+        if (!audioContext || !masterGain) return;
+
+        const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00];
+        const note = audioContext.createOscillator();
+        const noteGain = audioContext.createGain();
+
+        note.type = 'sine';
+        note.frequency.value = notes[Math.floor(Math.random() * notes.length)];
+
+        noteGain.gain.value = 0.025;
+        noteGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+        note.connect(noteGain);
+        noteGain.connect(masterGain);
+
+        note.start();
+        note.stop(audioContext.currentTime + 0.3);
+
+        const nextNote = setTimeout(creativeNote, 8000 + Math.random() * 12000);
+        timeouts.push(nextNote);
+      }
+
+      const firstNote = setTimeout(creativeNote, 4000);
+      timeouts.push(firstNote);
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in studio zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Wilds zone layer - dense nature sounds, rushing water
+   */
+  function playWildsZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+
+    try {
+      // Rushing water - white noise with bandpass
+      const water = createWhiteNoise();
+      if (water) {
+        const waterFilter = audioContext.createBiquadFilter();
+        const waterGain = audioContext.createGain();
+
+        waterFilter.type = 'bandpass';
+        waterFilter.frequency.value = 800;
+        waterFilter.Q.value = 1;
+
+        waterGain.gain.value = 0.04;
+
+        water.connect(waterFilter);
+        waterFilter.connect(waterGain);
+        waterGain.connect(masterGain);
+
+        nodes.push(water, waterFilter, waterGain);
+      }
+
+      return { nodes };
+    } catch (err) {
+      console.error('Error in wilds zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Agora zone layer - crowd murmur, occasional calls
+   */
+  function playAgoraZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Enhanced crowd murmur
+      const crowd = createWhiteNoise();
+      if (crowd) {
+        const crowdFilter = audioContext.createBiquadFilter();
+        const crowdGain = audioContext.createGain();
+
+        crowdFilter.type = 'bandpass';
+        crowdFilter.frequency.value = 450;
+        crowdFilter.Q.value = 1.2;
+
+        crowdGain.gain.value = 0.025;
+
+        crowd.connect(crowdFilter);
+        crowdFilter.connect(crowdGain);
+        crowdGain.connect(masterGain);
+
+        nodes.push(crowd, crowdFilter, crowdGain);
+      }
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in agora zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Commons zone layer - homey sounds (crackling fire, wind chimes)
+   */
+  function playCommonsZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Wind chimes - random high notes
+      function chime() {
+        if (!audioContext || !masterGain) return;
+
+        const bell = audioContext.createOscillator();
+        const bellGain = audioContext.createGain();
+
+        bell.type = 'sine';
+        bell.frequency.value = 800 + Math.random() * 600;
+
+        bellGain.gain.value = 0.03;
+        bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1.5);
+
+        bell.connect(bellGain);
+        bellGain.connect(masterGain);
+
+        bell.start();
+        bell.stop(audioContext.currentTime + 1.5);
+
+        const nextChime = setTimeout(chime, 5000 + Math.random() * 8000);
+        timeouts.push(nextChime);
+      }
+
+      const firstChime = setTimeout(chime, 3000);
+      timeouts.push(firstChime);
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in commons zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Arena zone layer - echoing space (slight delay)
+   */
+  function playArenaZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+
+    try {
+      // Subtle echo ambiance
+      const echo = createWhiteNoise();
+      if (echo) {
+        const echoFilter = audioContext.createBiquadFilter();
+        const echoDelay = audioContext.createDelay();
+        const echoDelayGain = audioContext.createGain();
+        const echoGain = audioContext.createGain();
+
+        echoFilter.type = 'bandpass';
+        echoFilter.frequency.value = 700;
+        echoFilter.Q.value = 0.8;
+
+        echoDelay.delayTime.value = 0.3;
+        echoDelayGain.gain.value = 0.3;
+
+        echoGain.gain.value = 0.02;
+
+        echo.connect(echoFilter);
+        echoFilter.connect(echoGain);
+        echoGain.connect(masterGain);
+        echoGain.connect(echoDelay);
+        echoDelay.connect(echoDelayGain);
+        echoDelayGain.connect(masterGain);
+
+        nodes.push(echo, echoFilter, echoDelay, echoDelayGain, echoGain);
+      }
+
+      return { nodes };
+    } catch (err) {
+      console.error('Error in arena zone layer:', err);
+      return null;
+    }
+  }
+
+  // ============================================================================
+  // NPC SOUNDS
+  // ============================================================================
+
+  /**
+   * Play NPC activity sound
+   * @param {string} type - hammer, music, garden, trade, teach, heal
+   */
+  function playNPCSound(type) {
+    if (!audioContext || !masterGain) return;
+
+    // Resume context if needed
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    try {
+      switch (type) {
+        case 'hammer':
+          playNPCHammerSound();
+          break;
+        case 'music':
+          playNPCMusicSound();
+          break;
+        case 'garden':
+          playNPCGardenSound();
+          break;
+        case 'trade':
+          playNPCTradeSound();
+          break;
+        case 'teach':
+          playNPCTeachSound();
+          break;
+        case 'heal':
+          playNPCHealSound();
+          break;
+        default:
+          console.warn('Unknown NPC sound type:', type);
+      }
+    } catch (err) {
+      console.error('Error playing NPC sound:', err);
+    }
+  }
+
+  /**
+   * NPC hammer sound - metallic clang
+   */
+  function playNPCHammerSound() {
+    if (!audioContext || !masterGain) return;
+
+    const hammer = audioContext.createOscillator();
+    const hammerGain = audioContext.createGain();
+
+    hammer.type = 'square';
+    hammer.frequency.value = 90;
+
+    hammerGain.gain.value = 0.08;
+    hammerGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+
+    hammer.connect(hammerGain);
+    hammerGain.connect(masterGain);
+
+    hammer.start();
+    hammer.stop(audioContext.currentTime + 0.2);
+
+    // Metal ring
+    const ring = audioContext.createOscillator();
+    const ringGain = audioContext.createGain();
+
+    ring.type = 'sine';
+    ring.frequency.value = 2500;
+
+    ringGain.gain.value = 0.04;
+    ringGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+    ring.connect(ringGain);
+    ringGain.connect(masterGain);
+
+    ring.start();
+    ring.stop(audioContext.currentTime + 0.3);
+  }
+
+  /**
+   * NPC music sound - short melodic phrase
+   */
+  function playNPCMusicSound() {
+    if (!audioContext || !masterGain) return;
+
+    const notes = [392.00, 440.00, 493.88]; // G4, A4, B4
+
+    notes.forEach((freq, i) => {
+      const note = audioContext.createOscillator();
+      const noteGain = audioContext.createGain();
+
+      note.type = 'sine';
+      note.frequency.value = freq;
+
+      const startTime = audioContext.currentTime + i * 0.15;
+      noteGain.gain.setValueAtTime(0, startTime);
+      noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
+      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+
+      note.connect(noteGain);
+      noteGain.connect(masterGain);
+
+      note.start(startTime);
+      note.stop(startTime + 0.25);
+    });
+  }
+
+  /**
+   * NPC garden sound - rustling, digging
+   */
+  function playNPCGardenSound() {
+    if (!audioContext || !masterGain) return;
+
+    const rustle = createWhiteNoise();
+    if (rustle) {
+      const rustleFilter = audioContext.createBiquadFilter();
+      const rustleGain = audioContext.createGain();
+
+      rustleFilter.type = 'bandpass';
+      rustleFilter.frequency.value = 1200;
+      rustleFilter.Q.value = 2;
+
+      rustleGain.gain.value = 0.06;
+      rustleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+      rustle.connect(rustleFilter);
+      rustleFilter.connect(rustleGain);
+      rustleGain.connect(masterGain);
+
+      setTimeout(() => {
+        try {
+          if (rustle.stop) rustle.stop();
+          if (rustleFilter.disconnect) rustleFilter.disconnect();
+          if (rustleGain.disconnect) rustleGain.disconnect();
+        } catch (e) {}
+      }, 350);
+    }
+  }
+
+  /**
+   * NPC trade sound - coin clink
+   */
+  function playNPCTradeSound() {
+    if (!audioContext || !masterGain) return;
+
+    const coin = audioContext.createOscillator();
+    const coinGain = audioContext.createGain();
+
+    coin.type = 'triangle';
+    coin.frequency.value = 1800 + Math.random() * 500;
+
+    coinGain.gain.value = 0.06;
+    coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+
+    coin.connect(coinGain);
+    coinGain.connect(masterGain);
+
+    coin.start();
+    coin.stop(audioContext.currentTime + 0.2);
+  }
+
+  /**
+   * NPC teach sound - book thump and page turn
+   */
+  function playNPCTeachSound() {
+    if (!audioContext || !masterGain) return;
+
+    // Book thump
+    const thump = audioContext.createOscillator();
+    const thumpGain = audioContext.createGain();
+
+    thump.type = 'sine';
+    thump.frequency.value = 80;
+
+    thumpGain.gain.value = 0.05;
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+
+    thump.connect(thumpGain);
+    thumpGain.connect(masterGain);
+
+    thump.start();
+    thump.stop(audioContext.currentTime + 0.1);
+
+    // Page turn
+    setTimeout(() => {
+      const page = createWhiteNoise();
+      if (page) {
+        const pageFilter = audioContext.createBiquadFilter();
+        const pageGain = audioContext.createGain();
+
+        pageFilter.type = 'highpass';
+        pageFilter.frequency.value = 2200;
+
+        pageGain.gain.value = 0.04;
+        pageGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
+
+        page.connect(pageFilter);
+        pageFilter.connect(pageGain);
+        pageGain.connect(masterGain);
+
+        setTimeout(() => {
+          try {
+            if (page.stop) page.stop();
+            if (pageFilter.disconnect) pageFilter.disconnect();
+            if (pageGain.disconnect) pageGain.disconnect();
+          } catch (e) {}
+        }, 180);
+      }
+    }, 100);
+  }
+
+  /**
+   * NPC heal sound - gentle sparkle
+   */
+  function playNPCHealSound() {
+    if (!audioContext || !masterGain) return;
+
+    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+
+    notes.forEach((freq, i) => {
+      const note = audioContext.createOscillator();
+      const noteGain = audioContext.createGain();
+
+      note.type = 'sine';
+      note.frequency.value = freq;
+
+      const startTime = audioContext.currentTime + i * 0.1;
+      noteGain.gain.setValueAtTime(0, startTime);
+      noteGain.gain.linearRampToValueAtTime(0.04, startTime + 0.02);
+      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+
+      note.connect(noteGain);
+      noteGain.connect(masterGain);
+
+      note.start(startTime);
+      note.stop(startTime + 0.3);
+    });
   }
 
   // Export public API
@@ -11564,6 +13154,14 @@ html, body {
   exports.mute = mute;
   exports.unmute = unmute;
   exports.stopAll = stopAll;
+
+  // Time-of-day and weather ambient
+  exports.updateAmbientTime = updateAmbientForTime;
+  exports.updateAmbientWeather = updateAmbientForWeather;
+  exports.setZoneAmbient = setZoneAmbient;
+
+  // NPC sounds
+  exports.playNPCSound = playNPCSound;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Audio = {}));
 
@@ -13223,12 +14821,18 @@ html, body {
   // NPC AI reference (loaded from npc_ai.js)
   var NpcAI = typeof window !== 'undefined' ? window.NpcAI : null;
 
+  // Scene context storage for particle system
+  var storedSceneContext = null;
+
   // NPC data
   let npcAgents = [];
   let npcStates = new Map(); // id -> behavior state
   let npcBrains = new Map(); // id -> NpcAI brain object
   let npcMeshes = new Map(); // id -> THREE.Group
   let chatBubbles = new Map(); // id -> { mesh, timer }
+  let emoteSprites = new Map(); // id -> {sprite, currentEmote, timer, opacity}
+  let activityParticles = []; // {mesh, timer, velocity, startY}
+  let particleSpawnTimers = new Map(); // id -> timer (throttle particle spawn)
   let pendingEvents = []; // events to broadcast to all NPCs
   let npcUpdateFrame = 0; // frame counter for staggered updates
 
@@ -13573,6 +15177,468 @@ html, body {
   }
 
   /**
+   * Create emote sprite with canvas drawing
+   * @param {string} emoteType - Type of emote (heart, music, hammer, etc.)
+   * @returns {THREE.SpriteMaterial}
+   */
+  function createEmoteSprite(emoteType, THREE) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 64;
+    canvas.height = 64;
+
+    // Clear with transparency
+    ctx.clearRect(0, 0, 64, 64);
+
+    const cx = 32;
+    const cy = 32;
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    switch (emoteType) {
+      case 'heart':
+        // Pink heart - two arcs + triangle
+        ctx.fillStyle = '#FF69B4';
+        ctx.beginPath();
+        ctx.arc(24, 26, 8, Math.PI, 0, false);
+        ctx.arc(40, 26, 8, Math.PI, 0, false);
+        ctx.lineTo(32, 46);
+        ctx.closePath();
+        ctx.fill();
+        break;
+
+      case 'music':
+        // Blue music notes
+        ctx.fillStyle = '#4169E1';
+        ctx.strokeStyle = '#4169E1';
+        ctx.lineWidth = 2;
+        // First note
+        ctx.beginPath();
+        ctx.arc(22, 40, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(26, 40);
+        ctx.lineTo(26, 20);
+        ctx.stroke();
+        // Second note
+        ctx.beginPath();
+        ctx.arc(36, 42, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(40, 42);
+        ctx.lineTo(40, 22);
+        ctx.stroke();
+        // Beam
+        ctx.beginPath();
+        ctx.moveTo(26, 20);
+        ctx.lineTo(40, 22);
+        ctx.stroke();
+        break;
+
+      case 'hammer':
+        // Brown hammer
+        ctx.fillStyle = '#8B4513';
+        ctx.strokeStyle = '#654321';
+        ctx.lineWidth = 1;
+        // Handle
+        ctx.fillRect(28, 24, 4, 20);
+        ctx.strokeRect(28, 24, 4, 20);
+        // Head
+        ctx.fillRect(18, 20, 20, 8);
+        ctx.strokeRect(18, 20, 20, 8);
+        break;
+
+      case 'leaf':
+        // Green leaf
+        ctx.fillStyle = '#4CAF50';
+        ctx.strokeStyle = '#2E7D32';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.ellipse(32, 32, 10, 16, Math.PI / 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Center vein
+        ctx.beginPath();
+        ctx.moveTo(32, 18);
+        ctx.lineTo(32, 46);
+        ctx.stroke();
+        break;
+
+      case 'book':
+        // Purple book
+        ctx.fillStyle = '#9C27B0';
+        ctx.strokeStyle = '#6A1B9A';
+        ctx.lineWidth = 2;
+        ctx.fillRect(18, 22, 28, 20);
+        ctx.strokeRect(18, 22, 28, 20);
+        // Spine
+        ctx.beginPath();
+        ctx.moveTo(32, 22);
+        ctx.lineTo(32, 42);
+        ctx.stroke();
+        // Pages
+        ctx.strokeStyle = '#E1BEE7';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(20, 22);
+        ctx.lineTo(20, 42);
+        ctx.stroke();
+        break;
+
+      case 'star':
+        // Gold star
+        ctx.fillStyle = '#FFD700';
+        ctx.strokeStyle = '#DAA520';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+          const r = i % 2 === 0 ? 14 : 6;
+          const x = cx + r * Math.cos(angle);
+          const y = cy + r * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        break;
+
+      case 'zzz':
+        // Gray Zzz
+        ctx.fillStyle = '#888888';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText('Z', 18, 38);
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText('Z', 28, 30);
+        ctx.font = 'bold 10px Arial';
+        ctx.fillText('Z', 36, 24);
+        break;
+
+      case 'eye':
+        // Cyan eye
+        ctx.fillStyle = '#00BCD4';
+        ctx.strokeStyle = '#0097A7';
+        ctx.lineWidth = 2;
+        // Outer eye
+        ctx.beginPath();
+        ctx.ellipse(32, 32, 14, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Pupil
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(32, 32, 5, 0, Math.PI * 2);
+        ctx.fill();
+        // Highlight
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(30, 30, 2, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+
+      case '!':
+        // Yellow exclamation
+        ctx.fillStyle = '#FFD700';
+        ctx.strokeStyle = '#DAA520';
+        ctx.lineWidth = 1;
+        // Bar
+        ctx.fillRect(28, 18, 8, 18);
+        ctx.strokeRect(28, 18, 8, 18);
+        // Dot
+        ctx.beginPath();
+        ctx.arc(32, 42, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        break;
+
+      case '?':
+        // White question mark
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#CCCCCC';
+        ctx.lineWidth = 2;
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.strokeText('?', 32, 32);
+        ctx.fillText('?', 32, 32);
+        break;
+
+      case 'compass':
+        // Teal compass
+        ctx.strokeStyle = '#00BCD4';
+        ctx.fillStyle = '#00BCD4';
+        ctx.lineWidth = 2;
+        // Circle
+        ctx.beginPath();
+        ctx.arc(32, 32, 14, 0, Math.PI * 2);
+        ctx.stroke();
+        // N arrow
+        ctx.beginPath();
+        ctx.moveTo(32, 20);
+        ctx.lineTo(28, 28);
+        ctx.lineTo(32, 26);
+        ctx.lineTo(36, 28);
+        ctx.closePath();
+        ctx.fill();
+        // S indicator
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(32, 44, 2, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+
+      case 'coins':
+        // Gold coins
+        ctx.fillStyle = '#FFD700';
+        ctx.strokeStyle = '#DAA520';
+        ctx.lineWidth = 2;
+        // Back coin
+        ctx.beginPath();
+        ctx.arc(26, 34, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Middle coin
+        ctx.beginPath();
+        ctx.arc(34, 30, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Front coin
+        ctx.beginPath();
+        ctx.arc(30, 38, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        break;
+
+      default:
+        return null;
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    return new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 1.0
+    });
+  }
+
+  /**
+   * Update emote indicator for an NPC
+   * @param {object} agent - NPC agent
+   * @param {object} state - NPC state
+   * @param {object} mesh - NPC mesh
+   * @param {object} playerPos - Player position {x, z} or null
+   * @param {object} decision - AI decision (optional)
+   */
+  function updateEmoteIndicator(agent, state, mesh, playerPos, decision) {
+    const THREE = window.THREE;
+    if (!THREE) return;
+
+    let desiredEmote = null;
+
+    // Check player proximity first (highest priority)
+    if (playerPos) {
+      const dx = playerPos.x - agent.position.x;
+      const dz = playerPos.z - agent.position.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist < 8) {
+        desiredEmote = 'eye';
+      }
+    }
+
+    // Check AI decision overrides
+    if (decision && (decision.type === 'greet' || decision.type === 'react')) {
+      desiredEmote = '!';
+    }
+
+    // Otherwise, map state + archetype to emote
+    if (!desiredEmote) {
+      const currentState = state.currentState;
+      const archetype = agent.archetype;
+
+      if (currentState === 'idle' && archetype === 'philosopher') {
+        desiredEmote = '?';
+      } else if (currentState === 'walking') {
+        if (archetype === 'explorer') {
+          desiredEmote = 'compass';
+        }
+      } else if (currentState === 'working') {
+        switch (archetype) {
+          case 'gardener': desiredEmote = 'leaf'; break;
+          case 'builder': desiredEmote = 'hammer'; break;
+          case 'musician': desiredEmote = 'music'; break;
+          case 'teacher': desiredEmote = 'book'; break;
+          case 'merchant': desiredEmote = 'coins'; break;
+          case 'artist': desiredEmote = 'star'; break;
+          case 'storyteller': desiredEmote = 'book'; break;
+          case 'healer': desiredEmote = 'heart'; break;
+          case 'philosopher': desiredEmote = 'book'; break;
+          case 'explorer': desiredEmote = 'compass'; break;
+        }
+      } else if (currentState === 'talking' || currentState === 'socializing') {
+        desiredEmote = 'heart';
+      } else if (currentState === 'idle') {
+        // Check for rest-related state timer patterns (long idle = resting)
+        if (state.stateTimer > 10) {
+          desiredEmote = 'zzz';
+        }
+      }
+    }
+
+    // Get or create emote sprite data
+    let emoteData = emoteSprites.get(agent.id);
+
+    // Update emote if changed
+    if (desiredEmote !== (emoteData ? emoteData.currentEmote : null)) {
+      // Remove old sprite
+      if (emoteData && emoteData.sprite) {
+        mesh.remove(emoteData.sprite);
+      }
+
+      // Create new sprite if needed
+      if (desiredEmote) {
+        const material = createEmoteSprite(desiredEmote, THREE);
+        if (material) {
+          const sprite = new THREE.Sprite(material);
+          sprite.scale.set(0.5, 0.5, 1);
+          sprite.position.y = 2.8;
+          mesh.add(sprite);
+
+          emoteData = {
+            sprite: sprite,
+            currentEmote: desiredEmote,
+            opacity: 0,
+            timer: 0
+          };
+          emoteSprites.set(agent.id, emoteData);
+        }
+      } else {
+        // No emote, clear data
+        emoteSprites.delete(agent.id);
+        emoteData = null;
+      }
+    }
+
+    // Fade in/out animation
+    if (emoteData && emoteData.sprite) {
+      if (emoteData.opacity < 1.0) {
+        emoteData.opacity = Math.min(1.0, emoteData.opacity + 0.05);
+        emoteData.sprite.material.opacity = emoteData.opacity;
+      }
+      emoteData.timer += 0.016; // ~60fps assumption
+    }
+  }
+
+  /**
+   * Spawn activity particle near NPC
+   * @param {THREE.Group} npcMesh - NPC mesh
+   * @param {string} archetype - NPC archetype
+   * @param {THREE} THREE - Three.js library
+   */
+  function spawnActivityParticle(npcMesh, archetype, THREE) {
+    if (!THREE) return;
+    if (activityParticles.length >= 20) return; // Global particle limit
+
+    // Count particles for this NPC
+    const npcParticleCount = activityParticles.filter(p => p.npcId === npcMesh.userData.agentId).length;
+    if (npcParticleCount >= 3) return; // Per-NPC limit
+
+    // Determine particle color and type based on archetype
+    let color, size;
+    switch (archetype) {
+      case 'gardener':
+        color = 0x4CAF50; // green
+        size = 0.05;
+        break;
+      case 'builder':
+        color = 0x8D6E63; // brown
+        size = 0.06;
+        break;
+      case 'musician':
+        color = Math.random() > 0.5 ? 0x4169E1 : 0xFF69B4; // blue or pink
+        size = 0.04;
+        break;
+      case 'artist':
+        // Rainbow colors
+        const colors = [0xFF0000, 0xFF7F00, 0xFFFF00, 0x00FF00, 0x0000FF, 0x4B0082, 0x9400D3];
+        color = colors[Math.floor(Math.random() * colors.length)];
+        size = 0.05;
+        break;
+      case 'healer':
+        color = Math.random() > 0.5 ? 0xFFFFFF : 0xFFD700; // white or gold
+        size = 0.04;
+        break;
+      default:
+        return; // No particles for other archetypes
+    }
+
+    // Create particle geometry (reuse or create)
+    const geometry = new THREE.SphereGeometry(size, 6, 6);
+    const material = new THREE.MeshBasicMaterial({ color: color, transparent: true });
+    const particle = new THREE.Mesh(geometry, material);
+
+    // Position near NPC's hands (approximate)
+    const handOffset = Math.random() > 0.5 ? 0.3 : -0.3;
+    particle.position.set(
+      npcMesh.position.x + handOffset + (Math.random() - 0.5) * 0.2,
+      npcMesh.position.y + 1.0 + Math.random() * 0.2,
+      npcMesh.position.z + (Math.random() - 0.5) * 0.2
+    );
+
+    // Add to scene
+    if (storedSceneContext && storedSceneContext.scene) {
+      storedSceneContext.scene.add(particle);
+    } else {
+      return; // Can't add particle without scene
+    }
+
+    // Track particle
+    activityParticles.push({
+      mesh: particle,
+      timer: 2.0, // 2 second lifetime
+      velocity: {
+        x: (Math.random() - 0.5) * 0.1,
+        y: 0.3 + Math.random() * 0.2, // upward drift
+        z: (Math.random() - 0.5) * 0.1
+      },
+      startY: particle.position.y,
+      npcId: npcMesh.userData.agentId
+    });
+  }
+
+  /**
+   * Update activity particles
+   * @param {number} deltaTime - Frame delta time
+   */
+  function updateActivityParticles(deltaTime) {
+    if (!storedSceneContext || !storedSceneContext.scene) return;
+
+    for (let i = activityParticles.length - 1; i >= 0; i--) {
+      const particle = activityParticles[i];
+      particle.timer -= deltaTime;
+
+      if (particle.timer <= 0) {
+        // Remove particle
+        storedSceneContext.scene.remove(particle.mesh);
+        activityParticles.splice(i, 1);
+      } else {
+        // Update position
+        particle.mesh.position.x += particle.velocity.x * deltaTime;
+        particle.mesh.position.y += particle.velocity.y * deltaTime;
+        particle.mesh.position.z += particle.velocity.z * deltaTime;
+
+        // Fade out based on timer
+        const fadeProgress = particle.timer / 2.0;
+        particle.mesh.material.opacity = fadeProgress;
+
+        // Slow down upward velocity slightly over time
+        particle.velocity.y *= 0.98;
+      }
+    }
+  }
+
+  /**
    * Initialize NPCs
    */
   function initNPCs(agentsData, gameState, sceneContext) {
@@ -13633,6 +15699,9 @@ html, body {
     const THREE = window.THREE;
     if (!THREE) return;
 
+    // Store scene context for particle system
+    storedSceneContext = sceneContext;
+
     npcAgents.forEach(agent => {
       // Create detailed humanoid NPC
       const group = createHumanoidNPC(agent.archetype, THREE);
@@ -13669,6 +15738,9 @@ html, body {
       // Update agent position to world coordinates for movement calculations
       agent.position.x += zoneCenter.x;
       agent.position.z += zoneCenter.z;
+
+      // Store agent ID in mesh userData for particle system
+      group.userData.agentId = agent.id;
 
       // Store reference
       npcMeshes.set(agent.id, group);
@@ -13786,6 +15858,8 @@ html, body {
 
         // Execute decision
         if (decision) {
+          // Store decision in brain for emote system access
+          brain.lastDecision = decision;
           executeAIDecision(agent, state, decision, deltaTime);
         }
       } else {
@@ -13799,10 +15873,11 @@ html, body {
         updateNPCBehavior(agent, state, deltaTime, timeSeed + index);
       }
 
-      updateNPCVisual(agent, state, sceneContext, deltaTime);
+      updateNPCVisual(agent, state, sceneContext, deltaTime, playerPos);
     });
 
     updateChatBubbles(deltaTime);
+    updateActivityParticles(deltaTime);
   }
 
   /**
@@ -14189,9 +16264,11 @@ html, body {
   /**
    * Update NPC visual representation
    */
-  function updateNPCVisual(agent, state, sceneContext, deltaTime) {
+  function updateNPCVisual(agent, state, sceneContext, deltaTime, playerPos) {
     const mesh = npcMeshes.get(agent.id);
     if (!mesh) return;
+    const THREE = window.THREE;
+    if (!THREE) return;
 
     // Update position with smooth interpolation
     const lerpFactor = Math.min(deltaTime * 5, 1);
@@ -14212,6 +16289,50 @@ html, body {
 
     // Apply procedural animations
     applyAnimations(mesh, state, agent);
+
+    // Update emote indicator (only for NPCs within 30 units of camera/player)
+    if (playerPos || sceneContext.camera) {
+      let checkPos = playerPos;
+      if (!checkPos && sceneContext.camera) {
+        checkPos = { x: sceneContext.camera.position.x, z: sceneContext.camera.position.z };
+      }
+
+      if (checkPos) {
+        const dx = checkPos.x - agent.position.x;
+        const dz = checkPos.z - agent.position.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+
+        if (dist < 30) {
+          // Get AI decision if available (from brain)
+          let decision = null;
+          const brain = npcBrains.get(agent.id);
+          if (brain && brain.lastDecision) {
+            decision = brain.lastDecision;
+          }
+
+          updateEmoteIndicator(agent, state, mesh, playerPos, decision);
+
+          // Spawn activity particles for working NPCs (throttled)
+          if (state.currentState === 'working') {
+            let spawnTimer = particleSpawnTimers.get(agent.id) || 0;
+            spawnTimer -= deltaTime;
+            if (spawnTimer <= 0) {
+              spawnActivityParticle(mesh, agent.archetype, THREE);
+              particleSpawnTimers.set(agent.id, 1.0); // 1 second throttle
+            } else {
+              particleSpawnTimers.set(agent.id, spawnTimer);
+            }
+          }
+        } else {
+          // Too far - remove emote sprite if exists
+          const emoteData = emoteSprites.get(agent.id);
+          if (emoteData && emoteData.sprite) {
+            mesh.remove(emoteData.sprite);
+            emoteSprites.delete(agent.id);
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -14564,6 +16685,11 @@ html, body {
   let lastBreakReminder = 0;
   let footstepTimer = 0;
   let currentTimePeriod = 'morning';  // tracks dawn/morning/midday/afternoon/evening/night
+  let cameraYaw = 0;       // horizontal camera orbit angle (radians)
+  let cameraPitch = 0.35;  // vertical tilt (0 = flat, higher = more top-down)
+  let cameraDistance = 18;  // distance from player
+  let isDragging = false;
+  let lastMouseX = 0, lastMouseY = 0;
 
   // Platform detection
   let platform = 'desktop';
@@ -14732,6 +16858,37 @@ html, body {
       });
     }
 
+    // Mouse-look camera control (right-click drag to orbit)
+    if (typeof document !== 'undefined') {
+      var gameCanvas = document.querySelector('canvas');
+      if (gameCanvas) {
+        gameCanvas.addEventListener('mousedown', function(e) {
+          if (e.button === 2 || e.button === 0) { // right or left click
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+          }
+        });
+        document.addEventListener('mousemove', function(e) {
+          if (!isDragging) return;
+          var dx = e.clientX - lastMouseX;
+          var dy = e.clientY - lastMouseY;
+          cameraYaw -= dx * 0.005;
+          cameraPitch = Math.max(0.1, Math.min(1.2, cameraPitch + dy * 0.005));
+          lastMouseX = e.clientX;
+          lastMouseY = e.clientY;
+        });
+        document.addEventListener('mouseup', function() {
+          isDragging = false;
+        });
+        // Scroll to zoom
+        gameCanvas.addEventListener('wheel', function(e) {
+          cameraDistance = Math.max(5, Math.min(40, cameraDistance + e.deltaY * 0.02));
+          e.preventDefault();
+        }, { passive: false });
+      }
+    }
+
     // Play ambient audio
     if (Audio) {
       Audio.playAmbient(currentZone);
@@ -14765,40 +16922,66 @@ html, body {
     loginScreen.id = 'login-screen';
     loginScreen.style.cssText = `
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      font-family: Arial, sans-serif;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, #0a0e1a 0%, #1a1040 40%, #0d2137 70%, #0a0e1a 100%);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10000; font-family: 'Segoe UI', Arial, sans-serif;
+      overflow: hidden;
     `;
+
+    // Animated star background
+    var starCanvas = document.createElement('canvas');
+    starCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+    starCanvas.width = window.innerWidth;
+    starCanvas.height = window.innerHeight;
+    loginScreen.appendChild(starCanvas);
+    var starCtx = starCanvas.getContext('2d');
+    var loginStars = [];
+    for (var si = 0; si < 150; si++) {
+      loginStars.push({
+        x: Math.random() * starCanvas.width,
+        y: Math.random() * starCanvas.height,
+        r: 0.5 + Math.random() * 1.5,
+        speed: 0.1 + Math.random() * 0.3,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+    function animateLoginStars() {
+      if (!document.getElementById('login-screen')) return;
+      starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+      var time = Date.now() * 0.001;
+      loginStars.forEach(function(s) {
+        var alpha = 0.3 + Math.sin(time * s.speed + s.phase) * 0.4;
+        starCtx.fillStyle = 'rgba(180, 200, 255, ' + Math.max(0, alpha) + ')';
+        starCtx.beginPath();
+        starCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        starCtx.fill();
+      });
+      requestAnimationFrame(animateLoginStars);
+    }
+    animateLoginStars();
 
     const content = document.createElement('div');
-    content.style.cssText = `
-      text-align: center;
-      color: white;
-    `;
+    content.style.cssText = 'text-align:center;color:white;position:relative;z-index:1;';
 
     content.innerHTML = `
-      <h1 style="font-size: 48px; margin-bottom: 20px;">ZION MMO</h1>
-      <p style="font-size: 18px; margin-bottom: 30px;">A peer-to-peer social metaverse</p>
+      <div style="font-size:72px;font-weight:100;letter-spacing:16px;margin-bottom:8px;
+        background:linear-gradient(135deg,#4af,#a8f,#4af);-webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;background-clip:text;">ZION</div>
+      <p style="font-size:16px;margin-bottom:40px;opacity:0.6;letter-spacing:4px;text-transform:uppercase;">
+        A peer-to-peer social metaverse</p>
       <button id="github-login" style="
-        padding: 15px 40px;
-        font-size: 18px;
-        background: #24292e;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: bold;
-      ">Login with GitHub</button>
-      <p style="margin-top: 20px; font-size: 14px; opacity: 0.8;">
-        Or append ?token=YOUR_GITHUB_PAT to the URL for testing
-      </p>
+        padding:16px 48px;font-size:16px;background:rgba(255,255,255,0.1);
+        color:white;border:1px solid rgba(255,255,255,0.3);border-radius:30px;
+        cursor:pointer;font-weight:500;letter-spacing:1px;
+        backdrop-filter:blur(10px);transition:all 0.3s;
+      " onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='rgba(255,255,255,0.6)'"
+         onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='rgba(255,255,255,0.3)'"
+      >Login with GitHub</button>
+      <p style="margin-top:24px;font-size:12px;opacity:0.4;">
+        Or append ?token=YOUR_GITHUB_PAT to the URL</p>
+      <div style="margin-top:60px;font-size:11px;opacity:0.3;">
+        100 AI citizens await in 8 zones</div>
     `;
 
     loginScreen.appendChild(content);
@@ -14841,9 +17024,18 @@ html, body {
     if (Input && localPlayer && gameState) {
       const delta = Input.getMovementDelta();
       if (delta.x !== 0 || delta.z !== 0) {
+        // Rotate movement delta by camera yaw so WASD is camera-relative
+        var sinYaw = Math.sin(cameraYaw);
+        var cosYaw = Math.cos(cameraYaw);
+        var rotatedDelta = {
+          x: delta.x * cosYaw - delta.z * sinYaw,
+          y: delta.y,
+          z: delta.x * sinYaw + delta.z * cosYaw
+        };
+
         const moveMsg = Input.createMoveMessage(
           localPlayer.id,
-          delta,
+          rotatedDelta,
           localPlayer.position,
           currentZone
         );
@@ -14892,6 +17084,7 @@ html, body {
 
             if (Audio) {
               Audio.playAmbient(currentZone);
+              if (Audio.setZoneAmbient) Audio.setZoneAmbient(currentZone);
             }
 
             if (NPCs) {
@@ -14954,11 +17147,15 @@ html, body {
     else if (worldHour >= 18 && worldHour < 21) newTimePeriod = 'evening';
     else newTimePeriod = 'night';
 
-    // Broadcast time period changes to NPCs
+    // Broadcast time period changes to NPCs and audio
     if (newTimePeriod !== currentTimePeriod) {
       currentTimePeriod = newTimePeriod;
       if (NPCs && NPCs.broadcastEvent) {
         NPCs.broadcastEvent({ type: 'time_change', data: { period: currentTimePeriod, hour: worldHour } });
+      }
+      // Update ambient audio for time of day
+      if (Audio && Audio.updateAmbientTime) {
+        Audio.updateAmbientTime(currentTimePeriod);
       }
     }
 
@@ -14988,7 +17185,7 @@ html, body {
         });
       }
 
-      // Camera follows player (third-person with spring physics)
+      // Camera follows player (orbiting third-person with spring physics)
       if (sceneContext.camera && localPlayer) {
         var terrainY = 0;
         if (World && World.getTerrainHeight) {
@@ -14996,17 +17193,21 @@ html, body {
         }
         localPlayer.position.y = terrainY;
 
-        // Target camera position: behind and above player
-        var camTargetX = localPlayer.position.x;
-        var camTargetY = terrainY + 10;
-        var camTargetZ = localPlayer.position.z + 15;
+        // Calculate orbiting camera position from yaw/pitch/distance
+        var camOffX = Math.sin(cameraYaw) * Math.cos(cameraPitch) * cameraDistance;
+        var camOffY = Math.sin(cameraPitch) * cameraDistance;
+        var camOffZ = Math.cos(cameraYaw) * Math.cos(cameraPitch) * cameraDistance;
+
+        var camTargetX = localPlayer.position.x + camOffX;
+        var camTargetY = terrainY + camOffY + 2;
+        var camTargetZ = localPlayer.position.z + camOffZ;
 
         // Ensure camera doesn't go below terrain
         var camTerrainY = World && World.getTerrainHeight ? World.getTerrainHeight(camTargetX, camTargetZ) : 0;
-        if (camTargetY < camTerrainY + 3) camTargetY = camTerrainY + 3;
+        if (camTargetY < camTerrainY + 2) camTargetY = camTerrainY + 2;
 
         // Smooth spring follow
-        var lerpSpeed = Math.min(deltaTime * 3.0, 1.0);
+        var lerpSpeed = Math.min(deltaTime * 4.0, 1.0);
         sceneContext.camera.position.x += (camTargetX - sceneContext.camera.position.x) * lerpSpeed;
         sceneContext.camera.position.y += (camTargetY - sceneContext.camera.position.y) * lerpSpeed;
         sceneContext.camera.position.z += (camTargetZ - sceneContext.camera.position.z) * lerpSpeed;
@@ -15034,6 +17235,10 @@ html, body {
         // Broadcast weather change to NPCs
         if (NPCs && NPCs.broadcastEvent) {
           NPCs.broadcastEvent({ type: 'weather_change', data: { weather: currentWeather, previous: prevWeather } });
+        }
+        // Update ambient audio for weather
+        if (Audio && Audio.updateAmbientWeather) {
+          Audio.updateAmbientWeather(currentWeather);
         }
       }
 

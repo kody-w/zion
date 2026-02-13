@@ -2004,7 +2004,1597 @@
    */
   function stopAll() {
     stopAmbient();
+    stopTimeAmbient();
+    stopWeatherAmbient();
+    stopZoneAmbient();
     // Individual sound effects stop themselves automatically
+  }
+
+  // ============================================================================
+  // TIME-OF-DAY AMBIENT LAYERS
+  // ============================================================================
+
+  let currentTimeAmbient = null;
+
+  /**
+   * Update ambient sounds based on time of day
+   * @param {string} timePeriod - dawn, morning, midday, afternoon, evening, night
+   */
+  function updateAmbientForTime(timePeriod) {
+    if (!audioContext || !masterGain) return;
+
+    // Resume context if needed
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    // Stop current time ambient
+    stopTimeAmbient();
+
+    try {
+      switch (timePeriod) {
+        case 'dawn':
+          currentTimeAmbient = playDawnAmbient();
+          break;
+        case 'morning':
+          currentTimeAmbient = playMorningAmbient();
+          break;
+        case 'midday':
+          currentTimeAmbient = playMiddayAmbient();
+          break;
+        case 'afternoon':
+          currentTimeAmbient = playAfternoonAmbient();
+          break;
+        case 'evening':
+          currentTimeAmbient = playEveningAmbient();
+          break;
+        case 'night':
+          currentTimeAmbient = playNightAmbient();
+          break;
+        default:
+          currentTimeAmbient = null;
+      }
+    } catch (err) {
+      console.error('Error updating time ambient:', err);
+    }
+  }
+
+  /**
+   * Stop current time-of-day ambient
+   */
+  function stopTimeAmbient() {
+    if (!currentTimeAmbient) return;
+
+    try {
+      if (currentTimeAmbient.oscillators && Array.isArray(currentTimeAmbient.oscillators)) {
+        currentTimeAmbient.oscillators.forEach(osc => {
+          if (osc && osc.stop) {
+            try { osc.stop(); } catch (e) {}
+          }
+        });
+      }
+
+      if (currentTimeAmbient.nodes && Array.isArray(currentTimeAmbient.nodes)) {
+        currentTimeAmbient.nodes.forEach(node => {
+          if (node) {
+            if (node.stop) {
+              try { node.stop(); } catch (e) {}
+            }
+            if (node.disconnect) {
+              try { node.disconnect(); } catch (e) {}
+            }
+          }
+        });
+      }
+
+      if (currentTimeAmbient.intervals && Array.isArray(currentTimeAmbient.intervals)) {
+        currentTimeAmbient.intervals.forEach(id => clearInterval(id));
+      }
+
+      if (currentTimeAmbient.timeouts && Array.isArray(currentTimeAmbient.timeouts)) {
+        currentTimeAmbient.timeouts.forEach(id => clearTimeout(id));
+      }
+
+      if (currentTimeAmbient.cleanup && typeof currentTimeAmbient.cleanup === 'function') {
+        currentTimeAmbient.cleanup();
+      }
+    } catch (err) {
+      console.error('Error stopping time ambient:', err);
+    }
+
+    currentTimeAmbient = null;
+  }
+
+  /**
+   * Dawn ambient (5-7): Bird chirps, gentle wind
+   */
+  function playDawnAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Gentle wind
+      const wind = createWhiteNoise();
+      if (wind) {
+        const windFilter = audioContext.createBiquadFilter();
+        const windGain = audioContext.createGain();
+
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 180;
+        windGain.gain.value = 0.02;
+
+        wind.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterGain);
+
+        nodes.push(wind, windFilter, windGain);
+      }
+
+      // Morning bird chirps - high frequency with fast attack/decay
+      function dawnChirp() {
+        if (!audioContext || !masterGain) return;
+
+        const bird = audioContext.createOscillator();
+        const birdGain = audioContext.createGain();
+
+        bird.type = 'sine';
+        bird.frequency.value = 800 + Math.random() * 1000;
+
+        const duration = 0.05 + Math.random() * 0.1;
+        birdGain.gain.value = 0.04;
+        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+        bird.connect(birdGain);
+        birdGain.connect(masterGain);
+
+        bird.start();
+        bird.stop(audioContext.currentTime + duration);
+
+        const nextChirp = setTimeout(dawnChirp, 800 + Math.random() * 2000);
+        timeouts.push(nextChirp);
+      }
+
+      for (let i = 0; i < 2; i++) {
+        const firstChirp = setTimeout(dawnChirp, Math.random() * 1000);
+        timeouts.push(firstChirp);
+      }
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in dawn ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Morning ambient (7-12): Active birds, gentle breeze, insect buzzes
+   */
+  function playMorningAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Gentle breeze
+      const breeze = createWhiteNoise();
+      if (breeze) {
+        const breezeFilter = audioContext.createBiquadFilter();
+        const breezeGain = audioContext.createGain();
+
+        breezeFilter.type = 'lowpass';
+        breezeFilter.frequency.value = 200;
+        breezeGain.gain.value = 0.025;
+
+        breeze.connect(breezeFilter);
+        breezeFilter.connect(breezeGain);
+        breezeGain.connect(masterGain);
+
+        nodes.push(breeze, breezeFilter, breezeGain);
+      }
+
+      // Active bird chorus
+      function morningChirp() {
+        if (!audioContext || !masterGain) return;
+
+        const bird = audioContext.createOscillator();
+        const birdGain = audioContext.createGain();
+
+        bird.type = 'sine';
+        bird.frequency.value = 700 + Math.random() * 1200;
+
+        const duration = 0.08 + Math.random() * 0.15;
+        birdGain.gain.value = 0.05;
+        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+        bird.connect(birdGain);
+        birdGain.connect(masterGain);
+
+        bird.start();
+        bird.stop(audioContext.currentTime + duration);
+
+        const nextChirp = setTimeout(morningChirp, 400 + Math.random() * 2500);
+        timeouts.push(nextChirp);
+      }
+
+      for (let i = 0; i < 3; i++) {
+        const firstChirp = setTimeout(morningChirp, Math.random() * 1500);
+        timeouts.push(firstChirp);
+      }
+
+      // Occasional insect buzzes
+      function buzz() {
+        if (!audioContext || !masterGain) return;
+
+        const insect = audioContext.createOscillator();
+        const insectGain = audioContext.createGain();
+
+        insect.type = 'sawtooth';
+        insect.frequency.value = 250 + Math.random() * 100;
+
+        insectGain.gain.value = 0.02;
+        insectGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+        insect.connect(insectGain);
+        insectGain.connect(masterGain);
+
+        insect.start();
+        insect.stop(audioContext.currentTime + 0.3);
+
+        const nextBuzz = setTimeout(buzz, 8000 + Math.random() * 12000);
+        timeouts.push(nextBuzz);
+      }
+
+      const firstBuzz = setTimeout(buzz, 5000);
+      timeouts.push(firstBuzz);
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in morning ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Midday ambient (12-14): Cicada-like sustained tones, warm breeze
+   */
+  function playMiddayAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const oscillators = [];
+    const timeouts = [];
+
+    try {
+      // Warm breeze
+      const breeze = createWhiteNoise();
+      if (breeze) {
+        const breezeFilter = audioContext.createBiquadFilter();
+        const breezeGain = audioContext.createGain();
+
+        breezeFilter.type = 'lowpass';
+        breezeFilter.frequency.value = 220;
+        breezeGain.gain.value = 0.03;
+
+        breeze.connect(breezeFilter);
+        breezeFilter.connect(breezeGain);
+        breezeGain.connect(masterGain);
+
+        nodes.push(breeze, breezeFilter, breezeGain);
+      }
+
+      // Cicada-like sustained tone with AM
+      const cicada = audioContext.createOscillator();
+      const cicadaAm = audioContext.createOscillator();
+      const cicadaAmGain = audioContext.createGain();
+      const cicadaGain = audioContext.createGain();
+
+      cicada.type = 'sine';
+      cicada.frequency.value = 3500 + Math.random() * 500;
+
+      cicadaAm.type = 'sine';
+      cicadaAm.frequency.value = 15 + Math.random() * 10;
+      cicadaAmGain.gain.value = 0.02;
+
+      cicadaGain.gain.value = 0.04;
+
+      cicadaAm.connect(cicadaAmGain);
+      cicadaAmGain.connect(cicadaGain.gain);
+
+      cicada.connect(cicadaGain);
+      cicadaGain.connect(masterGain);
+
+      cicada.start();
+      cicadaAm.start();
+
+      oscillators.push(cicada, cicadaAm);
+      nodes.push(cicadaAmGain, cicadaGain);
+
+      // Occasional bird (quieter in heat)
+      function middayChirp() {
+        if (!audioContext || !masterGain) return;
+
+        const bird = audioContext.createOscillator();
+        const birdGain = audioContext.createGain();
+
+        bird.type = 'sine';
+        bird.frequency.value = 600 + Math.random() * 800;
+
+        const duration = 0.1 + Math.random() * 0.15;
+        birdGain.gain.value = 0.03;
+        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+        bird.connect(birdGain);
+        birdGain.connect(masterGain);
+
+        bird.start();
+        bird.stop(audioContext.currentTime + duration);
+
+        const nextChirp = setTimeout(middayChirp, 3000 + Math.random() * 5000);
+        timeouts.push(nextChirp);
+      }
+
+      const firstChirp = setTimeout(middayChirp, 2000);
+      timeouts.push(firstChirp);
+
+      return { nodes, oscillators, timeouts };
+    } catch (err) {
+      console.error('Error in midday ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Afternoon ambient (14-18): Softer birds, rustling leaves
+   */
+  function playAfternoonAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Gentle breeze
+      const breeze = createWhiteNoise();
+      if (breeze) {
+        const breezeFilter = audioContext.createBiquadFilter();
+        const breezeGain = audioContext.createGain();
+
+        breezeFilter.type = 'lowpass';
+        breezeFilter.frequency.value = 190;
+        breezeGain.gain.value = 0.025;
+
+        breeze.connect(breezeFilter);
+        breezeFilter.connect(breezeGain);
+        breezeGain.connect(masterGain);
+
+        nodes.push(breeze, breezeFilter, breezeGain);
+      }
+
+      // Softer bird calls
+      function afternoonChirp() {
+        if (!audioContext || !masterGain) return;
+
+        const bird = audioContext.createOscillator();
+        const birdGain = audioContext.createGain();
+
+        bird.type = 'sine';
+        bird.frequency.value = 500 + Math.random() * 900;
+
+        const duration = 0.1 + Math.random() * 0.2;
+        birdGain.gain.value = 0.04;
+        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+        bird.connect(birdGain);
+        birdGain.connect(masterGain);
+
+        bird.start();
+        bird.stop(audioContext.currentTime + duration);
+
+        const nextChirp = setTimeout(afternoonChirp, 1500 + Math.random() * 4000);
+        timeouts.push(nextChirp);
+      }
+
+      for (let i = 0; i < 2; i++) {
+        const firstChirp = setTimeout(afternoonChirp, Math.random() * 2000);
+        timeouts.push(firstChirp);
+      }
+
+      // Rustling leaves
+      function rustle() {
+        if (!audioContext || !masterGain) return;
+
+        const noise = createWhiteNoise();
+        if (noise) {
+          const rustleFilter = audioContext.createBiquadFilter();
+          const rustleGain = audioContext.createGain();
+
+          rustleFilter.type = 'bandpass';
+          rustleFilter.frequency.value = 1800 + Math.random() * 400;
+          rustleFilter.Q.value = 2;
+
+          rustleGain.gain.value = 0.03;
+          rustleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+
+          noise.connect(rustleFilter);
+          rustleFilter.connect(rustleGain);
+          rustleGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (noise.stop) noise.stop();
+              if (rustleFilter.disconnect) rustleFilter.disconnect();
+              if (rustleGain.disconnect) rustleGain.disconnect();
+            } catch (e) {}
+          }, 450);
+        }
+
+        const nextRustle = setTimeout(rustle, 2500 + Math.random() * 3500);
+        timeouts.push(nextRustle);
+      }
+
+      const firstRustle = setTimeout(rustle, 1500);
+      timeouts.push(firstRustle);
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in afternoon ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Evening ambient (18-21): Cricket chirps, owl hoots, gentle wind
+   */
+  function playEveningAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const oscillators = [];
+    const timeouts = [];
+
+    try {
+      // Gentle wind
+      const wind = createWhiteNoise();
+      if (wind) {
+        const windFilter = audioContext.createBiquadFilter();
+        const windGain = audioContext.createGain();
+
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 170;
+        windGain.gain.value = 0.02;
+
+        wind.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterGain);
+
+        nodes.push(wind, windFilter, windGain);
+      }
+
+      // Cricket chirps - rapid oscillator pulses
+      const cricket = audioContext.createOscillator();
+      const cricketAm = audioContext.createOscillator();
+      const cricketAmGain = audioContext.createGain();
+      const cricketGain = audioContext.createGain();
+
+      cricket.type = 'sine';
+      cricket.frequency.value = 4000 + Math.random() * 500;
+
+      cricketAm.type = 'sine';
+      cricketAm.frequency.value = 18 + Math.random() * 8;
+      cricketAmGain.gain.value = 0.025;
+
+      cricketGain.gain.value = 0.03;
+
+      cricketAm.connect(cricketAmGain);
+      cricketAmGain.connect(cricketGain.gain);
+
+      cricket.connect(cricketGain);
+      cricketGain.connect(masterGain);
+
+      cricket.start();
+      cricketAm.start();
+
+      oscillators.push(cricket, cricketAm);
+      nodes.push(cricketAmGain, cricketGain);
+
+      // Owl hoots - low frequency with vibrato
+      function hoot() {
+        if (!audioContext || !masterGain) return;
+
+        const owl = audioContext.createOscillator();
+        const owlVibrato = audioContext.createOscillator();
+        const owlVibratoGain = audioContext.createGain();
+        const owlGain = audioContext.createGain();
+
+        owl.type = 'sine';
+        owl.frequency.value = 320;
+
+        owlVibrato.type = 'sine';
+        owlVibrato.frequency.value = 4;
+        owlVibratoGain.gain.value = 8;
+
+        owlGain.gain.value = 0.05;
+        owlGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+
+        owlVibrato.connect(owlVibratoGain);
+        owlVibratoGain.connect(owl.frequency);
+
+        owl.connect(owlGain);
+        owlGain.connect(masterGain);
+
+        owl.start();
+        owlVibrato.start();
+
+        owl.stop(audioContext.currentTime + 0.4);
+        owlVibrato.stop(audioContext.currentTime + 0.4);
+
+        const nextHoot = setTimeout(hoot, 12000 + Math.random() * 12000);
+        timeouts.push(nextHoot);
+      }
+
+      const firstHoot = setTimeout(hoot, 5000);
+      timeouts.push(firstHoot);
+
+      return { nodes, oscillators, timeouts };
+    } catch (err) {
+      console.error('Error in evening ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Night ambient (21-5): Deep crickets, occasional owl, quiet wind, distant howl
+   */
+  function playNightAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const oscillators = [];
+    const timeouts = [];
+
+    try {
+      // Very quiet wind
+      const wind = createWhiteNoise();
+      if (wind) {
+        const windFilter = audioContext.createBiquadFilter();
+        const windGain = audioContext.createGain();
+
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 150;
+        windGain.gain.value = 0.015;
+
+        wind.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterGain);
+
+        nodes.push(wind, windFilter, windGain);
+      }
+
+      // Deep crickets
+      const cricket = audioContext.createOscillator();
+      const cricketAm = audioContext.createOscillator();
+      const cricketAmGain = audioContext.createGain();
+      const cricketGain = audioContext.createGain();
+
+      cricket.type = 'sine';
+      cricket.frequency.value = 3500 + Math.random() * 300;
+
+      cricketAm.type = 'sine';
+      cricketAm.frequency.value = 15 + Math.random() * 5;
+      cricketAmGain.gain.value = 0.02;
+
+      cricketGain.gain.value = 0.025;
+
+      cricketAm.connect(cricketAmGain);
+      cricketAmGain.connect(cricketGain.gain);
+
+      cricket.connect(cricketGain);
+      cricketGain.connect(masterGain);
+
+      cricket.start();
+      cricketAm.start();
+
+      oscillators.push(cricket, cricketAm);
+      nodes.push(cricketAmGain, cricketGain);
+
+      // Occasional owl
+      function nightHoot() {
+        if (!audioContext || !masterGain) return;
+
+        const owl = audioContext.createOscillator();
+        const owlVibrato = audioContext.createOscillator();
+        const owlVibratoGain = audioContext.createGain();
+        const owlGain = audioContext.createGain();
+
+        owl.type = 'sine';
+        owl.frequency.value = 280;
+
+        owlVibrato.type = 'sine';
+        owlVibrato.frequency.value = 4;
+        owlVibratoGain.gain.value = 6;
+
+        owlGain.gain.value = 0.04;
+        owlGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+
+        owlVibrato.connect(owlVibratoGain);
+        owlVibratoGain.connect(owl.frequency);
+
+        owl.connect(owlGain);
+        owlGain.connect(masterGain);
+
+        owl.start();
+        owlVibrato.start();
+
+        owl.stop(audioContext.currentTime + 0.5);
+        owlVibrato.stop(audioContext.currentTime + 0.5);
+
+        const nextHoot = setTimeout(nightHoot, 18000 + Math.random() * 18000);
+        timeouts.push(nextHoot);
+      }
+
+      const firstHoot = setTimeout(nightHoot, 8000);
+      timeouts.push(firstHoot);
+
+      // Distant wolf-like howl (very rare)
+      function distantHowl() {
+        if (!audioContext || !masterGain) return;
+
+        const wolf = audioContext.createOscillator();
+        const wolfVibrato = audioContext.createOscillator();
+        const wolfVibratoGain = audioContext.createGain();
+        const wolfGain = audioContext.createGain();
+
+        wolf.type = 'sine';
+        wolf.frequency.value = 350;
+
+        wolfVibrato.type = 'sine';
+        wolfVibrato.frequency.value = 4;
+        wolfVibratoGain.gain.value = 10;
+
+        wolfGain.gain.value = 0.03;
+
+        wolfVibrato.connect(wolfVibratoGain);
+        wolfVibratoGain.connect(wolf.frequency);
+
+        wolf.connect(wolfGain);
+        wolfGain.connect(masterGain);
+
+        wolf.start();
+        wolfVibrato.start();
+
+        wolf.frequency.linearRampToValueAtTime(500, audioContext.currentTime + 1.2);
+        wolf.frequency.linearRampToValueAtTime(350, audioContext.currentTime + 2);
+        wolfGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2.5);
+
+        wolf.stop(audioContext.currentTime + 2.5);
+        wolfVibrato.stop(audioContext.currentTime + 2.5);
+
+        const nextHowl = setTimeout(distantHowl, 60000 + Math.random() * 60000);
+        timeouts.push(nextHowl);
+      }
+
+      const firstHowl = setTimeout(distantHowl, 30000);
+      timeouts.push(firstHowl);
+
+      return { nodes, oscillators, timeouts };
+    } catch (err) {
+      console.error('Error in night ambient:', err);
+      return null;
+    }
+  }
+
+  // ============================================================================
+  // WEATHER AMBIENT LAYERS
+  // ============================================================================
+
+  let currentWeatherAmbient = null;
+
+  /**
+   * Update ambient sounds based on weather
+   * @param {string} weather - clear, cloudy, rain, snow
+   */
+  function updateAmbientForWeather(weather) {
+    if (!audioContext || !masterGain) return;
+
+    // Resume context if needed
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    // Stop current weather ambient
+    stopWeatherAmbient();
+
+    try {
+      switch (weather) {
+        case 'clear':
+          // Normal ambient, no additional layer
+          currentWeatherAmbient = null;
+          break;
+        case 'cloudy':
+          currentWeatherAmbient = playCloudyAmbient();
+          break;
+        case 'rain':
+          currentWeatherAmbient = playRainAmbient();
+          break;
+        case 'snow':
+          currentWeatherAmbient = playSnowAmbient();
+          break;
+        default:
+          currentWeatherAmbient = null;
+      }
+    } catch (err) {
+      console.error('Error updating weather ambient:', err);
+    }
+  }
+
+  /**
+   * Stop current weather ambient
+   */
+  function stopWeatherAmbient() {
+    if (!currentWeatherAmbient) return;
+
+    try {
+      if (currentWeatherAmbient.oscillators && Array.isArray(currentWeatherAmbient.oscillators)) {
+        currentWeatherAmbient.oscillators.forEach(osc => {
+          if (osc && osc.stop) {
+            try { osc.stop(); } catch (e) {}
+          }
+        });
+      }
+
+      if (currentWeatherAmbient.nodes && Array.isArray(currentWeatherAmbient.nodes)) {
+        currentWeatherAmbient.nodes.forEach(node => {
+          if (node) {
+            if (node.stop) {
+              try { node.stop(); } catch (e) {}
+            }
+            if (node.disconnect) {
+              try { node.disconnect(); } catch (e) {}
+            }
+          }
+        });
+      }
+
+      if (currentWeatherAmbient.intervals && Array.isArray(currentWeatherAmbient.intervals)) {
+        currentWeatherAmbient.intervals.forEach(id => clearInterval(id));
+      }
+
+      if (currentWeatherAmbient.timeouts && Array.isArray(currentWeatherAmbient.timeouts)) {
+        currentWeatherAmbient.timeouts.forEach(id => clearTimeout(id));
+      }
+
+      if (currentWeatherAmbient.cleanup && typeof currentWeatherAmbient.cleanup === 'function') {
+        currentWeatherAmbient.cleanup();
+      }
+    } catch (err) {
+      console.error('Error stopping weather ambient:', err);
+    }
+
+    currentWeatherAmbient = null;
+  }
+
+  /**
+   * Cloudy ambient - gentle wind increase
+   */
+  function playCloudyAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+
+    try {
+      const wind = createWhiteNoise();
+      if (wind) {
+        const windFilter = audioContext.createBiquadFilter();
+        const windGain = audioContext.createGain();
+
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 200;
+        windGain.gain.value = 0.03;
+
+        wind.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterGain);
+
+        nodes.push(wind, windFilter, windGain);
+      }
+
+      return { nodes };
+    } catch (err) {
+      console.error('Error in cloudy ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Rain ambient - rain sound, occasional thunder
+   */
+  function playRainAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Rain sound - white noise filtered through bandpass at ~4000Hz
+      const rain = createWhiteNoise();
+      if (rain) {
+        const rainFilter = audioContext.createBiquadFilter();
+        const rainGain = audioContext.createGain();
+
+        rainFilter.type = 'bandpass';
+        rainFilter.frequency.value = 4000;
+        rainFilter.Q.value = 0.5;
+
+        rainGain.gain.value = 0.05;
+
+        rain.connect(rainFilter);
+        rainFilter.connect(rainGain);
+        rainGain.connect(masterGain);
+
+        nodes.push(rain, rainFilter, rainGain);
+      }
+
+      // Occasional thunder
+      function thunder() {
+        if (!audioContext || !masterGain) return;
+
+        const rumble = createWhiteNoise();
+        if (rumble) {
+          const rumbleFilter = audioContext.createBiquadFilter();
+          const rumbleGain = audioContext.createGain();
+
+          rumbleFilter.type = 'lowpass';
+          rumbleFilter.frequency.value = 80;
+
+          rumbleGain.gain.value = 0.08;
+          rumbleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2.5);
+
+          rumble.connect(rumbleFilter);
+          rumbleFilter.connect(rumbleGain);
+          rumbleGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (rumble.stop) rumble.stop();
+              if (rumbleFilter.disconnect) rumbleFilter.disconnect();
+              if (rumbleGain.disconnect) rumbleGain.disconnect();
+            } catch (e) {}
+          }, 3000);
+        }
+
+        const nextThunder = setTimeout(thunder, 25000 + Math.random() * 35000);
+        timeouts.push(nextThunder);
+      }
+
+      const firstThunder = setTimeout(thunder, 15000);
+      timeouts.push(firstThunder);
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in rain ambient:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Snow ambient - very quiet, muffled ambient, soft wind
+   */
+  function playSnowAmbient() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+
+    try {
+      // Soft wind
+      const wind = createWhiteNoise();
+      if (wind) {
+        const windFilter = audioContext.createBiquadFilter();
+        const windGain = audioContext.createGain();
+
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 120;
+        windGain.gain.value = 0.015;
+
+        wind.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(masterGain);
+
+        nodes.push(wind, windFilter, windGain);
+      }
+
+      return { nodes };
+    } catch (err) {
+      console.error('Error in snow ambient:', err);
+      return null;
+    }
+  }
+
+  // ============================================================================
+  // ZONE-SPECIFIC ENHANCEMENTS
+  // ============================================================================
+
+  let currentZoneAmbient = null;
+
+  /**
+   * Set zone-specific ambient layer (on top of base ambient)
+   * @param {string} zone - Zone identifier
+   */
+  function setZoneAmbient(zone) {
+    if (!audioContext || !masterGain) return;
+
+    // Resume context if needed
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    // Stop current zone ambient
+    stopZoneAmbient();
+
+    try {
+      switch (zone) {
+        case 'nexus':
+          currentZoneAmbient = playNexusZoneLayer();
+          break;
+        case 'gardens':
+          currentZoneAmbient = playGardensZoneLayer();
+          break;
+        case 'athenaeum':
+          currentZoneAmbient = playAthenaeumZoneLayer();
+          break;
+        case 'studio':
+          currentZoneAmbient = playStudioZoneLayer();
+          break;
+        case 'wilds':
+          currentZoneAmbient = playWildsZoneLayer();
+          break;
+        case 'agora':
+          currentZoneAmbient = playAgoraZoneLayer();
+          break;
+        case 'commons':
+          currentZoneAmbient = playCommonsZoneLayer();
+          break;
+        case 'arena':
+          currentZoneAmbient = playArenaZoneLayer();
+          break;
+        default:
+          currentZoneAmbient = null;
+      }
+    } catch (err) {
+      console.error('Error setting zone ambient:', err);
+    }
+  }
+
+  /**
+   * Stop current zone ambient layer
+   */
+  function stopZoneAmbient() {
+    if (!currentZoneAmbient) return;
+
+    try {
+      if (currentZoneAmbient.oscillators && Array.isArray(currentZoneAmbient.oscillators)) {
+        currentZoneAmbient.oscillators.forEach(osc => {
+          if (osc && osc.stop) {
+            try { osc.stop(); } catch (e) {}
+          }
+        });
+      }
+
+      if (currentZoneAmbient.nodes && Array.isArray(currentZoneAmbient.nodes)) {
+        currentZoneAmbient.nodes.forEach(node => {
+          if (node) {
+            if (node.stop) {
+              try { node.stop(); } catch (e) {}
+            }
+            if (node.disconnect) {
+              try { node.disconnect(); } catch (e) {}
+            }
+          }
+        });
+      }
+
+      if (currentZoneAmbient.intervals && Array.isArray(currentZoneAmbient.intervals)) {
+        currentZoneAmbient.intervals.forEach(id => clearInterval(id));
+      }
+
+      if (currentZoneAmbient.timeouts && Array.isArray(currentZoneAmbient.timeouts)) {
+        currentZoneAmbient.timeouts.forEach(id => clearTimeout(id));
+      }
+
+      if (currentZoneAmbient.cleanup && typeof currentZoneAmbient.cleanup === 'function') {
+        currentZoneAmbient.cleanup();
+      }
+    } catch (err) {
+      console.error('Error stopping zone ambient:', err);
+    }
+
+    currentZoneAmbient = null;
+  }
+
+  /**
+   * Nexus zone layer - subtle crystalline resonance (high sine waves with slow LFO)
+   */
+  function playNexusZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const oscillators = [];
+    const nodes = [];
+
+    try {
+      const crystal = audioContext.createOscillator();
+      const lfo = audioContext.createOscillator();
+      const lfoGain = audioContext.createGain();
+      const crystalGain = audioContext.createGain();
+
+      crystal.type = 'sine';
+      crystal.frequency.value = 2000;
+
+      lfo.type = 'sine';
+      lfo.frequency.value = 0.15;
+      lfoGain.gain.value = 0.015;
+
+      crystalGain.gain.value = 0.02;
+
+      lfo.connect(lfoGain);
+      lfoGain.connect(crystalGain.gain);
+
+      crystal.connect(crystalGain);
+      crystalGain.connect(masterGain);
+
+      crystal.start();
+      lfo.start();
+
+      oscillators.push(crystal, lfo);
+      nodes.push(lfoGain, crystalGain);
+
+      return { oscillators, nodes };
+    } catch (err) {
+      console.error('Error in nexus zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Gardens zone layer - water trickling, more birds
+   */
+  function playGardensZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Water trickling - filtered noise with LFO
+      const water = createWhiteNoise();
+      if (water) {
+        const waterFilter = audioContext.createBiquadFilter();
+        const waterLfo = audioContext.createOscillator();
+        const waterLfoGain = audioContext.createGain();
+        const waterGain = audioContext.createGain();
+
+        waterFilter.type = 'highpass';
+        waterFilter.frequency.value = 2000;
+
+        waterLfo.type = 'sine';
+        waterLfo.frequency.value = 0.8;
+        waterLfoGain.gain.value = 50;
+
+        waterGain.gain.value = 0.03;
+
+        waterLfo.connect(waterLfoGain);
+        waterLfoGain.connect(waterFilter.frequency);
+
+        water.connect(waterFilter);
+        waterFilter.connect(waterGain);
+        waterGain.connect(masterGain);
+
+        waterLfo.start();
+
+        nodes.push(water, waterFilter, waterLfo, waterLfoGain, waterGain);
+      }
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in gardens zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Athenaeum zone layer - echo/reverb quality, page rustling
+   */
+  function playAthenaeumZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Page rustling - short noise bursts
+      function pageRustle() {
+        if (!audioContext || !masterGain) return;
+
+        const page = createWhiteNoise();
+        if (page) {
+          const pageFilter = audioContext.createBiquadFilter();
+          const pageGain = audioContext.createGain();
+
+          pageFilter.type = 'highpass';
+          pageFilter.frequency.value = 2500;
+
+          pageGain.gain.value = 0.02;
+          pageGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
+
+          page.connect(pageFilter);
+          pageFilter.connect(pageGain);
+          pageGain.connect(masterGain);
+
+          setTimeout(() => {
+            try {
+              if (page.stop) page.stop();
+              if (pageFilter.disconnect) pageFilter.disconnect();
+              if (pageGain.disconnect) pageGain.disconnect();
+            } catch (e) {}
+          }, 100);
+        }
+
+        const nextRustle = setTimeout(pageRustle, 10000 + Math.random() * 10000);
+        timeouts.push(nextRustle);
+      }
+
+      const firstRustle = setTimeout(pageRustle, 5000);
+      timeouts.push(firstRustle);
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in athenaeum zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Studio zone layer - creative sounds (random melodic tones, tapping)
+   */
+  function playStudioZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Random melodic tones
+      function creativeNote() {
+        if (!audioContext || !masterGain) return;
+
+        const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00];
+        const note = audioContext.createOscillator();
+        const noteGain = audioContext.createGain();
+
+        note.type = 'sine';
+        note.frequency.value = notes[Math.floor(Math.random() * notes.length)];
+
+        noteGain.gain.value = 0.025;
+        noteGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+        note.connect(noteGain);
+        noteGain.connect(masterGain);
+
+        note.start();
+        note.stop(audioContext.currentTime + 0.3);
+
+        const nextNote = setTimeout(creativeNote, 8000 + Math.random() * 12000);
+        timeouts.push(nextNote);
+      }
+
+      const firstNote = setTimeout(creativeNote, 4000);
+      timeouts.push(firstNote);
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in studio zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Wilds zone layer - dense nature sounds, rushing water
+   */
+  function playWildsZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+
+    try {
+      // Rushing water - white noise with bandpass
+      const water = createWhiteNoise();
+      if (water) {
+        const waterFilter = audioContext.createBiquadFilter();
+        const waterGain = audioContext.createGain();
+
+        waterFilter.type = 'bandpass';
+        waterFilter.frequency.value = 800;
+        waterFilter.Q.value = 1;
+
+        waterGain.gain.value = 0.04;
+
+        water.connect(waterFilter);
+        waterFilter.connect(waterGain);
+        waterGain.connect(masterGain);
+
+        nodes.push(water, waterFilter, waterGain);
+      }
+
+      return { nodes };
+    } catch (err) {
+      console.error('Error in wilds zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Agora zone layer - crowd murmur, occasional calls
+   */
+  function playAgoraZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Enhanced crowd murmur
+      const crowd = createWhiteNoise();
+      if (crowd) {
+        const crowdFilter = audioContext.createBiquadFilter();
+        const crowdGain = audioContext.createGain();
+
+        crowdFilter.type = 'bandpass';
+        crowdFilter.frequency.value = 450;
+        crowdFilter.Q.value = 1.2;
+
+        crowdGain.gain.value = 0.025;
+
+        crowd.connect(crowdFilter);
+        crowdFilter.connect(crowdGain);
+        crowdGain.connect(masterGain);
+
+        nodes.push(crowd, crowdFilter, crowdGain);
+      }
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in agora zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Commons zone layer - homey sounds (crackling fire, wind chimes)
+   */
+  function playCommonsZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+    const timeouts = [];
+
+    try {
+      // Wind chimes - random high notes
+      function chime() {
+        if (!audioContext || !masterGain) return;
+
+        const bell = audioContext.createOscillator();
+        const bellGain = audioContext.createGain();
+
+        bell.type = 'sine';
+        bell.frequency.value = 800 + Math.random() * 600;
+
+        bellGain.gain.value = 0.03;
+        bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1.5);
+
+        bell.connect(bellGain);
+        bellGain.connect(masterGain);
+
+        bell.start();
+        bell.stop(audioContext.currentTime + 1.5);
+
+        const nextChime = setTimeout(chime, 5000 + Math.random() * 8000);
+        timeouts.push(nextChime);
+      }
+
+      const firstChime = setTimeout(chime, 3000);
+      timeouts.push(firstChime);
+
+      return { nodes, timeouts };
+    } catch (err) {
+      console.error('Error in commons zone layer:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Arena zone layer - echoing space (slight delay)
+   */
+  function playArenaZoneLayer() {
+    if (!audioContext || !masterGain) return null;
+
+    const nodes = [];
+
+    try {
+      // Subtle echo ambiance
+      const echo = createWhiteNoise();
+      if (echo) {
+        const echoFilter = audioContext.createBiquadFilter();
+        const echoDelay = audioContext.createDelay();
+        const echoDelayGain = audioContext.createGain();
+        const echoGain = audioContext.createGain();
+
+        echoFilter.type = 'bandpass';
+        echoFilter.frequency.value = 700;
+        echoFilter.Q.value = 0.8;
+
+        echoDelay.delayTime.value = 0.3;
+        echoDelayGain.gain.value = 0.3;
+
+        echoGain.gain.value = 0.02;
+
+        echo.connect(echoFilter);
+        echoFilter.connect(echoGain);
+        echoGain.connect(masterGain);
+        echoGain.connect(echoDelay);
+        echoDelay.connect(echoDelayGain);
+        echoDelayGain.connect(masterGain);
+
+        nodes.push(echo, echoFilter, echoDelay, echoDelayGain, echoGain);
+      }
+
+      return { nodes };
+    } catch (err) {
+      console.error('Error in arena zone layer:', err);
+      return null;
+    }
+  }
+
+  // ============================================================================
+  // NPC SOUNDS
+  // ============================================================================
+
+  /**
+   * Play NPC activity sound
+   * @param {string} type - hammer, music, garden, trade, teach, heal
+   */
+  function playNPCSound(type) {
+    if (!audioContext || !masterGain) return;
+
+    // Resume context if needed
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    try {
+      switch (type) {
+        case 'hammer':
+          playNPCHammerSound();
+          break;
+        case 'music':
+          playNPCMusicSound();
+          break;
+        case 'garden':
+          playNPCGardenSound();
+          break;
+        case 'trade':
+          playNPCTradeSound();
+          break;
+        case 'teach':
+          playNPCTeachSound();
+          break;
+        case 'heal':
+          playNPCHealSound();
+          break;
+        default:
+          console.warn('Unknown NPC sound type:', type);
+      }
+    } catch (err) {
+      console.error('Error playing NPC sound:', err);
+    }
+  }
+
+  /**
+   * NPC hammer sound - metallic clang
+   */
+  function playNPCHammerSound() {
+    if (!audioContext || !masterGain) return;
+
+    const hammer = audioContext.createOscillator();
+    const hammerGain = audioContext.createGain();
+
+    hammer.type = 'square';
+    hammer.frequency.value = 90;
+
+    hammerGain.gain.value = 0.08;
+    hammerGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+
+    hammer.connect(hammerGain);
+    hammerGain.connect(masterGain);
+
+    hammer.start();
+    hammer.stop(audioContext.currentTime + 0.2);
+
+    // Metal ring
+    const ring = audioContext.createOscillator();
+    const ringGain = audioContext.createGain();
+
+    ring.type = 'sine';
+    ring.frequency.value = 2500;
+
+    ringGain.gain.value = 0.04;
+    ringGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+    ring.connect(ringGain);
+    ringGain.connect(masterGain);
+
+    ring.start();
+    ring.stop(audioContext.currentTime + 0.3);
+  }
+
+  /**
+   * NPC music sound - short melodic phrase
+   */
+  function playNPCMusicSound() {
+    if (!audioContext || !masterGain) return;
+
+    const notes = [392.00, 440.00, 493.88]; // G4, A4, B4
+
+    notes.forEach((freq, i) => {
+      const note = audioContext.createOscillator();
+      const noteGain = audioContext.createGain();
+
+      note.type = 'sine';
+      note.frequency.value = freq;
+
+      const startTime = audioContext.currentTime + i * 0.15;
+      noteGain.gain.setValueAtTime(0, startTime);
+      noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
+      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+
+      note.connect(noteGain);
+      noteGain.connect(masterGain);
+
+      note.start(startTime);
+      note.stop(startTime + 0.25);
+    });
+  }
+
+  /**
+   * NPC garden sound - rustling, digging
+   */
+  function playNPCGardenSound() {
+    if (!audioContext || !masterGain) return;
+
+    const rustle = createWhiteNoise();
+    if (rustle) {
+      const rustleFilter = audioContext.createBiquadFilter();
+      const rustleGain = audioContext.createGain();
+
+      rustleFilter.type = 'bandpass';
+      rustleFilter.frequency.value = 1200;
+      rustleFilter.Q.value = 2;
+
+      rustleGain.gain.value = 0.06;
+      rustleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+      rustle.connect(rustleFilter);
+      rustleFilter.connect(rustleGain);
+      rustleGain.connect(masterGain);
+
+      setTimeout(() => {
+        try {
+          if (rustle.stop) rustle.stop();
+          if (rustleFilter.disconnect) rustleFilter.disconnect();
+          if (rustleGain.disconnect) rustleGain.disconnect();
+        } catch (e) {}
+      }, 350);
+    }
+  }
+
+  /**
+   * NPC trade sound - coin clink
+   */
+  function playNPCTradeSound() {
+    if (!audioContext || !masterGain) return;
+
+    const coin = audioContext.createOscillator();
+    const coinGain = audioContext.createGain();
+
+    coin.type = 'triangle';
+    coin.frequency.value = 1800 + Math.random() * 500;
+
+    coinGain.gain.value = 0.06;
+    coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+
+    coin.connect(coinGain);
+    coinGain.connect(masterGain);
+
+    coin.start();
+    coin.stop(audioContext.currentTime + 0.2);
+  }
+
+  /**
+   * NPC teach sound - book thump and page turn
+   */
+  function playNPCTeachSound() {
+    if (!audioContext || !masterGain) return;
+
+    // Book thump
+    const thump = audioContext.createOscillator();
+    const thumpGain = audioContext.createGain();
+
+    thump.type = 'sine';
+    thump.frequency.value = 80;
+
+    thumpGain.gain.value = 0.05;
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+
+    thump.connect(thumpGain);
+    thumpGain.connect(masterGain);
+
+    thump.start();
+    thump.stop(audioContext.currentTime + 0.1);
+
+    // Page turn
+    setTimeout(() => {
+      const page = createWhiteNoise();
+      if (page) {
+        const pageFilter = audioContext.createBiquadFilter();
+        const pageGain = audioContext.createGain();
+
+        pageFilter.type = 'highpass';
+        pageFilter.frequency.value = 2200;
+
+        pageGain.gain.value = 0.04;
+        pageGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
+
+        page.connect(pageFilter);
+        pageFilter.connect(pageGain);
+        pageGain.connect(masterGain);
+
+        setTimeout(() => {
+          try {
+            if (page.stop) page.stop();
+            if (pageFilter.disconnect) pageFilter.disconnect();
+            if (pageGain.disconnect) pageGain.disconnect();
+          } catch (e) {}
+        }, 180);
+      }
+    }, 100);
+  }
+
+  /**
+   * NPC heal sound - gentle sparkle
+   */
+  function playNPCHealSound() {
+    if (!audioContext || !masterGain) return;
+
+    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+
+    notes.forEach((freq, i) => {
+      const note = audioContext.createOscillator();
+      const noteGain = audioContext.createGain();
+
+      note.type = 'sine';
+      note.frequency.value = freq;
+
+      const startTime = audioContext.currentTime + i * 0.1;
+      noteGain.gain.setValueAtTime(0, startTime);
+      noteGain.gain.linearRampToValueAtTime(0.04, startTime + 0.02);
+      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+
+      note.connect(noteGain);
+      noteGain.connect(masterGain);
+
+      note.start(startTime);
+      note.stop(startTime + 0.3);
+    });
   }
 
   // Export public API
@@ -2016,5 +3606,13 @@
   exports.mute = mute;
   exports.unmute = unmute;
   exports.stopAll = stopAll;
+
+  // Time-of-day and weather ambient
+  exports.updateAmbientTime = updateAmbientForTime;
+  exports.updateAmbientWeather = updateAmbientForWeather;
+  exports.setZoneAmbient = setZoneAmbient;
+
+  // NPC sounds
+  exports.playNPCSound = playNPCSound;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Audio = {}));

@@ -35,6 +35,11 @@
   let lastBreakReminder = 0;
   let footstepTimer = 0;
   let currentTimePeriod = 'morning';  // tracks dawn/morning/midday/afternoon/evening/night
+  let cameraYaw = 0;       // horizontal camera orbit angle (radians)
+  let cameraPitch = 0.35;  // vertical tilt (0 = flat, higher = more top-down)
+  let cameraDistance = 18;  // distance from player
+  let isDragging = false;
+  let lastMouseX = 0, lastMouseY = 0;
 
   // Platform detection
   let platform = 'desktop';
@@ -203,6 +208,37 @@
       });
     }
 
+    // Mouse-look camera control (right-click drag to orbit)
+    if (typeof document !== 'undefined') {
+      var gameCanvas = document.querySelector('canvas');
+      if (gameCanvas) {
+        gameCanvas.addEventListener('mousedown', function(e) {
+          if (e.button === 2 || e.button === 0) { // right or left click
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+          }
+        });
+        document.addEventListener('mousemove', function(e) {
+          if (!isDragging) return;
+          var dx = e.clientX - lastMouseX;
+          var dy = e.clientY - lastMouseY;
+          cameraYaw -= dx * 0.005;
+          cameraPitch = Math.max(0.1, Math.min(1.2, cameraPitch + dy * 0.005));
+          lastMouseX = e.clientX;
+          lastMouseY = e.clientY;
+        });
+        document.addEventListener('mouseup', function() {
+          isDragging = false;
+        });
+        // Scroll to zoom
+        gameCanvas.addEventListener('wheel', function(e) {
+          cameraDistance = Math.max(5, Math.min(40, cameraDistance + e.deltaY * 0.02));
+          e.preventDefault();
+        }, { passive: false });
+      }
+    }
+
     // Play ambient audio
     if (Audio) {
       Audio.playAmbient(currentZone);
@@ -236,40 +272,66 @@
     loginScreen.id = 'login-screen';
     loginScreen.style.cssText = `
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      font-family: Arial, sans-serif;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, #0a0e1a 0%, #1a1040 40%, #0d2137 70%, #0a0e1a 100%);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10000; font-family: 'Segoe UI', Arial, sans-serif;
+      overflow: hidden;
     `;
+
+    // Animated star background
+    var starCanvas = document.createElement('canvas');
+    starCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+    starCanvas.width = window.innerWidth;
+    starCanvas.height = window.innerHeight;
+    loginScreen.appendChild(starCanvas);
+    var starCtx = starCanvas.getContext('2d');
+    var loginStars = [];
+    for (var si = 0; si < 150; si++) {
+      loginStars.push({
+        x: Math.random() * starCanvas.width,
+        y: Math.random() * starCanvas.height,
+        r: 0.5 + Math.random() * 1.5,
+        speed: 0.1 + Math.random() * 0.3,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+    function animateLoginStars() {
+      if (!document.getElementById('login-screen')) return;
+      starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+      var time = Date.now() * 0.001;
+      loginStars.forEach(function(s) {
+        var alpha = 0.3 + Math.sin(time * s.speed + s.phase) * 0.4;
+        starCtx.fillStyle = 'rgba(180, 200, 255, ' + Math.max(0, alpha) + ')';
+        starCtx.beginPath();
+        starCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        starCtx.fill();
+      });
+      requestAnimationFrame(animateLoginStars);
+    }
+    animateLoginStars();
 
     const content = document.createElement('div');
-    content.style.cssText = `
-      text-align: center;
-      color: white;
-    `;
+    content.style.cssText = 'text-align:center;color:white;position:relative;z-index:1;';
 
     content.innerHTML = `
-      <h1 style="font-size: 48px; margin-bottom: 20px;">ZION MMO</h1>
-      <p style="font-size: 18px; margin-bottom: 30px;">A peer-to-peer social metaverse</p>
+      <div style="font-size:72px;font-weight:100;letter-spacing:16px;margin-bottom:8px;
+        background:linear-gradient(135deg,#4af,#a8f,#4af);-webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;background-clip:text;">ZION</div>
+      <p style="font-size:16px;margin-bottom:40px;opacity:0.6;letter-spacing:4px;text-transform:uppercase;">
+        A peer-to-peer social metaverse</p>
       <button id="github-login" style="
-        padding: 15px 40px;
-        font-size: 18px;
-        background: #24292e;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: bold;
-      ">Login with GitHub</button>
-      <p style="margin-top: 20px; font-size: 14px; opacity: 0.8;">
-        Or append ?token=YOUR_GITHUB_PAT to the URL for testing
-      </p>
+        padding:16px 48px;font-size:16px;background:rgba(255,255,255,0.1);
+        color:white;border:1px solid rgba(255,255,255,0.3);border-radius:30px;
+        cursor:pointer;font-weight:500;letter-spacing:1px;
+        backdrop-filter:blur(10px);transition:all 0.3s;
+      " onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='rgba(255,255,255,0.6)'"
+         onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='rgba(255,255,255,0.3)'"
+      >Login with GitHub</button>
+      <p style="margin-top:24px;font-size:12px;opacity:0.4;">
+        Or append ?token=YOUR_GITHUB_PAT to the URL</p>
+      <div style="margin-top:60px;font-size:11px;opacity:0.3;">
+        100 AI citizens await in 8 zones</div>
     `;
 
     loginScreen.appendChild(content);
@@ -312,9 +374,18 @@
     if (Input && localPlayer && gameState) {
       const delta = Input.getMovementDelta();
       if (delta.x !== 0 || delta.z !== 0) {
+        // Rotate movement delta by camera yaw so WASD is camera-relative
+        var sinYaw = Math.sin(cameraYaw);
+        var cosYaw = Math.cos(cameraYaw);
+        var rotatedDelta = {
+          x: delta.x * cosYaw - delta.z * sinYaw,
+          y: delta.y,
+          z: delta.x * sinYaw + delta.z * cosYaw
+        };
+
         const moveMsg = Input.createMoveMessage(
           localPlayer.id,
-          delta,
+          rotatedDelta,
           localPlayer.position,
           currentZone
         );
@@ -363,6 +434,7 @@
 
             if (Audio) {
               Audio.playAmbient(currentZone);
+              if (Audio.setZoneAmbient) Audio.setZoneAmbient(currentZone);
             }
 
             if (NPCs) {
@@ -425,11 +497,15 @@
     else if (worldHour >= 18 && worldHour < 21) newTimePeriod = 'evening';
     else newTimePeriod = 'night';
 
-    // Broadcast time period changes to NPCs
+    // Broadcast time period changes to NPCs and audio
     if (newTimePeriod !== currentTimePeriod) {
       currentTimePeriod = newTimePeriod;
       if (NPCs && NPCs.broadcastEvent) {
         NPCs.broadcastEvent({ type: 'time_change', data: { period: currentTimePeriod, hour: worldHour } });
+      }
+      // Update ambient audio for time of day
+      if (Audio && Audio.updateAmbientTime) {
+        Audio.updateAmbientTime(currentTimePeriod);
       }
     }
 
@@ -459,7 +535,7 @@
         });
       }
 
-      // Camera follows player (third-person with spring physics)
+      // Camera follows player (orbiting third-person with spring physics)
       if (sceneContext.camera && localPlayer) {
         var terrainY = 0;
         if (World && World.getTerrainHeight) {
@@ -467,17 +543,21 @@
         }
         localPlayer.position.y = terrainY;
 
-        // Target camera position: behind and above player
-        var camTargetX = localPlayer.position.x;
-        var camTargetY = terrainY + 10;
-        var camTargetZ = localPlayer.position.z + 15;
+        // Calculate orbiting camera position from yaw/pitch/distance
+        var camOffX = Math.sin(cameraYaw) * Math.cos(cameraPitch) * cameraDistance;
+        var camOffY = Math.sin(cameraPitch) * cameraDistance;
+        var camOffZ = Math.cos(cameraYaw) * Math.cos(cameraPitch) * cameraDistance;
+
+        var camTargetX = localPlayer.position.x + camOffX;
+        var camTargetY = terrainY + camOffY + 2;
+        var camTargetZ = localPlayer.position.z + camOffZ;
 
         // Ensure camera doesn't go below terrain
         var camTerrainY = World && World.getTerrainHeight ? World.getTerrainHeight(camTargetX, camTargetZ) : 0;
-        if (camTargetY < camTerrainY + 3) camTargetY = camTerrainY + 3;
+        if (camTargetY < camTerrainY + 2) camTargetY = camTerrainY + 2;
 
         // Smooth spring follow
-        var lerpSpeed = Math.min(deltaTime * 3.0, 1.0);
+        var lerpSpeed = Math.min(deltaTime * 4.0, 1.0);
         sceneContext.camera.position.x += (camTargetX - sceneContext.camera.position.x) * lerpSpeed;
         sceneContext.camera.position.y += (camTargetY - sceneContext.camera.position.y) * lerpSpeed;
         sceneContext.camera.position.z += (camTargetZ - sceneContext.camera.position.z) * lerpSpeed;
@@ -505,6 +585,10 @@
         // Broadcast weather change to NPCs
         if (NPCs && NPCs.broadcastEvent) {
           NPCs.broadcastEvent({ type: 'weather_change', data: { weather: currentWeather, previous: prevWeather } });
+        }
+        // Update ambient audio for weather
+        if (Audio && Audio.updateAmbientWeather) {
+          Audio.updateAmbientWeather(currentWeather);
         }
       }
 
