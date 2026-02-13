@@ -1375,9 +1375,8 @@
 
   function updateWeather(sceneCtx, weatherType) {
     if (!sceneCtx || !sceneCtx.scene) return;
-    if (sceneCtx.scene.fog) {
-      sceneCtx.scene.fog.density = weatherType === 'rain' ? 0.0018 : 0.0012;
-    }
+    // Call setWeather to handle visual effects and fog
+    setWeather(sceneCtx, weatherType);
   }
 
   // ========================================================================
@@ -1458,6 +1457,573 @@
   }
 
   // ========================================================================
+  // PARTICLE SYSTEM
+  // ========================================================================
+
+  var particleSystems = null;
+  var MAX_PARTICLES = 500;
+  var PARTICLE_CULL_DISTANCE = 100;
+
+  // Particle pool and emitter definitions
+  function ParticleSystem() {
+    this.particles = [];
+    this.positions = new Float32Array(MAX_PARTICLES * 3);
+    this.colors = new Float32Array(MAX_PARTICLES * 3);
+    this.sizes = new Float32Array(MAX_PARTICLES);
+    this.activeCount = 0;
+
+    // Particle data
+    for (var i = 0; i < MAX_PARTICLES; i++) {
+      this.particles.push({
+        active: false,
+        position: { x: 0, y: 0, z: 0 },
+        velocity: { x: 0, y: 0, z: 0 },
+        life: 0,
+        maxLife: 1,
+        color: { r: 1, g: 1, b: 1 },
+        size: 1,
+        opacity: 1,
+        emitterType: null
+      });
+    }
+
+    // Create geometry
+    this.geometry = new THREE.BufferGeometry();
+    this.geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+    this.geometry.setAttribute('color', new THREE.BufferAttribute(this.colors, 3));
+    this.geometry.setAttribute('size', new THREE.BufferAttribute(this.sizes, 1));
+
+    // Create material with texture support
+    this.material = new THREE.PointsMaterial({
+      size: 0.5,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true
+    });
+
+    // Load particle texture
+    var particleTex = textureLoader ? textureLoader.load(ASSET_BASE + 'assets/textures/particle.png') : null;
+    if (particleTex) {
+      this.material.map = particleTex;
+    }
+
+    // Create Points mesh
+    this.points = new THREE.Points(this.geometry, this.material);
+    this.points.frustumCulled = false;
+
+    // Emitters
+    this.emitters = [];
+  }
+
+  ParticleSystem.prototype.addEmitter = function(type, position, config) {
+    this.emitters.push({
+      type: type,
+      position: position,
+      config: config || {},
+      timer: 0,
+      active: true
+    });
+  };
+
+  ParticleSystem.prototype.removeEmitter = function(index) {
+    if (index >= 0 && index < this.emitters.length) {
+      this.emitters.splice(index, 1);
+    }
+  };
+
+  ParticleSystem.prototype.emitParticle = function(type, position, count) {
+    count = count || 1;
+    for (var i = 0; i < count; i++) {
+      this._spawnParticle(type, position);
+    }
+  };
+
+  ParticleSystem.prototype._spawnParticle = function(type, position) {
+    // Find dead particle to reuse
+    var particle = null;
+    for (var i = 0; i < MAX_PARTICLES; i++) {
+      if (!this.particles[i].active) {
+        particle = this.particles[i];
+        break;
+      }
+    }
+    if (!particle) return; // Pool full
+
+    particle.active = true;
+    particle.position.x = position.x;
+    particle.position.y = position.y;
+    particle.position.z = position.z;
+    particle.emitterType = type;
+
+    // Configure particle based on type
+    switch (type) {
+      case 'fire':
+        particle.maxLife = 1.0 + Math.random() * 0.5;
+        particle.life = particle.maxLife;
+        particle.velocity.x = (Math.random() - 0.5) * 0.5;
+        particle.velocity.y = 1.5 + Math.random() * 1.0;
+        particle.velocity.z = (Math.random() - 0.5) * 0.5;
+        particle.color.r = 1.0;
+        particle.color.g = 0.4 + Math.random() * 0.3;
+        particle.color.b = 0.0;
+        particle.size = 0.3 + Math.random() * 0.3;
+        particle.opacity = 1.0;
+        break;
+
+      case 'sparkle':
+        particle.maxLife = 1.5 + Math.random() * 1.0;
+        particle.life = particle.maxLife;
+        var angle = Math.random() * Math.PI * 2;
+        var radius = 2.0;
+        particle.velocity.x = Math.cos(angle) * radius;
+        particle.velocity.y = (Math.random() - 0.5) * 0.3;
+        particle.velocity.z = Math.sin(angle) * radius;
+        particle.color.r = 0.0;
+        particle.color.g = 0.8 + Math.random() * 0.2;
+        particle.color.b = 1.0;
+        particle.size = 0.2 + Math.random() * 0.2;
+        particle.opacity = 1.0;
+        break;
+
+      case 'dust':
+        particle.maxLife = 0.5 + Math.random() * 0.5;
+        particle.life = particle.maxLife;
+        particle.velocity.x = (Math.random() - 0.5) * 1.0;
+        particle.velocity.y = 0.3 + Math.random() * 0.5;
+        particle.velocity.z = (Math.random() - 0.5) * 1.0;
+        particle.color.r = 0.6;
+        particle.color.g = 0.5;
+        particle.color.b = 0.4;
+        particle.size = 0.1 + Math.random() * 0.15;
+        particle.opacity = 0.6;
+        break;
+
+      case 'leaf':
+        particle.maxLife = 3.0 + Math.random() * 2.0;
+        particle.life = particle.maxLife;
+        particle.velocity.x = (Math.random() - 0.5) * 0.5;
+        particle.velocity.y = -0.3 - Math.random() * 0.2;
+        particle.velocity.z = (Math.random() - 0.5) * 0.5;
+        particle.color.r = 0.2 + Math.random() * 0.3;
+        particle.color.g = 0.6 + Math.random() * 0.3;
+        particle.color.b = 0.1;
+        particle.size = 0.2 + Math.random() * 0.2;
+        particle.opacity = 0.8;
+        break;
+
+      case 'mist':
+        particle.maxLife = 2.0 + Math.random() * 2.0;
+        particle.life = particle.maxLife;
+        particle.velocity.x = (Math.random() - 0.5) * 0.2;
+        particle.velocity.y = 0.05 + Math.random() * 0.1;
+        particle.velocity.z = (Math.random() - 0.5) * 0.2;
+        particle.color.r = 0.8;
+        particle.color.g = 0.85;
+        particle.color.b = 0.9;
+        particle.size = 0.8 + Math.random() * 0.6;
+        particle.opacity = 0.3;
+        break;
+
+      case 'fountain':
+        particle.maxLife = 1.5 + Math.random() * 0.5;
+        particle.life = particle.maxLife;
+        var fAngle = Math.random() * Math.PI * 2;
+        var fSpeed = 1.0 + Math.random() * 1.5;
+        particle.velocity.x = Math.cos(fAngle) * fSpeed * 0.5;
+        particle.velocity.y = 3.0 + Math.random() * 1.5;
+        particle.velocity.z = Math.sin(fAngle) * fSpeed * 0.5;
+        particle.color.r = 0.2;
+        particle.color.g = 0.5 + Math.random() * 0.3;
+        particle.color.b = 0.8 + Math.random() * 0.2;
+        particle.size = 0.15 + Math.random() * 0.15;
+        particle.opacity = 0.7;
+        break;
+
+      default:
+        particle.active = false;
+        return;
+    }
+  };
+
+  ParticleSystem.prototype.update = function(deltaTime, playerPos) {
+    var dt = deltaTime * 0.001; // Convert to seconds
+    var px = playerPos ? playerPos.x : 0;
+    var pz = playerPos ? playerPos.z : 0;
+
+    // Update emitters
+    for (var e = 0; e < this.emitters.length; e++) {
+      var emitter = this.emitters[e];
+      if (!emitter.active) continue;
+
+      emitter.timer += deltaTime;
+
+      // Emit particles based on type
+      var emitRate = 50; // ms per particle
+      switch (emitter.type) {
+        case 'fire': emitRate = 80; break;
+        case 'sparkle': emitRate = 100; break;
+        case 'dust': emitRate = 150; break;
+        case 'leaf': emitRate = 200; break;
+        case 'mist': emitRate = 120; break;
+        case 'fountain': emitRate = 60; break;
+      }
+
+      while (emitter.timer >= emitRate) {
+        emitter.timer -= emitRate;
+        this._spawnParticle(emitter.type, emitter.position);
+      }
+    }
+
+    // Update particles
+    this.activeCount = 0;
+    for (var i = 0; i < MAX_PARTICLES; i++) {
+      var p = this.particles[i];
+      if (!p.active) continue;
+
+      // Update life
+      p.life -= dt;
+      if (p.life <= 0) {
+        p.active = false;
+        continue;
+      }
+
+      // Distance culling
+      var dx = p.position.x - px;
+      var dz = p.position.z - pz;
+      var dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist > PARTICLE_CULL_DISTANCE) {
+        p.active = false;
+        continue;
+      }
+
+      // Update physics
+      p.position.x += p.velocity.x * dt;
+      p.position.y += p.velocity.y * dt;
+      p.position.z += p.velocity.z * dt;
+
+      // Apply gravity (except for sparkle and mist)
+      if (p.emitterType !== 'sparkle' && p.emitterType !== 'mist') {
+        p.velocity.y -= 2.0 * dt;
+      }
+
+      // Type-specific updates
+      if (p.emitterType === 'sparkle') {
+        // Circular motion around origin
+        var angle = Math.atan2(p.velocity.z, p.velocity.x);
+        angle += dt * 2.0;
+        var speed = Math.sqrt(p.velocity.x * p.velocity.x + p.velocity.z * p.velocity.z);
+        p.velocity.x = Math.cos(angle) * speed;
+        p.velocity.z = Math.sin(angle) * speed;
+      } else if (p.emitterType === 'leaf') {
+        // Swaying motion
+        p.velocity.x += Math.sin(p.life * 3.0) * dt * 0.5;
+        p.velocity.z += Math.cos(p.life * 2.5) * dt * 0.5;
+      } else if (p.emitterType === 'mist') {
+        // Slow drift
+        p.velocity.x *= 0.98;
+        p.velocity.z *= 0.98;
+      }
+
+      // Friction
+      p.velocity.x *= 0.99;
+      p.velocity.z *= 0.99;
+
+      // Fade out
+      var lifeRatio = p.life / p.maxLife;
+      p.opacity = Math.min(1.0, lifeRatio * 2.0);
+
+      // Update buffer
+      var idx = this.activeCount * 3;
+      this.positions[idx] = p.position.x;
+      this.positions[idx + 1] = p.position.y;
+      this.positions[idx + 2] = p.position.z;
+
+      this.colors[idx] = p.color.r * p.opacity;
+      this.colors[idx + 1] = p.color.g * p.opacity;
+      this.colors[idx + 2] = p.color.b * p.opacity;
+
+      this.sizes[this.activeCount] = p.size;
+
+      this.activeCount++;
+    }
+
+    // Update geometry
+    this.geometry.setDrawRange(0, this.activeCount);
+    this.geometry.attributes.position.needsUpdate = true;
+    this.geometry.attributes.color.needsUpdate = true;
+    this.geometry.attributes.size.needsUpdate = true;
+  };
+
+  // Public API functions
+  function initParticles(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    particleSystems = new ParticleSystem();
+    sceneCtx.scene.add(particleSystems.points);
+
+    // Add default emitters at key locations
+    // Fire at arena torches (12 torches around arena)
+    var arenaZ = ZONES.arena;
+    for (var ti = 0; ti < 12; ti++) {
+      var tAngle = (ti / 12) * Math.PI * 2;
+      var tpx = arenaZ.cx + Math.cos(tAngle) * 20;
+      var tpz = arenaZ.cz + Math.sin(tAngle) * 20;
+      particleSystems.addEmitter('fire', { x: tpx, y: arenaZ.baseHeight + 2.7, z: tpz });
+    }
+
+    // Sparkle at portals
+    for (var zId in ZONES) {
+      if (zId === 'nexus') continue;
+      var zone = ZONES[zId];
+      var dx = ZONES.nexus.cx - zone.cx;
+      var dz = ZONES.nexus.cz - zone.cz;
+      var dist = Math.sqrt(dx * dx + dz * dz);
+      var nx = dx / dist, nz = dz / dist;
+      var portalX = zone.cx + nx * zone.radius * 0.7;
+      var portalZ = zone.cz + nz * zone.radius * 0.7;
+      var portalY = terrainHeight(portalX, portalZ);
+      particleSystems.addEmitter('sparkle', { x: portalX, y: portalY + 3, z: portalZ });
+    }
+
+    // Fountain at gardens
+    var gardensZ = ZONES.gardens;
+    particleSystems.addEmitter('fountain', { x: gardensZ.cx, y: gardensZ.baseHeight + 1.5, z: gardensZ.cz });
+
+    // Mist in wilds
+    var wildsZ = ZONES.wilds;
+    for (var mi = 0; mi < 3; mi++) {
+      var mAngle = (mi / 3) * Math.PI * 2;
+      var mx = wildsZ.cx + Math.cos(mAngle) * 10;
+      var mz = wildsZ.cz + Math.sin(mAngle) * 10;
+      particleSystems.addEmitter('mist', { x: mx, y: wildsZ.baseHeight + 0.5, z: mz });
+    }
+
+    // Leaves in gardens and wilds
+    var leafZones = [ZONES.gardens, ZONES.wilds];
+    for (var lzi = 0; lzi < leafZones.length; lzi++) {
+      var lz = leafZones[lzi];
+      for (var li = 0; li < 4; li++) {
+        var lAngle = (li / 4) * Math.PI * 2;
+        var lx = lz.cx + Math.cos(lAngle) * 15;
+        var lzp = lz.cz + Math.sin(lAngle) * 15;
+        particleSystems.addEmitter('leaf', { x: lx, y: lz.baseHeight + 8, z: lzp });
+      }
+    }
+  }
+
+  function updateParticles(sceneCtx, deltaTime, playerPos) {
+    if (!particleSystems) return;
+    particleSystems.update(deltaTime, playerPos);
+  }
+
+  function emitParticles(type, position, count) {
+    if (!particleSystems) return;
+    particleSystems.emitParticle(type, position, count || 1);
+  }
+
+  // ========================================================================
+  // WEATHER EFFECTS SYSTEM
+  // ========================================================================
+
+  var weatherParticles = null; // Current active weather particle system
+  var currentWeatherType = 'clear';
+
+  function setWeather(sceneCtx, type) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    // Remove existing weather particles
+    if (weatherParticles) {
+      sceneCtx.scene.remove(weatherParticles);
+      if (weatherParticles.geometry) weatherParticles.geometry.dispose();
+      if (weatherParticles.material) weatherParticles.material.dispose();
+      weatherParticles = null;
+    }
+
+    currentWeatherType = type;
+
+    // Update fog based on weather
+    if (sceneCtx.scene.fog) {
+      switch (type) {
+        case 'rain':
+          sceneCtx.scene.fog.density = 0.0022;
+          break;
+        case 'snow':
+          sceneCtx.scene.fog.density = 0.0018;
+          break;
+        case 'cloudy':
+          sceneCtx.scene.fog.density = 0.0015;
+          break;
+        default:
+          sceneCtx.scene.fog.density = 0.0012;
+      }
+    }
+
+    // Create particle system based on type
+    if (type === 'rain') {
+      var rainCount = 2000;
+      var rainGeo = new THREE.BufferGeometry();
+      var rainPositions = new Float32Array(rainCount * 3);
+      var rainVelocities = new Float32Array(rainCount * 3);
+
+      // Initialize rain particles in a box around origin
+      for (var i = 0; i < rainCount; i++) {
+        var idx = i * 3;
+        rainPositions[idx] = (Math.random() - 0.5) * 100;     // x
+        rainPositions[idx + 1] = Math.random() * 80 + 20;      // y
+        rainPositions[idx + 2] = (Math.random() - 0.5) * 100; // z
+
+        // Velocities: fast downward with gentle drift
+        rainVelocities[idx] = (Math.random() - 0.5) * 0.5;     // x drift
+        rainVelocities[idx + 1] = -0.8 - Math.random() * 0.4;  // y fall speed
+        rainVelocities[idx + 2] = (Math.random() - 0.5) * 0.5; // z drift
+      }
+
+      rainGeo.setAttribute('position', new THREE.Float32BufferAttribute(rainPositions, 3));
+      rainGeo.userData.velocities = rainVelocities;
+
+      var rainMat = new THREE.PointsMaterial({
+        color: 0xaaccff,
+        size: 0.15,
+        transparent: true,
+        opacity: 0.6,
+        depthWrite: false
+      });
+
+      weatherParticles = new THREE.Points(rainGeo, rainMat);
+      weatherParticles.userData.type = 'rain';
+      sceneCtx.scene.add(weatherParticles);
+
+    } else if (type === 'snow') {
+      var snowCount = 1000;
+      var snowGeo = new THREE.BufferGeometry();
+      var snowPositions = new Float32Array(snowCount * 3);
+      var snowVelocities = new Float32Array(snowCount * 3);
+      var snowPhases = new Float32Array(snowCount); // For sine-wave movement
+
+      // Initialize snow particles
+      for (var j = 0; j < snowCount; j++) {
+        var jdx = j * 3;
+        snowPositions[jdx] = (Math.random() - 0.5) * 120;     // x
+        snowPositions[jdx + 1] = Math.random() * 100 + 20;    // y
+        snowPositions[jdx + 2] = (Math.random() - 0.5) * 120; // z
+
+        // Velocities: slow downward
+        snowVelocities[jdx] = 0;                              // x (handled by sine wave)
+        snowVelocities[jdx + 1] = -0.15 - Math.random() * 0.1; // y fall speed
+        snowVelocities[jdx + 2] = 0;                          // z (handled by sine wave)
+
+        snowPhases[j] = Math.random() * Math.PI * 2;
+      }
+
+      snowGeo.setAttribute('position', new THREE.Float32BufferAttribute(snowPositions, 3));
+      snowGeo.userData.velocities = snowVelocities;
+      snowGeo.userData.phases = snowPhases;
+
+      var snowMat = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.25,
+        transparent: true,
+        opacity: 0.8,
+        depthWrite: false
+      });
+
+      weatherParticles = new THREE.Points(snowGeo, snowMat);
+      weatherParticles.userData.type = 'snow';
+      sceneCtx.scene.add(weatherParticles);
+    }
+  }
+
+  function updateWeatherEffects(sceneCtx, deltaTime, cameraPos) {
+    if (!weatherParticles || !weatherParticles.geometry) return;
+
+    var positions = weatherParticles.geometry.attributes.position.array;
+    var velocities = weatherParticles.geometry.userData.velocities;
+    var type = weatherParticles.userData.type;
+
+    var camX = cameraPos.x || 0;
+    var camY = cameraPos.y || 0;
+    var camZ = cameraPos.z || 0;
+
+    if (type === 'rain') {
+      // Update rain particles
+      for (var i = 0; i < positions.length / 3; i++) {
+        var idx = i * 3;
+
+        // Update position based on velocity
+        positions[idx] += velocities[idx] * deltaTime;
+        positions[idx + 1] += velocities[idx + 1] * deltaTime;
+        positions[idx + 2] += velocities[idx + 2] * deltaTime;
+
+        // Get ground height at particle position
+        var groundHeight = terrainHeight(positions[idx], positions[idx + 2]);
+
+        // Recycle particle if it hits the ground
+        if (positions[idx + 1] < groundHeight) {
+          // Respawn near camera
+          positions[idx] = camX + (Math.random() - 0.5) * 100;
+          positions[idx + 1] = camY + Math.random() * 40 + 20;
+          positions[idx + 2] = camZ + (Math.random() - 0.5) * 100;
+
+          // Randomize drift slightly
+          velocities[idx] = (Math.random() - 0.5) * 0.5;
+          velocities[idx + 2] = (Math.random() - 0.5) * 0.5;
+        }
+
+        // Keep particles centered around camera
+        var dx = positions[idx] - camX;
+        var dz = positions[idx + 2] - camZ;
+        if (Math.abs(dx) > 60 || Math.abs(dz) > 60) {
+          positions[idx] = camX + (Math.random() - 0.5) * 100;
+          positions[idx + 1] = camY + Math.random() * 40 + 20;
+          positions[idx + 2] = camZ + (Math.random() - 0.5) * 100;
+        }
+      }
+
+    } else if (type === 'snow') {
+      var phases = weatherParticles.geometry.userData.phases;
+      var time = Date.now() * 0.001;
+
+      // Update snow particles
+      for (var j = 0; j < positions.length / 3; j++) {
+        var jdx = j * 3;
+
+        // Sine wave horizontal movement
+        var sineX = Math.sin(time * 0.5 + phases[j]) * 0.3;
+        var sineZ = Math.cos(time * 0.5 + phases[j] * 1.3) * 0.3;
+
+        positions[jdx] += (velocities[jdx] + sineX) * deltaTime;
+        positions[jdx + 1] += velocities[jdx + 1] * deltaTime;
+        positions[jdx + 2] += (velocities[jdx + 2] + sineZ) * deltaTime;
+
+        // Get ground height at particle position
+        var snowGroundHeight = terrainHeight(positions[jdx], positions[jdx + 2]);
+
+        // Recycle particle if it hits the ground
+        if (positions[jdx + 1] < snowGroundHeight) {
+          positions[jdx] = camX + (Math.random() - 0.5) * 120;
+          positions[jdx + 1] = camY + Math.random() * 50 + 30;
+          positions[jdx + 2] = camZ + (Math.random() - 0.5) * 120;
+          phases[j] = Math.random() * Math.PI * 2;
+        }
+
+        // Keep particles centered around camera
+        var sdx = positions[jdx] - camX;
+        var sdz = positions[jdx + 2] - camZ;
+        if (Math.abs(sdx) > 70 || Math.abs(sdz) > 70) {
+          positions[jdx] = camX + (Math.random() - 0.5) * 120;
+          positions[jdx + 1] = camY + Math.random() * 50 + 30;
+          positions[jdx + 2] = camZ + (Math.random() - 0.5) * 120;
+        }
+      }
+    }
+
+    weatherParticles.geometry.attributes.position.needsUpdate = true;
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -1468,6 +2034,8 @@
   exports.removePlayer = removePlayer;
   exports.updateDayNight = updateDayNight;
   exports.updateWeather = updateWeather;
+  exports.setWeather = setWeather;
+  exports.updateWeatherEffects = updateWeatherEffects;
   exports.cullLights = cullLights;
   exports.updateAnimations = updateAnimations;
   exports.updateChunks = updateChunks;
@@ -1476,6 +2044,9 @@
   exports.getZoneCenter = getZoneCenter;
   exports.checkCollision = checkCollision;
   exports.getTexture = getTexture;
+  exports.initParticles = initParticles;
+  exports.updateParticles = updateParticles;
+  exports.emitParticles = emitParticles;
   exports.ZONES = ZONES;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));

@@ -325,7 +325,8 @@
    * @returns {object} - Protocol message
    */
   function createMoveMessage(from, delta, currentPosition, zone) {
-    const speed = 0.1; // Units per frame
+    var baseSpeed = 0.3; // Units per frame
+    var speed = (keys['shift']) ? baseSpeed * 2.0 : baseSpeed; // Sprint with Shift
     const newPosition = {
       x: currentPosition.x + delta.x * speed,
       y: currentPosition.y + delta.y * speed,

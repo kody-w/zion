@@ -141,6 +141,11 @@
           World.updateChunks(sceneContext, localPlayer.position.x, localPlayer.position.z);
         }
         World.addPlayer(sceneContext, username, localPlayer.position);
+
+        // Initialize particle effects (fire, sparkle, mist, fountain, etc.)
+        if (World.initParticles) {
+          World.initParticles(sceneContext);
+        }
       }
     }
 
@@ -190,7 +195,7 @@
     // Initialize AI citizens
     if (NPCs) {
       NPCs.initNPCs(null, gameState, sceneContext);
-      NPCs.reloadZoneNPCs(sceneContext, currentZone);
+      NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
     }
 
     // Send join message
@@ -298,6 +303,22 @@
           currentZone
         );
 
+        // Collision check — reject move if it would clip into a structure
+        var newPos = moveMsg.payload.position;
+        if (World && World.checkCollision && World.checkCollision(newPos.x, newPos.z, 0.5)) {
+          // Blocked — try sliding along X or Z axis only
+          var slideX = { x: newPos.x, y: localPlayer.position.y, z: localPlayer.position.z };
+          var slideZ = { x: localPlayer.position.x, y: localPlayer.position.y, z: newPos.z };
+          if (!World.checkCollision(slideX.x, slideX.z, 0.5)) {
+            moveMsg.payload.position = slideX;
+          } else if (!World.checkCollision(slideZ.x, slideZ.z, 0.5)) {
+            moveMsg.payload.position = slideZ;
+          } else {
+            // Fully blocked, don't move
+            moveMsg.payload.position = { x: localPlayer.position.x, y: localPlayer.position.y, z: localPlayer.position.z };
+          }
+        }
+
         // Apply locally
         handleLocalAction('move', moveMsg.payload);
 
@@ -329,9 +350,14 @@
             }
 
             if (NPCs) {
-              NPCs.reloadZoneNPCs(sceneContext, currentZone);
+              NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
             }
           }
+        }
+
+        // Update NPC visibility by distance every ~30 frames
+        if (NPCs && Math.random() < 0.03) {
+          NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
         }
 
         // Footstep sounds
@@ -385,7 +411,7 @@
         });
       }
 
-      // Camera follows player (third-person)
+      // Camera follows player (third-person with spring physics)
       if (sceneContext.camera && localPlayer) {
         var terrainY = 0;
         if (World && World.getTerrainHeight) {
@@ -393,21 +419,41 @@
         }
         localPlayer.position.y = terrainY;
 
-        var camOffsetX = localPlayer.position.x;
-        var camOffsetY = terrainY + 12;
-        var camOffsetZ = localPlayer.position.z + 18;
-        sceneContext.camera.position.lerp(
-          new THREE.Vector3(camOffsetX, camOffsetY, camOffsetZ), 0.05
-        );
+        // Target camera position: behind and above player
+        var camTargetX = localPlayer.position.x;
+        var camTargetY = terrainY + 10;
+        var camTargetZ = localPlayer.position.z + 15;
+
+        // Ensure camera doesn't go below terrain
+        var camTerrainY = World && World.getTerrainHeight ? World.getTerrainHeight(camTargetX, camTargetZ) : 0;
+        if (camTargetY < camTerrainY + 3) camTargetY = camTerrainY + 3;
+
+        // Smooth spring follow
+        var lerpSpeed = Math.min(deltaTime * 3.0, 1.0);
+        sceneContext.camera.position.x += (camTargetX - sceneContext.camera.position.x) * lerpSpeed;
+        sceneContext.camera.position.y += (camTargetY - sceneContext.camera.position.y) * lerpSpeed;
+        sceneContext.camera.position.z += (camTargetZ - sceneContext.camera.position.z) * lerpSpeed;
+
         sceneContext.camera.lookAt(
           localPlayer.position.x,
-          terrainY + 1,
+          terrainY + 1.5,
           localPlayer.position.z
         );
       }
 
       // Update day/night cycle
       World.updateDayNight(sceneContext, worldTime);
+
+      // Weather cycling — changes every 6 in-game hours (every 6 real minutes)
+      var weatherCycleMinute = Math.floor(worldTime / 360); // 0-3
+      var weatherTypes = ['clear', 'cloudy', 'rain', 'clear'];
+      var nextWeather = weatherTypes[weatherCycleMinute % weatherTypes.length];
+      if (nextWeather !== currentWeather) {
+        currentWeather = nextWeather;
+        if (World.setWeather) {
+          World.setWeather(sceneContext, currentWeather);
+        }
+      }
 
       // Cull distant lights for performance (max 8 nearest within 40 units)
       if (World.cullLights) {
@@ -417,6 +463,16 @@
       // Update environmental animations
       if (World.updateAnimations) {
         World.updateAnimations(sceneContext, deltaTime, worldTime);
+      }
+
+      // Update particle effects (fire, sparkle, mist, fountain, leaves)
+      if (World.updateParticles) {
+        World.updateParticles(sceneContext, deltaTime * 1000, localPlayer ? localPlayer.position : null);
+      }
+
+      // Update weather effects (rain, snow)
+      if (World.updateWeatherEffects) {
+        World.updateWeatherEffects(sceneContext, deltaTime * 1000, localPlayer ? localPlayer.position : null);
       }
 
       // Render scene
