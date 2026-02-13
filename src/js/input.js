@@ -1,11 +1,18 @@
 (function(exports) {
   // Input handling and protocol message generation
-  let callbacks = {};
-  let keys = {};
-  let chatMode = false;
-  let buildMode = false;
-  let canvas = null;
-  let mouseNDC = { x: 0, y: 0 }; // Normalized device coordinates
+  var callbacks = {};
+  var keys = {};
+  var chatMode = false;
+  var buildMode = false;
+  var canvas = null;
+  var mouseNDC = { x: 0, y: 0 }; // Normalized device coordinates
+
+  // Camera control variables
+  var cameraDistance = 20; // Default camera distance from player
+  var cameraOrbitAngle = 0; // Horizontal orbit angle in radians
+  var isDraggingCamera = false;
+  var lastCameraDragX = 0;
+  var lastCameraDragY = 0;
 
   /**
    * Initialize input handlers
@@ -33,7 +40,12 @@
       canvas.addEventListener('click', handleMouseClick);
       canvas.addEventListener('contextmenu', handleContextMenu);
       canvas.addEventListener('mousemove', handleMouseMove);
+      canvas.addEventListener('mousedown', handleMouseDown);
+      canvas.addEventListener('wheel', handleMouseWheel, { passive: false });
     }
+
+    // Global mouse up handler for camera drag
+    document.addEventListener('mouseup', handleMouseUp);
 
     // Touch handlers for mobile
     if ('ontouchstart' in window) {
@@ -345,9 +357,9 @@
   function handleMouseClick(e) {
     if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    var rect = canvas.getBoundingClientRect();
+    var x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    var y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
     // In build mode, click places structure
     if (buildMode && callbacks.onBuild) {
@@ -374,9 +386,54 @@
   function handleMouseMove(e) {
     if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
+    var rect = canvas.getBoundingClientRect();
     mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    // Handle camera orbit dragging
+    if (isDraggingCamera) {
+      var deltaX = e.clientX - lastCameraDragX;
+      var deltaY = e.clientY - lastCameraDragY;
+
+      // Adjust orbit angle based on horizontal drag
+      cameraOrbitAngle -= deltaX * 0.005;
+
+      lastCameraDragX = e.clientX;
+      lastCameraDragY = e.clientY;
+    }
+  }
+
+  /**
+   * Handle mouse down for camera drag
+   */
+  function handleMouseDown(e) {
+    // Right-click or middle-click for camera orbit
+    if (e.button === 2 || e.button === 1) {
+      isDraggingCamera = true;
+      lastCameraDragX = e.clientX;
+      lastCameraDragY = e.clientY;
+      e.preventDefault();
+    }
+  }
+
+  /**
+   * Handle mouse up
+   */
+  function handleMouseUp(e) {
+    if (e.button === 2 || e.button === 1) {
+      isDraggingCamera = false;
+    }
+  }
+
+  /**
+   * Handle mouse wheel for camera zoom
+   */
+  function handleMouseWheel(e) {
+    e.preventDefault();
+
+    // Adjust camera distance with constraints
+    cameraDistance += e.deltaY * 0.02;
+    cameraDistance = Math.max(5, Math.min(50, cameraDistance));
   }
 
   /**
@@ -387,13 +444,27 @@
   }
 
   /**
+   * Get camera distance (for zoom)
+   */
+  function getCameraDistance() {
+    return cameraDistance;
+  }
+
+  /**
+   * Get camera orbit angle
+   */
+  function getCameraOrbit() {
+    return cameraOrbitAngle;
+  }
+
+  /**
    * Initialize touch controls (virtual joystick)
    */
   function initTouchControls() {
     if (typeof document === 'undefined') return;
 
     // Create virtual joystick (left side)
-    const joystick = document.createElement('div');
+    var joystick = document.createElement('div');
     joystick.id = 'virtual-joystick';
     joystick.style.cssText = `
       position: fixed;
@@ -408,7 +479,7 @@
       z-index: 1000;
     `;
 
-    const stick = document.createElement('div');
+    var stick = document.createElement('div');
     stick.style.cssText = `
       position: absolute;
       width: 50px;
@@ -423,13 +494,13 @@
     document.body.appendChild(joystick);
 
     // Joystick touch handler
-    let touchStartPos = { x: 0, y: 0 };
-    let isDragging = false;
+    var touchStartPos = { x: 0, y: 0 };
+    var isDragging = false;
 
     joystick.addEventListener('touchstart', (e) => {
       e.preventDefault();
       isDragging = true;
-      const touch = e.touches[0];
+      var touch = e.touches[0];
       touchStartPos = { x: touch.clientX, y: touch.clientY };
     });
 
@@ -437,14 +508,14 @@
       if (!isDragging) return;
       e.preventDefault();
 
-      const touch = e.touches[0];
-      const deltaX = touch.clientX - touchStartPos.x;
-      const deltaY = touch.clientY - touchStartPos.y;
+      var touch = e.touches[0];
+      var deltaX = touch.clientX - touchStartPos.x;
+      var deltaY = touch.clientY - touchStartPos.y;
 
       // Limit stick movement
-      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-      const maxDistance = 35;
-      const normalizedDelta = {
+      var distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      var maxDistance = 35;
+      var normalizedDelta = {
         x: deltaX / maxDistance,
         y: deltaY / maxDistance
       };
@@ -475,7 +546,7 @@
     });
 
     // Create action buttons (right side)
-    const actionButton = document.createElement('button');
+    var actionButton = document.createElement('button');
     actionButton.textContent = 'E';
     actionButton.style.cssText = `
       position: fixed;
@@ -498,7 +569,7 @@
     });
     document.body.appendChild(actionButton);
 
-    const buildButton = document.createElement('button');
+    var buildButton = document.createElement('button');
     buildButton.textContent = 'B';
     buildButton.style.cssText = `
       position: fixed;
@@ -530,7 +601,7 @@
   function getMovementDelta() {
     if (chatMode) return { x: 0, y: 0, z: 0 };
 
-    const delta = { x: 0, y: 0, z: 0 };
+    var delta = { x: 0, y: 0, z: 0 };
 
     // WASD / Arrow keys
     if (keys['w'] || keys['arrowup']) delta.z -= 1;
@@ -540,7 +611,7 @@
 
     // Normalize diagonal movement
     if (delta.x !== 0 && delta.z !== 0) {
-      const length = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
+      var length = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
       delta.x /= length;
       delta.z /= length;
     }
@@ -555,7 +626,7 @@
   function getPlatform() {
     if (typeof navigator === 'undefined') return 'desktop';
 
-    const ua = navigator.userAgent.toLowerCase();
+    var ua = navigator.userAgent.toLowerCase();
 
     // Check WebXR
     if (navigator.xr) {
@@ -582,7 +653,7 @@
   function createMoveMessage(from, delta, currentPosition, zone) {
     var baseSpeed = 0.3; // Units per frame
     var speed = (keys['shift']) ? baseSpeed * 2.0 : baseSpeed; // Sprint with Shift
-    const newPosition = {
+    var newPosition = {
       x: currentPosition.x + delta.x * speed,
       y: currentPosition.y + delta.y * speed,
       z: currentPosition.z + delta.z * speed
@@ -606,5 +677,7 @@
   exports.getPlatform = getPlatform;
   exports.createMoveMessage = createMoveMessage;
   exports.getMouseNDC = getMouseNDC;
+  exports.getCameraDistance = getCameraDistance;
+  exports.getCameraOrbit = getCameraOrbit;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Input = {}));

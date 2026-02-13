@@ -7199,4 +7199,312 @@
   exports.hidePetPanel = hidePetPanel;
   exports.showPetAdoptNotification = showPetAdoptNotification;
 
+  // =============================================================================
+  // TUTORIAL/ONBOARDING SYSTEM
+  // =============================================================================
+
+  var tutorialState = {
+    active: false,
+    currentStep: 0,
+    completed: false
+  };
+
+  var tutorialTooltip = null;
+  var tutorialSteps = [
+    {
+      id: 'move',
+      message: 'Welcome to ZION! Use WASD to move around.',
+      action: 'move'
+    },
+    {
+      id: 'interact',
+      message: 'Press E near an NPC to interact.',
+      action: 'interact'
+    },
+    {
+      id: 'inventory',
+      message: 'Press I to open your inventory.',
+      action: 'openInventory'
+    },
+    {
+      id: 'quests',
+      message: 'Press J to check your quests.',
+      action: 'openQuests'
+    },
+    {
+      id: 'chat',
+      message: 'Press Enter to chat with other players.',
+      action: 'openChat'
+    },
+    {
+      id: 'complete',
+      message: "You're ready! Explore the world, make friends, and build something beautiful.",
+      action: 'complete',
+      autoDismiss: true
+    }
+  ];
+
+  /**
+   * Create tutorial tooltip UI
+   */
+  function createTutorialTooltip() {
+    if (typeof document === 'undefined') return null;
+
+    var tooltip = document.createElement('div');
+    tooltip.id = 'tutorial-tooltip';
+    tooltip.style.cssText = `
+      position: absolute;
+      bottom: 240px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 12, 10, 0.92);
+      border: 1px solid rgba(218, 165, 32, 0.4);
+      border-radius: 8px;
+      padding: 20px 25px;
+      min-width: 400px;
+      max-width: 500px;
+      pointer-events: auto;
+      z-index: 1000;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      animation: tutorialPulse 2s infinite;
+    `;
+
+    // Add CSS animation for pulsing glow
+    var styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+      @keyframes tutorialPulse {
+        0%, 100% {
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 10px rgba(218, 165, 32, 0.2);
+        }
+        50% {
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(218, 165, 32, 0.5);
+        }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+
+    // Step counter
+    var stepCounter = document.createElement('div');
+    stepCounter.id = 'tutorial-step-counter';
+    stepCounter.style.cssText = `
+      color: #DAA520;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    `;
+    tooltip.appendChild(stepCounter);
+
+    // Message content
+    var message = document.createElement('div');
+    message.id = 'tutorial-message';
+    message.style.cssText = `
+      color: #ffffff;
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 15px;
+    `;
+    tooltip.appendChild(message);
+
+    // Button container
+    var buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = `
+      display: flex;
+      justify-content: flex-end;
+    `;
+
+    // Skip button
+    var skipButton = document.createElement('button');
+    skipButton.id = 'tutorial-skip-btn';
+    skipButton.textContent = 'Skip Tutorial';
+    skipButton.style.cssText = `
+      background: rgba(100, 100, 100, 0.3);
+      border: 1px solid rgba(150, 150, 150, 0.4);
+      color: #cccccc;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    `;
+    skipButton.onmouseover = function() {
+      skipButton.style.background = 'rgba(120, 120, 120, 0.4)';
+      skipButton.style.borderColor = 'rgba(170, 170, 170, 0.6)';
+    };
+    skipButton.onmouseout = function() {
+      skipButton.style.background = 'rgba(100, 100, 100, 0.3)';
+      skipButton.style.borderColor = 'rgba(150, 150, 150, 0.4)';
+    };
+    skipButton.onclick = function() {
+      skipTutorial();
+    };
+    buttonContainer.appendChild(skipButton);
+
+    tooltip.appendChild(buttonContainer);
+
+    return tooltip;
+  }
+
+  /**
+   * Update tutorial tooltip content
+   */
+  function updateTutorialTooltip() {
+    if (!tutorialTooltip || !tutorialState.active) return;
+
+    var step = tutorialSteps[tutorialState.currentStep];
+    var stepCounter = tutorialTooltip.querySelector('#tutorial-step-counter');
+    var message = tutorialTooltip.querySelector('#tutorial-message');
+
+    if (stepCounter) {
+      stepCounter.textContent = 'Step ' + (tutorialState.currentStep + 1) + '/' + tutorialSteps.length;
+    }
+
+    if (message) {
+      message.textContent = step.message;
+    }
+  }
+
+  /**
+   * Show tutorial tooltip
+   */
+  function showTutorialTooltip() {
+    if (!hudContainer || typeof document === 'undefined') return;
+
+    if (!tutorialTooltip) {
+      tutorialTooltip = createTutorialTooltip();
+      if (!tutorialTooltip) return;
+    }
+
+    var hudOverlay = document.getElementById('zion-hud');
+    if (hudOverlay && tutorialTooltip.parentNode !== hudOverlay) {
+      hudOverlay.appendChild(tutorialTooltip);
+    }
+
+    updateTutorialTooltip();
+    tutorialTooltip.style.display = 'block';
+  }
+
+  /**
+   * Hide tutorial tooltip
+   */
+  function hideTutorialTooltip() {
+    if (tutorialTooltip) {
+      tutorialTooltip.style.display = 'none';
+    }
+  }
+
+  /**
+   * Remove tutorial tooltip from DOM
+   */
+  function removeTutorialTooltip() {
+    if (tutorialTooltip && tutorialTooltip.parentNode) {
+      tutorialTooltip.parentNode.removeChild(tutorialTooltip);
+      tutorialTooltip = null;
+    }
+  }
+
+  /**
+   * Initialize tutorial system
+   * Called after login to check if player is new
+   */
+  function initTutorial() {
+    if (typeof localStorage === 'undefined') {
+      console.warn('Tutorial requires localStorage support');
+      return;
+    }
+
+    // Check if tutorial is already complete
+    var tutorialComplete = localStorage.getItem('zion_tutorial_complete');
+    if (tutorialComplete === 'true') {
+      tutorialState.completed = true;
+      tutorialState.active = false;
+      return;
+    }
+
+    // Start tutorial for new player
+    tutorialState.active = true;
+    tutorialState.currentStep = 0;
+    tutorialState.completed = false;
+
+    showTutorialTooltip();
+  }
+
+  /**
+   * Advance tutorial to next step
+   * @param {string} completedAction - The action that was completed (move, interact, openInventory, openQuests, openChat)
+   */
+  function advanceTutorial(completedAction) {
+    if (!tutorialState.active || tutorialState.completed) return;
+
+    var currentStep = tutorialSteps[tutorialState.currentStep];
+
+    // Check if completed action matches current step
+    if (currentStep.action !== completedAction) return;
+
+    // Handle final step with auto-dismiss
+    if (currentStep.autoDismiss) {
+      setTimeout(function() {
+        completeTutorial();
+      }, 5000);
+      return;
+    }
+
+    // Move to next step
+    tutorialState.currentStep++;
+
+    if (tutorialState.currentStep >= tutorialSteps.length) {
+      completeTutorial();
+      return;
+    }
+
+    // Update tooltip for next step
+    updateTutorialTooltip();
+  }
+
+  /**
+   * Complete tutorial and mark as done
+   */
+  function completeTutorial() {
+    tutorialState.active = false;
+    tutorialState.completed = true;
+
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('zion_tutorial_complete', 'true');
+    }
+
+    hideTutorialTooltip();
+
+    // Remove tooltip after a short delay to allow for fade out
+    setTimeout(function() {
+      removeTutorialTooltip();
+    }, 300);
+
+    // Show completion notification
+    if (typeof showNotification === 'function') {
+      showNotification('Tutorial Complete! Good luck in ZION!', 'success');
+    }
+  }
+
+  /**
+   * Skip tutorial and mark as complete
+   */
+  function skipTutorial() {
+    completeTutorial();
+  }
+
+  /**
+   * Check if tutorial is currently active
+   * @returns {boolean} True if tutorial is active
+   */
+  function isTutorialActive() {
+    return tutorialState.active;
+  }
+
+  // Export tutorial functions
+  exports.initTutorial = initTutorial;
+  exports.advanceTutorial = advanceTutorial;
+  exports.skipTutorial = skipTutorial;
+  exports.isTutorialActive = isTutorialActive;
+
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));

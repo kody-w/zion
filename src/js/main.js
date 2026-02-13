@@ -86,6 +86,43 @@
   // Fishing state
   let isFishing = false;
 
+  // World events tracking
+  var worldEvents = {
+    shootingStars: {
+      lastSpawn: 0,
+      interval: 30000, // 30-90 seconds in milliseconds
+      active: []
+    },
+    resourceBloom: {
+      lastSpawn: 0,
+      interval: 600000, // 10-15 minutes in milliseconds
+      activeZone: null,
+      startTime: 0,
+      duration: 120000 // 2 minutes
+    },
+    auroraBorealis: {
+      lastSpawn: 0,
+      interval: 1200000, // 20+ minutes in milliseconds
+      active: false,
+      mesh: null,
+      startTime: 0,
+      duration: 240000, // 3-5 minutes
+      animTime: 0
+    },
+    wanderingMerchant: {
+      lastSpawn: 0,
+      interval: 900000, // 15 minutes in milliseconds
+      activeZone: null
+    },
+    fireflySwarm: {
+      lastSpawn: 0,
+      interval: 1800000, // 30 minutes
+      active: false,
+      startTime: 0,
+      duration: 180000 // 3 minutes
+    }
+  };
+
   // Warmth tracking (GPS-based outdoor play bonus)
   let gpsHistory = [];
   let gpsWatchId = null;
@@ -93,6 +130,16 @@
 
   // Platform detection
   let platform = 'desktop';
+
+  /**
+   * Emit level up particle burst effect
+   */
+  function emitLevelUpParticles() {
+    if (World && World.emitParticles && localPlayer && localPlayer.position) {
+      var levelUpPos = { x: localPlayer.position.x, y: localPlayer.position.y + 2, z: localPlayer.position.z };
+      World.emitParticles('sparkle', levelUpPos, 25);
+    }
+  }
 
   /**
    * Initialize the game
@@ -121,18 +168,35 @@
       return;
     }
 
-    // Hide login screen
+    // Hide login screen, show loading screen
     if (typeof document !== 'undefined') {
       var loginEl = document.getElementById('login-screen');
       if (loginEl) loginEl.style.display = 'none';
+      var loadingEl = document.getElementById('loading-overlay');
+      if (loadingEl) loadingEl.style.display = 'flex';
     }
 
     // Get username
     const username = Auth.getUsername();
     console.log('Authenticated as:', username);
 
-    // Initialize game systems
+    // Initialize game systems with loading progress
     await initGameSystems(username);
+
+    // Hide loading screen with fade
+    if (typeof document !== 'undefined') {
+      var loadEl = document.getElementById('loading-overlay');
+      if (loadEl) {
+        loadEl.style.opacity = '0';
+        loadEl.style.transition = 'opacity 0.5s ease';
+        setTimeout(function() { loadEl.style.display = 'none'; }, 600);
+      }
+    }
+
+    // Start tutorial for new players
+    if (HUD && HUD.initTutorial) {
+      setTimeout(function() { HUD.initTutorial(); }, 1500);
+    }
 
     // Start game loop
     startGameLoop();
@@ -409,37 +473,6 @@
           handleBuildAction(data);
         }
       });
-    }
-
-    // Mouse-look camera control (right-click drag to orbit)
-    if (typeof document !== 'undefined') {
-      var gameCanvas = document.querySelector('canvas');
-      if (gameCanvas) {
-        gameCanvas.addEventListener('mousedown', function(e) {
-          if (e.button === 2 || e.button === 0) { // right or left click
-            isDragging = true;
-            lastMouseX = e.clientX;
-            lastMouseY = e.clientY;
-          }
-        });
-        document.addEventListener('mousemove', function(e) {
-          if (!isDragging) return;
-          var dx = e.clientX - lastMouseX;
-          var dy = e.clientY - lastMouseY;
-          cameraYaw -= dx * 0.005;
-          cameraPitch = Math.max(0.1, Math.min(1.2, cameraPitch + dy * 0.005));
-          lastMouseX = e.clientX;
-          lastMouseY = e.clientY;
-        });
-        document.addEventListener('mouseup', function() {
-          isDragging = false;
-        });
-        // Scroll to zoom
-        gameCanvas.addEventListener('wheel', function(e) {
-          cameraDistance = Math.max(5, Math.min(40, cameraDistance + e.deltaY * 0.02));
-          e.preventDefault();
-        }, { passive: false });
-      }
     }
 
     // Play ambient audio
@@ -722,6 +755,7 @@
               var xpResult = Mentoring.addSkillXP(localPlayer.id, 'exploration', 8);
               if (xpResult.leveledUp && HUD) {
                 HUD.showNotification('Exploration skill increased to ' + xpResult.newLevelName, 'success');
+                emitLevelUpParticles();
               }
             }
 
@@ -865,7 +899,7 @@
         });
       }
 
-      // Camera follows player (orbiting third-person with spring physics)
+      // Camera follows player (orbiting third-person with smooth lerp interpolation)
       if (sceneContext.camera && localPlayer) {
         var terrainY = 0;
         if (World && World.getTerrainHeight) {
@@ -873,24 +907,28 @@
         }
         localPlayer.position.y = terrainY;
 
-        // Calculate orbiting camera position from yaw/pitch/distance
-        var camOffX = Math.sin(cameraYaw) * Math.cos(cameraPitch) * cameraDistance;
-        var camOffY = Math.sin(cameraPitch) * cameraDistance;
-        var camOffZ = Math.cos(cameraYaw) * Math.cos(cameraPitch) * cameraDistance;
+        // Get camera controls from Input module
+        var inputCameraDistance = Input && Input.getCameraDistance ? Input.getCameraDistance() : cameraDistance;
+        var inputCameraOrbit = Input && Input.getCameraOrbit ? Input.getCameraOrbit() : cameraYaw;
+
+        // Calculate orbiting camera position from orbit/pitch/distance
+        var camOffX = Math.sin(inputCameraOrbit) * Math.cos(cameraPitch) * inputCameraDistance;
+        var camOffY = Math.sin(cameraPitch) * inputCameraDistance;
+        var camOffZ = Math.cos(inputCameraOrbit) * Math.cos(cameraPitch) * inputCameraDistance;
 
         var camTargetX = localPlayer.position.x + camOffX;
         var camTargetY = terrainY + camOffY + 2;
         var camTargetZ = localPlayer.position.z + camOffZ;
 
-        // Ensure camera doesn't go below terrain
+        // Camera collision: ensure camera doesn't go below terrain
         var camTerrainY = World && World.getTerrainHeight ? World.getTerrainHeight(camTargetX, camTargetZ) : 0;
         if (camTargetY < camTerrainY + 2) camTargetY = camTerrainY + 2;
 
-        // Smooth spring follow
-        var lerpSpeed = Math.min(deltaTime * 4.0, 1.0);
-        sceneContext.camera.position.x += (camTargetX - sceneContext.camera.position.x) * lerpSpeed;
-        sceneContext.camera.position.y += (camTargetY - sceneContext.camera.position.y) * lerpSpeed;
-        sceneContext.camera.position.z += (camTargetZ - sceneContext.camera.position.z) * lerpSpeed;
+        // Buttery smooth camera follow using lerp interpolation
+        var lerpFactor = 0.08;
+        sceneContext.camera.position.x += (camTargetX - sceneContext.camera.position.x) * lerpFactor;
+        sceneContext.camera.position.y += (camTargetY - sceneContext.camera.position.y) * lerpFactor;
+        sceneContext.camera.position.z += (camTargetZ - sceneContext.camera.position.z) * lerpFactor;
 
         sceneContext.camera.lookAt(
           localPlayer.position.x,
@@ -985,6 +1023,9 @@
       if (World.updateWildlife) {
         World.updateWildlife(sceneContext, deltaTime, worldTime);
       }
+
+      // Update world events (shooting stars, aurora, resource blooms, etc.)
+      updateWorldEvents(deltaTime, worldTime, sceneContext);
 
       // Update zone boundary particles (golden floating markers)
       if (World.updateZoneBoundaryParticles) {
@@ -1527,6 +1568,7 @@
             var combatXP = Mentoring.addSkillXP(localPlayer.id, 'combat', 25);
             if (combatXP.leveledUp && HUD) {
               HUD.showNotification('Combat skill increased to ' + combatXP.newLevelName + '!', 'success');
+              emitLevelUpParticles();
             }
           }
         } else {
@@ -1661,6 +1703,12 @@
       if (NPCs) {
         NPCs.reloadZoneNPCs(sceneContext, currentZone);
       }
+    }
+
+    // Emit portal warp particles (cyan swirl at player position)
+    if (World && World.emitParticles && player && player.position) {
+      var warpPos = { x: player.position.x, y: player.position.y + 1, z: player.position.z };
+      World.emitParticles('fountain', warpPos, 15);
     }
 
     if (Audio) {
@@ -1801,6 +1849,12 @@
         HUD.showTradeComplete(msg.from);
         if (Audio) Audio.playSound('trade');
 
+        // Emit trade complete particles (gold sparkle at player position)
+        if (World && World.emitParticles && localPlayer && localPlayer.position) {
+          var tradePos = { x: localPlayer.position.x, y: localPlayer.position.y + 1.5, z: localPlayer.position.z };
+          World.emitParticles('sparkle', tradePos, 12);
+        }
+
         // Track trade achievement
         trackAchievement('trade', { with: msg.from });
 
@@ -1808,6 +1862,7 @@
           var xpResult = Mentoring.addSkillXP(localPlayer.id, 'trading', 15);
           if (xpResult.leveledUp && HUD) {
             HUD.showNotification('Trading skill increased to ' + xpResult.newLevelName, 'success');
+            emitLevelUpParticles();
           }
         }
 
@@ -2116,7 +2171,14 @@
         var xpResult = Mentoring.addSkillXP(localPlayer.id, 'gardening', 5);
         if (xpResult.leveledUp && HUD) {
           HUD.showNotification('Gardening skill increased to ' + xpResult.newLevelName, 'success');
+          emitLevelUpParticles();
         }
+      }
+
+      // Emit harvest success particles (green/gold upward burst)
+      if (World && World.emitParticles && node.position) {
+        var harvestPos = { x: node.position.x, y: node.position.y + 1, z: node.position.z };
+        World.emitParticles('sparkle', harvestPos, 8);
       }
 
       if (Quests) {
@@ -2203,6 +2265,7 @@
         var xpResult = Mentoring.addSkillXP(localPlayer.id, 'crafting', 10);
         if (xpResult.leveledUp && HUD) {
           HUD.showNotification('Crafting skill increased to ' + xpResult.newLevelName, 'success');
+          emitLevelUpParticles();
         }
       }
 
@@ -2212,6 +2275,12 @@
 
       // Track craft achievement
       trackAchievement('craft', { item: result.output.itemId, recipe: recipeId });
+
+      // Emit craft success particles (orange/white sparkle at player position)
+      if (World && World.emitParticles && localPlayer && localPlayer.position) {
+        var craftPos = { x: localPlayer.position.x, y: localPlayer.position.y + 1.5, z: localPlayer.position.z };
+        World.emitParticles('fire', craftPos, 10);
+      }
 
       if (Audio) Audio.playSound('build');
     } else {
@@ -2327,6 +2396,7 @@
           var xpResult = Mentoring.addSkillXP(localPlayer.id, 'social', 20);
           if (xpResult.leveledUp && HUD) {
             HUD.showNotification('Social skill increased to ' + xpResult.newLevelName, 'success');
+            emitLevelUpParticles();
           }
         }
 
@@ -2368,6 +2438,7 @@
         var xpResult = Mentoring.addSkillXP(localPlayer.id, 'social', 15);
         if (xpResult.leveledUp && HUD) {
           HUD.showNotification('Social skill increased to ' + xpResult.newLevelName, 'success');
+          emitLevelUpParticles();
         }
       }
 
@@ -2569,6 +2640,7 @@
             var xpResult = Mentoring.addSkillXP(localPlayer.id, 'building', 12);
             if (xpResult.leveledUp && HUD) {
               HUD.showNotification('Building skill increased to ' + xpResult.newLevelName, 'success');
+              emitLevelUpParticles();
             }
           }
 
@@ -2631,10 +2703,11 @@
       case 'move':
         localPlayer.position = payload.position;
         localPlayer.zone = payload.zone;
-        // Move message already created by Input module
+        if (HUD && HUD.advanceTutorial) HUD.advanceTutorial('move');
         break;
 
       case 'chat':
+        if (HUD && HUD.advanceTutorial) HUD.advanceTutorial('openChat');
         // Check for emote chat commands
         var message = payload.message;
         var emoteMatch = message.match(/^\/(wave|dance|bow|cheer|meditate|point)$/);
@@ -2650,6 +2723,7 @@
           var xpResult = Mentoring.addSkillXP(localPlayer.id, 'social', 3);
           if (xpResult.leveledUp && HUD) {
             HUD.showNotification('Social skill increased to ' + xpResult.newLevelName, 'success');
+            emitLevelUpParticles();
           }
         }
 
@@ -2807,6 +2881,7 @@
         break;
 
       case 'interact':
+        if (HUD && HUD.advanceTutorial) HUD.advanceTutorial('interact');
         // Check for nearby NPCs first
         if (NPCs && NPCs.interactWithNPC && localPlayer) {
           var npcResponse = NPCs.interactWithNPC(localPlayer.position.x, localPlayer.position.z, localPlayer.id);
@@ -2837,6 +2912,12 @@
                   HUD.updatePlayerInfo(localPlayer);
                   // Track activity
                   addRecentActivity('Completed quest: ' + result.quest.title);
+                  // Emit quest complete particles (rainbow burst - use sparkle and fountain for variety)
+                  if (World && World.emitParticles && localPlayer && localPlayer.position) {
+                    var questPos = { x: localPlayer.position.x, y: localPlayer.position.y + 2, z: localPlayer.position.z };
+                    World.emitParticles('sparkle', questPos, 15);
+                    World.emitParticles('fountain', questPos, 15);
+                  }
                 }
               }
 
@@ -2877,6 +2958,7 @@
                   var loreXP = Mentoring.addSkillXP(localPlayer.id, 'lore', 5);
                   if (loreXP.leveledUp && HUD) {
                     HUD.showNotification('Lore skill increased to ' + loreXP.newLevelName, 'success');
+                    emitLevelUpParticles();
                   }
                 }
                 addRecentActivity('Studied at ' + objResult.type.replace(/_/g, ' '));
@@ -2885,6 +2967,7 @@
                   var combatXP = Mentoring.addSkillXP(localPlayer.id, 'combat', 5);
                   if (combatXP.leveledUp && HUD) {
                     HUD.showNotification('Combat skill increased to ' + combatXP.newLevelName, 'success');
+                    emitLevelUpParticles();
                   }
                 }
                 addRecentActivity('Trained at combat dummy');
@@ -2893,6 +2976,7 @@
                   var craftXP = Mentoring.addSkillXP(localPlayer.id, 'crafting', 5);
                   if (craftXP.leveledUp && HUD) {
                     HUD.showNotification('Crafting skill increased to ' + craftXP.newLevelName, 'success');
+                    emitLevelUpParticles();
                   }
                 }
                 addRecentActivity('Created at ' + objResult.type.replace(/_/g, ' '));
@@ -2924,6 +3008,7 @@
         break;
 
       case 'toggle_quest_log':
+        if (HUD && HUD.advanceTutorial) HUD.advanceTutorial('openQuests');
         // Toggle quest log panel
         if (HUD && Quests && localPlayer) {
           var questLogEl = document.getElementById('quest-log-panel');
@@ -2941,6 +3026,7 @@
           HUD.toggleInventoryPanel();
           HUD.updateInventoryDisplay(playerInventory);
         }
+        if (HUD && HUD.advanceTutorial) HUD.advanceTutorial('openInventory');
         break;
 
       case 'toggleCrafting':
@@ -3018,7 +3104,33 @@
         break;
 
       case 'useQuickSlot':
-        console.log('Use quick slot:', payload.slot);
+        if (playerInventory && Inventory) {
+          var slotIndex = payload.slot; // 0-4
+          var qbSlotIdx = playerInventory.quickBar ? playerInventory.quickBar[slotIndex] : slotIndex;
+          var items = Inventory.getInventory(playerInventory);
+          var slotItem = items[qbSlotIdx];
+          if (slotItem) {
+            if (slotItem.type === 'food') {
+              // Consume food - remove 1 and show notification
+              Inventory.removeItem(playerInventory, slotItem.itemId, 1);
+              if (HUD) HUD.showNotification('Ate ' + slotItem.icon + ' ' + slotItem.name);
+              // Award small Spark for eating
+              if (Economy) Economy.earnSpark(localPlayer.id, 'daily_login', {});
+              if (HUD && HUD.updateInventoryDisplay) {
+                HUD.updateInventoryDisplay(playerInventory);
+                HUD.updateQuickBar(playerInventory);
+              }
+            } else if (slotItem.type === 'tools') {
+              // Equip tool - show notification
+              if (HUD) HUD.showNotification('Equipped ' + slotItem.icon + ' ' + slotItem.name);
+            } else {
+              // Other items - show info
+              if (HUD) HUD.showNotification(slotItem.icon + ' ' + slotItem.name + ': ' + (slotItem.description || 'An item'));
+            }
+          } else {
+            if (HUD) HUD.showNotification('Quick slot ' + (slotIndex + 1) + ' is empty');
+          }
+        }
         break;
 
       case 'click':
@@ -3335,6 +3447,7 @@
               var loreXP = Mentoring.addSkillXP(localPlayer.id, 'lore', 15);
               if (loreXP.leveledUp && HUD) {
                 HUD.showNotification('Lore skill increased to ' + loreXP.newLevelName + '!', 'success');
+                emitLevelUpParticles();
               }
             }
           }
@@ -3343,6 +3456,7 @@
             var exploreXP = Mentoring.addSkillXP(localPlayer.id, 'exploration', 10);
             if (exploreXP.leveledUp && HUD) {
               HUD.showNotification('Exploration skill increased to ' + exploreXP.newLevelName + '!', 'success');
+              emitLevelUpParticles();
             }
           }
           // Track achievement
@@ -3527,6 +3641,7 @@
           var fishXP = Mentoring.addSkillXP(localPlayer.id, 'gardening', 8);
           if (fishXP.leveledUp && HUD) {
             HUD.showNotification('Gardening skill increased to ' + fishXP.newLevelName + '!', 'success');
+            emitLevelUpParticles();
           }
         }
         addRecentActivity('Caught: ' + result.fish.name);
@@ -3647,6 +3762,327 @@
             }
           };
           panel.appendChild(row);
+  // ========================================================================
+  // WORLD EVENTS SYSTEM
+  // ========================================================================
+
+  /**
+   * Check if it's nighttime based on worldTime
+   * @param {number} worldTime - Minutes in 24-hour cycle (0-1440)
+   * @returns {boolean} True if nighttime
+   */
+  function isNighttime(worldTime) {
+    var hour = worldTime / 60;
+    return hour < 6 || hour >= 20; // Night is 8pm-6am
+  }
+
+  /**
+   * Get a random zone ID
+   * @returns {string} Random zone ID
+   */
+  function getRandomZone() {
+    if (!World || !World.ZONES) return 'nexus';
+    var zoneKeys = Object.keys(World.ZONES);
+    return zoneKeys[Math.floor(Math.random() * zoneKeys.length)];
+  }
+
+  /**
+   * Get zone name from zone ID
+   * @param {string} zoneId - Zone identifier
+   * @returns {string} Zone name
+   */
+  function getZoneName(zoneId) {
+    if (!World || !World.ZONES || !World.ZONES[zoneId]) return zoneId;
+    return World.ZONES[zoneId].name || zoneId;
+  }
+
+  /**
+   * Spawn a shooting star event
+   * @param {object} sceneContext - Scene context
+   * @param {number} currentTime - Current timestamp in milliseconds
+   */
+  function spawnShootingStar(sceneContext, currentTime) {
+    if (!sceneContext || !sceneContext.scene) return;
+
+    // Random direction: left-to-right or right-to-left
+    var direction = Math.random() > 0.5 ? 1 : -1;
+    var startX = direction > 0 ? -300 : 300;
+    var endX = direction > 0 ? 300 : -300;
+    var y = 150 + Math.random() * 50; // High in sky
+    var z = -200 + Math.random() * 400;
+
+    // Create shooting star
+    var starGeom = new THREE.SphereGeometry(0.8, 8, 8);
+    var starMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    var star = new THREE.Mesh(starGeom, starMat);
+    star.position.set(startX, y, z);
+    sceneContext.scene.add(star);
+
+    // Create trail spheres
+    var trail = [];
+    for (var i = 0; i < 3; i++) {
+      var trailGeom = new THREE.SphereGeometry(0.5 - i * 0.15, 6, 6);
+      var trailMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.7 - i * 0.2
+      });
+      var trailSphere = new THREE.Mesh(trailGeom, trailMat);
+      trailSphere.position.copy(star.position);
+      sceneContext.scene.add(trailSphere);
+      trail.push(trailSphere);
+    }
+
+    // Store in active events
+    var duration = 1000 + Math.random() * 1000; // 1-2 seconds
+    worldEvents.shootingStars.active.push({
+      star: star,
+      trail: trail,
+      startTime: currentTime,
+      duration: duration,
+      startX: startX,
+      endX: endX,
+      y: y,
+      z: z
+    });
+
+    // Show notification
+    if (HUD && HUD.showNotification) {
+      HUD.showNotification('A shooting star streaks across the sky!', 'info');
+    }
+  }
+
+  /**
+   * Spawn resource bloom event
+   * @param {number} currentTime - Current timestamp in milliseconds
+   */
+  function spawnResourceBloom(currentTime) {
+    var zone = getRandomZone();
+    worldEvents.resourceBloom.activeZone = zone;
+    worldEvents.resourceBloom.startTime = currentTime;
+
+    if (HUD && HUD.showNotification) {
+      HUD.showNotification('A bloom of resources has appeared in ' + getZoneName(zone) + '!', 'success');
+    }
+  }
+
+  /**
+   * Spawn aurora borealis event
+   * @param {object} sceneContext - Scene context
+   * @param {number} currentTime - Current timestamp in milliseconds
+   */
+  function spawnAuroraBorealis(sceneContext, currentTime) {
+    if (!sceneContext || !sceneContext.scene) return;
+
+    // Create a large plane high in the sky
+    var auroraGeom = new THREE.PlaneGeometry(400, 200, 40, 20);
+    var auroraMat = new THREE.MeshBasicMaterial({
+      color: 0x00ff88,
+      transparent: true,
+      opacity: 0.3,
+      side: THREE.DoubleSide
+    });
+    var aurora = new THREE.Mesh(auroraGeom, auroraMat);
+    aurora.position.set(0, 180, -100);
+    aurora.rotation.x = Math.PI / 2.5;
+    sceneContext.scene.add(aurora);
+
+    worldEvents.auroraBorealis.active = true;
+    worldEvents.auroraBorealis.mesh = aurora;
+    worldEvents.auroraBorealis.startTime = currentTime;
+    worldEvents.auroraBorealis.duration = 180000 + Math.random() * 120000; // 3-5 minutes
+    worldEvents.auroraBorealis.animTime = 0;
+
+    // Store original vertex positions for animation
+    var positions = auroraGeom.attributes.position.array;
+    var originalPositions = new Float32Array(positions.length);
+    for (var i = 0; i < positions.length; i++) {
+      originalPositions[i] = positions[i];
+    }
+    aurora.userData.originalPositions = originalPositions;
+
+    if (HUD && HUD.showNotification) {
+      HUD.showNotification('The Northern Lights dance across the sky!', 'success');
+    }
+  }
+
+  /**
+   * Spawn wandering merchant event
+   * @param {number} currentTime - Current timestamp in milliseconds
+   */
+  function spawnWanderingMerchant(currentTime) {
+    var zone = getRandomZone();
+    worldEvents.wanderingMerchant.activeZone = zone;
+    worldEvents.wanderingMerchant.lastSpawn = currentTime;
+
+    if (HUD && HUD.showNotification) {
+      HUD.showNotification('A wandering merchant has appeared near ' + getZoneName(zone) + '!', 'info');
+    }
+  }
+
+  /**
+   * Spawn firefly swarm event
+   * @param {number} currentTime - Current timestamp in milliseconds
+   */
+  function spawnFireflySwarm(currentTime) {
+    // Only in gardens zone
+    worldEvents.fireflySwarm.active = true;
+    worldEvents.fireflySwarm.startTime = currentTime;
+
+    if (HUD && HUD.showNotification) {
+      HUD.showNotification('A swarm of fireflies fills the gardens!', 'success');
+    }
+  }
+
+  /**
+   * Update world events
+   * @param {number} deltaTime - Time elapsed since last frame (seconds)
+   * @param {number} worldTime - Current world time in minutes (0-1440)
+   * @param {object} sceneContext - Scene context with scene, camera, etc.
+   */
+  function updateWorldEvents(deltaTime, worldTime, sceneContext) {
+    if (!sceneContext) return;
+
+    var currentTime = Date.now();
+    var isNight = isNighttime(worldTime);
+
+    // 1. SHOOTING STARS (nighttime only, every 30-90 seconds)
+    if (isNight) {
+      var starInterval = worldEvents.shootingStars.interval + Math.random() * 60000;
+      if (currentTime - worldEvents.shootingStars.lastSpawn > starInterval) {
+        spawnShootingStar(sceneContext, currentTime);
+        worldEvents.shootingStars.lastSpawn = currentTime;
+      }
+    }
+
+    // Update active shooting stars
+    for (var i = worldEvents.shootingStars.active.length - 1; i >= 0; i--) {
+      var starEvent = worldEvents.shootingStars.active[i];
+      var elapsed = currentTime - starEvent.startTime;
+      var progress = Math.min(elapsed / starEvent.duration, 1);
+
+      if (progress >= 1) {
+        // Remove completed star
+        sceneContext.scene.remove(starEvent.star);
+        starEvent.star.geometry.dispose();
+        starEvent.star.material.dispose();
+        for (var j = 0; j < starEvent.trail.length; j++) {
+          sceneContext.scene.remove(starEvent.trail[j]);
+          starEvent.trail[j].geometry.dispose();
+          starEvent.trail[j].material.dispose();
+        }
+        worldEvents.shootingStars.active.splice(i, 1);
+      } else {
+        // Update position
+        var newX = starEvent.startX + (starEvent.endX - starEvent.startX) * progress;
+        starEvent.star.position.x = newX;
+
+        // Update trail with delay
+        for (var k = 0; k < starEvent.trail.length; k++) {
+          var trailDelay = (k + 1) * 0.1;
+          var trailProgress = Math.max(0, progress - trailDelay);
+          var trailX = starEvent.startX + (starEvent.endX - starEvent.startX) * trailProgress;
+          starEvent.trail[k].position.x = trailX;
+          starEvent.trail[k].position.y = starEvent.y;
+          starEvent.trail[k].position.z = starEvent.z;
+          // Fade out trail
+          starEvent.trail[k].material.opacity = (0.7 - k * 0.2) * (1 - progress);
+        }
+      }
+    }
+
+    // 2. RESOURCE BLOOM (every 10-15 minutes)
+    var bloomInterval = worldEvents.resourceBloom.interval + Math.random() * 300000;
+    if (currentTime - worldEvents.resourceBloom.lastSpawn > bloomInterval) {
+      spawnResourceBloom(currentTime);
+      worldEvents.resourceBloom.lastSpawn = currentTime;
+    }
+
+    // Update resource bloom (make resources glow if player is in zone)
+    if (worldEvents.resourceBloom.activeZone) {
+      var bloomElapsed = currentTime - worldEvents.resourceBloom.startTime;
+      if (bloomElapsed > worldEvents.resourceBloom.duration) {
+        worldEvents.resourceBloom.activeZone = null;
+      } else {
+        // If player is in bloom zone, resources could glow brighter
+        // This would require World module support, so for now just track state
+      }
+    }
+
+    // 3. AURORA BOREALIS (nighttime, rare - every 20+ minutes)
+    if (isNight) {
+      var auroraInterval = worldEvents.auroraBorealis.interval + Math.random() * 600000;
+      if (!worldEvents.auroraBorealis.active &&
+          currentTime - worldEvents.auroraBorealis.lastSpawn > auroraInterval) {
+        spawnAuroraBorealis(sceneContext, currentTime);
+        worldEvents.auroraBorealis.lastSpawn = currentTime;
+      }
+    }
+
+    // Update aurora animation
+    if (worldEvents.auroraBorealis.active && worldEvents.auroraBorealis.mesh) {
+      var auroraElapsed = currentTime - worldEvents.auroraBorealis.startTime;
+      if (auroraElapsed > worldEvents.auroraBorealis.duration) {
+        // Remove aurora
+        sceneContext.scene.remove(worldEvents.auroraBorealis.mesh);
+        worldEvents.auroraBorealis.mesh.geometry.dispose();
+        worldEvents.auroraBorealis.mesh.material.dispose();
+        worldEvents.auroraBorealis.mesh = null;
+        worldEvents.auroraBorealis.active = false;
+      } else {
+        // Animate with sine wave displacement
+        worldEvents.auroraBorealis.animTime += deltaTime;
+        var aurora = worldEvents.auroraBorealis.mesh;
+        var geometry = aurora.geometry;
+        var positions = geometry.attributes.position.array;
+        var originalPositions = aurora.userData.originalPositions;
+
+        if (originalPositions) {
+          for (var v = 0; v < positions.length; v += 3) {
+            var x = originalPositions[v];
+            var y = originalPositions[v + 1];
+            var offset = Math.sin(x * 0.02 + worldEvents.auroraBorealis.animTime * 2) *
+                        Math.cos(y * 0.02 + worldEvents.auroraBorealis.animTime * 1.5) * 8;
+            positions[v + 2] = originalPositions[v + 2] + offset;
+          }
+          geometry.attributes.position.needsUpdate = true;
+        }
+
+        // Fade opacity based on time
+        var fadeProgress = auroraElapsed / worldEvents.auroraBorealis.duration;
+        if (fadeProgress > 0.8) {
+          aurora.material.opacity = 0.3 * (1 - (fadeProgress - 0.8) / 0.2);
+        }
+      }
+    }
+
+    // 4. WANDERING MERCHANT (every 15 minutes)
+    var merchantInterval = worldEvents.wanderingMerchant.interval;
+    if (currentTime - worldEvents.wanderingMerchant.lastSpawn > merchantInterval) {
+      spawnWanderingMerchant(currentTime);
+    }
+
+    // 5. FIREFLY SWARM (nighttime in gardens)
+    if (isNight && currentZone === 'gardens') {
+      var swarmInterval = worldEvents.fireflySwarm.interval;
+      if (!worldEvents.fireflySwarm.active &&
+          currentTime - worldEvents.fireflySwarm.lastSpawn > swarmInterval) {
+        spawnFireflySwarm(currentTime);
+        worldEvents.fireflySwarm.lastSpawn = currentTime;
+      }
+    }
+
+    // Update firefly swarm
+    if (worldEvents.fireflySwarm.active) {
+      var swarmElapsed = currentTime - worldEvents.fireflySwarm.startTime;
+      if (swarmElapsed > worldEvents.fireflySwarm.duration) {
+        worldEvents.fireflySwarm.active = false;
+      }
+      // The actual firefly count increase is handled in World.updateWildlife
+      // We just track the active state here
+    }
+  }
+
         });
       }
     }
