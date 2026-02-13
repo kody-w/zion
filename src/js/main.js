@@ -184,6 +184,7 @@
     // Initialize AI citizens
     if (NPCs) {
       NPCs.initNPCs(null, gameState, sceneContext);
+      NPCs.reloadZoneNPCs(sceneContext, currentZone);
     }
 
     // Send join message

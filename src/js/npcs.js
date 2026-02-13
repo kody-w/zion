@@ -209,7 +209,7 @@
 
       // Body
       const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1.5, 8);
-      const bodyMaterial = new THREE.MeshPhongMaterial({
+      const bodyMaterial = new THREE.MeshStandardMaterial({
         color: ARCHETYPE_COLORS[agent.archetype] || 0xCCCCCC
       });
       const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
@@ -219,7 +219,7 @@
 
       // Head
       const headGeometry = new THREE.SphereGeometry(0.25, 8, 8);
-      const headMaterial = new THREE.MeshPhongMaterial({
+      const headMaterial = new THREE.MeshStandardMaterial({
         color: ARCHETYPE_COLORS[agent.archetype] || 0xCCCCCC
       });
       const head = new THREE.Mesh(headGeometry, headMaterial);
