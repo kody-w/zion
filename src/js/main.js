@@ -63,6 +63,12 @@
       return;
     }
 
+    // Hide login screen
+    if (typeof document !== 'undefined') {
+      var loginEl = document.getElementById('login-screen');
+      if (loginEl) loginEl.style.display = 'none';
+    }
+
     // Get username
     const username = Auth.getUsername();
     console.log('Authenticated as:', username);
