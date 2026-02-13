@@ -16,6 +16,7 @@ JS_FILES = [
     'competition.js',
     'exploration.js',
     'physical.js',
+    'models.js',
     'auth.js',
     'network.js',
     'world.js',
@@ -23,6 +24,7 @@ JS_FILES = [
     'hud.js',
     'xr.js',
     'audio.js',
+    'npc_ai.js',
     'npcs.js',
     'main.js'
 ]

@@ -17,11 +17,17 @@
     arena: {x: 0, z: -240}
   };
 
+  // NPC AI reference (loaded from npc_ai.js)
+  var NpcAI = typeof window !== 'undefined' ? window.NpcAI : null;
+
   // NPC data
   let npcAgents = [];
   let npcStates = new Map(); // id -> behavior state
+  let npcBrains = new Map(); // id -> NpcAI brain object
   let npcMeshes = new Map(); // id -> THREE.Group
   let chatBubbles = new Map(); // id -> { mesh, timer }
+  let pendingEvents = []; // events to broadcast to all NPCs
+  let npcUpdateFrame = 0; // frame counter for staggered updates
 
   // Seeded random number generator
   function seededRandom(seed) {
@@ -388,6 +394,9 @@
    * Initialize NPC behavior states
    */
   function initNPCStates() {
+    // Re-check for NpcAI module (may have loaded after npcs.js)
+    if (!NpcAI && typeof window !== 'undefined') NpcAI = window.NpcAI;
+
     npcAgents.forEach(agent => {
       npcStates.set(agent.id, {
         currentState: 'idle',
@@ -395,9 +404,21 @@
         destination: null,
         targetNPC: null,
         lookAngle: 0,
-        animationTime: Math.random() * 1000 // Offset for variety
+        animationTime: Math.random() * 1000
       });
+
+      // Create AI brain for each NPC (if NpcAI available)
+      if (NpcAI && NpcAI.createNpcBrain) {
+        var brain = NpcAI.createNpcBrain(agent.archetype, agent.id);
+        npcBrains.set(agent.id, brain);
+      }
     });
+
+    if (NpcAI) {
+      console.log('NPC AI brains initialized for ' + npcBrains.size + ' agents');
+    } else {
+      console.log('NpcAI not loaded — using fallback behavior');
+    }
   }
 
   /**
@@ -460,36 +481,261 @@
   /**
    * Update NPCs (called every frame)
    */
-  function updateNPCs(sceneContext, gameState, deltaTime, worldTime) {
+  function updateNPCs(sceneContext, gameState, deltaTime, worldTime, worldState) {
     if (npcAgents.length === 0) return;
+    npcUpdateFrame++;
 
-    // Use world time as seed base for deterministic behavior
-    const timeSeed = Math.floor(worldTime);
+    // Re-check for NpcAI module (may have loaded after init)
+    if (!NpcAI && typeof window !== 'undefined' && window.NpcAI) {
+      NpcAI = window.NpcAI;
+      // Late-init brains for NPCs that don't have one
+      npcAgents.forEach(function(agent) {
+        if (!npcBrains.has(agent.id) && NpcAI.createNpcBrain) {
+          npcBrains.set(agent.id, NpcAI.createNpcBrain(agent.archetype, agent.id));
+        }
+      });
+      console.log('NpcAI late-loaded, brains initialized');
+    }
 
-    npcAgents.forEach((agent, index) => {
-      const state = npcStates.get(agent.id);
+    // Process pending events
+    if (NpcAI && pendingEvents.length > 0) {
+      var events = pendingEvents.slice();
+      pendingEvents = [];
+      events.forEach(function(event) {
+        npcBrains.forEach(function(brain) {
+          if (NpcAI.handleEvent) NpcAI.handleEvent(brain.memory, event);
+        });
+      });
+    }
+
+    var timeSeed = Math.floor(worldTime);
+    var playerPos = worldState && worldState.playerPosition ? worldState.playerPosition : null;
+
+    npcAgents.forEach(function(agent, index) {
+      var state = npcStates.get(agent.id);
       if (!state) return;
 
-      // Increment animation time
-      state.animationTime += deltaTime * 1000;
-
-      // Decrement state timer (walking/socializing run until destination reached)
-      if (state.currentState !== 'walking' && state.currentState !== 'socializing') {
-        state.stateTimer -= deltaTime;
-        if (state.stateTimer <= 0) {
-          transitionState(agent, state, timeSeed + index);
-        }
+      // Performance: stagger AI updates by distance
+      if (playerPos) {
+        var dx = agent.position.x - playerPos.x;
+        var dz = agent.position.z - playerPos.z;
+        var dist = Math.sqrt(dx * dx + dz * dz);
+        // Far NPCs update less frequently
+        if (dist > 300) return; // skip entirely
+        if (dist > 150 && npcUpdateFrame % 10 !== index % 10) return;
+        if (dist > 50 && npcUpdateFrame % 3 !== index % 3) return;
       }
 
-      // Update behavior based on current state
-      updateNPCBehavior(agent, state, deltaTime, timeSeed + index);
+      state.animationTime += deltaTime * 1000;
 
-      // Update visual representation
+      // Use NpcAI brain if available
+      var brain = npcBrains.get(agent.id);
+      if (brain && NpcAI && NpcAI.updateBrain) {
+        // Build world state for AI perception
+        var aiWorldState = {
+          weather: worldState ? worldState.weather : 'clear',
+          timeOfDay: worldState ? worldState.timePeriod : 'midday',
+          currentHour: worldTime ? worldTime / 60 : 12,
+          currentZone: agent.position.zone,
+          nearbyPlayers: [],
+          nearbyNPCs: [],
+          allNPCs: npcAgents
+        };
+
+        // Add player info for perception
+        if (playerPos && worldState) {
+          var pdx = playerPos.x - agent.position.x;
+          var pdz = playerPos.z - agent.position.z;
+          var pDist = Math.sqrt(pdx * pdx + pdz * pdz);
+          if (pDist < 25) {
+            aiWorldState.nearbyPlayers.push({
+              id: worldState.playerId || 'player',
+              distance: pDist,
+              direction: { x: pdx, z: pdz },
+              isBuilding: false,
+              isHarvesting: false
+            });
+          }
+        }
+
+        // Add nearby NPCs for perception
+        npcAgents.forEach(function(other) {
+          if (other.id === agent.id) return;
+          var ndx = other.position.x - agent.position.x;
+          var ndz = other.position.z - agent.position.z;
+          var nDist = Math.sqrt(ndx * ndx + ndz * ndz);
+          if (nDist < 25) {
+            var otherBrain = npcBrains.get(other.id);
+            aiWorldState.nearbyNPCs.push({
+              id: other.id,
+              distance: nDist,
+              direction: { x: ndx, z: ndz },
+              archetype: other.archetype,
+              currentActivity: otherBrain ? NpcAI.getGoal(otherBrain) : 'idle',
+              mood: otherBrain ? NpcAI.getMood(otherBrain) : 'neutral'
+            });
+          }
+        });
+
+        // Get AI decision
+        var npcObj = { x: agent.position.x, z: agent.position.z, name: agent.name, zone: agent.position.zone };
+        var decision = NpcAI.updateBrain(brain, npcObj, aiWorldState);
+
+        // Execute decision
+        if (decision) {
+          executeAIDecision(agent, state, decision, deltaTime);
+        }
+      } else {
+        // Fallback to original behavior
+        if (state.currentState !== 'walking' && state.currentState !== 'socializing') {
+          state.stateTimer -= deltaTime;
+          if (state.stateTimer <= 0) {
+            transitionState(agent, state, timeSeed + index);
+          }
+        }
+        updateNPCBehavior(agent, state, deltaTime, timeSeed + index);
+      }
+
       updateNPCVisual(agent, state, sceneContext, deltaTime);
     });
 
-    // Update chat bubbles
     updateChatBubbles(deltaTime);
+  }
+
+  /**
+   * Execute an AI brain decision — translates decision to movement/animation/dialogue
+   */
+  function executeAIDecision(agent, state, decision, deltaTime) {
+    // Map AI decision type to NPC state
+    switch (decision.type) {
+      case 'walk_to':
+      case 'wander':
+      case 'explore':
+      case 'approach_social':
+      case 'seek_shelter':
+        if (decision.target) {
+          state.destination = { x: decision.target.x, z: decision.target.z };
+          state.currentState = 'walking';
+          // Move toward destination
+          var dx = state.destination.x - agent.position.x;
+          var dz = state.destination.z - agent.position.z;
+          var dist = Math.sqrt(dx * dx + dz * dz);
+          if (dist > 0.5) {
+            var speed = (decision.speed || 1.5) * deltaTime;
+            var ratio = Math.min(speed / dist, 1);
+            agent.position.x += dx * ratio;
+            agent.position.z += dz * ratio;
+            state.lookAngle = Math.atan2(dx, dz);
+          } else {
+            state.currentState = 'idle';
+            state.destination = null;
+          }
+        }
+        break;
+
+      case 'work':
+        state.currentState = 'working';
+        state.stateTimer = 5 + Math.random() * 10;
+        break;
+
+      case 'socialize':
+      case 'join_group':
+        state.currentState = 'talking';
+        state.stateTimer = 4 + Math.random() * 3;
+        break;
+
+      case 'greet':
+      case 'react':
+        state.currentState = 'talking';
+        state.stateTimer = 3;
+        if (decision.facing) {
+          state.lookAngle = Math.atan2(
+            decision.facing.x - agent.position.x,
+            decision.facing.z - agent.position.z
+          );
+        }
+        break;
+
+      case 'rest':
+        state.currentState = 'idle';
+        state.stateTimer = 8 + Math.random() * 10;
+        break;
+
+      case 'idle':
+      default:
+        state.currentState = 'idle';
+        state.stateTimer = 3 + Math.random() * 5;
+        break;
+    }
+
+    // Show dialogue if the decision includes one
+    if (decision.dialogue) {
+      showChatBubbleWithText(agent, decision.dialogue);
+    }
+  }
+
+  /**
+   * Show chat bubble with specific text (from AI brain)
+   */
+  function showChatBubbleWithText(agent, text) {
+    var mesh = npcMeshes.get(agent.id);
+    if (!mesh) return;
+    var THREE = window.THREE;
+    if (!THREE) return;
+
+    // Remove existing bubble
+    var existing = chatBubbles.get(agent.id);
+    if (existing) { mesh.remove(existing.mesh); }
+
+    var canvas = document.createElement('canvas');
+    var context = canvas.getContext('2d');
+    canvas.width = 512; canvas.height = 128;
+
+    context.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    context.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+    context.lineWidth = 4;
+
+    var x = 10, y = 10, w = canvas.width - 20, h = canvas.height - 20, r = 15;
+    context.beginPath();
+    context.moveTo(x + r, y);
+    context.lineTo(x + w - r, y);
+    context.quadraticCurveTo(x + w, y, x + w, y + r);
+    context.lineTo(x + w, y + h - r);
+    context.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    context.lineTo(x + r, y + h);
+    context.quadraticCurveTo(x, y + h, x, y + h - r);
+    context.lineTo(x, y + r);
+    context.quadraticCurveTo(x, y, x + r, y);
+    context.closePath();
+    context.fill();
+    context.stroke();
+
+    context.fillStyle = 'black';
+    context.font = '18px Arial';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+
+    var words = text.split(' ');
+    var line = '', y_pos = 50;
+    for (var i = 0; i < words.length; i++) {
+      var testLine = line + words[i] + ' ';
+      if (context.measureText(testLine).width > 480 && line !== '') {
+        context.fillText(line, canvas.width / 2, y_pos);
+        line = words[i] + ' ';
+        y_pos += 22;
+      } else {
+        line = testLine;
+      }
+    }
+    context.fillText(line, canvas.width / 2, y_pos);
+
+    var bubbleTexture = new THREE.CanvasTexture(canvas);
+    var bubbleMaterial = new THREE.SpriteMaterial({ map: bubbleTexture });
+    var bubble = new THREE.Sprite(bubbleMaterial);
+    bubble.scale.set(4, 1, 1);
+    bubble.position.y = 3.5;
+    mesh.add(bubble);
+    chatBubbles.set(agent.id, { mesh: bubble, timer: 5 });
   }
 
   /**
@@ -912,11 +1158,166 @@
     return npcAgents.find(agent => agent.id === id);
   }
 
+  /**
+   * Find nearest NPC to a world position within a max distance
+   * @returns {object|null} - {agent, distance} or null
+   */
+  function findNearestNPC(worldX, worldZ, maxDist) {
+    maxDist = maxDist || 10;
+    var best = null;
+    var bestDist = maxDist;
+    for (var i = 0; i < npcAgents.length; i++) {
+      var agent = npcAgents[i];
+      var dx = agent.position.x - worldX;
+      var dz = agent.position.z - worldZ;
+      var dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = { agent: agent, distance: dist };
+      }
+    }
+    return best;
+  }
+
+  /**
+   * Interact with an NPC — triggers greeting dialogue and returns response
+   * @returns {object|null} - {name, message, archetype}
+   */
+  function interactWithNPC(worldX, worldZ) {
+    var nearest = findNearestNPC(worldX, worldZ, 8);
+    if (!nearest) return null;
+
+    var agent = nearest.agent;
+    var seed = Date.now() * 0.001 + agent.id.charCodeAt(0);
+    var brain = npcBrains.get(agent.id);
+    var message, mood, activity, familiarity;
+
+    if (brain && NpcAI) {
+      // Use AI brain for contextual dialogue
+      var context = { category: 'greeting_first' };
+      if (NpcAI.getDialogue) {
+        // Build a simple perception for dialogue context
+        message = NpcAI.getDialogue(brain.memory, context, agent.name);
+      }
+      mood = NpcAI.getMood ? NpcAI.getMood(brain) : 'neutral';
+      activity = NpcAI.getGoal ? NpcAI.getGoal(brain) : '';
+      familiarity = brain.memory && brain.memory.playerFamiliarity
+        ? Math.round(Object.values(brain.memory.playerFamiliarity)[0] || 0)
+        : 0;
+
+      // Record interaction in brain memory
+      if (NpcAI.handleEvent) {
+        NpcAI.handleEvent(brain.memory, {
+          type: 'player_interact',
+          playerId: 'player',
+          description: 'Player interacted directly'
+        });
+      }
+      // Increase familiarity
+      if (brain.memory && brain.memory.playerFamiliarity) {
+        var pKey = Object.keys(brain.memory.playerFamiliarity)[0] || 'player';
+        brain.memory.playerFamiliarity[pKey] = Math.min(100, (brain.memory.playerFamiliarity[pKey] || 0) + 5);
+        familiarity = Math.round(brain.memory.playerFamiliarity[pKey]);
+      }
+    }
+
+    // Fallback to random message if no AI dialogue
+    if (!message) {
+      var messages = ARCHETYPE_MESSAGES[agent.archetype] || ['Hello there.'];
+      message = randomChoice(messages, seed);
+    }
+
+    // Show chat bubble
+    if (brain && NpcAI) {
+      showChatBubbleWithText(agent, message);
+    } else {
+      showChatBubble(agent, seed);
+    }
+
+    return {
+      name: agent.name,
+      message: message,
+      archetype: agent.archetype,
+      mood: mood || 'neutral',
+      activity: activity || '',
+      familiarity: familiarity || 0,
+      id: agent.id
+    };
+  }
+
+  /**
+   * Get all NPC positions for minimap rendering
+   * @returns {Array} - [{x, z, name, archetype}]
+   */
+  function getNPCPositions() {
+    return npcAgents.map(function(agent) {
+      return {
+        x: agent.position.x,
+        z: agent.position.z,
+        name: agent.name,
+        archetype: agent.archetype,
+        zone: agent.position.zone
+      };
+    });
+  }
+
+  /**
+   * Broadcast an event to all NPC brains
+   * @param {object} event - {type, data}
+   */
+  function broadcastEvent(event) {
+    if (!event) return;
+    // Convert event format for NpcAI
+    var aiEvent = {
+      type: event.type,
+      description: event.type + ': ' + JSON.stringify(event.data || {}).substring(0, 100)
+    };
+    // Merge event data
+    if (event.data) {
+      if (event.data.weather) aiEvent.weather = event.data.weather;
+      if (event.data.period) aiEvent.timeOfDay = event.data.period;
+    }
+    pendingEvents.push(aiEvent);
+  }
+
+  /**
+   * Get NPC mood by ID
+   */
+  function getNPCMood(id) {
+    var brain = npcBrains.get(id);
+    if (brain && NpcAI && NpcAI.getMood) return NpcAI.getMood(brain);
+    return 'neutral';
+  }
+
+  /**
+   * Get NPC current goal by ID
+   */
+  function getNPCGoal(id) {
+    var brain = npcBrains.get(id);
+    if (brain && NpcAI && NpcAI.getGoal) return NpcAI.getGoal(brain);
+    return 'idle';
+  }
+
+  /**
+   * Get NPC current activity string
+   */
+  function getNPCActivity(id) {
+    var state = npcStates.get(id);
+    return state ? state.currentState : 'unknown';
+  }
+
   // Export public API
   exports.initNPCs = initNPCs;
   exports.updateNPCs = updateNPCs;
   exports.reloadZoneNPCs = reloadZoneNPCs;
   exports.getNPCsInZone = getNPCsInZone;
   exports.getNPCById = getNPCById;
+  exports.findNearestNPC = findNearestNPC;
+  exports.interactWithNPC = interactWithNPC;
+  exports.getNPCPositions = getNPCPositions;
+  exports.broadcastEvent = broadcastEvent;
+  exports.getNPCMood = getNPCMood;
+  exports.getNPCGoal = getNPCGoal;
+  exports.getNPCActivity = getNPCActivity;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));

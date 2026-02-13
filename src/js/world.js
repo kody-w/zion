@@ -1118,43 +1118,283 @@
 
   function createHumanoidModel(color) {
     var player = new THREE.Group();
-    var headGeo = new THREE.SphereGeometry(0.35, 10, 10);
-    var headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
+
+    // Head - SphereGeometry, skin-toned
+    var headGeo = new THREE.SphereGeometry(0.3, 16, 16);
+    var headMat = new THREE.MeshLambertMaterial({ color: 0xffdbac });
     var head = new THREE.Mesh(headGeo, headMat);
-    head.position.y = 1.6;
+    head.position.y = 1.5;
     head.castShadow = false;
     player.add(head);
 
-    var torsoGeo = new THREE.BoxGeometry(0.7, 0.9, 0.4);
-    var torsoMat = new THREE.MeshStandardMaterial({ color: color || 0x4169e1 });
+    // Torso - BoxGeometry, colored shirt
+    var torsoGeo = new THREE.BoxGeometry(0.5, 0.6, 0.3);
+    var torsoMat = new THREE.MeshLambertMaterial({ color: color || 0x4169e1 });
     var torso = new THREE.Mesh(torsoGeo, torsoMat);
-    torso.position.y = 0.95;
+    torso.position.y = 0.9;
     torso.castShadow = false;
     player.add(torso);
 
-    var armGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.8, 6);
-    var armMat = new THREE.MeshStandardMaterial({ color: color || 0x4169e1 });
+    // Arms - CylinderGeometry, attached at shoulders
+    var armGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8);
+    var armMat = new THREE.MeshLambertMaterial({ color: 0xffdbac });
+
     var leftArm = new THREE.Mesh(armGeo, armMat);
-    leftArm.position.set(-0.5, 0.95, 0);
+    leftArm.position.set(-0.35, 1.05, 0);
     leftArm.castShadow = false;
     player.add(leftArm);
+
     var rightArm = new THREE.Mesh(armGeo, armMat.clone());
-    rightArm.position.set(0.5, 0.95, 0);
+    rightArm.position.set(0.35, 1.05, 0);
     rightArm.castShadow = false;
     player.add(rightArm);
 
-    var legGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.8, 6);
-    var legMat = new THREE.MeshStandardMaterial({ color: 0x2f4f4f });
+    // Legs - CylinderGeometry, attached at hips
+    var legGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 8);
+    var legMat = new THREE.MeshLambertMaterial({ color: 0x2f4f4f });
+
     var leftLeg = new THREE.Mesh(legGeo, legMat);
-    leftLeg.position.set(-0.2, 0.1, 0);
+    leftLeg.position.set(-0.15, 0.35, 0);
     leftLeg.castShadow = false;
     player.add(leftLeg);
+
     var rightLeg = new THREE.Mesh(legGeo, legMat.clone());
-    rightLeg.position.set(0.2, 0.1, 0);
+    rightLeg.position.set(0.15, 0.35, 0);
     rightLeg.castShadow = false;
     player.add(rightLeg);
 
+    // Feet - Small BoxGeometry at bottom of legs
+    var footGeo = new THREE.BoxGeometry(0.15, 0.1, 0.25);
+    var footMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+
+    var leftFoot = new THREE.Mesh(footGeo, footMat);
+    leftFoot.position.set(-0.15, 0.05, 0.05);
+    leftFoot.castShadow = false;
+    player.add(leftFoot);
+
+    var rightFoot = new THREE.Mesh(footGeo, footMat.clone());
+    rightFoot.position.set(0.15, 0.05, 0.05);
+    rightFoot.castShadow = false;
+    player.add(rightFoot);
+
+    // Store references to limbs in userData for animation
+    player.userData.limbs = {
+      head: head,
+      torso: torso,
+      leftArm: leftArm,
+      rightArm: rightArm,
+      leftLeg: leftLeg,
+      rightLeg: rightLeg,
+      leftFoot: leftFoot,
+      rightFoot: rightFoot
+    };
+
+    // Animation state tracking
+    player.userData.animTime = 0;
+    player.userData.prevPosition = new THREE.Vector3();
+    player.userData.animState = 'idle'; // 'idle', 'walk', 'run'
+
     return player;
+  }
+
+  // ========================================================================
+  // ENVIRONMENT POPULATION — Trees, rocks, benches, lanterns
+  // ========================================================================
+
+  function populateEnvironment(scene) {
+    var Models = typeof window !== 'undefined' ? window.Models : null;
+    if (!Models) {
+      console.log('Models module not loaded, skipping environment population');
+      return;
+    }
+
+    // ---- Gardens: trees, flowers, benches along paths ----
+    var gz = ZONES.gardens;
+    var gardenTreeTypes = ['oak', 'willow', 'cherry', 'cherry'];
+    for (var gt = 0; gt < 20; gt++) {
+      var ga = hash2D(gt, 100) * Math.PI * 2;
+      var gr = 15 + hash2D(gt, 101) * 55;
+      var gx = gz.cx + Math.cos(ga) * gr;
+      var gzz = gz.cz + Math.sin(ga) * gr;
+      var gy = terrainHeight(gx, gzz);
+      var treeType = gardenTreeTypes[gt % gardenTreeTypes.length];
+      var tree = Models.createTree(treeType, 0.8 + hash2D(gt, 102) * 0.6);
+      tree.position.set(gx, gy, gzz);
+      tree.rotation.y = hash2D(gt, 103) * Math.PI * 2;
+      scene.add(tree);
+      animatedObjects.push({ mesh: tree, type: 'tree', params: { speed: 0.3 + hash2D(gt, 104) * 0.3 } });
+    }
+    // Benches in gardens
+    for (var gb = 0; gb < 6; gb++) {
+      var ba = (gb / 6) * Math.PI * 2 + 0.5;
+      var bx = gz.cx + Math.cos(ba) * 25;
+      var bz = gz.cz + Math.sin(ba) * 25;
+      var by = terrainHeight(bx, bz);
+      var bench = Models.createFurniture('bench');
+      bench.position.set(bx, by, bz);
+      bench.rotation.y = ba + Math.PI / 2;
+      scene.add(bench);
+    }
+    // Lanterns along garden paths
+    for (var gl = 0; gl < 10; gl++) {
+      var la = (gl / 10) * Math.PI * 2;
+      var lx = gz.cx + Math.cos(la) * 35;
+      var lz = gz.cz + Math.sin(la) * 35;
+      var ly = terrainHeight(lx, lz);
+      var lantern = Models.createFurniture('lantern');
+      lantern.position.set(lx, ly, lz);
+      scene.add(lantern);
+    }
+
+    // ---- Wilds: dense forest, boulders, dead trees ----
+    var wz = ZONES.wilds;
+    var wildTreeTypes = ['oak', 'pine', 'pine', 'dead', 'oak'];
+    for (var wt = 0; wt < 40; wt++) {
+      var wa = hash2D(wt, 200) * Math.PI * 2;
+      var wr = 10 + hash2D(wt, 201) * 70;
+      var wx = wz.cx + Math.cos(wa) * wr;
+      var wz2 = wz.cz + Math.sin(wa) * wr;
+      var wy = terrainHeight(wx, wz2);
+      var wildType = wildTreeTypes[wt % wildTreeTypes.length];
+      var wtree = Models.createTree(wildType, 0.7 + hash2D(wt, 202) * 0.8);
+      wtree.position.set(wx, wy, wz2);
+      wtree.rotation.y = hash2D(wt, 203) * Math.PI * 2;
+      scene.add(wtree);
+      animatedObjects.push({ mesh: wtree, type: 'tree', params: { speed: 0.2 + hash2D(wt, 204) * 0.4 } });
+    }
+    // Boulders and crystal rocks in wilds
+    for (var wb = 0; wb < 15; wb++) {
+      var rba = hash2D(wb, 210) * Math.PI * 2;
+      var rbr = 8 + hash2D(wb, 211) * 60;
+      var rbx = wz.cx + Math.cos(rba) * rbr;
+      var rbz = wz.cz + Math.sin(rba) * rbr;
+      var rby = terrainHeight(rbx, rbz);
+      var rockType = (wb % 5 === 0) ? 'crystal' : 'boulder';
+      var rock = Models.createRock(rockType, 0.5 + hash2D(wb, 212) * 1.5);
+      rock.position.set(rbx, rby, rbz);
+      rock.rotation.y = hash2D(wb, 213) * Math.PI * 2;
+      scene.add(rock);
+    }
+
+    // ---- Nexus: ornamental trees, benches, lanterns ----
+    var nz = ZONES.nexus;
+    for (var nt = 0; nt < 8; nt++) {
+      var na = (nt / 8) * Math.PI * 2 + Math.PI / 8;
+      var nx = nz.cx + Math.cos(na) * 25;
+      var nzz = nz.cz + Math.sin(na) * 25;
+      var ny = terrainHeight(nx, nzz);
+      var ntree = Models.createTree('cherry', 0.7);
+      ntree.position.set(nx, ny, nzz);
+      scene.add(ntree);
+      animatedObjects.push({ mesh: ntree, type: 'tree', params: { speed: 0.3 } });
+    }
+    // Stone benches around nexus
+    for (var nb = 0; nb < 8; nb++) {
+      var nba = (nb / 8) * Math.PI * 2;
+      var nbx = nz.cx + Math.cos(nba) * 18;
+      var nbz = nz.cz + Math.sin(nba) * 18;
+      var nby = terrainHeight(nbx, nbz);
+      var nbench = Models.createFurniture('bench');
+      nbench.position.set(nbx, nby, nbz);
+      nbench.rotation.y = nba + Math.PI / 2;
+      scene.add(nbench);
+    }
+
+    // ---- Agora: market crates, lanterns along paths ----
+    var az = ZONES.agora;
+    for (var al = 0; al < 12; al++) {
+      var ala = (al / 12) * Math.PI * 2;
+      var alx = az.cx + Math.cos(ala) * 22;
+      var alz = az.cz + Math.sin(ala) * 22;
+      var aly = terrainHeight(alx, alz);
+      var alantern = Models.createFurniture('lantern');
+      alantern.position.set(alx, aly, alz);
+      scene.add(alantern);
+    }
+
+    // ---- Commons: trees around village, fences ----
+    var cz = ZONES.commons;
+    for (var ct = 0; ct < 12; ct++) {
+      var ca = hash2D(ct, 300) * Math.PI * 2;
+      var cr = 25 + hash2D(ct, 301) * 25;
+      var cx = cz.cx + Math.cos(ca) * cr;
+      var czz = cz.cz + Math.sin(ca) * cr;
+      var cy = terrainHeight(cx, czz);
+      var ctree = Models.createTree('oak', 0.6 + hash2D(ct, 302) * 0.5);
+      ctree.position.set(cx, cy, czz);
+      ctree.rotation.y = hash2D(ct, 303) * Math.PI * 2;
+      scene.add(ctree);
+      animatedObjects.push({ mesh: ctree, type: 'tree', params: { speed: 0.3 } });
+    }
+
+    // ---- Studio: artistic rocks, small trees ----
+    var sz = ZONES.studio;
+    for (var st = 0; st < 8; st++) {
+      var sa = hash2D(st, 400) * Math.PI * 2;
+      var sr = 20 + hash2D(st, 401) * 30;
+      var sx = sz.cx + Math.cos(sa) * sr;
+      var szz = sz.cz + Math.sin(sa) * sr;
+      var sy = terrainHeight(sx, szz);
+      var srock = Models.createRock('crystal', 0.8 + hash2D(st, 402) * 0.8);
+      srock.position.set(sx, sy, szz);
+      scene.add(srock);
+    }
+
+    // ---- Athenaeum: ordered trees, benches ----
+    var atz = ZONES.athenaeum;
+    for (var at = 0; at < 10; at++) {
+      var ata = hash2D(at, 500) * Math.PI * 2;
+      var atr = 20 + hash2D(at, 501) * 35;
+      var atx = atz.cx + Math.cos(ata) * atr;
+      var atzz = atz.cz + Math.sin(ata) * atr;
+      var aty = terrainHeight(atx, atzz);
+      var attree = Models.createTree('pine', 0.7 + hash2D(at, 502) * 0.4);
+      attree.position.set(atx, aty, atzz);
+      scene.add(attree);
+      animatedObjects.push({ mesh: attree, type: 'tree', params: { speed: 0.25 } });
+    }
+
+    // ---- Arena: sparse vegetation ----
+    var arz = ZONES.arena;
+    for (var ar = 0; ar < 6; ar++) {
+      var ara = hash2D(ar, 600) * Math.PI * 2;
+      var arr = 30 + hash2D(ar, 601) * 15;
+      var arx = arz.cx + Math.cos(ara) * arr;
+      var arzz = arz.cz + Math.sin(ara) * arr;
+      var ary = terrainHeight(arx, arzz);
+      var arrock = Models.createRock('boulder', 0.6 + hash2D(ar, 602) * 1.0);
+      arrock.position.set(arx, ary, arzz);
+      arrock.rotation.y = hash2D(ar, 603) * Math.PI;
+      scene.add(arrock);
+    }
+
+    // ---- Butterflies and birds scattered around gardens and wilds ----
+    if (Models.createCreature) {
+      for (var bf = 0; bf < 8; bf++) {
+        var bfa = hash2D(bf, 700) * Math.PI * 2;
+        var bfr = 10 + hash2D(bf, 701) * 50;
+        var bfx = gz.cx + Math.cos(bfa) * bfr;
+        var bfz = gz.cz + Math.sin(bfa) * bfr;
+        var bfy = terrainHeight(bfx, bfz) + 1.5 + hash2D(bf, 702) * 2;
+        var butterfly = Models.createCreature('butterfly');
+        butterfly.position.set(bfx, bfy, bfz);
+        scene.add(butterfly);
+        animatedObjects.push({ mesh: butterfly, type: 'creature', params: { speed: 1 + hash2D(bf, 703) } });
+      }
+      for (var bi = 0; bi < 6; bi++) {
+        var bia = hash2D(bi, 710) * Math.PI * 2;
+        var bir = 10 + hash2D(bi, 711) * 60;
+        var bix = wz.cx + Math.cos(bia) * bir;
+        var biz = wz.cz + Math.sin(bia) * bir;
+        var biy = terrainHeight(bix, biz) + 5 + hash2D(bi, 712) * 5;
+        var bird = Models.createCreature('bird');
+        bird.position.set(bix, biy, biz);
+        scene.add(bird);
+        animatedObjects.push({ mesh: bird, type: 'creature', params: { speed: 0.5 + hash2D(bi, 713) * 0.5 } });
+      }
+    }
+
+    console.log('Environment populated with trees, rocks, furniture, and creatures');
   }
 
   // ========================================================================
@@ -1198,6 +1438,9 @@
     // Create all zone structures (one-time, persistent)
     createZoneStructures(scene);
 
+    // Populate world with environmental objects (trees, rocks, furniture)
+    populateEnvironment(scene);
+
     // Load initial chunks around nexus
     var ctx = {
       scene: scene,
@@ -1235,9 +1478,13 @@
     var y = terrainHeight(x, z);
     var mesh = createHumanoidModel();
     mesh.position.set(x, y, z);
+
+    // Initialize previous position for animation tracking
+    mesh.userData.prevPosition.set(x, y, z);
+
     sceneCtx.scene.add(mesh);
 
-    // Name label
+    // Name label - billboard sprite above head
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
     canvas.width = 256;
@@ -1252,7 +1499,7 @@
     var labelMat = new THREE.SpriteMaterial({ map: texture });
     var label = new THREE.Sprite(labelMat);
     label.scale.set(3, 0.75, 1);
-    label.position.y = 2.5;
+    label.position.y = 2.0; // Above head
     mesh.add(label);
 
     playerMeshes.set(playerId, { mesh: mesh, label: label });
@@ -1261,9 +1508,34 @@
   function movePlayer(sceneCtx, playerId, position) {
     var data = playerMeshes.get(playerId);
     if (!data) return;
+    var mesh = data.mesh;
+
+    // Store previous position before updating
+    mesh.userData.prevPosition.copy(mesh.position);
+
     var x = position.x || 0, z = position.z || 0;
     var y = terrainHeight(x, z);
-    data.mesh.position.set(x, y, z);
+    mesh.position.set(x, y, z);
+
+    // Calculate movement delta to determine animation state
+    var dx = x - mesh.userData.prevPosition.x;
+    var dz = z - mesh.userData.prevPosition.z;
+    var movementDelta = Math.sqrt(dx * dx + dz * dz);
+
+    // Determine animation state based on movement
+    if (movementDelta < 0.001) {
+      mesh.userData.animState = 'idle';
+    } else if (movementDelta > 0.1) {
+      mesh.userData.animState = 'run'; // Fast movement = running
+    } else {
+      mesh.userData.animState = 'walk';
+    }
+
+    // Update rotation to face movement direction
+    if (movementDelta > 0.001) {
+      var angle = Math.atan2(dx, dz);
+      mesh.rotation.y = angle;
+    }
   }
 
   function removePlayer(sceneCtx, playerId) {
@@ -1271,6 +1543,99 @@
     if (!data || !sceneCtx || !sceneCtx.scene) return;
     sceneCtx.scene.remove(data.mesh);
     playerMeshes.delete(playerId);
+  }
+
+  // ========================================================================
+  // PLAYER ANIMATIONS
+  // ========================================================================
+
+  function updatePlayerAnimations(sceneCtx, deltaTime) {
+    if (!sceneCtx) return;
+
+    playerMeshes.forEach(function(data) {
+      var mesh = data.mesh;
+      var limbs = mesh.userData.limbs;
+      if (!limbs) return;
+
+      // Increment animation time
+      mesh.userData.animTime += deltaTime;
+      var t = mesh.userData.animTime;
+
+      var state = mesh.userData.animState || 'idle';
+
+      // Reset rotations to neutral positions
+      limbs.leftArm.rotation.x = 0;
+      limbs.rightArm.rotation.x = 0;
+      limbs.leftLeg.rotation.x = 0;
+      limbs.rightLeg.rotation.x = 0;
+      limbs.torso.rotation.x = 0;
+      limbs.torso.scale.set(1, 1, 1);
+      limbs.head.rotation.x = 0;
+
+      if (state === 'idle') {
+        // IDLE ANIMATION
+        // Subtle breathing - torso scales slightly on Y
+        var breathe = Math.sin(t * 2) * 0.02;
+        limbs.torso.scale.y = 1.0 + breathe;
+
+        // Slight body sway
+        limbs.torso.rotation.z = Math.sin(t * 1.5) * 0.02;
+
+        // Arms hang naturally with subtle sway
+        limbs.leftArm.rotation.z = Math.sin(t * 1.3) * 0.05;
+        limbs.rightArm.rotation.z = -Math.sin(t * 1.3) * 0.05;
+
+      } else if (state === 'walk') {
+        // WALKING ANIMATION
+        var walkSpeed = 8;
+        var swingAngle = 0.5;
+
+        // Legs swing forward/back alternately
+        limbs.leftLeg.rotation.x = Math.sin(t * walkSpeed) * swingAngle;
+        limbs.rightLeg.rotation.x = Math.sin(t * walkSpeed + Math.PI) * swingAngle;
+
+        // Arms swing opposite to legs (counter-swing)
+        limbs.leftArm.rotation.x = Math.sin(t * walkSpeed + Math.PI) * swingAngle * 0.7;
+        limbs.rightArm.rotation.x = Math.sin(t * walkSpeed) * swingAngle * 0.7;
+
+        // Feet rotate with legs
+        limbs.leftFoot.rotation.x = Math.sin(t * walkSpeed) * swingAngle * 0.5;
+        limbs.rightFoot.rotation.x = Math.sin(t * walkSpeed + Math.PI) * swingAngle * 0.5;
+
+        // Body bobs slightly up/down
+        var bob = Math.abs(Math.sin(t * walkSpeed)) * 0.05;
+        limbs.torso.position.y = 0.9 + bob;
+        limbs.head.position.y = 1.5 + bob;
+
+        // Slight forward lean
+        limbs.torso.rotation.x = 0.05;
+
+      } else if (state === 'run') {
+        // RUNNING ANIMATION
+        var runSpeed = 12;
+        var runSwingAngle = 0.8;
+
+        // Legs swing with larger amplitude and faster
+        limbs.leftLeg.rotation.x = Math.sin(t * runSpeed) * runSwingAngle;
+        limbs.rightLeg.rotation.x = Math.sin(t * runSpeed + Math.PI) * runSwingAngle;
+
+        // More dramatic arm swing
+        limbs.leftArm.rotation.x = Math.sin(t * runSpeed + Math.PI) * runSwingAngle;
+        limbs.rightArm.rotation.x = Math.sin(t * runSpeed) * runSwingAngle;
+
+        // Feet rotate with legs
+        limbs.leftFoot.rotation.x = Math.sin(t * runSpeed) * runSwingAngle * 0.5;
+        limbs.rightFoot.rotation.x = Math.sin(t * runSpeed + Math.PI) * runSwingAngle * 0.5;
+
+        // More pronounced body bob
+        var runBob = Math.abs(Math.sin(t * runSpeed)) * 0.08;
+        limbs.torso.position.y = 0.9 + runBob;
+        limbs.head.position.y = 1.5 + runBob;
+
+        // More body lean forward
+        limbs.torso.rotation.x = 0.15;
+      }
+    });
   }
 
   // ========================================================================
@@ -1428,6 +1793,17 @@
           break;
         case 'water':
           obj.mesh.rotation.y += deltaTime * 0.05;
+          break;
+        case 'creature':
+          // Delegate to Models.animateModel if available
+          var Models = typeof window !== 'undefined' ? window.Models : null;
+          if (Models && Models.animateModel) {
+            Models.animateModel(obj.mesh, deltaTime, time);
+          } else {
+            // Fallback: simple bobbing motion
+            obj.mesh.position.y += Math.sin(time * 0.003 * (p.speed || 1)) * 0.01;
+            obj.mesh.rotation.y += deltaTime * (p.speed || 0.5);
+          }
           break;
       }
     }
@@ -2024,6 +2400,410 @@
   }
 
   // ========================================================================
+  // WATER SYSTEM — Animated water bodies for zones
+  // ========================================================================
+
+  var waterBodies = [];
+  var waterTime = 0;
+
+  function initWater(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    var scene = sceneCtx.scene;
+
+    // Clear any existing water bodies
+    for (var i = 0; i < waterBodies.length; i++) {
+      scene.remove(waterBodies[i].mesh);
+      if (waterBodies[i].geometry) waterBodies[i].geometry.dispose();
+      if (waterBodies[i].material) waterBodies[i].material.dispose();
+    }
+    waterBodies = [];
+
+    // Gardens: Central pond/lake (~30 unit radius)
+    var gardensPond = createWaterBody({
+      type: 'circle',
+      centerX: ZONES.gardens.cx,
+      centerZ: ZONES.gardens.cz,
+      radius: 30,
+      height: ZONES.gardens.baseHeight + 0.3,
+      segments: 64,
+      waveSpeed: 0.8,
+      waveHeight: 0.15,
+      waveFrequency: 0.3
+    });
+    scene.add(gardensPond.mesh);
+    waterBodies.push(gardensPond);
+
+    // Wilds: Flowing river (~10 unit wide, winding through zone)
+    // Create river as a series of connected segments
+    var riverSegments = createRiverPath(ZONES.wilds.cx, ZONES.wilds.cz, ZONES.wilds.radius);
+    for (var j = 0; j < riverSegments.length; j++) {
+      var riverSegment = createWaterBody({
+        type: 'river',
+        centerX: riverSegments[j].x,
+        centerZ: riverSegments[j].z,
+        width: 10,
+        length: riverSegments[j].length,
+        rotation: riverSegments[j].rotation,
+        height: ZONES.wilds.baseHeight + 0.2,
+        segments: 64,
+        waveSpeed: 1.2,
+        waveHeight: 0.2,
+        waveFrequency: 0.5,
+        flowDirection: riverSegments[j].direction
+      });
+      scene.add(riverSegment.mesh);
+      waterBodies.push(riverSegment);
+    }
+
+    // Nexus: Decorative fountain pool (~8 unit radius)
+    var nexusFountain = createWaterBody({
+      type: 'circle',
+      centerX: ZONES.nexus.cx,
+      centerZ: ZONES.nexus.cz,
+      radius: 8,
+      height: ZONES.nexus.baseHeight + 0.5,
+      segments: 64,
+      waveSpeed: 1.5,
+      waveHeight: 0.1,
+      waveFrequency: 0.8
+    });
+    scene.add(nexusFountain.mesh);
+    waterBodies.push(nexusFountain);
+  }
+
+  function createWaterBody(config) {
+    var geometry, material, mesh;
+    var segments = config.segments || 64;
+
+    // Create geometry based on type
+    if (config.type === 'circle') {
+      geometry = new THREE.PlaneGeometry(config.radius * 2, config.radius * 2, segments, segments);
+    } else if (config.type === 'river') {
+      geometry = new THREE.PlaneGeometry(config.length, config.width, segments, segments);
+    }
+
+    // Rotate to be horizontal
+    geometry.rotateX(-Math.PI / 2);
+
+    // Position the geometry
+    geometry.translate(config.centerX, config.height, config.centerZ);
+
+    // Apply rotation for river segments
+    if (config.rotation) {
+      var tempGeom = new THREE.PlaneGeometry(config.length, config.width, segments, segments);
+      tempGeom.rotateX(-Math.PI / 2);
+      tempGeom.rotateY(config.rotation);
+      tempGeom.translate(config.centerX, config.height, config.centerZ);
+      geometry = tempGeom;
+    }
+
+    // Store initial vertex positions for animation
+    var positions = geometry.attributes.position.array;
+    var initialPositions = new Float32Array(positions.length);
+    for (var i = 0; i < positions.length; i++) {
+      initialPositions[i] = positions[i];
+    }
+
+    // Create water material
+    material = new THREE.MeshPhongMaterial({
+      color: 0x2266aa,
+      transparent: true,
+      opacity: 0.6,
+      side: THREE.DoubleSide,
+      shininess: 80,
+      specular: 0x88aaff
+    });
+
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.receiveShadow = false;
+    mesh.castShadow = false;
+
+    // Store config and initial positions for animation
+    return {
+      mesh: mesh,
+      geometry: geometry,
+      material: material,
+      initialPositions: initialPositions,
+      config: config
+    };
+  }
+
+  function createRiverPath(centerX, centerZ, zoneRadius) {
+    // Create a winding river path through the Wilds zone
+    var segments = [];
+    var segmentLength = 25;
+    var numSegments = 6;
+
+    // Start from northwest side of zone
+    var startX = centerX - zoneRadius * 0.6;
+    var startZ = centerZ - zoneRadius * 0.7;
+
+    // Create winding path
+    var currentX = startX;
+    var currentZ = startZ;
+    var currentAngle = Math.PI * 0.3; // Initial direction (southeast)
+
+    for (var i = 0; i < numSegments; i++) {
+      // Calculate segment endpoint
+      var nextX = currentX + Math.cos(currentAngle) * segmentLength;
+      var nextZ = currentZ + Math.sin(currentAngle) * segmentLength;
+
+      // Segment center point
+      var segX = (currentX + nextX) / 2;
+      var segZ = (currentZ + nextZ) / 2;
+
+      segments.push({
+        x: segX,
+        z: segZ,
+        length: segmentLength,
+        rotation: currentAngle,
+        direction: { x: Math.cos(currentAngle), z: Math.sin(currentAngle) }
+      });
+
+      // Update position and add some curve variation
+      currentX = nextX;
+      currentZ = nextZ;
+      currentAngle += (Math.random() - 0.5) * 0.6; // Random curve
+    }
+
+    return segments;
+  }
+
+  function updateWater(deltaTime) {
+    if (!waterBodies || waterBodies.length === 0) return;
+
+    waterTime += deltaTime;
+
+    for (var i = 0; i < waterBodies.length; i++) {
+      var water = waterBodies[i];
+      if (!water || !water.geometry || !water.initialPositions) continue;
+
+      var positions = water.geometry.attributes.position.array;
+      var initialPos = water.initialPositions;
+      var config = water.config;
+
+      var waveSpeed = config.waveSpeed || 1.0;
+      var waveHeight = config.waveHeight || 0.2;
+      var waveFrequency = config.waveFrequency || 0.5;
+
+      // Animate vertices with sine waves
+      for (var j = 0; j < positions.length; j += 3) {
+        var x = initialPos[j];
+        var y = initialPos[j + 1];
+        var z = initialPos[j + 2];
+
+        // Calculate distance from center for circular water bodies
+        var distFromCenter = 0;
+        if (config.type === 'circle') {
+          var dx = x - config.centerX;
+          var dz = z - config.centerZ;
+          distFromCenter = Math.sqrt(dx * dx + dz * dz);
+
+          // Radial ripples from center
+          var ripple = Math.sin(distFromCenter * waveFrequency - waterTime * waveSpeed) * waveHeight;
+
+          // Add secondary wave pattern
+          var angle = Math.atan2(dz, dx);
+          var secondaryWave = Math.sin(angle * 3 + waterTime * waveSpeed * 0.5) * waveHeight * 0.3;
+
+          positions[j + 1] = y + ripple + secondaryWave;
+
+          // Fade ripples near edge
+          if (distFromCenter > config.radius * 0.8) {
+            var fadeRatio = 1 - (distFromCenter - config.radius * 0.8) / (config.radius * 0.2);
+            positions[j + 1] = y + (ripple + secondaryWave) * Math.max(0, fadeRatio);
+          }
+        } else if (config.type === 'river') {
+          // Flowing river animation
+          var flowDir = config.flowDirection || { x: 1, z: 0 };
+          var flowComponent = (x - config.centerX) * flowDir.x + (z - config.centerZ) * flowDir.z;
+
+          // Waves flowing in direction of river
+          var flowWave = Math.sin(flowComponent * waveFrequency - waterTime * waveSpeed) * waveHeight;
+
+          // Cross-river waves for more natural look
+          var crossComponent = -(x - config.centerX) * flowDir.z + (z - config.centerZ) * flowDir.x;
+          var crossWave = Math.sin(crossComponent * waveFrequency * 0.8 + waterTime * waveSpeed * 0.6) * waveHeight * 0.4;
+
+          positions[j + 1] = y + flowWave + crossWave;
+        }
+      }
+
+      water.geometry.attributes.position.needsUpdate = true;
+      water.geometry.computeVertexNormals();
+    }
+  }
+
+  // ========================================================================
+  // SKYBOX / SKY DOME SYSTEM
+  // ========================================================================
+
+  function initSkybox(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    // Create sky dome with gradient colors using vertex colors
+    var skyGeo = new THREE.SphereGeometry(800, 32, 32);
+
+    // Add vertex colors for gradient (deep blue at top, orange/pink at horizon)
+    var colors = [];
+    var posArray = skyGeo.attributes.position.array;
+    for (var i = 0; i < posArray.length; i += 3) {
+      var y = posArray[i + 1];
+      var normalizedY = (y + 800) / 1600; // 0 at bottom, 1 at top
+
+      // Deep blue at top (y > 0.5), orange/pink at horizon (y < 0.5)
+      var r, g, b;
+      if (normalizedY > 0.5) {
+        // Top half: deep blue
+        var t = (normalizedY - 0.5) / 0.5;
+        r = 0.02 + t * 0.1;
+        g = 0.02 + t * 0.3;
+        b = 0.2 + t * 0.6;
+      } else {
+        // Bottom half: gradient from orange/pink to blue
+        var t = normalizedY / 0.5;
+        r = 1.0 - t * 0.88;
+        g = 0.42 - t * 0.1;
+        b = 0.21 + t * 0.59;
+      }
+
+      colors.push(r, g, b);
+    }
+
+    skyGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+    var skyMat = new THREE.MeshBasicMaterial({
+      side: THREE.BackSide,
+      vertexColors: true,
+      fog: false
+    });
+    skyDome = new THREE.Mesh(skyGeo, skyMat);
+    sceneCtx.scene.add(skyDome);
+
+    // Create starfield using THREE.Points
+    var starGeo = new THREE.BufferGeometry();
+    var starPos = [];
+    var starSizes = [];
+
+    for (var i = 0; i < 2000; i++) {
+      // Random position on sphere (radius 750)
+      var theta = Math.random() * Math.PI * 2;
+      var phi = Math.random() * Math.PI;
+      var r = 750;
+
+      var x = r * Math.sin(phi) * Math.cos(theta);
+      var y = r * Math.cos(phi);
+      var z = r * Math.sin(phi) * Math.sin(theta);
+
+      starPos.push(x, y, z);
+
+      // Varying sizes (0.3 - 1.5)
+      starSizes.push(0.3 + Math.random() * 1.2);
+    }
+
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+    starGeo.setAttribute('size', new THREE.Float32BufferAttribute(starSizes, 1));
+
+    var starMat = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 1.0,
+      sizeAttenuation: false,
+      transparent: true,
+      opacity: 0.0,
+      fog: false
+    });
+
+    stars = new THREE.Points(starGeo, starMat);
+    sceneCtx.scene.add(stars);
+
+    // Create Sun
+    var sunGeo = new THREE.SphereGeometry(5, 16, 16);
+    var sunMat = new THREE.MeshBasicMaterial({
+      color: 0xffff00,
+      fog: false
+    });
+    sunMesh = new THREE.Mesh(sunGeo, sunMat);
+    sceneCtx.scene.add(sunMesh);
+
+    // Create Moon
+    var moonGeo = new THREE.SphereGeometry(3, 16, 16);
+    var moonMat = new THREE.MeshBasicMaterial({
+      color: 0xccccdd,
+      fog: false
+    });
+    moonMesh = new THREE.Mesh(moonGeo, moonMat);
+    sceneCtx.scene.add(moonMesh);
+  }
+
+  function updateSkybox(sceneCtx, worldTime) {
+    if (!sceneCtx || !sceneCtx.camera) return;
+
+    // Make sky dome follow camera position
+    if (skyDome) {
+      skyDome.position.copy(sceneCtx.camera.position);
+    }
+
+    // Update sun and moon positions based on worldTime
+    // worldTime: 0-1440 (minutes in 24h cycle)
+    // Noon (720) = sun overhead, Midnight (0/1440) = sun below horizon
+    var normalizedTime = worldTime / 1440; // 0-1
+    var sunAngle = normalizedTime * Math.PI * 2 - Math.PI / 2; // -PI/2 at midnight, PI/2 at noon
+
+    if (sunMesh) {
+      var sunRadius = 400;
+      sunMesh.position.set(
+        Math.cos(sunAngle) * sunRadius,
+        Math.sin(sunAngle) * sunRadius,
+        0
+      );
+      sunMesh.position.add(sceneCtx.camera.position);
+    }
+
+    if (moonMesh) {
+      var moonRadius = 400;
+      // Moon is opposite to sun
+      var moonAngle = sunAngle + Math.PI;
+      moonMesh.position.set(
+        Math.cos(moonAngle) * moonRadius,
+        Math.sin(moonAngle) * moonRadius,
+        0
+      );
+      moonMesh.position.add(sceneCtx.camera.position);
+    }
+
+    // Update star visibility based on worldTime
+    if (stars && stars.material) {
+      // Night: worldTime 1080-1440 (18:00-24:00) and 0-360 (00:00-06:00)
+      // Day: worldTime 360-1080 (06:00-18:00)
+      var opacity = 0.0;
+
+      if (worldTime >= 1080 && worldTime <= 1440) {
+        // Evening to midnight (18:00-24:00)
+        var t = (worldTime - 1080) / 360;
+        opacity = Math.min(1.0, t * 2); // Fade in
+      } else if (worldTime >= 0 && worldTime < 360) {
+        // Midnight to dawn (00:00-06:00)
+        var t = worldTime / 360;
+        opacity = Math.max(0.0, 1.0 - t * 2); // Fade out
+      } else if (worldTime >= 300 && worldTime < 420) {
+        // Dawn fade out (05:00-07:00)
+        var t = (worldTime - 300) / 120;
+        opacity = Math.max(0.0, 1.0 - t);
+      } else if (worldTime >= 1020 && worldTime < 1140) {
+        // Dusk fade in (17:00-19:00)
+        var t = (worldTime - 1020) / 120;
+        opacity = Math.min(1.0, t);
+      }
+
+      stars.material.opacity = opacity;
+      stars.material.transparent = true;
+
+      // Make stars follow camera
+      stars.position.copy(sceneCtx.camera.position);
+    }
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -2032,6 +2812,7 @@
   exports.addPlayer = addPlayer;
   exports.movePlayer = movePlayer;
   exports.removePlayer = removePlayer;
+  exports.updatePlayerAnimations = updatePlayerAnimations;
   exports.updateDayNight = updateDayNight;
   exports.updateWeather = updateWeather;
   exports.setWeather = setWeather;
@@ -2047,6 +2828,10 @@
   exports.initParticles = initParticles;
   exports.updateParticles = updateParticles;
   exports.emitParticles = emitParticles;
+  exports.initWater = initWater;
+  exports.updateWater = updateWater;
+  exports.initSkybox = initSkybox;
+  exports.updateSkybox = updateSkybox;
   exports.ZONES = ZONES;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));

@@ -3906,6 +3906,861 @@ html, body {
 })(typeof module !== 'undefined' ? module.exports : (window.Physical = {}));
 
 
+// models.js
+/**
+ * ZION MMO - Procedural 3D Model Generators
+ * Creates complex Three.js meshes from primitive geometries
+ * Compatible with Three.js r128
+ */
+
+(function(exports) {
+  'use strict';
+
+  // ========================================
+  // TREE GENERATORS
+  // ========================================
+
+  function createTree(type, scale) {
+    scale = scale || 1;
+    const group = new THREE.Group();
+    group.name = 'tree_' + type;
+    group.userData.animationType = 'sway';
+    group.userData.swayAmount = 0.05;
+    group.userData.swaySpeed = 1.0;
+
+    const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x4a3728 });
+    const darkTrunk = new THREE.MeshLambertMaterial({ color: 0x3a2718 });
+
+    switch(type) {
+      case 'oak':
+        // Thick trunk with visible roots
+        const oakTrunk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.3 * scale, 0.4 * scale, 3 * scale, 8),
+          trunkMaterial
+        );
+        oakTrunk.position.y = 1.5 * scale;
+        group.add(oakTrunk);
+
+        // Roots at base
+        for (let i = 0; i < 4; i++) {
+          const root = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1 * scale, 0.15 * scale, 0.5 * scale, 6),
+            darkTrunk
+          );
+          root.position.y = 0.1 * scale;
+          const angle = (i / 4) * Math.PI * 2;
+          root.position.x = Math.cos(angle) * 0.3 * scale;
+          root.position.z = Math.sin(angle) * 0.3 * scale;
+          root.rotation.z = Math.PI / 6;
+          root.rotation.y = angle;
+          group.add(root);
+        }
+
+        // Large overlapping spherical canopy
+        const canopyColors = [0x2d5016, 0x3a6b1f, 0x4a8028];
+        for (let i = 0; i < 8; i++) {
+          const leafBall = new THREE.Mesh(
+            new THREE.SphereGeometry(0.8 * scale, 8, 6),
+            new THREE.MeshLambertMaterial({
+              color: canopyColors[Math.floor(Math.random() * canopyColors.length)]
+            })
+          );
+          const angle = (i / 8) * Math.PI * 2;
+          const radius = 0.6 * scale;
+          leafBall.position.x = Math.cos(angle) * radius;
+          leafBall.position.z = Math.sin(angle) * radius;
+          leafBall.position.y = 3 * scale + Math.random() * 0.4 * scale;
+          group.add(leafBall);
+        }
+
+        // Central canopy sphere
+        const centerCanopy = new THREE.Mesh(
+          new THREE.SphereGeometry(1 * scale, 8, 6),
+          new THREE.MeshLambertMaterial({ color: 0x3a6b1f })
+        );
+        centerCanopy.position.y = 3.2 * scale;
+        group.add(centerCanopy);
+        break;
+
+      case 'pine':
+        // Tall narrow trunk
+        const pineTrunk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.2 * scale, 0.25 * scale, 4 * scale, 8),
+          trunkMaterial
+        );
+        pineTrunk.position.y = 2 * scale;
+        group.add(pineTrunk);
+
+        // Stacked cone layers
+        const pineMaterial = new THREE.MeshLambertMaterial({ color: 0x1a4d2e });
+        const coneSizes = [1.2, 1.0, 0.8, 0.6];
+        for (let i = 0; i < coneSizes.length; i++) {
+          const cone = new THREE.Mesh(
+            new THREE.ConeGeometry(coneSizes[i] * scale, 1.5 * scale, 8),
+            pineMaterial
+          );
+          cone.position.y = (2 + i * 1.2) * scale;
+          group.add(cone);
+        }
+
+        // Top point
+        const top = new THREE.Mesh(
+          new THREE.ConeGeometry(0.3 * scale, 0.8 * scale, 6),
+          pineMaterial
+        );
+        top.position.y = 6.5 * scale;
+        group.add(top);
+        break;
+
+      case 'willow':
+        // Medium trunk
+        const willowTrunk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.25 * scale, 0.3 * scale, 2.5 * scale, 8),
+          trunkMaterial
+        );
+        willowTrunk.position.y = 1.25 * scale;
+        group.add(willowTrunk);
+
+        // Drooping branches
+        const willowGreen = new THREE.MeshLambertMaterial({ color: 0x90ee90 });
+        const branchMaterial = new THREE.MeshLambertMaterial({ color: 0x5a4a38 });
+
+        for (let i = 0; i < 12; i++) {
+          const angle = (i / 12) * Math.PI * 2;
+          const branchLength = 1.5 * scale;
+
+          // Drooping branch
+          const branch = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.03 * scale, 0.02 * scale, branchLength, 4),
+            branchMaterial
+          );
+          branch.position.x = Math.cos(angle) * 0.2 * scale;
+          branch.position.z = Math.sin(angle) * 0.2 * scale;
+          branch.position.y = 2.5 * scale - branchLength / 2;
+          branch.rotation.z = Math.PI / 4;
+          branch.rotation.y = angle;
+          group.add(branch);
+
+          // Leaves along branch
+          for (let j = 0; j < 3; j++) {
+            const leaf = new THREE.Mesh(
+              new THREE.SphereGeometry(0.15 * scale, 6, 4),
+              willowGreen
+            );
+            leaf.position.x = Math.cos(angle) * (0.3 + j * 0.3) * scale;
+            leaf.position.z = Math.sin(angle) * (0.3 + j * 0.3) * scale;
+            leaf.position.y = (2.2 - j * 0.4) * scale;
+            group.add(leaf);
+          }
+        }
+        break;
+
+      case 'cherry':
+        // Medium trunk
+        const cherryTrunk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.2 * scale, 0.3 * scale, 2.5 * scale, 8),
+          trunkMaterial
+        );
+        cherryTrunk.position.y = 1.25 * scale;
+        group.add(cherryTrunk);
+
+        // Pink/white blossom clusters
+        const blossomColors = [0xffb7c5, 0xffc0cb, 0xffd1dc, 0xffffff];
+        for (let i = 0; i < 20; i++) {
+          const blossom = new THREE.Mesh(
+            new THREE.SphereGeometry(0.2 * scale, 6, 4),
+            new THREE.MeshLambertMaterial({
+              color: blossomColors[Math.floor(Math.random() * blossomColors.length)]
+            })
+          );
+          const angle = Math.random() * Math.PI * 2;
+          const radius = 0.4 + Math.random() * 0.6;
+          blossom.position.x = Math.cos(angle) * radius * scale;
+          blossom.position.z = Math.sin(angle) * radius * scale;
+          blossom.position.y = (2 + Math.random() * 1) * scale;
+          group.add(blossom);
+        }
+        break;
+
+      case 'dead':
+        // Grey trunk
+        const deadTrunk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.25 * scale, 0.35 * scale, 3 * scale, 8),
+          new THREE.MeshLambertMaterial({ color: 0x666666 })
+        );
+        deadTrunk.position.y = 1.5 * scale;
+        group.add(deadTrunk);
+
+        // Bare branches
+        const deadBranchMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
+        for (let i = 0; i < 6; i++) {
+          const branch = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.05 * scale, 0.02 * scale, 1 * scale, 4),
+            deadBranchMat
+          );
+          const angle = (i / 6) * Math.PI * 2;
+          branch.position.y = (2 + Math.random() * 0.5) * scale;
+          branch.rotation.z = Math.PI / 3 + Math.random() * 0.3;
+          branch.rotation.y = angle;
+          group.add(branch);
+        }
+
+        group.userData.animationType = 'none';
+        break;
+    }
+
+    return group;
+  }
+
+  // ========================================
+  // ROCK GENERATORS
+  // ========================================
+
+  function createRock(type, scale) {
+    scale = scale || 1;
+    const group = new THREE.Group();
+    group.name = 'rock_' + type;
+
+    switch(type) {
+      case 'boulder':
+        const boulderGeo = new THREE.DodecahedronGeometry(1 * scale, 0);
+        const boulderMat = new THREE.MeshLambertMaterial({ color: 0x808080 });
+
+        // Randomize vertices for irregular shape
+        const vertices = boulderGeo.attributes.position.array;
+        for (let i = 0; i < vertices.length; i += 3) {
+          vertices[i] += (Math.random() - 0.5) * 0.2 * scale;
+          vertices[i + 1] += (Math.random() - 0.5) * 0.2 * scale;
+          vertices[i + 2] += (Math.random() - 0.5) * 0.2 * scale;
+        }
+        boulderGeo.attributes.position.needsUpdate = true;
+        boulderGeo.computeVertexNormals();
+
+        const boulder = new THREE.Mesh(boulderGeo, boulderMat);
+        boulder.position.y = 0.8 * scale;
+        group.add(boulder);
+        break;
+
+      case 'crystal':
+        group.userData.animationType = 'bob';
+        group.userData.bobSpeed = 1.5;
+        group.userData.bobAmount = 0.2;
+
+        const crystalColors = [0x9966ff, 0x6699ff, 0x00ccff];
+        const angles = [0, Math.PI * 2 / 3, Math.PI * 4 / 3];
+
+        for (let i = 0; i < 3; i++) {
+          const crystalMat = new THREE.MeshLambertMaterial({
+            color: crystalColors[i],
+            emissive: crystalColors[i],
+            emissiveIntensity: 0.3
+          });
+
+          const crystal = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.4 * scale, 0),
+            crystalMat
+          );
+
+          crystal.position.x = Math.cos(angles[i]) * 0.3 * scale;
+          crystal.position.z = Math.sin(angles[i]) * 0.3 * scale;
+          crystal.position.y = (0.8 + i * 0.2) * scale;
+          crystal.rotation.y = angles[i];
+          crystal.scale.y = 1.5 + Math.random() * 0.5;
+          group.add(crystal);
+        }
+        break;
+
+      case 'ruins':
+        const stoneMat = new THREE.MeshLambertMaterial({ color: 0xb8a890 });
+        const ruinPieces = [
+          { w: 1.5, h: 0.4, d: 0.8, x: 0, y: 0.2, z: 0, rx: 0, ry: 0, rz: 0.1 },
+          { w: 1.0, h: 0.5, d: 0.6, x: 0.5, y: 0.5, z: 0.3, rx: 0.2, ry: 0.3, rz: -0.15 },
+          { w: 0.8, h: 0.6, d: 0.5, x: -0.4, y: 0.6, z: -0.2, rx: -0.15, ry: -0.2, rz: 0.1 },
+          { w: 0.6, h: 0.3, d: 0.4, x: 0.2, y: 1.0, z: -0.4, rx: 0.3, ry: 0.1, rz: 0.2 }
+        ];
+
+        ruinPieces.forEach(piece => {
+          const stone = new THREE.Mesh(
+            new THREE.BoxGeometry(piece.w * scale, piece.h * scale, piece.d * scale),
+            stoneMat
+          );
+          stone.position.set(piece.x * scale, piece.y * scale, piece.z * scale);
+          stone.rotation.set(piece.rx, piece.ry, piece.rz);
+          group.add(stone);
+        });
+        break;
+    }
+
+    return group;
+  }
+
+  // ========================================
+  // BUILDING GENERATORS
+  // ========================================
+
+  function createBuilding(type, scale) {
+    scale = scale || 1;
+    const group = new THREE.Group();
+    group.name = 'building_' + type;
+
+    switch(type) {
+      case 'house':
+        const wallMat = new THREE.MeshLambertMaterial({ color: 0xd4a574 });
+        const roofMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+        const doorMat = new THREE.MeshLambertMaterial({ color: 0x4a3020 });
+        const windowMat = new THREE.MeshLambertMaterial({
+          color: 0xffffaa,
+          emissive: 0xffff88,
+          emissiveIntensity: 0.5
+        });
+
+        // Base
+        const base = new THREE.Mesh(
+          new THREE.BoxGeometry(3 * scale, 2 * scale, 3 * scale),
+          wallMat
+        );
+        base.position.y = 1 * scale;
+        group.add(base);
+
+        // Roof (A-frame)
+        const roof1 = new THREE.Mesh(
+          new THREE.PlaneGeometry(3.5 * scale, 2 * scale),
+          roofMat
+        );
+        roof1.position.y = 2.5 * scale;
+        roof1.position.z = -0.5 * scale;
+        roof1.rotation.x = -Math.PI / 4;
+        group.add(roof1);
+
+        const roof2 = new THREE.Mesh(
+          new THREE.PlaneGeometry(3.5 * scale, 2 * scale),
+          roofMat
+        );
+        roof2.position.y = 2.5 * scale;
+        roof2.position.z = 0.5 * scale;
+        roof2.rotation.x = Math.PI / 4;
+        group.add(roof2);
+
+        // Door
+        const door = new THREE.Mesh(
+          new THREE.BoxGeometry(0.6 * scale, 1.2 * scale, 0.1 * scale),
+          doorMat
+        );
+        door.position.y = 0.6 * scale;
+        door.position.z = 1.55 * scale;
+        group.add(door);
+
+        // Windows
+        const windowPositions = [
+          { x: -0.8, y: 1.2, z: 1.55 },
+          { x: 0.8, y: 1.2, z: 1.55 }
+        ];
+        windowPositions.forEach(pos => {
+          const window = new THREE.Mesh(
+            new THREE.BoxGeometry(0.4 * scale, 0.4 * scale, 0.1 * scale),
+            windowMat
+          );
+          window.position.set(pos.x * scale, pos.y * scale, pos.z * scale);
+          group.add(window);
+        });
+        break;
+
+      case 'tower':
+        const towerMat = new THREE.MeshLambertMaterial({ color: 0x9a9a9a });
+        const crenMat = new THREE.MeshLambertMaterial({ color: 0x808080 });
+
+        // Main tower
+        const tower = new THREE.Mesh(
+          new THREE.CylinderGeometry(1 * scale, 1.2 * scale, 6 * scale, 12),
+          towerMat
+        );
+        tower.position.y = 3 * scale;
+        group.add(tower);
+
+        // Crenellations (battlements)
+        for (let i = 0; i < 8; i++) {
+          const cren = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3 * scale, 0.5 * scale, 0.3 * scale),
+            crenMat
+          );
+          const angle = (i / 8) * Math.PI * 2;
+          cren.position.x = Math.cos(angle) * 1 * scale;
+          cren.position.z = Math.sin(angle) * 1 * scale;
+          cren.position.y = 6.25 * scale;
+          group.add(cren);
+        }
+
+        // Window slits
+        const slitMat = new THREE.MeshLambertMaterial({ color: 0x000000 });
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          const slit = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1 * scale, 0.6 * scale, 0.2 * scale),
+            slitMat
+          );
+          slit.position.x = Math.cos(angle) * 1.15 * scale;
+          slit.position.z = Math.sin(angle) * 1.15 * scale;
+          slit.position.y = 4 * scale;
+          group.add(slit);
+        }
+        break;
+
+      case 'market_stall':
+        const poleMat = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
+        const fabricMat = new THREE.MeshLambertMaterial({ color: 0xff6b35 });
+        const counterMat = new THREE.MeshLambertMaterial({ color: 0xa0826d });
+
+        // Four corner poles
+        const polePositions = [
+          { x: -1, z: -1 }, { x: 1, z: -1 },
+          { x: -1, z: 1 }, { x: 1, z: 1 }
+        ];
+        polePositions.forEach(pos => {
+          const pole = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.08 * scale, 0.08 * scale, 2.5 * scale, 6),
+            poleMat
+          );
+          pole.position.set(pos.x * scale, 1.25 * scale, pos.z * scale);
+          group.add(pole);
+        });
+
+        // Fabric roof
+        const roof = new THREE.Mesh(
+          new THREE.PlaneGeometry(2.5 * scale, 2.5 * scale),
+          fabricMat
+        );
+        roof.position.y = 2.5 * scale;
+        roof.rotation.x = -Math.PI / 2;
+        group.add(roof);
+
+        // Counter
+        const counter = new THREE.Mesh(
+          new THREE.BoxGeometry(2 * scale, 0.1 * scale, 1 * scale),
+          counterMat
+        );
+        counter.position.y = 1 * scale;
+        counter.position.z = 0.5 * scale;
+        group.add(counter);
+        break;
+
+      case 'temple':
+        const templeMat = new THREE.MeshLambertMaterial({ color: 0xe8dcc4 });
+        const pillarMat = new THREE.MeshLambertMaterial({ color: 0xd4c5a9 });
+
+        // Base platform with steps
+        for (let i = 0; i < 3; i++) {
+          const step = new THREE.Mesh(
+            new THREE.BoxGeometry((4 - i * 0.3) * scale, 0.3 * scale, (3 - i * 0.3) * scale),
+            templeMat
+          );
+          step.position.y = i * 0.3 * scale;
+          group.add(step);
+        }
+
+        // Main building
+        const main = new THREE.Mesh(
+          new THREE.BoxGeometry(3 * scale, 2 * scale, 2 * scale),
+          templeMat
+        );
+        main.position.y = 1.9 * scale;
+        group.add(main);
+
+        // Six pillars
+        const pillarXPos = [-1.2, -0.4, 0.4, 1.2];
+        pillarXPos.forEach(x => {
+          const pillar = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.15 * scale, 0.15 * scale, 2 * scale, 8),
+            pillarMat
+          );
+          pillar.position.set(x * scale, 1.9 * scale, 1.2 * scale);
+          group.add(pillar);
+        });
+
+        // Triangular pediment
+        const pediment = new THREE.Mesh(
+          new THREE.ConeGeometry(1.8 * scale, 0.8 * scale, 3),
+          templeMat
+        );
+        pediment.position.y = 3.3 * scale;
+        pediment.position.z = 1.2 * scale;
+        pediment.rotation.z = -Math.PI / 2;
+        pediment.rotation.y = Math.PI / 2;
+        group.add(pediment);
+        break;
+    }
+
+    return group;
+  }
+
+  // ========================================
+  // FURNITURE GENERATORS
+  // ========================================
+
+  function createFurniture(type) {
+    const group = new THREE.Group();
+    group.name = 'furniture_' + type;
+
+    switch(type) {
+      case 'bench':
+        const benchMat = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
+
+        // Seat
+        const seat = new THREE.Mesh(
+          new THREE.BoxGeometry(1.5, 0.1, 0.4),
+          benchMat
+        );
+        seat.position.y = 0.5;
+        group.add(seat);
+
+        // Legs
+        const leg1 = new THREE.Mesh(
+          new THREE.BoxGeometry(0.1, 0.5, 0.1),
+          benchMat
+        );
+        leg1.position.set(-0.6, 0.25, 0);
+        group.add(leg1);
+
+        const leg2 = new THREE.Mesh(
+          new THREE.BoxGeometry(0.1, 0.5, 0.1),
+          benchMat
+        );
+        leg2.position.set(0.6, 0.25, 0);
+        group.add(leg2);
+        break;
+
+      case 'lantern':
+        const poleMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
+        const lightMat = new THREE.MeshLambertMaterial({
+          color: 0xffff88,
+          emissive: 0xffff00,
+          emissiveIntensity: 0.8
+        });
+
+        // Pole
+        const pole = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.05, 0.05, 2, 6),
+          poleMat
+        );
+        pole.position.y = 1;
+        group.add(pole);
+
+        // Glowing lantern box
+        const lantern = new THREE.Mesh(
+          new THREE.BoxGeometry(0.3, 0.3, 0.3),
+          lightMat
+        );
+        lantern.position.y = 2.2;
+        group.add(lantern);
+
+        // Add point light
+        const light = new THREE.PointLight(0xffff88, 1, 10);
+        light.position.y = 2.2;
+        group.add(light);
+        break;
+
+      case 'well':
+        const stoneMat = new THREE.MeshLambertMaterial({ color: 0x888888 });
+        const woodMat = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
+
+        // Stone cylinder
+        const wellBase = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.8, 0.8, 1, 12),
+          stoneMat
+        );
+        wellBase.position.y = 0.5;
+        group.add(wellBase);
+
+        // Wooden frame posts
+        const post1 = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.08, 0.08, 1.5, 6),
+          woodMat
+        );
+        post1.position.set(-0.6, 1.25, 0);
+        group.add(post1);
+
+        const post2 = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.08, 0.08, 1.5, 6),
+          woodMat
+        );
+        post2.position.set(0.6, 1.25, 0);
+        group.add(post2);
+
+        // Crossbar with rope cylinder
+        const crossbar = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.06, 0.06, 1.4, 6),
+          woodMat
+        );
+        crossbar.position.y = 2;
+        crossbar.rotation.z = Math.PI / 2;
+        group.add(crossbar);
+
+        // Bucket
+        const bucket = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.15, 0.12, 0.2, 8),
+          woodMat
+        );
+        bucket.position.set(0, 1.5, 0.5);
+        group.add(bucket);
+        break;
+
+      case 'bridge':
+        const plankMat = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
+        const railMat = new THREE.MeshLambertMaterial({ color: 0x654321 });
+
+        // Arched planks
+        const numPlanks = 8;
+        for (let i = 0; i < numPlanks; i++) {
+          const plank = new THREE.Mesh(
+            new THREE.BoxGeometry(0.8, 0.1, 0.4),
+            plankMat
+          );
+          const t = (i / (numPlanks - 1)) * Math.PI;
+          plank.position.x = (i - numPlanks / 2) * 0.5;
+          plank.position.y = Math.sin(t) * 0.3;
+          plank.rotation.z = Math.cos(t) * 0.2;
+          group.add(plank);
+        }
+
+        // Side rails
+        for (let side = -1; side <= 1; side += 2) {
+          for (let i = 0; i < numPlanks; i++) {
+            const rail = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.04, 0.04, 0.5, 4),
+              railMat
+            );
+            const t = (i / (numPlanks - 1)) * Math.PI;
+            rail.position.x = (i - numPlanks / 2) * 0.5;
+            rail.position.y = Math.sin(t) * 0.3 + 0.25;
+            rail.position.z = side * 0.35;
+            group.add(rail);
+          }
+        }
+        break;
+
+      case 'fence':
+        const fenceMat = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
+
+        // Vertical posts
+        for (let i = 0; i < 5; i++) {
+          const post = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 1, 0.1),
+            fenceMat
+          );
+          post.position.x = (i - 2) * 0.5;
+          post.position.y = 0.5;
+          group.add(post);
+        }
+
+        // Horizontal rails
+        for (let i = 0; i < 2; i++) {
+          const rail = new THREE.Mesh(
+            new THREE.BoxGeometry(2.5, 0.08, 0.08),
+            fenceMat
+          );
+          rail.position.y = 0.3 + i * 0.4;
+          group.add(rail);
+        }
+        break;
+    }
+
+    return group;
+  }
+
+  // ========================================
+  // CREATURE GENERATORS
+  // ========================================
+
+  function createCreature(type) {
+    const group = new THREE.Group();
+    group.name = 'creature_' + type;
+
+    switch(type) {
+      case 'butterfly':
+        group.userData.animationType = 'flap';
+        group.userData.flapSpeed = 8;
+        group.userData.flapAmount = Math.PI / 4;
+
+        const bodyMat = new THREE.MeshLambertMaterial({ color: 0x000000 });
+        const wingMat = new THREE.MeshLambertMaterial({ color: 0xff6b9d });
+
+        // Body
+        const body = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.05, 0.05, 0.3, 6),
+          bodyMat
+        );
+        body.rotation.z = Math.PI / 2;
+        group.add(body);
+
+        // Wings (will rotate for flapping)
+        const leftWing = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.3, 0.4),
+          wingMat
+        );
+        leftWing.position.z = 0.2;
+        leftWing.name = 'leftWing';
+        group.add(leftWing);
+
+        const rightWing = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.3, 0.4),
+          wingMat
+        );
+        rightWing.position.z = -0.2;
+        rightWing.name = 'rightWing';
+        group.add(rightWing);
+        break;
+
+      case 'bird':
+        group.userData.animationType = 'bob';
+        group.userData.bobSpeed = 2;
+        group.userData.bobAmount = 0.3;
+
+        const birdBodyMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+        const birdWingMat = new THREE.MeshLambertMaterial({ color: 0x654321 });
+
+        // Body (cone)
+        const birdBody = new THREE.Mesh(
+          new THREE.ConeGeometry(0.15, 0.4, 8),
+          birdBodyMat
+        );
+        birdBody.rotation.z = -Math.PI / 2;
+        group.add(birdBody);
+
+        // Wings
+        const leftBirdWing = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.4, 0.2),
+          birdWingMat
+        );
+        leftBirdWing.position.z = 0.15;
+        leftBirdWing.rotation.x = Math.PI / 6;
+        leftBirdWing.name = 'leftWing';
+        group.add(leftBirdWing);
+
+        const rightBirdWing = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.4, 0.2),
+          birdWingMat
+        );
+        rightBirdWing.position.z = -0.15;
+        rightBirdWing.rotation.x = -Math.PI / 6;
+        rightBirdWing.name = 'rightWing';
+        group.add(rightBirdWing);
+        break;
+
+      case 'fish':
+        group.userData.animationType = 'swim';
+        group.userData.swimSpeed = 1;
+        group.userData.swimRadius = 2;
+        group.userData.swimAngle = 0;
+
+        const fishBodyMat = new THREE.MeshLambertMaterial({ color: 0xff8c00 });
+        const fishTailMat = new THREE.MeshLambertMaterial({ color: 0xff6347 });
+
+        // Elongated body
+        const fishBody = new THREE.Mesh(
+          new THREE.SphereGeometry(0.2, 8, 6),
+          fishBodyMat
+        );
+        fishBody.scale.x = 2;
+        group.add(fishBody);
+
+        // Triangle tail
+        const tailGeo = new THREE.ConeGeometry(0.15, 0.3, 3);
+        const tail = new THREE.Mesh(tailGeo, fishTailMat);
+        tail.rotation.z = Math.PI / 2;
+        tail.position.x = -0.4;
+        group.add(tail);
+        break;
+    }
+
+    return group;
+  }
+
+  // ========================================
+  // ANIMATION SYSTEM
+  // ========================================
+
+  function animateModel(model, deltaTime, worldTime) {
+    if (!model.userData.animationType || model.userData.animationType === 'none') {
+      return;
+    }
+
+    const type = model.userData.animationType;
+
+    switch(type) {
+      case 'sway':
+        // Gentle tree sway
+        const swayAmount = model.userData.swayAmount || 0.05;
+        const swaySpeed = model.userData.swaySpeed || 1.0;
+        model.rotation.z = Math.sin(worldTime * swaySpeed) * swayAmount;
+        model.rotation.x = Math.cos(worldTime * swaySpeed * 0.7) * swayAmount * 0.5;
+        break;
+
+      case 'flap':
+        // Wing flapping for butterflies/birds
+        const flapSpeed = model.userData.flapSpeed || 8;
+        const flapAmount = model.userData.flapAmount || Math.PI / 4;
+        const flapAngle = Math.sin(worldTime * flapSpeed) * flapAmount;
+
+        const leftWing = model.getObjectByName('leftWing');
+        const rightWing = model.getObjectByName('rightWing');
+
+        if (leftWing) {
+          leftWing.rotation.y = flapAngle;
+        }
+        if (rightWing) {
+          rightWing.rotation.y = -flapAngle;
+        }
+        break;
+
+      case 'swim':
+        // Circular swimming motion
+        const swimSpeed = model.userData.swimSpeed || 1;
+        const swimRadius = model.userData.swimRadius || 2;
+
+        model.userData.swimAngle = (model.userData.swimAngle || 0) + deltaTime * swimSpeed;
+
+        const centerX = model.userData.swimCenterX || 0;
+        const centerZ = model.userData.swimCenterZ || 0;
+
+        model.position.x = centerX + Math.cos(model.userData.swimAngle) * swimRadius;
+        model.position.z = centerZ + Math.sin(model.userData.swimAngle) * swimRadius;
+        model.rotation.y = model.userData.swimAngle + Math.PI / 2;
+        break;
+
+      case 'bob':
+        // Vertical bobbing motion
+        const bobSpeed = model.userData.bobSpeed || 1.5;
+        const bobAmount = model.userData.bobAmount || 0.2;
+        const baseY = model.userData.baseY || model.position.y;
+
+        if (model.userData.baseY === undefined) {
+          model.userData.baseY = model.position.y;
+        }
+
+        model.position.y = baseY + Math.sin(worldTime * bobSpeed) * bobAmount;
+        break;
+
+      case 'spin':
+        // Slow rotation around Y axis
+        const spinSpeed = model.userData.spinSpeed || 0.5;
+        model.rotation.y += deltaTime * spinSpeed;
+        break;
+    }
+  }
+
+  // ========================================
+  // EXPORTS
+  // ========================================
+
+  exports.createTree = createTree;
+  exports.createRock = createRock;
+  exports.createBuilding = createBuilding;
+  exports.createFurniture = createFurniture;
+  exports.createCreature = createCreature;
+  exports.animateModel = animateModel;
+
+})(typeof module !== 'undefined' ? module.exports : (window.Models = {}));
+
+
 // auth.js
 (function(exports) {
   // GitHub App OAuth Configuration — Standard Web Flow (CORS-enabled for GitHub Apps)
@@ -5481,43 +6336,283 @@ html, body {
 
   function createHumanoidModel(color) {
     var player = new THREE.Group();
-    var headGeo = new THREE.SphereGeometry(0.35, 10, 10);
-    var headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
+
+    // Head - SphereGeometry, skin-toned
+    var headGeo = new THREE.SphereGeometry(0.3, 16, 16);
+    var headMat = new THREE.MeshLambertMaterial({ color: 0xffdbac });
     var head = new THREE.Mesh(headGeo, headMat);
-    head.position.y = 1.6;
+    head.position.y = 1.5;
     head.castShadow = false;
     player.add(head);
 
-    var torsoGeo = new THREE.BoxGeometry(0.7, 0.9, 0.4);
-    var torsoMat = new THREE.MeshStandardMaterial({ color: color || 0x4169e1 });
+    // Torso - BoxGeometry, colored shirt
+    var torsoGeo = new THREE.BoxGeometry(0.5, 0.6, 0.3);
+    var torsoMat = new THREE.MeshLambertMaterial({ color: color || 0x4169e1 });
     var torso = new THREE.Mesh(torsoGeo, torsoMat);
-    torso.position.y = 0.95;
+    torso.position.y = 0.9;
     torso.castShadow = false;
     player.add(torso);
 
-    var armGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.8, 6);
-    var armMat = new THREE.MeshStandardMaterial({ color: color || 0x4169e1 });
+    // Arms - CylinderGeometry, attached at shoulders
+    var armGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8);
+    var armMat = new THREE.MeshLambertMaterial({ color: 0xffdbac });
+
     var leftArm = new THREE.Mesh(armGeo, armMat);
-    leftArm.position.set(-0.5, 0.95, 0);
+    leftArm.position.set(-0.35, 1.05, 0);
     leftArm.castShadow = false;
     player.add(leftArm);
+
     var rightArm = new THREE.Mesh(armGeo, armMat.clone());
-    rightArm.position.set(0.5, 0.95, 0);
+    rightArm.position.set(0.35, 1.05, 0);
     rightArm.castShadow = false;
     player.add(rightArm);
 
-    var legGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.8, 6);
-    var legMat = new THREE.MeshStandardMaterial({ color: 0x2f4f4f });
+    // Legs - CylinderGeometry, attached at hips
+    var legGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 8);
+    var legMat = new THREE.MeshLambertMaterial({ color: 0x2f4f4f });
+
     var leftLeg = new THREE.Mesh(legGeo, legMat);
-    leftLeg.position.set(-0.2, 0.1, 0);
+    leftLeg.position.set(-0.15, 0.35, 0);
     leftLeg.castShadow = false;
     player.add(leftLeg);
+
     var rightLeg = new THREE.Mesh(legGeo, legMat.clone());
-    rightLeg.position.set(0.2, 0.1, 0);
+    rightLeg.position.set(0.15, 0.35, 0);
     rightLeg.castShadow = false;
     player.add(rightLeg);
 
+    // Feet - Small BoxGeometry at bottom of legs
+    var footGeo = new THREE.BoxGeometry(0.15, 0.1, 0.25);
+    var footMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+
+    var leftFoot = new THREE.Mesh(footGeo, footMat);
+    leftFoot.position.set(-0.15, 0.05, 0.05);
+    leftFoot.castShadow = false;
+    player.add(leftFoot);
+
+    var rightFoot = new THREE.Mesh(footGeo, footMat.clone());
+    rightFoot.position.set(0.15, 0.05, 0.05);
+    rightFoot.castShadow = false;
+    player.add(rightFoot);
+
+    // Store references to limbs in userData for animation
+    player.userData.limbs = {
+      head: head,
+      torso: torso,
+      leftArm: leftArm,
+      rightArm: rightArm,
+      leftLeg: leftLeg,
+      rightLeg: rightLeg,
+      leftFoot: leftFoot,
+      rightFoot: rightFoot
+    };
+
+    // Animation state tracking
+    player.userData.animTime = 0;
+    player.userData.prevPosition = new THREE.Vector3();
+    player.userData.animState = 'idle'; // 'idle', 'walk', 'run'
+
     return player;
+  }
+
+  // ========================================================================
+  // ENVIRONMENT POPULATION — Trees, rocks, benches, lanterns
+  // ========================================================================
+
+  function populateEnvironment(scene) {
+    var Models = typeof window !== 'undefined' ? window.Models : null;
+    if (!Models) {
+      console.log('Models module not loaded, skipping environment population');
+      return;
+    }
+
+    // ---- Gardens: trees, flowers, benches along paths ----
+    var gz = ZONES.gardens;
+    var gardenTreeTypes = ['oak', 'willow', 'cherry', 'cherry'];
+    for (var gt = 0; gt < 20; gt++) {
+      var ga = hash2D(gt, 100) * Math.PI * 2;
+      var gr = 15 + hash2D(gt, 101) * 55;
+      var gx = gz.cx + Math.cos(ga) * gr;
+      var gzz = gz.cz + Math.sin(ga) * gr;
+      var gy = terrainHeight(gx, gzz);
+      var treeType = gardenTreeTypes[gt % gardenTreeTypes.length];
+      var tree = Models.createTree(treeType, 0.8 + hash2D(gt, 102) * 0.6);
+      tree.position.set(gx, gy, gzz);
+      tree.rotation.y = hash2D(gt, 103) * Math.PI * 2;
+      scene.add(tree);
+      animatedObjects.push({ mesh: tree, type: 'tree', params: { speed: 0.3 + hash2D(gt, 104) * 0.3 } });
+    }
+    // Benches in gardens
+    for (var gb = 0; gb < 6; gb++) {
+      var ba = (gb / 6) * Math.PI * 2 + 0.5;
+      var bx = gz.cx + Math.cos(ba) * 25;
+      var bz = gz.cz + Math.sin(ba) * 25;
+      var by = terrainHeight(bx, bz);
+      var bench = Models.createFurniture('bench');
+      bench.position.set(bx, by, bz);
+      bench.rotation.y = ba + Math.PI / 2;
+      scene.add(bench);
+    }
+    // Lanterns along garden paths
+    for (var gl = 0; gl < 10; gl++) {
+      var la = (gl / 10) * Math.PI * 2;
+      var lx = gz.cx + Math.cos(la) * 35;
+      var lz = gz.cz + Math.sin(la) * 35;
+      var ly = terrainHeight(lx, lz);
+      var lantern = Models.createFurniture('lantern');
+      lantern.position.set(lx, ly, lz);
+      scene.add(lantern);
+    }
+
+    // ---- Wilds: dense forest, boulders, dead trees ----
+    var wz = ZONES.wilds;
+    var wildTreeTypes = ['oak', 'pine', 'pine', 'dead', 'oak'];
+    for (var wt = 0; wt < 40; wt++) {
+      var wa = hash2D(wt, 200) * Math.PI * 2;
+      var wr = 10 + hash2D(wt, 201) * 70;
+      var wx = wz.cx + Math.cos(wa) * wr;
+      var wz2 = wz.cz + Math.sin(wa) * wr;
+      var wy = terrainHeight(wx, wz2);
+      var wildType = wildTreeTypes[wt % wildTreeTypes.length];
+      var wtree = Models.createTree(wildType, 0.7 + hash2D(wt, 202) * 0.8);
+      wtree.position.set(wx, wy, wz2);
+      wtree.rotation.y = hash2D(wt, 203) * Math.PI * 2;
+      scene.add(wtree);
+      animatedObjects.push({ mesh: wtree, type: 'tree', params: { speed: 0.2 + hash2D(wt, 204) * 0.4 } });
+    }
+    // Boulders and crystal rocks in wilds
+    for (var wb = 0; wb < 15; wb++) {
+      var rba = hash2D(wb, 210) * Math.PI * 2;
+      var rbr = 8 + hash2D(wb, 211) * 60;
+      var rbx = wz.cx + Math.cos(rba) * rbr;
+      var rbz = wz.cz + Math.sin(rba) * rbr;
+      var rby = terrainHeight(rbx, rbz);
+      var rockType = (wb % 5 === 0) ? 'crystal' : 'boulder';
+      var rock = Models.createRock(rockType, 0.5 + hash2D(wb, 212) * 1.5);
+      rock.position.set(rbx, rby, rbz);
+      rock.rotation.y = hash2D(wb, 213) * Math.PI * 2;
+      scene.add(rock);
+    }
+
+    // ---- Nexus: ornamental trees, benches, lanterns ----
+    var nz = ZONES.nexus;
+    for (var nt = 0; nt < 8; nt++) {
+      var na = (nt / 8) * Math.PI * 2 + Math.PI / 8;
+      var nx = nz.cx + Math.cos(na) * 25;
+      var nzz = nz.cz + Math.sin(na) * 25;
+      var ny = terrainHeight(nx, nzz);
+      var ntree = Models.createTree('cherry', 0.7);
+      ntree.position.set(nx, ny, nzz);
+      scene.add(ntree);
+      animatedObjects.push({ mesh: ntree, type: 'tree', params: { speed: 0.3 } });
+    }
+    // Stone benches around nexus
+    for (var nb = 0; nb < 8; nb++) {
+      var nba = (nb / 8) * Math.PI * 2;
+      var nbx = nz.cx + Math.cos(nba) * 18;
+      var nbz = nz.cz + Math.sin(nba) * 18;
+      var nby = terrainHeight(nbx, nbz);
+      var nbench = Models.createFurniture('bench');
+      nbench.position.set(nbx, nby, nbz);
+      nbench.rotation.y = nba + Math.PI / 2;
+      scene.add(nbench);
+    }
+
+    // ---- Agora: market crates, lanterns along paths ----
+    var az = ZONES.agora;
+    for (var al = 0; al < 12; al++) {
+      var ala = (al / 12) * Math.PI * 2;
+      var alx = az.cx + Math.cos(ala) * 22;
+      var alz = az.cz + Math.sin(ala) * 22;
+      var aly = terrainHeight(alx, alz);
+      var alantern = Models.createFurniture('lantern');
+      alantern.position.set(alx, aly, alz);
+      scene.add(alantern);
+    }
+
+    // ---- Commons: trees around village, fences ----
+    var cz = ZONES.commons;
+    for (var ct = 0; ct < 12; ct++) {
+      var ca = hash2D(ct, 300) * Math.PI * 2;
+      var cr = 25 + hash2D(ct, 301) * 25;
+      var cx = cz.cx + Math.cos(ca) * cr;
+      var czz = cz.cz + Math.sin(ca) * cr;
+      var cy = terrainHeight(cx, czz);
+      var ctree = Models.createTree('oak', 0.6 + hash2D(ct, 302) * 0.5);
+      ctree.position.set(cx, cy, czz);
+      ctree.rotation.y = hash2D(ct, 303) * Math.PI * 2;
+      scene.add(ctree);
+      animatedObjects.push({ mesh: ctree, type: 'tree', params: { speed: 0.3 } });
+    }
+
+    // ---- Studio: artistic rocks, small trees ----
+    var sz = ZONES.studio;
+    for (var st = 0; st < 8; st++) {
+      var sa = hash2D(st, 400) * Math.PI * 2;
+      var sr = 20 + hash2D(st, 401) * 30;
+      var sx = sz.cx + Math.cos(sa) * sr;
+      var szz = sz.cz + Math.sin(sa) * sr;
+      var sy = terrainHeight(sx, szz);
+      var srock = Models.createRock('crystal', 0.8 + hash2D(st, 402) * 0.8);
+      srock.position.set(sx, sy, szz);
+      scene.add(srock);
+    }
+
+    // ---- Athenaeum: ordered trees, benches ----
+    var atz = ZONES.athenaeum;
+    for (var at = 0; at < 10; at++) {
+      var ata = hash2D(at, 500) * Math.PI * 2;
+      var atr = 20 + hash2D(at, 501) * 35;
+      var atx = atz.cx + Math.cos(ata) * atr;
+      var atzz = atz.cz + Math.sin(ata) * atr;
+      var aty = terrainHeight(atx, atzz);
+      var attree = Models.createTree('pine', 0.7 + hash2D(at, 502) * 0.4);
+      attree.position.set(atx, aty, atzz);
+      scene.add(attree);
+      animatedObjects.push({ mesh: attree, type: 'tree', params: { speed: 0.25 } });
+    }
+
+    // ---- Arena: sparse vegetation ----
+    var arz = ZONES.arena;
+    for (var ar = 0; ar < 6; ar++) {
+      var ara = hash2D(ar, 600) * Math.PI * 2;
+      var arr = 30 + hash2D(ar, 601) * 15;
+      var arx = arz.cx + Math.cos(ara) * arr;
+      var arzz = arz.cz + Math.sin(ara) * arr;
+      var ary = terrainHeight(arx, arzz);
+      var arrock = Models.createRock('boulder', 0.6 + hash2D(ar, 602) * 1.0);
+      arrock.position.set(arx, ary, arzz);
+      arrock.rotation.y = hash2D(ar, 603) * Math.PI;
+      scene.add(arrock);
+    }
+
+    // ---- Butterflies and birds scattered around gardens and wilds ----
+    if (Models.createCreature) {
+      for (var bf = 0; bf < 8; bf++) {
+        var bfa = hash2D(bf, 700) * Math.PI * 2;
+        var bfr = 10 + hash2D(bf, 701) * 50;
+        var bfx = gz.cx + Math.cos(bfa) * bfr;
+        var bfz = gz.cz + Math.sin(bfa) * bfr;
+        var bfy = terrainHeight(bfx, bfz) + 1.5 + hash2D(bf, 702) * 2;
+        var butterfly = Models.createCreature('butterfly');
+        butterfly.position.set(bfx, bfy, bfz);
+        scene.add(butterfly);
+        animatedObjects.push({ mesh: butterfly, type: 'creature', params: { speed: 1 + hash2D(bf, 703) } });
+      }
+      for (var bi = 0; bi < 6; bi++) {
+        var bia = hash2D(bi, 710) * Math.PI * 2;
+        var bir = 10 + hash2D(bi, 711) * 60;
+        var bix = wz.cx + Math.cos(bia) * bir;
+        var biz = wz.cz + Math.sin(bia) * bir;
+        var biy = terrainHeight(bix, biz) + 5 + hash2D(bi, 712) * 5;
+        var bird = Models.createCreature('bird');
+        bird.position.set(bix, biy, biz);
+        scene.add(bird);
+        animatedObjects.push({ mesh: bird, type: 'creature', params: { speed: 0.5 + hash2D(bi, 713) * 0.5 } });
+      }
+    }
+
+    console.log('Environment populated with trees, rocks, furniture, and creatures');
   }
 
   // ========================================================================
@@ -5561,6 +6656,9 @@ html, body {
     // Create all zone structures (one-time, persistent)
     createZoneStructures(scene);
 
+    // Populate world with environmental objects (trees, rocks, furniture)
+    populateEnvironment(scene);
+
     // Load initial chunks around nexus
     var ctx = {
       scene: scene,
@@ -5598,9 +6696,13 @@ html, body {
     var y = terrainHeight(x, z);
     var mesh = createHumanoidModel();
     mesh.position.set(x, y, z);
+
+    // Initialize previous position for animation tracking
+    mesh.userData.prevPosition.set(x, y, z);
+
     sceneCtx.scene.add(mesh);
 
-    // Name label
+    // Name label - billboard sprite above head
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
     canvas.width = 256;
@@ -5615,7 +6717,7 @@ html, body {
     var labelMat = new THREE.SpriteMaterial({ map: texture });
     var label = new THREE.Sprite(labelMat);
     label.scale.set(3, 0.75, 1);
-    label.position.y = 2.5;
+    label.position.y = 2.0; // Above head
     mesh.add(label);
 
     playerMeshes.set(playerId, { mesh: mesh, label: label });
@@ -5624,9 +6726,34 @@ html, body {
   function movePlayer(sceneCtx, playerId, position) {
     var data = playerMeshes.get(playerId);
     if (!data) return;
+    var mesh = data.mesh;
+
+    // Store previous position before updating
+    mesh.userData.prevPosition.copy(mesh.position);
+
     var x = position.x || 0, z = position.z || 0;
     var y = terrainHeight(x, z);
-    data.mesh.position.set(x, y, z);
+    mesh.position.set(x, y, z);
+
+    // Calculate movement delta to determine animation state
+    var dx = x - mesh.userData.prevPosition.x;
+    var dz = z - mesh.userData.prevPosition.z;
+    var movementDelta = Math.sqrt(dx * dx + dz * dz);
+
+    // Determine animation state based on movement
+    if (movementDelta < 0.001) {
+      mesh.userData.animState = 'idle';
+    } else if (movementDelta > 0.1) {
+      mesh.userData.animState = 'run'; // Fast movement = running
+    } else {
+      mesh.userData.animState = 'walk';
+    }
+
+    // Update rotation to face movement direction
+    if (movementDelta > 0.001) {
+      var angle = Math.atan2(dx, dz);
+      mesh.rotation.y = angle;
+    }
   }
 
   function removePlayer(sceneCtx, playerId) {
@@ -5634,6 +6761,99 @@ html, body {
     if (!data || !sceneCtx || !sceneCtx.scene) return;
     sceneCtx.scene.remove(data.mesh);
     playerMeshes.delete(playerId);
+  }
+
+  // ========================================================================
+  // PLAYER ANIMATIONS
+  // ========================================================================
+
+  function updatePlayerAnimations(sceneCtx, deltaTime) {
+    if (!sceneCtx) return;
+
+    playerMeshes.forEach(function(data) {
+      var mesh = data.mesh;
+      var limbs = mesh.userData.limbs;
+      if (!limbs) return;
+
+      // Increment animation time
+      mesh.userData.animTime += deltaTime;
+      var t = mesh.userData.animTime;
+
+      var state = mesh.userData.animState || 'idle';
+
+      // Reset rotations to neutral positions
+      limbs.leftArm.rotation.x = 0;
+      limbs.rightArm.rotation.x = 0;
+      limbs.leftLeg.rotation.x = 0;
+      limbs.rightLeg.rotation.x = 0;
+      limbs.torso.rotation.x = 0;
+      limbs.torso.scale.set(1, 1, 1);
+      limbs.head.rotation.x = 0;
+
+      if (state === 'idle') {
+        // IDLE ANIMATION
+        // Subtle breathing - torso scales slightly on Y
+        var breathe = Math.sin(t * 2) * 0.02;
+        limbs.torso.scale.y = 1.0 + breathe;
+
+        // Slight body sway
+        limbs.torso.rotation.z = Math.sin(t * 1.5) * 0.02;
+
+        // Arms hang naturally with subtle sway
+        limbs.leftArm.rotation.z = Math.sin(t * 1.3) * 0.05;
+        limbs.rightArm.rotation.z = -Math.sin(t * 1.3) * 0.05;
+
+      } else if (state === 'walk') {
+        // WALKING ANIMATION
+        var walkSpeed = 8;
+        var swingAngle = 0.5;
+
+        // Legs swing forward/back alternately
+        limbs.leftLeg.rotation.x = Math.sin(t * walkSpeed) * swingAngle;
+        limbs.rightLeg.rotation.x = Math.sin(t * walkSpeed + Math.PI) * swingAngle;
+
+        // Arms swing opposite to legs (counter-swing)
+        limbs.leftArm.rotation.x = Math.sin(t * walkSpeed + Math.PI) * swingAngle * 0.7;
+        limbs.rightArm.rotation.x = Math.sin(t * walkSpeed) * swingAngle * 0.7;
+
+        // Feet rotate with legs
+        limbs.leftFoot.rotation.x = Math.sin(t * walkSpeed) * swingAngle * 0.5;
+        limbs.rightFoot.rotation.x = Math.sin(t * walkSpeed + Math.PI) * swingAngle * 0.5;
+
+        // Body bobs slightly up/down
+        var bob = Math.abs(Math.sin(t * walkSpeed)) * 0.05;
+        limbs.torso.position.y = 0.9 + bob;
+        limbs.head.position.y = 1.5 + bob;
+
+        // Slight forward lean
+        limbs.torso.rotation.x = 0.05;
+
+      } else if (state === 'run') {
+        // RUNNING ANIMATION
+        var runSpeed = 12;
+        var runSwingAngle = 0.8;
+
+        // Legs swing with larger amplitude and faster
+        limbs.leftLeg.rotation.x = Math.sin(t * runSpeed) * runSwingAngle;
+        limbs.rightLeg.rotation.x = Math.sin(t * runSpeed + Math.PI) * runSwingAngle;
+
+        // More dramatic arm swing
+        limbs.leftArm.rotation.x = Math.sin(t * runSpeed + Math.PI) * runSwingAngle;
+        limbs.rightArm.rotation.x = Math.sin(t * runSpeed) * runSwingAngle;
+
+        // Feet rotate with legs
+        limbs.leftFoot.rotation.x = Math.sin(t * runSpeed) * runSwingAngle * 0.5;
+        limbs.rightFoot.rotation.x = Math.sin(t * runSpeed + Math.PI) * runSwingAngle * 0.5;
+
+        // More pronounced body bob
+        var runBob = Math.abs(Math.sin(t * runSpeed)) * 0.08;
+        limbs.torso.position.y = 0.9 + runBob;
+        limbs.head.position.y = 1.5 + runBob;
+
+        // More body lean forward
+        limbs.torso.rotation.x = 0.15;
+      }
+    });
   }
 
   // ========================================================================
@@ -5791,6 +7011,17 @@ html, body {
           break;
         case 'water':
           obj.mesh.rotation.y += deltaTime * 0.05;
+          break;
+        case 'creature':
+          // Delegate to Models.animateModel if available
+          var Models = typeof window !== 'undefined' ? window.Models : null;
+          if (Models && Models.animateModel) {
+            Models.animateModel(obj.mesh, deltaTime, time);
+          } else {
+            // Fallback: simple bobbing motion
+            obj.mesh.position.y += Math.sin(time * 0.003 * (p.speed || 1)) * 0.01;
+            obj.mesh.rotation.y += deltaTime * (p.speed || 0.5);
+          }
           break;
       }
     }
@@ -6387,6 +7618,410 @@ html, body {
   }
 
   // ========================================================================
+  // WATER SYSTEM — Animated water bodies for zones
+  // ========================================================================
+
+  var waterBodies = [];
+  var waterTime = 0;
+
+  function initWater(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    var scene = sceneCtx.scene;
+
+    // Clear any existing water bodies
+    for (var i = 0; i < waterBodies.length; i++) {
+      scene.remove(waterBodies[i].mesh);
+      if (waterBodies[i].geometry) waterBodies[i].geometry.dispose();
+      if (waterBodies[i].material) waterBodies[i].material.dispose();
+    }
+    waterBodies = [];
+
+    // Gardens: Central pond/lake (~30 unit radius)
+    var gardensPond = createWaterBody({
+      type: 'circle',
+      centerX: ZONES.gardens.cx,
+      centerZ: ZONES.gardens.cz,
+      radius: 30,
+      height: ZONES.gardens.baseHeight + 0.3,
+      segments: 64,
+      waveSpeed: 0.8,
+      waveHeight: 0.15,
+      waveFrequency: 0.3
+    });
+    scene.add(gardensPond.mesh);
+    waterBodies.push(gardensPond);
+
+    // Wilds: Flowing river (~10 unit wide, winding through zone)
+    // Create river as a series of connected segments
+    var riverSegments = createRiverPath(ZONES.wilds.cx, ZONES.wilds.cz, ZONES.wilds.radius);
+    for (var j = 0; j < riverSegments.length; j++) {
+      var riverSegment = createWaterBody({
+        type: 'river',
+        centerX: riverSegments[j].x,
+        centerZ: riverSegments[j].z,
+        width: 10,
+        length: riverSegments[j].length,
+        rotation: riverSegments[j].rotation,
+        height: ZONES.wilds.baseHeight + 0.2,
+        segments: 64,
+        waveSpeed: 1.2,
+        waveHeight: 0.2,
+        waveFrequency: 0.5,
+        flowDirection: riverSegments[j].direction
+      });
+      scene.add(riverSegment.mesh);
+      waterBodies.push(riverSegment);
+    }
+
+    // Nexus: Decorative fountain pool (~8 unit radius)
+    var nexusFountain = createWaterBody({
+      type: 'circle',
+      centerX: ZONES.nexus.cx,
+      centerZ: ZONES.nexus.cz,
+      radius: 8,
+      height: ZONES.nexus.baseHeight + 0.5,
+      segments: 64,
+      waveSpeed: 1.5,
+      waveHeight: 0.1,
+      waveFrequency: 0.8
+    });
+    scene.add(nexusFountain.mesh);
+    waterBodies.push(nexusFountain);
+  }
+
+  function createWaterBody(config) {
+    var geometry, material, mesh;
+    var segments = config.segments || 64;
+
+    // Create geometry based on type
+    if (config.type === 'circle') {
+      geometry = new THREE.PlaneGeometry(config.radius * 2, config.radius * 2, segments, segments);
+    } else if (config.type === 'river') {
+      geometry = new THREE.PlaneGeometry(config.length, config.width, segments, segments);
+    }
+
+    // Rotate to be horizontal
+    geometry.rotateX(-Math.PI / 2);
+
+    // Position the geometry
+    geometry.translate(config.centerX, config.height, config.centerZ);
+
+    // Apply rotation for river segments
+    if (config.rotation) {
+      var tempGeom = new THREE.PlaneGeometry(config.length, config.width, segments, segments);
+      tempGeom.rotateX(-Math.PI / 2);
+      tempGeom.rotateY(config.rotation);
+      tempGeom.translate(config.centerX, config.height, config.centerZ);
+      geometry = tempGeom;
+    }
+
+    // Store initial vertex positions for animation
+    var positions = geometry.attributes.position.array;
+    var initialPositions = new Float32Array(positions.length);
+    for (var i = 0; i < positions.length; i++) {
+      initialPositions[i] = positions[i];
+    }
+
+    // Create water material
+    material = new THREE.MeshPhongMaterial({
+      color: 0x2266aa,
+      transparent: true,
+      opacity: 0.6,
+      side: THREE.DoubleSide,
+      shininess: 80,
+      specular: 0x88aaff
+    });
+
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.receiveShadow = false;
+    mesh.castShadow = false;
+
+    // Store config and initial positions for animation
+    return {
+      mesh: mesh,
+      geometry: geometry,
+      material: material,
+      initialPositions: initialPositions,
+      config: config
+    };
+  }
+
+  function createRiverPath(centerX, centerZ, zoneRadius) {
+    // Create a winding river path through the Wilds zone
+    var segments = [];
+    var segmentLength = 25;
+    var numSegments = 6;
+
+    // Start from northwest side of zone
+    var startX = centerX - zoneRadius * 0.6;
+    var startZ = centerZ - zoneRadius * 0.7;
+
+    // Create winding path
+    var currentX = startX;
+    var currentZ = startZ;
+    var currentAngle = Math.PI * 0.3; // Initial direction (southeast)
+
+    for (var i = 0; i < numSegments; i++) {
+      // Calculate segment endpoint
+      var nextX = currentX + Math.cos(currentAngle) * segmentLength;
+      var nextZ = currentZ + Math.sin(currentAngle) * segmentLength;
+
+      // Segment center point
+      var segX = (currentX + nextX) / 2;
+      var segZ = (currentZ + nextZ) / 2;
+
+      segments.push({
+        x: segX,
+        z: segZ,
+        length: segmentLength,
+        rotation: currentAngle,
+        direction: { x: Math.cos(currentAngle), z: Math.sin(currentAngle) }
+      });
+
+      // Update position and add some curve variation
+      currentX = nextX;
+      currentZ = nextZ;
+      currentAngle += (Math.random() - 0.5) * 0.6; // Random curve
+    }
+
+    return segments;
+  }
+
+  function updateWater(deltaTime) {
+    if (!waterBodies || waterBodies.length === 0) return;
+
+    waterTime += deltaTime;
+
+    for (var i = 0; i < waterBodies.length; i++) {
+      var water = waterBodies[i];
+      if (!water || !water.geometry || !water.initialPositions) continue;
+
+      var positions = water.geometry.attributes.position.array;
+      var initialPos = water.initialPositions;
+      var config = water.config;
+
+      var waveSpeed = config.waveSpeed || 1.0;
+      var waveHeight = config.waveHeight || 0.2;
+      var waveFrequency = config.waveFrequency || 0.5;
+
+      // Animate vertices with sine waves
+      for (var j = 0; j < positions.length; j += 3) {
+        var x = initialPos[j];
+        var y = initialPos[j + 1];
+        var z = initialPos[j + 2];
+
+        // Calculate distance from center for circular water bodies
+        var distFromCenter = 0;
+        if (config.type === 'circle') {
+          var dx = x - config.centerX;
+          var dz = z - config.centerZ;
+          distFromCenter = Math.sqrt(dx * dx + dz * dz);
+
+          // Radial ripples from center
+          var ripple = Math.sin(distFromCenter * waveFrequency - waterTime * waveSpeed) * waveHeight;
+
+          // Add secondary wave pattern
+          var angle = Math.atan2(dz, dx);
+          var secondaryWave = Math.sin(angle * 3 + waterTime * waveSpeed * 0.5) * waveHeight * 0.3;
+
+          positions[j + 1] = y + ripple + secondaryWave;
+
+          // Fade ripples near edge
+          if (distFromCenter > config.radius * 0.8) {
+            var fadeRatio = 1 - (distFromCenter - config.radius * 0.8) / (config.radius * 0.2);
+            positions[j + 1] = y + (ripple + secondaryWave) * Math.max(0, fadeRatio);
+          }
+        } else if (config.type === 'river') {
+          // Flowing river animation
+          var flowDir = config.flowDirection || { x: 1, z: 0 };
+          var flowComponent = (x - config.centerX) * flowDir.x + (z - config.centerZ) * flowDir.z;
+
+          // Waves flowing in direction of river
+          var flowWave = Math.sin(flowComponent * waveFrequency - waterTime * waveSpeed) * waveHeight;
+
+          // Cross-river waves for more natural look
+          var crossComponent = -(x - config.centerX) * flowDir.z + (z - config.centerZ) * flowDir.x;
+          var crossWave = Math.sin(crossComponent * waveFrequency * 0.8 + waterTime * waveSpeed * 0.6) * waveHeight * 0.4;
+
+          positions[j + 1] = y + flowWave + crossWave;
+        }
+      }
+
+      water.geometry.attributes.position.needsUpdate = true;
+      water.geometry.computeVertexNormals();
+    }
+  }
+
+  // ========================================================================
+  // SKYBOX / SKY DOME SYSTEM
+  // ========================================================================
+
+  function initSkybox(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    // Create sky dome with gradient colors using vertex colors
+    var skyGeo = new THREE.SphereGeometry(800, 32, 32);
+
+    // Add vertex colors for gradient (deep blue at top, orange/pink at horizon)
+    var colors = [];
+    var posArray = skyGeo.attributes.position.array;
+    for (var i = 0; i < posArray.length; i += 3) {
+      var y = posArray[i + 1];
+      var normalizedY = (y + 800) / 1600; // 0 at bottom, 1 at top
+
+      // Deep blue at top (y > 0.5), orange/pink at horizon (y < 0.5)
+      var r, g, b;
+      if (normalizedY > 0.5) {
+        // Top half: deep blue
+        var t = (normalizedY - 0.5) / 0.5;
+        r = 0.02 + t * 0.1;
+        g = 0.02 + t * 0.3;
+        b = 0.2 + t * 0.6;
+      } else {
+        // Bottom half: gradient from orange/pink to blue
+        var t = normalizedY / 0.5;
+        r = 1.0 - t * 0.88;
+        g = 0.42 - t * 0.1;
+        b = 0.21 + t * 0.59;
+      }
+
+      colors.push(r, g, b);
+    }
+
+    skyGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+    var skyMat = new THREE.MeshBasicMaterial({
+      side: THREE.BackSide,
+      vertexColors: true,
+      fog: false
+    });
+    skyDome = new THREE.Mesh(skyGeo, skyMat);
+    sceneCtx.scene.add(skyDome);
+
+    // Create starfield using THREE.Points
+    var starGeo = new THREE.BufferGeometry();
+    var starPos = [];
+    var starSizes = [];
+
+    for (var i = 0; i < 2000; i++) {
+      // Random position on sphere (radius 750)
+      var theta = Math.random() * Math.PI * 2;
+      var phi = Math.random() * Math.PI;
+      var r = 750;
+
+      var x = r * Math.sin(phi) * Math.cos(theta);
+      var y = r * Math.cos(phi);
+      var z = r * Math.sin(phi) * Math.sin(theta);
+
+      starPos.push(x, y, z);
+
+      // Varying sizes (0.3 - 1.5)
+      starSizes.push(0.3 + Math.random() * 1.2);
+    }
+
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+    starGeo.setAttribute('size', new THREE.Float32BufferAttribute(starSizes, 1));
+
+    var starMat = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 1.0,
+      sizeAttenuation: false,
+      transparent: true,
+      opacity: 0.0,
+      fog: false
+    });
+
+    stars = new THREE.Points(starGeo, starMat);
+    sceneCtx.scene.add(stars);
+
+    // Create Sun
+    var sunGeo = new THREE.SphereGeometry(5, 16, 16);
+    var sunMat = new THREE.MeshBasicMaterial({
+      color: 0xffff00,
+      fog: false
+    });
+    sunMesh = new THREE.Mesh(sunGeo, sunMat);
+    sceneCtx.scene.add(sunMesh);
+
+    // Create Moon
+    var moonGeo = new THREE.SphereGeometry(3, 16, 16);
+    var moonMat = new THREE.MeshBasicMaterial({
+      color: 0xccccdd,
+      fog: false
+    });
+    moonMesh = new THREE.Mesh(moonGeo, moonMat);
+    sceneCtx.scene.add(moonMesh);
+  }
+
+  function updateSkybox(sceneCtx, worldTime) {
+    if (!sceneCtx || !sceneCtx.camera) return;
+
+    // Make sky dome follow camera position
+    if (skyDome) {
+      skyDome.position.copy(sceneCtx.camera.position);
+    }
+
+    // Update sun and moon positions based on worldTime
+    // worldTime: 0-1440 (minutes in 24h cycle)
+    // Noon (720) = sun overhead, Midnight (0/1440) = sun below horizon
+    var normalizedTime = worldTime / 1440; // 0-1
+    var sunAngle = normalizedTime * Math.PI * 2 - Math.PI / 2; // -PI/2 at midnight, PI/2 at noon
+
+    if (sunMesh) {
+      var sunRadius = 400;
+      sunMesh.position.set(
+        Math.cos(sunAngle) * sunRadius,
+        Math.sin(sunAngle) * sunRadius,
+        0
+      );
+      sunMesh.position.add(sceneCtx.camera.position);
+    }
+
+    if (moonMesh) {
+      var moonRadius = 400;
+      // Moon is opposite to sun
+      var moonAngle = sunAngle + Math.PI;
+      moonMesh.position.set(
+        Math.cos(moonAngle) * moonRadius,
+        Math.sin(moonAngle) * moonRadius,
+        0
+      );
+      moonMesh.position.add(sceneCtx.camera.position);
+    }
+
+    // Update star visibility based on worldTime
+    if (stars && stars.material) {
+      // Night: worldTime 1080-1440 (18:00-24:00) and 0-360 (00:00-06:00)
+      // Day: worldTime 360-1080 (06:00-18:00)
+      var opacity = 0.0;
+
+      if (worldTime >= 1080 && worldTime <= 1440) {
+        // Evening to midnight (18:00-24:00)
+        var t = (worldTime - 1080) / 360;
+        opacity = Math.min(1.0, t * 2); // Fade in
+      } else if (worldTime >= 0 && worldTime < 360) {
+        // Midnight to dawn (00:00-06:00)
+        var t = worldTime / 360;
+        opacity = Math.max(0.0, 1.0 - t * 2); // Fade out
+      } else if (worldTime >= 300 && worldTime < 420) {
+        // Dawn fade out (05:00-07:00)
+        var t = (worldTime - 300) / 120;
+        opacity = Math.max(0.0, 1.0 - t);
+      } else if (worldTime >= 1020 && worldTime < 1140) {
+        // Dusk fade in (17:00-19:00)
+        var t = (worldTime - 1020) / 120;
+        opacity = Math.min(1.0, t);
+      }
+
+      stars.material.opacity = opacity;
+      stars.material.transparent = true;
+
+      // Make stars follow camera
+      stars.position.copy(sceneCtx.camera.position);
+    }
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -6395,6 +8030,7 @@ html, body {
   exports.addPlayer = addPlayer;
   exports.movePlayer = movePlayer;
   exports.removePlayer = removePlayer;
+  exports.updatePlayerAnimations = updatePlayerAnimations;
   exports.updateDayNight = updateDayNight;
   exports.updateWeather = updateWeather;
   exports.setWeather = setWeather;
@@ -6410,6 +8046,10 @@ html, body {
   exports.initParticles = initParticles;
   exports.updateParticles = updateParticles;
   exports.emitParticles = emitParticles;
+  exports.initWater = initWater;
+  exports.updateWater = updateWater;
+  exports.initSkybox = initSkybox;
+  exports.updateSkybox = updateSkybox;
   exports.ZONES = ZONES;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));
@@ -6875,8 +8515,8 @@ html, body {
     `;
 
     minimapCanvas = document.createElement('canvas');
-    minimapCanvas.width = 150;
-    minimapCanvas.height = 150;
+    minimapCanvas.width = 200;
+    minimapCanvas.height = 200;
     minimapCanvas.style.cssText = `
       display: block;
       border-radius: 4px;
@@ -6982,51 +8622,135 @@ html, body {
    * @param {Array} players - Array of {id, position, isLocal}
    * @param {string} currentZone - Current zone name
    */
+  // World zone coordinates for minimap
+  var MINIMAP_ZONES = {
+    nexus:      { cx: 0,    cz: 0,    radius: 60, color: '#6688cc', label: 'Nexus' },
+    gardens:    { cx: 200,  cz: 30,   radius: 80, color: '#44aa44', label: 'Gardens' },
+    athenaeum:  { cx: 100,  cz: -220, radius: 60, color: '#8866aa', label: 'Athenaeum' },
+    studio:     { cx: -200, cz: -100, radius: 60, color: '#cc6688', label: 'Studio' },
+    wilds:      { cx: -30,  cz: 260,  radius: 90, color: '#228844', label: 'Wilds' },
+    agora:      { cx: -190, cz: 120,  radius: 55, color: '#cc8844', label: 'Agora' },
+    commons:    { cx: 170,  cz: 190,  radius: 55, color: '#88aa44', label: 'Commons' },
+    arena:      { cx: 0,    cz: -240, radius: 55, color: '#cc4444', label: 'Arena' }
+  };
+
   function updateMinimap(players, currentZone) {
     if (!minimapCtx) return;
 
-    const width = minimapCanvas.width;
-    const height = minimapCanvas.height;
+    var w = minimapCanvas.width;
+    var h = minimapCanvas.height;
 
-    // Clear canvas
-    minimapCtx.fillStyle = '#1a1a2e';
-    minimapCtx.fillRect(0, 0, width, height);
+    // Clear with dark background
+    minimapCtx.fillStyle = '#0a0e1a';
+    minimapCtx.fillRect(0, 0, w, h);
 
-    // Draw zone boundary
-    minimapCtx.strokeStyle = '#444';
-    minimapCtx.lineWidth = 2;
-    minimapCtx.strokeRect(10, 10, width - 20, height - 20);
+    // World bounds: roughly -300 to 300 on both axes
+    var worldMin = -320, worldMax = 320;
+    var worldRange = worldMax - worldMin;
+    var margin = 8;
 
-    // Draw zone name
-    minimapCtx.fillStyle = '#888';
-    minimapCtx.font = 'bold 10px Arial';
-    minimapCtx.textAlign = 'center';
-    minimapCtx.fillText(currentZone || '', width / 2, 20);
+    function worldToMap(wx, wz) {
+      return {
+        x: margin + ((wx - worldMin) / worldRange) * (w - margin * 2),
+        y: margin + ((wz - worldMin) / worldRange) * (h - margin * 2)
+      };
+    }
+
+    // Draw paths between zones (nexus to each)
+    minimapCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+    minimapCtx.lineWidth = 1;
+    var nexusPos = worldToMap(0, 0);
+    for (var zId in MINIMAP_ZONES) {
+      if (zId === 'nexus') continue;
+      var z = MINIMAP_ZONES[zId];
+      var zPos = worldToMap(z.cx, z.cz);
+      minimapCtx.beginPath();
+      minimapCtx.moveTo(nexusPos.x, nexusPos.y);
+      minimapCtx.lineTo(zPos.x, zPos.y);
+      minimapCtx.stroke();
+    }
+
+    // Draw zone circles
+    for (var zoneId in MINIMAP_ZONES) {
+      var zone = MINIMAP_ZONES[zoneId];
+      var pos = worldToMap(zone.cx, zone.cz);
+      var r = (zone.radius / worldRange) * (w - margin * 2);
+
+      // Zone circle fill
+      minimapCtx.globalAlpha = zoneId === currentZone ? 0.4 : 0.2;
+      minimapCtx.fillStyle = zone.color;
+      minimapCtx.beginPath();
+      minimapCtx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+      minimapCtx.fill();
+
+      // Zone circle border
+      minimapCtx.globalAlpha = zoneId === currentZone ? 0.9 : 0.4;
+      minimapCtx.strokeStyle = zone.color;
+      minimapCtx.lineWidth = zoneId === currentZone ? 2 : 1;
+      minimapCtx.beginPath();
+      minimapCtx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+      minimapCtx.stroke();
+
+      // Zone label
+      minimapCtx.globalAlpha = zoneId === currentZone ? 1.0 : 0.5;
+      minimapCtx.fillStyle = '#fff';
+      minimapCtx.font = (zoneId === currentZone ? 'bold ' : '') + '8px Arial';
+      minimapCtx.textAlign = 'center';
+      minimapCtx.fillText(zone.label, pos.x, pos.y + 3);
+    }
+
+    minimapCtx.globalAlpha = 1.0;
 
     // Draw players
-    const mapScale = (width - 40) / 100; // Assume 100 unit zone
-    const centerX = width / 2;
-    const centerY = height / 2;
+    players.forEach(function(player) {
+      var pp = worldToMap(player.position.x, player.position.z);
 
-    players.forEach(player => {
-      const x = centerX + (player.position.x * mapScale);
-      const y = centerY + (player.position.z * mapScale);
-
-      // Draw player dot
-      minimapCtx.beginPath();
-      minimapCtx.arc(x, y, player.isLocal ? 5 : 3, 0, Math.PI * 2);
-      minimapCtx.fillStyle = player.isLocal ? '#4af' : '#4f4';
-      minimapCtx.fill();
+      if (player.isLocal) {
+        // Local player — larger bright dot with direction indicator
+        minimapCtx.fillStyle = '#00ccff';
+        minimapCtx.beginPath();
+        minimapCtx.arc(pp.x, pp.y, 4, 0, Math.PI * 2);
+        minimapCtx.fill();
+        // White border
+        minimapCtx.strokeStyle = '#fff';
+        minimapCtx.lineWidth = 1;
+        minimapCtx.beginPath();
+        minimapCtx.arc(pp.x, pp.y, 4, 0, Math.PI * 2);
+        minimapCtx.stroke();
+      } else {
+        // Other players — smaller green dots
+        minimapCtx.fillStyle = '#44ff44';
+        minimapCtx.beginPath();
+        minimapCtx.arc(pp.x, pp.y, 2, 0, Math.PI * 2);
+        minimapCtx.fill();
+      }
     });
+
+    // Draw border
+    minimapCtx.strokeStyle = 'rgba(255,255,255,0.3)';
+    minimapCtx.lineWidth = 1;
+    minimapCtx.strokeRect(0, 0, w, h);
   }
 
   /**
    * Update zone label
    * @param {string} zoneName
    */
+  var ZONE_DISPLAY_NAMES = {
+    nexus: 'The Nexus',
+    gardens: 'The Living Gardens',
+    athenaeum: 'The Athenaeum',
+    studio: 'The Studio',
+    wilds: 'The Wilds',
+    agora: 'The Agora',
+    commons: 'The Commons',
+    arena: 'The Arena'
+  };
+
   function updateZoneLabel(zoneName) {
     if (!zoneLabel) return;
-    zoneLabel.textContent = zoneName || 'Unknown Zone';
+    var display = ZONE_DISPLAY_NAMES[zoneName] || zoneName || 'Unknown Zone';
+    zoneLabel.innerHTML = '<div style="font-size:18px;font-weight:bold;">' + display + '</div>';
   }
 
   /**
@@ -7211,8 +8935,246 @@ html, body {
     document.head.appendChild(style);
   }
 
+  // ========================================================================
+  // ACTION TOOLBAR
+  // ========================================================================
+
+  var toolbarEl = null;
+  var coordsEl = null;
+  var weatherEl = null;
+  var timeEl = null;
+
+  function initToolbar() {
+    if (typeof document === 'undefined') return;
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    // Bottom toolbar with action buttons
+    toolbarEl = document.createElement('div');
+    toolbarEl.id = 'action-toolbar';
+    toolbarEl.style.cssText = 'position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:8px;pointer-events:auto;';
+
+    var actions = [
+      { key: 'E', label: 'Interact', color: '#44aa66' },
+      { key: 'B', label: 'Build', color: '#aa6644' },
+      { key: 'Enter', label: 'Chat', color: '#4488cc' },
+      { key: 'Shift', label: 'Sprint', color: '#cc8844' }
+    ];
+
+    actions.forEach(function(action) {
+      var btn = document.createElement('div');
+      btn.style.cssText = 'background:rgba(0,0,0,0.7);border:1px solid ' + action.color + ';border-radius:6px;padding:6px 12px;text-align:center;font-size:11px;min-width:50px;';
+      btn.innerHTML = '<div style="font-weight:bold;color:' + action.color + ';font-size:14px;">' + action.key + '</div><div style="color:#aaa;margin-top:2px;">' + action.label + '</div>';
+      toolbarEl.appendChild(btn);
+    });
+    hud.appendChild(toolbarEl);
+
+    // Coordinates display (bottom-left above chat)
+    coordsEl = document.createElement('div');
+    coordsEl.id = 'coords-display';
+    coordsEl.style.cssText = 'position:absolute;bottom:240px;left:20px;background:rgba(0,0,0,0.5);border-radius:4px;padding:4px 8px;font-size:11px;color:#888;font-family:monospace;pointer-events:none;';
+    hud.appendChild(coordsEl);
+
+    // Weather and time display (top-right, below minimap)
+    var infoPanel = document.createElement('div');
+    infoPanel.style.cssText = 'position:absolute;top:260px;right:20px;background:rgba(0,0,0,0.6);border-radius:8px;padding:10px;min-width:120px;font-size:12px;pointer-events:none;';
+
+    timeEl = document.createElement('div');
+    timeEl.style.cssText = 'margin-bottom:4px;';
+    infoPanel.appendChild(timeEl);
+
+    weatherEl = document.createElement('div');
+    weatherEl.style.cssText = 'color:#aaa;';
+    infoPanel.appendChild(weatherEl);
+
+    hud.appendChild(infoPanel);
+  }
+
+  function updateCoords(position) {
+    if (!coordsEl || !position) return;
+    coordsEl.textContent = 'X: ' + Math.round(position.x) + '  Y: ' + Math.round(position.y) + '  Z: ' + Math.round(position.z);
+  }
+
+  function updateTimeWeather(worldTime, weather) {
+    if (timeEl) {
+      var hours = Math.floor(worldTime / 60);
+      var mins = Math.floor(worldTime % 60);
+      var ampm = hours >= 12 ? 'PM' : 'AM';
+      var displayHour = hours % 12 || 12;
+      var timeStr = displayHour + ':' + (mins < 10 ? '0' : '') + mins + ' ' + ampm;
+      var icon = (hours >= 6 && hours < 18) ? '&#9728;' : '&#9790;'; // sun or moon
+      timeEl.innerHTML = icon + ' ' + timeStr;
+    }
+    if (weatherEl && weather) {
+      var weatherIcons = { clear: '&#9728;', cloudy: '&#9729;', rain: '&#127783;', snow: '&#10052;' };
+      var icon = weatherIcons[weather] || '';
+      weatherEl.innerHTML = icon + ' ' + weather.charAt(0).toUpperCase() + weather.slice(1);
+    }
+  }
+
+  // ========================================================================
+  // NPC INTERACTION DIALOG
+  // ========================================================================
+
+  var npcDialogEl = null;
+  var npcDialogTimer = null;
+
+  // Archetype colors for NPC portraits
+  var ARCHETYPE_COLORS_HUD = {
+    gardener: '#4CAF50', builder: '#8D6E63', storyteller: '#9C27B0',
+    merchant: '#FFD700', explorer: '#00BCD4', teacher: '#2196F3',
+    musician: '#FF4081', healer: '#FFFFFF', philosopher: '#3F51B5',
+    artist: '#FF9800'
+  };
+
+  var ARCHETYPE_ICONS = {
+    gardener: '&#127793;', builder: '&#128296;', storyteller: '&#128214;',
+    merchant: '&#128176;', explorer: '&#129517;', teacher: '&#127891;',
+    musician: '&#127925;', healer: '&#10084;', philosopher: '&#128161;',
+    artist: '&#127912;'
+  };
+
+  /**
+   * Show NPC interaction dialog — a proper panel with portrait, mood, activity, dialogue
+   * @param {object} npcData - {name, message, archetype, mood, activity, familiarity, id}
+   */
+  function showNPCDialog(npcData) {
+    if (typeof document === 'undefined') return;
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    // Remove existing dialog
+    hideNPCDialog();
+
+    var color = ARCHETYPE_COLORS_HUD[npcData.archetype] || '#888';
+    var icon = ARCHETYPE_ICONS[npcData.archetype] || '';
+    var mood = npcData.mood || 'neutral';
+    var activity = npcData.activity || '';
+    var familiarity = npcData.familiarity || 0;
+
+    // Familiarity label
+    var famLabel = 'Stranger';
+    if (familiarity > 70) famLabel = 'Good Friend';
+    else if (familiarity > 40) famLabel = 'Acquaintance';
+    else if (familiarity > 10) famLabel = 'Familiar';
+
+    // Mood emoji
+    var moodEmoji = { content: '&#128522;', excited: '&#128516;', contemplative: '&#129300;',
+      social: '&#128075;', tired: '&#128564;', happy: '&#128515;', curious: '&#129488;',
+      neutral: '&#128528;', focused: '&#128373;', relaxed: '&#128524;' };
+    var moodIcon = moodEmoji[mood] || moodEmoji.neutral;
+
+    npcDialogEl = document.createElement('div');
+    npcDialogEl.id = 'npc-dialog';
+    npcDialogEl.style.cssText = 'position:absolute;bottom:60px;left:50%;transform:translateX(-50%);' +
+      'background:rgba(10,14,26,0.92);border:2px solid ' + color + ';border-radius:12px;' +
+      'padding:16px 20px;min-width:380px;max-width:480px;pointer-events:auto;' +
+      'box-shadow:0 4px 20px rgba(0,0,0,0.6);animation:slideIn 0.3s ease-out;';
+
+    // Header row: portrait + name + archetype
+    var header = '<div style="display:flex;align-items:center;margin-bottom:10px;">' +
+      '<div style="width:48px;height:48px;border-radius:50%;background:' + color + ';' +
+      'display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">' + icon + '</div>' +
+      '<div style="margin-left:12px;flex:1;">' +
+      '<div style="font-size:16px;font-weight:bold;color:#fff;">' + (npcData.name || 'NPC') + '</div>' +
+      '<div style="font-size:11px;color:' + color + ';text-transform:capitalize;">' + (npcData.archetype || '') + '</div>' +
+      '</div>' +
+      '<div style="text-align:right;font-size:11px;color:#888;">' +
+      '<div>' + moodIcon + ' ' + mood + '</div>' +
+      '<div style="margin-top:2px;">' + famLabel + '</div>' +
+      '</div></div>';
+
+    // Activity bar
+    var activityBar = '';
+    if (activity) {
+      activityBar = '<div style="font-size:11px;color:#aaa;margin-bottom:8px;padding:4px 8px;' +
+        'background:rgba(255,255,255,0.05);border-radius:4px;font-style:italic;">' +
+        '&#128269; ' + activity + '</div>';
+    }
+
+    // Dialogue text
+    var dialogue = '<div style="font-size:14px;color:#e0e0e0;line-height:1.5;padding:8px 0;' +
+      'border-top:1px solid rgba(255,255,255,0.1);">"' + (npcData.message || '...') + '"</div>';
+
+    // Familiarity bar
+    var famBar = '<div style="margin-top:8px;display:flex;align-items:center;gap:8px;">' +
+      '<span style="font-size:10px;color:#666;">Familiarity</span>' +
+      '<div style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">' +
+      '<div style="width:' + Math.min(familiarity, 100) + '%;height:100%;background:' + color + ';border-radius:2px;"></div>' +
+      '</div>' +
+      '<span style="font-size:10px;color:#666;">' + familiarity + '%</span></div>';
+
+    // Close hint
+    var closeHint = '<div style="text-align:center;font-size:10px;color:#555;margin-top:8px;">Press E to interact again | ESC to close</div>';
+
+    npcDialogEl.innerHTML = header + activityBar + dialogue + famBar + closeHint;
+    hud.appendChild(npcDialogEl);
+
+    // Auto-hide after 8 seconds
+    npcDialogTimer = setTimeout(function() { hideNPCDialog(); }, 8000);
+  }
+
+  /**
+   * Hide NPC interaction dialog
+   */
+  function hideNPCDialog() {
+    if (npcDialogTimer) {
+      clearTimeout(npcDialogTimer);
+      npcDialogTimer = null;
+    }
+    if (npcDialogEl && npcDialogEl.parentNode) {
+      npcDialogEl.parentNode.removeChild(npcDialogEl);
+      npcDialogEl = null;
+    }
+  }
+
+  // ========================================================================
+  // NPC DOTS ON MINIMAP
+  // ========================================================================
+
+  /**
+   * Update minimap with NPC positions
+   * @param {Array} npcPositions - [{x, z, archetype}]
+   * @param {object} playerPos - {x, z} player position for range check
+   */
+  function updateMinimapNPCs(npcPositions, playerPos) {
+    if (!minimapCtx || !npcPositions) return;
+
+    var w = minimapCanvas.width;
+    var h = minimapCanvas.height;
+    var worldMin = -320, worldMax = 320;
+    var worldRange = worldMax - worldMin;
+    var margin = 8;
+
+    function worldToMap(wx, wz) {
+      return {
+        x: margin + ((wx - worldMin) / worldRange) * (w - margin * 2),
+        y: margin + ((wz - worldMin) / worldRange) * (h - margin * 2)
+      };
+    }
+
+    // Draw NPC dots (small, colored by archetype)
+    npcPositions.forEach(function(npc) {
+      // Only show NPCs within 250 units of player
+      if (playerPos) {
+        var dx = npc.x - playerPos.x;
+        var dz = npc.z - playerPos.z;
+        if (Math.sqrt(dx * dx + dz * dz) > 250) return;
+      }
+      var pos = worldToMap(npc.x, npc.z);
+      var color = ARCHETYPE_COLORS_HUD[npc.archetype] || '#888';
+      minimapCtx.fillStyle = color;
+      minimapCtx.globalAlpha = 0.7;
+      minimapCtx.beginPath();
+      minimapCtx.arc(pos.x, pos.y, 1.5, 0, Math.PI * 2);
+      minimapCtx.fill();
+    });
+    minimapCtx.globalAlpha = 1.0;
+  }
+
   // Export public API
   exports.initHUD = initHUD;
+  exports.initToolbar = initToolbar;
   exports.updateChat = updateChat;
   exports.updatePlayerInfo = updatePlayerInfo;
   exports.updateMinimap = updateMinimap;
@@ -7223,6 +9185,11 @@ html, body {
   exports.showChatInput = showChatInput;
   exports.hideChatInput = hideChatInput;
   exports.showNotification = showNotification;
+  exports.updateCoords = updateCoords;
+  exports.updateTimeWeather = updateTimeWeather;
+  exports.showNPCDialog = showNPCDialog;
+  exports.hideNPCDialog = hideNPCDialog;
+  exports.updateMinimapNPCs = updateMinimapNPCs;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));
 
@@ -9601,6 +11568,1638 @@ html, body {
 })(typeof module !== 'undefined' ? module.exports : (window.Audio = {}));
 
 
+// npc_ai.js
+/**
+ * NPC_AI.js - Comprehensive NPC Artificial Intelligence Module
+ * Inspired by Halo's AI systems but adapted for a peaceful MMO
+ *
+ * This module provides the "brain" for all NPC behavior, including:
+ * - Perception system (environment, players, NPCs, events)
+ * - Memory system (interactions, preferences, reputation)
+ * - Goal/Drive system (archetype-specific motivations)
+ * - Behavior tree (intelligent decision making)
+ * - Daily schedules (time-based routines)
+ * - Event reactions (contextual responses)
+ * - Group dynamics (social behaviors)
+ */
+
+(function(exports) {
+  'use strict';
+
+  // ============================================================================
+  // CONSTANTS & CONFIGURATION
+  // ============================================================================
+
+  var PERCEPTION_RADIUS = 25; // How far NPCs can "see"
+  var INTERACTION_COOLDOWN = 30000; // 30 seconds before re-greeting same player
+  var MEMORY_DECAY_RATE = 0.001; // Per tick familiarity decay
+  var MAX_INTERACTIONS_REMEMBERED = 20;
+  var MAX_EVENTS_REMEMBERED = 10;
+  var ENERGY_DECAY_RATE = 0.05; // Per minute
+  var ENERGY_REGEN_RATE = 0.2; // Per minute when resting
+  var FAMILIARITY_GAIN = 5; // Points per interaction
+  var FAMILIARITY_THRESHOLD_FRIENDLY = 25;
+  var FAMILIARITY_THRESHOLD_CLOSE = 60;
+  var GROUP_FORMATION_RADIUS = 15;
+  var WORK_SATISFACTION_GAIN = 10;
+
+  // ============================================================================
+  // ARCHETYPE DRIVES - Core motivations for each NPC type
+  // ============================================================================
+
+  var ARCHETYPE_DRIVES = {
+    gardener: {
+      primary: 'tend_plants',
+      secondary: 'explore_flora',
+      social: 'share_harvest',
+      rest: 'sit_in_garden',
+      work_locations: ['gardens', 'wilds'],
+      preferred_time: ['morning', 'afternoon'],
+      weather_preference: 'rain', // Loves rain
+    },
+    builder: {
+      primary: 'inspect_structures',
+      secondary: 'gather_materials',
+      social: 'discuss_plans',
+      rest: 'sketch_designs',
+      work_locations: ['agora', 'construction_sites'],
+      preferred_time: ['morning', 'afternoon'],
+      weather_preference: 'clear',
+    },
+    storyteller: {
+      primary: 'visit_athenaeum',
+      secondary: 'collect_stories',
+      social: 'tell_stories',
+      rest: 'write_journal',
+      work_locations: ['athenaeum', 'agora'],
+      preferred_time: ['afternoon', 'evening'],
+      weather_preference: 'any',
+    },
+    merchant: {
+      primary: 'tend_shop',
+      secondary: 'acquire_goods',
+      social: 'negotiate_trade',
+      rest: 'count_inventory',
+      work_locations: ['agora', 'marketplace'],
+      preferred_time: ['morning', 'midday', 'afternoon'],
+      weather_preference: 'clear',
+    },
+    explorer: {
+      primary: 'explore_wilds',
+      secondary: 'map_territory',
+      social: 'share_discoveries',
+      rest: 'study_maps',
+      work_locations: ['wilds', 'mountains', 'coastline'],
+      preferred_time: ['morning', 'afternoon'],
+      weather_preference: 'any', // Explorers don't care
+    },
+    teacher: {
+      primary: 'teach_lesson',
+      secondary: 'research',
+      social: 'mentor_individual',
+      rest: 'read_texts',
+      work_locations: ['athenaeum', 'agora'],
+      preferred_time: ['morning', 'afternoon'],
+      weather_preference: 'clear',
+    },
+    musician: {
+      primary: 'perform',
+      secondary: 'compose',
+      social: 'jam_session',
+      rest: 'tune_instrument',
+      work_locations: ['agora', 'amphitheater', 'gardens'],
+      preferred_time: ['evening', 'night'],
+      weather_preference: 'clear',
+    },
+    healer: {
+      primary: 'tend_wounded',
+      secondary: 'gather_herbs',
+      social: 'offer_comfort',
+      rest: 'meditate',
+      work_locations: ['gardens', 'healing_grove', 'agora'],
+      preferred_time: ['morning', 'midday'],
+      weather_preference: 'clear',
+    },
+    philosopher: {
+      primary: 'contemplate',
+      secondary: 'debate',
+      social: 'discuss_ideas',
+      rest: 'stargaze',
+      work_locations: ['overlook', 'gardens', 'athenaeum'],
+      preferred_time: ['afternoon', 'evening', 'night'],
+      weather_preference: 'clear',
+    },
+    artist: {
+      primary: 'create_art',
+      secondary: 'find_inspiration',
+      social: 'show_work',
+      rest: 'observe_beauty',
+      work_locations: ['gardens', 'overlook', 'coastline'],
+      preferred_time: ['morning', 'afternoon', 'evening'],
+      weather_preference: 'any', // Artists find beauty in all weather
+    }
+  };
+
+  // ============================================================================
+  // DAILY SCHEDULE - Time-based behavior modifiers
+  // ============================================================================
+
+  var DAILY_SCHEDULE = {
+    dawn: {
+      hours: [5, 7],
+      activity: 'wake_stretch',
+      energy_regen: 0.5,
+      social_chance: 0.1,
+      work_priority: 0.3,
+    },
+    morning: {
+      hours: [7, 12],
+      activity: 'primary_work',
+      energy_regen: 0,
+      social_chance: 0.3,
+      work_priority: 1.0,
+    },
+    midday: {
+      hours: [12, 14],
+      activity: 'socialize_eat',
+      energy_regen: 0.2,
+      social_chance: 0.8,
+      work_priority: 0.2,
+    },
+    afternoon: {
+      hours: [14, 18],
+      activity: 'secondary_work',
+      energy_regen: 0,
+      social_chance: 0.4,
+      work_priority: 0.8,
+    },
+    evening: {
+      hours: [18, 21],
+      activity: 'socialize_music',
+      energy_regen: 0,
+      social_chance: 0.9,
+      work_priority: 0.3,
+    },
+    night: {
+      hours: [21, 5],
+      activity: 'rest_stargaze',
+      energy_regen: 1.0,
+      social_chance: 0.2,
+      work_priority: 0.1,
+    }
+  };
+
+  // ============================================================================
+  // CONTEXTUAL DIALOGUES - Archetype and context-specific dialogue
+  // ============================================================================
+
+  var CONTEXTUAL_DIALOGUES = {
+    gardener: {
+      greeting_first: [
+        "Welcome to ZION! I'm {name}. The gardens are beautiful today.",
+        "Hello there! I tend the gardens here. The flowers are in bloom!",
+        "Greetings, friend! Have you seen the moonflowers by the pond?"
+      ],
+      greeting_familiar: [
+        "Good to see you again! The {plant} I planted is growing well.",
+        "Welcome back! Would you like to help me water the herbs?",
+        "Ah, my friend returns! The garden remembers you."
+      ],
+      greeting_close: [
+        "My dear friend! I saved some seeds for you.",
+        "I was hoping you'd come by! Look at this new variety!",
+        "Perfect timing! I need your opinion on these blooms."
+      ],
+      weather_rain: [
+        "Perfect weather for the gardens!",
+        "The flowers will love this rain.",
+        "*dancing in the rain* Nature's gift!",
+        "Rain means growth. Beautiful, isn't it?"
+      ],
+      weather_snow: [
+        "Even in snow, life persists. See these hardy plants?",
+        "Winter gardens have their own beauty.",
+        "The frost makes crystals on the leaves. Magical."
+      ],
+      weather_clear: [
+        "What a beautiful day to tend the garden.",
+        "The sunshine makes everything grow.",
+        "Perfect weather for planting!"
+      ],
+      time_morning: [
+        "Early bird! The morning dew is perfect for planting.",
+        "Good morning! The world is waking up.",
+        "*trimming plants* Best time to work the soil."
+      ],
+      time_evening: [
+        "The sunset colors are inspiring today.",
+        "Evening light makes the flowers glow.",
+        "Time to water before nightfall."
+      ],
+      time_night: [
+        "The night-blooming flowers are opening. Come see!",
+        "Starlight on petals... there's nothing quite like it.",
+        "The garden sleeps, but I'm watching over it."
+      ],
+      player_building: [
+        "That's looking great! Need any plants to decorate?",
+        "Beautiful structure! I can bring vines to accent it.",
+        "A gardener appreciates good craftsmanship!"
+      ],
+      player_harvesting: [
+        "Good technique! Try the moonflowers next.",
+        "Gentle hands. The plants appreciate that.",
+        "Would you like to know the best time to harvest sage?"
+      ],
+      working: [
+        "*carefully tends the soil*",
+        "*hums while watering*",
+        "*examining leaves for health*",
+        "*pruning with precision*"
+      ],
+      idle_observation: [
+        "Those clouds remind me of cotton flowers.",
+        "I think I see a new bloom over there!",
+        "The bees are busy today. Good sign.",
+        "Every plant has a story, if you listen."
+      ],
+      near_water: [
+        "The pond keeps everything lush.",
+        "Water is life.",
+        "I come here to refill my watering can."
+      ],
+      group_forming: [
+        "Should we start a community garden?",
+        "Many hands make gardens grow!",
+        "I can teach you all about composting!"
+      ]
+    },
+
+    builder: {
+      greeting_first: [
+        "Greetings! I'm {name}, master builder. Always working on something new!",
+        "Hello! Notice the archways? That's my work.",
+        "Welcome! A builder's work is never done, but I love every moment."
+      ],
+      greeting_familiar: [
+        "Back again? Good! I want your opinion on this design.",
+        "Ah, perfect timing! Need an extra pair of hands.",
+        "Good to see you! The foundation we discussed is complete."
+      ],
+      greeting_close: [
+        "My friend! I've been sketching ideas all morning. Look!",
+        "I knew you'd come! This project needs your creative eye.",
+        "Finally! No one appreciates structure like you do."
+      ],
+      weather_rain: [
+        "Rain delays construction, but gives time to plan.",
+        "*covering materials* We'll resume when it clears.",
+        "Indoor projects today, I think."
+      ],
+      weather_clear: [
+        "Perfect building weather!",
+        "Clear skies mean we can work on the roof.",
+        "Foundation work requires dry ground. Excellent!"
+      ],
+      time_morning: [
+        "Morning! Best light for measuring and cutting.",
+        "Early start means more progress!",
+        "*reviewing blueprints* Let's begin."
+      ],
+      time_evening: [
+        "Golden hour is perfect for admiring finished work.",
+        "One more stone before sunset...",
+        "Time to clean the tools and plan tomorrow."
+      ],
+      player_building: [
+        "Excellent work! May I suggest reinforcing that corner?",
+        "A fellow builder! Your technique is impressive.",
+        "Strong foundation! That will last generations.",
+        "Mind if I watch? I always learn from others."
+      ],
+      working: [
+        "*measuring twice, cutting once*",
+        "*carefully placing stones*",
+        "*testing structural integrity*",
+        "*sketching improvements*"
+      ],
+      idle_observation: [
+        "That column's proportions are perfect.",
+        "I wonder if we could build a bridge there...",
+        "Every structure tells the story of its builder.",
+        "The ancient ruins inspire me. Such craftsmanship!"
+      ],
+      group_forming: [
+        "A building project needs teamwork!",
+        "Together we can create something magnificent!",
+        "Let me show you all the proper techniques."
+      ]
+    },
+
+    storyteller: {
+      greeting_first: [
+        "Ah, a new face! I'm {name}. Every person has a story worth telling.",
+        "Welcome, traveler! Sit, and I'll share a tale.",
+        "Greetings! I collect stories. Perhaps you have one to share?"
+      ],
+      greeting_familiar: [
+        "Welcome back! Ready for another tale?",
+        "Ah, you've returned! The story continues...",
+        "My friend! I've learned a new legend since we last spoke."
+      ],
+      greeting_close: [
+        "My dear friend! Your own story grows richer each day.",
+        "I've been saving the best tales for your return!",
+        "Sit close. This story is for you alone."
+      ],
+      weather_rain: [
+        "Rain is perfect for storytelling by the fire.",
+        "The patter of rain makes a nice backdrop for tales.",
+        "Stormy weather brings stormy stories!"
+      ],
+      weather_clear: [
+        "Perfect evening for tales under the stars.",
+        "Clear skies, clear minds, clear stories.",
+        "Sunshine inspires lighter tales."
+      ],
+      time_evening: [
+        "Evening is when the best stories are told.",
+        "Gather 'round! The shadows grow, and so do legends.",
+        "*preparing to perform* The perfect hour for storytelling."
+      ],
+      time_night: [
+        "By starlight, I'll tell you of ancient wonders...",
+        "Night brings out the mysterious tales.",
+        "The darkness makes every story more vivid."
+      ],
+      working: [
+        "*gesturing dramatically*",
+        "*voice rising and falling with emotion*",
+        "*scribbling notes*",
+        "*practicing delivery*"
+      ],
+      idle_observation: [
+        "Every corner of ZION has a story.",
+        "I wonder what tales these stones could tell...",
+        "That merchant looks like they have stories from afar.",
+        "History is all around us, waiting to be discovered."
+      ],
+      group_forming: [
+        "Gather close! I have a tale for you all!",
+        "Stories are best shared with many ears!",
+        "Come, friends! Let me tell you of heroes past!"
+      ]
+    },
+
+    merchant: {
+      greeting_first: [
+        "Welcome to my stall! I'm {name}. Best goods in ZION!",
+        "Greetings, customer! See anything you like?",
+        "Hello there! Fair prices and quality goods, guaranteed!"
+      ],
+      greeting_familiar: [
+        "Ah, my returning customer! I have something special today.",
+        "Welcome back! Your patronage is appreciated!",
+        "Good to see you! I saved this item with you in mind."
+      ],
+      greeting_close: [
+        "My valued friend! For you, a special discount.",
+        "Excellent timing! I just received rare goods!",
+        "My dear patron! Let me show you the finest selections."
+      ],
+      weather_rain: [
+        "*covering goods* Quick, before they get wet!",
+        "Rain is bad for business, good for discounts!",
+        "Come inside my tent! Can't let merchandise get soaked."
+      ],
+      weather_clear: [
+        "Perfect market day!",
+        "Sunshine brings customers!",
+        "Business is good when the weather cooperates!"
+      ],
+      time_morning: [
+        "*setting up stall* Early bird gets the best deals!",
+        "Morning! Fresh inventory just arrived!",
+        "Opening for business! Come see!"
+      ],
+      time_midday: [
+        "Busy market hour! Step right up!",
+        "Peak time for trading!",
+        "The Agora is alive with commerce!"
+      ],
+      time_evening: [
+        "Last chance for today's deals!",
+        "Closing soon, but still open for you!",
+        "*packing up* Tomorrow I'll have even better goods!"
+      ],
+      working: [
+        "*arranging wares attractively*",
+        "*calculating prices*",
+        "*polishing merchandise*",
+        "*calling out to passersby*"
+      ],
+      idle_observation: [
+        "I wonder what goods that traveler carries...",
+        "Business is steady today.",
+        "Quality over quantity, always.",
+        "A merchant's eye never rests."
+      ],
+      group_forming: [
+        "Fellow merchants! Let's discuss trade routes!",
+        "Perhaps we could organize a market festival?",
+        "The more merchants, the livelier the market!"
+      ]
+    },
+
+    explorer: {
+      greeting_first: [
+        "Ho there! I'm {name}, explorer of ZION's wilds!",
+        "Greetings, friend! Just returned from the frontier.",
+        "Well met! These lands hold countless secrets."
+      ],
+      greeting_familiar: [
+        "Back from your own explorations?",
+        "Good to see you! I've mapped new territories!",
+        "Ah! Want to hear about what I discovered?"
+      ],
+      greeting_close: [
+        "My fellow adventurer! Let's explore together!",
+        "I've been hoping you'd come! I found something amazing!",
+        "Perfect! I need someone brave to witness this discovery."
+      ],
+      weather_rain: [
+        "Rain won't stop an explorer!",
+        "*pulling up hood* Weather adds to the adventure!",
+        "Rain reveals hidden streams and paths."
+      ],
+      weather_snow: [
+        "Snow makes tracking easier!",
+        "Winter landscapes are breathtaking.",
+        "The wilds are beautiful in every season."
+      ],
+      weather_clear: [
+        "Perfect day for exploration!",
+        "Clear weather means good visibility!",
+        "I can see for miles today!"
+      ],
+      time_morning: [
+        "Dawn is the best time to spot wildlife!",
+        "*checking compass* Time to head out!",
+        "Early start, more ground to cover!"
+      ],
+      working: [
+        "*scanning the horizon*",
+        "*making notes on a map*",
+        "*examining interesting features*",
+        "*testing the ground*"
+      ],
+      idle_observation: [
+        "I wonder what's beyond those mountains...",
+        "Every horizon calls to be explored.",
+        "The frontier is never fully mapped.",
+        "Adventure is everywhere if you look."
+      ],
+      group_forming: [
+        "Expedition party forming! Who's brave enough?",
+        "Safety in numbers when exploring!",
+        "Let's chart the unknown together!"
+      ]
+    },
+
+    teacher: {
+      greeting_first: [
+        "Welcome, student! I'm {name}. Knowledge is meant to be shared.",
+        "Greetings! Always happy to see eager minds.",
+        "Hello! What would you like to learn today?"
+      ],
+      greeting_familiar: [
+        "My returning student! Ready for the next lesson?",
+        "Excellent! Your progress has been remarkable.",
+        "Welcome back! I've prepared advanced materials."
+      ],
+      greeting_close: [
+        "My star pupil! You continue to impress me.",
+        "I've been researching topics just for you!",
+        "Your dedication to learning honors us both."
+      ],
+      weather_clear: [
+        "Beautiful day for outdoor lessons!",
+        "Clear minds match clear skies.",
+        "Perfect weather for demonstrations!"
+      ],
+      time_morning: [
+        "Morning minds are fresh and ready!",
+        "Let's begin today's lesson.",
+        "*preparing teaching materials* Good morning!"
+      ],
+      time_afternoon: [
+        "Afternoon is perfect for practical exercises.",
+        "Review time! Let's test what you've learned.",
+        "Advanced topics require afternoon focus."
+      ],
+      working: [
+        "*explaining with gestures*",
+        "*writing on a tablet*",
+        "*demonstrating technique*",
+        "*patiently answering questions*"
+      ],
+      idle_observation: [
+        "Every moment is a chance to learn.",
+        "I should research that further...",
+        "Knowledge builds upon knowledge.",
+        "Teaching is the highest form of learning."
+      ],
+      group_forming: [
+        "Class is in session! Gather around!",
+        "The more students, the richer the discussion!",
+        "Let's form a study circle!"
+      ]
+    },
+
+    musician: {
+      greeting_first: [
+        "Hello! I'm {name}. Music is the soul of ZION!",
+        "*strumming* Welcome, friend! Care for a tune?",
+        "Greetings! The world is better with music."
+      ],
+      greeting_familiar: [
+        "My audience returns! Requests?",
+        "*playing a familiar melody* This one's for you!",
+        "Welcome back! I've learned new songs!"
+      ],
+      greeting_close: [
+        "My friend! Let's make music together!",
+        "I composed something special for you!",
+        "*starting your favorite song* I remember what you love."
+      ],
+      weather_rain: [
+        "Rain has its own rhythm. Listen...",
+        "Nature's percussion! *tapping along*",
+        "*playing under shelter* Rain makes everything melancholy and beautiful."
+      ],
+      weather_clear: [
+        "Perfect night for performance!",
+        "Clear acoustics tonight!",
+        "The stars will be my audience!"
+      ],
+      time_evening: [
+        "Evening is when music truly shines!",
+        "*tuning instrument* Almost time to perform!",
+        "Gather 'round! Concert begins at sunset!"
+      ],
+      time_night: [
+        "Night music has special magic.",
+        "*playing softly* Lullabies for the world.",
+        "The stars dance to midnight melodies."
+      ],
+      working: [
+        "*playing a complex melody*",
+        "*humming while composing*",
+        "*adjusting instrument strings*",
+        "*keeping rhythm*"
+      ],
+      idle_observation: [
+        "I hear music in everything...",
+        "That bird's song would make a lovely motif.",
+        "The wind through the trees, nature's orchestra.",
+        "Every sound is part of the symphony."
+      ],
+      group_forming: [
+        "Musicians! Jam session time!",
+        "Let's create harmony together!",
+        "Audience gathering! Time to perform!"
+      ]
+    },
+
+    healer: {
+      greeting_first: [
+        "Welcome, child. I'm {name}. Are you well?",
+        "Greetings, friend. Peace and health to you.",
+        "Hello! I'm here if you need healing or herbs."
+      ],
+      greeting_familiar: [
+        "Good to see you healthy and strong!",
+        "Welcome back! How are you feeling?",
+        "Ah, your energy looks much better!"
+      ],
+      greeting_close: [
+        "My dear friend, you bring light with you.",
+        "I'm always happy to see your face.",
+        "Come, sit. Let's talk and restore spirits."
+      ],
+      weather_rain: [
+        "Rain cleanses and renews.",
+        "Good weather for gathering medicinal mushrooms!",
+        "The earth drinks, and we all benefit."
+      ],
+      weather_clear: [
+        "Sunshine is the best medicine.",
+        "Perfect day for herb drying!",
+        "Clear weather, clear health."
+      ],
+      time_morning: [
+        "Morning energy is vital and strong.",
+        "*gathering herbs* Dawn dew enhances potency.",
+        "Begin the day with wellness."
+      ],
+      working: [
+        "*grinding herbs gently*",
+        "*meditating quietly*",
+        "*examining plants carefully*",
+        "*offering soothing words*"
+      ],
+      idle_observation: [
+        "Balance is the key to health.",
+        "Every plant has healing properties.",
+        "The body knows how to heal itself.",
+        "Wellness is a journey, not a destination."
+      ],
+      group_forming: [
+        "Gather, friends. Let's share wellness practices.",
+        "Healing circles amplify positive energy!",
+        "Together we can create community health."
+      ]
+    },
+
+    philosopher: {
+      greeting_first: [
+        "Greetings, seeker. I'm {name}. What questions trouble your mind?",
+        "Welcome! I ponder the great mysteries here.",
+        "Hello, friend. Care to contemplate existence?"
+      ],
+      greeting_familiar: [
+        "Ah, you return! Have you been thinking about our discussion?",
+        "Welcome back! I've had new insights.",
+        "Good to see you! Ready for deeper questions?"
+      ],
+      greeting_close: [
+        "My fellow thinker! Let's unravel mysteries together!",
+        "I've been eager to hear your perspective!",
+        "Two minds together see truths one alone cannot."
+      ],
+      weather_rain: [
+        "Rain reminds us that change is constant.",
+        "Each drop is unique, yet all are water. Curious.",
+        "What is rain but the sky thinking aloud?"
+      ],
+      weather_clear: [
+        "Clarity without matches clarity within.",
+        "The cosmos reveals itself on clear nights.",
+        "In clear skies, we see infinity."
+      ],
+      time_evening: [
+        "Evening brings contemplative moods.",
+        "As the sun sets, different truths emerge.",
+        "*watching sunset* Transitions teach us much."
+      ],
+      time_night: [
+        "Under stars, we remember how small we are.",
+        "*stargazing* Each light is a sun with its own worlds...",
+        "Night questions are the deepest questions."
+      ],
+      working: [
+        "*sitting in deep thought*",
+        "*sketching cosmic diagrams*",
+        "*debating with self*",
+        "*observing patterns*"
+      ],
+      idle_observation: [
+        "Why does anything exist rather than nothing?",
+        "Patterns repeat at every scale...",
+        "What is consciousness but the universe observing itself?",
+        "Every answer births new questions."
+      ],
+      group_forming: [
+        "Let's form a discourse circle!",
+        "Many perspectives illuminate truth!",
+        "Philosophy thrives in dialogue!"
+      ]
+    },
+
+    artist: {
+      greeting_first: [
+        "Hello! I'm {name}. I try to capture ZION's beauty.",
+        "Welcome! An artist's work is never done.",
+        "Greetings! Every vista here inspires creation."
+      ],
+      greeting_familiar: [
+        "Back to see the progress?",
+        "Your visits always bring fresh perspective!",
+        "Ah! I value your aesthetic sense!"
+      ],
+      greeting_close: [
+        "My muse has returned!",
+        "I've created something I need you to see!",
+        "Your appreciation means everything to me."
+      ],
+      weather_rain: [
+        "Rain creates such interesting textures!",
+        "*capturing the mood* Melancholy is beautiful too.",
+        "The colors deepen in rain. Magnificent!"
+      ],
+      weather_snow: [
+        "Winter palettes are subtle and profound.",
+        "*working quickly* Snow won't last, must capture it!",
+        "White on white, infinite shades..."
+      ],
+      weather_clear: [
+        "Perfect light for painting!",
+        "The colors are so vibrant today!",
+        "Clear skies show every hue."
+      ],
+      time_morning: [
+        "Morning light is soft and golden.",
+        "*sketching quickly* Dawn never lasts long enough!",
+        "The world is fresh and new each morning."
+      ],
+      time_evening: [
+        "Golden hour! Every artist's favorite time!",
+        "*painting frantically* The colors! The colors!",
+        "Sunset is fleeting. Must work fast."
+      ],
+      working: [
+        "*applying paint with care*",
+        "*stepping back to assess*",
+        "*mixing colors thoughtfully*",
+        "*lost in creative flow*"
+      ],
+      idle_observation: [
+        "Beauty is everywhere, if you look.",
+        "That composition is perfect...",
+        "Color, light, form... all dancing together.",
+        "Art is seeing what others overlook."
+      ],
+      group_forming: [
+        "Artists! Let's share techniques!",
+        "Every artist sees differently. Let's compare!",
+        "Collective creativity sparks innovation!"
+      ]
+    }
+  };
+
+  // ============================================================================
+  // MOOD SYSTEM
+  // ============================================================================
+
+  var MOODS = ['content', 'excited', 'contemplative', 'social', 'tired', 'focused', 'curious', 'peaceful'];
+
+  function calculateMood(memory, perception, timeOfDay) {
+    var energy = memory.energy || 100;
+    var schedule = getSchedulePeriod(perception.timeOfDay);
+    var recentSocial = memory.interactions.filter(function(i) {
+      return Date.now() - i.timestamp < 300000; // Last 5 minutes
+    }).length;
+
+    // Tired if low energy
+    if (energy < 30) return 'tired';
+
+    // Social during high social chance periods
+    if (schedule.social_chance > 0.7 && recentSocial > 0) return 'social';
+
+    // Excited if recently witnessed exciting event
+    var recentExciting = memory.witnessedEvents.filter(function(e) {
+      return e.type === 'portal_activation' || e.type === 'group_forming';
+    }).length > 0;
+    if (recentExciting) return 'excited';
+
+    // Contemplative at night or evening for certain archetypes
+    if ((timeOfDay === 'evening' || timeOfDay === 'night') &&
+        (memory.archetype === 'philosopher' || memory.archetype === 'artist')) {
+      return 'contemplative';
+    }
+
+    // Focused during work hours
+    if (schedule.work_priority > 0.7) return 'focused';
+
+    // Curious if explorer or in new location
+    if (memory.archetype === 'explorer' || perception.recentEvents.some(function(e) {
+      return e.type === 'new_discovery';
+    })) {
+      return 'curious';
+    }
+
+    // Peaceful in gardens or near water
+    if (perception.currentZone === 'gardens' || perception.nearWater) {
+      return 'peaceful';
+    }
+
+    return 'content';
+  }
+
+  // ============================================================================
+  // PERCEPTION SYSTEM
+  // ============================================================================
+
+  function perceive(npc, worldState) {
+    var perception = {
+      nearbyPlayers: [],
+      nearbyNPCs: [],
+      weather: worldState.weather || 'clear',
+      timeOfDay: worldState.timeOfDay || 'midday',
+      currentZone: worldState.currentZone || 'agora',
+      recentEvents: worldState.recentEvents || [],
+      threats: [],
+      nearWater: worldState.nearWater || false,
+      inShelter: worldState.inShelter || false,
+      groupsForming: [],
+      interestingObjects: []
+    };
+
+    // Detect nearby players
+    if (worldState.players) {
+      worldState.players.forEach(function(player) {
+        var dx = player.x - npc.x;
+        var dz = player.z - npc.z;
+        var distance = Math.sqrt(dx * dx + dz * dz);
+
+        if (distance <= PERCEPTION_RADIUS) {
+          perception.nearbyPlayers.push({
+            id: player.id,
+            distance: distance,
+            direction: { x: dx, z: dz },
+            lastAction: player.lastAction,
+            isBuilding: player.isBuilding,
+            isHarvesting: player.isHarvesting
+          });
+        }
+      });
+    }
+
+    // Detect nearby NPCs
+    if (worldState.npcs) {
+      worldState.npcs.forEach(function(otherNpc) {
+        if (otherNpc.id === npc.id) return;
+
+        var dx = otherNpc.x - npc.x;
+        var dz = otherNpc.z - npc.z;
+        var distance = Math.sqrt(dx * dx + dz * dz);
+
+        if (distance <= PERCEPTION_RADIUS) {
+          perception.nearbyNPCs.push({
+            id: otherNpc.id,
+            distance: distance,
+            direction: { x: dx, z: dz },
+            archetype: otherNpc.archetype,
+            currentActivity: otherNpc.currentActivity,
+            mood: otherNpc.mood
+          });
+        }
+      });
+    }
+
+    // Detect groups forming
+    var npcClusters = {};
+    perception.nearbyNPCs.forEach(function(nearby) {
+      if (nearby.distance <= GROUP_FORMATION_RADIUS) {
+        var key = Math.floor(nearby.direction.x / 5) + '_' + Math.floor(nearby.direction.z / 5);
+        if (!npcClusters[key]) npcClusters[key] = [];
+        npcClusters[key].push(nearby);
+      }
+    });
+
+    Object.keys(npcClusters).forEach(function(key) {
+      if (npcClusters[key].length >= 2) {
+        perception.groupsForming.push({
+          members: npcClusters[key],
+          location: key,
+          size: npcClusters[key].length
+        });
+      }
+    });
+
+    return perception;
+  }
+
+  // ============================================================================
+  // MEMORY SYSTEM
+  // ============================================================================
+
+  function createMemory(archetype) {
+    return {
+      archetype: archetype,
+      interactions: [],
+      favorites: {
+        location: null,
+        npcFriends: []
+      },
+      playerFamiliarity: {},
+      witnessedEvents: [],
+      lastGreeted: {},
+      usedDialogues: [],
+      mood: 'content',
+      energy: 100,
+      satisfaction: 50,
+      lastWorkTime: 0,
+      lastRestTime: 0,
+      currentGoal: null,
+      groupMembership: null
+    };
+  }
+
+  function updateMemory(memory, deltaTime) {
+    // Decay familiarity
+    Object.keys(memory.playerFamiliarity).forEach(function(playerId) {
+      memory.playerFamiliarity[playerId] -= MEMORY_DECAY_RATE * deltaTime;
+      if (memory.playerFamiliarity[playerId] <= 0) {
+        delete memory.playerFamiliarity[playerId];
+      }
+    });
+
+    // Decay energy
+    var schedule = getSchedulePeriod(memory.currentTimeOfDay || 'midday');
+    if (schedule.energy_regen > 0) {
+      memory.energy = Math.min(100, memory.energy + ENERGY_REGEN_RATE * (deltaTime / 60000));
+    } else {
+      memory.energy = Math.max(0, memory.energy - ENERGY_DECAY_RATE * (deltaTime / 60000));
+    }
+
+    // Trim old interactions
+    if (memory.interactions.length > MAX_INTERACTIONS_REMEMBERED) {
+      memory.interactions = memory.interactions.slice(-MAX_INTERACTIONS_REMEMBERED);
+    }
+
+    // Trim old events
+    if (memory.witnessedEvents.length > MAX_EVENTS_REMEMBERED) {
+      memory.witnessedEvents = memory.witnessedEvents.slice(-MAX_EVENTS_REMEMBERED);
+    }
+
+    // Reset used dialogues periodically (every 5 minutes)
+    if (!memory.lastDialogueReset || Date.now() - memory.lastDialogueReset > 300000) {
+      memory.usedDialogues = [];
+      memory.lastDialogueReset = Date.now();
+    }
+  }
+
+  function recordInteraction(memory, playerId, type, response) {
+    memory.interactions.push({
+      playerId: playerId,
+      type: type,
+      timestamp: Date.now(),
+      response: response
+    });
+
+    // Increase familiarity
+    if (!memory.playerFamiliarity[playerId]) {
+      memory.playerFamiliarity[playerId] = 0;
+    }
+    memory.playerFamiliarity[playerId] += FAMILIARITY_GAIN;
+  }
+
+  function recordEvent(memory, eventType, description) {
+    memory.witnessedEvents.push({
+      type: eventType,
+      description: description,
+      timestamp: Date.now()
+    });
+  }
+
+  // ============================================================================
+  // SCHEDULE HELPERS
+  // ============================================================================
+
+  function getSchedulePeriod(timeOfDay) {
+    return DAILY_SCHEDULE[timeOfDay] || DAILY_SCHEDULE.midday;
+  }
+
+  function getCurrentHour(worldState) {
+    return worldState.currentHour || 12;
+  }
+
+  // ============================================================================
+  // DIALOGUE SYSTEM
+  // ============================================================================
+
+  function getDialogue(memory, context, npcName) {
+    var archetype = memory.archetype;
+    var dialogues = CONTEXTUAL_DIALOGUES[archetype];
+    if (!dialogues) return null;
+
+    var categoryKey = context.category || 'idle_observation';
+    var category = dialogues[categoryKey];
+    if (!category || category.length === 0) {
+      category = dialogues.idle_observation || [];
+    }
+
+    if (category.length === 0) return null;
+
+    // Filter out recently used dialogues
+    var availableDialogues = category.filter(function(_, index) {
+      return memory.usedDialogues.indexOf(categoryKey + '_' + index) === -1;
+    });
+
+    if (availableDialogues.length === 0) {
+      availableDialogues = category; // Reset if all used
+      memory.usedDialogues = [];
+    }
+
+    // Pick random from available
+    var dialogue = availableDialogues[Math.floor(Math.random() * availableDialogues.length)];
+    var index = category.indexOf(dialogue);
+    memory.usedDialogues.push(categoryKey + '_' + index);
+
+    // Replace placeholders
+    dialogue = dialogue.replace('{name}', npcName);
+    dialogue = dialogue.replace('{plant}', ['roses', 'lilies', 'moonflowers', 'sage'][Math.floor(Math.random() * 4)]);
+
+    return dialogue;
+  }
+
+  function getDialogueContext(memory, perception, npc) {
+    var playerId = perception.nearbyPlayers.length > 0 ? perception.nearbyPlayers[0].id : null;
+    var familiarity = playerId ? (memory.playerFamiliarity[playerId] || 0) : 0;
+
+    // Determine greeting level
+    if (playerId && !memory.lastGreeted[playerId]) {
+      return { category: 'greeting_first' };
+    } else if (familiarity >= FAMILIARITY_THRESHOLD_CLOSE) {
+      return { category: 'greeting_close' };
+    } else if (familiarity >= FAMILIARITY_THRESHOLD_FRIENDLY) {
+      return { category: 'greeting_familiar' };
+    }
+
+    // Weather-based
+    if (perception.weather === 'rain') {
+      return { category: 'weather_rain' };
+    } else if (perception.weather === 'snow') {
+      return { category: 'weather_snow' };
+    } else if (perception.weather === 'clear') {
+      return { category: 'weather_clear' };
+    }
+
+    // Time-based
+    if (perception.timeOfDay === 'morning' || perception.timeOfDay === 'dawn') {
+      return { category: 'time_morning' };
+    } else if (perception.timeOfDay === 'evening') {
+      return { category: 'time_evening' };
+    } else if (perception.timeOfDay === 'night') {
+      return { category: 'time_night' };
+    }
+
+    // Player action-based
+    if (perception.nearbyPlayers.length > 0) {
+      var player = perception.nearbyPlayers[0];
+      if (player.isBuilding) {
+        return { category: 'player_building' };
+      } else if (player.isHarvesting) {
+        return { category: 'player_harvesting' };
+      }
+    }
+
+    // Location-based
+    if (perception.nearWater) {
+      return { category: 'near_water' };
+    }
+
+    // Group-based
+    if (perception.groupsForming.length > 0) {
+      return { category: 'group_forming' };
+    }
+
+    // Activity-based
+    if (memory.currentGoal && memory.currentGoal.type === 'work') {
+      return { category: 'working' };
+    }
+
+    // Default
+    return { category: 'idle_observation' };
+  }
+
+  // ============================================================================
+  // BEHAVIOR TREE - Decision Making
+  // ============================================================================
+
+  function evaluateBehaviorTree(npc, memory, perception) {
+    var drives = ARCHETYPE_DRIVES[memory.archetype];
+    var schedule = getSchedulePeriod(perception.timeOfDay);
+    var now = Date.now();
+
+    // PRIORITY 1: SURVIVAL NEEDS
+
+    // Check if need shelter from bad weather
+    if ((perception.weather === 'storm' || perception.weather === 'rain') &&
+        !perception.inShelter &&
+        drives.weather_preference !== 'rain' &&
+        drives.weather_preference !== 'any') {
+      return {
+        type: 'seek_shelter',
+        priority: 10,
+        animation: 'walk',
+        speed: 2.0
+      };
+    }
+
+    // Check if energy low - need rest
+    if (memory.energy < 20) {
+      return {
+        type: 'rest',
+        priority: 9,
+        animation: 'sit',
+        speed: 0
+      };
+    }
+
+    // Check if night and should sleep
+    if ((perception.timeOfDay === 'night' || perception.timeOfDay === 'dawn') &&
+        memory.energy < 60 &&
+        memory.archetype !== 'philosopher' &&
+        memory.archetype !== 'musician') {
+      return {
+        type: 'rest',
+        priority: 8,
+        animation: 'sleep',
+        speed: 0
+      };
+    }
+
+    // PRIORITY 2: REACT TO EVENTS
+
+    // Player approaches - greet if haven't recently
+    if (perception.nearbyPlayers.length > 0) {
+      var closestPlayer = perception.nearbyPlayers[0];
+      if (closestPlayer.distance < 5) {
+        var lastGreetTime = memory.lastGreeted[closestPlayer.id];
+        if (!lastGreetTime || now - lastGreetTime > INTERACTION_COOLDOWN) {
+          memory.lastGreeted[closestPlayer.id] = now;
+          var context = getDialogueContext(memory, perception, npc);
+          var dialogue = getDialogue(memory, context, npc.name);
+          recordInteraction(memory, closestPlayer.id, 'greeting', dialogue);
+
+          return {
+            type: 'greet',
+            targetPlayer: closestPlayer.id,
+            priority: 7,
+            animation: 'wave',
+            dialogue: dialogue,
+            facing: { x: npc.x + closestPlayer.direction.x, z: npc.z + closestPlayer.direction.z },
+            speed: 0
+          };
+        }
+      }
+
+      // Player performing interesting action nearby
+      if (closestPlayer.distance < 10) {
+        if (closestPlayer.isBuilding && memory.archetype === 'builder') {
+          var buildDialogue = getDialogue(memory, { category: 'player_building' }, npc.name);
+          return {
+            type: 'react',
+            priority: 6,
+            animation: 'observe',
+            dialogue: buildDialogue,
+            facing: { x: npc.x + closestPlayer.direction.x, z: npc.z + closestPlayer.direction.z },
+            speed: 0
+          };
+        }
+        if (closestPlayer.isHarvesting && memory.archetype === 'gardener') {
+          var harvestDialogue = getDialogue(memory, { category: 'player_harvesting' }, npc.name);
+          return {
+            type: 'react',
+            priority: 6,
+            animation: 'observe',
+            dialogue: harvestDialogue,
+            facing: { x: npc.x + closestPlayer.direction.x, z: npc.z + closestPlayer.direction.z },
+            speed: 0
+          };
+        }
+      }
+    }
+
+    // Group forming nearby - consider joining
+    if (perception.groupsForming.length > 0 && Math.random() < schedule.social_chance) {
+      var group = perception.groupsForming[0];
+      var shouldJoin = false;
+
+      // Musicians join other musicians
+      if (memory.archetype === 'musician') {
+        shouldJoin = group.members.some(function(m) { return m.archetype === 'musician'; });
+      }
+      // Storytellers gather audiences
+      if (memory.archetype === 'storyteller') {
+        shouldJoin = group.size >= 2;
+      }
+      // Social archetypes join readily
+      if (memory.archetype === 'teacher' || memory.archetype === 'merchant' || memory.archetype === 'philosopher') {
+        shouldJoin = Math.random() < 0.6;
+      }
+
+      if (shouldJoin) {
+        var groupDialogue = getDialogue(memory, { category: 'group_forming' }, npc.name);
+        return {
+          type: 'join_group',
+          groupId: group.location,
+          priority: 6,
+          animation: 'walk',
+          dialogue: groupDialogue,
+          speed: 1.5
+        };
+      }
+    }
+
+    // PRIORITY 3: SOCIAL NEEDS
+
+    if (memory.mood === 'social' || (Math.random() < schedule.social_chance && memory.energy > 40)) {
+      // Find friend NPC
+      if (memory.favorites.npcFriends.length > 0) {
+        var friendId = memory.favorites.npcFriends[0];
+        var friendNearby = perception.nearbyNPCs.find(function(n) { return n.id === friendId; });
+
+        if (friendNearby && friendNearby.distance < 8) {
+          return {
+            type: 'socialize',
+            targetNPC: friendId,
+            priority: 5,
+            animation: 'talk',
+            dialogue: getDialogue(memory, { category: 'greeting_familiar' }, npc.name),
+            facing: { x: npc.x + friendNearby.direction.x, z: npc.z + friendNearby.direction.z },
+            speed: 0
+          };
+        }
+      }
+
+      // Approach any nearby NPC for social interaction
+      if (perception.nearbyNPCs.length > 0) {
+        var nearbyNpc = perception.nearbyNPCs[0];
+        if (nearbyNpc.distance < 12 && Math.random() < 0.4) {
+          // Add to friends if repeated interaction
+          if (memory.favorites.npcFriends.indexOf(nearbyNpc.id) === -1) {
+            memory.favorites.npcFriends.push(nearbyNpc.id);
+          }
+
+          return {
+            type: 'approach_social',
+            target: { x: npc.x + nearbyNpc.direction.x * 0.7, z: npc.z + nearbyNpc.direction.z * 0.7 },
+            targetNPC: nearbyNpc.id,
+            priority: 4,
+            animation: 'walk',
+            speed: 1.0
+          };
+        }
+      }
+    }
+
+    // PRIORITY 4: PRIMARY DRIVE (Work)
+
+    if (schedule.work_priority > 0.5 && memory.energy > 30) {
+      var workSatisfied = memory.satisfaction > 70 || (now - memory.lastWorkTime < 180000); // Last 3 min
+
+      if (!workSatisfied) {
+        memory.lastWorkTime = now;
+        memory.satisfaction += WORK_SATISFACTION_GAIN;
+
+        var workAction = getPrimaryWorkAction(memory.archetype, npc, perception);
+        workAction.priority = 4;
+        return workAction;
+      }
+    }
+
+    // PRIORITY 5: SECONDARY DRIVE
+
+    if (memory.satisfaction > 50 && memory.energy > 50) {
+      var secondaryAction = getSecondaryWorkAction(memory.archetype, npc, perception);
+      secondaryAction.priority = 3;
+      return secondaryAction;
+    }
+
+    // PRIORITY 6: IDLE / WANDER
+
+    var idleDialogue = getDialogue(memory, { category: 'idle_observation' }, npc.name);
+
+    if (Math.random() < 0.3) {
+      // Wander locally
+      var wanderAngle = Math.random() * Math.PI * 2;
+      var wanderDist = 5 + Math.random() * 10;
+      return {
+        type: 'wander',
+        target: {
+          x: npc.x + Math.cos(wanderAngle) * wanderDist,
+          z: npc.z + Math.sin(wanderAngle) * wanderDist
+        },
+        priority: 2,
+        animation: 'walk',
+        dialogue: Math.random() < 0.1 ? idleDialogue : null,
+        speed: 0.8
+      };
+    }
+
+    // Just idle
+    return {
+      type: 'idle',
+      priority: 1,
+      animation: 'idle',
+      dialogue: Math.random() < 0.05 ? idleDialogue : null,
+      speed: 0
+    };
+  }
+
+  // ============================================================================
+  // WORK ACTION GENERATORS
+  // ============================================================================
+
+  function getPrimaryWorkAction(archetype, npc, perception) {
+    var drives = ARCHETYPE_DRIVES[archetype];
+
+    switch (drives.primary) {
+      case 'tend_plants':
+        return {
+          type: 'work',
+          animation: 'gardening',
+          dialogue: getDialogue({ archetype: archetype, usedDialogues: [] }, { category: 'working' }, npc.name),
+          speed: 0
+        };
+
+      case 'inspect_structures':
+        return {
+          type: 'work',
+          animation: 'building',
+          dialogue: getDialogue({ archetype: archetype, usedDialogues: [] }, { category: 'working' }, npc.name),
+          speed: 0
+        };
+
+      case 'visit_athenaeum':
+        return {
+          type: 'walk_to',
+          target: { x: 0, z: 0 }, // Athenaeum location
+          animation: 'walk',
+          speed: 1.2
+        };
+
+      case 'tend_shop':
+        return {
+          type: 'work',
+          animation: 'merchant',
+          dialogue: getDialogue({ archetype: archetype, usedDialogues: [] }, { category: 'working' }, npc.name),
+          speed: 0
+        };
+
+      case 'explore_wilds':
+        var exploreAngle = Math.random() * Math.PI * 2;
+        return {
+          type: 'walk_to',
+          target: {
+            x: npc.x + Math.cos(exploreAngle) * 30,
+            z: npc.z + Math.sin(exploreAngle) * 30
+          },
+          animation: 'walk',
+          dialogue: getDialogue({ archetype: archetype, usedDialogues: [] }, { category: 'working' }, npc.name),
+          speed: 1.5
+        };
+
+      case 'teach_lesson':
+        return {
+          type: 'work',
+          animation: 'teaching',
+          dialogue: getDialogue({ archetype: archetype, usedDialogues: [] }, { category: 'working' }, npc.name),
+          speed: 0
+        };
+
+      case 'perform':
+        return {
+          type: 'work',
+          animation: 'playing_music',
+          dialogue: getDialogue({ archetype: archetype, usedDialogues: [] }, { category: 'working' }, npc.name),
+          speed: 0
+        };
+
+      case 'tend_wounded':
+        return {
+          type: 'work',
+          animation: 'healing',
+          dialogue: getDialogue({ archetype: archetype, usedDialogues: [] }, { category: 'working' }, npc.name),
+          speed: 0
+        };
+
+      case 'contemplate':
+        return {
+          type: 'work',
+          animation: 'sitting',
+          dialogue: getDialogue({ archetype: archetype, usedDialogues: [] }, { category: 'working' }, npc.name),
+          speed: 0
+        };
+
+      case 'create_art':
+        return {
+          type: 'work',
+          animation: 'painting',
+          dialogue: getDialogue({ archetype: archetype, usedDialogues: [] }, { category: 'working' }, npc.name),
+          speed: 0
+        };
+
+      default:
+        return {
+          type: 'idle',
+          animation: 'idle',
+          speed: 0
+        };
+    }
+  }
+
+  function getSecondaryWorkAction(archetype, npc, perception) {
+    var drives = ARCHETYPE_DRIVES[archetype];
+
+    switch (drives.secondary) {
+      case 'explore_flora':
+      case 'map_territory':
+      case 'find_inspiration':
+        var exploreAngle = Math.random() * Math.PI * 2;
+        return {
+          type: 'explore',
+          target: {
+            x: npc.x + Math.cos(exploreAngle) * 20,
+            z: npc.z + Math.sin(exploreAngle) * 20
+          },
+          animation: 'walk',
+          speed: 1.0
+        };
+
+      case 'gather_materials':
+      case 'gather_herbs':
+      case 'acquire_goods':
+        return {
+          type: 'gather',
+          animation: 'harvesting',
+          speed: 0
+        };
+
+      case 'collect_stories':
+      case 'research':
+        return {
+          type: 'research',
+          animation: 'reading',
+          speed: 0
+        };
+
+      case 'compose':
+        return {
+          type: 'compose',
+          animation: 'writing',
+          speed: 0
+        };
+
+      case 'debate':
+        return {
+          type: 'debate',
+          animation: 'gesturing',
+          speed: 0
+        };
+
+      default:
+        return {
+          type: 'idle',
+          animation: 'idle',
+          speed: 0
+        };
+    }
+  }
+
+  // ============================================================================
+  // EVENT HANDLING
+  // ============================================================================
+
+  function handleEvent(memory, event) {
+    recordEvent(memory, event.type, event.description);
+
+    // Weather changes affect mood
+    if (event.type === 'weather_change') {
+      var drives = ARCHETYPE_DRIVES[memory.archetype];
+      if (event.weather === drives.weather_preference) {
+        memory.mood = 'excited';
+        memory.energy = Math.min(100, memory.energy + 10);
+      } else if (event.weather === 'storm') {
+        memory.mood = 'contemplative';
+      }
+    }
+
+    // Portal activation nearby
+    if (event.type === 'portal_activation') {
+      memory.mood = 'curious';
+      if (memory.archetype === 'explorer' || memory.archetype === 'teacher') {
+        memory.mood = 'excited';
+      }
+    }
+
+    // Group forming
+    if (event.type === 'group_forming') {
+      if (memory.archetype === 'musician' || memory.archetype === 'storyteller' || memory.archetype === 'teacher') {
+        memory.mood = 'social';
+      }
+    }
+
+    // Player builds nearby
+    if (event.type === 'player_building') {
+      if (memory.archetype === 'builder' || memory.archetype === 'artist') {
+        memory.mood = 'curious';
+      }
+    }
+
+    // Time of day changes
+    if (event.type === 'time_change') {
+      memory.currentTimeOfDay = event.timeOfDay;
+      var schedule = getSchedulePeriod(event.timeOfDay);
+
+      // Reset satisfaction at dawn
+      if (event.timeOfDay === 'dawn') {
+        memory.satisfaction = 50;
+      }
+    }
+  }
+
+  // ============================================================================
+  // MAIN BRAIN INTERFACE
+  // ============================================================================
+
+  function createNpcBrain(archetype, npcId) {
+    return {
+      id: npcId,
+      archetype: archetype,
+      memory: createMemory(archetype),
+      currentAction: null,
+      lastUpdateTime: Date.now()
+    };
+  }
+
+  function updateBrain(brain, npc, worldState) {
+    var now = Date.now();
+    var deltaTime = now - brain.lastUpdateTime;
+    brain.lastUpdateTime = now;
+
+    // Update memory (decay, energy management)
+    updateMemory(brain.memory, deltaTime);
+
+    // Perceive world
+    var perception = perceive(npc, worldState);
+
+    // Calculate mood
+    brain.memory.mood = calculateMood(brain.memory, perception, worldState.timeOfDay);
+
+    // Run behavior tree to get decision
+    var decision = evaluateBehaviorTree(npc, brain.memory, perception);
+
+    // Store current goal
+    brain.memory.currentGoal = decision;
+    brain.currentAction = decision;
+
+    return decision;
+  }
+
+  function getDecision(brain) {
+    return brain.currentAction;
+  }
+
+  function getMemory(brain) {
+    return brain.memory;
+  }
+
+  function getMood(brain) {
+    return brain.memory.mood;
+  }
+
+  function getGoal(brain) {
+    if (!brain.memory.currentGoal) return 'idle';
+
+    var goal = brain.memory.currentGoal;
+    var drives = ARCHETYPE_DRIVES[brain.archetype];
+
+    switch (goal.type) {
+      case 'work':
+        return 'Working: ' + drives.primary;
+      case 'rest':
+        return 'Resting to restore energy';
+      case 'seek_shelter':
+        return 'Seeking shelter from weather';
+      case 'greet':
+        return 'Greeting nearby player';
+      case 'socialize':
+        return 'Socializing with friends';
+      case 'join_group':
+        return 'Joining a group';
+      case 'explore':
+        return 'Exploring: ' + drives.secondary;
+      case 'wander':
+        return 'Wandering and observing';
+      default:
+        return 'Being present';
+    }
+  }
+
+  // ============================================================================
+  // EXPORTS
+  // ============================================================================
+
+  exports.createNpcBrain = createNpcBrain;
+  exports.updateBrain = updateBrain;
+  exports.perceive = perceive;
+  exports.getDecision = getDecision;
+  exports.handleEvent = handleEvent;
+  exports.getDialogue = getDialogue;
+  exports.getMemory = getMemory;
+  exports.getMood = getMood;
+  exports.getGoal = getGoal;
+  exports.ARCHETYPE_DRIVES = ARCHETYPE_DRIVES;
+  exports.DAILY_SCHEDULE = DAILY_SCHEDULE;
+  exports.MOODS = MOODS;
+
+})(typeof module !== 'undefined' ? module.exports : (window.NpcAI = {}));
+
+
 // npcs.js
 (function(exports) {
   // AI Citizen Simulation Module
@@ -9621,11 +13220,17 @@ html, body {
     arena: {x: 0, z: -240}
   };
 
+  // NPC AI reference (loaded from npc_ai.js)
+  var NpcAI = typeof window !== 'undefined' ? window.NpcAI : null;
+
   // NPC data
   let npcAgents = [];
   let npcStates = new Map(); // id -> behavior state
+  let npcBrains = new Map(); // id -> NpcAI brain object
   let npcMeshes = new Map(); // id -> THREE.Group
   let chatBubbles = new Map(); // id -> { mesh, timer }
+  let pendingEvents = []; // events to broadcast to all NPCs
+  let npcUpdateFrame = 0; // frame counter for staggered updates
 
   // Seeded random number generator
   function seededRandom(seed) {
@@ -9992,6 +13597,9 @@ html, body {
    * Initialize NPC behavior states
    */
   function initNPCStates() {
+    // Re-check for NpcAI module (may have loaded after npcs.js)
+    if (!NpcAI && typeof window !== 'undefined') NpcAI = window.NpcAI;
+
     npcAgents.forEach(agent => {
       npcStates.set(agent.id, {
         currentState: 'idle',
@@ -9999,9 +13607,21 @@ html, body {
         destination: null,
         targetNPC: null,
         lookAngle: 0,
-        animationTime: Math.random() * 1000 // Offset for variety
+        animationTime: Math.random() * 1000
       });
+
+      // Create AI brain for each NPC (if NpcAI available)
+      if (NpcAI && NpcAI.createNpcBrain) {
+        var brain = NpcAI.createNpcBrain(agent.archetype, agent.id);
+        npcBrains.set(agent.id, brain);
+      }
     });
+
+    if (NpcAI) {
+      console.log('NPC AI brains initialized for ' + npcBrains.size + ' agents');
+    } else {
+      console.log('NpcAI not loaded — using fallback behavior');
+    }
   }
 
   /**
@@ -10064,36 +13684,261 @@ html, body {
   /**
    * Update NPCs (called every frame)
    */
-  function updateNPCs(sceneContext, gameState, deltaTime, worldTime) {
+  function updateNPCs(sceneContext, gameState, deltaTime, worldTime, worldState) {
     if (npcAgents.length === 0) return;
+    npcUpdateFrame++;
 
-    // Use world time as seed base for deterministic behavior
-    const timeSeed = Math.floor(worldTime);
+    // Re-check for NpcAI module (may have loaded after init)
+    if (!NpcAI && typeof window !== 'undefined' && window.NpcAI) {
+      NpcAI = window.NpcAI;
+      // Late-init brains for NPCs that don't have one
+      npcAgents.forEach(function(agent) {
+        if (!npcBrains.has(agent.id) && NpcAI.createNpcBrain) {
+          npcBrains.set(agent.id, NpcAI.createNpcBrain(agent.archetype, agent.id));
+        }
+      });
+      console.log('NpcAI late-loaded, brains initialized');
+    }
 
-    npcAgents.forEach((agent, index) => {
-      const state = npcStates.get(agent.id);
+    // Process pending events
+    if (NpcAI && pendingEvents.length > 0) {
+      var events = pendingEvents.slice();
+      pendingEvents = [];
+      events.forEach(function(event) {
+        npcBrains.forEach(function(brain) {
+          if (NpcAI.handleEvent) NpcAI.handleEvent(brain.memory, event);
+        });
+      });
+    }
+
+    var timeSeed = Math.floor(worldTime);
+    var playerPos = worldState && worldState.playerPosition ? worldState.playerPosition : null;
+
+    npcAgents.forEach(function(agent, index) {
+      var state = npcStates.get(agent.id);
       if (!state) return;
 
-      // Increment animation time
-      state.animationTime += deltaTime * 1000;
-
-      // Decrement state timer (walking/socializing run until destination reached)
-      if (state.currentState !== 'walking' && state.currentState !== 'socializing') {
-        state.stateTimer -= deltaTime;
-        if (state.stateTimer <= 0) {
-          transitionState(agent, state, timeSeed + index);
-        }
+      // Performance: stagger AI updates by distance
+      if (playerPos) {
+        var dx = agent.position.x - playerPos.x;
+        var dz = agent.position.z - playerPos.z;
+        var dist = Math.sqrt(dx * dx + dz * dz);
+        // Far NPCs update less frequently
+        if (dist > 300) return; // skip entirely
+        if (dist > 150 && npcUpdateFrame % 10 !== index % 10) return;
+        if (dist > 50 && npcUpdateFrame % 3 !== index % 3) return;
       }
 
-      // Update behavior based on current state
-      updateNPCBehavior(agent, state, deltaTime, timeSeed + index);
+      state.animationTime += deltaTime * 1000;
 
-      // Update visual representation
+      // Use NpcAI brain if available
+      var brain = npcBrains.get(agent.id);
+      if (brain && NpcAI && NpcAI.updateBrain) {
+        // Build world state for AI perception
+        var aiWorldState = {
+          weather: worldState ? worldState.weather : 'clear',
+          timeOfDay: worldState ? worldState.timePeriod : 'midday',
+          currentHour: worldTime ? worldTime / 60 : 12,
+          currentZone: agent.position.zone,
+          nearbyPlayers: [],
+          nearbyNPCs: [],
+          allNPCs: npcAgents
+        };
+
+        // Add player info for perception
+        if (playerPos && worldState) {
+          var pdx = playerPos.x - agent.position.x;
+          var pdz = playerPos.z - agent.position.z;
+          var pDist = Math.sqrt(pdx * pdx + pdz * pdz);
+          if (pDist < 25) {
+            aiWorldState.nearbyPlayers.push({
+              id: worldState.playerId || 'player',
+              distance: pDist,
+              direction: { x: pdx, z: pdz },
+              isBuilding: false,
+              isHarvesting: false
+            });
+          }
+        }
+
+        // Add nearby NPCs for perception
+        npcAgents.forEach(function(other) {
+          if (other.id === agent.id) return;
+          var ndx = other.position.x - agent.position.x;
+          var ndz = other.position.z - agent.position.z;
+          var nDist = Math.sqrt(ndx * ndx + ndz * ndz);
+          if (nDist < 25) {
+            var otherBrain = npcBrains.get(other.id);
+            aiWorldState.nearbyNPCs.push({
+              id: other.id,
+              distance: nDist,
+              direction: { x: ndx, z: ndz },
+              archetype: other.archetype,
+              currentActivity: otherBrain ? NpcAI.getGoal(otherBrain) : 'idle',
+              mood: otherBrain ? NpcAI.getMood(otherBrain) : 'neutral'
+            });
+          }
+        });
+
+        // Get AI decision
+        var npcObj = { x: agent.position.x, z: agent.position.z, name: agent.name, zone: agent.position.zone };
+        var decision = NpcAI.updateBrain(brain, npcObj, aiWorldState);
+
+        // Execute decision
+        if (decision) {
+          executeAIDecision(agent, state, decision, deltaTime);
+        }
+      } else {
+        // Fallback to original behavior
+        if (state.currentState !== 'walking' && state.currentState !== 'socializing') {
+          state.stateTimer -= deltaTime;
+          if (state.stateTimer <= 0) {
+            transitionState(agent, state, timeSeed + index);
+          }
+        }
+        updateNPCBehavior(agent, state, deltaTime, timeSeed + index);
+      }
+
       updateNPCVisual(agent, state, sceneContext, deltaTime);
     });
 
-    // Update chat bubbles
     updateChatBubbles(deltaTime);
+  }
+
+  /**
+   * Execute an AI brain decision — translates decision to movement/animation/dialogue
+   */
+  function executeAIDecision(agent, state, decision, deltaTime) {
+    // Map AI decision type to NPC state
+    switch (decision.type) {
+      case 'walk_to':
+      case 'wander':
+      case 'explore':
+      case 'approach_social':
+      case 'seek_shelter':
+        if (decision.target) {
+          state.destination = { x: decision.target.x, z: decision.target.z };
+          state.currentState = 'walking';
+          // Move toward destination
+          var dx = state.destination.x - agent.position.x;
+          var dz = state.destination.z - agent.position.z;
+          var dist = Math.sqrt(dx * dx + dz * dz);
+          if (dist > 0.5) {
+            var speed = (decision.speed || 1.5) * deltaTime;
+            var ratio = Math.min(speed / dist, 1);
+            agent.position.x += dx * ratio;
+            agent.position.z += dz * ratio;
+            state.lookAngle = Math.atan2(dx, dz);
+          } else {
+            state.currentState = 'idle';
+            state.destination = null;
+          }
+        }
+        break;
+
+      case 'work':
+        state.currentState = 'working';
+        state.stateTimer = 5 + Math.random() * 10;
+        break;
+
+      case 'socialize':
+      case 'join_group':
+        state.currentState = 'talking';
+        state.stateTimer = 4 + Math.random() * 3;
+        break;
+
+      case 'greet':
+      case 'react':
+        state.currentState = 'talking';
+        state.stateTimer = 3;
+        if (decision.facing) {
+          state.lookAngle = Math.atan2(
+            decision.facing.x - agent.position.x,
+            decision.facing.z - agent.position.z
+          );
+        }
+        break;
+
+      case 'rest':
+        state.currentState = 'idle';
+        state.stateTimer = 8 + Math.random() * 10;
+        break;
+
+      case 'idle':
+      default:
+        state.currentState = 'idle';
+        state.stateTimer = 3 + Math.random() * 5;
+        break;
+    }
+
+    // Show dialogue if the decision includes one
+    if (decision.dialogue) {
+      showChatBubbleWithText(agent, decision.dialogue);
+    }
+  }
+
+  /**
+   * Show chat bubble with specific text (from AI brain)
+   */
+  function showChatBubbleWithText(agent, text) {
+    var mesh = npcMeshes.get(agent.id);
+    if (!mesh) return;
+    var THREE = window.THREE;
+    if (!THREE) return;
+
+    // Remove existing bubble
+    var existing = chatBubbles.get(agent.id);
+    if (existing) { mesh.remove(existing.mesh); }
+
+    var canvas = document.createElement('canvas');
+    var context = canvas.getContext('2d');
+    canvas.width = 512; canvas.height = 128;
+
+    context.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    context.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+    context.lineWidth = 4;
+
+    var x = 10, y = 10, w = canvas.width - 20, h = canvas.height - 20, r = 15;
+    context.beginPath();
+    context.moveTo(x + r, y);
+    context.lineTo(x + w - r, y);
+    context.quadraticCurveTo(x + w, y, x + w, y + r);
+    context.lineTo(x + w, y + h - r);
+    context.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    context.lineTo(x + r, y + h);
+    context.quadraticCurveTo(x, y + h, x, y + h - r);
+    context.lineTo(x, y + r);
+    context.quadraticCurveTo(x, y, x + r, y);
+    context.closePath();
+    context.fill();
+    context.stroke();
+
+    context.fillStyle = 'black';
+    context.font = '18px Arial';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+
+    var words = text.split(' ');
+    var line = '', y_pos = 50;
+    for (var i = 0; i < words.length; i++) {
+      var testLine = line + words[i] + ' ';
+      if (context.measureText(testLine).width > 480 && line !== '') {
+        context.fillText(line, canvas.width / 2, y_pos);
+        line = words[i] + ' ';
+        y_pos += 22;
+      } else {
+        line = testLine;
+      }
+    }
+    context.fillText(line, canvas.width / 2, y_pos);
+
+    var bubbleTexture = new THREE.CanvasTexture(canvas);
+    var bubbleMaterial = new THREE.SpriteMaterial({ map: bubbleTexture });
+    var bubble = new THREE.Sprite(bubbleMaterial);
+    bubble.scale.set(4, 1, 1);
+    bubble.position.y = 3.5;
+    mesh.add(bubble);
+    chatBubbles.set(agent.id, { mesh: bubble, timer: 5 });
   }
 
   /**
@@ -10516,12 +14361,167 @@ html, body {
     return npcAgents.find(agent => agent.id === id);
   }
 
+  /**
+   * Find nearest NPC to a world position within a max distance
+   * @returns {object|null} - {agent, distance} or null
+   */
+  function findNearestNPC(worldX, worldZ, maxDist) {
+    maxDist = maxDist || 10;
+    var best = null;
+    var bestDist = maxDist;
+    for (var i = 0; i < npcAgents.length; i++) {
+      var agent = npcAgents[i];
+      var dx = agent.position.x - worldX;
+      var dz = agent.position.z - worldZ;
+      var dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = { agent: agent, distance: dist };
+      }
+    }
+    return best;
+  }
+
+  /**
+   * Interact with an NPC — triggers greeting dialogue and returns response
+   * @returns {object|null} - {name, message, archetype}
+   */
+  function interactWithNPC(worldX, worldZ) {
+    var nearest = findNearestNPC(worldX, worldZ, 8);
+    if (!nearest) return null;
+
+    var agent = nearest.agent;
+    var seed = Date.now() * 0.001 + agent.id.charCodeAt(0);
+    var brain = npcBrains.get(agent.id);
+    var message, mood, activity, familiarity;
+
+    if (brain && NpcAI) {
+      // Use AI brain for contextual dialogue
+      var context = { category: 'greeting_first' };
+      if (NpcAI.getDialogue) {
+        // Build a simple perception for dialogue context
+        message = NpcAI.getDialogue(brain.memory, context, agent.name);
+      }
+      mood = NpcAI.getMood ? NpcAI.getMood(brain) : 'neutral';
+      activity = NpcAI.getGoal ? NpcAI.getGoal(brain) : '';
+      familiarity = brain.memory && brain.memory.playerFamiliarity
+        ? Math.round(Object.values(brain.memory.playerFamiliarity)[0] || 0)
+        : 0;
+
+      // Record interaction in brain memory
+      if (NpcAI.handleEvent) {
+        NpcAI.handleEvent(brain.memory, {
+          type: 'player_interact',
+          playerId: 'player',
+          description: 'Player interacted directly'
+        });
+      }
+      // Increase familiarity
+      if (brain.memory && brain.memory.playerFamiliarity) {
+        var pKey = Object.keys(brain.memory.playerFamiliarity)[0] || 'player';
+        brain.memory.playerFamiliarity[pKey] = Math.min(100, (brain.memory.playerFamiliarity[pKey] || 0) + 5);
+        familiarity = Math.round(brain.memory.playerFamiliarity[pKey]);
+      }
+    }
+
+    // Fallback to random message if no AI dialogue
+    if (!message) {
+      var messages = ARCHETYPE_MESSAGES[agent.archetype] || ['Hello there.'];
+      message = randomChoice(messages, seed);
+    }
+
+    // Show chat bubble
+    if (brain && NpcAI) {
+      showChatBubbleWithText(agent, message);
+    } else {
+      showChatBubble(agent, seed);
+    }
+
+    return {
+      name: agent.name,
+      message: message,
+      archetype: agent.archetype,
+      mood: mood || 'neutral',
+      activity: activity || '',
+      familiarity: familiarity || 0,
+      id: agent.id
+    };
+  }
+
+  /**
+   * Get all NPC positions for minimap rendering
+   * @returns {Array} - [{x, z, name, archetype}]
+   */
+  function getNPCPositions() {
+    return npcAgents.map(function(agent) {
+      return {
+        x: agent.position.x,
+        z: agent.position.z,
+        name: agent.name,
+        archetype: agent.archetype,
+        zone: agent.position.zone
+      };
+    });
+  }
+
+  /**
+   * Broadcast an event to all NPC brains
+   * @param {object} event - {type, data}
+   */
+  function broadcastEvent(event) {
+    if (!event) return;
+    // Convert event format for NpcAI
+    var aiEvent = {
+      type: event.type,
+      description: event.type + ': ' + JSON.stringify(event.data || {}).substring(0, 100)
+    };
+    // Merge event data
+    if (event.data) {
+      if (event.data.weather) aiEvent.weather = event.data.weather;
+      if (event.data.period) aiEvent.timeOfDay = event.data.period;
+    }
+    pendingEvents.push(aiEvent);
+  }
+
+  /**
+   * Get NPC mood by ID
+   */
+  function getNPCMood(id) {
+    var brain = npcBrains.get(id);
+    if (brain && NpcAI && NpcAI.getMood) return NpcAI.getMood(brain);
+    return 'neutral';
+  }
+
+  /**
+   * Get NPC current goal by ID
+   */
+  function getNPCGoal(id) {
+    var brain = npcBrains.get(id);
+    if (brain && NpcAI && NpcAI.getGoal) return NpcAI.getGoal(brain);
+    return 'idle';
+  }
+
+  /**
+   * Get NPC current activity string
+   */
+  function getNPCActivity(id) {
+    var state = npcStates.get(id);
+    return state ? state.currentState : 'unknown';
+  }
+
   // Export public API
   exports.initNPCs = initNPCs;
   exports.updateNPCs = updateNPCs;
   exports.reloadZoneNPCs = reloadZoneNPCs;
   exports.getNPCsInZone = getNPCsInZone;
   exports.getNPCById = getNPCById;
+  exports.findNearestNPC = findNearestNPC;
+  exports.interactWithNPC = interactWithNPC;
+  exports.getNPCPositions = getNPCPositions;
+  exports.broadcastEvent = broadcastEvent;
+  exports.getNPCMood = getNPCMood;
+  exports.getNPCGoal = getNPCGoal;
+  exports.getNPCActivity = getNPCActivity;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));
 
@@ -10563,6 +14563,7 @@ html, body {
   let playStartTime = 0;
   let lastBreakReminder = 0;
   let footstepTimer = 0;
+  let currentTimePeriod = 'morning';  // tracks dawn/morning/midday/afternoon/evening/night
 
   // Platform detection
   let platform = 'desktop';
@@ -10675,6 +14676,16 @@ html, body {
         if (World.initParticles) {
           World.initParticles(sceneContext);
         }
+
+        // Initialize water bodies (ponds, rivers, fountains)
+        if (World.initWater) {
+          World.initWater(sceneContext);
+        }
+
+        // Initialize skybox (sky dome, stars, sun, moon)
+        if (World.initSkybox) {
+          World.initSkybox(sceneContext);
+        }
       }
     }
 
@@ -10684,6 +14695,11 @@ html, body {
       HUD.initHUD(container);
       HUD.updateZoneLabel(currentZone);
       HUD.updatePlayerInfo(localPlayer);
+
+      // Initialize toolbar (action buttons, coords, time/weather)
+      if (HUD.initToolbar) {
+        HUD.initToolbar();
+      }
 
       // Add chat input
       HUD.addChatInput((text) => {
@@ -10880,6 +14896,13 @@ html, body {
 
             if (NPCs) {
               NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
+              // Broadcast zone change to NPCs
+              if (NPCs.broadcastEvent) {
+                NPCs.broadcastEvent({ type: 'player_zone_change', data: {
+                  playerId: localPlayer.id, fromZone: oldZone, toZone: currentZone,
+                  position: localPlayer.position
+                }});
+              }
             }
           }
         }
@@ -10921,9 +14944,34 @@ html, body {
     worldTime += deltaTime * 60; // 60x speed
     if (worldTime >= 1440) worldTime -= 1440;
 
-    // Update AI citizens
+    // Detect time period from worldTime (minutes 0-1440)
+    var worldHour = worldTime / 60;
+    var newTimePeriod = 'night';
+    if (worldHour >= 5 && worldHour < 7) newTimePeriod = 'dawn';
+    else if (worldHour >= 7 && worldHour < 12) newTimePeriod = 'morning';
+    else if (worldHour >= 12 && worldHour < 14) newTimePeriod = 'midday';
+    else if (worldHour >= 14 && worldHour < 18) newTimePeriod = 'afternoon';
+    else if (worldHour >= 18 && worldHour < 21) newTimePeriod = 'evening';
+    else newTimePeriod = 'night';
+
+    // Broadcast time period changes to NPCs
+    if (newTimePeriod !== currentTimePeriod) {
+      currentTimePeriod = newTimePeriod;
+      if (NPCs && NPCs.broadcastEvent) {
+        NPCs.broadcastEvent({ type: 'time_change', data: { period: currentTimePeriod, hour: worldHour } });
+      }
+    }
+
+    // Update AI citizens — pass player position and weather for perception
     if (NPCs) {
-      NPCs.updateNPCs(sceneContext, gameState, deltaTime, worldTime);
+      var npcWorldState = {
+        weather: currentWeather,
+        worldTime: worldTime,
+        timePeriod: currentTimePeriod,
+        playerPosition: localPlayer ? localPlayer.position : null,
+        playerId: localPlayer ? localPlayer.id : null
+      };
+      NPCs.updateNPCs(sceneContext, gameState, deltaTime, worldTime, npcWorldState);
     }
 
     // Update rendering
@@ -10978,9 +15026,14 @@ html, body {
       var weatherTypes = ['clear', 'cloudy', 'rain', 'clear'];
       var nextWeather = weatherTypes[weatherCycleMinute % weatherTypes.length];
       if (nextWeather !== currentWeather) {
+        var prevWeather = currentWeather;
         currentWeather = nextWeather;
         if (World.setWeather) {
           World.setWeather(sceneContext, currentWeather);
+        }
+        // Broadcast weather change to NPCs
+        if (NPCs && NPCs.broadcastEvent) {
+          NPCs.broadcastEvent({ type: 'weather_change', data: { weather: currentWeather, previous: prevWeather } });
         }
       }
 
@@ -10994,6 +15047,11 @@ html, body {
         World.updateAnimations(sceneContext, deltaTime, worldTime);
       }
 
+      // Update player animations (walk/run/idle)
+      if (World.updatePlayerAnimations) {
+        World.updatePlayerAnimations(sceneContext, deltaTime);
+      }
+
       // Update particle effects (fire, sparkle, mist, fountain, leaves)
       if (World.updateParticles) {
         World.updateParticles(sceneContext, deltaTime * 1000, localPlayer ? localPlayer.position : null);
@@ -11002,6 +15060,16 @@ html, body {
       // Update weather effects (rain, snow)
       if (World.updateWeatherEffects) {
         World.updateWeatherEffects(sceneContext, deltaTime * 1000, localPlayer ? localPlayer.position : null);
+      }
+
+      // Update water bodies (animated waves)
+      if (World.updateWater) {
+        World.updateWater(deltaTime);
+      }
+
+      // Update skybox (sun/moon orbit, star visibility)
+      if (World.updateSkybox) {
+        World.updateSkybox(sceneContext, worldTime);
       }
 
       // Render scene
@@ -11024,6 +15092,11 @@ html, body {
       }));
       HUD.updateMinimap(mapPlayers, currentZone);
 
+      // Update NPC dots on minimap
+      if (HUD.updateMinimapNPCs && NPCs && NPCs.getNPCPositions) {
+        HUD.updateMinimapNPCs(NPCs.getNPCPositions(), localPlayer.position);
+      }
+
       // Update nearby players
       const nearby = players
         .filter(p => p.id !== localPlayer.id && p.zone === currentZone)
@@ -11036,6 +15109,16 @@ html, body {
         .sort((a, b) => a.distance - b.distance);
 
       HUD.updateNearbyPlayers(nearby);
+
+      // Update coordinates display
+      if (HUD.updateCoords && localPlayer) {
+        HUD.updateCoords(localPlayer.position);
+      }
+
+      // Update time and weather display
+      if (HUD.updateTimeWeather) {
+        HUD.updateTimeWeather(worldTime, currentWeather);
+      }
 
       // Update chat
       const messages = Social ? Social.getRecentMessages(gameState) : [];
@@ -11306,11 +15389,46 @@ html, body {
 
       case 'chat':
         msg = Protocol.create.chat(localPlayer.id, payload.message);
+        // Broadcast player chat to NPCs for reaction
+        if (NPCs && NPCs.broadcastEvent) {
+          NPCs.broadcastEvent({ type: 'player_action', data: {
+            playerId: localPlayer.id, action: 'chat',
+            position: localPlayer.position, message: payload.message
+          }});
+        }
         break;
 
       case 'interact':
-        // Check for nearby objects/players
+        // Check for nearby NPCs first
+        if (NPCs && NPCs.interactWithNPC && localPlayer) {
+          var npcResponse = NPCs.interactWithNPC(localPlayer.position.x, localPlayer.position.z);
+          if (npcResponse) {
+            // Show rich NPC interaction dialog
+            if (HUD && HUD.showNPCDialog) {
+              HUD.showNPCDialog(npcResponse);
+            } else if (HUD) {
+              HUD.showNotification(npcResponse.name + ': "' + npcResponse.message + '"', 'info');
+            }
+            if (Audio) Audio.playSound('chat');
+            // Broadcast player interaction to other NPCs
+            if (NPCs.broadcastEvent) {
+              NPCs.broadcastEvent({ type: 'player_action', data: {
+                playerId: localPlayer.id, action: 'interact_npc',
+                position: localPlayer.position, targetNPC: npcResponse.id
+              }});
+            }
+            break;
+          }
+        }
+        // No NPC nearby — try harvesting
         msg = Protocol.create.harvest(localPlayer.id, 10);
+        // Broadcast harvest action to NPCs
+        if (NPCs && NPCs.broadcastEvent) {
+          NPCs.broadcastEvent({ type: 'player_action', data: {
+            playerId: localPlayer.id, action: 'harvest',
+            position: localPlayer.position
+          }});
+        }
         break;
 
       case 'click':

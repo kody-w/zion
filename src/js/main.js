@@ -34,6 +34,7 @@
   let playStartTime = 0;
   let lastBreakReminder = 0;
   let footstepTimer = 0;
+  let currentTimePeriod = 'morning';  // tracks dawn/morning/midday/afternoon/evening/night
 
   // Platform detection
   let platform = 'desktop';
@@ -146,6 +147,16 @@
         if (World.initParticles) {
           World.initParticles(sceneContext);
         }
+
+        // Initialize water bodies (ponds, rivers, fountains)
+        if (World.initWater) {
+          World.initWater(sceneContext);
+        }
+
+        // Initialize skybox (sky dome, stars, sun, moon)
+        if (World.initSkybox) {
+          World.initSkybox(sceneContext);
+        }
       }
     }
 
@@ -155,6 +166,11 @@
       HUD.initHUD(container);
       HUD.updateZoneLabel(currentZone);
       HUD.updatePlayerInfo(localPlayer);
+
+      // Initialize toolbar (action buttons, coords, time/weather)
+      if (HUD.initToolbar) {
+        HUD.initToolbar();
+      }
 
       // Add chat input
       HUD.addChatInput((text) => {
@@ -351,6 +367,13 @@
 
             if (NPCs) {
               NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
+              // Broadcast zone change to NPCs
+              if (NPCs.broadcastEvent) {
+                NPCs.broadcastEvent({ type: 'player_zone_change', data: {
+                  playerId: localPlayer.id, fromZone: oldZone, toZone: currentZone,
+                  position: localPlayer.position
+                }});
+              }
             }
           }
         }
@@ -392,9 +415,34 @@
     worldTime += deltaTime * 60; // 60x speed
     if (worldTime >= 1440) worldTime -= 1440;
 
-    // Update AI citizens
+    // Detect time period from worldTime (minutes 0-1440)
+    var worldHour = worldTime / 60;
+    var newTimePeriod = 'night';
+    if (worldHour >= 5 && worldHour < 7) newTimePeriod = 'dawn';
+    else if (worldHour >= 7 && worldHour < 12) newTimePeriod = 'morning';
+    else if (worldHour >= 12 && worldHour < 14) newTimePeriod = 'midday';
+    else if (worldHour >= 14 && worldHour < 18) newTimePeriod = 'afternoon';
+    else if (worldHour >= 18 && worldHour < 21) newTimePeriod = 'evening';
+    else newTimePeriod = 'night';
+
+    // Broadcast time period changes to NPCs
+    if (newTimePeriod !== currentTimePeriod) {
+      currentTimePeriod = newTimePeriod;
+      if (NPCs && NPCs.broadcastEvent) {
+        NPCs.broadcastEvent({ type: 'time_change', data: { period: currentTimePeriod, hour: worldHour } });
+      }
+    }
+
+    // Update AI citizens — pass player position and weather for perception
     if (NPCs) {
-      NPCs.updateNPCs(sceneContext, gameState, deltaTime, worldTime);
+      var npcWorldState = {
+        weather: currentWeather,
+        worldTime: worldTime,
+        timePeriod: currentTimePeriod,
+        playerPosition: localPlayer ? localPlayer.position : null,
+        playerId: localPlayer ? localPlayer.id : null
+      };
+      NPCs.updateNPCs(sceneContext, gameState, deltaTime, worldTime, npcWorldState);
     }
 
     // Update rendering
@@ -449,9 +497,14 @@
       var weatherTypes = ['clear', 'cloudy', 'rain', 'clear'];
       var nextWeather = weatherTypes[weatherCycleMinute % weatherTypes.length];
       if (nextWeather !== currentWeather) {
+        var prevWeather = currentWeather;
         currentWeather = nextWeather;
         if (World.setWeather) {
           World.setWeather(sceneContext, currentWeather);
+        }
+        // Broadcast weather change to NPCs
+        if (NPCs && NPCs.broadcastEvent) {
+          NPCs.broadcastEvent({ type: 'weather_change', data: { weather: currentWeather, previous: prevWeather } });
         }
       }
 
@@ -465,6 +518,11 @@
         World.updateAnimations(sceneContext, deltaTime, worldTime);
       }
 
+      // Update player animations (walk/run/idle)
+      if (World.updatePlayerAnimations) {
+        World.updatePlayerAnimations(sceneContext, deltaTime);
+      }
+
       // Update particle effects (fire, sparkle, mist, fountain, leaves)
       if (World.updateParticles) {
         World.updateParticles(sceneContext, deltaTime * 1000, localPlayer ? localPlayer.position : null);
@@ -473,6 +531,16 @@
       // Update weather effects (rain, snow)
       if (World.updateWeatherEffects) {
         World.updateWeatherEffects(sceneContext, deltaTime * 1000, localPlayer ? localPlayer.position : null);
+      }
+
+      // Update water bodies (animated waves)
+      if (World.updateWater) {
+        World.updateWater(deltaTime);
+      }
+
+      // Update skybox (sun/moon orbit, star visibility)
+      if (World.updateSkybox) {
+        World.updateSkybox(sceneContext, worldTime);
       }
 
       // Render scene
@@ -495,6 +563,11 @@
       }));
       HUD.updateMinimap(mapPlayers, currentZone);
 
+      // Update NPC dots on minimap
+      if (HUD.updateMinimapNPCs && NPCs && NPCs.getNPCPositions) {
+        HUD.updateMinimapNPCs(NPCs.getNPCPositions(), localPlayer.position);
+      }
+
       // Update nearby players
       const nearby = players
         .filter(p => p.id !== localPlayer.id && p.zone === currentZone)
@@ -507,6 +580,16 @@
         .sort((a, b) => a.distance - b.distance);
 
       HUD.updateNearbyPlayers(nearby);
+
+      // Update coordinates display
+      if (HUD.updateCoords && localPlayer) {
+        HUD.updateCoords(localPlayer.position);
+      }
+
+      // Update time and weather display
+      if (HUD.updateTimeWeather) {
+        HUD.updateTimeWeather(worldTime, currentWeather);
+      }
 
       // Update chat
       const messages = Social ? Social.getRecentMessages(gameState) : [];
@@ -777,11 +860,46 @@
 
       case 'chat':
         msg = Protocol.create.chat(localPlayer.id, payload.message);
+        // Broadcast player chat to NPCs for reaction
+        if (NPCs && NPCs.broadcastEvent) {
+          NPCs.broadcastEvent({ type: 'player_action', data: {
+            playerId: localPlayer.id, action: 'chat',
+            position: localPlayer.position, message: payload.message
+          }});
+        }
         break;
 
       case 'interact':
-        // Check for nearby objects/players
+        // Check for nearby NPCs first
+        if (NPCs && NPCs.interactWithNPC && localPlayer) {
+          var npcResponse = NPCs.interactWithNPC(localPlayer.position.x, localPlayer.position.z);
+          if (npcResponse) {
+            // Show rich NPC interaction dialog
+            if (HUD && HUD.showNPCDialog) {
+              HUD.showNPCDialog(npcResponse);
+            } else if (HUD) {
+              HUD.showNotification(npcResponse.name + ': "' + npcResponse.message + '"', 'info');
+            }
+            if (Audio) Audio.playSound('chat');
+            // Broadcast player interaction to other NPCs
+            if (NPCs.broadcastEvent) {
+              NPCs.broadcastEvent({ type: 'player_action', data: {
+                playerId: localPlayer.id, action: 'interact_npc',
+                position: localPlayer.position, targetNPC: npcResponse.id
+              }});
+            }
+            break;
+          }
+        }
+        // No NPC nearby — try harvesting
         msg = Protocol.create.harvest(localPlayer.id, 10);
+        // Broadcast harvest action to NPCs
+        if (NPCs && NPCs.broadcastEvent) {
+          NPCs.broadcastEvent({ type: 'player_action', data: {
+            playerId: localPlayer.id, action: 'harvest',
+            position: localPlayer.position
+          }});
+        }
         break;
 
       case 'click':
