@@ -175,6 +175,31 @@
       // Connect to lobby peer
       const lobbyPeer = Network.getLobbyPeerId('main');
       Network.connectToPeer(lobbyPeer);
+
+      // Initialize federation
+      const worldId = Network.deriveWorldId();
+      const worldName = 'ZION'; // Could be customized per fork
+      const endpoint = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+      Network.initFederation(worldId, worldName, endpoint);
+
+      // Register federation event handler
+      Network.onFederationEvent((event) => {
+        handleFederationEvent(event);
+      });
+
+      // Announce to federation network periodically
+      setInterval(() => {
+        if (Network.announceFederation) {
+          Network.announceFederation();
+        }
+      }, 60000); // Every 60 seconds
+
+      // Initial announce
+      setTimeout(() => {
+        if (Network.announceFederation) {
+          Network.announceFederation();
+        }
+      }, 5000); // After 5 seconds to let connections establish
     }
 
     // Initialize 3D scene
@@ -228,6 +253,19 @@
       // Initialize quest tracker
       if (HUD.initQuestTracker) {
         HUD.initQuestTracker();
+      }
+
+      // Initialize reputation system
+      if (Social && Social.initReputation) {
+        Social.initReputation(localPlayer.id);
+        if (HUD.updateReputationDisplay) {
+          HUD.updateReputationDisplay(Social.getReputation(localPlayer.id));
+        }
+      }
+
+      // Initialize governance panel callback
+      if (HUD.initGovernancePanel) {
+        HUD.initGovernancePanel(handleGovernanceAction);
       }
 
       // Initialize inventory panel
@@ -633,6 +671,19 @@
               }
             }
 
+            // Record zone visit for governance
+            if (Zones && Zones.recordZoneVisit) {
+              Zones.recordZoneVisit(currentZone, localPlayer.id);
+            }
+
+            // Show welcome message if zone has one
+            if (Zones && HUD) {
+              var policies = Zones.getZonePolicies(currentZone);
+              if (policies && policies.welcomeMessage) {
+                HUD.showNotification(policies.welcomeMessage, 'info');
+              }
+            }
+
             // Update quest progress for zone visits
             if (Quests) {
               var updated = Quests.updateQuestProgress(localPlayer.id, 'visit_zone', { zone: currentZone });
@@ -994,6 +1045,75 @@
   }
 
   /**
+   * Handle federation events from Network module
+   */
+  function handleFederationEvent(event) {
+    if (!event || !event.type) return;
+
+    switch (event.type) {
+      case 'world_discovered':
+        console.log('Discovered federated world:', event.worldInfo.worldName);
+        if (HUD && HUD.showNotification) {
+          HUD.showNotification('Discovered world: ' + event.worldInfo.worldName, 'info');
+        }
+        if (HUD && HUD.updateFederationStatus) {
+          HUD.updateFederationStatus(Network.getDiscoveredWorlds(), Network.getFederatedWorlds());
+        }
+        break;
+
+      case 'federation_established':
+        console.log('Federation established with:', event.worldInfo.worldName);
+        if (HUD && HUD.showNotification) {
+          HUD.showNotification('Portal opened to: ' + event.worldInfo.worldName, 'success');
+        }
+        if (HUD && HUD.updateFederationStatus) {
+          HUD.updateFederationStatus(Network.getDiscoveredWorlds(), Network.getFederatedWorlds());
+        }
+        // Create portal in 3D world if in Nexus
+        if (World && sceneContext && currentZone === 'nexus') {
+          createFederationPortal(event.worldInfo);
+        }
+        break;
+
+      case 'cross_world_warp':
+        console.log('Player warping to world:', event.targetWorld);
+        break;
+
+      case 'player_returned':
+        console.log('Player returned:', event.playerId);
+        break;
+
+      default:
+        console.log('Unknown federation event:', event.type);
+    }
+  }
+
+  /**
+   * Create a federation portal in the 3D world
+   */
+  function createFederationPortal(worldInfo) {
+    if (!World || !sceneContext || !World.createPortal) return;
+
+    // Position portals around the nexus
+    var portalCount = Network.getFederatedWorlds().length;
+    var angle = (portalCount * Math.PI * 2) / 8; // Spread around circle
+    var radius = 30;
+    var x = Math.cos(angle) * radius;
+    var z = Math.sin(angle) * radius;
+
+    var portalData = {
+      id: 'portal-fed-' + worldInfo.worldId,
+      position: { x: x, y: 0, z: z },
+      targetWorld: worldInfo.worldId,
+      worldName: worldInfo.worldName,
+      type: 'federation'
+    };
+
+    World.createPortal(sceneContext, portalData);
+    console.log('Created federation portal to:', worldInfo.worldName);
+  }
+
+  /**
    * Handle incoming network message
    */
   function handleIncomingMessage(msg) {
@@ -1051,6 +1171,18 @@
         break;
       case 'score':
         handleScoreMessage(msg);
+        break;
+      case 'federation_announce':
+        handleFederationAnnounce(msg);
+        break;
+      case 'federation_handshake':
+        handleFederationHandshake(msg);
+        break;
+      case 'warp_fork':
+        handleWarpFork(msg);
+        break;
+      case 'return_home':
+        handleReturnHome(msg);
         break;
       default:
         console.log('Unknown message type:', msg.type);
@@ -1111,6 +1243,108 @@
         addRecentActivity('Discovered a ' + result.discovery.type);
 
         if (Audio) Audio.playSound('warp');
+      }
+    }
+  }
+
+  /**
+   * Handle federation announce message
+   */
+  function handleFederationAnnounce(msg) {
+    if (!Network) return;
+
+    // Let Network module handle the discovery
+    Network.handleFederationMessage(msg);
+
+    // Update HUD if available
+    if (HUD && HUD.updateFederationStatus) {
+      HUD.updateFederationStatus(Network.getDiscoveredWorlds(), Network.getFederatedWorlds());
+    }
+  }
+
+  /**
+   * Handle federation handshake message
+   */
+  function handleFederationHandshake(msg) {
+    if (!Network) return;
+
+    // Let Network module handle the handshake
+    Network.handleFederationMessage(msg);
+
+    // Update HUD
+    if (HUD && HUD.updateFederationStatus) {
+      HUD.updateFederationStatus(Network.getDiscoveredWorlds(), Network.getFederatedWorlds());
+    }
+
+    // Show notification
+    var worldName = msg.worldName || msg.payload?.worldName || 'Unknown World';
+    if (HUD && HUD.showNotification) {
+      HUD.showNotification('Federation established with ' + worldName, 'success');
+    }
+  }
+
+  /**
+   * Handle cross-world warp message
+   */
+  function handleWarpFork(msg) {
+    if (!msg.payload || !msg.payload.target_world) return;
+
+    var targetWorld = msg.payload.target_world;
+    var playerId = msg.from;
+
+    // If this is the local player, handle the warp
+    if (playerId === localPlayer.id) {
+      // Store home world if not already set
+      if (!localPlayer.home_world) {
+        localPlayer.home_world = Network.deriveWorldId();
+      }
+
+      // Update current world
+      localPlayer.current_world = targetWorld;
+
+      if (HUD && HUD.showNotification) {
+        HUD.showNotification('Warping to federated world: ' + targetWorld, 'info');
+      }
+
+      // In a real implementation, this would navigate to the other world's URL
+      // For now, we just track the state
+      console.log('Player warped to federated world:', targetWorld);
+    } else {
+      // Another player warped out
+      if (gameState && State) {
+        State.removePlayer(gameState, playerId);
+      }
+
+      if (World && sceneContext) {
+        World.removePlayer(sceneContext, playerId);
+      }
+
+      if (HUD && HUD.showNotification) {
+        HUD.showNotification(playerId + ' traveled to another world', 'info');
+      }
+    }
+  }
+
+  /**
+   * Handle return home message
+   */
+  function handleReturnHome(msg) {
+    var playerId = msg.from;
+
+    // If this is the local player returning
+    if (playerId === localPlayer.id) {
+      var homeWorld = localPlayer.home_world || Network.deriveWorldId();
+      localPlayer.current_world = homeWorld;
+
+      if (HUD && HUD.showNotification) {
+        HUD.showNotification('Returned to home world', 'success');
+      }
+
+      console.log('Player returned to home world:', homeWorld);
+    } else {
+      // Another player returned from traveling
+      if (HUD && HUD.showNotification) {
+        HUD.showNotification(playerId + ' returned from traveling', 'info');
       }
     }
   }
@@ -1375,6 +1609,14 @@
             function(tradeId) {
               // Decline trade
               Trading.declineTrade(tradeId, localPlayer.id, localPlayer.position);
+
+              // Record decline for harassment detection
+              if (Social && result.data.from) {
+                var harassment = Social.recordDecline(result.data.from, localPlayer.id, 'trade_offer');
+                if (harassment && HUD) {
+                  HUD.showNotification('Repeated unwanted interactions detected - reputation penalty applied', 'warning');
+                }
+              }
             }
           );
         }
@@ -1415,6 +1657,17 @@
           var xpResult = Mentoring.addSkillXP(localPlayer.id, 'trading', 15);
           if (xpResult.leveledUp && HUD) {
             HUD.showNotification('Trading skill increased to ' + xpResult.newLevelName, 'success');
+          }
+        }
+
+        // Award reputation for trading
+        if (Social) {
+          var repResult = Social.adjustReputation(localPlayer.id, 'trading', { with: msg.from });
+          if (repResult.tierChanged && HUD) {
+            HUD.showNotification('Reputation increased to ' + repResult.tier + '!', 'success');
+          }
+          if (HUD && HUD.updateReputationDisplay) {
+            HUD.updateReputationDisplay(Social.getReputation(localPlayer.id));
           }
         }
 
@@ -1846,6 +2099,116 @@
   }
 
   /**
+   * Handle governance actions (elections, steward policies, etc.)
+   */
+  function handleGovernanceAction(action, data) {
+    if (!Social || !Zones || !localPlayer) return;
+
+    switch (action) {
+      case 'startElection':
+        // Start election in current zone
+        var zoneId = data.zoneId || currentZone;
+        var reputation = Social.getReputation(localPlayer.id);
+
+        // Check if player meets requirements
+        if (reputation.tier !== 'Respected' && reputation.tier !== 'Honored' && reputation.tier !== 'Elder') {
+          if (HUD) HUD.showNotification('Must be Respected tier or higher to start an election', 'error');
+          return;
+        }
+
+        // For now, create a simple election with the local player as a candidate
+        // In a full implementation, this would open a dialog to add candidates
+        var candidates = [localPlayer.id];
+        var election = Zones.startElection(zoneId, candidates);
+
+        if (HUD) {
+          HUD.showNotification('Election started! Voting ends in 48 hours.', 'success');
+          HUD.hideGovernancePanel();
+          HUD.showGovernancePanel(zoneId, localPlayer);
+        }
+
+        // Broadcast election start to network
+        if (Network && Protocol) {
+          var msg = Protocol.create.election_start(localPlayer.id, {
+            zoneId: zoneId,
+            electionId: election.id,
+            candidates: candidates
+          });
+          Network.broadcast(msg);
+        }
+        break;
+
+      case 'vote':
+        var electionId = data.electionId;
+        var candidateId = data.candidateId;
+
+        var voteResult = Zones.castVote(electionId, localPlayer.id, candidateId);
+        if (voteResult.success) {
+          if (HUD) {
+            HUD.showNotification('Vote cast for ' + candidateId, 'success');
+            HUD.hideGovernancePanel();
+            HUD.showGovernancePanel(currentZone, localPlayer);
+          }
+
+          // Broadcast vote to network
+          if (Network && Protocol) {
+            var msg = Protocol.create.election_vote(localPlayer.id, {
+              electionId: electionId,
+              candidateId: candidateId
+            });
+            Network.broadcast(msg);
+          }
+        } else {
+          if (HUD) HUD.showNotification(voteResult.error, 'error');
+        }
+        break;
+
+      case 'savePolicies':
+        var zoneId = data.zoneId || currentZone;
+
+        // Set welcome message
+        if (data.welcomeMessage !== undefined) {
+          var msgResult = Zones.setWelcomeMessage(zoneId, localPlayer.id, data.welcomeMessage);
+          if (!msgResult.success) {
+            if (HUD) HUD.showNotification(msgResult.error, 'error');
+            return;
+          }
+        }
+
+        // Set policies
+        if (data.buildingRequiresApproval !== undefined) {
+          Zones.setZonePolicy(zoneId, localPlayer.id, 'buildingRequiresApproval', data.buildingRequiresApproval);
+        }
+        if (data.chatModerated !== undefined) {
+          Zones.setZonePolicy(zoneId, localPlayer.id, 'chatModerated', data.chatModerated);
+        }
+
+        if (HUD) {
+          HUD.showNotification('Zone policies updated', 'success');
+          HUD.hideGovernancePanel();
+          HUD.showGovernancePanel(zoneId, localPlayer);
+        }
+
+        // Award reputation for steward action
+        Social.adjustReputation(localPlayer.id, 'zone_steward_action', { zoneId: zoneId });
+
+        // Broadcast policy changes to network
+        if (Network && Protocol) {
+          var msg = Protocol.create.steward_set_policy(localPlayer.id, {
+            zoneId: zoneId,
+            policies: {
+              welcomeMessage: data.welcomeMessage,
+              buildingRequiresApproval: data.buildingRequiresApproval,
+              chatModerated: data.chatModerated
+            }
+          });
+          Network.broadcast(msg);
+        }
+        break;
+    }
+  }
+
+  /**
    * Handle build mode actions
    */
   var buildModeActive = false;
@@ -2240,6 +2603,16 @@
         if (HUD && playerInventory) {
           HUD.toggleCraftingPanel();
           HUD.updateCraftingDisplay(playerInventory);
+        }
+        break;
+
+      case 'toggleGovernance':
+        if (HUD && localPlayer && Social && Zones) {
+          // Initialize governance panel with callback
+          if (!HUD.initGovernancePanel) {
+            HUD.initGovernancePanel(handleGovernanceAction);
+          }
+          HUD.toggleGovernancePanel(currentZone, localPlayer);
         }
         break;
 

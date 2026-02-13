@@ -10,12 +10,42 @@
   // Internal stores
   const consentStore = new Map(); // "${fromId}:${toId}:${type}" -> boolean
   const rateLimitStore = new Map(); // playerId -> {count, windowStart}
+  const reputationStore = new Map(); // playerId -> {score, tier, history}
+  const harassmentStore = new Map(); // "${fromId}:${toId}" -> {declineCount, lastDecline}
 
   // Constants
   const RATE_LIMIT_MAX = 30; // messages per window
   const RATE_LIMIT_WINDOW = 60000; // 60 seconds in milliseconds
   const SAY_DISTANCE = 20;
   const EMOTE_DISTANCE = 30;
+
+  // Reputation constants
+  const REPUTATION_TIERS = [
+    { name: 'Newcomer', minScore: 0, maxScore: 99 },
+    { name: 'Trusted', minScore: 100, maxScore: 499 },
+    { name: 'Respected', minScore: 500, maxScore: 1499 },
+    { name: 'Honored', minScore: 1500, maxScore: 4999 },
+    { name: 'Elder', minScore: 5000, maxScore: Infinity }
+  ];
+
+  const REPUTATION_GAINS = {
+    helping: 10,
+    teaching: 15,
+    trading: 5,
+    gifting: 8,
+    guild_contribution: 12,
+    mentoring: 20,
+    zone_steward_action: 5
+  };
+
+  const REPUTATION_LOSSES = {
+    harassment: -25,
+    griefing_report: -50,
+    steward_violation: -30
+  };
+
+  const HARASSMENT_THRESHOLD = 3; // Declined interactions before harassment flag
+  const HARASSMENT_WINDOW = 600000; // 10 minutes
 
   /**
    * Calculate Euclidean distance between two 3D positions
@@ -255,6 +285,216 @@
     return state.chat.messages.slice(-count);
   }
 
+  /**
+   * Initialize reputation for a player
+   * @param {string} playerId - The player ID
+   */
+  function initReputation(playerId) {
+    if (!reputationStore.has(playerId)) {
+      reputationStore.set(playerId, {
+        score: 0,
+        tier: 'Newcomer',
+        history: [],
+        restrictions: {
+          tradeBanned: false,
+          zoneMuted: new Set(),
+          zoneBanned: new Set()
+        }
+      });
+    }
+  }
+
+  /**
+   * Get player reputation
+   * @param {string} playerId - The player ID
+   * @returns {Object} Reputation data
+   */
+  function getReputation(playerId) {
+    initReputation(playerId);
+    return reputationStore.get(playerId);
+  }
+
+  /**
+   * Calculate tier from score
+   * @param {number} score - Reputation score
+   * @returns {string} Tier name
+   */
+  function calculateTier(score) {
+    for (const tier of REPUTATION_TIERS) {
+      if (score >= tier.minScore && score <= tier.maxScore) {
+        return tier.name;
+      }
+    }
+    return 'Newcomer';
+  }
+
+  /**
+   * Adjust player reputation
+   * @param {string} playerId - The player ID
+   * @param {string} action - Action type (e.g., 'helping', 'harassment')
+   * @param {Object} details - Additional details about the action
+   */
+  function adjustReputation(playerId, action, details) {
+    initReputation(playerId);
+    const rep = reputationStore.get(playerId);
+
+    const change = REPUTATION_GAINS[action] || REPUTATION_LOSSES[action] || 0;
+    const oldScore = rep.score;
+    const oldTier = rep.tier;
+
+    rep.score = Math.max(0, rep.score + change);
+    rep.tier = calculateTier(rep.score);
+
+    rep.history.push({
+      action,
+      change,
+      oldScore,
+      newScore: rep.score,
+      timestamp: Date.now(),
+      details: details || {}
+    });
+
+    // Keep last 100 history entries
+    if (rep.history.length > 100) {
+      rep.history = rep.history.slice(-100);
+    }
+
+    // Check for tier change
+    const tierChanged = oldTier !== rep.tier;
+
+    return {
+      score: rep.score,
+      tier: rep.tier,
+      change,
+      tierChanged,
+      oldTier
+    };
+  }
+
+  /**
+   * Record a declined interaction for harassment detection
+   * @param {string} fromId - The player initiating the action
+   * @param {string} toId - The player declining the action
+   * @param {string} type - The interaction type
+   */
+  function recordDecline(fromId, toId, type) {
+    const key = `${fromId}:${toId}`;
+    const now = Date.now();
+
+    if (!harassmentStore.has(key)) {
+      harassmentStore.set(key, {
+        declineCount: 0,
+        lastDecline: 0,
+        type: type
+      });
+    }
+
+    const record = harassmentStore.get(key);
+
+    // Reset if outside harassment window
+    if (now - record.lastDecline > HARASSMENT_WINDOW) {
+      record.declineCount = 0;
+    }
+
+    record.declineCount++;
+    record.lastDecline = now;
+    record.type = type;
+
+    // Check if harassment threshold reached
+    if (record.declineCount >= HARASSMENT_THRESHOLD) {
+      adjustReputation(fromId, 'harassment', {
+        targetPlayer: toId,
+        interactionType: type,
+        declineCount: record.declineCount
+      });
+
+      // Reset counter after penalty applied
+      record.declineCount = 0;
+
+      return true; // Harassment detected
+    }
+
+    return false;
+  }
+
+  /**
+   * Apply reputation restrictions
+   * @param {string} playerId - The player ID
+   */
+  function applyReputationRestrictions(playerId) {
+    const rep = getReputation(playerId);
+
+    // Low reputation consequences
+    if (rep.score < 0) {
+      rep.restrictions.tradeBanned = true;
+    } else if (rep.score < 50) {
+      // Restrictions lifted but monitored
+      rep.restrictions.tradeBanned = false;
+    }
+  }
+
+  /**
+   * Check if player can perform action based on reputation
+   * @param {string} playerId - The player ID
+   * @param {string} action - Action type
+   * @param {string} zone - Zone ID (optional)
+   * @returns {Object} {allowed: boolean, reason?: string}
+   */
+  function checkReputationPermission(playerId, action, zone) {
+    const rep = getReputation(playerId);
+
+    if (action === 'trade' && rep.restrictions.tradeBanned) {
+      return { allowed: false, reason: 'Trade restricted due to low reputation' };
+    }
+
+    if (zone && rep.restrictions.zoneMuted.has(zone) && (action === 'say' || action === 'shout')) {
+      return { allowed: false, reason: 'You are muted in this zone' };
+    }
+
+    if (zone && rep.restrictions.zoneBanned.has(zone)) {
+      return { allowed: false, reason: 'You are temporarily banned from this zone' };
+    }
+
+    // Check minimum tier for zone steward candidacy
+    if (action === 'run_for_steward' && rep.tier !== 'Respected' && rep.tier !== 'Honored' && rep.tier !== 'Elder') {
+      return { allowed: false, reason: 'Must be Respected tier or higher to run for zone steward' };
+    }
+
+    return { allowed: true };
+  }
+
+  /**
+   * Mute player in zone
+   * @param {string} playerId - The player ID
+   * @param {string} zone - Zone ID
+   * @param {number} duration - Duration in milliseconds (0 for permanent)
+   */
+  function muteInZone(playerId, zone, duration) {
+    const rep = getReputation(playerId);
+    rep.restrictions.zoneMuted.add(zone);
+
+    if (duration > 0) {
+      setTimeout(() => {
+        rep.restrictions.zoneMuted.delete(zone);
+      }, duration);
+    }
+  }
+
+  /**
+   * Ban player from zone
+   * @param {string} playerId - The player ID
+   * @param {string} zone - Zone ID
+   * @param {number} duration - Duration in milliseconds
+   */
+  function banFromZone(playerId, zone, duration) {
+    const rep = getReputation(playerId);
+    rep.restrictions.zoneBanned.add(zone);
+
+    setTimeout(() => {
+      rep.restrictions.zoneBanned.delete(zone);
+    }, duration);
+  }
+
   // Export public API
   exports.handleSay = handleSay;
   exports.handleShout = handleShout;
@@ -268,5 +508,15 @@
   exports.getNearbyPlayers = getNearbyPlayers;
   exports.addMessage = addMessage;
   exports.getRecentMessages = getRecentMessages;
+
+  // Reputation API
+  exports.initReputation = initReputation;
+  exports.getReputation = getReputation;
+  exports.adjustReputation = adjustReputation;
+  exports.recordDecline = recordDecline;
+  exports.checkReputationPermission = checkReputationPermission;
+  exports.muteInZone = muteInZone;
+  exports.banFromZone = banFromZone;
+  exports.REPUTATION_TIERS = REPUTATION_TIERS;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Social = {}));

@@ -132,6 +132,125 @@
     removeStorage(AVATAR_KEY);
   }
 
+  // ========================================================================
+  // PLAYER DATA PERSISTENCE — Save/load player state across sessions
+  // ========================================================================
+
+  var PLAYER_DATA_KEY = 'zion_player_data';
+  var PLAYER_PREFS_KEY = 'zion_player_prefs';
+
+  /**
+   * Save player game data to localStorage
+   * @param {Object} data - Player state to save
+   */
+  function savePlayerData(data) {
+    if (!data) return;
+    try {
+      var saveData = {
+        version: 2,
+        ts: Date.now(),
+        username: getUsername(),
+        inventory: data.inventory || null,
+        spark: data.spark || 0,
+        position: data.position || null,
+        zone: data.zone || 'nexus',
+        skills: data.skills || null,
+        questState: data.questState || null,
+        achievements: data.achievements || null,
+        guild: data.guild || null,
+        discoveredSecrets: data.discoveredSecrets || [],
+        warmth: data.warmth || 0,
+        playTime: data.playTime || 0,
+        lastSave: Date.now()
+      };
+      setStorage(PLAYER_DATA_KEY, JSON.stringify(saveData));
+    } catch (e) {
+      console.warn('Failed to save player data:', e);
+    }
+  }
+
+  /**
+   * Load player game data from localStorage
+   * @returns {Object|null} Saved player data or null
+   */
+  function loadPlayerData() {
+    try {
+      var raw = getStorage(PLAYER_DATA_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      // Verify it belongs to current user
+      if (data.username !== getUsername()) return null;
+      return data;
+    } catch (e) {
+      console.warn('Failed to load player data:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Save player preferences
+   * @param {Object} prefs - {volume, musicVolume, sfxVolume, quality, chatVisible, minimapVisible, showFPS}
+   */
+  function savePreferences(prefs) {
+    try {
+      setStorage(PLAYER_PREFS_KEY, JSON.stringify(prefs));
+    } catch (e) {}
+  }
+
+  /**
+   * Load player preferences
+   * @returns {Object} Saved preferences or defaults
+   */
+  function loadPreferences() {
+    try {
+      var raw = getStorage(PLAYER_PREFS_KEY);
+      if (!raw) return getDefaultPreferences();
+      return JSON.parse(raw);
+    } catch (e) {
+      return getDefaultPreferences();
+    }
+  }
+
+  function getDefaultPreferences() {
+    return {
+      volume: 0.5,
+      musicVolume: 0.3,
+      sfxVolume: 0.5,
+      quality: 'medium',
+      chatVisible: true,
+      minimapVisible: true,
+      showFPS: false,
+      controlsHint: true
+    };
+  }
+
+  /**
+   * Get avatar URL for display
+   * @returns {string} Avatar URL or empty string
+   */
+  function getAvatarUrl() {
+    return getStorage(AVATAR_KEY) || '';
+  }
+
+  /**
+   * Check if user is a guest
+   * @returns {boolean}
+   */
+  function isGuest() {
+    var token = getStorage(TOKEN_KEY);
+    return token ? token.startsWith('guest_') : false;
+  }
+
+  /**
+   * Get time since last save
+   * @returns {number} Milliseconds since last save, or Infinity if never saved
+   */
+  function getTimeSinceLastSave() {
+    var data = loadPlayerData();
+    if (!data || !data.lastSave) return Infinity;
+    return Date.now() - data.lastSave;
+  }
+
   exports.OAUTH_CONFIG = OAUTH_CONFIG;
   exports.initiateOAuth = initiateOAuth;
   exports.handleCallback = handleCallback;
@@ -142,5 +261,13 @@
   exports.setToken = setToken;
   exports.loginAsGuest = loginAsGuest;
   exports.logout = logout;
+  exports.savePlayerData = savePlayerData;
+  exports.loadPlayerData = loadPlayerData;
+  exports.savePreferences = savePreferences;
+  exports.loadPreferences = loadPreferences;
+  exports.getDefaultPreferences = getDefaultPreferences;
+  exports.getAvatarUrl = getAvatarUrl;
+  exports.isGuest = isGuest;
+  exports.getTimeSinceLastSave = getTimeSinceLastSave;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Auth = {}));

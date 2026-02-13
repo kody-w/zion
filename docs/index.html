@@ -1489,6 +1489,118 @@ html, body {
   background: rgba(255,152,0,0.1); border-radius: 4px;
 }
 
+/* Achievement panel */
+.achievement-panel {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(15,12,10,0.95); border: 1px solid rgba(218,165,32,0.3);
+  border-radius: 12px; padding: 24px; min-width: 420px; max-width: 550px;
+  max-height: 70vh; overflow-y: auto; z-index: 1100;
+  backdrop-filter: blur(10px);
+}
+.achievement-panel h2 {
+  color: var(--color-gold); margin: 0 0 4px; font-size: 1.2rem;
+  font-family: var(--font-main); letter-spacing: 0.1em;
+}
+.achievement-progress-bar {
+  width: 100%; height: 6px; background: rgba(255,255,255,0.1);
+  border-radius: 3px; margin: 8px 0 16px; overflow: hidden;
+}
+.achievement-progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--color-gold), #f0c040);
+  border-radius: 3px; transition: width 0.5s ease;
+}
+.achievement-category { margin-bottom: 16px; }
+.achievement-category-title {
+  color: var(--color-text-muted); font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.15em; margin-bottom: 8px; padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.achievement-row {
+  display: flex; align-items: center; gap: 10px; padding: 6px 8px;
+  border-radius: 6px; margin-bottom: 4px; transition: background 0.2s;
+}
+.achievement-row:hover { background: rgba(255,255,255,0.05); }
+.achievement-row.locked { opacity: 0.4; }
+.achievement-row.unlocked { opacity: 1; }
+.achievement-icon { font-size: 1.4rem; width: 32px; text-align: center; }
+.achievement-info { flex: 1; }
+.achievement-name {
+  color: var(--color-text); font-size: 0.85rem; font-weight: 500;
+}
+.achievement-desc {
+  color: var(--color-text-muted); font-size: 0.7rem;
+}
+.achievement-reward {
+  color: var(--color-gold); font-size: 0.7rem; white-space: nowrap;
+}
+
+/* Achievement toast notification */
+.achievement-toast {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(25,20,15,0.95), rgba(35,28,18,0.95));
+  border: 1px solid var(--color-gold); border-radius: 10px;
+  padding: 12px 20px; display: flex; align-items: center; gap: 12px;
+  z-index: 1200; animation: achievementSlide 0.4s ease, achievementFade 0.5s 3s forwards;
+  box-shadow: 0 4px 20px rgba(218,165,32,0.2);
+}
+.achievement-toast-icon { font-size: 2rem; }
+.achievement-toast-text { }
+.achievement-toast-label {
+  color: var(--color-gold); font-size: 0.65rem; text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+.achievement-toast-name {
+  color: var(--color-text); font-size: 1rem; font-weight: 500;
+}
+@keyframes achievementSlide {
+  from { transform: translateX(-50%) translateY(-30px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+@keyframes achievementFade {
+  to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+
+/* Auction house panel */
+.auction-panel {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(15,12,10,0.95); border: 1px solid rgba(176,224,230,0.3);
+  border-radius: 12px; padding: 24px; min-width: 450px; max-width: 600px;
+  max-height: 70vh; overflow-y: auto; z-index: 1100;
+  backdrop-filter: blur(10px);
+}
+.auction-panel h2 {
+  color: var(--color-accent); margin: 0 0 16px; font-size: 1.2rem;
+  font-family: var(--font-main);
+}
+.auction-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px;
+  background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 8px;
+  border: 1px solid rgba(255,255,255,0.05); transition: border-color 0.2s;
+}
+.auction-item:hover { border-color: rgba(176,224,230,0.2); }
+.auction-item-icon { font-size: 1.5rem; width: 36px; text-align: center; }
+.auction-item-info { flex: 1; }
+.auction-item-name { color: var(--color-text); font-size: 0.85rem; }
+.auction-item-seller { color: var(--color-text-muted); font-size: 0.7rem; }
+.auction-item-time { color: rgba(255,200,100,0.7); font-size: 0.65rem; }
+.auction-bid-info { text-align: right; }
+.auction-current-bid { color: var(--color-gold); font-size: 0.9rem; font-weight: 500; }
+.auction-bid-count { color: var(--color-text-muted); font-size: 0.65rem; }
+
+/* Economic event banner */
+.economic-event-banner {
+  position: fixed; top: 50px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(218,165,32,0.15), transparent);
+  color: var(--color-gold); font-size: 0.75rem; padding: 4px 20px;
+  border-radius: 20px; z-index: 900; pointer-events: none;
+  letter-spacing: 0.05em; text-align: center;
+  animation: eventBannerPulse 3s ease-in-out infinite;
+}
+@keyframes eventBannerPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .chat-panel {
@@ -1826,7 +1938,7 @@ html, body {
         <span style="color:var(--color-text-muted); font-size:0.75rem; letter-spacing:0.1em;">or</span>
         <button class="login-btn" id="login-btn" style="width:100%;"
           onclick="Auth.initiateOAuth()">Enter with GitHub</button>
-        <p style="color:rgba(160,151,142,0.5); font-size:0.65rem; margin-top:1rem;">WASD move / E interact / B build / M map / F emote / J quests / G guild / K skills</p>
+        <p style="color:rgba(160,151,142,0.5); font-size:0.65rem; margin-top:1rem;">WASD move / E interact / B build / M map / F emote / H governance / J quests / G guild / K skills</p>
       </div>
     </div>
 
@@ -1853,6 +1965,7 @@ html, body {
       <div class="control-row"><span class="control-key">K</span><span class="control-desc">Skills</span></div>
       <div class="control-row"><span class="control-key">L</span><span class="control-desc">Lore Book</span></div>
       <div class="control-row"><span class="control-key">V</span><span class="control-desc">Discoveries</span></div>
+      <div class="control-row"><span class="control-key">H</span><span class="control-desc">Governance</span></div>
       <div class="control-row"><span class="control-key">N</span><span class="control-desc">Compose</span></div>
       <div class="control-row"><span class="control-key">P</span><span class="control-desc">Profile</span></div>
       <div class="control-row"><span class="control-key">Enter</span><span class="control-desc">Chat</span></div>
@@ -1910,7 +2023,15 @@ html, body {
     'warp_fork',
     'return_home',
     'federation_announce',
-    'federation_handshake'
+    'federation_handshake',
+    'reputation_adjust',
+    'report_griefing',
+    'election_start',
+    'election_vote',
+    'election_finalize',
+    'steward_set_welcome',
+    'steward_set_policy',
+    'steward_moderate'
   ]);
 
   // Message types that require consent
@@ -2370,6 +2491,388 @@ html, body {
     return ZONES.hasOwnProperty(zoneId);
   }
 
+  // Zone governance stores
+  const zoneStewards = new Map(); // zoneId -> {stewards: [], elections: [], policies: {}}
+  const governanceLog = []; // Array of all governance actions
+  const zoneRegulars = new Map(); // zoneId -> Set(playerId) - players who visit regularly
+
+  // Governance constants
+  const STEWARD_TERM_LENGTH = 604800000; // 7 days in milliseconds
+  const ELECTION_DURATION = 172800000; // 2 days in milliseconds (voting period)
+  const MAX_STEWARDS_PER_ZONE = 3;
+  const REGULAR_VISIT_THRESHOLD = 5; // Visits needed to be considered a regular
+  const REGULAR_VISIT_WINDOW = 2592000000; // 30 days
+
+  /**
+   * Initialize governance for a zone
+   * @param {string} zoneId - Zone identifier
+   */
+  function initZoneGovernance(zoneId) {
+    if (!zoneStewards.has(zoneId)) {
+      zoneStewards.set(zoneId, {
+        stewards: [],
+        elections: [],
+        policies: {
+          welcomeMessage: '',
+          buildingRequiresApproval: false,
+          chatModerated: false,
+          eventCalendar: []
+        }
+      });
+    }
+    if (!zoneRegulars.has(zoneId)) {
+      zoneRegulars.set(zoneId, new Map()); // playerId -> visitCount
+    }
+  }
+
+  /**
+   * Record zone visit for player
+   * @param {string} zoneId - Zone identifier
+   * @param {string} playerId - Player ID
+   */
+  function recordZoneVisit(zoneId, playerId) {
+    initZoneGovernance(zoneId);
+    const regulars = zoneRegulars.get(zoneId);
+
+    if (!regulars.has(playerId)) {
+      regulars.set(playerId, { count: 0, lastVisit: 0 });
+    }
+
+    const record = regulars.get(playerId);
+    record.count++;
+    record.lastVisit = Date.now();
+  }
+
+  /**
+   * Check if player is a zone regular
+   * @param {string} zoneId - Zone identifier
+   * @param {string} playerId - Player ID
+   * @returns {boolean}
+   */
+  function isZoneRegular(zoneId, playerId) {
+    initZoneGovernance(zoneId);
+    const regulars = zoneRegulars.get(zoneId);
+    const record = regulars.get(playerId);
+
+    if (!record) return false;
+
+    // Check if enough visits and within window
+    const withinWindow = (Date.now() - record.lastVisit) < REGULAR_VISIT_WINDOW;
+    return record.count >= REGULAR_VISIT_THRESHOLD && withinWindow;
+  }
+
+  /**
+   * Get zone stewards
+   * @param {string} zoneId - Zone identifier
+   * @returns {Array} Array of steward objects
+   */
+  function getZoneStewards(zoneId) {
+    initZoneGovernance(zoneId);
+    const governance = zoneStewards.get(zoneId);
+
+    // Filter active stewards (term not expired)
+    const now = Date.now();
+    governance.stewards = governance.stewards.filter(s => s.termEnd > now);
+
+    return governance.stewards;
+  }
+
+  /**
+   * Check if player is a steward of zone
+   * @param {string} zoneId - Zone identifier
+   * @param {string} playerId - Player ID
+   * @returns {boolean}
+   */
+  function isZoneSteward(zoneId, playerId) {
+    const stewards = getZoneStewards(zoneId);
+    return stewards.some(s => s.playerId === playerId);
+  }
+
+  /**
+   * Start zone steward election
+   * @param {string} zoneId - Zone identifier
+   * @param {Array} candidates - Array of candidate player IDs
+   * @returns {Object} Election object
+   */
+  function startElection(zoneId, candidates) {
+    initZoneGovernance(zoneId);
+    const governance = zoneStewards.get(zoneId);
+
+    const election = {
+      id: `election_${zoneId}_${Date.now()}`,
+      zoneId,
+      candidates: candidates.map(playerId => ({
+        playerId,
+        votes: 0,
+        voters: new Set()
+      })),
+      startTime: Date.now(),
+      endTime: Date.now() + ELECTION_DURATION,
+      status: 'active',
+      totalVotes: 0
+    };
+
+    governance.elections.push(election);
+
+    logGovernanceAction({
+      type: 'election_started',
+      zoneId,
+      electionId: election.id,
+      candidates: candidates,
+      timestamp: Date.now()
+    });
+
+    return election;
+  }
+
+  /**
+   * Cast vote in zone election
+   * @param {string} electionId - Election ID
+   * @param {string} voterId - Voter player ID
+   * @param {string} candidateId - Candidate player ID
+   * @returns {Object} {success: boolean, error?: string}
+   */
+  function castVote(electionId, voterId, candidateId) {
+    // Find election across all zones
+    for (const [zoneId, governance] of zoneStewards.entries()) {
+      const election = governance.elections.find(e => e.id === electionId);
+      if (!election) continue;
+
+      // Check election is active
+      if (election.status !== 'active') {
+        return { success: false, error: 'Election is not active' };
+      }
+
+      if (Date.now() > election.endTime) {
+        election.status = 'ended';
+        return { success: false, error: 'Election has ended' };
+      }
+
+      // Check voter is a zone regular
+      if (!isZoneRegular(zoneId, voterId)) {
+        return { success: false, error: 'Only zone regulars can vote' };
+      }
+
+      // Check voter hasn't already voted
+      const hasVoted = election.candidates.some(c => c.voters.has(voterId));
+      if (hasVoted) {
+        return { success: false, error: 'You have already voted in this election' };
+      }
+
+      // Find candidate and cast vote
+      const candidate = election.candidates.find(c => c.playerId === candidateId);
+      if (!candidate) {
+        return { success: false, error: 'Candidate not found' };
+      }
+
+      candidate.votes++;
+      candidate.voters.add(voterId);
+      election.totalVotes++;
+
+      logGovernanceAction({
+        type: 'vote_cast',
+        zoneId,
+        electionId,
+        voterId,
+        candidateId,
+        timestamp: Date.now()
+      });
+
+      return { success: true };
+    }
+
+    return { success: false, error: 'Election not found' };
+  }
+
+  /**
+   * Finalize election and assign stewards
+   * @param {string} electionId - Election ID
+   * @returns {Object} {success: boolean, stewards?: Array, error?: string}
+   */
+  function finalizeElection(electionId) {
+    for (const [zoneId, governance] of zoneStewards.entries()) {
+      const election = governance.elections.find(e => e.id === electionId);
+      if (!election) continue;
+
+      if (Date.now() < election.endTime) {
+        return { success: false, error: 'Election is still in progress' };
+      }
+
+      election.status = 'finalized';
+
+      // Sort candidates by votes
+      const sorted = [...election.candidates].sort((a, b) => b.votes - a.votes);
+
+      // Top candidates become stewards (up to MAX_STEWARDS_PER_ZONE)
+      const winners = sorted.slice(0, MAX_STEWARDS_PER_ZONE);
+
+      const newStewards = winners.map(winner => ({
+        playerId: winner.playerId,
+        zoneId,
+        electionId,
+        votes: winner.votes,
+        termStart: Date.now(),
+        termEnd: Date.now() + STEWARD_TERM_LENGTH,
+        actions: []
+      }));
+
+      // Clear existing stewards and set new ones
+      governance.stewards = newStewards;
+
+      logGovernanceAction({
+        type: 'election_finalized',
+        zoneId,
+        electionId,
+        stewards: newStewards.map(s => ({ playerId: s.playerId, votes: s.votes })),
+        timestamp: Date.now()
+      });
+
+      return { success: true, stewards: newStewards };
+    }
+
+    return { success: false, error: 'Election not found' };
+  }
+
+  /**
+   * Set zone welcome message (steward only)
+   * @param {string} zoneId - Zone identifier
+   * @param {string} stewardId - Steward player ID
+   * @param {string} message - Welcome message
+   * @returns {Object} {success: boolean, error?: string}
+   */
+  function setWelcomeMessage(zoneId, stewardId, message) {
+    if (!isZoneSteward(zoneId, stewardId)) {
+      return { success: false, error: 'Only zone stewards can set welcome message' };
+    }
+
+    initZoneGovernance(zoneId);
+    const governance = zoneStewards.get(zoneId);
+    governance.policies.welcomeMessage = message;
+
+    logGovernanceAction({
+      type: 'welcome_message_set',
+      zoneId,
+      stewardId,
+      message,
+      timestamp: Date.now()
+    });
+
+    return { success: true };
+  }
+
+  /**
+   * Toggle zone policy (steward only)
+   * @param {string} zoneId - Zone identifier
+   * @param {string} stewardId - Steward player ID
+   * @param {string} policy - Policy name
+   * @param {boolean} value - Policy value
+   * @returns {Object} {success: boolean, error?: string}
+   */
+  function setZonePolicy(zoneId, stewardId, policy, value) {
+    if (!isZoneSteward(zoneId, stewardId)) {
+      return { success: false, error: 'Only zone stewards can set zone policies' };
+    }
+
+    initZoneGovernance(zoneId);
+    const governance = zoneStewards.get(zoneId);
+
+    if (!governance.policies.hasOwnProperty(policy)) {
+      return { success: false, error: 'Invalid policy' };
+    }
+
+    governance.policies[policy] = value;
+
+    logGovernanceAction({
+      type: 'policy_changed',
+      zoneId,
+      stewardId,
+      policy,
+      value,
+      timestamp: Date.now()
+    });
+
+    return { success: true };
+  }
+
+  /**
+   * Moderate chat in zone (steward only)
+   * @param {string} zoneId - Zone identifier
+   * @param {string} stewardId - Steward player ID
+   * @param {string} targetPlayerId - Player to moderate
+   * @param {string} action - Moderation action (warn, mute, etc.)
+   * @param {string} reason - Reason for moderation
+   * @returns {Object} {success: boolean, error?: string}
+   */
+  function moderateChat(zoneId, stewardId, targetPlayerId, action, reason) {
+    if (!isZoneSteward(zoneId, stewardId)) {
+      return { success: false, error: 'Only zone stewards can moderate chat' };
+    }
+
+    logGovernanceAction({
+      type: 'chat_moderation',
+      zoneId,
+      stewardId,
+      targetPlayerId,
+      action,
+      reason,
+      timestamp: Date.now()
+    });
+
+    return { success: true, action };
+  }
+
+  /**
+   * Log governance action
+   * @param {Object} action - Action object
+   */
+  function logGovernanceAction(action) {
+    governanceLog.push(action);
+
+    // Keep last 1000 actions
+    if (governanceLog.length > 1000) {
+      governanceLog.shift();
+    }
+  }
+
+  /**
+   * Get governance log for zone
+   * @param {string} zoneId - Zone identifier
+   * @param {number} limit - Max entries to return
+   * @returns {Array} Array of governance actions
+   */
+  function getGovernanceLog(zoneId, limit) {
+    limit = limit || 50;
+    return governanceLog
+      .filter(action => action.zoneId === zoneId)
+      .slice(-limit);
+  }
+
+  /**
+   * Get zone policies
+   * @param {string} zoneId - Zone identifier
+   * @returns {Object} Zone policies
+   */
+  function getZonePolicies(zoneId) {
+    initZoneGovernance(zoneId);
+    const governance = zoneStewards.get(zoneId);
+    return governance.policies;
+  }
+
+  /**
+   * Get active election for zone
+   * @param {string} zoneId - Zone identifier
+   * @returns {Object|null} Active election or null
+   */
+  function getActiveElection(zoneId) {
+    initZoneGovernance(zoneId);
+    const governance = zoneStewards.get(zoneId);
+    const now = Date.now();
+
+    return governance.elections.find(e =>
+      e.status === 'active' && e.endTime > now
+    ) || null;
+  }
+
   // Export all functions and constants
   exports.ZONES = ZONES;
   exports.getZoneRules = getZoneRules;
@@ -2379,6 +2882,22 @@ html, body {
   exports.getZone = getZone;
   exports.getAllZoneIds = getAllZoneIds;
   exports.zoneExists = zoneExists;
+
+  // Governance exports
+  exports.initZoneGovernance = initZoneGovernance;
+  exports.recordZoneVisit = recordZoneVisit;
+  exports.isZoneRegular = isZoneRegular;
+  exports.getZoneStewards = getZoneStewards;
+  exports.isZoneSteward = isZoneSteward;
+  exports.startElection = startElection;
+  exports.castVote = castVote;
+  exports.finalizeElection = finalizeElection;
+  exports.setWelcomeMessage = setWelcomeMessage;
+  exports.setZonePolicy = setZonePolicy;
+  exports.moderateChat = moderateChat;
+  exports.getGovernanceLog = getGovernanceLog;
+  exports.getZonePolicies = getZonePolicies;
+  exports.getActiveElection = getActiveElection;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Zones = {}));
 
@@ -2733,6 +3252,169 @@ html, body {
     return players.slice(0, limit);
   }
 
+  // ========================================================================
+  // AUCTION HOUSE - Timed bid system
+  // ========================================================================
+
+  var auctionCounter = 0;
+
+  /**
+   * Create an auction listing
+   * @param {Object} ledger
+   * @param {string} sellerId
+   * @param {Object} item - Item being auctioned
+   * @param {number} startingBid - Minimum bid
+   * @param {number} durationMs - Auction duration in milliseconds
+   * @returns {Object} Auction object
+   */
+  function createAuction(ledger, sellerId, item, startingBid, durationMs) {
+    if (!ledger.auctions) ledger.auctions = [];
+
+    var auction = {
+      id: 'auction_' + (auctionCounter++) + '_' + Date.now(),
+      seller: sellerId,
+      item: item,
+      startingBid: startingBid || 1,
+      currentBid: 0,
+      currentBidder: null,
+      bids: [],
+      startTime: Date.now(),
+      endTime: Date.now() + (durationMs || 300000), // Default 5 min
+      status: 'active'
+    };
+
+    ledger.auctions.push(auction);
+    return auction;
+  }
+
+  /**
+   * Place a bid on an auction
+   * @param {Object} ledger
+   * @param {string} auctionId
+   * @param {string} bidderId
+   * @param {number} amount
+   * @returns {Object} {success, message}
+   */
+  function placeBid(ledger, auctionId, bidderId, amount) {
+    if (!ledger.auctions) return { success: false, message: 'No auctions' };
+
+    var auction = ledger.auctions.find(function(a) { return a.id === auctionId; });
+    if (!auction) return { success: false, message: 'Auction not found' };
+    if (auction.status !== 'active') return { success: false, message: 'Auction not active' };
+    if (Date.now() > auction.endTime) return { success: false, message: 'Auction ended' };
+    if (auction.seller === bidderId) return { success: false, message: 'Cannot bid on own auction' };
+    if (amount <= auction.currentBid) return { success: false, message: 'Bid must be higher than current bid' };
+    if (amount < auction.startingBid) return { success: false, message: 'Bid below minimum' };
+
+    var balance = getBalance(ledger, bidderId);
+    if (balance < amount) return { success: false, message: 'Insufficient Spark' };
+
+    // Record bid
+    auction.currentBid = amount;
+    auction.currentBidder = bidderId;
+    auction.bids.push({ bidder: bidderId, amount: amount, ts: Date.now() });
+
+    // Extend auction if bid in last 30s (anti-sniping)
+    if (auction.endTime - Date.now() < 30000) {
+      auction.endTime = Date.now() + 30000;
+    }
+
+    return { success: true, message: 'Bid placed' };
+  }
+
+  /**
+   * Finalize ended auctions
+   * @param {Object} ledger
+   * @returns {Array} Completed auctions
+   */
+  function finalizeAuctions(ledger) {
+    if (!ledger.auctions) return [];
+
+    var now = Date.now();
+    var completed = [];
+
+    for (var i = 0; i < ledger.auctions.length; i++) {
+      var auction = ledger.auctions[i];
+      if (auction.status !== 'active') continue;
+      if (now < auction.endTime) continue;
+
+      if (auction.currentBidder && auction.currentBid > 0) {
+        // Check winner still has funds
+        var winnerBalance = getBalance(ledger, auction.currentBidder);
+        if (winnerBalance >= auction.currentBid) {
+          // Transfer Spark
+          if (!ledger.balances[auction.seller]) ledger.balances[auction.seller] = 0;
+          ledger.balances[auction.currentBidder] -= auction.currentBid;
+          ledger.balances[auction.seller] += auction.currentBid;
+
+          recordTransaction(ledger, auction.currentBidder, auction.seller, auction.currentBid, 'auction', {
+            auctionId: auction.id,
+            item: auction.item
+          });
+
+          auction.status = 'sold';
+          completed.push({ auction: auction, winner: auction.currentBidder, item: auction.item });
+        } else {
+          auction.status = 'failed';
+        }
+      } else {
+        auction.status = 'expired';
+      }
+    }
+
+    return completed;
+  }
+
+  function getActiveAuctions(ledger) {
+    if (!ledger.auctions) return [];
+    var now = Date.now();
+    return ledger.auctions.filter(function(a) {
+      return a.status === 'active' && now < a.endTime;
+    });
+  }
+
+  // ========================================================================
+  // ECONOMIC EVENTS - Rotating modifiers
+  // ========================================================================
+
+  var ECONOMIC_EVENTS = [
+    { id: 'harvest_festival', name: 'Harvest Festival', description: 'Harvesting rewards doubled', modifier: { activity: 'harvest', multiplier: 2 } },
+    { id: 'craft_fair', name: 'Craft Fair', description: 'Crafting rewards +50%', modifier: { activity: 'craft', multiplier: 1.5 } },
+    { id: 'trading_day', name: 'Grand Trading Day', description: 'Trade bonuses increased', modifier: { activity: 'gift', multiplier: 3 } },
+    { id: 'scholars_week', name: "Scholar's Week", description: 'Teaching and discovery rewards doubled', modifier: { activity: 'teach', multiplier: 2 } },
+    { id: 'builders_boom', name: "Builder's Boom", description: 'Building rewards +50%', modifier: { activity: 'build', multiplier: 1.5 } },
+    { id: 'exploration_surge', name: 'Exploration Surge', description: 'Discovery rewards doubled', modifier: { activity: 'discover', multiplier: 2 } }
+  ];
+
+  /**
+   * Get current economic event based on day
+   * @returns {Object|null} Current event or null
+   */
+  function getCurrentEvent() {
+    var now = new Date();
+    var dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    // Events rotate every 3 days, with 1 day of no event between
+    var cycle = dayOfYear % 4;
+    if (cycle === 3) return null; // Rest day
+    var eventIndex = Math.floor(dayOfYear / 4) % ECONOMIC_EVENTS.length;
+    return ECONOMIC_EVENTS[eventIndex];
+  }
+
+  /**
+   * Apply economic event modifier to earn amount
+   * @param {number} baseAmount
+   * @param {string} activity
+   * @returns {number} Modified amount
+   */
+  function applyEventModifier(baseAmount, activity) {
+    var event = getCurrentEvent();
+    if (!event || !event.modifier) return baseAmount;
+    if (event.modifier.activity === activity) {
+      return Math.round(baseAmount * event.modifier.multiplier);
+    }
+    return baseAmount;
+  }
+
   // Export public API
   exports.createLedger = createLedger;
   exports.earnSpark = earnSpark;
@@ -2749,6 +3431,13 @@ html, body {
   exports.getEconomyStats = getEconomyStats;
   exports.getLeaderboard = getLeaderboard;
   exports.EARN_TABLE = EARN_TABLE;
+  exports.createAuction = createAuction;
+  exports.placeBid = placeBid;
+  exports.finalizeAuctions = finalizeAuctions;
+  exports.getActiveAuctions = getActiveAuctions;
+  exports.ECONOMIC_EVENTS = ECONOMIC_EVENTS;
+  exports.getCurrentEvent = getCurrentEvent;
+  exports.applyEventModifier = applyEventModifier;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Economy = {}));
 
@@ -3179,6 +3868,312 @@ html, body {
       stackable: true,
       maxStack: 10,
       rarity: 'rare'
+    },
+
+    // === MUSICAL INSTRUMENTS (Studio) ===
+    instrument_flute: {
+      id: 'instrument_flute',
+      name: 'Wooden Flute',
+      type: 'instruments',
+      icon: '🪈',
+      description: 'A hand-carved wooden flute',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'uncommon'
+    },
+    instrument_drum: {
+      id: 'instrument_drum',
+      name: 'Hand Drum',
+      type: 'instruments',
+      icon: '🥁',
+      description: 'A resonant hand drum for rhythm',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'uncommon'
+    },
+    instrument_harp: {
+      id: 'instrument_harp',
+      name: 'Crystal Harp',
+      type: 'instruments',
+      icon: '🎵',
+      description: 'A harp strung with crystal fibers',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'rare'
+    },
+    instrument_bell: {
+      id: 'instrument_bell',
+      name: 'Harmony Bell',
+      type: 'instruments',
+      icon: '🔔',
+      description: 'Rings with perfect pitch',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'rare'
+    },
+
+    // === ART SUPPLIES (Studio) ===
+    art_pigment: {
+      id: 'art_pigment',
+      name: 'Pigment',
+      type: 'art_supplies',
+      icon: '🎨',
+      description: 'Colorful pigment for painting',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'common'
+    },
+    art_canvas: {
+      id: 'art_canvas',
+      name: 'Canvas',
+      type: 'art_supplies',
+      icon: '🖼️',
+      description: 'Stretched canvas for artwork',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'common'
+    },
+    art_clay: {
+      id: 'art_clay',
+      name: 'Sculpting Clay',
+      type: 'art_supplies',
+      icon: '🏺',
+      description: 'Soft clay for sculpting',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'common'
+    },
+    art_ink: {
+      id: 'art_ink',
+      name: 'Luminous Ink',
+      type: 'art_supplies',
+      icon: '✒️',
+      description: 'Ink that faintly glows in darkness',
+      stackable: true,
+      maxStack: 30,
+      rarity: 'uncommon'
+    },
+
+    // === EXPLORATION GEAR ===
+    gear_compass: {
+      id: 'gear_compass',
+      name: 'Explorer Compass',
+      type: 'gear',
+      icon: '🧭',
+      description: 'Points toward undiscovered locations',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'uncommon'
+    },
+    gear_map: {
+      id: 'gear_map',
+      name: 'Zone Map',
+      type: 'gear',
+      icon: '🗺️',
+      description: 'Reveals hidden paths in a zone',
+      stackable: true,
+      maxStack: 8,
+      rarity: 'uncommon'
+    },
+    gear_spyglass: {
+      id: 'gear_spyglass',
+      name: 'Spyglass',
+      type: 'gear',
+      icon: '🔭',
+      description: 'See farther into the distance',
+      stackable: false,
+      maxStack: 1,
+      rarity: 'rare'
+    },
+    gear_rope: {
+      id: 'gear_rope',
+      name: 'Climbing Rope',
+      type: 'gear',
+      icon: '🪢',
+      description: 'Reach high places safely',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'common'
+    },
+
+    // === FOOD (expanded) ===
+    food_pie: {
+      id: 'food_pie',
+      name: 'Fruit Pie',
+      type: 'food',
+      icon: '🥧',
+      description: 'A warm pie made with fresh berries',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'uncommon'
+    },
+    food_stew: {
+      id: 'food_stew',
+      name: 'Herb Stew',
+      type: 'food',
+      icon: '🍲',
+      description: 'Hearty stew with healing herbs',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'uncommon'
+    },
+    food_tea: {
+      id: 'food_tea',
+      name: 'Calming Tea',
+      type: 'food',
+      icon: '🍵',
+      description: 'Brewed with lavender and mint',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'common'
+    },
+    food_cake: {
+      id: 'food_cake',
+      name: 'Celebration Cake',
+      type: 'food',
+      icon: '🎂',
+      description: 'A cake for special occasions',
+      stackable: true,
+      maxStack: 5,
+      rarity: 'rare'
+    },
+
+    // === DECORATIVE ITEMS ===
+    decor_wreath: {
+      id: 'decor_wreath',
+      name: 'Flower Wreath',
+      type: 'decorations',
+      icon: '💐',
+      description: 'A woven wreath of wildflowers',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'uncommon'
+    },
+    decor_banner: {
+      id: 'decor_banner',
+      name: 'Woven Banner',
+      type: 'decorations',
+      icon: '🏳️',
+      description: 'A decorative banner for buildings',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'uncommon'
+    },
+    decor_windchime: {
+      id: 'decor_windchime',
+      name: 'Wind Chime',
+      type: 'decorations',
+      icon: '🎐',
+      description: 'Tinkles gently in the breeze',
+      stackable: true,
+      maxStack: 5,
+      rarity: 'uncommon'
+    },
+    decor_mosaic: {
+      id: 'decor_mosaic',
+      name: 'Crystal Mosaic',
+      type: 'decorations',
+      icon: '🪟',
+      description: 'A stunning crystal mosaic tile',
+      stackable: true,
+      maxStack: 20,
+      rarity: 'rare'
+    },
+
+    // === RARE COLLECTIBLES ===
+    rare_feather: {
+      id: 'rare_feather',
+      name: 'Phoenix Feather',
+      type: 'collectibles',
+      icon: '🪶',
+      description: 'A feather that radiates gentle warmth',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'legendary'
+    },
+    rare_pearl: {
+      id: 'rare_pearl',
+      name: 'Moon Pearl',
+      type: 'collectibles',
+      icon: '🌕',
+      description: 'Glows softly under moonlight',
+      stackable: true,
+      maxStack: 5,
+      rarity: 'legendary'
+    },
+    rare_fossil: {
+      id: 'rare_fossil',
+      name: 'Ancient Fossil',
+      type: 'collectibles',
+      icon: '🦴',
+      description: 'A fossilized remnant from before ZION',
+      stackable: true,
+      maxStack: 10,
+      rarity: 'rare'
+    },
+    rare_starfragment: {
+      id: 'rare_starfragment',
+      name: 'Star Fragment',
+      type: 'collectibles',
+      icon: '⭐',
+      description: 'A piece of fallen starlight',
+      stackable: true,
+      maxStack: 5,
+      rarity: 'legendary'
+    },
+
+    // === CLOTH & FIBER ===
+    cloth_silk: {
+      id: 'cloth_silk',
+      name: 'Silk Thread',
+      type: 'cloth',
+      icon: '🧵',
+      description: 'Fine silk for weaving',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'uncommon'
+    },
+    cloth_wool: {
+      id: 'cloth_wool',
+      name: 'Wool',
+      type: 'cloth',
+      icon: '🧶',
+      description: 'Soft wool for crafting',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+
+    // === METAL ===
+    metal_copper: {
+      id: 'metal_copper',
+      name: 'Copper Ore',
+      type: 'metal',
+      icon: '🟤',
+      description: 'Raw copper for smelting',
+      stackable: true,
+      maxStack: 99,
+      rarity: 'common'
+    },
+    metal_silver: {
+      id: 'metal_silver',
+      name: 'Silver Ingot',
+      type: 'metal',
+      icon: '⬜',
+      description: 'Refined silver for fine crafting',
+      stackable: true,
+      maxStack: 50,
+      rarity: 'uncommon'
+    },
+    metal_gold: {
+      id: 'metal_gold',
+      name: 'Gold Nugget',
+      type: 'metal',
+      icon: '🟡',
+      description: 'A nugget of pure gold',
+      stackable: true,
+      maxStack: 30,
+      rarity: 'rare'
     }
   };
 
@@ -3369,8 +4364,335 @@ html, body {
         { itemId: 'seed_wildflower', count: 5 }
       ],
       sparkReward: 8
+    },
+
+    // Musical Instruments
+    {
+      id: 'craft_flute',
+      name: 'Carve Wooden Flute',
+      output: { itemId: 'instrument_flute', count: 1 },
+      requirements: [
+        { itemId: 'wood_oak', count: 4 },
+        { itemId: 'herb_sage', count: 2 }
+      ],
+      sparkReward: 20
+    },
+    {
+      id: 'craft_drum',
+      name: 'Build Hand Drum',
+      output: { itemId: 'instrument_drum', count: 1 },
+      requirements: [
+        { itemId: 'wood_oak', count: 3 },
+        { itemId: 'cloth_wool', count: 4 }
+      ],
+      sparkReward: 20
+    },
+    {
+      id: 'craft_harp',
+      name: 'String Crystal Harp',
+      output: { itemId: 'instrument_harp', count: 1 },
+      requirements: [
+        { itemId: 'wood_mystical', count: 3 },
+        { itemId: 'crystal_clear', count: 4 },
+        { itemId: 'cloth_silk', count: 6 }
+      ],
+      sparkReward: 50
+    },
+    {
+      id: 'craft_bell',
+      name: 'Cast Harmony Bell',
+      output: { itemId: 'instrument_bell', count: 1 },
+      requirements: [
+        { itemId: 'metal_copper', count: 8 },
+        { itemId: 'metal_silver', count: 3 },
+        { itemId: 'crystal_clear', count: 2 }
+      ],
+      sparkReward: 45
+    },
+
+    // Art Supplies crafting
+    {
+      id: 'craft_pigment',
+      name: 'Grind Pigment',
+      output: { itemId: 'art_pigment', count: 5 },
+      requirements: [
+        { itemId: 'flower_rose', count: 2 },
+        { itemId: 'flower_tulip', count: 2 },
+        { itemId: 'stone_common', count: 1 }
+      ],
+      sparkReward: 8
+    },
+    {
+      id: 'craft_canvas',
+      name: 'Stretch Canvas',
+      output: { itemId: 'art_canvas', count: 2 },
+      requirements: [
+        { itemId: 'cloth_wool', count: 4 },
+        { itemId: 'wood_oak', count: 2 }
+      ],
+      sparkReward: 12
+    },
+    {
+      id: 'craft_ink',
+      name: 'Brew Luminous Ink',
+      output: { itemId: 'art_ink', count: 3 },
+      requirements: [
+        { itemId: 'crystal_clear', count: 1 },
+        { itemId: 'herb_sage', count: 3 },
+        { itemId: 'food_berry', count: 5 }
+      ],
+      sparkReward: 18
+    },
+
+    // Exploration Gear
+    {
+      id: 'craft_compass',
+      name: 'Craft Explorer Compass',
+      output: { itemId: 'gear_compass', count: 1 },
+      requirements: [
+        { itemId: 'metal_copper', count: 5 },
+        { itemId: 'crystal_clear', count: 2 },
+        { itemId: 'metal_silver', count: 1 }
+      ],
+      sparkReward: 30
+    },
+    {
+      id: 'craft_spyglass',
+      name: 'Craft Spyglass',
+      output: { itemId: 'gear_spyglass', count: 1 },
+      requirements: [
+        { itemId: 'metal_copper', count: 6 },
+        { itemId: 'crystal_clear', count: 3 },
+        { itemId: 'metal_silver', count: 2 }
+      ],
+      sparkReward: 40
+    },
+    {
+      id: 'craft_rope',
+      name: 'Braid Climbing Rope',
+      output: { itemId: 'gear_rope', count: 2 },
+      requirements: [
+        { itemId: 'cloth_wool', count: 6 }
+      ],
+      sparkReward: 10
+    },
+    {
+      id: 'craft_map',
+      name: 'Draw Zone Map',
+      output: { itemId: 'gear_map', count: 1 },
+      requirements: [
+        { itemId: 'art_ink', count: 2 },
+        { itemId: 'art_canvas', count: 1 }
+      ],
+      sparkReward: 15
+    },
+
+    // Advanced Food
+    {
+      id: 'cook_pie',
+      name: 'Bake Fruit Pie',
+      output: { itemId: 'food_pie', count: 1 },
+      requirements: [
+        { itemId: 'food_berry', count: 8 },
+        { itemId: 'food_honey', count: 1 },
+        { itemId: 'seed_wildflower', count: 5 }
+      ],
+      sparkReward: 18
+    },
+    {
+      id: 'cook_stew',
+      name: 'Cook Herb Stew',
+      output: { itemId: 'food_stew', count: 1 },
+      requirements: [
+        { itemId: 'herb_mint', count: 2 },
+        { itemId: 'herb_sage', count: 2 },
+        { itemId: 'food_mushroom', count: 3 }
+      ],
+      sparkReward: 15
+    },
+    {
+      id: 'brew_tea',
+      name: 'Brew Calming Tea',
+      output: { itemId: 'food_tea', count: 3 },
+      requirements: [
+        { itemId: 'herb_lavender', count: 3 },
+        { itemId: 'herb_mint', count: 2 }
+      ],
+      sparkReward: 10
+    },
+    {
+      id: 'bake_cake',
+      name: 'Bake Celebration Cake',
+      output: { itemId: 'food_cake', count: 1 },
+      requirements: [
+        { itemId: 'food_honey', count: 3 },
+        { itemId: 'food_berry', count: 5 },
+        { itemId: 'food_bread', count: 2 },
+        { itemId: 'flower_cherry', count: 2 }
+      ],
+      sparkReward: 35
+    },
+
+    // Decorative Items
+    {
+      id: 'craft_wreath',
+      name: 'Weave Flower Wreath',
+      output: { itemId: 'decor_wreath', count: 1 },
+      requirements: [
+        { itemId: 'flower_rose', count: 3 },
+        { itemId: 'flower_tulip', count: 3 },
+        { itemId: 'flower_cherry', count: 2 }
+      ],
+      sparkReward: 15
+    },
+    {
+      id: 'craft_banner',
+      name: 'Weave Banner',
+      output: { itemId: 'decor_banner', count: 1 },
+      requirements: [
+        { itemId: 'cloth_silk', count: 5 },
+        { itemId: 'art_pigment', count: 3 },
+        { itemId: 'wood_oak', count: 2 }
+      ],
+      sparkReward: 20
+    },
+    {
+      id: 'craft_windchime',
+      name: 'Craft Wind Chime',
+      output: { itemId: 'decor_windchime', count: 1 },
+      requirements: [
+        { itemId: 'metal_copper', count: 4 },
+        { itemId: 'metal_silver', count: 2 },
+        { itemId: 'crystal_clear', count: 1 }
+      ],
+      sparkReward: 25
+    },
+    {
+      id: 'craft_mosaic',
+      name: 'Craft Crystal Mosaic',
+      output: { itemId: 'decor_mosaic', count: 1 },
+      requirements: [
+        { itemId: 'crystal_clear', count: 2 },
+        { itemId: 'crystal_amethyst', count: 1 },
+        { itemId: 'stone_marble', count: 3 }
+      ],
+      sparkReward: 30
+    },
+
+    // Metal Refining
+    {
+      id: 'smelt_silver',
+      name: 'Smelt Silver',
+      output: { itemId: 'metal_silver', count: 2 },
+      requirements: [
+        { itemId: 'metal_copper', count: 6 },
+        { itemId: 'crystal_clear', count: 1 }
+      ],
+      sparkReward: 15
+    },
+    {
+      id: 'refine_gold',
+      name: 'Refine Gold',
+      output: { itemId: 'metal_gold', count: 1 },
+      requirements: [
+        { itemId: 'metal_silver', count: 4 },
+        { itemId: 'crystal_amethyst', count: 1 }
+      ],
+      sparkReward: 25
+    },
+
+    // Cloth crafting
+    {
+      id: 'spin_silk',
+      name: 'Spin Silk Thread',
+      output: { itemId: 'cloth_silk', count: 3 },
+      requirements: [
+        { itemId: 'cloth_wool', count: 5 },
+        { itemId: 'herb_lavender', count: 2 }
+      ],
+      sparkReward: 12
     }
   ];
+
+  // ========================================================================
+  // ZONE LOOT TABLES - What resources can be harvested in each zone
+  // ========================================================================
+
+  const ZONE_LOOT_TABLES = {
+    nexus: {
+      common: ['stone_common', 'herb_mint', 'cloth_wool'],
+      uncommon: ['crystal_clear', 'metal_copper'],
+      rare: ['item_scroll']
+    },
+    gardens: {
+      common: ['seed_wildflower', 'herb_mint', 'herb_lavender', 'food_berry', 'cloth_wool'],
+      uncommon: ['flower_rose', 'flower_tulip', 'flower_cherry', 'herb_sage', 'food_honey'],
+      rare: ['seed_lotus', 'herb_ginseng', 'flower_lotus', 'rare_feather']
+    },
+    athenaeum: {
+      common: ['item_scroll', 'stone_common', 'herb_sage'],
+      uncommon: ['crystal_clear', 'art_ink', 'cloth_silk'],
+      rare: ['crystal_amethyst', 'item_book', 'rare_fossil']
+    },
+    studio: {
+      common: ['art_pigment', 'art_clay', 'cloth_wool', 'wood_oak'],
+      uncommon: ['art_canvas', 'art_ink', 'cloth_silk', 'metal_copper'],
+      rare: ['crystal_clear', 'metal_silver', 'rare_pearl']
+    },
+    wilds: {
+      common: ['wood_oak', 'wood_pine', 'stone_common', 'food_mushroom', 'food_berry', 'gear_rope'],
+      uncommon: ['herb_ginseng', 'stone_marble', 'metal_copper', 'rare_fossil'],
+      rare: ['wood_mystical', 'stone_obsidian', 'crystal_emerald', 'rare_starfragment']
+    },
+    agora: {
+      common: ['cloth_wool', 'food_bread', 'metal_copper'],
+      uncommon: ['cloth_silk', 'metal_silver', 'food_honey'],
+      rare: ['metal_gold', 'rare_pearl']
+    },
+    commons: {
+      common: ['wood_oak', 'stone_common', 'cloth_wool', 'seed_wildflower'],
+      uncommon: ['stone_marble', 'metal_copper', 'flower_sunflower'],
+      rare: ['crystal_clear', 'metal_silver']
+    },
+    arena: {
+      common: ['stone_common', 'metal_copper', 'food_mushroom'],
+      uncommon: ['stone_marble', 'metal_silver', 'crystal_clear'],
+      rare: ['stone_obsidian', 'metal_gold', 'item_trophy']
+    }
+  };
+
+  /**
+   * Roll a harvest drop from a zone's loot table
+   * @param {string} zoneId - The zone to harvest in
+   * @param {number} luck - Luck factor 0-1 (affects rarity chance)
+   * @returns {Object} {itemId: string, count: number, rarity: string}
+   */
+  function rollHarvestDrop(zoneId, luck) {
+    luck = typeof luck === 'number' ? Math.max(0, Math.min(1, luck)) : 0.3;
+    var table = ZONE_LOOT_TABLES[zoneId] || ZONE_LOOT_TABLES.nexus;
+
+    // Determine rarity: common 60%, uncommon 30%, rare 10% (shifted by luck)
+    var roll = Math.random();
+    var rareChance = 0.05 + luck * 0.15;   // 5-20%
+    var uncommonChance = 0.25 + luck * 0.1; // 25-35%
+
+    var rarity, pool;
+    if (roll < rareChance && table.rare && table.rare.length > 0) {
+      rarity = 'rare';
+      pool = table.rare;
+    } else if (roll < rareChance + uncommonChance && table.uncommon && table.uncommon.length > 0) {
+      rarity = 'uncommon';
+      pool = table.uncommon;
+    } else {
+      rarity = 'common';
+      pool = table.common;
+    }
+
+    var itemId = pool[Math.floor(Math.random() * pool.length)];
+    var count = rarity === 'rare' ? 1 : rarity === 'uncommon' ? Math.floor(Math.random() * 2) + 1 : Math.floor(Math.random() * 3) + 1;
+
+    return { itemId: itemId, count: count, rarity: rarity };
+  }
 
   // ========================================================================
   // PLAYER INVENTORY MANAGEMENT
@@ -3707,6 +5029,8 @@ html, body {
   exports.getInventoryStats = getInventoryStats;
   exports.sortInventory = sortInventory;
   exports.searchInventory = searchInventory;
+  exports.ZONE_LOOT_TABLES = ZONE_LOOT_TABLES;
+  exports.rollHarvestDrop = rollHarvestDrop;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Inventory = {}));
 
@@ -5534,12 +6858,42 @@ html, body {
   // Internal stores
   const consentStore = new Map(); // "${fromId}:${toId}:${type}" -> boolean
   const rateLimitStore = new Map(); // playerId -> {count, windowStart}
+  const reputationStore = new Map(); // playerId -> {score, tier, history}
+  const harassmentStore = new Map(); // "${fromId}:${toId}" -> {declineCount, lastDecline}
 
   // Constants
   const RATE_LIMIT_MAX = 30; // messages per window
   const RATE_LIMIT_WINDOW = 60000; // 60 seconds in milliseconds
   const SAY_DISTANCE = 20;
   const EMOTE_DISTANCE = 30;
+
+  // Reputation constants
+  const REPUTATION_TIERS = [
+    { name: 'Newcomer', minScore: 0, maxScore: 99 },
+    { name: 'Trusted', minScore: 100, maxScore: 499 },
+    { name: 'Respected', minScore: 500, maxScore: 1499 },
+    { name: 'Honored', minScore: 1500, maxScore: 4999 },
+    { name: 'Elder', minScore: 5000, maxScore: Infinity }
+  ];
+
+  const REPUTATION_GAINS = {
+    helping: 10,
+    teaching: 15,
+    trading: 5,
+    gifting: 8,
+    guild_contribution: 12,
+    mentoring: 20,
+    zone_steward_action: 5
+  };
+
+  const REPUTATION_LOSSES = {
+    harassment: -25,
+    griefing_report: -50,
+    steward_violation: -30
+  };
+
+  const HARASSMENT_THRESHOLD = 3; // Declined interactions before harassment flag
+  const HARASSMENT_WINDOW = 600000; // 10 minutes
 
   /**
    * Calculate Euclidean distance between two 3D positions
@@ -5779,6 +7133,216 @@ html, body {
     return state.chat.messages.slice(-count);
   }
 
+  /**
+   * Initialize reputation for a player
+   * @param {string} playerId - The player ID
+   */
+  function initReputation(playerId) {
+    if (!reputationStore.has(playerId)) {
+      reputationStore.set(playerId, {
+        score: 0,
+        tier: 'Newcomer',
+        history: [],
+        restrictions: {
+          tradeBanned: false,
+          zoneMuted: new Set(),
+          zoneBanned: new Set()
+        }
+      });
+    }
+  }
+
+  /**
+   * Get player reputation
+   * @param {string} playerId - The player ID
+   * @returns {Object} Reputation data
+   */
+  function getReputation(playerId) {
+    initReputation(playerId);
+    return reputationStore.get(playerId);
+  }
+
+  /**
+   * Calculate tier from score
+   * @param {number} score - Reputation score
+   * @returns {string} Tier name
+   */
+  function calculateTier(score) {
+    for (const tier of REPUTATION_TIERS) {
+      if (score >= tier.minScore && score <= tier.maxScore) {
+        return tier.name;
+      }
+    }
+    return 'Newcomer';
+  }
+
+  /**
+   * Adjust player reputation
+   * @param {string} playerId - The player ID
+   * @param {string} action - Action type (e.g., 'helping', 'harassment')
+   * @param {Object} details - Additional details about the action
+   */
+  function adjustReputation(playerId, action, details) {
+    initReputation(playerId);
+    const rep = reputationStore.get(playerId);
+
+    const change = REPUTATION_GAINS[action] || REPUTATION_LOSSES[action] || 0;
+    const oldScore = rep.score;
+    const oldTier = rep.tier;
+
+    rep.score = Math.max(0, rep.score + change);
+    rep.tier = calculateTier(rep.score);
+
+    rep.history.push({
+      action,
+      change,
+      oldScore,
+      newScore: rep.score,
+      timestamp: Date.now(),
+      details: details || {}
+    });
+
+    // Keep last 100 history entries
+    if (rep.history.length > 100) {
+      rep.history = rep.history.slice(-100);
+    }
+
+    // Check for tier change
+    const tierChanged = oldTier !== rep.tier;
+
+    return {
+      score: rep.score,
+      tier: rep.tier,
+      change,
+      tierChanged,
+      oldTier
+    };
+  }
+
+  /**
+   * Record a declined interaction for harassment detection
+   * @param {string} fromId - The player initiating the action
+   * @param {string} toId - The player declining the action
+   * @param {string} type - The interaction type
+   */
+  function recordDecline(fromId, toId, type) {
+    const key = `${fromId}:${toId}`;
+    const now = Date.now();
+
+    if (!harassmentStore.has(key)) {
+      harassmentStore.set(key, {
+        declineCount: 0,
+        lastDecline: 0,
+        type: type
+      });
+    }
+
+    const record = harassmentStore.get(key);
+
+    // Reset if outside harassment window
+    if (now - record.lastDecline > HARASSMENT_WINDOW) {
+      record.declineCount = 0;
+    }
+
+    record.declineCount++;
+    record.lastDecline = now;
+    record.type = type;
+
+    // Check if harassment threshold reached
+    if (record.declineCount >= HARASSMENT_THRESHOLD) {
+      adjustReputation(fromId, 'harassment', {
+        targetPlayer: toId,
+        interactionType: type,
+        declineCount: record.declineCount
+      });
+
+      // Reset counter after penalty applied
+      record.declineCount = 0;
+
+      return true; // Harassment detected
+    }
+
+    return false;
+  }
+
+  /**
+   * Apply reputation restrictions
+   * @param {string} playerId - The player ID
+   */
+  function applyReputationRestrictions(playerId) {
+    const rep = getReputation(playerId);
+
+    // Low reputation consequences
+    if (rep.score < 0) {
+      rep.restrictions.tradeBanned = true;
+    } else if (rep.score < 50) {
+      // Restrictions lifted but monitored
+      rep.restrictions.tradeBanned = false;
+    }
+  }
+
+  /**
+   * Check if player can perform action based on reputation
+   * @param {string} playerId - The player ID
+   * @param {string} action - Action type
+   * @param {string} zone - Zone ID (optional)
+   * @returns {Object} {allowed: boolean, reason?: string}
+   */
+  function checkReputationPermission(playerId, action, zone) {
+    const rep = getReputation(playerId);
+
+    if (action === 'trade' && rep.restrictions.tradeBanned) {
+      return { allowed: false, reason: 'Trade restricted due to low reputation' };
+    }
+
+    if (zone && rep.restrictions.zoneMuted.has(zone) && (action === 'say' || action === 'shout')) {
+      return { allowed: false, reason: 'You are muted in this zone' };
+    }
+
+    if (zone && rep.restrictions.zoneBanned.has(zone)) {
+      return { allowed: false, reason: 'You are temporarily banned from this zone' };
+    }
+
+    // Check minimum tier for zone steward candidacy
+    if (action === 'run_for_steward' && rep.tier !== 'Respected' && rep.tier !== 'Honored' && rep.tier !== 'Elder') {
+      return { allowed: false, reason: 'Must be Respected tier or higher to run for zone steward' };
+    }
+
+    return { allowed: true };
+  }
+
+  /**
+   * Mute player in zone
+   * @param {string} playerId - The player ID
+   * @param {string} zone - Zone ID
+   * @param {number} duration - Duration in milliseconds (0 for permanent)
+   */
+  function muteInZone(playerId, zone, duration) {
+    const rep = getReputation(playerId);
+    rep.restrictions.zoneMuted.add(zone);
+
+    if (duration > 0) {
+      setTimeout(() => {
+        rep.restrictions.zoneMuted.delete(zone);
+      }, duration);
+    }
+  }
+
+  /**
+   * Ban player from zone
+   * @param {string} playerId - The player ID
+   * @param {string} zone - Zone ID
+   * @param {number} duration - Duration in milliseconds
+   */
+  function banFromZone(playerId, zone, duration) {
+    const rep = getReputation(playerId);
+    rep.restrictions.zoneBanned.add(zone);
+
+    setTimeout(() => {
+      rep.restrictions.zoneBanned.delete(zone);
+    }, duration);
+  }
+
   // Export public API
   exports.handleSay = handleSay;
   exports.handleShout = handleShout;
@@ -5792,6 +7356,16 @@ html, body {
   exports.getNearbyPlayers = getNearbyPlayers;
   exports.addMessage = addMessage;
   exports.getRecentMessages = getRecentMessages;
+
+  // Reputation API
+  exports.initReputation = initReputation;
+  exports.getReputation = getReputation;
+  exports.adjustReputation = adjustReputation;
+  exports.recordDecline = recordDecline;
+  exports.checkReputationPermission = checkReputationPermission;
+  exports.muteInZone = muteInZone;
+  exports.banFromZone = banFromZone;
+  exports.REPUTATION_TIERS = REPUTATION_TIERS;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Social = {}));
 
@@ -7375,6 +8949,269 @@ html, body {
     };
   }
 
+  // ========================================================================
+  // ACHIEVEMENT / BADGE SYSTEM
+  // ========================================================================
+
+  var ACHIEVEMENTS = {
+    // Exploration
+    first_steps: { id: 'first_steps', name: 'First Steps', description: 'Enter ZION for the first time', icon: '👣', category: 'exploration', sparkReward: 10 },
+    zone_hopper: { id: 'zone_hopper', name: 'Zone Hopper', description: 'Visit 4 different zones', icon: '🚶', category: 'exploration', sparkReward: 25 },
+    world_traveler: { id: 'world_traveler', name: 'World Traveler', description: 'Visit all 8 zones', icon: '🌍', category: 'exploration', sparkReward: 75 },
+    trailblazer: { id: 'trailblazer', name: 'Trailblazer', description: 'Make 10 discoveries', icon: '🔍', category: 'exploration', sparkReward: 50 },
+    cartographer: { id: 'cartographer', name: 'Cartographer', description: 'Make 25 discoveries', icon: '🗺️', category: 'exploration', sparkReward: 100 },
+
+    // Social
+    friendly_face: { id: 'friendly_face', name: 'Friendly Face', description: 'Talk to 10 NPCs', icon: '😊', category: 'social', sparkReward: 15 },
+    social_butterfly: { id: 'social_butterfly', name: 'Social Butterfly', description: 'Talk to 50 NPCs', icon: '🦋', category: 'social', sparkReward: 40 },
+    first_trade: { id: 'first_trade', name: 'First Trade', description: 'Complete your first trade', icon: '🤝', category: 'social', sparkReward: 20 },
+    merchant_prince: { id: 'merchant_prince', name: 'Merchant Prince', description: 'Complete 25 trades', icon: '👑', category: 'social', sparkReward: 75 },
+    gift_giver: { id: 'gift_giver', name: 'Gift Giver', description: 'Gift an item to another player', icon: '🎁', category: 'social', sparkReward: 15 },
+
+    // Crafting
+    first_craft: { id: 'first_craft', name: 'First Craft', description: 'Craft your first item', icon: '🔨', category: 'crafting', sparkReward: 10 },
+    apprentice_crafter: { id: 'apprentice_crafter', name: 'Apprentice Crafter', description: 'Craft 10 items', icon: '⚒️', category: 'crafting', sparkReward: 30 },
+    master_crafter: { id: 'master_crafter', name: 'Master Crafter', description: 'Craft 50 items', icon: '🛠️', category: 'crafting', sparkReward: 80 },
+    potion_brewer: { id: 'potion_brewer', name: 'Potion Brewer', description: 'Brew 10 potions', icon: '🧪', category: 'crafting', sparkReward: 25 },
+    instrument_maker: { id: 'instrument_maker', name: 'Instrument Maker', description: 'Craft a musical instrument', icon: '🎵', category: 'crafting', sparkReward: 20 },
+
+    // Building
+    first_build: { id: 'first_build', name: 'First Build', description: 'Place your first structure', icon: '🏗️', category: 'building', sparkReward: 10 },
+    architect: { id: 'architect', name: 'Architect', description: 'Place 10 structures', icon: '🏛️', category: 'building', sparkReward: 40 },
+    city_planner: { id: 'city_planner', name: 'City Planner', description: 'Place 50 structures', icon: '🏙️', category: 'building', sparkReward: 100 },
+
+    // Gardening
+    green_thumb: { id: 'green_thumb', name: 'Green Thumb', description: 'Plant your first seed', icon: '🌱', category: 'gardening', sparkReward: 10 },
+    gardener: { id: 'gardener', name: 'Gardener', description: 'Harvest 20 plants', icon: '🌻', category: 'gardening', sparkReward: 30 },
+    botanist: { id: 'botanist', name: 'Botanist', description: 'Harvest 100 plants', icon: '🌿', category: 'gardening', sparkReward: 80 },
+
+    // Economy
+    spark_saver: { id: 'spark_saver', name: 'Spark Saver', description: 'Accumulate 100 Spark', icon: '✨', category: 'economy', sparkReward: 10 },
+    spark_hoarder: { id: 'spark_hoarder', name: 'Spark Hoarder', description: 'Accumulate 500 Spark', icon: '💰', category: 'economy', sparkReward: 25 },
+    spark_magnate: { id: 'spark_magnate', name: 'Spark Magnate', description: 'Accumulate 2000 Spark', icon: '💎', category: 'economy', sparkReward: 75 },
+
+    // Competition
+    first_challenge: { id: 'first_challenge', name: 'First Challenge', description: 'Participate in your first competition', icon: '⚔️', category: 'competition', sparkReward: 15 },
+    champion: { id: 'champion', name: 'Champion', description: 'Win 5 competitions', icon: '🏆', category: 'competition', sparkReward: 50 },
+
+    // Quests
+    quest_starter: { id: 'quest_starter', name: 'Quest Starter', description: 'Accept your first quest', icon: '📋', category: 'quests', sparkReward: 5 },
+    questmaster: { id: 'questmaster', name: 'Questmaster', description: 'Complete 10 quests', icon: '📜', category: 'quests', sparkReward: 40 },
+    completionist: { id: 'completionist', name: 'Completionist', description: 'Complete 25 quests', icon: '⭐', category: 'quests', sparkReward: 100 },
+    chain_finisher: { id: 'chain_finisher', name: 'Chain Finisher', description: 'Complete a quest chain', icon: '🔗', category: 'quests', sparkReward: 30 },
+
+    // Guild
+    guild_founder: { id: 'guild_founder', name: 'Guild Founder', description: 'Create a guild', icon: '🏰', category: 'guild', sparkReward: 25 },
+    guild_member: { id: 'guild_member', name: 'Guild Member', description: 'Join a guild', icon: '🤜', category: 'guild', sparkReward: 10 },
+
+    // Art
+    first_artwork: { id: 'first_artwork', name: 'First Artwork', description: 'Create your first artwork', icon: '🎨', category: 'art', sparkReward: 15 },
+    prolific_artist: { id: 'prolific_artist', name: 'Prolific Artist', description: 'Create 10 artworks', icon: '🖼️', category: 'art', sparkReward: 40 },
+
+    // Physical
+    sunwalker: { id: 'sunwalker', name: 'Sunwalker', description: 'Reach Sunwalker warmth tier', icon: '☀️', category: 'physical', sparkReward: 50 },
+
+    // Mentoring
+    first_lesson: { id: 'first_lesson', name: 'First Lesson', description: 'Complete a mentoring lesson', icon: '📚', category: 'mentoring', sparkReward: 15 },
+    wise_mentor: { id: 'wise_mentor', name: 'Wise Mentor', description: 'Mentor 5 players', icon: '🎓', category: 'mentoring', sparkReward: 50 }
+  };
+
+  // Player achievement tracking
+  var playerAchievements = new Map(); // playerId -> { unlocked: Set, counters: {} }
+
+  function initPlayerAchievements(playerId) {
+    if (!playerAchievements.has(playerId)) {
+      playerAchievements.set(playerId, {
+        unlocked: new Set(),
+        counters: {
+          npcs_talked: 0,
+          zones_visited: new Set(),
+          trades_completed: 0,
+          items_crafted: 0,
+          potions_brewed: 0,
+          structures_placed: 0,
+          plants_harvested: 0,
+          seeds_planted: 0,
+          discoveries_made: 0,
+          competitions_entered: 0,
+          competitions_won: 0,
+          quests_completed: 0,
+          artworks_created: 0,
+          players_mentored: 0,
+          lessons_completed: 0,
+          gifts_given: 0
+        }
+      });
+    }
+    return playerAchievements.get(playerId);
+  }
+
+  /**
+   * Track an event and check for newly unlocked achievements
+   * @param {string} playerId
+   * @param {string} eventType - e.g. 'craft', 'trade', 'visit_zone', 'talk_npc'
+   * @param {Object} eventData - event-specific data
+   * @returns {Array} Newly unlocked achievements
+   */
+  function trackAchievementEvent(playerId, eventType, eventData) {
+    var state = initPlayerAchievements(playerId);
+    eventData = eventData || {};
+
+    // Update counters based on event
+    switch (eventType) {
+      case 'login':
+        break; // first_steps checked separately
+      case 'talk_npc':
+        state.counters.npcs_talked++;
+        break;
+      case 'visit_zone':
+        if (eventData.zone) state.counters.zones_visited.add(eventData.zone);
+        break;
+      case 'trade':
+        state.counters.trades_completed++;
+        break;
+      case 'craft':
+        state.counters.items_crafted++;
+        if (eventData.category === 'potion') state.counters.potions_brewed++;
+        break;
+      case 'build':
+        state.counters.structures_placed++;
+        break;
+      case 'harvest':
+        state.counters.plants_harvested++;
+        break;
+      case 'plant':
+        state.counters.seeds_planted++;
+        break;
+      case 'discover':
+        state.counters.discoveries_made++;
+        break;
+      case 'competition_enter':
+        state.counters.competitions_entered++;
+        break;
+      case 'competition_win':
+        state.counters.competitions_won++;
+        break;
+      case 'quest_complete':
+        state.counters.quests_completed++;
+        break;
+      case 'artwork':
+        state.counters.artworks_created++;
+        break;
+      case 'mentor':
+        state.counters.players_mentored++;
+        break;
+      case 'lesson':
+        state.counters.lessons_completed++;
+        break;
+      case 'gift':
+        state.counters.gifts_given++;
+        break;
+    }
+
+    // Check all achievements
+    var newlyUnlocked = [];
+    var checks = {
+      first_steps: eventType === 'login',
+      zone_hopper: state.counters.zones_visited.size >= 4,
+      world_traveler: state.counters.zones_visited.size >= 8,
+      trailblazer: state.counters.discoveries_made >= 10,
+      cartographer: state.counters.discoveries_made >= 25,
+      friendly_face: state.counters.npcs_talked >= 10,
+      social_butterfly: state.counters.npcs_talked >= 50,
+      first_trade: state.counters.trades_completed >= 1,
+      merchant_prince: state.counters.trades_completed >= 25,
+      gift_giver: state.counters.gifts_given >= 1,
+      first_craft: state.counters.items_crafted >= 1,
+      apprentice_crafter: state.counters.items_crafted >= 10,
+      master_crafter: state.counters.items_crafted >= 50,
+      potion_brewer: state.counters.potions_brewed >= 10,
+      instrument_maker: eventType === 'craft' && eventData.category === 'instrument',
+      first_build: state.counters.structures_placed >= 1,
+      architect: state.counters.structures_placed >= 10,
+      city_planner: state.counters.structures_placed >= 50,
+      green_thumb: state.counters.seeds_planted >= 1,
+      gardener: state.counters.plants_harvested >= 20,
+      botanist: state.counters.plants_harvested >= 100,
+      spark_saver: eventData.spark >= 100,
+      spark_hoarder: eventData.spark >= 500,
+      spark_magnate: eventData.spark >= 2000,
+      first_challenge: state.counters.competitions_entered >= 1,
+      champion: state.counters.competitions_won >= 5,
+      quest_starter: state.counters.quests_completed >= 0 && eventType === 'quest_accept',
+      questmaster: state.counters.quests_completed >= 10,
+      completionist: state.counters.quests_completed >= 25,
+      chain_finisher: eventType === 'chain_complete',
+      guild_founder: eventType === 'guild_create',
+      guild_member: eventType === 'guild_join',
+      first_artwork: state.counters.artworks_created >= 1,
+      prolific_artist: state.counters.artworks_created >= 10,
+      sunwalker: eventType === 'warmth_tier' && eventData.tier === 'Sunwalker',
+      first_lesson: state.counters.lessons_completed >= 1,
+      wise_mentor: state.counters.players_mentored >= 5
+    };
+
+    for (var achId in checks) {
+      if (checks[achId] && !state.unlocked.has(achId) && ACHIEVEMENTS[achId]) {
+        state.unlocked.add(achId);
+        newlyUnlocked.push(ACHIEVEMENTS[achId]);
+      }
+    }
+
+    return newlyUnlocked;
+  }
+
+  /**
+   * Get all achievements with unlock status
+   * @param {string} playerId
+   * @returns {Array} All achievements with unlocked status
+   */
+  function getAchievements(playerId) {
+    var state = initPlayerAchievements(playerId);
+    var result = [];
+
+    for (var achId in ACHIEVEMENTS) {
+      var ach = ACHIEVEMENTS[achId];
+      result.push({
+        id: ach.id,
+        name: ach.name,
+        description: ach.description,
+        icon: ach.icon,
+        category: ach.category,
+        sparkReward: ach.sparkReward,
+        unlocked: state.unlocked.has(achId)
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * Get achievement progress summary
+   * @param {string} playerId
+   * @returns {Object} {unlocked, total, percentage, recentUnlocks}
+   */
+  function getAchievementProgress(playerId) {
+    var state = initPlayerAchievements(playerId);
+    var total = Object.keys(ACHIEVEMENTS).length;
+    var unlocked = state.unlocked.size;
+
+    return {
+      unlocked: unlocked,
+      total: total,
+      percentage: total > 0 ? Math.round((unlocked / total) * 100) : 0,
+      counters: {
+        npcs_talked: state.counters.npcs_talked,
+        zones_visited: state.counters.zones_visited.size,
+        trades_completed: state.counters.trades_completed,
+        items_crafted: state.counters.items_crafted,
+        structures_placed: state.counters.structures_placed,
+        quests_completed: state.counters.quests_completed,
+        discoveries_made: state.counters.discoveries_made
+      }
+    };
+  }
+
   // Export public API
   exports.getAvailableQuests = getAvailableQuests;
   exports.acceptQuest = acceptQuest;
@@ -7393,6 +9230,11 @@ html, body {
   exports.getPlayerQuestStats = getPlayerQuestStats;
   exports.QUEST_CHAINS = QUEST_CHAINS;
   exports.DAILY_QUESTS = DAILY_QUESTS;
+  exports.ACHIEVEMENTS = ACHIEVEMENTS;
+  exports.trackAchievementEvent = trackAchievementEvent;
+  exports.getAchievements = getAchievements;
+  exports.getAchievementProgress = getAchievementProgress;
+  exports.initPlayerAchievements = initPlayerAchievements;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Quests = {}));
 
@@ -8083,6 +9925,323 @@ html, body {
     return Object.keys(zones);
   }
 
+  // ========================================================================
+  // ZONE SECRETS — Hidden discoverable locations in each zone
+  // ========================================================================
+
+  var ZONE_SECRETS = {
+    nexus: [
+      { id: 'nexus_heart', name: 'Heart of the Nexus', type: 'secret', description: 'A pulsing crystal embedded in the ground at the world\'s center, humming with energy from all connected zones.', position: { x: 0, y: 0.5, z: 0 }, rarity: 0.8, loreId: 'lore_nexus_heart' },
+      { id: 'nexus_echo', name: 'Echo Stone', type: 'artifact', description: 'A smooth stone that whispers the names of every player who has ever visited ZION.', position: { x: 15, y: 1, z: -10 }, rarity: 0.6, loreId: 'lore_echo_stone' },
+      { id: 'nexus_sundial', name: 'Eternal Sundial', type: 'landmark', description: 'An ancient sundial that tracks not just time but the phases of ZION\'s day-night cycle.', position: { x: -8, y: 0, z: 12 }, rarity: 0.4, loreId: 'lore_sundial' }
+    ],
+    gardens: [
+      { id: 'gardens_moonwell', name: 'Moonwell', type: 'spring', description: 'A hidden pool that glows silver at night, said to accelerate plant growth nearby.', position: { x: -20, y: 0, z: -25 }, rarity: 0.7, loreId: 'lore_moonwell' },
+      { id: 'gardens_ancient_tree', name: 'The First Tree', type: 'landmark', description: 'The oldest tree in ZION, its trunk carved with symbols from the founding.', position: { x: 30, y: 0, z: 10 }, rarity: 0.5, loreId: 'lore_first_tree' },
+      { id: 'gardens_fairy_ring', name: 'Fairy Ring', type: 'secret', description: 'A perfect circle of mushrooms that appears only at certain times.', position: { x: -5, y: 0, z: 35 }, rarity: 0.9, loreId: 'lore_fairy_ring' },
+      { id: 'gardens_meditation', name: 'Meditation Hollow', type: 'location', description: 'A sheltered hollow where the ambient sounds of nature converge in perfect harmony.', position: { x: 18, y: -1, z: -30 }, rarity: 0.6, loreId: 'lore_meditation' }
+    ],
+    athenaeum: [
+      { id: 'athenaeum_codex', name: 'The Lost Codex', type: 'artifact', description: 'A floating book whose pages contain knowledge from all federated worlds.', position: { x: -12, y: 3, z: -15 }, rarity: 0.9, loreId: 'lore_codex' },
+      { id: 'athenaeum_orrery', name: 'Celestial Orrery', type: 'artifact', description: 'A mechanical model of the multiverse, with a tiny light for each federated world.', position: { x: 5, y: 2, z: 20 }, rarity: 0.8, loreId: 'lore_orrery' },
+      { id: 'athenaeum_whispering', name: 'Whispering Stacks', type: 'secret', description: 'Deep in the shelves, the books murmur to each other, sharing fragments of lore.', position: { x: -25, y: 0, z: 8 }, rarity: 0.7, loreId: 'lore_whispering' }
+    ],
+    studio: [
+      { id: 'studio_muse', name: 'The Muse\'s Corner', type: 'secret', description: 'A corner where inspiration strikes harder. Art created here always seems to resonate more.', position: { x: 10, y: 0, z: -18 }, rarity: 0.7, loreId: 'lore_muse' },
+      { id: 'studio_palette', name: 'Living Palette', type: 'artifact', description: 'A palette whose colors shift with the seasons, mixing hues no artisan has seen before.', position: { x: -15, y: 1, z: 12 }, rarity: 0.8, loreId: 'lore_palette' },
+      { id: 'studio_resonance', name: 'Resonance Chamber', type: 'cave', description: 'A natural acoustic chamber where even whispers become music.', position: { x: 22, y: -2, z: -5 }, rarity: 0.6, loreId: 'lore_resonance' }
+    ],
+    wilds: [
+      { id: 'wilds_hollow', name: 'Starfall Hollow', type: 'cave', description: 'A cavern where fragments of starlight collect in luminous pools.', position: { x: -30, y: -3, z: -20 }, rarity: 0.9, loreId: 'lore_starfall' },
+      { id: 'wilds_monolith', name: 'The Monolith', type: 'ruin', description: 'A towering black stone that predates ZION itself, covered in undecipherable glyphs.', position: { x: 35, y: 0, z: 25 }, rarity: 0.8, loreId: 'lore_monolith' },
+      { id: 'wilds_grove', name: 'Singing Grove', type: 'location', description: 'Trees here sway in patterns that create hauntingly beautiful melodies.', position: { x: -10, y: 0, z: 30 }, rarity: 0.5, loreId: 'lore_singing_grove' },
+      { id: 'wilds_fossil', name: 'Fossil Cliff', type: 'landmark', description: 'A cliff face embedded with fossils from creatures that never existed in our world.', position: { x: 20, y: 5, z: -35 }, rarity: 0.6, loreId: 'lore_fossil_cliff' },
+      { id: 'wilds_spring', name: 'Hidden Hot Spring', type: 'spring', description: 'A natural hot spring tucked behind a waterfall, warm even in winter.', position: { x: -25, y: -1, z: -10 }, rarity: 0.7, loreId: 'lore_hot_spring' }
+    ],
+    agora: [
+      { id: 'agora_vault', name: 'The Old Vault', type: 'ruin', description: 'Beneath the market, the remains of ZION\'s first bank, its vault door still ajar.', position: { x: 8, y: -2, z: -12 }, rarity: 0.7, loreId: 'lore_vault' },
+      { id: 'agora_scales', name: 'Scales of Truth', type: 'artifact', description: 'Ancient merchant scales that glow when a fair trade is struck nearby.', position: { x: -10, y: 1, z: 5 }, rarity: 0.6, loreId: 'lore_scales' }
+    ],
+    commons: [
+      { id: 'commons_bell', name: 'Community Bell', type: 'landmark', description: 'A large bell that was rung to call the first citizens of ZION together.', position: { x: 0, y: 3, z: 0 }, rarity: 0.4, loreId: 'lore_bell' },
+      { id: 'commons_mosaic', name: 'Founders\' Mosaic', type: 'artifact', description: 'A floor mosaic depicting the founding of ZION, with space for new tiles from each generation.', position: { x: -15, y: 0, z: 15 }, rarity: 0.6, loreId: 'lore_mosaic' },
+      { id: 'commons_time_capsule', name: 'Time Capsule', type: 'secret', description: 'Buried beneath the gathering circle, a capsule left by the founders with messages for the future.', position: { x: 5, y: -1, z: -8 }, rarity: 0.8, loreId: 'lore_time_capsule' }
+    ],
+    arena: [
+      { id: 'arena_champions', name: 'Hall of Champions', type: 'ruin', description: 'Carved into the arena wall, the names and deeds of every champion who competed here.', position: { x: 20, y: 2, z: 0 }, rarity: 0.5, loreId: 'lore_champions' },
+      { id: 'arena_flame', name: 'Eternal Flame', type: 'landmark', description: 'A flame that has burned since the arena was built, said to embody the spirit of competition.', position: { x: 0, y: 1, z: -20 }, rarity: 0.6, loreId: 'lore_flame' }
+    ]
+  };
+
+  // ========================================================================
+  // LORE ENTRIES — Deep world-building text
+  // ========================================================================
+
+  var LORE_ENTRIES = {
+    lore_nexus_heart: {
+      title: 'The Heart of ZION',
+      text: 'Long before the first player set foot in ZION, the Heart was placed here — a crystal forged from the combined intentions of its creators. It pulses once for every soul currently inhabiting the world. Old-timers say that on quiet nights, you can feel it sync with your own heartbeat, as if the world itself is alive and breathing alongside you.',
+      category: 'origins'
+    },
+    lore_echo_stone: {
+      title: 'The Echo Stone',
+      text: 'The Echo Stone remembers. Every name spoken near it is captured and preserved in its crystalline lattice. Some say if you press your ear to its surface and whisper a name, you can hear a faint echo of that person\'s first words in ZION. The stone grows infinitesimally larger with each new voice it records.',
+      category: 'artifacts'
+    },
+    lore_sundial: {
+      title: 'The Eternal Sundial',
+      text: 'The Sundial was the first structure built in the Nexus, before even the portals were erected. It tracks the 24-minute day cycle and marks the seasons that shift each real-world week. At dawn, its shadow points toward the Gardens. At dusk, toward the Wilds. At the rare eclipse, it casts no shadow at all.',
+      category: 'landmarks'
+    },
+    lore_moonwell: {
+      title: 'The Moonwell',
+      text: 'Hidden in the deepest grove of the Gardens lies the Moonwell, a pool of water that seems to capture and hold moonlight even after dawn. Gardeners discovered that plants watered from the Moonwell grow twice as fast, though they suspect this is less about the water and more about the attention the gardener pays in finding it.',
+      category: 'nature'
+    },
+    lore_first_tree: {
+      title: 'The First Tree',
+      text: 'Before the Gardens were cultivated, before the zones were named, there was a single tree. The First Tree grew from a seed of intention planted by ZION\'s architects. Its roots extend beneath every zone, connecting the world in ways no map can show. The symbols carved in its trunk are the original protocol — the language that all of ZION\'s systems speak.',
+      category: 'origins'
+    },
+    lore_fairy_ring: {
+      title: 'The Fairy Ring',
+      text: 'The Fairy Ring appears and disappears according to rules no scholar has fully deciphered. Some say it follows the moon cycle, others claim it responds to the emotional state of the world itself. Those who find it report a fleeting sense of profound connection to every other being in ZION — as if, for one moment, the boundaries between self and world dissolve.',
+      category: 'mysteries'
+    },
+    lore_meditation: {
+      title: 'The Meditation Hollow',
+      text: 'In the Meditation Hollow, the sounds of nature converge in unexpected harmony — birdsong becomes melody, wind becomes rhythm, water becomes bass. Those who sit here long enough report achieving a rare clarity of purpose. It\'s said this was the spot where the intention system was first imagined.',
+      category: 'nature'
+    },
+    lore_codex: {
+      title: 'The Lost Codex',
+      text: 'The Codex floats between shelves, never resting in one place. Its pages are blank to most, but to those who have visited federated worlds, text appears: knowledge from those distant lands. The more worlds you visit, the more pages reveal themselves. Scholars believe the Codex is less a book and more a living bridge between realities.',
+      category: 'artifacts'
+    },
+    lore_orrery: {
+      title: 'The Celestial Orrery',
+      text: 'Built by the first scholars of the Athenaeum, the Orrery maps every federated world as a tiny point of light orbiting a central sun — ZION itself. New lights appear when new federations are forged, and they dim when connections grow quiet. It serves as both art and practical tool, allowing citizens to see the health of the multiverse at a glance.',
+      category: 'artifacts'
+    },
+    lore_whispering: {
+      title: 'The Whispering Stacks',
+      text: 'Deep in the Athenaeum, where the oldest books reside, the air is thick with whispers. The books share knowledge among themselves when no one is looking, cross-referencing and updating their contents. Scholars who linger here too long report dreams filled with information they never consciously learned.',
+      category: 'mysteries'
+    },
+    lore_muse: {
+      title: 'The Muse\'s Corner',
+      text: 'Every studio has its sweet spot, the place where creativity flows most freely. In ZION\'s Studio, that spot is marked by a slight warmth in the floor and a tendency for ambient sounds to harmonize. Artists who create here often surprise themselves with the results. Is it magic, or simply the power of expectation? The Muse keeps her secrets.',
+      category: 'art'
+    },
+    lore_palette: {
+      title: 'The Living Palette',
+      text: 'The Palette was not crafted but grown — crystallized from the combined creative energy of ZION\'s first artists. Its colors are alive: they deepen in autumn, brighten in spring, glow warmly in winter, and shimmer like water in summer. Art created with its pigments is said to evoke emotions in viewers that no ordinary color can.',
+      category: 'artifacts'
+    },
+    lore_resonance: {
+      title: 'The Resonance Chamber',
+      text: 'Beneath the Studio lies a natural cavern with perfect acoustics. Sound enters and emerges transformed — whispers become symphonies, footsteps become percussion, breath becomes wind instruments. Musicians gather here to compose pieces that could never exist in the above-ground world. The Chamber doesn\'t amplify sound; it reveals its hidden depth.',
+      category: 'nature'
+    },
+    lore_starfall: {
+      title: 'Starfall Hollow',
+      text: 'When the procedural stars of ZION\'s sky occasionally flicker and fall, their light doesn\'t vanish — it collects in pools deep within Starfall Hollow. The luminous pools cast impossible shadows that move independently of light sources. Explorers have reported seeing brief visions of other worlds reflected in the starlight pools.',
+      category: 'mysteries'
+    },
+    lore_monolith: {
+      title: 'The Monolith',
+      text: 'The Monolith stands as a reminder that not everything in ZION was placed there by its creators. It appeared one day, unannounced, and no log records its creation. Its glyphs resist translation — they seem to shift when observed directly. Some theorize it\'s a message from a parallel ZION, a fork that found a way to communicate across the multiverse gap.',
+      category: 'mysteries'
+    },
+    lore_singing_grove: {
+      title: 'The Singing Grove',
+      text: 'The trees of the Singing Grove have grown in a pattern that channels wind into music. Each season brings a different key, and the melody changes with the weather. During storms, the grove produces sounds that can only be described as the world singing itself to sleep. Wildlife gathers here during these concerts, unbothered by the presence of visitors.',
+      category: 'nature'
+    },
+    lore_fossil_cliff: {
+      title: 'The Fossil Cliff',
+      text: 'The fossils in this cliff belong to creatures that exist in no biological record. Wings with too many segments, shells that spiral in mathematically impossible patterns, teeth that seem designed for eating light itself. Scholars debate whether these are remnants of an earlier version of ZION, or dreams that somehow calcified into stone.',
+      category: 'mysteries'
+    },
+    lore_hot_spring: {
+      title: 'The Hidden Hot Spring',
+      text: 'Tucked behind a waterfall that reveals itself only to those who approach from the right angle, the Hot Spring maintains a perfect temperature regardless of season. Its waters carry a faint mineral glow. Visitors leave feeling restored, though whether this is the water\'s doing or simply the peace of discovering a hidden place is debated.',
+      category: 'nature'
+    },
+    lore_vault: {
+      title: 'The Old Vault',
+      text: 'Beneath the bustling Agora lies the Old Vault — ZION\'s first attempt at a central bank, abandoned when the community chose a distributed ledger instead. The vault door is still ajar, revealing a room lined with empty shelves. A plaque on the wall reads: "The true wealth of ZION cannot be stored in a single place."',
+      category: 'history'
+    },
+    lore_scales: {
+      title: 'The Scales of Truth',
+      text: 'The Scales were a gift from the merchants of early ZION, imbued with a simple enchantment: they glow golden when a fair trade is completed nearby. In a world where the protocol enforces honest transactions, the Scales serve more as a celebration than a safeguard. Their gentle light is a reminder that fairness feels good.',
+      category: 'artifacts'
+    },
+    lore_bell: {
+      title: 'The Community Bell',
+      text: 'The Bell was rung to gather the first hundred citizens of ZION — the founding AI agents who would give the world its initial life. It rang once for each of them, one hundred clear notes that still echo in the architecture of the Commons. Now it rings for every community event, its tone slightly different each time, as if greeting each gathering uniquely.',
+      category: 'history'
+    },
+    lore_mosaic: {
+      title: 'The Founders\' Mosaic',
+      text: 'The mosaic in the Commons floor tells the story of ZION\'s founding in tiny colored tiles. At the center, a burst of golden Spark radiating outward. Around it, the eight zones taking shape from formless possibility. At the edges, blank space — room for new tiles that each generation of citizens adds. Finding your own tile is a rite of passage.',
+      category: 'history'
+    },
+    lore_time_capsule: {
+      title: 'The Time Capsule',
+      text: 'Buried beneath the gathering circle is a capsule containing the original vision documents for ZION — the hopes and principles its creators encoded before the first line of code was written. The capsule is sealed but not locked; anyone can open it. Inside, alongside the documents, is a simple note: "Build kindly."',
+      category: 'origins'
+    },
+    lore_champions: {
+      title: 'The Hall of Champions',
+      text: 'The Arena wall bears the names of all who have competed with honor. Not just winners — every participant who showed sportsmanship, creativity, or grace under pressure. The Hall reminds visitors that competition in ZION is not about domination but about pushing each other to grow. Below the names runs a single line: "The only defeat is refusing to play."',
+      category: 'history'
+    },
+    lore_flame: {
+      title: 'The Eternal Flame',
+      text: 'The Eternal Flame burns without fuel, its light neither hot nor cold but somehow both warming and invigorating. It was lit at the Arena\'s inauguration and has never gone out. Competitors who pass the flame before a challenge report feeling calmer and more focused, as if the flame absorbs anxiety and returns resolve.',
+      category: 'landmarks'
+    }
+  };
+
+  /**
+   * Get zone secrets (discoverable hidden locations)
+   * @param {string} zoneId
+   * @returns {Array} Secrets for the zone
+   */
+  function getZoneSecrets(zoneId) {
+    return ZONE_SECRETS[zoneId] || [];
+  }
+
+  /**
+   * Check if player is near a secret and hasn't discovered it yet
+   * @param {string} playerId
+   * @param {Object} position - Player position {x, y, z}
+   * @param {string} zoneId
+   * @param {Object} state
+   * @returns {Object|null} Secret found or null
+   */
+  function checkNearbySecrets(playerId, position, zoneId, state) {
+    var secrets = ZONE_SECRETS[zoneId];
+    if (!secrets) return null;
+
+    for (var i = 0; i < secrets.length; i++) {
+      var secret = secrets[i];
+      var dist = calculateDistance(position, secret.position);
+
+      // Within 8 units
+      if (dist <= 8) {
+        // Check if already discovered
+        var alreadyFound = false;
+        if (state.discoveries) {
+          for (var j = 0; j < state.discoveries.length; j++) {
+            if (state.discoveries[j].discoverer === playerId && state.discoveries[j].secretId === secret.id) {
+              alreadyFound = true;
+              break;
+            }
+          }
+        }
+
+        if (!alreadyFound) {
+          return secret;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Discover a zone secret
+   * @param {string} playerId
+   * @param {Object} secret - Secret from ZONE_SECRETS
+   * @param {Object} state
+   * @returns {Object} Discovery result
+   */
+  function discoverSecret(playerId, secret, state) {
+    if (!state.discoveries) state.discoveries = [];
+
+    var sparkAwarded = 5 + Math.floor(secret.rarity * 30); // Higher rewards for secrets
+
+    var discovery = {
+      id: generateId(),
+      secretId: secret.id,
+      discoverer: playerId,
+      type: secret.type,
+      name: secret.name,
+      description: secret.description,
+      position: secret.position,
+      zone: secret.position.zone || 'unknown',
+      ts: Date.now(),
+      rarity: secret.rarity,
+      loreId: secret.loreId
+    };
+
+    state.discoveries.push(discovery);
+
+    return {
+      success: true,
+      discovery: discovery,
+      sparkAwarded: sparkAwarded,
+      lore: secret.loreId ? LORE_ENTRIES[secret.loreId] : null
+    };
+  }
+
+  /**
+   * Get a lore entry by ID
+   * @param {string} loreId
+   * @returns {Object|null} Lore entry
+   */
+  function getLoreEntry(loreId) {
+    return LORE_ENTRIES[loreId] || null;
+  }
+
+  /**
+   * Get all lore entries unlocked by a player
+   * @param {string} playerId
+   * @param {Object} state
+   * @returns {Array} Unlocked lore entries
+   */
+  function getUnlockedLore(playerId, state) {
+    if (!state.discoveries) return [];
+
+    var loreIds = new Set();
+    state.discoveries.forEach(function(d) {
+      if (d.discoverer === playerId && d.loreId) {
+        loreIds.add(d.loreId);
+      }
+    });
+
+    var result = [];
+    loreIds.forEach(function(loreId) {
+      var entry = LORE_ENTRIES[loreId];
+      if (entry) {
+        result.push({
+          id: loreId,
+          title: entry.title,
+          text: entry.text,
+          category: entry.category
+        });
+      }
+    });
+
+    return result;
+  }
+
+  /**
+   * Get all lore categories and counts
+   * @returns {Object} {category: totalCount}
+   */
+  function getLoreCategories() {
+    var cats = {};
+    for (var loreId in LORE_ENTRIES) {
+      var cat = LORE_ENTRIES[loreId].category;
+      cats[cat] = (cats[cat] || 0) + 1;
+    }
+    return cats;
+  }
+
   // Exports
   exports.DISCOVERY_TYPES = DISCOVERY_TYPES;
   exports.BASE_RARITY = BASE_RARITY;
@@ -8092,6 +10251,14 @@ html, body {
   exports.calculateRarity = calculateRarity;
   exports.getDiscoveries = getDiscoveries;
   exports.getDiscoveredZones = getDiscoveredZones;
+  exports.ZONE_SECRETS = ZONE_SECRETS;
+  exports.LORE_ENTRIES = LORE_ENTRIES;
+  exports.getZoneSecrets = getZoneSecrets;
+  exports.checkNearbySecrets = checkNearbySecrets;
+  exports.discoverSecret = discoverSecret;
+  exports.getLoreEntry = getLoreEntry;
+  exports.getUnlockedLore = getUnlockedLore;
+  exports.getLoreCategories = getLoreCategories;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Exploration = {}));
 
@@ -12246,6 +14413,125 @@ html, body {
     removeStorage(AVATAR_KEY);
   }
 
+  // ========================================================================
+  // PLAYER DATA PERSISTENCE — Save/load player state across sessions
+  // ========================================================================
+
+  var PLAYER_DATA_KEY = 'zion_player_data';
+  var PLAYER_PREFS_KEY = 'zion_player_prefs';
+
+  /**
+   * Save player game data to localStorage
+   * @param {Object} data - Player state to save
+   */
+  function savePlayerData(data) {
+    if (!data) return;
+    try {
+      var saveData = {
+        version: 2,
+        ts: Date.now(),
+        username: getUsername(),
+        inventory: data.inventory || null,
+        spark: data.spark || 0,
+        position: data.position || null,
+        zone: data.zone || 'nexus',
+        skills: data.skills || null,
+        questState: data.questState || null,
+        achievements: data.achievements || null,
+        guild: data.guild || null,
+        discoveredSecrets: data.discoveredSecrets || [],
+        warmth: data.warmth || 0,
+        playTime: data.playTime || 0,
+        lastSave: Date.now()
+      };
+      setStorage(PLAYER_DATA_KEY, JSON.stringify(saveData));
+    } catch (e) {
+      console.warn('Failed to save player data:', e);
+    }
+  }
+
+  /**
+   * Load player game data from localStorage
+   * @returns {Object|null} Saved player data or null
+   */
+  function loadPlayerData() {
+    try {
+      var raw = getStorage(PLAYER_DATA_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      // Verify it belongs to current user
+      if (data.username !== getUsername()) return null;
+      return data;
+    } catch (e) {
+      console.warn('Failed to load player data:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Save player preferences
+   * @param {Object} prefs - {volume, musicVolume, sfxVolume, quality, chatVisible, minimapVisible, showFPS}
+   */
+  function savePreferences(prefs) {
+    try {
+      setStorage(PLAYER_PREFS_KEY, JSON.stringify(prefs));
+    } catch (e) {}
+  }
+
+  /**
+   * Load player preferences
+   * @returns {Object} Saved preferences or defaults
+   */
+  function loadPreferences() {
+    try {
+      var raw = getStorage(PLAYER_PREFS_KEY);
+      if (!raw) return getDefaultPreferences();
+      return JSON.parse(raw);
+    } catch (e) {
+      return getDefaultPreferences();
+    }
+  }
+
+  function getDefaultPreferences() {
+    return {
+      volume: 0.5,
+      musicVolume: 0.3,
+      sfxVolume: 0.5,
+      quality: 'medium',
+      chatVisible: true,
+      minimapVisible: true,
+      showFPS: false,
+      controlsHint: true
+    };
+  }
+
+  /**
+   * Get avatar URL for display
+   * @returns {string} Avatar URL or empty string
+   */
+  function getAvatarUrl() {
+    return getStorage(AVATAR_KEY) || '';
+  }
+
+  /**
+   * Check if user is a guest
+   * @returns {boolean}
+   */
+  function isGuest() {
+    var token = getStorage(TOKEN_KEY);
+    return token ? token.startsWith('guest_') : false;
+  }
+
+  /**
+   * Get time since last save
+   * @returns {number} Milliseconds since last save, or Infinity if never saved
+   */
+  function getTimeSinceLastSave() {
+    var data = loadPlayerData();
+    if (!data || !data.lastSave) return Infinity;
+    return Date.now() - data.lastSave;
+  }
+
   exports.OAUTH_CONFIG = OAUTH_CONFIG;
   exports.initiateOAuth = initiateOAuth;
   exports.handleCallback = handleCallback;
@@ -12256,6 +14542,14 @@ html, body {
   exports.setToken = setToken;
   exports.loginAsGuest = loginAsGuest;
   exports.logout = logout;
+  exports.savePlayerData = savePlayerData;
+  exports.loadPlayerData = loadPlayerData;
+  exports.savePreferences = savePreferences;
+  exports.loadPreferences = loadPreferences;
+  exports.getDefaultPreferences = getDefaultPreferences;
+  exports.getAvatarUrl = getAvatarUrl;
+  exports.isGuest = isGuest;
+  exports.getTimeSinceLastSave = getTimeSinceLastSave;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Auth = {}));
 
@@ -12656,6 +14950,11 @@ html, body {
   function handleLobbyMessage(msg) {
     if (!msg || !msg.type) return false;
 
+    // Check if it's a federation message first
+    if (handleFederationMessage(msg)) {
+      return true;
+    }
+
     if (msg.type === '_lobby_announce') {
       // Someone announced — connect to their known peers
       if (msg.peers && Array.isArray(msg.peers)) {
@@ -12721,6 +15020,279 @@ html, body {
     };
   }
 
+  // ========================================================================
+  // FEDERATION SYSTEM — Cross-world connectivity
+  // ========================================================================
+
+  var federationState = {
+    worldId: null,
+    worldName: null,
+    endpoint: null,
+    federatedPeers: new Map(), // worldId -> {peerId, connection, worldInfo}
+    federationCallback: null,
+    discoveredWorlds: new Map() // worldId -> worldInfo
+  };
+
+  /**
+   * Initialize federation for this world
+   * @param {string} worldId - Unique world identifier (derived from URL)
+   * @param {string} worldName - Human-readable world name
+   * @param {string} endpoint - Public endpoint URL (e.g., GitHub Pages URL)
+   */
+  function initFederation(worldId, worldName, endpoint) {
+    federationState.worldId = worldId;
+    federationState.worldName = worldName || worldId;
+    federationState.endpoint = endpoint;
+
+    console.log('Federation initialized for world:', worldId);
+  }
+
+  /**
+   * Generate federated peer ID for cross-world connections
+   * @param {string} worldId - World identifier
+   * @param {string} playerId - Player identifier
+   * @returns {string}
+   */
+  function getFederatedPeerId(worldId, playerId) {
+    return `zion-fed-${worldId}-${playerId}`;
+  }
+
+  /**
+   * Announce this world to the federation network
+   * Broadcasts availability for cross-world connections
+   */
+  function announceFederation() {
+    if (!peer || !peer.open) return;
+    if (!federationState.worldId) {
+      console.warn('Federation not initialized');
+      return;
+    }
+
+    var announcement = {
+      type: 'federation_announce',
+      worldId: federationState.worldId,
+      worldName: federationState.worldName,
+      endpoint: federationState.endpoint,
+      protocolVersion: 1,
+      playerCount: connections.size,
+      peerId: peer.id,
+      timestamp: Date.now()
+    };
+
+    broadcastMessage(announcement);
+    console.log('Federation announced:', federationState.worldName);
+  }
+
+  /**
+   * Establish handshake with a federated world
+   * @param {string} targetWorldId - Target world identifier
+   * @param {object} worldInfo - Information about target world
+   */
+  function federationHandshake(targetWorldId, worldInfo) {
+    if (!peer || !peer.open) return;
+    if (!federationState.worldId) {
+      console.warn('Federation not initialized');
+      return;
+    }
+
+    // Generate federated peer ID for the target world
+    var federatedPeerId = getFederatedPeerId(targetWorldId, lobbyState.peerId);
+
+    // Check if already connected
+    if (federationState.federatedPeers.has(targetWorldId)) {
+      console.log('Already federated with world:', targetWorldId);
+      return;
+    }
+
+    // Send handshake message
+    var handshake = {
+      type: 'federation_handshake',
+      from_world: federationState.worldId,
+      to_world: targetWorldId,
+      worldName: federationState.worldName,
+      endpoint: federationState.endpoint,
+      protocolVersion: 1,
+      peerId: peer.id,
+      timestamp: Date.now()
+    };
+
+    broadcastMessage(handshake);
+
+    // Store federated world info
+    federationState.federatedPeers.set(targetWorldId, {
+      worldId: targetWorldId,
+      worldInfo: worldInfo,
+      peerId: federatedPeerId,
+      status: 'handshake_sent',
+      timestamp: Date.now()
+    });
+
+    console.log('Federation handshake sent to:', targetWorldId);
+  }
+
+  /**
+   * Handle incoming federation messages
+   * @param {object} msg - Federation message
+   * @returns {boolean} True if message was handled
+   */
+  function handleFederationMessage(msg) {
+    if (!msg || !msg.type) return false;
+
+    if (msg.type === 'federation_announce') {
+      // Another world announced itself
+      var worldId = msg.worldId || msg.payload?.worldId;
+      if (worldId && worldId !== federationState.worldId) {
+        var worldInfo = {
+          worldId: worldId,
+          worldName: msg.worldName || msg.payload?.worldName,
+          endpoint: msg.endpoint || msg.payload?.endpoint,
+          protocolVersion: msg.protocolVersion || msg.payload?.protocolVersion || 1,
+          playerCount: msg.playerCount || msg.payload?.playerCount || 0,
+          peerId: msg.peerId || msg.payload?.peerId,
+          timestamp: msg.timestamp || Date.now()
+        };
+
+        // Track discovered world
+        federationState.discoveredWorlds.set(worldId, worldInfo);
+
+        // Notify callback
+        if (federationState.federationCallback) {
+          federationState.federationCallback({
+            type: 'world_discovered',
+            worldInfo: worldInfo
+          });
+        }
+
+        console.log('Discovered federated world:', worldInfo.worldName);
+      }
+      return true;
+    }
+
+    if (msg.type === 'federation_handshake') {
+      // Another world wants to federate with us
+      var fromWorld = msg.from_world || msg.payload?.from_world;
+      var toWorld = msg.to_world || msg.payload?.to_world;
+
+      if (toWorld === federationState.worldId && fromWorld) {
+        var worldInfo = {
+          worldId: fromWorld,
+          worldName: msg.worldName || msg.payload?.worldName,
+          endpoint: msg.endpoint || msg.payload?.endpoint,
+          protocolVersion: msg.protocolVersion || msg.payload?.protocolVersion || 1,
+          peerId: msg.peerId || msg.payload?.peerId,
+          timestamp: msg.timestamp || Date.now()
+        };
+
+        // Check if we already have a federation with this world
+        var existing = federationState.federatedPeers.get(fromWorld);
+        if (existing && existing.status === 'active') {
+          console.log('Federation already active with:', fromWorld);
+          return true;
+        }
+
+        // Store federated world
+        federationState.federatedPeers.set(fromWorld, {
+          worldId: fromWorld,
+          worldInfo: worldInfo,
+          status: 'active',
+          timestamp: Date.now()
+        });
+
+        // Notify callback
+        if (federationState.federationCallback) {
+          federationState.federationCallback({
+            type: 'federation_established',
+            worldInfo: worldInfo
+          });
+        }
+
+        console.log('Federation established with:', worldInfo.worldName);
+      }
+      return true;
+    }
+
+    if (msg.type === 'warp_fork') {
+      // Player warping between federated worlds
+      if (federationState.federationCallback) {
+        federationState.federationCallback({
+          type: 'cross_world_warp',
+          playerId: msg.from,
+          targetWorld: msg.payload?.target_world,
+          position: msg.payload?.position
+        });
+      }
+      return true;
+    }
+
+    if (msg.type === 'return_home') {
+      // Player returning from federated world
+      if (federationState.federationCallback) {
+        federationState.federationCallback({
+          type: 'player_returned',
+          playerId: msg.from,
+          position: msg.payload?.position
+        });
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Register callback for federation events
+   * @param {function} callback - Called with federation events
+   */
+  function onFederationEvent(callback) {
+    federationState.federationCallback = callback;
+  }
+
+  /**
+   * Get list of federated worlds
+   * @returns {Array} Array of federated world info
+   */
+  function getFederatedWorlds() {
+    return Array.from(federationState.federatedPeers.values());
+  }
+
+  /**
+   * Get list of discovered worlds
+   * @returns {Array} Array of discovered world info
+   */
+  function getDiscoveredWorlds() {
+    return Array.from(federationState.discoveredWorlds.values());
+  }
+
+  /**
+   * Check if connected to a specific world
+   * @param {string} worldId - World identifier
+   * @returns {boolean}
+   */
+  function isFederatedWith(worldId) {
+    var fed = federationState.federatedPeers.get(worldId);
+    return fed && fed.status === 'active';
+  }
+
+  /**
+   * Get world ID derived from current URL
+   * @returns {string}
+   */
+  function deriveWorldId() {
+    if (typeof window === 'undefined' || !window.location) {
+      return 'localhost';
+    }
+
+    var url = window.location.href;
+    // Extract meaningful part from URL (e.g., github.io/repo-name)
+    var match = url.match(/github\.io\/([^\/]+)/);
+    if (match) {
+      return match[1];
+    }
+
+    // Fallback to hostname
+    return window.location.hostname.replace(/\./g, '-');
+  }
+
   // Export public API
   exports.initMesh = initMesh;
   exports.broadcastMessage = broadcastMessage;
@@ -12734,6 +15306,18 @@ html, body {
   exports.updateLobbyZone = updateLobbyZone;
   exports.handleLobbyMessage = handleLobbyMessage;
   exports.getNetworkStats = getNetworkStats;
+
+  // Federation exports
+  exports.initFederation = initFederation;
+  exports.announceFederation = announceFederation;
+  exports.federationHandshake = federationHandshake;
+  exports.handleFederationMessage = handleFederationMessage;
+  exports.onFederationEvent = onFederationEvent;
+  exports.getFederatedWorlds = getFederatedWorlds;
+  exports.getDiscoveredWorlds = getDiscoveredWorlds;
+  exports.isFederatedWith = isFederatedWith;
+  exports.deriveWorldId = deriveWorldId;
+  exports.getFederatedPeerId = getFederatedPeerId;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Network = {}));
 
@@ -13365,6 +15949,85 @@ html, body {
     pool.castShadow = false;
     scene.add(pool);
     animatedObjects.push({ mesh: pool, type: 'water', params: { speed: 1 } });
+
+    // ENHANCED DECORATIONS: Glowing central monument
+    var monumentGeo = new THREE.CylinderGeometry(0.8, 1.2, 3, 8);
+    var monumentMat = new THREE.MeshStandardMaterial({
+      color: 0xb0b0d0,
+      emissive: 0x5555aa,
+      emissiveIntensity: 0.2,
+      roughness: 0.5
+    });
+    var monument = new THREE.Mesh(monumentGeo, monumentMat);
+    monument.position.set(z.cx + 6, y + 2.5, z.cz + 6);
+    monument.castShadow = false;
+    scene.add(monument);
+
+    // Fountain particle effects (4 water jets)
+    for (var j = 0; j < 4; j++) {
+      var jAngle = (j / 4) * Math.PI * 2;
+      var jx = z.cx + Math.cos(jAngle) * 2;
+      var jz = z.cz + Math.sin(jAngle) * 2;
+      var jetGeo = new THREE.CylinderGeometry(0.1, 0.15, 1.5, 8);
+      var jetMat = new THREE.MeshStandardMaterial({
+        color: 0x66aaff,
+        transparent: true,
+        opacity: 0.6
+      });
+      var jet = new THREE.Mesh(jetGeo, jetMat);
+      jet.position.set(jx, y + 2.5, jz);
+      jet.castShadow = false;
+      scene.add(jet);
+      animatedObjects.push({ mesh: jet, type: 'water', params: { speed: 2 } });
+    }
+
+    // Decorative benches around perimeter
+    for (var b = 0; b < 4; b++) {
+      var bAngle = (b / 4) * Math.PI * 2 + Math.PI / 8;
+      var bx = z.cx + Math.cos(bAngle) * 16;
+      var bz = z.cz + Math.sin(bAngle) * 16;
+
+      var benchGeo = new THREE.BoxGeometry(2.5, 0.3, 0.8);
+      var benchMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+      var bench = new THREE.Mesh(benchGeo, benchMat);
+      bench.position.set(bx, y + 0.4, bz);
+      bench.rotation.y = bAngle + Math.PI / 2;
+      bench.castShadow = false;
+      scene.add(bench);
+
+      // Bench legs
+      for (var leg = -1; leg <= 1; leg += 2) {
+        var legGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.4, 6);
+        var legMesh = new THREE.Mesh(legGeo, benchMat);
+        legMesh.position.set(
+          bx + Math.cos(bAngle + Math.PI / 2) * leg * 0.9,
+          y + 0.2,
+          bz + Math.sin(bAngle + Math.PI / 2) * leg * 0.9
+        );
+        legMesh.castShadow = false;
+        scene.add(legMesh);
+      }
+    }
+
+    // Knowledge orbs floating around
+    for (var k = 0; k < 3; k++) {
+      var kAngle = (k / 3) * Math.PI * 2;
+      var kx = z.cx + Math.cos(kAngle) * 7;
+      var kz = z.cz + Math.sin(kAngle) * 7;
+      var orbGeo = new THREE.SphereGeometry(0.3, 12, 12);
+      var orbMat = new THREE.MeshStandardMaterial({
+        color: 0x8888ff,
+        emissive: 0x6666cc,
+        emissiveIntensity: 0.5,
+        transparent: true,
+        opacity: 0.8
+      });
+      var orb = new THREE.Mesh(orbGeo, orbMat);
+      orb.position.set(kx, y + 4 + k * 0.5, kz);
+      orb.castShadow = false;
+      scene.add(orb);
+      animatedObjects.push({ mesh: orb, type: 'crystal', params: { speed: 0.4, baseY: y + 4 + k * 0.5 } });
+    }
   }
 
   function createGardensStructure(scene) {
@@ -13415,6 +16078,102 @@ html, body {
     water.castShadow = false;
     scene.add(water);
     animatedObjects.push({ mesh: water, type: 'water', params: { speed: 1 } });
+
+    // ENHANCED DECORATIONS: Seasonal growing plants (varied heights and colors)
+    for (var sp = 0; sp < 12; sp++) {
+      var spAngle = (sp / 12) * Math.PI * 2 + 0.2;
+      var spRadius = 12 + (sp % 3) * 6;
+      var spx = z.cx + Math.cos(spAngle) * spRadius;
+      var spz = z.cz + Math.sin(spAngle) * spRadius;
+
+      var plantHeight = 0.5 + seededRandom(sp, 10, 1) * 1.5;
+      var plantGeo = new THREE.ConeGeometry(0.3, plantHeight, 6);
+      var plantColors = [0x66bb6a, 0x81c784, 0xa5d6a7, 0x4caf50, 0x8bc34a];
+      var plantMat = new THREE.MeshStandardMaterial({
+        color: plantColors[sp % plantColors.length]
+      });
+      var plant = new THREE.Mesh(plantGeo, plantMat);
+      plant.position.set(spx, y + plantHeight / 2, spz);
+      plant.castShadow = false;
+      scene.add(plant);
+    }
+
+    // Butterfly particle effects (small glowing spheres that float around)
+    for (var bf = 0; bf < 8; bf++) {
+      var bfAngle = (bf / 8) * Math.PI * 2;
+      var bfx = z.cx + Math.cos(bfAngle) * (15 + bf % 3 * 5);
+      var bfz = z.cz + Math.sin(bfAngle) * (15 + bf % 3 * 5);
+      var butterflyGeo = new THREE.SphereGeometry(0.15, 6, 6);
+      var butterflyMat = new THREE.MeshStandardMaterial({
+        color: bf % 2 === 0 ? 0xffeb3b : 0xff69b4,
+        emissive: bf % 2 === 0 ? 0xffeb3b : 0xff69b4,
+        emissiveIntensity: 0.4,
+        transparent: true,
+        opacity: 0.7
+      });
+      var butterfly = new THREE.Mesh(butterflyGeo, butterflyMat);
+      butterfly.position.set(bfx, y + 1.5 + bf * 0.2, bfz);
+      butterfly.castShadow = false;
+      scene.add(butterfly);
+      animatedObjects.push({
+        mesh: butterfly,
+        type: 'crystal',
+        params: { speed: 0.5 + bf * 0.1, baseY: y + 1.5 + bf * 0.2 }
+      });
+    }
+
+    // Garden archways (decorative trellises)
+    for (var ga = 0; ga < 4; ga++) {
+      var gaAngle = (ga / 4) * Math.PI * 2;
+      var gax = z.cx + Math.cos(gaAngle) * 25;
+      var gaz = z.cz + Math.sin(gaAngle) * 25;
+
+      // Two posts
+      for (var side = -1; side <= 1; side += 2) {
+        var postGeo = new THREE.CylinderGeometry(0.15, 0.15, 3, 8);
+        var postMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+        var post = new THREE.Mesh(postGeo, postMat);
+        var perpAngle = gaAngle + Math.PI / 2;
+        post.position.set(
+          gax + Math.cos(perpAngle) * side * 1.5,
+          y + 1.5,
+          gaz + Math.sin(perpAngle) * side * 1.5
+        );
+        post.castShadow = false;
+        scene.add(post);
+      }
+
+      // Top beam
+      var beamGeo = new THREE.BoxGeometry(3.5, 0.2, 0.2);
+      var beamMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+      var beam = new THREE.Mesh(beamGeo, beamMat);
+      beam.position.set(gax, y + 3.2, gaz);
+      beam.rotation.y = gaAngle + Math.PI / 2;
+      beam.castShadow = false;
+      scene.add(beam);
+
+      // Vines on archway
+      var vineGeo = new THREE.TorusGeometry(0.8, 0.08, 6, 12);
+      var vineMat = new THREE.MeshStandardMaterial({ color: 0x2e7d32 });
+      var vine = new THREE.Mesh(vineGeo, vineMat);
+      vine.position.set(gax, y + 2.8, gaz);
+      vine.rotation.x = Math.PI / 2;
+      vine.castShadow = false;
+      scene.add(vine);
+    }
+
+    // Stone pathways markers
+    for (var pm = 0; pm < 6; pm++) {
+      var pmAngle = (pm / 6) * Math.PI * 2;
+      var pmx = z.cx + Math.cos(pmAngle) * 18;
+      var pmz = z.cz + Math.sin(pmAngle) * 18;
+      var markerGeo = new THREE.CylinderGeometry(0.4, 0.5, 0.3, 8);
+      var markerMat = new THREE.MeshStandardMaterial({ color: 0x9e9e9e });
+      var marker = new THREE.Mesh(markerGeo, markerMat);
+      marker.position.set(pmx, y + 0.15, pmz);
+      marker.castShadow = false;
+      scene.add(marker);
+    }
   }
 
   function createAtheneumStructure(scene) {
@@ -13456,6 +16215,116 @@ html, body {
       step.castShadow = false;
       scene.add(step);
     }
+
+    // ENHANCED DECORATIONS: Floating book particles
+    for (var fb = 0; fb < 10; fb++) {
+      var fbAngle = (fb / 10) * Math.PI * 2;
+      var fbRadius = 8 + (fb % 3) * 3;
+      var fbx = z.cx + Math.cos(fbAngle) * fbRadius;
+      var fbz = z.cz + Math.sin(fbAngle) * fbRadius;
+      var bookGeo = new THREE.BoxGeometry(0.2, 0.3, 0.05);
+      var bookMat = new THREE.MeshStandardMaterial({
+        color: [0x8b4513, 0x5d4037, 0x3e2723][fb % 3],
+        emissive: 0x4a2511,
+        emissiveIntensity: 0.1
+      });
+      var book = new THREE.Mesh(bookGeo, bookMat);
+      book.position.set(fbx, y + 5 + fb * 0.3, fbz);
+      book.rotation.y = fbAngle;
+      book.rotation.x = Math.PI / 6;
+      book.castShadow = false;
+      scene.add(book);
+      animatedObjects.push({
+        mesh: book,
+        type: 'crystal',
+        params: { speed: 0.2, baseY: y + 5 + fb * 0.3 }
+      });
+    }
+
+    // Glowing knowledge orbs
+    for (var ko = 0; ko < 6; ko++) {
+      var koAngle = (ko / 6) * Math.PI * 2;
+      var kox = z.cx + Math.cos(koAngle) * 6;
+      var koz = z.cz + Math.sin(koAngle) * 6;
+      var orbGeo = new THREE.SphereGeometry(0.25, 12, 12);
+      var orbMat = new THREE.MeshStandardMaterial({
+        color: 0xffd700,
+        emissive: 0xffaa00,
+        emissiveIntensity: 0.6,
+        transparent: true,
+        opacity: 0.7
+      });
+      var orb = new THREE.Mesh(orbGeo, orbMat);
+      orb.position.set(kox, y + 6 + ko * 0.4, koz);
+      orb.castShadow = false;
+      scene.add(orb);
+      animatedObjects.push({
+        mesh: orb,
+        type: 'crystal',
+        params: { speed: 0.3, baseY: y + 6 + ko * 0.4 }
+      });
+    }
+
+    // Reading desks
+    for (var rd = 0; rd < 4; rd++) {
+      var rdAngle = (rd / 4) * Math.PI * 2 + Math.PI / 4;
+      var rdx = z.cx + Math.cos(rdAngle) * 12;
+      var rdz = z.cz + Math.sin(rdAngle) * 12;
+      var deskGeo = new THREE.BoxGeometry(2, 0.15, 1.2);
+      var deskMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+      var desk = new THREE.Mesh(deskGeo, deskMat);
+      desk.position.set(rdx, y + 0.8, rdz);
+      desk.rotation.y = rdAngle;
+      desk.castShadow = false;
+      scene.add(desk);
+
+      // Desk legs
+      for (var dl = 0; dl < 4; dl++) {
+        var dlx = rdx + Math.cos(rdAngle) * (dl < 2 ? -0.9 : 0.9) + Math.cos(rdAngle + Math.PI / 2) * (dl % 2 === 0 ? -0.5 : 0.5);
+        var dlz = rdz + Math.sin(rdAngle) * (dl < 2 ? -0.9 : 0.9) + Math.sin(rdAngle + Math.PI / 2) * (dl % 2 === 0 ? -0.5 : 0.5);
+        var legGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.8, 6);
+        var legMesh = new THREE.Mesh(legGeo, deskMat);
+        legMesh.position.set(dlx, y + 0.4, dlz);
+        legMesh.castShadow = false;
+        scene.add(legMesh);
+      }
+    }
+
+    // Decorative scrolls on pillars
+    for (var sc = 0; sc < 6; sc++) {
+      var scrollGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8);
+      var scrollMat = new THREE.MeshStandardMaterial({ color: 0xf5deb3 });
+      var scroll = new THREE.Mesh(scrollGeo, scrollMat);
+      var scx = z.cx - 8 + sc * 3.2;
+      scroll.position.set(scx, y + 6, z.cz + 8);
+      scroll.rotation.z = Math.PI / 2;
+      scroll.castShadow = false;
+      scene.add(scroll);
+    }
+
+    // Ancient tome pedestals
+    for (var tp = 0; tp < 3; tp++) {
+      var tpx = z.cx + (tp - 1) * 5;
+      var pedestalGeo = new THREE.CylinderGeometry(0.5, 0.7, 1.2, 8);
+      var pedestalMat = new THREE.MeshStandardMaterial({ color: 0x9e9e9e });
+      var pedestal = new THREE.Mesh(pedestalGeo, pedestalMat);
+      pedestal.position.set(tpx, y + 0.6, z.cz - 3);
+      pedestal.castShadow = false;
+      scene.add(pedestal);
+
+      // Tome on pedestal
+      var tomeGeo = new THREE.BoxGeometry(0.6, 0.15, 0.8);
+      var tomeMat = new THREE.MeshStandardMaterial({
+        color: 0x4a148c,
+        emissive: 0x2a0a4c,
+        emissiveIntensity: 0.2
+      });
+      var tome = new THREE.Mesh(tomeGeo, tomeMat);
+      tome.position.set(tpx, y + 1.3, z.cz - 3);
+      tome.rotation.y = Math.PI / 8;
+      tome.castShadow = false;
+      scene.add(tome);
+    }
   }
 
   function createStudioStructure(scene) {
@@ -13495,6 +16364,123 @@ html, body {
     sculpture.castShadow = false;
     scene.add(sculpture);
     animatedObjects.push({ mesh: sculpture, type: 'crystal', params: { speed: 0.5, baseY: y + 4 } });
+
+    // ENHANCED DECORATIONS: Paint splatter decorations (colorful spheres on ground)
+    for (var ps = 0; ps < 15; ps++) {
+      var psAngle = (ps / 15) * Math.PI * 2;
+      var psRadius = 5 + seededRandom(ps, 20, 1) * 10;
+      var psx = z.cx + Math.cos(psAngle) * psRadius;
+      var psz = z.cz + Math.sin(psAngle) * psRadius;
+      var splatGeo = new THREE.SphereGeometry(0.2, 8, 8);
+      var splatColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xff8800, 0x8800ff];
+      var splatMat = new THREE.MeshStandardMaterial({
+        color: splatColors[ps % splatColors.length],
+        emissive: splatColors[ps % splatColors.length],
+        emissiveIntensity: 0.3
+      });
+      var splat = new THREE.Mesh(splatGeo, splatMat);
+      splat.position.set(psx, y + 0.15, psz);
+      splat.scale.y = 0.3;
+      splat.castShadow = false;
+      scene.add(splat);
+    }
+
+    // Easels around the zone
+    for (var ea = 0; ea < 5; ea++) {
+      var eaAngle = (ea / 5) * Math.PI * 2 + 0.2;
+      var eax = z.cx + Math.cos(eaAngle) * 10;
+      var eaz = z.cz + Math.sin(eaAngle) * 10;
+
+      // Easel legs (tripod)
+      for (var el = 0; el < 3; el++) {
+        var elAngle = eaAngle + (el / 3) * Math.PI * 2;
+        var legGeo = new THREE.CylinderGeometry(0.05, 0.05, 2, 6);
+        var legMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+        var leg = new THREE.Mesh(legGeo, legMat);
+        leg.position.set(
+          eax + Math.cos(elAngle) * 0.3,
+          y + 1,
+          eaz + Math.sin(elAngle) * 0.3
+        );
+        leg.rotation.z = (el === 1 ? -0.2 : (el === 2 ? 0.2 : 0));
+        leg.castShadow = false;
+        scene.add(leg);
+      }
+
+      // Canvas
+      var canvasGeo = new THREE.PlaneGeometry(1.2, 1.5);
+      var canvasMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        side: THREE.DoubleSide
+      });
+      var canvas = new THREE.Mesh(canvasGeo, canvasMat);
+      canvas.position.set(eax, y + 1.8, eaz);
+      canvas.rotation.y = eaAngle;
+      canvas.castShadow = false;
+      scene.add(canvas);
+    }
+
+    // Musical note particles (for musician artists)
+    for (var mn = 0; mn < 6; mn++) {
+      var mnAngle = (mn / 6) * Math.PI * 2;
+      var mnx = z.cx + Math.cos(mnAngle) * 8;
+      var mnz = z.cz + Math.sin(mnAngle) * 8;
+      var noteGeo = new THREE.SphereGeometry(0.2, 8, 8);
+      var noteMat = new THREE.MeshStandardMaterial({
+        color: 0xff69b4,
+        emissive: 0xff1493,
+        emissiveIntensity: 0.4,
+        transparent: true,
+        opacity: 0.7
+      });
+      var note = new THREE.Mesh(noteGeo, noteMat);
+      note.position.set(mnx, y + 3 + mn * 0.4, mnz);
+      note.castShadow = false;
+      scene.add(note);
+      animatedObjects.push({
+        mesh: note,
+        type: 'crystal',
+        params: { speed: 0.4 + mn * 0.1, baseY: y + 3 + mn * 0.4 }
+      });
+    }
+
+    // Sculpture pedestals
+    for (var sp = 0; sp < 3; sp++) {
+      var spAngle = (sp / 3) * Math.PI * 2;
+      var spx = z.cx + Math.cos(spAngle) * 18;
+      var spz = z.cz + Math.sin(spAngle) * 18;
+      var pedGeo = new THREE.CylinderGeometry(0.6, 0.8, 1.5, 8);
+      var pedMat = new THREE.MeshStandardMaterial({ color: 0x9e9e9e });
+      var ped = new THREE.Mesh(pedGeo, pedMat);
+      ped.position.set(spx, y + 0.75, spz);
+      ped.castShadow = false;
+      scene.add(ped);
+
+      // Small sculpture on pedestal
+      var miniSculpGeo = new THREE.TorusGeometry(0.4, 0.15, 8, 12);
+      var miniSculpMat = new THREE.MeshStandardMaterial({
+        color: [0xff9800, 0x9c27b0, 0x00bcd4][sp],
+        emissive: [0xff9800, 0x9c27b0, 0x00bcd4][sp],
+        emissiveIntensity: 0.2
+      });
+      var miniSculp = new THREE.Mesh(miniSculpGeo, miniSculpMat);
+      miniSculp.position.set(spx, y + 1.8, spz);
+      miniSculp.rotation.x = Math.PI / 4;
+      miniSculp.castShadow = false;
+      scene.add(miniSculp);
+    }
+
+    // Paint palettes on ground
+    for (var pp = 0; pp < 4; pp++) {
+      var ppx = z.cx + (pp % 2 === 0 ? -6 : 6);
+      var ppz = z.cz + (pp < 2 ? -6 : 6);
+      var paletteGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.05, 8);
+      var paletteMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+      var palette = new THREE.Mesh(paletteGeo, paletteMat);
+      palette.position.set(ppx, y + 0.05, ppz);
+      palette.castShadow = false;
+      scene.add(palette);
+    }
   }
 
   function createWildsStructure(scene) {
@@ -13536,6 +16522,120 @@ html, body {
     rune.castShadow = false;
     scene.add(rune);
     animatedObjects.push({ mesh: rune, type: 'crystal', params: { speed: 0.2, baseY: y + 1.55 } });
+
+    // ENHANCED DECORATIONS: More varied trees (different sizes)
+    for (var vt = 0; vt < 10; vt++) {
+      var vtAngle = (vt / 10) * Math.PI * 2;
+      var vtRadius = 20 + seededRandom(vt, 15, 1) * 15;
+      var vtx = z.cx + Math.cos(vtAngle) * vtRadius;
+      var vtz = z.cz + Math.sin(vtAngle) * vtRadius;
+      var treeHeight = 3 + seededRandom(vt, 15, 2) * 4;
+
+      // Trunk
+      var trunkGeo = new THREE.CylinderGeometry(0.3, 0.5, treeHeight, 8);
+      var trunkMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+      var trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.set(vtx, y + treeHeight / 2, vtz);
+      trunk.castShadow = false;
+      scene.add(trunk);
+
+      // Canopy
+      var canopyGeo = new THREE.SphereGeometry(treeHeight * 0.5, 8, 8);
+      var canopyMat = new THREE.MeshStandardMaterial({ color: 0x1a5e1a });
+      var canopy = new THREE.Mesh(canopyGeo, canopyMat);
+      canopy.position.set(vtx, y + treeHeight + treeHeight * 0.3, vtz);
+      canopy.castShadow = false;
+      scene.add(canopy);
+    }
+
+    // Animal tracks (small spheres in dirt)
+    for (var at = 0; at < 20; at++) {
+      var atAngle = (at / 20) * Math.PI * 2;
+      var atRadius = 8 + (at % 5) * 3;
+      var atx = z.cx + Math.cos(atAngle) * atRadius;
+      var atz = z.cz + Math.sin(atAngle) * atRadius;
+      var trackGeo = new THREE.SphereGeometry(0.12, 6, 6);
+      var trackMat = new THREE.MeshStandardMaterial({ color: 0x4a3728 });
+      var track = new THREE.Mesh(trackGeo, trackMat);
+      track.position.set(atx, y + 0.08, atz);
+      track.scale.y = 0.3;
+      track.castShadow = false;
+      scene.add(track);
+    }
+
+    // Fog patches (semi-transparent spheres)
+    for (var fg = 0; fg < 6; fg++) {
+      var fgAngle = (fg / 6) * Math.PI * 2 + 0.3;
+      var fgx = z.cx + Math.cos(fgAngle) * 12;
+      var fgz = z.cz + Math.sin(fgAngle) * 12;
+      var fogGeo = new THREE.SphereGeometry(2, 8, 8);
+      var fogMat = new THREE.MeshStandardMaterial({
+        color: 0xcccccc,
+        transparent: true,
+        opacity: 0.2,
+        emissive: 0xaaaaaa,
+        emissiveIntensity: 0.1
+      });
+      var fog = new THREE.Mesh(fogGeo, fogMat);
+      fog.position.set(fgx, y + 1, fgz);
+      fog.scale.y = 0.4;
+      fog.castShadow = false;
+      scene.add(fog);
+      animatedObjects.push({
+        mesh: fog,
+        type: 'water',
+        params: { speed: 0.3 }
+      });
+    }
+
+    // Wild mushroom clusters
+    for (var wm = 0; wm < 12; wm++) {
+      var wmAngle = (wm / 12) * Math.PI * 2;
+      var wmRadius = 10 + (wm % 4) * 4;
+      var wmx = z.cx + Math.cos(wmAngle) * wmRadius;
+      var wmz = z.cz + Math.sin(wmAngle) * wmRadius;
+
+      for (var mc = 0; mc < 3; mc++) {
+        var mushroomCapGeo = new THREE.SphereGeometry(0.3, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+        var mushroomMat = new THREE.MeshStandardMaterial({
+          color: wm % 3 === 0 ? 0xff6b6b : (wm % 3 === 1 ? 0x4ecdc4 : 0xf7b731)
+        });
+        var mushroomCap = new THREE.Mesh(mushroomCapGeo, mushroomMat);
+        mushroomCap.position.set(
+          wmx + (mc - 1) * 0.4,
+          y + 0.25 + mc * 0.05,
+          wmz
+        );
+        mushroomCap.castShadow = false;
+        scene.add(mushroomCap);
+
+        var stemGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.3, 6);
+        var stemMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5 });
+        var stem = new THREE.Mesh(stemGeo, stemMat);
+        stem.position.set(
+          wmx + (mc - 1) * 0.4,
+          y + 0.1 + mc * 0.05,
+          wmz
+        );
+        stem.castShadow = false;
+        scene.add(stem);
+      }
+    }
+
+    // Ancient vine-covered rocks
+    for (var vr = 0; vr < 8; vr++) {
+      var vrAngle = (vr / 8) * Math.PI * 2;
+      var vrx = z.cx + Math.cos(vrAngle) * 18;
+      var vrz = z.cz + Math.sin(vrAngle) * 18;
+      var rockSize = 0.8 + seededRandom(vr, 25, 1) * 1.2;
+      var vineRockGeo = new THREE.SphereGeometry(rockSize, 8, 8);
+      var vineRockMat = new THREE.MeshStandardMaterial({ color: 0x3e6b3e });
+      var vineRock = new THREE.Mesh(vineRockGeo, vineRockMat);
+      vineRock.position.set(vrx, y + rockSize * 0.6, vrz);
+      vineRock.scale.y = 0.7;
+      vineRock.castShadow = false;
+      scene.add(vineRock);
+    }
   }
 
   function createAgoraStructure(scene) {
@@ -13581,6 +16681,120 @@ html, body {
       crate.rotation.y = seededRandom(100, c, 3) * Math.PI;
       crate.castShadow = false;
       scene.add(crate);
+    }
+
+    // ENHANCED DECORATIONS: Market stall awnings (already have tents, add rope decorations)
+    for (var aw = 0; aw < 8; aw++) {
+      var awx = z.cx + (aw % 4 - 1.5) * 8;
+      var awz = z.cz + Math.floor(aw / 4) * 14 - 7;
+
+      // Hanging lanterns
+      for (var hl = -1; hl <= 1; hl += 2) {
+        var lanternGeo = new THREE.CylinderGeometry(0.15, 0.2, 0.4, 6);
+        var lanternMat = new THREE.MeshStandardMaterial({
+          color: 0xffd700,
+          emissive: 0xffaa00,
+          emissiveIntensity: 0.4
+        });
+        var lantern = new THREE.Mesh(lanternGeo, lanternMat);
+        lantern.position.set(awx + hl * 2, y + 3.5, awz);
+        lantern.castShadow = false;
+        scene.add(lantern);
+
+        // Rope
+        var ropeGeo = new THREE.CylinderGeometry(0.02, 0.02, 1.5, 6);
+        var ropeMat = new THREE.MeshStandardMaterial({ color: 0x8b7355 });
+        var rope = new THREE.Mesh(ropeGeo, ropeMat);
+        rope.position.set(awx + hl * 2, y + 4.2, awz);
+        rope.castShadow = false;
+        scene.add(rope);
+      }
+    }
+
+    // Trading goods displays (colorful items on counters)
+    for (var tg = 0; tg < 8; tg++) {
+      var tgx = z.cx + (tg % 4 - 1.5) * 8;
+      var tgz = z.cz + Math.floor(tg / 4) * 14 - 7 + 2.5;
+
+      // Display items (spheres and boxes)
+      for (var di = 0; di < 3; di++) {
+        var displayGeo = di % 2 === 0 ? new THREE.SphereGeometry(0.15, 8, 8) : new THREE.BoxGeometry(0.25, 0.25, 0.25);
+        var displayColors = [0xff6b6b, 0x4ecdc4, 0xf7b731, 0x5f27cd, 0x00d2d3, 0xff9ff3];
+        var displayMat = new THREE.MeshStandardMaterial({
+          color: displayColors[(tg + di) % displayColors.length],
+          emissive: displayColors[(tg + di) % displayColors.length],
+          emissiveIntensity: 0.1
+        });
+        var display = new THREE.Mesh(displayGeo, displayMat);
+        display.position.set(tgx + (di - 1) * 0.5, y + 1.15, tgz);
+        display.castShadow = false;
+        scene.add(display);
+      }
+    }
+
+    // Barrels for storage
+    for (var br = 0; br < 6; br++) {
+      var brAngle = (br / 6) * Math.PI * 2;
+      var brx = z.cx + Math.cos(brAngle) * 12;
+      var brz = z.cz + Math.sin(brAngle) * 12;
+      var barrelGeo = new THREE.CylinderGeometry(0.5, 0.6, 1.2, 12);
+      var barrelMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+      var barrel = new THREE.Mesh(barrelGeo, barrelMat);
+      barrel.position.set(brx, y + 0.6, brz);
+      barrel.castShadow = false;
+      scene.add(barrel);
+
+      // Barrel bands
+      for (var bb = 0; bb < 3; bb++) {
+        var bandGeo = new THREE.TorusGeometry(0.55, 0.03, 6, 12);
+        var bandMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+        var band = new THREE.Mesh(bandGeo, bandMat);
+        band.position.set(brx, y + 0.3 + bb * 0.4, brz);
+        band.rotation.x = Math.PI / 2;
+        band.castShadow = false;
+        scene.add(band);
+      }
+    }
+
+    // Decorative rugs under stalls
+    for (var rg = 0; rg < 4; rg++) {
+      var rgx = z.cx + (rg % 2 - 0.5) * 12;
+      var rgz = z.cz + (rg < 2 ? -10 : 10);
+      var rugGeo = new THREE.PlaneGeometry(5, 3);
+      var rugColors = [0x8b0000, 0x006400, 0x00008b, 0x8b008b];
+      var rugMat = new THREE.MeshStandardMaterial({
+        color: rugColors[rg],
+        side: THREE.DoubleSide
+      });
+      var rug = new THREE.Mesh(rugGeo, rugMat);
+      rug.position.set(rgx, y + 0.02, rgz);
+      rug.rotation.x = -Math.PI / 2;
+      rug.castShadow = false;
+      scene.add(rug);
+    }
+
+    // Signposts
+    for (var sgn = 0; sgn < 4; sgn++) {
+      var sgnAngle = (sgn / 4) * Math.PI * 2;
+      var sgnx = z.cx + Math.cos(sgnAngle) * 20;
+      var sgnz = z.cz + Math.sin(sgnAngle) * 20;
+
+      // Post
+      var postGeo = new THREE.CylinderGeometry(0.1, 0.1, 3, 8);
+      var postMat = new THREE.MeshStandardMaterial({ color: 0x654321 });
+      var post = new THREE.Mesh(postGeo, postMat);
+      post.position.set(sgnx, y + 1.5, sgnz);
+      post.castShadow = false;
+      scene.add(post);
+
+      // Sign
+      var signGeo = new THREE.BoxGeometry(1.5, 0.5, 0.1);
+      var signMat = new THREE.MeshStandardMaterial({ color: 0xf5deb3 });
+      var sign = new THREE.Mesh(signGeo, signMat);
+      sign.position.set(sgnx, y + 3.2, sgnz);
+      sign.rotation.y = sgnAngle;
+      sign.castShadow = false;
+      scene.add(sign);
     }
   }
 
@@ -13644,6 +16858,168 @@ html, body {
       wp.castShadow = false;
       scene.add(wp);
     }
+
+    // ENHANCED DECORATIONS: Benches in gathering circles
+    for (var bc = 0; bc < 6; bc++) {
+      var bcAngle = (bc / 6) * Math.PI * 2;
+      var bcx = z.cx + Math.cos(bcAngle) * 8;
+      var bcz = z.cz + Math.sin(bcAngle) * 8;
+
+      var benchGeo = new THREE.BoxGeometry(2, 0.3, 0.6);
+      var benchMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+      var bench = new THREE.Mesh(benchGeo, benchMat);
+      bench.position.set(bcx, y + 0.4, bcz);
+      bench.rotation.y = bcAngle + Math.PI / 2;
+      bench.castShadow = false;
+      scene.add(bench);
+
+      // Bench back
+      var backGeo = new THREE.BoxGeometry(2, 0.8, 0.1);
+      var back = new THREE.Mesh(backGeo, benchMat);
+      back.position.set(
+        bcx + Math.cos(bcAngle) * 0.35,
+        y + 0.9,
+        bcz + Math.sin(bcAngle) * 0.35
+      );
+      back.rotation.y = bcAngle + Math.PI / 2;
+      back.castShadow = false;
+      scene.add(back);
+
+      // Bench legs
+      for (var bl = -1; bl <= 1; bl += 2) {
+        var legGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6);
+        var legMesh = new THREE.Mesh(legGeo, benchMat);
+        legMesh.position.set(
+          bcx + Math.cos(bcAngle + Math.PI / 2) * bl * 0.8,
+          y + 0.2,
+          bcz + Math.sin(bcAngle + Math.PI / 2) * bl * 0.8
+        );
+        legMesh.castShadow = false;
+        scene.add(legMesh);
+      }
+    }
+
+    // Gathering circles (stone rings)
+    for (var gc = 0; gc < 2; gc++) {
+      var gcx = z.cx + (gc === 0 ? -10 : 10);
+      var gcz = z.cz;
+
+      for (var gs = 0; gs < 10; gs++) {
+        var gsAngle = (gs / 10) * Math.PI * 2;
+        var stoneGeo = new THREE.BoxGeometry(0.5, 0.3, 0.4);
+        var stoneMat = new THREE.MeshStandardMaterial({ color: 0x9e9e9e });
+        var stone = new THREE.Mesh(stoneGeo, stoneMat);
+        stone.position.set(
+          gcx + Math.cos(gsAngle) * 4,
+          y + 0.15,
+          gcz + Math.sin(gsAngle) * 4
+        );
+        stone.rotation.y = gsAngle;
+        stone.castShadow = false;
+        scene.add(stone);
+      }
+    }
+
+    // Lantern strings connecting houses
+    for (var ls = 0; ls < 8; ls++) {
+      var lsAngle = (ls / 8) * Math.PI * 2;
+      var lsx = z.cx + Math.cos(lsAngle) * 18;
+      var lsz = z.cz + Math.sin(lsAngle) * 18;
+
+      // Lanterns hanging from house eaves
+      var hangLanternGeo = new THREE.SphereGeometry(0.2, 8, 8);
+      var hangLanternMat = new THREE.MeshStandardMaterial({
+        color: 0xffeb3b,
+        emissive: 0xffc107,
+        emissiveIntensity: 0.5
+      });
+      var hangLantern = new THREE.Mesh(hangLanternGeo, hangLanternMat);
+      hangLantern.position.set(lsx, y + 4.5, lsz);
+      hangLantern.castShadow = false;
+      scene.add(hangLantern);
+      animatedObjects.push({
+        mesh: hangLantern,
+        type: 'torch',
+        params: { seed: ls * 100 }
+      });
+
+      // String to next house
+      var nextAngle = ((ls + 1) / 8) * Math.PI * 2;
+      var nextX = z.cx + Math.cos(nextAngle) * 18;
+      var nextZ = z.cz + Math.sin(nextAngle) * 18;
+      var stringLength = Math.sqrt(Math.pow(nextX - lsx, 2) + Math.pow(nextZ - lsz, 2));
+      var stringGeo = new THREE.CylinderGeometry(0.02, 0.02, stringLength, 6);
+      var stringMat = new THREE.MeshStandardMaterial({ color: 0x654321 });
+      var string = new THREE.Mesh(stringGeo, stringMat);
+      string.position.set((lsx + nextX) / 2, y + 4.5, (lsz + nextZ) / 2);
+      string.rotation.y = Math.atan2(nextZ - lsz, nextX - lsx);
+      string.rotation.z = Math.PI / 2;
+      string.castShadow = false;
+      scene.add(string);
+    }
+
+    // Flower pots near houses
+    for (var fp = 0; fp < 8; fp++) {
+      var fpAngle = (fp / 8) * Math.PI * 2;
+      var fpx = z.cx + Math.cos(fpAngle) * 16;
+      var fpz = z.cz + Math.sin(fpAngle) * 16;
+
+      var potGeo = new THREE.CylinderGeometry(0.3, 0.25, 0.5, 8);
+      var potMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+      var pot = new THREE.Mesh(potGeo, potMat);
+      pot.position.set(fpx, y + 0.25, fpz);
+      pot.castShadow = false;
+      scene.add(pot);
+
+      // Flowers in pot
+      var flowerGeo = new THREE.SphereGeometry(0.25, 6, 6);
+      var flowerMat = new THREE.MeshStandardMaterial({
+        color: [0xff6b9d, 0x4ecdc4, 0xf7b731][fp % 3]
+      });
+      var flower = new THREE.Mesh(flowerGeo, flowerMat);
+      flower.position.set(fpx, y + 0.6, fpz);
+      flower.castShadow = false;
+      scene.add(flower);
+    }
+
+    // Community notice board
+    var boardPostGeo = new THREE.CylinderGeometry(0.12, 0.12, 3, 8);
+    var boardPostMat = new THREE.MeshStandardMaterial({ color: 0x654321 });
+    var boardPost = new THREE.Mesh(boardPostGeo, boardPostMat);
+    boardPost.position.set(z.cx + 5, y + 1.5, z.cz + 5);
+    boardPost.castShadow = false;
+    scene.add(boardPost);
+
+    var boardGeo = new THREE.BoxGeometry(2.5, 2, 0.1);
+    var boardMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+    var board = new THREE.Mesh(boardGeo, boardMat);
+    board.position.set(z.cx + 5, y + 2.5, z.cz + 5);
+    board.castShadow = false;
+    scene.add(board);
+
+    // Tool racks
+    for (var tr = 0; tr < 2; tr++) {
+      var trx = z.cx + (tr === 0 ? -12 : 12);
+      var trz = z.cz + 8;
+
+      var rackGeo = new THREE.BoxGeometry(1.5, 0.1, 0.3);
+      var rackMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+      var rack = new THREE.Mesh(rackGeo, rackMat);
+      rack.position.set(trx, y + 1.5, trz);
+      rack.castShadow = false;
+      scene.add(rack);
+
+      // Tools on rack (simplified as small boxes)
+      for (var tl = 0; tl < 3; tl++) {
+        var toolGeo = new THREE.BoxGeometry(0.1, 0.8, 0.05);
+        var toolMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+        var tool = new THREE.Mesh(toolGeo, toolMat);
+        tool.position.set(trx + (tl - 1) * 0.4, y + 1.1, trz);
+        tool.rotation.z = Math.PI / 6;
+        tool.castShadow = false;
+        scene.add(tool);
+      }
+    }
   }
 
   function createArenaStructure(scene) {
@@ -13706,6 +17082,157 @@ html, body {
       var tpx = z.cx + Math.cos(tAngle) * 20;
       var tpz = z.cz + Math.sin(tAngle) * 20;
       addTorch(scene, tpx, y, tpz);
+    }
+
+    // ENHANCED DECORATIONS: Spectator banners
+    for (var bn = 0; bn < 8; bn++) {
+      var bnAngle = (bn / 8) * Math.PI * 2;
+      var bnRadius = 28;
+      var bnx = z.cx + Math.cos(bnAngle) * bnRadius;
+      var bnz = z.cz + Math.sin(bnAngle) * bnRadius;
+
+      // Banner pole
+      var poleGeo = new THREE.CylinderGeometry(0.08, 0.08, 4, 8);
+      var poleMat = new THREE.MeshStandardMaterial({ color: 0x654321 });
+      var pole = new THREE.Mesh(poleGeo, poleMat);
+      pole.position.set(bnx, y + 2, bnz);
+      pole.castShadow = false;
+      scene.add(pole);
+
+      // Banner cloth
+      var bannerGeo = new THREE.PlaneGeometry(1.5, 2.5);
+      var bannerColors = [0xff0000, 0x0000ff, 0x00ff00, 0xffff00];
+      var bannerMat = new THREE.MeshStandardMaterial({
+        color: bannerColors[bn % bannerColors.length],
+        side: THREE.DoubleSide
+      });
+      var banner = new THREE.Mesh(bannerGeo, bannerMat);
+      banner.position.set(bnx, y + 3, bnz);
+      banner.rotation.y = bnAngle + Math.PI / 2;
+      banner.castShadow = false;
+      scene.add(banner);
+    }
+
+    // Torch brackets on seating tiers
+    for (var tb = 0; tb < 16; tb++) {
+      var tbAngle = (tb / 16) * Math.PI * 2;
+      var tbRadius = 24;
+      var tbx = z.cx + Math.cos(tbAngle) * tbRadius;
+      var tbz = z.cz + Math.sin(tbAngle) * tbRadius;
+
+      var bracketGeo = new THREE.BoxGeometry(0.3, 0.15, 0.3);
+      var bracketMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+      var bracket = new THREE.Mesh(bracketGeo, bracketMat);
+      bracket.position.set(tbx, y + 4, tbz);
+      bracket.castShadow = false;
+      scene.add(bracket);
+
+      // Torch on bracket
+      var torchGeo = new THREE.SphereGeometry(0.12, 6, 6);
+      var torchMat = new THREE.MeshStandardMaterial({
+        color: 0xff6600,
+        emissive: 0xff4400,
+        emissiveIntensity: 0.8
+      });
+      var torch = new THREE.Mesh(torchGeo, torchMat);
+      torch.position.set(tbx, y + 4.3, tbz);
+      torch.castShadow = false;
+      scene.add(torch);
+      animatedObjects.push({
+        mesh: torch,
+        type: 'torch',
+        params: { seed: tb * 200 }
+      });
+    }
+
+    // Scoring boards (tall posts with platforms)
+    for (var sb = 0; sb < 4; sb++) {
+      var sbAngle = (sb / 4) * Math.PI * 2;
+      var sbx = z.cx + Math.cos(sbAngle) * 30;
+      var sbz = z.cz + Math.sin(sbAngle) * 30;
+
+      // Post
+      var scorePostGeo = new THREE.CylinderGeometry(0.2, 0.25, 6, 8);
+      var scorePostMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+      var scorePost = new THREE.Mesh(scorePostGeo, scorePostMat);
+      scorePost.position.set(sbx, y + 3, sbz);
+      scorePost.castShadow = false;
+      scene.add(scorePost);
+
+      // Scoreboard
+      var scoreBoardGeo = new THREE.BoxGeometry(2, 1.5, 0.2);
+      var scoreBoardMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50 });
+      var scoreBoard = new THREE.Mesh(scoreBoardGeo, scoreBoardMat);
+      scoreBoard.position.set(sbx, y + 6.5, sbz);
+      scoreBoard.rotation.y = sbAngle + Math.PI;
+      scoreBoard.castShadow = false;
+      scene.add(scoreBoard);
+    }
+
+    // Training equipment (dummy posts)
+    for (var te = 0; te < 4; te++) {
+      var teAngle = (te / 4) * Math.PI * 2 + Math.PI / 8;
+      var tex = z.cx + Math.cos(teAngle) * 10;
+      var tez = z.cz + Math.sin(teAngle) * 10;
+
+      // Post
+      var dummyPostGeo = new THREE.CylinderGeometry(0.15, 0.15, 2.5, 8);
+      var dummyPostMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+      var dummyPost = new THREE.Mesh(dummyPostGeo, dummyPostMat);
+      dummyPost.position.set(tex, y + 1.25, tez);
+      dummyPost.castShadow = false;
+      scene.add(dummyPost);
+
+      // Dummy head
+      var dummyHeadGeo = new THREE.SphereGeometry(0.3, 8, 8);
+      var dummyHeadMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+      var dummyHead = new THREE.Mesh(dummyHeadGeo, dummyHeadMat);
+      dummyHead.position.set(tex, y + 2.8, tez);
+      dummyHead.castShadow = false;
+      scene.add(dummyHead);
+
+      // Crossbar arms
+      for (var ca = -1; ca <= 1; ca += 2) {
+        var armGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.8, 6);
+        var arm = new THREE.Mesh(armGeo, dummyPostMat);
+        arm.position.set(tex + ca * 0.4, y + 2.2, tez);
+        arm.rotation.z = Math.PI / 2;
+        arm.castShadow = false;
+        scene.add(arm);
+      }
+    }
+
+    // Weapon racks
+    for (var wr = 0; wr < 2; wr++) {
+      var wrx = z.cx + (wr === 0 ? -14 : 14);
+      var wrz = z.cz;
+
+      var weaponRackGeo = new THREE.BoxGeometry(3, 0.15, 0.3);
+      var weaponRackMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+      var weaponRack = new THREE.Mesh(weaponRackGeo, weaponRackMat);
+      weaponRack.position.set(wrx, y + 1.5, wrz);
+      weaponRack.castShadow = false;
+      scene.add(weaponRack);
+
+      // Support posts
+      for (var wp = -1; wp <= 1; wp += 2) {
+        var wpGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.5, 6);
+        var wpMesh = new THREE.Mesh(wpGeo, weaponRackMat);
+        wpMesh.position.set(wrx + wp * 1.2, y + 0.75, wrz);
+        wpMesh.castShadow = false;
+        scene.add(wpMesh);
+      }
+
+      // Weapons on rack (simplified as sticks)
+      for (var wn = 0; wn < 4; wn++) {
+        var weaponGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.8, 6);
+        var weaponMat = new THREE.MeshStandardMaterial({ color: 0x8b8b8b });
+        var weapon = new THREE.Mesh(weaponGeo, weaponMat);
+        weapon.position.set(wrx + (wn - 1.5) * 0.6, y + 0.9, wrz);
+        weapon.rotation.z = Math.PI / 6;
+        weapon.castShadow = false;
+        scene.add(weapon);
+      }
     }
   }
 
@@ -17275,6 +20802,16 @@ html, body {
         }
         break;
 
+      case 'h':
+      case 'H':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleGovernance', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
       case 'r':
       case 'R':
         if (!chatMode && buildMode) {
@@ -17595,6 +21132,7 @@ html, body {
   let nearbyPlayersList = null;
   let chatInput = null;
   let notificationContainer = null;
+  let federationPanel = null;
 
   /**
    * Initialize HUD
@@ -17713,6 +21251,25 @@ html, body {
     `;
     nearbyPlayersList.innerHTML = '<div style="font-weight: bold; margin-bottom: 5px;">Nearby Players</div>';
     hudOverlay.appendChild(nearbyPlayersList);
+
+    // Federation status panel (bottom-right)
+    federationPanel = document.createElement('div');
+    federationPanel.id = 'federation-panel';
+    federationPanel.style.cssText = `
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 8px;
+      padding: 10px;
+      min-width: 200px;
+      max-height: 250px;
+      overflow-y: auto;
+      pointer-events: auto;
+      border: 2px solid rgba(100, 100, 255, 0.5);
+    `;
+    federationPanel.innerHTML = '<div style="font-weight: bold; margin-bottom: 5px; color: #88f;">Federation</div>';
+    hudOverlay.appendChild(federationPanel);
 
     // Notification container (top-center, below zone label)
     notificationContainer = document.createElement('div');
@@ -22358,7 +25915,371 @@ html, body {
     }
   }
 
+  // ========================================================================
+  // GOVERNANCE PANEL (Zone Stewards & Elections)
+  // ========================================================================
+
+  var governancePanel = null;
+  var governanceVisible = false;
+  var governanceCallback = null;
+
+  function initGovernancePanel(callback) {
+    if (typeof document === 'undefined') return;
+    governanceCallback = callback;
+  }
+
+  function showGovernancePanel(zoneId, playerData) {
+    if (typeof document === 'undefined') return;
+
+    var Social = typeof window !== 'undefined' ? window.Social : null;
+    var Zones = typeof window !== 'undefined' ? window.Zones : null;
+    if (!Social || !Zones) return;
+
+    hideGovernancePanel();
+
+    governancePanel = document.createElement('div');
+    governancePanel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #daa520;border-radius:12px;' +
+      'padding:20px;width:700px;max-height:80vh;overflow-y:auto;z-index:300;' +
+      'box-shadow:0 4px 30px rgba(218,165,32,0.3);pointer-events:auto;';
+
+    var zone = Zones.getZone(zoneId);
+    var stewards = Zones.getZoneStewards(zoneId);
+    var policies = Zones.getZonePolicies(zoneId);
+    var activeElection = Zones.getActiveElection(zoneId);
+    var reputation = Social.getReputation(playerData.id);
+    var isRegular = Zones.isZoneRegular(zoneId, playerData.id);
+    var isSteward = Zones.isZoneSteward(zoneId, playerData.id);
+
+    var html = '<div style="font-size:24px;font-weight:bold;margin-bottom:10px;text-align:center;color:#daa520;">' +
+      zone.name + ' Governance</div>';
+
+    html += '<div style="margin-bottom:15px;color:#b0e0e6;text-align:center;font-size:12px;">' +
+      'Your Reputation: ' + reputation.tier + ' (' + reputation.score + ' points)</div>';
+
+    // Stewards section
+    html += '<div style="margin-bottom:20px;">';
+    html += '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#4af;border-bottom:1px solid #4af;padding-bottom:4px;">Current Stewards</div>';
+    if (stewards.length > 0) {
+      html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+      stewards.forEach(function(s) {
+        var daysLeft = Math.ceil((s.termEnd - Date.now()) / 86400000);
+        html += '<div style="background:rgba(74,170,255,0.1);padding:10px;border-radius:6px;border-left:3px solid #4af;">' +
+          '<div style="font-weight:bold;">' + s.playerId + '</div>' +
+          '<div style="font-size:11px;color:#aaa;">' + s.votes + ' votes • ' + daysLeft + ' days remaining</div>' +
+          '</div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div style="color:#888;font-style:italic;padding:10px;">No active stewards. Start an election!</div>';
+    }
+    html += '</div>';
+
+    // Zone Policies section
+    if (isSteward) {
+      html += '<div style="margin-bottom:20px;">';
+      html += '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#fa4;border-bottom:1px solid #fa4;padding-bottom:4px;">Zone Policies (Steward)</div>';
+      html += '<div style="background:rgba(255,170,68,0.1);padding:12px;border-radius:6px;">';
+      html += '<label style="display:block;margin-bottom:8px;cursor:pointer;">' +
+        '<input type="checkbox" id="policy-building" ' + (policies.buildingRequiresApproval ? 'checked' : '') + '> Building requires approval</label>';
+      html += '<label style="display:block;margin-bottom:8px;cursor:pointer;">' +
+        '<input type="checkbox" id="policy-moderated" ' + (policies.chatModerated ? 'checked' : '') + '> Chat moderated</label>';
+      html += '<div style="margin-top:10px;"><input type="text" id="welcome-message" placeholder="Zone welcome message..." ' +
+        'value="' + (policies.welcomeMessage || '').replace(/"/g, '&quot;') + '" style="width:100%;padding:8px;background:rgba(0,0,0,0.3);' +
+        'border:1px solid #666;border-radius:4px;color:#fff;"></div>';
+      html += '<button id="save-policies-btn" style="margin-top:10px;padding:8px 16px;background:#fa4;border:none;' +
+        'border-radius:4px;color:#000;font-weight:bold;cursor:pointer;">Save Policies</button>';
+      html += '</div>';
+      html += '</div>';
+    } else if (policies.welcomeMessage) {
+      html += '<div style="margin-bottom:20px;padding:12px;background:rgba(218,165,32,0.1);border-radius:6px;border-left:3px solid #daa520;">';
+      html += '<div style="font-size:14px;font-weight:bold;color:#daa520;margin-bottom:4px;">Welcome Message</div>';
+      html += '<div style="font-size:12px;color:#ccc;">' + policies.welcomeMessage + '</div>';
+      html += '</div>';
+    }
+
+    // Election section
+    html += '<div style="margin-bottom:20px;">';
+    html += '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#4af;border-bottom:1px solid #4af;padding-bottom:4px;">Elections</div>';
+    if (activeElection) {
+      var timeLeft = Math.ceil((activeElection.endTime - Date.now()) / 3600000);
+      html += '<div style="background:rgba(74,170,255,0.1);padding:12px;border-radius:6px;margin-bottom:10px;">';
+      html += '<div style="font-weight:bold;margin-bottom:8px;">Active Election (' + timeLeft + ' hours left)</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:6px;">';
+      activeElection.candidates.forEach(function(c) {
+        var hasVoted = isRegular && c.voters && c.voters.has(playerData.id);
+        html += '<div style="background:rgba(0,0,0,0.3);padding:8px;border-radius:4px;display:flex;justify-content:space-between;align-items:center;">' +
+          '<span>' + c.playerId + '</span>' +
+          '<span style="color:#4af;font-weight:bold;">' + c.votes + ' votes</span>' +
+          (isRegular && !hasVoted ? '<button class="vote-btn" data-candidate="' + c.playerId + '" data-election="' + activeElection.id + '" ' +
+          'style="padding:4px 12px;background:#4af;border:none;border-radius:4px;color:#000;cursor:pointer;font-size:11px;">Vote</button>' : '') +
+          (hasVoted ? '<span style="color:#4a4;font-size:11px;">Voted</span>' : '') +
+          '</div>';
+      });
+      html += '</div></div>';
+
+      if (isRegular) {
+        html += '<div style="font-size:11px;color:#aaa;margin-top:8px;">You can vote as a zone regular.</div>';
+      } else {
+        html += '<div style="font-size:11px;color:#888;margin-top:8px;">Visit this zone 5+ times to vote in elections.</div>';
+      }
+    } else {
+      var canRunForSteward = reputation.tier === 'Respected' || reputation.tier === 'Honored' || reputation.tier === 'Elder';
+      html += '<div style="color:#888;font-style:italic;margin-bottom:10px;">No active election.</div>';
+      if (canRunForSteward) {
+        html += '<button id="start-election-btn" style="padding:8px 16px;background:#4af;border:none;' +
+          'border-radius:4px;color:#000;font-weight:bold;cursor:pointer;">Start Election</button>';
+      } else {
+        html += '<div style="font-size:11px;color:#888;">Reach Respected tier to run for steward.</div>';
+      }
+    }
+    html += '</div>';
+
+    // Governance Log section
+    var log = Zones.getGovernanceLog(zoneId, 10);
+    if (log.length > 0) {
+      html += '<div style="margin-bottom:20px;">';
+      html += '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#888;border-bottom:1px solid #666;padding-bottom:4px;">Recent Actions</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:4px;max-height:150px;overflow-y:auto;">';
+      log.forEach(function(action) {
+        var timeAgo = Math.floor((Date.now() - action.timestamp) / 60000);
+        html += '<div style="font-size:11px;color:#aaa;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">' +
+          '<span style="color:#4af;">' + action.type + '</span> by ' + (action.stewardId || action.from || 'system') + ' — ' + timeAgo + 'm ago</div>';
+      });
+      html += '</div></div>';
+    }
+
+    // Close button
+    html += '<div style="text-align:center;margin-top:20px;">' +
+      '<button id="close-governance-btn" style="padding:10px 24px;background:#666;border:none;' +
+      'border-radius:6px;color:#fff;font-weight:bold;cursor:pointer;">Close (H)</button></div>';
+
+    governancePanel.innerHTML = html;
+    document.body.appendChild(governancePanel);
+    governanceVisible = true;
+
+    // Attach event listeners
+    var closeBtn = document.getElementById('close-governance-btn');
+    if (closeBtn) {
+      closeBtn.onclick = hideGovernancePanel;
+    }
+
+    var startElectionBtn = document.getElementById('start-election-btn');
+    if (startElectionBtn) {
+      startElectionBtn.onclick = function() {
+        if (governanceCallback) {
+          governanceCallback('startElection', { zoneId: zoneId });
+        }
+      };
+    }
+
+    var savePoliciesBtn = document.getElementById('save-policies-btn');
+    if (savePoliciesBtn) {
+      savePoliciesBtn.onclick = function() {
+        var buildingApproval = document.getElementById('policy-building').checked;
+        var chatModerated = document.getElementById('policy-moderated').checked;
+        var welcomeMsg = document.getElementById('welcome-message').value;
+
+        if (governanceCallback) {
+          governanceCallback('savePolicies', {
+            zoneId: zoneId,
+            buildingRequiresApproval: buildingApproval,
+            chatModerated: chatModerated,
+            welcomeMessage: welcomeMsg
+          });
+        }
+      };
+    }
+
+    var voteButtons = document.querySelectorAll('.vote-btn');
+    voteButtons.forEach(function(btn) {
+      btn.onclick = function() {
+        var candidateId = btn.getAttribute('data-candidate');
+        var electionId = btn.getAttribute('data-election');
+        if (governanceCallback) {
+          governanceCallback('vote', {
+            electionId: electionId,
+            candidateId: candidateId
+          });
+        }
+      };
+    });
+  }
+
+  function hideGovernancePanel() {
+    if (governancePanel) {
+      document.body.removeChild(governancePanel);
+      governancePanel = null;
+    }
+    governanceVisible = false;
+  }
+
+  function toggleGovernancePanel(zoneId, playerData) {
+    if (governanceVisible) {
+      hideGovernancePanel();
+    } else {
+      showGovernancePanel(zoneId, playerData);
+    }
+  }
+
+  // ========================================================================
+  // REPUTATION DISPLAY
+  // ========================================================================
+
+  function updateReputationDisplay(reputation) {
+    if (typeof document === 'undefined') return;
+    var playerInfo = document.getElementById('player-info');
+    if (!playerInfo) return;
+
+    var repEl = document.getElementById('reputation-display');
+    if (!repEl) {
+      repEl = document.createElement('div');
+      repEl.id = 'reputation-display';
+      repEl.style.cssText = 'font-size:11px;color:#daa520;margin-top:2px;';
+      playerInfo.appendChild(repEl);
+    }
+
+    var tierColors = {
+      'Newcomer': '#888',
+      'Trusted': '#4af',
+      'Respected': '#4a4',
+      'Honored': '#f4a',
+      'Elder': '#daa520'
+    };
+
+    var color = tierColors[reputation.tier] || '#888';
+    repEl.innerHTML = '<span style="color:' + color + ';">★</span> ' + reputation.tier + ' (' + reputation.score + ')';
+  }
+
   // Export public API
+  /**
+   * Update federation status panel
+   * @param {Array} discoveredWorlds - Array of discovered world info
+   * @param {Array} federatedWorlds - Array of federated world info
+   */
+  function updateFederationStatus(discoveredWorlds, federatedWorlds) {
+    if (!federationPanel) return;
+
+    var html = '<div style="font-weight: bold; margin-bottom: 8px; color: #88f;">Federation</div>';
+
+    // Show federated worlds (active portals)
+    if (federatedWorlds && federatedWorlds.length > 0) {
+      html += '<div style="margin-bottom: 8px;">';
+      html += '<div style="font-size: 11px; color: #aaa; margin-bottom: 3px;">Active Portals:</div>';
+      federatedWorlds.forEach(function(world) {
+        html += '<div style="margin-left: 8px; margin-bottom: 3px;">';
+        html += '<span style="color: #4f4;">&#x2713;</span> ';
+        html += '<span style="color: #fff;">' + (world.worldInfo?.worldName || world.worldId) + '</span>';
+        if (world.worldInfo?.playerCount !== undefined) {
+          html += '<span style="color: #888; font-size: 10px;"> (' + world.worldInfo.playerCount + ')</span>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Show discovered worlds (not yet federated)
+    if (discoveredWorlds && discoveredWorlds.length > 0) {
+      var unfederated = discoveredWorlds.filter(function(dw) {
+        return !federatedWorlds.some(function(fw) {
+          return fw.worldId === dw.worldId;
+        });
+      });
+
+      if (unfederated.length > 0) {
+        html += '<div style="margin-bottom: 8px;">';
+        html += '<div style="font-size: 11px; color: #aaa; margin-bottom: 3px;">Discovered:</div>';
+        unfederated.forEach(function(world) {
+          html += '<div style="margin-left: 8px; margin-bottom: 3px;">';
+          html += '<span style="color: #88f;">&#x25cf;</span> ';
+          html += '<span style="color: #ccc;">' + (world.worldName || world.worldId) + '</span>';
+          if (world.playerCount !== undefined) {
+            html += '<span style="color: #888; font-size: 10px;"> (' + world.playerCount + ')</span>';
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+    }
+
+    // Show help text if no worlds
+    if ((!federatedWorlds || federatedWorlds.length === 0) &&
+        (!discoveredWorlds || discoveredWorlds.length === 0)) {
+      html += '<div style="color: #888; font-size: 11px; font-style: italic;">No federated worlds yet</div>';
+    }
+
+    federationPanel.innerHTML = html;
+  }
+
+  /**
+   * Show federation portal UI when near a portal
+   * @param {object} portalInfo - Portal information
+   */
+  function showFederationPortalUI(portalInfo) {
+    if (typeof document === 'undefined') return;
+
+    // Create portal interaction UI
+    var portalUI = document.getElementById('federation-portal-ui');
+    if (!portalUI) {
+      portalUI = document.createElement('div');
+      portalUI.id = 'federation-portal-ui';
+      portalUI.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid #88f;
+        border-radius: 12px;
+        padding: 20px;
+        min-width: 300px;
+        color: white;
+        text-align: center;
+        pointer-events: auto;
+        z-index: 200;
+      `;
+      document.body.appendChild(portalUI);
+    }
+
+    var html = '<div style="font-size: 20px; font-weight: bold; margin-bottom: 10px; color: #88f;">Rift Portal</div>';
+    html += '<div style="margin-bottom: 15px; color: #ccc;">' + (portalInfo.worldName || 'Unknown World') + '</div>';
+
+    if (portalInfo.playerCount !== undefined) {
+      html += '<div style="margin-bottom: 15px; font-size: 12px; color: #aaa;">Players: ' + portalInfo.playerCount + '</div>';
+    }
+
+    html += '<button id="portal-warp-btn" style="';
+    html += 'background: #4488ff; color: white; border: none; padding: 10px 20px;';
+    html += 'border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px;">Enter Portal</button>';
+    html += '<button id="portal-close-btn" style="';
+    html += 'background: #444; color: white; border: none; padding: 10px 20px;';
+    html += 'border-radius: 5px; cursor: pointer; font-size: 14px;">Cancel</button>';
+
+    portalUI.innerHTML = html;
+
+    // Add event listeners
+    document.getElementById('portal-warp-btn').onclick = function() {
+      if (portalInfo.onWarp) {
+        portalInfo.onWarp(portalInfo.targetWorld);
+      }
+      hideFederationPortalUI();
+    };
+
+    document.getElementById('portal-close-btn').onclick = function() {
+      hideFederationPortalUI();
+    };
+  }
+
+  /**
+   * Hide federation portal UI
+   */
+  function hideFederationPortalUI() {
+    var portalUI = document.getElementById('federation-portal-ui');
+    if (portalUI) {
+      portalUI.remove();
+    }
+  }
+
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
   exports.updateChat = updateChat;
@@ -22388,6 +26309,9 @@ html, body {
   exports.showQuestComplete = showQuestComplete;
   exports.showQuestProgress = showQuestProgress;
   exports.acceptQuestFromOffer = acceptQuestFromOffer;
+  exports.updateFederationStatus = updateFederationStatus;
+  exports.showFederationPortalUI = showFederationPortalUI;
+  exports.hideFederationPortalUI = hideFederationPortalUI;
   exports.abandonQuestFromLog = abandonQuestFromLog;
   exports.initInventoryPanel = initInventoryPanel;
   exports.toggleInventoryPanel = toggleInventoryPanel;
@@ -22442,6 +26366,11 @@ html, body {
   exports.hideGuildCreate = hideGuildCreate;
   exports.showGuildInvite = showGuildInvite;
   exports.updateGuildTag = updateGuildTag;
+  exports.initGovernancePanel = initGovernancePanel;
+  exports.showGovernancePanel = showGovernancePanel;
+  exports.hideGovernancePanel = hideGovernancePanel;
+  exports.toggleGovernancePanel = toggleGovernancePanel;
+  exports.updateReputationDisplay = updateReputationDisplay;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));
 
@@ -29621,6 +33550,275 @@ html, body {
   }
 
   // ============================================================================
+  // ENHANCED DAILY SCHEDULES
+  // Get zone + activity for NPC based on archetype and time of day
+  // ============================================================================
+
+  /**
+   * Get the daily schedule for an NPC archetype at a specific time
+   * @param {string} archetype - NPC archetype
+   * @param {string} timeOfDay - Current time (dawn, morning, midday, afternoon, evening, night)
+   * @returns {object} - {zone, activity, priority}
+   */
+  function getDailySchedule(archetype, timeOfDay) {
+    var drives = ARCHETYPE_DRIVES[archetype];
+    var schedule = getSchedulePeriod(timeOfDay);
+
+    // Default zone based on archetype work locations
+    var defaultZone = drives.work_locations && drives.work_locations[0] ? drives.work_locations[0] : 'agora';
+
+    // Time-specific schedules by archetype
+    var schedules = {
+      merchant: {
+        dawn: { zone: 'agora', activity: 'setting_up_stall', priority: 0.8 },
+        morning: { zone: 'agora', activity: 'tend_shop', priority: 1.0 },
+        midday: { zone: 'agora', activity: 'tend_shop', priority: 1.0 },
+        afternoon: { zone: 'agora', activity: 'tend_shop', priority: 1.0 },
+        evening: { zone: 'commons', activity: 'socialize', priority: 0.6 },
+        night: { zone: 'commons', activity: 'rest', priority: 0.3 }
+      },
+      scholar: {
+        dawn: { zone: 'athenaeum', activity: 'research', priority: 0.5 },
+        morning: { zone: 'athenaeum', activity: 'study', priority: 1.0 },
+        midday: { zone: 'agora', activity: 'socialize_eat', priority: 0.8 },
+        afternoon: { zone: 'gardens', activity: 'wander', priority: 0.6 },
+        evening: { zone: 'commons', activity: 'socialize', priority: 0.9 },
+        night: { zone: 'athenaeum', activity: 'rest', priority: 0.2 }
+      },
+      gardener: {
+        dawn: { zone: 'gardens', activity: 'tend_plants', priority: 1.0 },
+        morning: { zone: 'gardens', activity: 'tend_plants', priority: 1.0 },
+        midday: { zone: 'gardens', activity: 'harvest', priority: 0.9 },
+        afternoon: { zone: 'agora', activity: 'sell_harvest', priority: 0.8 },
+        evening: { zone: 'commons', activity: 'socialize', priority: 0.6 },
+        night: { zone: 'gardens', activity: 'rest', priority: 0.3 }
+      },
+      artist: {
+        dawn: { zone: 'gardens', activity: 'find_inspiration', priority: 0.7 },
+        morning: { zone: 'studio', activity: 'create_art', priority: 1.0 },
+        midday: { zone: 'studio', activity: 'create_art', priority: 0.9 },
+        afternoon: { zone: 'studio', activity: 'create_art', priority: 0.8 },
+        evening: { zone: 'commons', activity: 'show_work', priority: 0.9 },
+        night: { zone: 'gardens', activity: 'observe_beauty', priority: 0.5 }
+      },
+      warrior: {
+        dawn: { zone: 'arena', activity: 'warm_up', priority: 0.8 },
+        morning: { zone: 'arena', activity: 'train', priority: 1.0 },
+        midday: { zone: 'wilds', activity: 'patrol', priority: 0.9 },
+        afternoon: { zone: 'wilds', activity: 'patrol', priority: 0.8 },
+        evening: { zone: 'commons', activity: 'socialize', priority: 0.7 },
+        night: { zone: 'arena', activity: 'rest', priority: 0.3 }
+      },
+      explorer: {
+        dawn: { zone: 'wilds', activity: 'explore_wilds', priority: 1.0 },
+        morning: { zone: 'wilds', activity: 'explore_wilds', priority: 1.0 },
+        midday: { zone: 'agora', activity: 'share_discoveries', priority: 0.7 },
+        afternoon: { zone: 'athenaeum', activity: 'map_territory', priority: 0.6 },
+        evening: { zone: 'commons', activity: 'share_discoveries', priority: 0.9 },
+        night: { zone: 'wilds', activity: 'rest', priority: 0.2 }
+      },
+      storyteller: {
+        dawn: { zone: 'athenaeum', activity: 'research', priority: 0.6 },
+        morning: { zone: 'athenaeum', activity: 'collect_stories', priority: 0.9 },
+        midday: { zone: 'agora', activity: 'socialize_eat', priority: 0.7 },
+        afternoon: { zone: 'commons', activity: 'tell_stories', priority: 0.8 },
+        evening: { zone: 'commons', activity: 'tell_stories', priority: 1.0 },
+        night: { zone: 'athenaeum', activity: 'write_journal', priority: 0.4 }
+      },
+      teacher: {
+        dawn: { zone: 'athenaeum', activity: 'prepare', priority: 0.6 },
+        morning: { zone: 'athenaeum', activity: 'teach_lesson', priority: 1.0 },
+        midday: { zone: 'gardens', activity: 'socialize_eat', priority: 0.7 },
+        afternoon: { zone: 'athenaeum', activity: 'teach_lesson', priority: 1.0 },
+        evening: { zone: 'commons', activity: 'socialize', priority: 0.6 },
+        night: { zone: 'athenaeum', activity: 'research', priority: 0.5 }
+      },
+      musician: {
+        dawn: { zone: 'gardens', activity: 'compose', priority: 0.5 },
+        morning: { zone: 'studio', activity: 'compose', priority: 0.8 },
+        midday: { zone: 'agora', activity: 'perform', priority: 0.7 },
+        afternoon: { zone: 'commons', activity: 'perform', priority: 0.8 },
+        evening: { zone: 'commons', activity: 'perform', priority: 1.0 },
+        night: { zone: 'gardens', activity: 'tune_instrument', priority: 0.4 }
+      },
+      healer: {
+        dawn: { zone: 'gardens', activity: 'gather_herbs', priority: 1.0 },
+        morning: { zone: 'gardens', activity: 'gather_herbs', priority: 0.9 },
+        midday: { zone: 'agora', activity: 'tend_wounded', priority: 0.9 },
+        afternoon: { zone: 'commons', activity: 'offer_comfort', priority: 0.7 },
+        evening: { zone: 'gardens', activity: 'meditate', priority: 0.6 },
+        night: { zone: 'gardens', activity: 'meditate', priority: 0.5 }
+      },
+      philosopher: {
+        dawn: { zone: 'gardens', activity: 'contemplate', priority: 0.7 },
+        morning: { zone: 'athenaeum', activity: 'research', priority: 0.8 },
+        midday: { zone: 'agora', activity: 'debate', priority: 0.6 },
+        afternoon: { zone: 'gardens', activity: 'contemplate', priority: 0.9 },
+        evening: { zone: 'commons', activity: 'discuss_ideas', priority: 0.9 },
+        night: { zone: 'gardens', activity: 'stargaze', priority: 1.0 }
+      },
+      builder: {
+        dawn: { zone: 'commons', activity: 'prepare', priority: 0.5 },
+        morning: { zone: 'commons', activity: 'inspect_structures', priority: 1.0 },
+        midday: { zone: 'agora', activity: 'gather_materials', priority: 0.8 },
+        afternoon: { zone: 'commons', activity: 'inspect_structures', priority: 1.0 },
+        evening: { zone: 'commons', activity: 'discuss_plans', priority: 0.7 },
+        night: { zone: 'commons', activity: 'sketch_designs', priority: 0.4 }
+      }
+    };
+
+    // Get archetype-specific schedule or fallback
+    var archetypeSchedule = schedules[archetype] || {};
+    var timeSchedule = archetypeSchedule[timeOfDay];
+
+    if (timeSchedule) {
+      return timeSchedule;
+    }
+
+    // Fallback based on general schedule
+    if (schedule.work_priority > 0.7) {
+      return { zone: defaultZone, activity: drives.primary, priority: schedule.work_priority };
+    } else if (schedule.social_chance > 0.7) {
+      return { zone: 'commons', activity: drives.social, priority: schedule.social_chance };
+    } else if (schedule.energy_regen > 0.5) {
+      return { zone: defaultZone, activity: drives.rest, priority: 0.5 };
+    }
+
+    return { zone: defaultZone, activity: 'idle', priority: 0.3 };
+  }
+
+  /**
+   * Get NPC reaction to events (weather, player proximity)
+   * @param {object} npcData - NPC data {archetype, position, etc}
+   * @param {object} event - Event {type, weather, playerPos, etc}
+   * @returns {object} - {action, dialogue, animation}
+   */
+  function getNPCReaction(npcData, event) {
+    var archetype = npcData.archetype;
+    var drives = ARCHETYPE_DRIVES[archetype];
+
+    if (event.type === 'weather') {
+      var weather = event.weather;
+
+      // Rain reaction
+      if (weather === 'rain') {
+        if (drives.weather_preference === 'rain') {
+          return {
+            action: 'celebrate',
+            dialogue: 'Rain! Perfect weather!',
+            animation: 'dance',
+            shouldSeekShelter: false
+          };
+        } else if (drives.weather_preference === 'any') {
+          return {
+            action: 'continue',
+            dialogue: null,
+            animation: 'walk',
+            shouldSeekShelter: false
+          };
+        } else {
+          return {
+            action: 'seek_shelter',
+            dialogue: 'Quick, need to get under cover!',
+            animation: 'run',
+            shouldSeekShelter: true
+          };
+        }
+      }
+
+      // Clear weather reaction
+      if (weather === 'clear' && drives.weather_preference === 'clear') {
+        return {
+          action: 'enjoy',
+          dialogue: 'Beautiful day!',
+          animation: 'idle',
+          shouldSeekShelter: false
+        };
+      }
+    }
+
+    if (event.type === 'player_proximity') {
+      var distance = event.distance;
+
+      if (distance < 3) {
+        return {
+          action: 'greet',
+          dialogue: 'Hello there!',
+          animation: 'wave',
+          shouldSeekShelter: false
+        };
+      } else if (distance < 8) {
+        return {
+          action: 'acknowledge',
+          dialogue: null,
+          animation: 'look',
+          shouldSeekShelter: false
+        };
+      }
+    }
+
+    return {
+      action: 'none',
+      dialogue: null,
+      animation: null,
+      shouldSeekShelter: false
+    };
+  }
+
+  /**
+   * Generate NPC-to-NPC interaction
+   * @param {object} npc1 - First NPC {id, name, archetype, position}
+   * @param {object} npc2 - Second NPC {id, name, archetype, position}
+   * @returns {object} - {type, dialogue, animation, duration}
+   */
+  function generateNPCInteraction(npc1, npc2) {
+    var arch1 = npc1.archetype;
+    var arch2 = npc2.archetype;
+
+    // Check for collaborative activity
+    var collab = getCollaborativeActivity(arch1, arch2);
+    if (collab && Math.random() < 0.3) {
+      return {
+        type: 'collaborate',
+        dialogue: npc1.name + ' and ' + npc2.name + ' are ' + collab.description,
+        animation: collab.animation,
+        duration: 10000 // 10 seconds
+      };
+    }
+
+    // Check for conversation
+    var conversation = generateConversation(npc1.name, arch1, npc2.name, arch2);
+    if (conversation && Math.random() < 0.4) {
+      return {
+        type: 'converse',
+        dialogue: conversation[0], // First line of conversation
+        fullConversation: conversation,
+        animation: 'talk',
+        duration: conversation.length * 3000 // 3 seconds per line
+      };
+    }
+
+    // Simple greeting
+    var greeting = ARCHETYPE_REACTIONS[arch1];
+    if (greeting && greeting[arch2]) {
+      return {
+        type: 'greet',
+        dialogue: greeting[arch2],
+        animation: 'wave',
+        duration: 5000 // 5 seconds
+      };
+    }
+
+    // Default friendly acknowledgment
+    return {
+      type: 'acknowledge',
+      dialogue: npc1.name + ' nods to ' + npc2.name,
+      animation: 'nod',
+      duration: 2000 // 2 seconds
+    };
+  }
+
+  // ============================================================================
   // EXPORTS
   // ============================================================================
 
@@ -29653,6 +33851,9 @@ html, body {
   exports.WORLD_LORE = WORLD_LORE;
   exports.ARCHETYPE_LORE = ARCHETYPE_LORE;
   exports.TEACHINGS = TEACHINGS;
+  exports.getDailySchedule = getDailySchedule;
+  exports.getNPCReaction = getNPCReaction;
+  exports.generateNPCInteraction = generateNPCInteraction;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NpcAI = {}));
 
@@ -32076,6 +36277,31 @@ html, body {
       // Connect to lobby peer
       const lobbyPeer = Network.getLobbyPeerId('main');
       Network.connectToPeer(lobbyPeer);
+
+      // Initialize federation
+      const worldId = Network.deriveWorldId();
+      const worldName = 'ZION'; // Could be customized per fork
+      const endpoint = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+      Network.initFederation(worldId, worldName, endpoint);
+
+      // Register federation event handler
+      Network.onFederationEvent((event) => {
+        handleFederationEvent(event);
+      });
+
+      // Announce to federation network periodically
+      setInterval(() => {
+        if (Network.announceFederation) {
+          Network.announceFederation();
+        }
+      }, 60000); // Every 60 seconds
+
+      // Initial announce
+      setTimeout(() => {
+        if (Network.announceFederation) {
+          Network.announceFederation();
+        }
+      }, 5000); // After 5 seconds to let connections establish
     }
 
     // Initialize 3D scene
@@ -32129,6 +36355,19 @@ html, body {
       // Initialize quest tracker
       if (HUD.initQuestTracker) {
         HUD.initQuestTracker();
+      }
+
+      // Initialize reputation system
+      if (Social && Social.initReputation) {
+        Social.initReputation(localPlayer.id);
+        if (HUD.updateReputationDisplay) {
+          HUD.updateReputationDisplay(Social.getReputation(localPlayer.id));
+        }
+      }
+
+      // Initialize governance panel callback
+      if (HUD.initGovernancePanel) {
+        HUD.initGovernancePanel(handleGovernanceAction);
       }
 
       // Initialize inventory panel
@@ -32534,6 +36773,19 @@ html, body {
               }
             }
 
+            // Record zone visit for governance
+            if (Zones && Zones.recordZoneVisit) {
+              Zones.recordZoneVisit(currentZone, localPlayer.id);
+            }
+
+            // Show welcome message if zone has one
+            if (Zones && HUD) {
+              var policies = Zones.getZonePolicies(currentZone);
+              if (policies && policies.welcomeMessage) {
+                HUD.showNotification(policies.welcomeMessage, 'info');
+              }
+            }
+
             // Update quest progress for zone visits
             if (Quests) {
               var updated = Quests.updateQuestProgress(localPlayer.id, 'visit_zone', { zone: currentZone });
@@ -32895,6 +37147,75 @@ html, body {
   }
 
   /**
+   * Handle federation events from Network module
+   */
+  function handleFederationEvent(event) {
+    if (!event || !event.type) return;
+
+    switch (event.type) {
+      case 'world_discovered':
+        console.log('Discovered federated world:', event.worldInfo.worldName);
+        if (HUD && HUD.showNotification) {
+          HUD.showNotification('Discovered world: ' + event.worldInfo.worldName, 'info');
+        }
+        if (HUD && HUD.updateFederationStatus) {
+          HUD.updateFederationStatus(Network.getDiscoveredWorlds(), Network.getFederatedWorlds());
+        }
+        break;
+
+      case 'federation_established':
+        console.log('Federation established with:', event.worldInfo.worldName);
+        if (HUD && HUD.showNotification) {
+          HUD.showNotification('Portal opened to: ' + event.worldInfo.worldName, 'success');
+        }
+        if (HUD && HUD.updateFederationStatus) {
+          HUD.updateFederationStatus(Network.getDiscoveredWorlds(), Network.getFederatedWorlds());
+        }
+        // Create portal in 3D world if in Nexus
+        if (World && sceneContext && currentZone === 'nexus') {
+          createFederationPortal(event.worldInfo);
+        }
+        break;
+
+      case 'cross_world_warp':
+        console.log('Player warping to world:', event.targetWorld);
+        break;
+
+      case 'player_returned':
+        console.log('Player returned:', event.playerId);
+        break;
+
+      default:
+        console.log('Unknown federation event:', event.type);
+    }
+  }
+
+  /**
+   * Create a federation portal in the 3D world
+   */
+  function createFederationPortal(worldInfo) {
+    if (!World || !sceneContext || !World.createPortal) return;
+
+    // Position portals around the nexus
+    var portalCount = Network.getFederatedWorlds().length;
+    var angle = (portalCount * Math.PI * 2) / 8; // Spread around circle
+    var radius = 30;
+    var x = Math.cos(angle) * radius;
+    var z = Math.sin(angle) * radius;
+
+    var portalData = {
+      id: 'portal-fed-' + worldInfo.worldId,
+      position: { x: x, y: 0, z: z },
+      targetWorld: worldInfo.worldId,
+      worldName: worldInfo.worldName,
+      type: 'federation'
+    };
+
+    World.createPortal(sceneContext, portalData);
+    console.log('Created federation portal to:', worldInfo.worldName);
+  }
+
+  /**
    * Handle incoming network message
    */
   function handleIncomingMessage(msg) {
@@ -32952,6 +37273,18 @@ html, body {
         break;
       case 'score':
         handleScoreMessage(msg);
+        break;
+      case 'federation_announce':
+        handleFederationAnnounce(msg);
+        break;
+      case 'federation_handshake':
+        handleFederationHandshake(msg);
+        break;
+      case 'warp_fork':
+        handleWarpFork(msg);
+        break;
+      case 'return_home':
+        handleReturnHome(msg);
         break;
       default:
         console.log('Unknown message type:', msg.type);
@@ -33012,6 +37345,108 @@ html, body {
         addRecentActivity('Discovered a ' + result.discovery.type);
 
         if (Audio) Audio.playSound('warp');
+      }
+    }
+  }
+
+  /**
+   * Handle federation announce message
+   */
+  function handleFederationAnnounce(msg) {
+    if (!Network) return;
+
+    // Let Network module handle the discovery
+    Network.handleFederationMessage(msg);
+
+    // Update HUD if available
+    if (HUD && HUD.updateFederationStatus) {
+      HUD.updateFederationStatus(Network.getDiscoveredWorlds(), Network.getFederatedWorlds());
+    }
+  }
+
+  /**
+   * Handle federation handshake message
+   */
+  function handleFederationHandshake(msg) {
+    if (!Network) return;
+
+    // Let Network module handle the handshake
+    Network.handleFederationMessage(msg);
+
+    // Update HUD
+    if (HUD && HUD.updateFederationStatus) {
+      HUD.updateFederationStatus(Network.getDiscoveredWorlds(), Network.getFederatedWorlds());
+    }
+
+    // Show notification
+    var worldName = msg.worldName || msg.payload?.worldName || 'Unknown World';
+    if (HUD && HUD.showNotification) {
+      HUD.showNotification('Federation established with ' + worldName, 'success');
+    }
+  }
+
+  /**
+   * Handle cross-world warp message
+   */
+  function handleWarpFork(msg) {
+    if (!msg.payload || !msg.payload.target_world) return;
+
+    var targetWorld = msg.payload.target_world;
+    var playerId = msg.from;
+
+    // If this is the local player, handle the warp
+    if (playerId === localPlayer.id) {
+      // Store home world if not already set
+      if (!localPlayer.home_world) {
+        localPlayer.home_world = Network.deriveWorldId();
+      }
+
+      // Update current world
+      localPlayer.current_world = targetWorld;
+
+      if (HUD && HUD.showNotification) {
+        HUD.showNotification('Warping to federated world: ' + targetWorld, 'info');
+      }
+
+      // In a real implementation, this would navigate to the other world's URL
+      // For now, we just track the state
+      console.log('Player warped to federated world:', targetWorld);
+    } else {
+      // Another player warped out
+      if (gameState && State) {
+        State.removePlayer(gameState, playerId);
+      }
+
+      if (World && sceneContext) {
+        World.removePlayer(sceneContext, playerId);
+      }
+
+      if (HUD && HUD.showNotification) {
+        HUD.showNotification(playerId + ' traveled to another world', 'info');
+      }
+    }
+  }
+
+  /**
+   * Handle return home message
+   */
+  function handleReturnHome(msg) {
+    var playerId = msg.from;
+
+    // If this is the local player returning
+    if (playerId === localPlayer.id) {
+      var homeWorld = localPlayer.home_world || Network.deriveWorldId();
+      localPlayer.current_world = homeWorld;
+
+      if (HUD && HUD.showNotification) {
+        HUD.showNotification('Returned to home world', 'success');
+      }
+
+      console.log('Player returned to home world:', homeWorld);
+    } else {
+      // Another player returned from traveling
+      if (HUD && HUD.showNotification) {
+        HUD.showNotification(playerId + ' returned from traveling', 'info');
       }
     }
   }
@@ -33276,6 +37711,14 @@ html, body {
             function(tradeId) {
               // Decline trade
               Trading.declineTrade(tradeId, localPlayer.id, localPlayer.position);
+
+              // Record decline for harassment detection
+              if (Social && result.data.from) {
+                var harassment = Social.recordDecline(result.data.from, localPlayer.id, 'trade_offer');
+                if (harassment && HUD) {
+                  HUD.showNotification('Repeated unwanted interactions detected - reputation penalty applied', 'warning');
+                }
+              }
             }
           );
         }
@@ -33316,6 +37759,17 @@ html, body {
           var xpResult = Mentoring.addSkillXP(localPlayer.id, 'trading', 15);
           if (xpResult.leveledUp && HUD) {
             HUD.showNotification('Trading skill increased to ' + xpResult.newLevelName, 'success');
+          }
+        }
+
+        // Award reputation for trading
+        if (Social) {
+          var repResult = Social.adjustReputation(localPlayer.id, 'trading', { with: msg.from });
+          if (repResult.tierChanged && HUD) {
+            HUD.showNotification('Reputation increased to ' + repResult.tier + '!', 'success');
+          }
+          if (HUD && HUD.updateReputationDisplay) {
+            HUD.updateReputationDisplay(Social.getReputation(localPlayer.id));
           }
         }
 
@@ -33747,6 +38201,116 @@ html, body {
   }
 
   /**
+   * Handle governance actions (elections, steward policies, etc.)
+   */
+  function handleGovernanceAction(action, data) {
+    if (!Social || !Zones || !localPlayer) return;
+
+    switch (action) {
+      case 'startElection':
+        // Start election in current zone
+        var zoneId = data.zoneId || currentZone;
+        var reputation = Social.getReputation(localPlayer.id);
+
+        // Check if player meets requirements
+        if (reputation.tier !== 'Respected' && reputation.tier !== 'Honored' && reputation.tier !== 'Elder') {
+          if (HUD) HUD.showNotification('Must be Respected tier or higher to start an election', 'error');
+          return;
+        }
+
+        // For now, create a simple election with the local player as a candidate
+        // In a full implementation, this would open a dialog to add candidates
+        var candidates = [localPlayer.id];
+        var election = Zones.startElection(zoneId, candidates);
+
+        if (HUD) {
+          HUD.showNotification('Election started! Voting ends in 48 hours.', 'success');
+          HUD.hideGovernancePanel();
+          HUD.showGovernancePanel(zoneId, localPlayer);
+        }
+
+        // Broadcast election start to network
+        if (Network && Protocol) {
+          var msg = Protocol.create.election_start(localPlayer.id, {
+            zoneId: zoneId,
+            electionId: election.id,
+            candidates: candidates
+          });
+          Network.broadcast(msg);
+        }
+        break;
+
+      case 'vote':
+        var electionId = data.electionId;
+        var candidateId = data.candidateId;
+
+        var voteResult = Zones.castVote(electionId, localPlayer.id, candidateId);
+        if (voteResult.success) {
+          if (HUD) {
+            HUD.showNotification('Vote cast for ' + candidateId, 'success');
+            HUD.hideGovernancePanel();
+            HUD.showGovernancePanel(currentZone, localPlayer);
+          }
+
+          // Broadcast vote to network
+          if (Network && Protocol) {
+            var msg = Protocol.create.election_vote(localPlayer.id, {
+              electionId: electionId,
+              candidateId: candidateId
+            });
+            Network.broadcast(msg);
+          }
+        } else {
+          if (HUD) HUD.showNotification(voteResult.error, 'error');
+        }
+        break;
+
+      case 'savePolicies':
+        var zoneId = data.zoneId || currentZone;
+
+        // Set welcome message
+        if (data.welcomeMessage !== undefined) {
+          var msgResult = Zones.setWelcomeMessage(zoneId, localPlayer.id, data.welcomeMessage);
+          if (!msgResult.success) {
+            if (HUD) HUD.showNotification(msgResult.error, 'error');
+            return;
+          }
+        }
+
+        // Set policies
+        if (data.buildingRequiresApproval !== undefined) {
+          Zones.setZonePolicy(zoneId, localPlayer.id, 'buildingRequiresApproval', data.buildingRequiresApproval);
+        }
+        if (data.chatModerated !== undefined) {
+          Zones.setZonePolicy(zoneId, localPlayer.id, 'chatModerated', data.chatModerated);
+        }
+
+        if (HUD) {
+          HUD.showNotification('Zone policies updated', 'success');
+          HUD.hideGovernancePanel();
+          HUD.showGovernancePanel(zoneId, localPlayer);
+        }
+
+        // Award reputation for steward action
+        Social.adjustReputation(localPlayer.id, 'zone_steward_action', { zoneId: zoneId });
+
+        // Broadcast policy changes to network
+        if (Network && Protocol) {
+          var msg = Protocol.create.steward_set_policy(localPlayer.id, {
+            zoneId: zoneId,
+            policies: {
+              welcomeMessage: data.welcomeMessage,
+              buildingRequiresApproval: data.buildingRequiresApproval,
+              chatModerated: data.chatModerated
+            }
+          });
+          Network.broadcast(msg);
+        }
+        break;
+    }
+  }
+
+  /**
    * Handle build mode actions
    */
   var buildModeActive = false;
@@ -34141,6 +38705,16 @@ html, body {
         if (HUD && playerInventory) {
           HUD.toggleCraftingPanel();
           HUD.updateCraftingDisplay(playerInventory);
+        }
+        break;
+
+      case 'toggleGovernance':
+        if (HUD && localPlayer && Social && Zones) {
+          // Initialize governance panel with callback
+          if (!HUD.initGovernancePanel) {
+            HUD.initGovernancePanel(handleGovernanceAction);
+          }
+          HUD.toggleGovernancePanel(currentZone, localPlayer);
         }
         break;
 

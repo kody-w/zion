@@ -624,6 +624,85 @@
     pool.castShadow = false;
     scene.add(pool);
     animatedObjects.push({ mesh: pool, type: 'water', params: { speed: 1 } });
+
+    // ENHANCED DECORATIONS: Glowing central monument
+    var monumentGeo = new THREE.CylinderGeometry(0.8, 1.2, 3, 8);
+    var monumentMat = new THREE.MeshStandardMaterial({
+      color: 0xb0b0d0,
+      emissive: 0x5555aa,
+      emissiveIntensity: 0.2,
+      roughness: 0.5
+    });
+    var monument = new THREE.Mesh(monumentGeo, monumentMat);
+    monument.position.set(z.cx + 6, y + 2.5, z.cz + 6);
+    monument.castShadow = false;
+    scene.add(monument);
+
+    // Fountain particle effects (4 water jets)
+    for (var j = 0; j < 4; j++) {
+      var jAngle = (j / 4) * Math.PI * 2;
+      var jx = z.cx + Math.cos(jAngle) * 2;
+      var jz = z.cz + Math.sin(jAngle) * 2;
+      var jetGeo = new THREE.CylinderGeometry(0.1, 0.15, 1.5, 8);
+      var jetMat = new THREE.MeshStandardMaterial({
+        color: 0x66aaff,
+        transparent: true,
+        opacity: 0.6
+      });
+      var jet = new THREE.Mesh(jetGeo, jetMat);
+      jet.position.set(jx, y + 2.5, jz);
+      jet.castShadow = false;
+      scene.add(jet);
+      animatedObjects.push({ mesh: jet, type: 'water', params: { speed: 2 } });
+    }
+
+    // Decorative benches around perimeter
+    for (var b = 0; b < 4; b++) {
+      var bAngle = (b / 4) * Math.PI * 2 + Math.PI / 8;
+      var bx = z.cx + Math.cos(bAngle) * 16;
+      var bz = z.cz + Math.sin(bAngle) * 16;
+
+      var benchGeo = new THREE.BoxGeometry(2.5, 0.3, 0.8);
+      var benchMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+      var bench = new THREE.Mesh(benchGeo, benchMat);
+      bench.position.set(bx, y + 0.4, bz);
+      bench.rotation.y = bAngle + Math.PI / 2;
+      bench.castShadow = false;
+      scene.add(bench);
+
+      // Bench legs
+      for (var leg = -1; leg <= 1; leg += 2) {
+        var legGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.4, 6);
+        var legMesh = new THREE.Mesh(legGeo, benchMat);
+        legMesh.position.set(
+          bx + Math.cos(bAngle + Math.PI / 2) * leg * 0.9,
+          y + 0.2,
+          bz + Math.sin(bAngle + Math.PI / 2) * leg * 0.9
+        );
+        legMesh.castShadow = false;
+        scene.add(legMesh);
+      }
+    }
+
+    // Knowledge orbs floating around
+    for (var k = 0; k < 3; k++) {
+      var kAngle = (k / 3) * Math.PI * 2;
+      var kx = z.cx + Math.cos(kAngle) * 7;
+      var kz = z.cz + Math.sin(kAngle) * 7;
+      var orbGeo = new THREE.SphereGeometry(0.3, 12, 12);
+      var orbMat = new THREE.MeshStandardMaterial({
+        color: 0x8888ff,
+        emissive: 0x6666cc,
+        emissiveIntensity: 0.5,
+        transparent: true,
+        opacity: 0.8
+      });
+      var orb = new THREE.Mesh(orbGeo, orbMat);
+      orb.position.set(kx, y + 4 + k * 0.5, kz);
+      orb.castShadow = false;
+      scene.add(orb);
+      animatedObjects.push({ mesh: orb, type: 'crystal', params: { speed: 0.4, baseY: y + 4 + k * 0.5 } });
+    }
   }
 
   function createGardensStructure(scene) {
@@ -674,6 +753,102 @@
     water.castShadow = false;
     scene.add(water);
     animatedObjects.push({ mesh: water, type: 'water', params: { speed: 1 } });
+
+    // ENHANCED DECORATIONS: Seasonal growing plants (varied heights and colors)
+    for (var sp = 0; sp < 12; sp++) {
+      var spAngle = (sp / 12) * Math.PI * 2 + 0.2;
+      var spRadius = 12 + (sp % 3) * 6;
+      var spx = z.cx + Math.cos(spAngle) * spRadius;
+      var spz = z.cz + Math.sin(spAngle) * spRadius;
+
+      var plantHeight = 0.5 + seededRandom(sp, 10, 1) * 1.5;
+      var plantGeo = new THREE.ConeGeometry(0.3, plantHeight, 6);
+      var plantColors = [0x66bb6a, 0x81c784, 0xa5d6a7, 0x4caf50, 0x8bc34a];
+      var plantMat = new THREE.MeshStandardMaterial({
+        color: plantColors[sp % plantColors.length]
+      });
+      var plant = new THREE.Mesh(plantGeo, plantMat);
+      plant.position.set(spx, y + plantHeight / 2, spz);
+      plant.castShadow = false;
+      scene.add(plant);
+    }
+
+    // Butterfly particle effects (small glowing spheres that float around)
+    for (var bf = 0; bf < 8; bf++) {
+      var bfAngle = (bf / 8) * Math.PI * 2;
+      var bfx = z.cx + Math.cos(bfAngle) * (15 + bf % 3 * 5);
+      var bfz = z.cz + Math.sin(bfAngle) * (15 + bf % 3 * 5);
+      var butterflyGeo = new THREE.SphereGeometry(0.15, 6, 6);
+      var butterflyMat = new THREE.MeshStandardMaterial({
+        color: bf % 2 === 0 ? 0xffeb3b : 0xff69b4,
+        emissive: bf % 2 === 0 ? 0xffeb3b : 0xff69b4,
+        emissiveIntensity: 0.4,
+        transparent: true,
+        opacity: 0.7
+      });
+      var butterfly = new THREE.Mesh(butterflyGeo, butterflyMat);
+      butterfly.position.set(bfx, y + 1.5 + bf * 0.2, bfz);
+      butterfly.castShadow = false;
+      scene.add(butterfly);
+      animatedObjects.push({
+        mesh: butterfly,
+        type: 'crystal',
+        params: { speed: 0.5 + bf * 0.1, baseY: y + 1.5 + bf * 0.2 }
+      });
+    }
+
+    // Garden archways (decorative trellises)
+    for (var ga = 0; ga < 4; ga++) {
+      var gaAngle = (ga / 4) * Math.PI * 2;
+      var gax = z.cx + Math.cos(gaAngle) * 25;
+      var gaz = z.cz + Math.sin(gaAngle) * 25;
+
+      // Two posts
+      for (var side = -1; side <= 1; side += 2) {
+        var postGeo = new THREE.CylinderGeometry(0.15, 0.15, 3, 8);
+        var postMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+        var post = new THREE.Mesh(postGeo, postMat);
+        var perpAngle = gaAngle + Math.PI / 2;
+        post.position.set(
+          gax + Math.cos(perpAngle) * side * 1.5,
+          y + 1.5,
+          gaz + Math.sin(perpAngle) * side * 1.5
+        );
+        post.castShadow = false;
+        scene.add(post);
+      }
+
+      // Top beam
+      var beamGeo = new THREE.BoxGeometry(3.5, 0.2, 0.2);
+      var beamMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+      var beam = new THREE.Mesh(beamGeo, beamMat);
+      beam.position.set(gax, y + 3.2, gaz);
+      beam.rotation.y = gaAngle + Math.PI / 2;
+      beam.castShadow = false;
+      scene.add(beam);
+
+      // Vines on archway
+      var vineGeo = new THREE.TorusGeometry(0.8, 0.08, 6, 12);
+      var vineMat = new THREE.MeshStandardMaterial({ color: 0x2e7d32 });
+      var vine = new THREE.Mesh(vineGeo, vineMat);
+      vine.position.set(gax, y + 2.8, gaz);
+      vine.rotation.x = Math.PI / 2;
+      vine.castShadow = false;
+      scene.add(vine);
+    }
+
+    // Stone pathways markers
+    for (var pm = 0; pm < 6; pm++) {
+      var pmAngle = (pm / 6) * Math.PI * 2;
+      var pmx = z.cx + Math.cos(pmAngle) * 18;
+      var pmz = z.cz + Math.sin(pmAngle) * 18;
+      var markerGeo = new THREE.CylinderGeometry(0.4, 0.5, 0.3, 8);
+      var markerMat = new THREE.MeshStandardMaterial({ color: 0x9e9e9e });
+      var marker = new THREE.Mesh(markerGeo, markerMat);
+      marker.position.set(pmx, y + 0.15, pmz);
+      marker.castShadow = false;
+      scene.add(marker);
+    }
   }
 
   function createAtheneumStructure(scene) {
@@ -715,6 +890,116 @@
       step.castShadow = false;
       scene.add(step);
     }
+
+    // ENHANCED DECORATIONS: Floating book particles
+    for (var fb = 0; fb < 10; fb++) {
+      var fbAngle = (fb / 10) * Math.PI * 2;
+      var fbRadius = 8 + (fb % 3) * 3;
+      var fbx = z.cx + Math.cos(fbAngle) * fbRadius;
+      var fbz = z.cz + Math.sin(fbAngle) * fbRadius;
+      var bookGeo = new THREE.BoxGeometry(0.2, 0.3, 0.05);
+      var bookMat = new THREE.MeshStandardMaterial({
+        color: [0x8b4513, 0x5d4037, 0x3e2723][fb % 3],
+        emissive: 0x4a2511,
+        emissiveIntensity: 0.1
+      });
+      var book = new THREE.Mesh(bookGeo, bookMat);
+      book.position.set(fbx, y + 5 + fb * 0.3, fbz);
+      book.rotation.y = fbAngle;
+      book.rotation.x = Math.PI / 6;
+      book.castShadow = false;
+      scene.add(book);
+      animatedObjects.push({
+        mesh: book,
+        type: 'crystal',
+        params: { speed: 0.2, baseY: y + 5 + fb * 0.3 }
+      });
+    }
+
+    // Glowing knowledge orbs
+    for (var ko = 0; ko < 6; ko++) {
+      var koAngle = (ko / 6) * Math.PI * 2;
+      var kox = z.cx + Math.cos(koAngle) * 6;
+      var koz = z.cz + Math.sin(koAngle) * 6;
+      var orbGeo = new THREE.SphereGeometry(0.25, 12, 12);
+      var orbMat = new THREE.MeshStandardMaterial({
+        color: 0xffd700,
+        emissive: 0xffaa00,
+        emissiveIntensity: 0.6,
+        transparent: true,
+        opacity: 0.7
+      });
+      var orb = new THREE.Mesh(orbGeo, orbMat);
+      orb.position.set(kox, y + 6 + ko * 0.4, koz);
+      orb.castShadow = false;
+      scene.add(orb);
+      animatedObjects.push({
+        mesh: orb,
+        type: 'crystal',
+        params: { speed: 0.3, baseY: y + 6 + ko * 0.4 }
+      });
+    }
+
+    // Reading desks
+    for (var rd = 0; rd < 4; rd++) {
+      var rdAngle = (rd / 4) * Math.PI * 2 + Math.PI / 4;
+      var rdx = z.cx + Math.cos(rdAngle) * 12;
+      var rdz = z.cz + Math.sin(rdAngle) * 12;
+      var deskGeo = new THREE.BoxGeometry(2, 0.15, 1.2);
+      var deskMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+      var desk = new THREE.Mesh(deskGeo, deskMat);
+      desk.position.set(rdx, y + 0.8, rdz);
+      desk.rotation.y = rdAngle;
+      desk.castShadow = false;
+      scene.add(desk);
+
+      // Desk legs
+      for (var dl = 0; dl < 4; dl++) {
+        var dlx = rdx + Math.cos(rdAngle) * (dl < 2 ? -0.9 : 0.9) + Math.cos(rdAngle + Math.PI / 2) * (dl % 2 === 0 ? -0.5 : 0.5);
+        var dlz = rdz + Math.sin(rdAngle) * (dl < 2 ? -0.9 : 0.9) + Math.sin(rdAngle + Math.PI / 2) * (dl % 2 === 0 ? -0.5 : 0.5);
+        var legGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.8, 6);
+        var legMesh = new THREE.Mesh(legGeo, deskMat);
+        legMesh.position.set(dlx, y + 0.4, dlz);
+        legMesh.castShadow = false;
+        scene.add(legMesh);
+      }
+    }
+
+    // Decorative scrolls on pillars
+    for (var sc = 0; sc < 6; sc++) {
+      var scrollGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8);
+      var scrollMat = new THREE.MeshStandardMaterial({ color: 0xf5deb3 });
+      var scroll = new THREE.Mesh(scrollGeo, scrollMat);
+      var scx = z.cx - 8 + sc * 3.2;
+      scroll.position.set(scx, y + 6, z.cz + 8);
+      scroll.rotation.z = Math.PI / 2;
+      scroll.castShadow = false;
+      scene.add(scroll);
+    }
+
+    // Ancient tome pedestals
+    for (var tp = 0; tp < 3; tp++) {
+      var tpx = z.cx + (tp - 1) * 5;
+      var pedestalGeo = new THREE.CylinderGeometry(0.5, 0.7, 1.2, 8);
+      var pedestalMat = new THREE.MeshStandardMaterial({ color: 0x9e9e9e });
+      var pedestal = new THREE.Mesh(pedestalGeo, pedestalMat);
+      pedestal.position.set(tpx, y + 0.6, z.cz - 3);
+      pedestal.castShadow = false;
+      scene.add(pedestal);
+
+      // Tome on pedestal
+      var tomeGeo = new THREE.BoxGeometry(0.6, 0.15, 0.8);
+      var tomeMat = new THREE.MeshStandardMaterial({
+        color: 0x4a148c,
+        emissive: 0x2a0a4c,
+        emissiveIntensity: 0.2
+      });
+      var tome = new THREE.Mesh(tomeGeo, tomeMat);
+      tome.position.set(tpx, y + 1.3, z.cz - 3);
+      tome.rotation.y = Math.PI / 8;
+      tome.castShadow = false;
+      scene.add(tome);
+    }
   }
 
   function createStudioStructure(scene) {
@@ -754,6 +1039,123 @@
     sculpture.castShadow = false;
     scene.add(sculpture);
     animatedObjects.push({ mesh: sculpture, type: 'crystal', params: { speed: 0.5, baseY: y + 4 } });
+
+    // ENHANCED DECORATIONS: Paint splatter decorations (colorful spheres on ground)
+    for (var ps = 0; ps < 15; ps++) {
+      var psAngle = (ps / 15) * Math.PI * 2;
+      var psRadius = 5 + seededRandom(ps, 20, 1) * 10;
+      var psx = z.cx + Math.cos(psAngle) * psRadius;
+      var psz = z.cz + Math.sin(psAngle) * psRadius;
+      var splatGeo = new THREE.SphereGeometry(0.2, 8, 8);
+      var splatColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xff8800, 0x8800ff];
+      var splatMat = new THREE.MeshStandardMaterial({
+        color: splatColors[ps % splatColors.length],
+        emissive: splatColors[ps % splatColors.length],
+        emissiveIntensity: 0.3
+      });
+      var splat = new THREE.Mesh(splatGeo, splatMat);
+      splat.position.set(psx, y + 0.15, psz);
+      splat.scale.y = 0.3;
+      splat.castShadow = false;
+      scene.add(splat);
+    }
+
+    // Easels around the zone
+    for (var ea = 0; ea < 5; ea++) {
+      var eaAngle = (ea / 5) * Math.PI * 2 + 0.2;
+      var eax = z.cx + Math.cos(eaAngle) * 10;
+      var eaz = z.cz + Math.sin(eaAngle) * 10;
+
+      // Easel legs (tripod)
+      for (var el = 0; el < 3; el++) {
+        var elAngle = eaAngle + (el / 3) * Math.PI * 2;
+        var legGeo = new THREE.CylinderGeometry(0.05, 0.05, 2, 6);
+        var legMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+        var leg = new THREE.Mesh(legGeo, legMat);
+        leg.position.set(
+          eax + Math.cos(elAngle) * 0.3,
+          y + 1,
+          eaz + Math.sin(elAngle) * 0.3
+        );
+        leg.rotation.z = (el === 1 ? -0.2 : (el === 2 ? 0.2 : 0));
+        leg.castShadow = false;
+        scene.add(leg);
+      }
+
+      // Canvas
+      var canvasGeo = new THREE.PlaneGeometry(1.2, 1.5);
+      var canvasMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        side: THREE.DoubleSide
+      });
+      var canvas = new THREE.Mesh(canvasGeo, canvasMat);
+      canvas.position.set(eax, y + 1.8, eaz);
+      canvas.rotation.y = eaAngle;
+      canvas.castShadow = false;
+      scene.add(canvas);
+    }
+
+    // Musical note particles (for musician artists)
+    for (var mn = 0; mn < 6; mn++) {
+      var mnAngle = (mn / 6) * Math.PI * 2;
+      var mnx = z.cx + Math.cos(mnAngle) * 8;
+      var mnz = z.cz + Math.sin(mnAngle) * 8;
+      var noteGeo = new THREE.SphereGeometry(0.2, 8, 8);
+      var noteMat = new THREE.MeshStandardMaterial({
+        color: 0xff69b4,
+        emissive: 0xff1493,
+        emissiveIntensity: 0.4,
+        transparent: true,
+        opacity: 0.7
+      });
+      var note = new THREE.Mesh(noteGeo, noteMat);
+      note.position.set(mnx, y + 3 + mn * 0.4, mnz);
+      note.castShadow = false;
+      scene.add(note);
+      animatedObjects.push({
+        mesh: note,
+        type: 'crystal',
+        params: { speed: 0.4 + mn * 0.1, baseY: y + 3 + mn * 0.4 }
+      });
+    }
+
+    // Sculpture pedestals
+    for (var sp = 0; sp < 3; sp++) {
+      var spAngle = (sp / 3) * Math.PI * 2;
+      var spx = z.cx + Math.cos(spAngle) * 18;
+      var spz = z.cz + Math.sin(spAngle) * 18;
+      var pedGeo = new THREE.CylinderGeometry(0.6, 0.8, 1.5, 8);
+      var pedMat = new THREE.MeshStandardMaterial({ color: 0x9e9e9e });
+      var ped = new THREE.Mesh(pedGeo, pedMat);
+      ped.position.set(spx, y + 0.75, spz);
+      ped.castShadow = false;
+      scene.add(ped);
+
+      // Small sculpture on pedestal
+      var miniSculpGeo = new THREE.TorusGeometry(0.4, 0.15, 8, 12);
+      var miniSculpMat = new THREE.MeshStandardMaterial({
+        color: [0xff9800, 0x9c27b0, 0x00bcd4][sp],
+        emissive: [0xff9800, 0x9c27b0, 0x00bcd4][sp],
+        emissiveIntensity: 0.2
+      });
+      var miniSculp = new THREE.Mesh(miniSculpGeo, miniSculpMat);
+      miniSculp.position.set(spx, y + 1.8, spz);
+      miniSculp.rotation.x = Math.PI / 4;
+      miniSculp.castShadow = false;
+      scene.add(miniSculp);
+    }
+
+    // Paint palettes on ground
+    for (var pp = 0; pp < 4; pp++) {
+      var ppx = z.cx + (pp % 2 === 0 ? -6 : 6);
+      var ppz = z.cz + (pp < 2 ? -6 : 6);
+      var paletteGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.05, 8);
+      var paletteMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+      var palette = new THREE.Mesh(paletteGeo, paletteMat);
+      palette.position.set(ppx, y + 0.05, ppz);
+      palette.castShadow = false;
+      scene.add(palette);
+    }
   }
 
   function createWildsStructure(scene) {
@@ -795,6 +1197,120 @@
     rune.castShadow = false;
     scene.add(rune);
     animatedObjects.push({ mesh: rune, type: 'crystal', params: { speed: 0.2, baseY: y + 1.55 } });
+
+    // ENHANCED DECORATIONS: More varied trees (different sizes)
+    for (var vt = 0; vt < 10; vt++) {
+      var vtAngle = (vt / 10) * Math.PI * 2;
+      var vtRadius = 20 + seededRandom(vt, 15, 1) * 15;
+      var vtx = z.cx + Math.cos(vtAngle) * vtRadius;
+      var vtz = z.cz + Math.sin(vtAngle) * vtRadius;
+      var treeHeight = 3 + seededRandom(vt, 15, 2) * 4;
+
+      // Trunk
+      var trunkGeo = new THREE.CylinderGeometry(0.3, 0.5, treeHeight, 8);
+      var trunkMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+      var trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.set(vtx, y + treeHeight / 2, vtz);
+      trunk.castShadow = false;
+      scene.add(trunk);
+
+      // Canopy
+      var canopyGeo = new THREE.SphereGeometry(treeHeight * 0.5, 8, 8);
+      var canopyMat = new THREE.MeshStandardMaterial({ color: 0x1a5e1a });
+      var canopy = new THREE.Mesh(canopyGeo, canopyMat);
+      canopy.position.set(vtx, y + treeHeight + treeHeight * 0.3, vtz);
+      canopy.castShadow = false;
+      scene.add(canopy);
+    }
+
+    // Animal tracks (small spheres in dirt)
+    for (var at = 0; at < 20; at++) {
+      var atAngle = (at / 20) * Math.PI * 2;
+      var atRadius = 8 + (at % 5) * 3;
+      var atx = z.cx + Math.cos(atAngle) * atRadius;
+      var atz = z.cz + Math.sin(atAngle) * atRadius;
+      var trackGeo = new THREE.SphereGeometry(0.12, 6, 6);
+      var trackMat = new THREE.MeshStandardMaterial({ color: 0x4a3728 });
+      var track = new THREE.Mesh(trackGeo, trackMat);
+      track.position.set(atx, y + 0.08, atz);
+      track.scale.y = 0.3;
+      track.castShadow = false;
+      scene.add(track);
+    }
+
+    // Fog patches (semi-transparent spheres)
+    for (var fg = 0; fg < 6; fg++) {
+      var fgAngle = (fg / 6) * Math.PI * 2 + 0.3;
+      var fgx = z.cx + Math.cos(fgAngle) * 12;
+      var fgz = z.cz + Math.sin(fgAngle) * 12;
+      var fogGeo = new THREE.SphereGeometry(2, 8, 8);
+      var fogMat = new THREE.MeshStandardMaterial({
+        color: 0xcccccc,
+        transparent: true,
+        opacity: 0.2,
+        emissive: 0xaaaaaa,
+        emissiveIntensity: 0.1
+      });
+      var fog = new THREE.Mesh(fogGeo, fogMat);
+      fog.position.set(fgx, y + 1, fgz);
+      fog.scale.y = 0.4;
+      fog.castShadow = false;
+      scene.add(fog);
+      animatedObjects.push({
+        mesh: fog,
+        type: 'water',
+        params: { speed: 0.3 }
+      });
+    }
+
+    // Wild mushroom clusters
+    for (var wm = 0; wm < 12; wm++) {
+      var wmAngle = (wm / 12) * Math.PI * 2;
+      var wmRadius = 10 + (wm % 4) * 4;
+      var wmx = z.cx + Math.cos(wmAngle) * wmRadius;
+      var wmz = z.cz + Math.sin(wmAngle) * wmRadius;
+
+      for (var mc = 0; mc < 3; mc++) {
+        var mushroomCapGeo = new THREE.SphereGeometry(0.3, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+        var mushroomMat = new THREE.MeshStandardMaterial({
+          color: wm % 3 === 0 ? 0xff6b6b : (wm % 3 === 1 ? 0x4ecdc4 : 0xf7b731)
+        });
+        var mushroomCap = new THREE.Mesh(mushroomCapGeo, mushroomMat);
+        mushroomCap.position.set(
+          wmx + (mc - 1) * 0.4,
+          y + 0.25 + mc * 0.05,
+          wmz
+        );
+        mushroomCap.castShadow = false;
+        scene.add(mushroomCap);
+
+        var stemGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.3, 6);
+        var stemMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5 });
+        var stem = new THREE.Mesh(stemGeo, stemMat);
+        stem.position.set(
+          wmx + (mc - 1) * 0.4,
+          y + 0.1 + mc * 0.05,
+          wmz
+        );
+        stem.castShadow = false;
+        scene.add(stem);
+      }
+    }
+
+    // Ancient vine-covered rocks
+    for (var vr = 0; vr < 8; vr++) {
+      var vrAngle = (vr / 8) * Math.PI * 2;
+      var vrx = z.cx + Math.cos(vrAngle) * 18;
+      var vrz = z.cz + Math.sin(vrAngle) * 18;
+      var rockSize = 0.8 + seededRandom(vr, 25, 1) * 1.2;
+      var vineRockGeo = new THREE.SphereGeometry(rockSize, 8, 8);
+      var vineRockMat = new THREE.MeshStandardMaterial({ color: 0x3e6b3e });
+      var vineRock = new THREE.Mesh(vineRockGeo, vineRockMat);
+      vineRock.position.set(vrx, y + rockSize * 0.6, vrz);
+      vineRock.scale.y = 0.7;
+      vineRock.castShadow = false;
+      scene.add(vineRock);
+    }
   }
 
   function createAgoraStructure(scene) {
@@ -840,6 +1356,120 @@
       crate.rotation.y = seededRandom(100, c, 3) * Math.PI;
       crate.castShadow = false;
       scene.add(crate);
+    }
+
+    // ENHANCED DECORATIONS: Market stall awnings (already have tents, add rope decorations)
+    for (var aw = 0; aw < 8; aw++) {
+      var awx = z.cx + (aw % 4 - 1.5) * 8;
+      var awz = z.cz + Math.floor(aw / 4) * 14 - 7;
+
+      // Hanging lanterns
+      for (var hl = -1; hl <= 1; hl += 2) {
+        var lanternGeo = new THREE.CylinderGeometry(0.15, 0.2, 0.4, 6);
+        var lanternMat = new THREE.MeshStandardMaterial({
+          color: 0xffd700,
+          emissive: 0xffaa00,
+          emissiveIntensity: 0.4
+        });
+        var lantern = new THREE.Mesh(lanternGeo, lanternMat);
+        lantern.position.set(awx + hl * 2, y + 3.5, awz);
+        lantern.castShadow = false;
+        scene.add(lantern);
+
+        // Rope
+        var ropeGeo = new THREE.CylinderGeometry(0.02, 0.02, 1.5, 6);
+        var ropeMat = new THREE.MeshStandardMaterial({ color: 0x8b7355 });
+        var rope = new THREE.Mesh(ropeGeo, ropeMat);
+        rope.position.set(awx + hl * 2, y + 4.2, awz);
+        rope.castShadow = false;
+        scene.add(rope);
+      }
+    }
+
+    // Trading goods displays (colorful items on counters)
+    for (var tg = 0; tg < 8; tg++) {
+      var tgx = z.cx + (tg % 4 - 1.5) * 8;
+      var tgz = z.cz + Math.floor(tg / 4) * 14 - 7 + 2.5;
+
+      // Display items (spheres and boxes)
+      for (var di = 0; di < 3; di++) {
+        var displayGeo = di % 2 === 0 ? new THREE.SphereGeometry(0.15, 8, 8) : new THREE.BoxGeometry(0.25, 0.25, 0.25);
+        var displayColors = [0xff6b6b, 0x4ecdc4, 0xf7b731, 0x5f27cd, 0x00d2d3, 0xff9ff3];
+        var displayMat = new THREE.MeshStandardMaterial({
+          color: displayColors[(tg + di) % displayColors.length],
+          emissive: displayColors[(tg + di) % displayColors.length],
+          emissiveIntensity: 0.1
+        });
+        var display = new THREE.Mesh(displayGeo, displayMat);
+        display.position.set(tgx + (di - 1) * 0.5, y + 1.15, tgz);
+        display.castShadow = false;
+        scene.add(display);
+      }
+    }
+
+    // Barrels for storage
+    for (var br = 0; br < 6; br++) {
+      var brAngle = (br / 6) * Math.PI * 2;
+      var brx = z.cx + Math.cos(brAngle) * 12;
+      var brz = z.cz + Math.sin(brAngle) * 12;
+      var barrelGeo = new THREE.CylinderGeometry(0.5, 0.6, 1.2, 12);
+      var barrelMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+      var barrel = new THREE.Mesh(barrelGeo, barrelMat);
+      barrel.position.set(brx, y + 0.6, brz);
+      barrel.castShadow = false;
+      scene.add(barrel);
+
+      // Barrel bands
+      for (var bb = 0; bb < 3; bb++) {
+        var bandGeo = new THREE.TorusGeometry(0.55, 0.03, 6, 12);
+        var bandMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+        var band = new THREE.Mesh(bandGeo, bandMat);
+        band.position.set(brx, y + 0.3 + bb * 0.4, brz);
+        band.rotation.x = Math.PI / 2;
+        band.castShadow = false;
+        scene.add(band);
+      }
+    }
+
+    // Decorative rugs under stalls
+    for (var rg = 0; rg < 4; rg++) {
+      var rgx = z.cx + (rg % 2 - 0.5) * 12;
+      var rgz = z.cz + (rg < 2 ? -10 : 10);
+      var rugGeo = new THREE.PlaneGeometry(5, 3);
+      var rugColors = [0x8b0000, 0x006400, 0x00008b, 0x8b008b];
+      var rugMat = new THREE.MeshStandardMaterial({
+        color: rugColors[rg],
+        side: THREE.DoubleSide
+      });
+      var rug = new THREE.Mesh(rugGeo, rugMat);
+      rug.position.set(rgx, y + 0.02, rgz);
+      rug.rotation.x = -Math.PI / 2;
+      rug.castShadow = false;
+      scene.add(rug);
+    }
+
+    // Signposts
+    for (var sgn = 0; sgn < 4; sgn++) {
+      var sgnAngle = (sgn / 4) * Math.PI * 2;
+      var sgnx = z.cx + Math.cos(sgnAngle) * 20;
+      var sgnz = z.cz + Math.sin(sgnAngle) * 20;
+
+      // Post
+      var postGeo = new THREE.CylinderGeometry(0.1, 0.1, 3, 8);
+      var postMat = new THREE.MeshStandardMaterial({ color: 0x654321 });
+      var post = new THREE.Mesh(postGeo, postMat);
+      post.position.set(sgnx, y + 1.5, sgnz);
+      post.castShadow = false;
+      scene.add(post);
+
+      // Sign
+      var signGeo = new THREE.BoxGeometry(1.5, 0.5, 0.1);
+      var signMat = new THREE.MeshStandardMaterial({ color: 0xf5deb3 });
+      var sign = new THREE.Mesh(signGeo, signMat);
+      sign.position.set(sgnx, y + 3.2, sgnz);
+      sign.rotation.y = sgnAngle;
+      sign.castShadow = false;
+      scene.add(sign);
     }
   }
 
@@ -903,6 +1533,168 @@
       wp.castShadow = false;
       scene.add(wp);
     }
+
+    // ENHANCED DECORATIONS: Benches in gathering circles
+    for (var bc = 0; bc < 6; bc++) {
+      var bcAngle = (bc / 6) * Math.PI * 2;
+      var bcx = z.cx + Math.cos(bcAngle) * 8;
+      var bcz = z.cz + Math.sin(bcAngle) * 8;
+
+      var benchGeo = new THREE.BoxGeometry(2, 0.3, 0.6);
+      var benchMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+      var bench = new THREE.Mesh(benchGeo, benchMat);
+      bench.position.set(bcx, y + 0.4, bcz);
+      bench.rotation.y = bcAngle + Math.PI / 2;
+      bench.castShadow = false;
+      scene.add(bench);
+
+      // Bench back
+      var backGeo = new THREE.BoxGeometry(2, 0.8, 0.1);
+      var back = new THREE.Mesh(backGeo, benchMat);
+      back.position.set(
+        bcx + Math.cos(bcAngle) * 0.35,
+        y + 0.9,
+        bcz + Math.sin(bcAngle) * 0.35
+      );
+      back.rotation.y = bcAngle + Math.PI / 2;
+      back.castShadow = false;
+      scene.add(back);
+
+      // Bench legs
+      for (var bl = -1; bl <= 1; bl += 2) {
+        var legGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.4, 6);
+        var legMesh = new THREE.Mesh(legGeo, benchMat);
+        legMesh.position.set(
+          bcx + Math.cos(bcAngle + Math.PI / 2) * bl * 0.8,
+          y + 0.2,
+          bcz + Math.sin(bcAngle + Math.PI / 2) * bl * 0.8
+        );
+        legMesh.castShadow = false;
+        scene.add(legMesh);
+      }
+    }
+
+    // Gathering circles (stone rings)
+    for (var gc = 0; gc < 2; gc++) {
+      var gcx = z.cx + (gc === 0 ? -10 : 10);
+      var gcz = z.cz;
+
+      for (var gs = 0; gs < 10; gs++) {
+        var gsAngle = (gs / 10) * Math.PI * 2;
+        var stoneGeo = new THREE.BoxGeometry(0.5, 0.3, 0.4);
+        var stoneMat = new THREE.MeshStandardMaterial({ color: 0x9e9e9e });
+        var stone = new THREE.Mesh(stoneGeo, stoneMat);
+        stone.position.set(
+          gcx + Math.cos(gsAngle) * 4,
+          y + 0.15,
+          gcz + Math.sin(gsAngle) * 4
+        );
+        stone.rotation.y = gsAngle;
+        stone.castShadow = false;
+        scene.add(stone);
+      }
+    }
+
+    // Lantern strings connecting houses
+    for (var ls = 0; ls < 8; ls++) {
+      var lsAngle = (ls / 8) * Math.PI * 2;
+      var lsx = z.cx + Math.cos(lsAngle) * 18;
+      var lsz = z.cz + Math.sin(lsAngle) * 18;
+
+      // Lanterns hanging from house eaves
+      var hangLanternGeo = new THREE.SphereGeometry(0.2, 8, 8);
+      var hangLanternMat = new THREE.MeshStandardMaterial({
+        color: 0xffeb3b,
+        emissive: 0xffc107,
+        emissiveIntensity: 0.5
+      });
+      var hangLantern = new THREE.Mesh(hangLanternGeo, hangLanternMat);
+      hangLantern.position.set(lsx, y + 4.5, lsz);
+      hangLantern.castShadow = false;
+      scene.add(hangLantern);
+      animatedObjects.push({
+        mesh: hangLantern,
+        type: 'torch',
+        params: { seed: ls * 100 }
+      });
+
+      // String to next house
+      var nextAngle = ((ls + 1) / 8) * Math.PI * 2;
+      var nextX = z.cx + Math.cos(nextAngle) * 18;
+      var nextZ = z.cz + Math.sin(nextAngle) * 18;
+      var stringLength = Math.sqrt(Math.pow(nextX - lsx, 2) + Math.pow(nextZ - lsz, 2));
+      var stringGeo = new THREE.CylinderGeometry(0.02, 0.02, stringLength, 6);
+      var stringMat = new THREE.MeshStandardMaterial({ color: 0x654321 });
+      var string = new THREE.Mesh(stringGeo, stringMat);
+      string.position.set((lsx + nextX) / 2, y + 4.5, (lsz + nextZ) / 2);
+      string.rotation.y = Math.atan2(nextZ - lsz, nextX - lsx);
+      string.rotation.z = Math.PI / 2;
+      string.castShadow = false;
+      scene.add(string);
+    }
+
+    // Flower pots near houses
+    for (var fp = 0; fp < 8; fp++) {
+      var fpAngle = (fp / 8) * Math.PI * 2;
+      var fpx = z.cx + Math.cos(fpAngle) * 16;
+      var fpz = z.cz + Math.sin(fpAngle) * 16;
+
+      var potGeo = new THREE.CylinderGeometry(0.3, 0.25, 0.5, 8);
+      var potMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+      var pot = new THREE.Mesh(potGeo, potMat);
+      pot.position.set(fpx, y + 0.25, fpz);
+      pot.castShadow = false;
+      scene.add(pot);
+
+      // Flowers in pot
+      var flowerGeo = new THREE.SphereGeometry(0.25, 6, 6);
+      var flowerMat = new THREE.MeshStandardMaterial({
+        color: [0xff6b9d, 0x4ecdc4, 0xf7b731][fp % 3]
+      });
+      var flower = new THREE.Mesh(flowerGeo, flowerMat);
+      flower.position.set(fpx, y + 0.6, fpz);
+      flower.castShadow = false;
+      scene.add(flower);
+    }
+
+    // Community notice board
+    var boardPostGeo = new THREE.CylinderGeometry(0.12, 0.12, 3, 8);
+    var boardPostMat = new THREE.MeshStandardMaterial({ color: 0x654321 });
+    var boardPost = new THREE.Mesh(boardPostGeo, boardPostMat);
+    boardPost.position.set(z.cx + 5, y + 1.5, z.cz + 5);
+    boardPost.castShadow = false;
+    scene.add(boardPost);
+
+    var boardGeo = new THREE.BoxGeometry(2.5, 2, 0.1);
+    var boardMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+    var board = new THREE.Mesh(boardGeo, boardMat);
+    board.position.set(z.cx + 5, y + 2.5, z.cz + 5);
+    board.castShadow = false;
+    scene.add(board);
+
+    // Tool racks
+    for (var tr = 0; tr < 2; tr++) {
+      var trx = z.cx + (tr === 0 ? -12 : 12);
+      var trz = z.cz + 8;
+
+      var rackGeo = new THREE.BoxGeometry(1.5, 0.1, 0.3);
+      var rackMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+      var rack = new THREE.Mesh(rackGeo, rackMat);
+      rack.position.set(trx, y + 1.5, trz);
+      rack.castShadow = false;
+      scene.add(rack);
+
+      // Tools on rack (simplified as small boxes)
+      for (var tl = 0; tl < 3; tl++) {
+        var toolGeo = new THREE.BoxGeometry(0.1, 0.8, 0.05);
+        var toolMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+        var tool = new THREE.Mesh(toolGeo, toolMat);
+        tool.position.set(trx + (tl - 1) * 0.4, y + 1.1, trz);
+        tool.rotation.z = Math.PI / 6;
+        tool.castShadow = false;
+        scene.add(tool);
+      }
+    }
   }
 
   function createArenaStructure(scene) {
@@ -965,6 +1757,157 @@
       var tpx = z.cx + Math.cos(tAngle) * 20;
       var tpz = z.cz + Math.sin(tAngle) * 20;
       addTorch(scene, tpx, y, tpz);
+    }
+
+    // ENHANCED DECORATIONS: Spectator banners
+    for (var bn = 0; bn < 8; bn++) {
+      var bnAngle = (bn / 8) * Math.PI * 2;
+      var bnRadius = 28;
+      var bnx = z.cx + Math.cos(bnAngle) * bnRadius;
+      var bnz = z.cz + Math.sin(bnAngle) * bnRadius;
+
+      // Banner pole
+      var poleGeo = new THREE.CylinderGeometry(0.08, 0.08, 4, 8);
+      var poleMat = new THREE.MeshStandardMaterial({ color: 0x654321 });
+      var pole = new THREE.Mesh(poleGeo, poleMat);
+      pole.position.set(bnx, y + 2, bnz);
+      pole.castShadow = false;
+      scene.add(pole);
+
+      // Banner cloth
+      var bannerGeo = new THREE.PlaneGeometry(1.5, 2.5);
+      var bannerColors = [0xff0000, 0x0000ff, 0x00ff00, 0xffff00];
+      var bannerMat = new THREE.MeshStandardMaterial({
+        color: bannerColors[bn % bannerColors.length],
+        side: THREE.DoubleSide
+      });
+      var banner = new THREE.Mesh(bannerGeo, bannerMat);
+      banner.position.set(bnx, y + 3, bnz);
+      banner.rotation.y = bnAngle + Math.PI / 2;
+      banner.castShadow = false;
+      scene.add(banner);
+    }
+
+    // Torch brackets on seating tiers
+    for (var tb = 0; tb < 16; tb++) {
+      var tbAngle = (tb / 16) * Math.PI * 2;
+      var tbRadius = 24;
+      var tbx = z.cx + Math.cos(tbAngle) * tbRadius;
+      var tbz = z.cz + Math.sin(tbAngle) * tbRadius;
+
+      var bracketGeo = new THREE.BoxGeometry(0.3, 0.15, 0.3);
+      var bracketMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+      var bracket = new THREE.Mesh(bracketGeo, bracketMat);
+      bracket.position.set(tbx, y + 4, tbz);
+      bracket.castShadow = false;
+      scene.add(bracket);
+
+      // Torch on bracket
+      var torchGeo = new THREE.SphereGeometry(0.12, 6, 6);
+      var torchMat = new THREE.MeshStandardMaterial({
+        color: 0xff6600,
+        emissive: 0xff4400,
+        emissiveIntensity: 0.8
+      });
+      var torch = new THREE.Mesh(torchGeo, torchMat);
+      torch.position.set(tbx, y + 4.3, tbz);
+      torch.castShadow = false;
+      scene.add(torch);
+      animatedObjects.push({
+        mesh: torch,
+        type: 'torch',
+        params: { seed: tb * 200 }
+      });
+    }
+
+    // Scoring boards (tall posts with platforms)
+    for (var sb = 0; sb < 4; sb++) {
+      var sbAngle = (sb / 4) * Math.PI * 2;
+      var sbx = z.cx + Math.cos(sbAngle) * 30;
+      var sbz = z.cz + Math.sin(sbAngle) * 30;
+
+      // Post
+      var scorePostGeo = new THREE.CylinderGeometry(0.2, 0.25, 6, 8);
+      var scorePostMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+      var scorePost = new THREE.Mesh(scorePostGeo, scorePostMat);
+      scorePost.position.set(sbx, y + 3, sbz);
+      scorePost.castShadow = false;
+      scene.add(scorePost);
+
+      // Scoreboard
+      var scoreBoardGeo = new THREE.BoxGeometry(2, 1.5, 0.2);
+      var scoreBoardMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50 });
+      var scoreBoard = new THREE.Mesh(scoreBoardGeo, scoreBoardMat);
+      scoreBoard.position.set(sbx, y + 6.5, sbz);
+      scoreBoard.rotation.y = sbAngle + Math.PI;
+      scoreBoard.castShadow = false;
+      scene.add(scoreBoard);
+    }
+
+    // Training equipment (dummy posts)
+    for (var te = 0; te < 4; te++) {
+      var teAngle = (te / 4) * Math.PI * 2 + Math.PI / 8;
+      var tex = z.cx + Math.cos(teAngle) * 10;
+      var tez = z.cz + Math.sin(teAngle) * 10;
+
+      // Post
+      var dummyPostGeo = new THREE.CylinderGeometry(0.15, 0.15, 2.5, 8);
+      var dummyPostMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+      var dummyPost = new THREE.Mesh(dummyPostGeo, dummyPostMat);
+      dummyPost.position.set(tex, y + 1.25, tez);
+      dummyPost.castShadow = false;
+      scene.add(dummyPost);
+
+      // Dummy head
+      var dummyHeadGeo = new THREE.SphereGeometry(0.3, 8, 8);
+      var dummyHeadMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+      var dummyHead = new THREE.Mesh(dummyHeadGeo, dummyHeadMat);
+      dummyHead.position.set(tex, y + 2.8, tez);
+      dummyHead.castShadow = false;
+      scene.add(dummyHead);
+
+      // Crossbar arms
+      for (var ca = -1; ca <= 1; ca += 2) {
+        var armGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.8, 6);
+        var arm = new THREE.Mesh(armGeo, dummyPostMat);
+        arm.position.set(tex + ca * 0.4, y + 2.2, tez);
+        arm.rotation.z = Math.PI / 2;
+        arm.castShadow = false;
+        scene.add(arm);
+      }
+    }
+
+    // Weapon racks
+    for (var wr = 0; wr < 2; wr++) {
+      var wrx = z.cx + (wr === 0 ? -14 : 14);
+      var wrz = z.cz;
+
+      var weaponRackGeo = new THREE.BoxGeometry(3, 0.15, 0.3);
+      var weaponRackMat = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+      var weaponRack = new THREE.Mesh(weaponRackGeo, weaponRackMat);
+      weaponRack.position.set(wrx, y + 1.5, wrz);
+      weaponRack.castShadow = false;
+      scene.add(weaponRack);
+
+      // Support posts
+      for (var wp = -1; wp <= 1; wp += 2) {
+        var wpGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.5, 6);
+        var wpMesh = new THREE.Mesh(wpGeo, weaponRackMat);
+        wpMesh.position.set(wrx + wp * 1.2, y + 0.75, wrz);
+        wpMesh.castShadow = false;
+        scene.add(wpMesh);
+      }
+
+      // Weapons on rack (simplified as sticks)
+      for (var wn = 0; wn < 4; wn++) {
+        var weaponGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.8, 6);
+        var weaponMat = new THREE.MeshStandardMaterial({ color: 0x8b8b8b });
+        var weapon = new THREE.Mesh(weaponGeo, weaponMat);
+        weapon.position.set(wrx + (wn - 1.5) * 0.6, y + 0.9, wrz);
+        weapon.rotation.z = Math.PI / 6;
+        weapon.castShadow = false;
+        scene.add(weapon);
+      }
     }
   }
 

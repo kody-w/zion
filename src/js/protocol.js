@@ -44,7 +44,15 @@
     'warp_fork',
     'return_home',
     'federation_announce',
-    'federation_handshake'
+    'federation_handshake',
+    'reputation_adjust',
+    'report_griefing',
+    'election_start',
+    'election_vote',
+    'election_finalize',
+    'steward_set_welcome',
+    'steward_set_policy',
+    'steward_moderate'
   ]);
 
   // Message types that require consent

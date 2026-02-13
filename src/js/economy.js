@@ -347,6 +347,169 @@
     return players.slice(0, limit);
   }
 
+  // ========================================================================
+  // AUCTION HOUSE - Timed bid system
+  // ========================================================================
+
+  var auctionCounter = 0;
+
+  /**
+   * Create an auction listing
+   * @param {Object} ledger
+   * @param {string} sellerId
+   * @param {Object} item - Item being auctioned
+   * @param {number} startingBid - Minimum bid
+   * @param {number} durationMs - Auction duration in milliseconds
+   * @returns {Object} Auction object
+   */
+  function createAuction(ledger, sellerId, item, startingBid, durationMs) {
+    if (!ledger.auctions) ledger.auctions = [];
+
+    var auction = {
+      id: 'auction_' + (auctionCounter++) + '_' + Date.now(),
+      seller: sellerId,
+      item: item,
+      startingBid: startingBid || 1,
+      currentBid: 0,
+      currentBidder: null,
+      bids: [],
+      startTime: Date.now(),
+      endTime: Date.now() + (durationMs || 300000), // Default 5 min
+      status: 'active'
+    };
+
+    ledger.auctions.push(auction);
+    return auction;
+  }
+
+  /**
+   * Place a bid on an auction
+   * @param {Object} ledger
+   * @param {string} auctionId
+   * @param {string} bidderId
+   * @param {number} amount
+   * @returns {Object} {success, message}
+   */
+  function placeBid(ledger, auctionId, bidderId, amount) {
+    if (!ledger.auctions) return { success: false, message: 'No auctions' };
+
+    var auction = ledger.auctions.find(function(a) { return a.id === auctionId; });
+    if (!auction) return { success: false, message: 'Auction not found' };
+    if (auction.status !== 'active') return { success: false, message: 'Auction not active' };
+    if (Date.now() > auction.endTime) return { success: false, message: 'Auction ended' };
+    if (auction.seller === bidderId) return { success: false, message: 'Cannot bid on own auction' };
+    if (amount <= auction.currentBid) return { success: false, message: 'Bid must be higher than current bid' };
+    if (amount < auction.startingBid) return { success: false, message: 'Bid below minimum' };
+
+    var balance = getBalance(ledger, bidderId);
+    if (balance < amount) return { success: false, message: 'Insufficient Spark' };
+
+    // Record bid
+    auction.currentBid = amount;
+    auction.currentBidder = bidderId;
+    auction.bids.push({ bidder: bidderId, amount: amount, ts: Date.now() });
+
+    // Extend auction if bid in last 30s (anti-sniping)
+    if (auction.endTime - Date.now() < 30000) {
+      auction.endTime = Date.now() + 30000;
+    }
+
+    return { success: true, message: 'Bid placed' };
+  }
+
+  /**
+   * Finalize ended auctions
+   * @param {Object} ledger
+   * @returns {Array} Completed auctions
+   */
+  function finalizeAuctions(ledger) {
+    if (!ledger.auctions) return [];
+
+    var now = Date.now();
+    var completed = [];
+
+    for (var i = 0; i < ledger.auctions.length; i++) {
+      var auction = ledger.auctions[i];
+      if (auction.status !== 'active') continue;
+      if (now < auction.endTime) continue;
+
+      if (auction.currentBidder && auction.currentBid > 0) {
+        // Check winner still has funds
+        var winnerBalance = getBalance(ledger, auction.currentBidder);
+        if (winnerBalance >= auction.currentBid) {
+          // Transfer Spark
+          if (!ledger.balances[auction.seller]) ledger.balances[auction.seller] = 0;
+          ledger.balances[auction.currentBidder] -= auction.currentBid;
+          ledger.balances[auction.seller] += auction.currentBid;
+
+          recordTransaction(ledger, auction.currentBidder, auction.seller, auction.currentBid, 'auction', {
+            auctionId: auction.id,
+            item: auction.item
+          });
+
+          auction.status = 'sold';
+          completed.push({ auction: auction, winner: auction.currentBidder, item: auction.item });
+        } else {
+          auction.status = 'failed';
+        }
+      } else {
+        auction.status = 'expired';
+      }
+    }
+
+    return completed;
+  }
+
+  function getActiveAuctions(ledger) {
+    if (!ledger.auctions) return [];
+    var now = Date.now();
+    return ledger.auctions.filter(function(a) {
+      return a.status === 'active' && now < a.endTime;
+    });
+  }
+
+  // ========================================================================
+  // ECONOMIC EVENTS - Rotating modifiers
+  // ========================================================================
+
+  var ECONOMIC_EVENTS = [
+    { id: 'harvest_festival', name: 'Harvest Festival', description: 'Harvesting rewards doubled', modifier: { activity: 'harvest', multiplier: 2 } },
+    { id: 'craft_fair', name: 'Craft Fair', description: 'Crafting rewards +50%', modifier: { activity: 'craft', multiplier: 1.5 } },
+    { id: 'trading_day', name: 'Grand Trading Day', description: 'Trade bonuses increased', modifier: { activity: 'gift', multiplier: 3 } },
+    { id: 'scholars_week', name: "Scholar's Week", description: 'Teaching and discovery rewards doubled', modifier: { activity: 'teach', multiplier: 2 } },
+    { id: 'builders_boom', name: "Builder's Boom", description: 'Building rewards +50%', modifier: { activity: 'build', multiplier: 1.5 } },
+    { id: 'exploration_surge', name: 'Exploration Surge', description: 'Discovery rewards doubled', modifier: { activity: 'discover', multiplier: 2 } }
+  ];
+
+  /**
+   * Get current economic event based on day
+   * @returns {Object|null} Current event or null
+   */
+  function getCurrentEvent() {
+    var now = new Date();
+    var dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    // Events rotate every 3 days, with 1 day of no event between
+    var cycle = dayOfYear % 4;
+    if (cycle === 3) return null; // Rest day
+    var eventIndex = Math.floor(dayOfYear / 4) % ECONOMIC_EVENTS.length;
+    return ECONOMIC_EVENTS[eventIndex];
+  }
+
+  /**
+   * Apply economic event modifier to earn amount
+   * @param {number} baseAmount
+   * @param {string} activity
+   * @returns {number} Modified amount
+   */
+  function applyEventModifier(baseAmount, activity) {
+    var event = getCurrentEvent();
+    if (!event || !event.modifier) return baseAmount;
+    if (event.modifier.activity === activity) {
+      return Math.round(baseAmount * event.modifier.multiplier);
+    }
+    return baseAmount;
+  }
+
   // Export public API
   exports.createLedger = createLedger;
   exports.earnSpark = earnSpark;
@@ -363,5 +526,12 @@
   exports.getEconomyStats = getEconomyStats;
   exports.getLeaderboard = getLeaderboard;
   exports.EARN_TABLE = EARN_TABLE;
+  exports.createAuction = createAuction;
+  exports.placeBid = placeBid;
+  exports.finalizeAuctions = finalizeAuctions;
+  exports.getActiveAuctions = getActiveAuctions;
+  exports.ECONOMIC_EVENTS = ECONOMIC_EVENTS;
+  exports.getCurrentEvent = getCurrentEvent;
+  exports.applyEventModifier = applyEventModifier;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Economy = {}));

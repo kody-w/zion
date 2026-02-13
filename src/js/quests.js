@@ -1157,6 +1157,269 @@
     };
   }
 
+  // ========================================================================
+  // ACHIEVEMENT / BADGE SYSTEM
+  // ========================================================================
+
+  var ACHIEVEMENTS = {
+    // Exploration
+    first_steps: { id: 'first_steps', name: 'First Steps', description: 'Enter ZION for the first time', icon: '👣', category: 'exploration', sparkReward: 10 },
+    zone_hopper: { id: 'zone_hopper', name: 'Zone Hopper', description: 'Visit 4 different zones', icon: '🚶', category: 'exploration', sparkReward: 25 },
+    world_traveler: { id: 'world_traveler', name: 'World Traveler', description: 'Visit all 8 zones', icon: '🌍', category: 'exploration', sparkReward: 75 },
+    trailblazer: { id: 'trailblazer', name: 'Trailblazer', description: 'Make 10 discoveries', icon: '🔍', category: 'exploration', sparkReward: 50 },
+    cartographer: { id: 'cartographer', name: 'Cartographer', description: 'Make 25 discoveries', icon: '🗺️', category: 'exploration', sparkReward: 100 },
+
+    // Social
+    friendly_face: { id: 'friendly_face', name: 'Friendly Face', description: 'Talk to 10 NPCs', icon: '😊', category: 'social', sparkReward: 15 },
+    social_butterfly: { id: 'social_butterfly', name: 'Social Butterfly', description: 'Talk to 50 NPCs', icon: '🦋', category: 'social', sparkReward: 40 },
+    first_trade: { id: 'first_trade', name: 'First Trade', description: 'Complete your first trade', icon: '🤝', category: 'social', sparkReward: 20 },
+    merchant_prince: { id: 'merchant_prince', name: 'Merchant Prince', description: 'Complete 25 trades', icon: '👑', category: 'social', sparkReward: 75 },
+    gift_giver: { id: 'gift_giver', name: 'Gift Giver', description: 'Gift an item to another player', icon: '🎁', category: 'social', sparkReward: 15 },
+
+    // Crafting
+    first_craft: { id: 'first_craft', name: 'First Craft', description: 'Craft your first item', icon: '🔨', category: 'crafting', sparkReward: 10 },
+    apprentice_crafter: { id: 'apprentice_crafter', name: 'Apprentice Crafter', description: 'Craft 10 items', icon: '⚒️', category: 'crafting', sparkReward: 30 },
+    master_crafter: { id: 'master_crafter', name: 'Master Crafter', description: 'Craft 50 items', icon: '🛠️', category: 'crafting', sparkReward: 80 },
+    potion_brewer: { id: 'potion_brewer', name: 'Potion Brewer', description: 'Brew 10 potions', icon: '🧪', category: 'crafting', sparkReward: 25 },
+    instrument_maker: { id: 'instrument_maker', name: 'Instrument Maker', description: 'Craft a musical instrument', icon: '🎵', category: 'crafting', sparkReward: 20 },
+
+    // Building
+    first_build: { id: 'first_build', name: 'First Build', description: 'Place your first structure', icon: '🏗️', category: 'building', sparkReward: 10 },
+    architect: { id: 'architect', name: 'Architect', description: 'Place 10 structures', icon: '🏛️', category: 'building', sparkReward: 40 },
+    city_planner: { id: 'city_planner', name: 'City Planner', description: 'Place 50 structures', icon: '🏙️', category: 'building', sparkReward: 100 },
+
+    // Gardening
+    green_thumb: { id: 'green_thumb', name: 'Green Thumb', description: 'Plant your first seed', icon: '🌱', category: 'gardening', sparkReward: 10 },
+    gardener: { id: 'gardener', name: 'Gardener', description: 'Harvest 20 plants', icon: '🌻', category: 'gardening', sparkReward: 30 },
+    botanist: { id: 'botanist', name: 'Botanist', description: 'Harvest 100 plants', icon: '🌿', category: 'gardening', sparkReward: 80 },
+
+    // Economy
+    spark_saver: { id: 'spark_saver', name: 'Spark Saver', description: 'Accumulate 100 Spark', icon: '✨', category: 'economy', sparkReward: 10 },
+    spark_hoarder: { id: 'spark_hoarder', name: 'Spark Hoarder', description: 'Accumulate 500 Spark', icon: '💰', category: 'economy', sparkReward: 25 },
+    spark_magnate: { id: 'spark_magnate', name: 'Spark Magnate', description: 'Accumulate 2000 Spark', icon: '💎', category: 'economy', sparkReward: 75 },
+
+    // Competition
+    first_challenge: { id: 'first_challenge', name: 'First Challenge', description: 'Participate in your first competition', icon: '⚔️', category: 'competition', sparkReward: 15 },
+    champion: { id: 'champion', name: 'Champion', description: 'Win 5 competitions', icon: '🏆', category: 'competition', sparkReward: 50 },
+
+    // Quests
+    quest_starter: { id: 'quest_starter', name: 'Quest Starter', description: 'Accept your first quest', icon: '📋', category: 'quests', sparkReward: 5 },
+    questmaster: { id: 'questmaster', name: 'Questmaster', description: 'Complete 10 quests', icon: '📜', category: 'quests', sparkReward: 40 },
+    completionist: { id: 'completionist', name: 'Completionist', description: 'Complete 25 quests', icon: '⭐', category: 'quests', sparkReward: 100 },
+    chain_finisher: { id: 'chain_finisher', name: 'Chain Finisher', description: 'Complete a quest chain', icon: '🔗', category: 'quests', sparkReward: 30 },
+
+    // Guild
+    guild_founder: { id: 'guild_founder', name: 'Guild Founder', description: 'Create a guild', icon: '🏰', category: 'guild', sparkReward: 25 },
+    guild_member: { id: 'guild_member', name: 'Guild Member', description: 'Join a guild', icon: '🤜', category: 'guild', sparkReward: 10 },
+
+    // Art
+    first_artwork: { id: 'first_artwork', name: 'First Artwork', description: 'Create your first artwork', icon: '🎨', category: 'art', sparkReward: 15 },
+    prolific_artist: { id: 'prolific_artist', name: 'Prolific Artist', description: 'Create 10 artworks', icon: '🖼️', category: 'art', sparkReward: 40 },
+
+    // Physical
+    sunwalker: { id: 'sunwalker', name: 'Sunwalker', description: 'Reach Sunwalker warmth tier', icon: '☀️', category: 'physical', sparkReward: 50 },
+
+    // Mentoring
+    first_lesson: { id: 'first_lesson', name: 'First Lesson', description: 'Complete a mentoring lesson', icon: '📚', category: 'mentoring', sparkReward: 15 },
+    wise_mentor: { id: 'wise_mentor', name: 'Wise Mentor', description: 'Mentor 5 players', icon: '🎓', category: 'mentoring', sparkReward: 50 }
+  };
+
+  // Player achievement tracking
+  var playerAchievements = new Map(); // playerId -> { unlocked: Set, counters: {} }
+
+  function initPlayerAchievements(playerId) {
+    if (!playerAchievements.has(playerId)) {
+      playerAchievements.set(playerId, {
+        unlocked: new Set(),
+        counters: {
+          npcs_talked: 0,
+          zones_visited: new Set(),
+          trades_completed: 0,
+          items_crafted: 0,
+          potions_brewed: 0,
+          structures_placed: 0,
+          plants_harvested: 0,
+          seeds_planted: 0,
+          discoveries_made: 0,
+          competitions_entered: 0,
+          competitions_won: 0,
+          quests_completed: 0,
+          artworks_created: 0,
+          players_mentored: 0,
+          lessons_completed: 0,
+          gifts_given: 0
+        }
+      });
+    }
+    return playerAchievements.get(playerId);
+  }
+
+  /**
+   * Track an event and check for newly unlocked achievements
+   * @param {string} playerId
+   * @param {string} eventType - e.g. 'craft', 'trade', 'visit_zone', 'talk_npc'
+   * @param {Object} eventData - event-specific data
+   * @returns {Array} Newly unlocked achievements
+   */
+  function trackAchievementEvent(playerId, eventType, eventData) {
+    var state = initPlayerAchievements(playerId);
+    eventData = eventData || {};
+
+    // Update counters based on event
+    switch (eventType) {
+      case 'login':
+        break; // first_steps checked separately
+      case 'talk_npc':
+        state.counters.npcs_talked++;
+        break;
+      case 'visit_zone':
+        if (eventData.zone) state.counters.zones_visited.add(eventData.zone);
+        break;
+      case 'trade':
+        state.counters.trades_completed++;
+        break;
+      case 'craft':
+        state.counters.items_crafted++;
+        if (eventData.category === 'potion') state.counters.potions_brewed++;
+        break;
+      case 'build':
+        state.counters.structures_placed++;
+        break;
+      case 'harvest':
+        state.counters.plants_harvested++;
+        break;
+      case 'plant':
+        state.counters.seeds_planted++;
+        break;
+      case 'discover':
+        state.counters.discoveries_made++;
+        break;
+      case 'competition_enter':
+        state.counters.competitions_entered++;
+        break;
+      case 'competition_win':
+        state.counters.competitions_won++;
+        break;
+      case 'quest_complete':
+        state.counters.quests_completed++;
+        break;
+      case 'artwork':
+        state.counters.artworks_created++;
+        break;
+      case 'mentor':
+        state.counters.players_mentored++;
+        break;
+      case 'lesson':
+        state.counters.lessons_completed++;
+        break;
+      case 'gift':
+        state.counters.gifts_given++;
+        break;
+    }
+
+    // Check all achievements
+    var newlyUnlocked = [];
+    var checks = {
+      first_steps: eventType === 'login',
+      zone_hopper: state.counters.zones_visited.size >= 4,
+      world_traveler: state.counters.zones_visited.size >= 8,
+      trailblazer: state.counters.discoveries_made >= 10,
+      cartographer: state.counters.discoveries_made >= 25,
+      friendly_face: state.counters.npcs_talked >= 10,
+      social_butterfly: state.counters.npcs_talked >= 50,
+      first_trade: state.counters.trades_completed >= 1,
+      merchant_prince: state.counters.trades_completed >= 25,
+      gift_giver: state.counters.gifts_given >= 1,
+      first_craft: state.counters.items_crafted >= 1,
+      apprentice_crafter: state.counters.items_crafted >= 10,
+      master_crafter: state.counters.items_crafted >= 50,
+      potion_brewer: state.counters.potions_brewed >= 10,
+      instrument_maker: eventType === 'craft' && eventData.category === 'instrument',
+      first_build: state.counters.structures_placed >= 1,
+      architect: state.counters.structures_placed >= 10,
+      city_planner: state.counters.structures_placed >= 50,
+      green_thumb: state.counters.seeds_planted >= 1,
+      gardener: state.counters.plants_harvested >= 20,
+      botanist: state.counters.plants_harvested >= 100,
+      spark_saver: eventData.spark >= 100,
+      spark_hoarder: eventData.spark >= 500,
+      spark_magnate: eventData.spark >= 2000,
+      first_challenge: state.counters.competitions_entered >= 1,
+      champion: state.counters.competitions_won >= 5,
+      quest_starter: state.counters.quests_completed >= 0 && eventType === 'quest_accept',
+      questmaster: state.counters.quests_completed >= 10,
+      completionist: state.counters.quests_completed >= 25,
+      chain_finisher: eventType === 'chain_complete',
+      guild_founder: eventType === 'guild_create',
+      guild_member: eventType === 'guild_join',
+      first_artwork: state.counters.artworks_created >= 1,
+      prolific_artist: state.counters.artworks_created >= 10,
+      sunwalker: eventType === 'warmth_tier' && eventData.tier === 'Sunwalker',
+      first_lesson: state.counters.lessons_completed >= 1,
+      wise_mentor: state.counters.players_mentored >= 5
+    };
+
+    for (var achId in checks) {
+      if (checks[achId] && !state.unlocked.has(achId) && ACHIEVEMENTS[achId]) {
+        state.unlocked.add(achId);
+        newlyUnlocked.push(ACHIEVEMENTS[achId]);
+      }
+    }
+
+    return newlyUnlocked;
+  }
+
+  /**
+   * Get all achievements with unlock status
+   * @param {string} playerId
+   * @returns {Array} All achievements with unlocked status
+   */
+  function getAchievements(playerId) {
+    var state = initPlayerAchievements(playerId);
+    var result = [];
+
+    for (var achId in ACHIEVEMENTS) {
+      var ach = ACHIEVEMENTS[achId];
+      result.push({
+        id: ach.id,
+        name: ach.name,
+        description: ach.description,
+        icon: ach.icon,
+        category: ach.category,
+        sparkReward: ach.sparkReward,
+        unlocked: state.unlocked.has(achId)
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * Get achievement progress summary
+   * @param {string} playerId
+   * @returns {Object} {unlocked, total, percentage, recentUnlocks}
+   */
+  function getAchievementProgress(playerId) {
+    var state = initPlayerAchievements(playerId);
+    var total = Object.keys(ACHIEVEMENTS).length;
+    var unlocked = state.unlocked.size;
+
+    return {
+      unlocked: unlocked,
+      total: total,
+      percentage: total > 0 ? Math.round((unlocked / total) * 100) : 0,
+      counters: {
+        npcs_talked: state.counters.npcs_talked,
+        zones_visited: state.counters.zones_visited.size,
+        trades_completed: state.counters.trades_completed,
+        items_crafted: state.counters.items_crafted,
+        structures_placed: state.counters.structures_placed,
+        quests_completed: state.counters.quests_completed,
+        discoveries_made: state.counters.discoveries_made
+      }
+    };
+  }
+
   // Export public API
   exports.getAvailableQuests = getAvailableQuests;
   exports.acceptQuest = acceptQuest;
@@ -1175,5 +1438,10 @@
   exports.getPlayerQuestStats = getPlayerQuestStats;
   exports.QUEST_CHAINS = QUEST_CHAINS;
   exports.DAILY_QUESTS = DAILY_QUESTS;
+  exports.ACHIEVEMENTS = ACHIEVEMENTS;
+  exports.trackAchievementEvent = trackAchievementEvent;
+  exports.getAchievements = getAchievements;
+  exports.getAchievementProgress = getAchievementProgress;
+  exports.initPlayerAchievements = initPlayerAchievements;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Quests = {}));

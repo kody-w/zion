@@ -393,6 +393,11 @@
   function handleLobbyMessage(msg) {
     if (!msg || !msg.type) return false;
 
+    // Check if it's a federation message first
+    if (handleFederationMessage(msg)) {
+      return true;
+    }
+
     if (msg.type === '_lobby_announce') {
       // Someone announced — connect to their known peers
       if (msg.peers && Array.isArray(msg.peers)) {
@@ -458,6 +463,279 @@
     };
   }
 
+  // ========================================================================
+  // FEDERATION SYSTEM — Cross-world connectivity
+  // ========================================================================
+
+  var federationState = {
+    worldId: null,
+    worldName: null,
+    endpoint: null,
+    federatedPeers: new Map(), // worldId -> {peerId, connection, worldInfo}
+    federationCallback: null,
+    discoveredWorlds: new Map() // worldId -> worldInfo
+  };
+
+  /**
+   * Initialize federation for this world
+   * @param {string} worldId - Unique world identifier (derived from URL)
+   * @param {string} worldName - Human-readable world name
+   * @param {string} endpoint - Public endpoint URL (e.g., GitHub Pages URL)
+   */
+  function initFederation(worldId, worldName, endpoint) {
+    federationState.worldId = worldId;
+    federationState.worldName = worldName || worldId;
+    federationState.endpoint = endpoint;
+
+    console.log('Federation initialized for world:', worldId);
+  }
+
+  /**
+   * Generate federated peer ID for cross-world connections
+   * @param {string} worldId - World identifier
+   * @param {string} playerId - Player identifier
+   * @returns {string}
+   */
+  function getFederatedPeerId(worldId, playerId) {
+    return `zion-fed-${worldId}-${playerId}`;
+  }
+
+  /**
+   * Announce this world to the federation network
+   * Broadcasts availability for cross-world connections
+   */
+  function announceFederation() {
+    if (!peer || !peer.open) return;
+    if (!federationState.worldId) {
+      console.warn('Federation not initialized');
+      return;
+    }
+
+    var announcement = {
+      type: 'federation_announce',
+      worldId: federationState.worldId,
+      worldName: federationState.worldName,
+      endpoint: federationState.endpoint,
+      protocolVersion: 1,
+      playerCount: connections.size,
+      peerId: peer.id,
+      timestamp: Date.now()
+    };
+
+    broadcastMessage(announcement);
+    console.log('Federation announced:', federationState.worldName);
+  }
+
+  /**
+   * Establish handshake with a federated world
+   * @param {string} targetWorldId - Target world identifier
+   * @param {object} worldInfo - Information about target world
+   */
+  function federationHandshake(targetWorldId, worldInfo) {
+    if (!peer || !peer.open) return;
+    if (!federationState.worldId) {
+      console.warn('Federation not initialized');
+      return;
+    }
+
+    // Generate federated peer ID for the target world
+    var federatedPeerId = getFederatedPeerId(targetWorldId, lobbyState.peerId);
+
+    // Check if already connected
+    if (federationState.federatedPeers.has(targetWorldId)) {
+      console.log('Already federated with world:', targetWorldId);
+      return;
+    }
+
+    // Send handshake message
+    var handshake = {
+      type: 'federation_handshake',
+      from_world: federationState.worldId,
+      to_world: targetWorldId,
+      worldName: federationState.worldName,
+      endpoint: federationState.endpoint,
+      protocolVersion: 1,
+      peerId: peer.id,
+      timestamp: Date.now()
+    };
+
+    broadcastMessage(handshake);
+
+    // Store federated world info
+    federationState.federatedPeers.set(targetWorldId, {
+      worldId: targetWorldId,
+      worldInfo: worldInfo,
+      peerId: federatedPeerId,
+      status: 'handshake_sent',
+      timestamp: Date.now()
+    });
+
+    console.log('Federation handshake sent to:', targetWorldId);
+  }
+
+  /**
+   * Handle incoming federation messages
+   * @param {object} msg - Federation message
+   * @returns {boolean} True if message was handled
+   */
+  function handleFederationMessage(msg) {
+    if (!msg || !msg.type) return false;
+
+    if (msg.type === 'federation_announce') {
+      // Another world announced itself
+      var worldId = msg.worldId || msg.payload?.worldId;
+      if (worldId && worldId !== federationState.worldId) {
+        var worldInfo = {
+          worldId: worldId,
+          worldName: msg.worldName || msg.payload?.worldName,
+          endpoint: msg.endpoint || msg.payload?.endpoint,
+          protocolVersion: msg.protocolVersion || msg.payload?.protocolVersion || 1,
+          playerCount: msg.playerCount || msg.payload?.playerCount || 0,
+          peerId: msg.peerId || msg.payload?.peerId,
+          timestamp: msg.timestamp || Date.now()
+        };
+
+        // Track discovered world
+        federationState.discoveredWorlds.set(worldId, worldInfo);
+
+        // Notify callback
+        if (federationState.federationCallback) {
+          federationState.federationCallback({
+            type: 'world_discovered',
+            worldInfo: worldInfo
+          });
+        }
+
+        console.log('Discovered federated world:', worldInfo.worldName);
+      }
+      return true;
+    }
+
+    if (msg.type === 'federation_handshake') {
+      // Another world wants to federate with us
+      var fromWorld = msg.from_world || msg.payload?.from_world;
+      var toWorld = msg.to_world || msg.payload?.to_world;
+
+      if (toWorld === federationState.worldId && fromWorld) {
+        var worldInfo = {
+          worldId: fromWorld,
+          worldName: msg.worldName || msg.payload?.worldName,
+          endpoint: msg.endpoint || msg.payload?.endpoint,
+          protocolVersion: msg.protocolVersion || msg.payload?.protocolVersion || 1,
+          peerId: msg.peerId || msg.payload?.peerId,
+          timestamp: msg.timestamp || Date.now()
+        };
+
+        // Check if we already have a federation with this world
+        var existing = federationState.federatedPeers.get(fromWorld);
+        if (existing && existing.status === 'active') {
+          console.log('Federation already active with:', fromWorld);
+          return true;
+        }
+
+        // Store federated world
+        federationState.federatedPeers.set(fromWorld, {
+          worldId: fromWorld,
+          worldInfo: worldInfo,
+          status: 'active',
+          timestamp: Date.now()
+        });
+
+        // Notify callback
+        if (federationState.federationCallback) {
+          federationState.federationCallback({
+            type: 'federation_established',
+            worldInfo: worldInfo
+          });
+        }
+
+        console.log('Federation established with:', worldInfo.worldName);
+      }
+      return true;
+    }
+
+    if (msg.type === 'warp_fork') {
+      // Player warping between federated worlds
+      if (federationState.federationCallback) {
+        federationState.federationCallback({
+          type: 'cross_world_warp',
+          playerId: msg.from,
+          targetWorld: msg.payload?.target_world,
+          position: msg.payload?.position
+        });
+      }
+      return true;
+    }
+
+    if (msg.type === 'return_home') {
+      // Player returning from federated world
+      if (federationState.federationCallback) {
+        federationState.federationCallback({
+          type: 'player_returned',
+          playerId: msg.from,
+          position: msg.payload?.position
+        });
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Register callback for federation events
+   * @param {function} callback - Called with federation events
+   */
+  function onFederationEvent(callback) {
+    federationState.federationCallback = callback;
+  }
+
+  /**
+   * Get list of federated worlds
+   * @returns {Array} Array of federated world info
+   */
+  function getFederatedWorlds() {
+    return Array.from(federationState.federatedPeers.values());
+  }
+
+  /**
+   * Get list of discovered worlds
+   * @returns {Array} Array of discovered world info
+   */
+  function getDiscoveredWorlds() {
+    return Array.from(federationState.discoveredWorlds.values());
+  }
+
+  /**
+   * Check if connected to a specific world
+   * @param {string} worldId - World identifier
+   * @returns {boolean}
+   */
+  function isFederatedWith(worldId) {
+    var fed = federationState.federatedPeers.get(worldId);
+    return fed && fed.status === 'active';
+  }
+
+  /**
+   * Get world ID derived from current URL
+   * @returns {string}
+   */
+  function deriveWorldId() {
+    if (typeof window === 'undefined' || !window.location) {
+      return 'localhost';
+    }
+
+    var url = window.location.href;
+    // Extract meaningful part from URL (e.g., github.io/repo-name)
+    var match = url.match(/github\.io\/([^\/]+)/);
+    if (match) {
+      return match[1];
+    }
+
+    // Fallback to hostname
+    return window.location.hostname.replace(/\./g, '-');
+  }
+
   // Export public API
   exports.initMesh = initMesh;
   exports.broadcastMessage = broadcastMessage;
@@ -471,5 +749,17 @@
   exports.updateLobbyZone = updateLobbyZone;
   exports.handleLobbyMessage = handleLobbyMessage;
   exports.getNetworkStats = getNetworkStats;
+
+  // Federation exports
+  exports.initFederation = initFederation;
+  exports.announceFederation = announceFederation;
+  exports.federationHandshake = federationHandshake;
+  exports.handleFederationMessage = handleFederationMessage;
+  exports.onFederationEvent = onFederationEvent;
+  exports.getFederatedWorlds = getFederatedWorlds;
+  exports.getDiscoveredWorlds = getDiscoveredWorlds;
+  exports.isFederatedWith = isFederatedWith;
+  exports.deriveWorldId = deriveWorldId;
+  exports.getFederatedPeerId = getFederatedPeerId;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Network = {}));

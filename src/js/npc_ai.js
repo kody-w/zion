@@ -2495,6 +2495,275 @@
   }
 
   // ============================================================================
+  // ENHANCED DAILY SCHEDULES
+  // Get zone + activity for NPC based on archetype and time of day
+  // ============================================================================
+
+  /**
+   * Get the daily schedule for an NPC archetype at a specific time
+   * @param {string} archetype - NPC archetype
+   * @param {string} timeOfDay - Current time (dawn, morning, midday, afternoon, evening, night)
+   * @returns {object} - {zone, activity, priority}
+   */
+  function getDailySchedule(archetype, timeOfDay) {
+    var drives = ARCHETYPE_DRIVES[archetype];
+    var schedule = getSchedulePeriod(timeOfDay);
+
+    // Default zone based on archetype work locations
+    var defaultZone = drives.work_locations && drives.work_locations[0] ? drives.work_locations[0] : 'agora';
+
+    // Time-specific schedules by archetype
+    var schedules = {
+      merchant: {
+        dawn: { zone: 'agora', activity: 'setting_up_stall', priority: 0.8 },
+        morning: { zone: 'agora', activity: 'tend_shop', priority: 1.0 },
+        midday: { zone: 'agora', activity: 'tend_shop', priority: 1.0 },
+        afternoon: { zone: 'agora', activity: 'tend_shop', priority: 1.0 },
+        evening: { zone: 'commons', activity: 'socialize', priority: 0.6 },
+        night: { zone: 'commons', activity: 'rest', priority: 0.3 }
+      },
+      scholar: {
+        dawn: { zone: 'athenaeum', activity: 'research', priority: 0.5 },
+        morning: { zone: 'athenaeum', activity: 'study', priority: 1.0 },
+        midday: { zone: 'agora', activity: 'socialize_eat', priority: 0.8 },
+        afternoon: { zone: 'gardens', activity: 'wander', priority: 0.6 },
+        evening: { zone: 'commons', activity: 'socialize', priority: 0.9 },
+        night: { zone: 'athenaeum', activity: 'rest', priority: 0.2 }
+      },
+      gardener: {
+        dawn: { zone: 'gardens', activity: 'tend_plants', priority: 1.0 },
+        morning: { zone: 'gardens', activity: 'tend_plants', priority: 1.0 },
+        midday: { zone: 'gardens', activity: 'harvest', priority: 0.9 },
+        afternoon: { zone: 'agora', activity: 'sell_harvest', priority: 0.8 },
+        evening: { zone: 'commons', activity: 'socialize', priority: 0.6 },
+        night: { zone: 'gardens', activity: 'rest', priority: 0.3 }
+      },
+      artist: {
+        dawn: { zone: 'gardens', activity: 'find_inspiration', priority: 0.7 },
+        morning: { zone: 'studio', activity: 'create_art', priority: 1.0 },
+        midday: { zone: 'studio', activity: 'create_art', priority: 0.9 },
+        afternoon: { zone: 'studio', activity: 'create_art', priority: 0.8 },
+        evening: { zone: 'commons', activity: 'show_work', priority: 0.9 },
+        night: { zone: 'gardens', activity: 'observe_beauty', priority: 0.5 }
+      },
+      warrior: {
+        dawn: { zone: 'arena', activity: 'warm_up', priority: 0.8 },
+        morning: { zone: 'arena', activity: 'train', priority: 1.0 },
+        midday: { zone: 'wilds', activity: 'patrol', priority: 0.9 },
+        afternoon: { zone: 'wilds', activity: 'patrol', priority: 0.8 },
+        evening: { zone: 'commons', activity: 'socialize', priority: 0.7 },
+        night: { zone: 'arena', activity: 'rest', priority: 0.3 }
+      },
+      explorer: {
+        dawn: { zone: 'wilds', activity: 'explore_wilds', priority: 1.0 },
+        morning: { zone: 'wilds', activity: 'explore_wilds', priority: 1.0 },
+        midday: { zone: 'agora', activity: 'share_discoveries', priority: 0.7 },
+        afternoon: { zone: 'athenaeum', activity: 'map_territory', priority: 0.6 },
+        evening: { zone: 'commons', activity: 'share_discoveries', priority: 0.9 },
+        night: { zone: 'wilds', activity: 'rest', priority: 0.2 }
+      },
+      storyteller: {
+        dawn: { zone: 'athenaeum', activity: 'research', priority: 0.6 },
+        morning: { zone: 'athenaeum', activity: 'collect_stories', priority: 0.9 },
+        midday: { zone: 'agora', activity: 'socialize_eat', priority: 0.7 },
+        afternoon: { zone: 'commons', activity: 'tell_stories', priority: 0.8 },
+        evening: { zone: 'commons', activity: 'tell_stories', priority: 1.0 },
+        night: { zone: 'athenaeum', activity: 'write_journal', priority: 0.4 }
+      },
+      teacher: {
+        dawn: { zone: 'athenaeum', activity: 'prepare', priority: 0.6 },
+        morning: { zone: 'athenaeum', activity: 'teach_lesson', priority: 1.0 },
+        midday: { zone: 'gardens', activity: 'socialize_eat', priority: 0.7 },
+        afternoon: { zone: 'athenaeum', activity: 'teach_lesson', priority: 1.0 },
+        evening: { zone: 'commons', activity: 'socialize', priority: 0.6 },
+        night: { zone: 'athenaeum', activity: 'research', priority: 0.5 }
+      },
+      musician: {
+        dawn: { zone: 'gardens', activity: 'compose', priority: 0.5 },
+        morning: { zone: 'studio', activity: 'compose', priority: 0.8 },
+        midday: { zone: 'agora', activity: 'perform', priority: 0.7 },
+        afternoon: { zone: 'commons', activity: 'perform', priority: 0.8 },
+        evening: { zone: 'commons', activity: 'perform', priority: 1.0 },
+        night: { zone: 'gardens', activity: 'tune_instrument', priority: 0.4 }
+      },
+      healer: {
+        dawn: { zone: 'gardens', activity: 'gather_herbs', priority: 1.0 },
+        morning: { zone: 'gardens', activity: 'gather_herbs', priority: 0.9 },
+        midday: { zone: 'agora', activity: 'tend_wounded', priority: 0.9 },
+        afternoon: { zone: 'commons', activity: 'offer_comfort', priority: 0.7 },
+        evening: { zone: 'gardens', activity: 'meditate', priority: 0.6 },
+        night: { zone: 'gardens', activity: 'meditate', priority: 0.5 }
+      },
+      philosopher: {
+        dawn: { zone: 'gardens', activity: 'contemplate', priority: 0.7 },
+        morning: { zone: 'athenaeum', activity: 'research', priority: 0.8 },
+        midday: { zone: 'agora', activity: 'debate', priority: 0.6 },
+        afternoon: { zone: 'gardens', activity: 'contemplate', priority: 0.9 },
+        evening: { zone: 'commons', activity: 'discuss_ideas', priority: 0.9 },
+        night: { zone: 'gardens', activity: 'stargaze', priority: 1.0 }
+      },
+      builder: {
+        dawn: { zone: 'commons', activity: 'prepare', priority: 0.5 },
+        morning: { zone: 'commons', activity: 'inspect_structures', priority: 1.0 },
+        midday: { zone: 'agora', activity: 'gather_materials', priority: 0.8 },
+        afternoon: { zone: 'commons', activity: 'inspect_structures', priority: 1.0 },
+        evening: { zone: 'commons', activity: 'discuss_plans', priority: 0.7 },
+        night: { zone: 'commons', activity: 'sketch_designs', priority: 0.4 }
+      }
+    };
+
+    // Get archetype-specific schedule or fallback
+    var archetypeSchedule = schedules[archetype] || {};
+    var timeSchedule = archetypeSchedule[timeOfDay];
+
+    if (timeSchedule) {
+      return timeSchedule;
+    }
+
+    // Fallback based on general schedule
+    if (schedule.work_priority > 0.7) {
+      return { zone: defaultZone, activity: drives.primary, priority: schedule.work_priority };
+    } else if (schedule.social_chance > 0.7) {
+      return { zone: 'commons', activity: drives.social, priority: schedule.social_chance };
+    } else if (schedule.energy_regen > 0.5) {
+      return { zone: defaultZone, activity: drives.rest, priority: 0.5 };
+    }
+
+    return { zone: defaultZone, activity: 'idle', priority: 0.3 };
+  }
+
+  /**
+   * Get NPC reaction to events (weather, player proximity)
+   * @param {object} npcData - NPC data {archetype, position, etc}
+   * @param {object} event - Event {type, weather, playerPos, etc}
+   * @returns {object} - {action, dialogue, animation}
+   */
+  function getNPCReaction(npcData, event) {
+    var archetype = npcData.archetype;
+    var drives = ARCHETYPE_DRIVES[archetype];
+
+    if (event.type === 'weather') {
+      var weather = event.weather;
+
+      // Rain reaction
+      if (weather === 'rain') {
+        if (drives.weather_preference === 'rain') {
+          return {
+            action: 'celebrate',
+            dialogue: 'Rain! Perfect weather!',
+            animation: 'dance',
+            shouldSeekShelter: false
+          };
+        } else if (drives.weather_preference === 'any') {
+          return {
+            action: 'continue',
+            dialogue: null,
+            animation: 'walk',
+            shouldSeekShelter: false
+          };
+        } else {
+          return {
+            action: 'seek_shelter',
+            dialogue: 'Quick, need to get under cover!',
+            animation: 'run',
+            shouldSeekShelter: true
+          };
+        }
+      }
+
+      // Clear weather reaction
+      if (weather === 'clear' && drives.weather_preference === 'clear') {
+        return {
+          action: 'enjoy',
+          dialogue: 'Beautiful day!',
+          animation: 'idle',
+          shouldSeekShelter: false
+        };
+      }
+    }
+
+    if (event.type === 'player_proximity') {
+      var distance = event.distance;
+
+      if (distance < 3) {
+        return {
+          action: 'greet',
+          dialogue: 'Hello there!',
+          animation: 'wave',
+          shouldSeekShelter: false
+        };
+      } else if (distance < 8) {
+        return {
+          action: 'acknowledge',
+          dialogue: null,
+          animation: 'look',
+          shouldSeekShelter: false
+        };
+      }
+    }
+
+    return {
+      action: 'none',
+      dialogue: null,
+      animation: null,
+      shouldSeekShelter: false
+    };
+  }
+
+  /**
+   * Generate NPC-to-NPC interaction
+   * @param {object} npc1 - First NPC {id, name, archetype, position}
+   * @param {object} npc2 - Second NPC {id, name, archetype, position}
+   * @returns {object} - {type, dialogue, animation, duration}
+   */
+  function generateNPCInteraction(npc1, npc2) {
+    var arch1 = npc1.archetype;
+    var arch2 = npc2.archetype;
+
+    // Check for collaborative activity
+    var collab = getCollaborativeActivity(arch1, arch2);
+    if (collab && Math.random() < 0.3) {
+      return {
+        type: 'collaborate',
+        dialogue: npc1.name + ' and ' + npc2.name + ' are ' + collab.description,
+        animation: collab.animation,
+        duration: 10000 // 10 seconds
+      };
+    }
+
+    // Check for conversation
+    var conversation = generateConversation(npc1.name, arch1, npc2.name, arch2);
+    if (conversation && Math.random() < 0.4) {
+      return {
+        type: 'converse',
+        dialogue: conversation[0], // First line of conversation
+        fullConversation: conversation,
+        animation: 'talk',
+        duration: conversation.length * 3000 // 3 seconds per line
+      };
+    }
+
+    // Simple greeting
+    var greeting = ARCHETYPE_REACTIONS[arch1];
+    if (greeting && greeting[arch2]) {
+      return {
+        type: 'greet',
+        dialogue: greeting[arch2],
+        animation: 'wave',
+        duration: 5000 // 5 seconds
+      };
+    }
+
+    // Default friendly acknowledgment
+    return {
+      type: 'acknowledge',
+      dialogue: npc1.name + ' nods to ' + npc2.name,
+      animation: 'nod',
+      duration: 2000 // 2 seconds
+    };
+  }
+
+  // ============================================================================
   // EXPORTS
   // ============================================================================
 
@@ -2527,5 +2796,8 @@
   exports.WORLD_LORE = WORLD_LORE;
   exports.ARCHETYPE_LORE = ARCHETYPE_LORE;
   exports.TEACHINGS = TEACHINGS;
+  exports.getDailySchedule = getDailySchedule;
+  exports.getNPCReaction = getNPCReaction;
+  exports.generateNPCInteraction = generateNPCInteraction;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NpcAI = {}));

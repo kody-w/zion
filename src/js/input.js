@@ -242,6 +242,16 @@
         }
         break;
 
+      case 'h':
+      case 'H':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleGovernance', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
       case 'r':
       case 'R':
         if (!chatMode && buildMode) {

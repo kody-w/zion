@@ -1292,6 +1292,118 @@
   background: rgba(255,152,0,0.1); border-radius: 4px;
 }
 
+/* Achievement panel */
+.achievement-panel {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(15,12,10,0.95); border: 1px solid rgba(218,165,32,0.3);
+  border-radius: 12px; padding: 24px; min-width: 420px; max-width: 550px;
+  max-height: 70vh; overflow-y: auto; z-index: 1100;
+  backdrop-filter: blur(10px);
+}
+.achievement-panel h2 {
+  color: var(--color-gold); margin: 0 0 4px; font-size: 1.2rem;
+  font-family: var(--font-main); letter-spacing: 0.1em;
+}
+.achievement-progress-bar {
+  width: 100%; height: 6px; background: rgba(255,255,255,0.1);
+  border-radius: 3px; margin: 8px 0 16px; overflow: hidden;
+}
+.achievement-progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--color-gold), #f0c040);
+  border-radius: 3px; transition: width 0.5s ease;
+}
+.achievement-category { margin-bottom: 16px; }
+.achievement-category-title {
+  color: var(--color-text-muted); font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.15em; margin-bottom: 8px; padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.achievement-row {
+  display: flex; align-items: center; gap: 10px; padding: 6px 8px;
+  border-radius: 6px; margin-bottom: 4px; transition: background 0.2s;
+}
+.achievement-row:hover { background: rgba(255,255,255,0.05); }
+.achievement-row.locked { opacity: 0.4; }
+.achievement-row.unlocked { opacity: 1; }
+.achievement-icon { font-size: 1.4rem; width: 32px; text-align: center; }
+.achievement-info { flex: 1; }
+.achievement-name {
+  color: var(--color-text); font-size: 0.85rem; font-weight: 500;
+}
+.achievement-desc {
+  color: var(--color-text-muted); font-size: 0.7rem;
+}
+.achievement-reward {
+  color: var(--color-gold); font-size: 0.7rem; white-space: nowrap;
+}
+
+/* Achievement toast notification */
+.achievement-toast {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(25,20,15,0.95), rgba(35,28,18,0.95));
+  border: 1px solid var(--color-gold); border-radius: 10px;
+  padding: 12px 20px; display: flex; align-items: center; gap: 12px;
+  z-index: 1200; animation: achievementSlide 0.4s ease, achievementFade 0.5s 3s forwards;
+  box-shadow: 0 4px 20px rgba(218,165,32,0.2);
+}
+.achievement-toast-icon { font-size: 2rem; }
+.achievement-toast-text { }
+.achievement-toast-label {
+  color: var(--color-gold); font-size: 0.65rem; text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+.achievement-toast-name {
+  color: var(--color-text); font-size: 1rem; font-weight: 500;
+}
+@keyframes achievementSlide {
+  from { transform: translateX(-50%) translateY(-30px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+@keyframes achievementFade {
+  to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+
+/* Auction house panel */
+.auction-panel {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(15,12,10,0.95); border: 1px solid rgba(176,224,230,0.3);
+  border-radius: 12px; padding: 24px; min-width: 450px; max-width: 600px;
+  max-height: 70vh; overflow-y: auto; z-index: 1100;
+  backdrop-filter: blur(10px);
+}
+.auction-panel h2 {
+  color: var(--color-accent); margin: 0 0 16px; font-size: 1.2rem;
+  font-family: var(--font-main);
+}
+.auction-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px;
+  background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 8px;
+  border: 1px solid rgba(255,255,255,0.05); transition: border-color 0.2s;
+}
+.auction-item:hover { border-color: rgba(176,224,230,0.2); }
+.auction-item-icon { font-size: 1.5rem; width: 36px; text-align: center; }
+.auction-item-info { flex: 1; }
+.auction-item-name { color: var(--color-text); font-size: 0.85rem; }
+.auction-item-seller { color: var(--color-text-muted); font-size: 0.7rem; }
+.auction-item-time { color: rgba(255,200,100,0.7); font-size: 0.65rem; }
+.auction-bid-info { text-align: right; }
+.auction-current-bid { color: var(--color-gold); font-size: 0.9rem; font-weight: 500; }
+.auction-bid-count { color: var(--color-text-muted); font-size: 0.65rem; }
+
+/* Economic event banner */
+.economic-event-banner {
+  position: fixed; top: 50px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(218,165,32,0.15), transparent);
+  color: var(--color-gold); font-size: 0.75rem; padding: 4px 20px;
+  border-radius: 20px; z-index: 900; pointer-events: none;
+  letter-spacing: 0.05em; text-align: center;
+  animation: eventBannerPulse 3s ease-in-out infinite;
+}
+@keyframes eventBannerPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .chat-panel {

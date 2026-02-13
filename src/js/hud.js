@@ -9,6 +9,7 @@
   let nearbyPlayersList = null;
   let chatInput = null;
   let notificationContainer = null;
+  let federationPanel = null;
 
   /**
    * Initialize HUD
@@ -127,6 +128,25 @@
     `;
     nearbyPlayersList.innerHTML = '<div style="font-weight: bold; margin-bottom: 5px;">Nearby Players</div>';
     hudOverlay.appendChild(nearbyPlayersList);
+
+    // Federation status panel (bottom-right)
+    federationPanel = document.createElement('div');
+    federationPanel.id = 'federation-panel';
+    federationPanel.style.cssText = `
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 8px;
+      padding: 10px;
+      min-width: 200px;
+      max-height: 250px;
+      overflow-y: auto;
+      pointer-events: auto;
+      border: 2px solid rgba(100, 100, 255, 0.5);
+    `;
+    federationPanel.innerHTML = '<div style="font-weight: bold; margin-bottom: 5px; color: #88f;">Federation</div>';
+    hudOverlay.appendChild(federationPanel);
 
     // Notification container (top-center, below zone label)
     notificationContainer = document.createElement('div');
@@ -4772,7 +4792,371 @@
     }
   }
 
+  // ========================================================================
+  // GOVERNANCE PANEL (Zone Stewards & Elections)
+  // ========================================================================
+
+  var governancePanel = null;
+  var governanceVisible = false;
+  var governanceCallback = null;
+
+  function initGovernancePanel(callback) {
+    if (typeof document === 'undefined') return;
+    governanceCallback = callback;
+  }
+
+  function showGovernancePanel(zoneId, playerData) {
+    if (typeof document === 'undefined') return;
+
+    var Social = typeof window !== 'undefined' ? window.Social : null;
+    var Zones = typeof window !== 'undefined' ? window.Zones : null;
+    if (!Social || !Zones) return;
+
+    hideGovernancePanel();
+
+    governancePanel = document.createElement('div');
+    governancePanel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #daa520;border-radius:12px;' +
+      'padding:20px;width:700px;max-height:80vh;overflow-y:auto;z-index:300;' +
+      'box-shadow:0 4px 30px rgba(218,165,32,0.3);pointer-events:auto;';
+
+    var zone = Zones.getZone(zoneId);
+    var stewards = Zones.getZoneStewards(zoneId);
+    var policies = Zones.getZonePolicies(zoneId);
+    var activeElection = Zones.getActiveElection(zoneId);
+    var reputation = Social.getReputation(playerData.id);
+    var isRegular = Zones.isZoneRegular(zoneId, playerData.id);
+    var isSteward = Zones.isZoneSteward(zoneId, playerData.id);
+
+    var html = '<div style="font-size:24px;font-weight:bold;margin-bottom:10px;text-align:center;color:#daa520;">' +
+      zone.name + ' Governance</div>';
+
+    html += '<div style="margin-bottom:15px;color:#b0e0e6;text-align:center;font-size:12px;">' +
+      'Your Reputation: ' + reputation.tier + ' (' + reputation.score + ' points)</div>';
+
+    // Stewards section
+    html += '<div style="margin-bottom:20px;">';
+    html += '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#4af;border-bottom:1px solid #4af;padding-bottom:4px;">Current Stewards</div>';
+    if (stewards.length > 0) {
+      html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+      stewards.forEach(function(s) {
+        var daysLeft = Math.ceil((s.termEnd - Date.now()) / 86400000);
+        html += '<div style="background:rgba(74,170,255,0.1);padding:10px;border-radius:6px;border-left:3px solid #4af;">' +
+          '<div style="font-weight:bold;">' + s.playerId + '</div>' +
+          '<div style="font-size:11px;color:#aaa;">' + s.votes + ' votes • ' + daysLeft + ' days remaining</div>' +
+          '</div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div style="color:#888;font-style:italic;padding:10px;">No active stewards. Start an election!</div>';
+    }
+    html += '</div>';
+
+    // Zone Policies section
+    if (isSteward) {
+      html += '<div style="margin-bottom:20px;">';
+      html += '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#fa4;border-bottom:1px solid #fa4;padding-bottom:4px;">Zone Policies (Steward)</div>';
+      html += '<div style="background:rgba(255,170,68,0.1);padding:12px;border-radius:6px;">';
+      html += '<label style="display:block;margin-bottom:8px;cursor:pointer;">' +
+        '<input type="checkbox" id="policy-building" ' + (policies.buildingRequiresApproval ? 'checked' : '') + '> Building requires approval</label>';
+      html += '<label style="display:block;margin-bottom:8px;cursor:pointer;">' +
+        '<input type="checkbox" id="policy-moderated" ' + (policies.chatModerated ? 'checked' : '') + '> Chat moderated</label>';
+      html += '<div style="margin-top:10px;"><input type="text" id="welcome-message" placeholder="Zone welcome message..." ' +
+        'value="' + (policies.welcomeMessage || '').replace(/"/g, '&quot;') + '" style="width:100%;padding:8px;background:rgba(0,0,0,0.3);' +
+        'border:1px solid #666;border-radius:4px;color:#fff;"></div>';
+      html += '<button id="save-policies-btn" style="margin-top:10px;padding:8px 16px;background:#fa4;border:none;' +
+        'border-radius:4px;color:#000;font-weight:bold;cursor:pointer;">Save Policies</button>';
+      html += '</div>';
+      html += '</div>';
+    } else if (policies.welcomeMessage) {
+      html += '<div style="margin-bottom:20px;padding:12px;background:rgba(218,165,32,0.1);border-radius:6px;border-left:3px solid #daa520;">';
+      html += '<div style="font-size:14px;font-weight:bold;color:#daa520;margin-bottom:4px;">Welcome Message</div>';
+      html += '<div style="font-size:12px;color:#ccc;">' + policies.welcomeMessage + '</div>';
+      html += '</div>';
+    }
+
+    // Election section
+    html += '<div style="margin-bottom:20px;">';
+    html += '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#4af;border-bottom:1px solid #4af;padding-bottom:4px;">Elections</div>';
+    if (activeElection) {
+      var timeLeft = Math.ceil((activeElection.endTime - Date.now()) / 3600000);
+      html += '<div style="background:rgba(74,170,255,0.1);padding:12px;border-radius:6px;margin-bottom:10px;">';
+      html += '<div style="font-weight:bold;margin-bottom:8px;">Active Election (' + timeLeft + ' hours left)</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:6px;">';
+      activeElection.candidates.forEach(function(c) {
+        var hasVoted = isRegular && c.voters && c.voters.has(playerData.id);
+        html += '<div style="background:rgba(0,0,0,0.3);padding:8px;border-radius:4px;display:flex;justify-content:space-between;align-items:center;">' +
+          '<span>' + c.playerId + '</span>' +
+          '<span style="color:#4af;font-weight:bold;">' + c.votes + ' votes</span>' +
+          (isRegular && !hasVoted ? '<button class="vote-btn" data-candidate="' + c.playerId + '" data-election="' + activeElection.id + '" ' +
+          'style="padding:4px 12px;background:#4af;border:none;border-radius:4px;color:#000;cursor:pointer;font-size:11px;">Vote</button>' : '') +
+          (hasVoted ? '<span style="color:#4a4;font-size:11px;">Voted</span>' : '') +
+          '</div>';
+      });
+      html += '</div></div>';
+
+      if (isRegular) {
+        html += '<div style="font-size:11px;color:#aaa;margin-top:8px;">You can vote as a zone regular.</div>';
+      } else {
+        html += '<div style="font-size:11px;color:#888;margin-top:8px;">Visit this zone 5+ times to vote in elections.</div>';
+      }
+    } else {
+      var canRunForSteward = reputation.tier === 'Respected' || reputation.tier === 'Honored' || reputation.tier === 'Elder';
+      html += '<div style="color:#888;font-style:italic;margin-bottom:10px;">No active election.</div>';
+      if (canRunForSteward) {
+        html += '<button id="start-election-btn" style="padding:8px 16px;background:#4af;border:none;' +
+          'border-radius:4px;color:#000;font-weight:bold;cursor:pointer;">Start Election</button>';
+      } else {
+        html += '<div style="font-size:11px;color:#888;">Reach Respected tier to run for steward.</div>';
+      }
+    }
+    html += '</div>';
+
+    // Governance Log section
+    var log = Zones.getGovernanceLog(zoneId, 10);
+    if (log.length > 0) {
+      html += '<div style="margin-bottom:20px;">';
+      html += '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#888;border-bottom:1px solid #666;padding-bottom:4px;">Recent Actions</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:4px;max-height:150px;overflow-y:auto;">';
+      log.forEach(function(action) {
+        var timeAgo = Math.floor((Date.now() - action.timestamp) / 60000);
+        html += '<div style="font-size:11px;color:#aaa;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">' +
+          '<span style="color:#4af;">' + action.type + '</span> by ' + (action.stewardId || action.from || 'system') + ' — ' + timeAgo + 'm ago</div>';
+      });
+      html += '</div></div>';
+    }
+
+    // Close button
+    html += '<div style="text-align:center;margin-top:20px;">' +
+      '<button id="close-governance-btn" style="padding:10px 24px;background:#666;border:none;' +
+      'border-radius:6px;color:#fff;font-weight:bold;cursor:pointer;">Close (H)</button></div>';
+
+    governancePanel.innerHTML = html;
+    document.body.appendChild(governancePanel);
+    governanceVisible = true;
+
+    // Attach event listeners
+    var closeBtn = document.getElementById('close-governance-btn');
+    if (closeBtn) {
+      closeBtn.onclick = hideGovernancePanel;
+    }
+
+    var startElectionBtn = document.getElementById('start-election-btn');
+    if (startElectionBtn) {
+      startElectionBtn.onclick = function() {
+        if (governanceCallback) {
+          governanceCallback('startElection', { zoneId: zoneId });
+        }
+      };
+    }
+
+    var savePoliciesBtn = document.getElementById('save-policies-btn');
+    if (savePoliciesBtn) {
+      savePoliciesBtn.onclick = function() {
+        var buildingApproval = document.getElementById('policy-building').checked;
+        var chatModerated = document.getElementById('policy-moderated').checked;
+        var welcomeMsg = document.getElementById('welcome-message').value;
+
+        if (governanceCallback) {
+          governanceCallback('savePolicies', {
+            zoneId: zoneId,
+            buildingRequiresApproval: buildingApproval,
+            chatModerated: chatModerated,
+            welcomeMessage: welcomeMsg
+          });
+        }
+      };
+    }
+
+    var voteButtons = document.querySelectorAll('.vote-btn');
+    voteButtons.forEach(function(btn) {
+      btn.onclick = function() {
+        var candidateId = btn.getAttribute('data-candidate');
+        var electionId = btn.getAttribute('data-election');
+        if (governanceCallback) {
+          governanceCallback('vote', {
+            electionId: electionId,
+            candidateId: candidateId
+          });
+        }
+      };
+    });
+  }
+
+  function hideGovernancePanel() {
+    if (governancePanel) {
+      document.body.removeChild(governancePanel);
+      governancePanel = null;
+    }
+    governanceVisible = false;
+  }
+
+  function toggleGovernancePanel(zoneId, playerData) {
+    if (governanceVisible) {
+      hideGovernancePanel();
+    } else {
+      showGovernancePanel(zoneId, playerData);
+    }
+  }
+
+  // ========================================================================
+  // REPUTATION DISPLAY
+  // ========================================================================
+
+  function updateReputationDisplay(reputation) {
+    if (typeof document === 'undefined') return;
+    var playerInfo = document.getElementById('player-info');
+    if (!playerInfo) return;
+
+    var repEl = document.getElementById('reputation-display');
+    if (!repEl) {
+      repEl = document.createElement('div');
+      repEl.id = 'reputation-display';
+      repEl.style.cssText = 'font-size:11px;color:#daa520;margin-top:2px;';
+      playerInfo.appendChild(repEl);
+    }
+
+    var tierColors = {
+      'Newcomer': '#888',
+      'Trusted': '#4af',
+      'Respected': '#4a4',
+      'Honored': '#f4a',
+      'Elder': '#daa520'
+    };
+
+    var color = tierColors[reputation.tier] || '#888';
+    repEl.innerHTML = '<span style="color:' + color + ';">★</span> ' + reputation.tier + ' (' + reputation.score + ')';
+  }
+
   // Export public API
+  /**
+   * Update federation status panel
+   * @param {Array} discoveredWorlds - Array of discovered world info
+   * @param {Array} federatedWorlds - Array of federated world info
+   */
+  function updateFederationStatus(discoveredWorlds, federatedWorlds) {
+    if (!federationPanel) return;
+
+    var html = '<div style="font-weight: bold; margin-bottom: 8px; color: #88f;">Federation</div>';
+
+    // Show federated worlds (active portals)
+    if (federatedWorlds && federatedWorlds.length > 0) {
+      html += '<div style="margin-bottom: 8px;">';
+      html += '<div style="font-size: 11px; color: #aaa; margin-bottom: 3px;">Active Portals:</div>';
+      federatedWorlds.forEach(function(world) {
+        html += '<div style="margin-left: 8px; margin-bottom: 3px;">';
+        html += '<span style="color: #4f4;">&#x2713;</span> ';
+        html += '<span style="color: #fff;">' + (world.worldInfo?.worldName || world.worldId) + '</span>';
+        if (world.worldInfo?.playerCount !== undefined) {
+          html += '<span style="color: #888; font-size: 10px;"> (' + world.worldInfo.playerCount + ')</span>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Show discovered worlds (not yet federated)
+    if (discoveredWorlds && discoveredWorlds.length > 0) {
+      var unfederated = discoveredWorlds.filter(function(dw) {
+        return !federatedWorlds.some(function(fw) {
+          return fw.worldId === dw.worldId;
+        });
+      });
+
+      if (unfederated.length > 0) {
+        html += '<div style="margin-bottom: 8px;">';
+        html += '<div style="font-size: 11px; color: #aaa; margin-bottom: 3px;">Discovered:</div>';
+        unfederated.forEach(function(world) {
+          html += '<div style="margin-left: 8px; margin-bottom: 3px;">';
+          html += '<span style="color: #88f;">&#x25cf;</span> ';
+          html += '<span style="color: #ccc;">' + (world.worldName || world.worldId) + '</span>';
+          if (world.playerCount !== undefined) {
+            html += '<span style="color: #888; font-size: 10px;"> (' + world.playerCount + ')</span>';
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+    }
+
+    // Show help text if no worlds
+    if ((!federatedWorlds || federatedWorlds.length === 0) &&
+        (!discoveredWorlds || discoveredWorlds.length === 0)) {
+      html += '<div style="color: #888; font-size: 11px; font-style: italic;">No federated worlds yet</div>';
+    }
+
+    federationPanel.innerHTML = html;
+  }
+
+  /**
+   * Show federation portal UI when near a portal
+   * @param {object} portalInfo - Portal information
+   */
+  function showFederationPortalUI(portalInfo) {
+    if (typeof document === 'undefined') return;
+
+    // Create portal interaction UI
+    var portalUI = document.getElementById('federation-portal-ui');
+    if (!portalUI) {
+      portalUI = document.createElement('div');
+      portalUI.id = 'federation-portal-ui';
+      portalUI.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid #88f;
+        border-radius: 12px;
+        padding: 20px;
+        min-width: 300px;
+        color: white;
+        text-align: center;
+        pointer-events: auto;
+        z-index: 200;
+      `;
+      document.body.appendChild(portalUI);
+    }
+
+    var html = '<div style="font-size: 20px; font-weight: bold; margin-bottom: 10px; color: #88f;">Rift Portal</div>';
+    html += '<div style="margin-bottom: 15px; color: #ccc;">' + (portalInfo.worldName || 'Unknown World') + '</div>';
+
+    if (portalInfo.playerCount !== undefined) {
+      html += '<div style="margin-bottom: 15px; font-size: 12px; color: #aaa;">Players: ' + portalInfo.playerCount + '</div>';
+    }
+
+    html += '<button id="portal-warp-btn" style="';
+    html += 'background: #4488ff; color: white; border: none; padding: 10px 20px;';
+    html += 'border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px;">Enter Portal</button>';
+    html += '<button id="portal-close-btn" style="';
+    html += 'background: #444; color: white; border: none; padding: 10px 20px;';
+    html += 'border-radius: 5px; cursor: pointer; font-size: 14px;">Cancel</button>';
+
+    portalUI.innerHTML = html;
+
+    // Add event listeners
+    document.getElementById('portal-warp-btn').onclick = function() {
+      if (portalInfo.onWarp) {
+        portalInfo.onWarp(portalInfo.targetWorld);
+      }
+      hideFederationPortalUI();
+    };
+
+    document.getElementById('portal-close-btn').onclick = function() {
+      hideFederationPortalUI();
+    };
+  }
+
+  /**
+   * Hide federation portal UI
+   */
+  function hideFederationPortalUI() {
+    var portalUI = document.getElementById('federation-portal-ui');
+    if (portalUI) {
+      portalUI.remove();
+    }
+  }
+
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
   exports.updateChat = updateChat;
@@ -4802,6 +5186,9 @@
   exports.showQuestComplete = showQuestComplete;
   exports.showQuestProgress = showQuestProgress;
   exports.acceptQuestFromOffer = acceptQuestFromOffer;
+  exports.updateFederationStatus = updateFederationStatus;
+  exports.showFederationPortalUI = showFederationPortalUI;
+  exports.hideFederationPortalUI = hideFederationPortalUI;
   exports.abandonQuestFromLog = abandonQuestFromLog;
   exports.initInventoryPanel = initInventoryPanel;
   exports.toggleInventoryPanel = toggleInventoryPanel;
@@ -4856,5 +5243,10 @@
   exports.hideGuildCreate = hideGuildCreate;
   exports.showGuildInvite = showGuildInvite;
   exports.updateGuildTag = updateGuildTag;
+  exports.initGovernancePanel = initGovernancePanel;
+  exports.showGovernancePanel = showGovernancePanel;
+  exports.hideGovernancePanel = hideGovernancePanel;
+  exports.toggleGovernancePanel = toggleGovernancePanel;
+  exports.updateReputationDisplay = updateReputationDisplay;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));
