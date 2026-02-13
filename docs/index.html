@@ -3892,16 +3892,14 @@ html, body {
 
     try {
       // Exchange code for access token (CORS-enabled for GitHub Apps)
+      // Use form-urlencoded to avoid CORS preflight (simple request)
       var res = await fetch(OAUTH_CONFIG.tokenUrl, {
         method: 'POST',
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          client_id: OAUTH_CONFIG.clientId,
-          code: code
-        })
+        body: 'client_id=' + encodeURIComponent(OAUTH_CONFIG.clientId) +
+              '&code=' + encodeURIComponent(code)
       });
 
       if (!res.ok) {
