@@ -4,7 +4,7 @@
     clientId: 'Iv23lixLqM3xo88npTs4',
     scope: 'read:user',
     authorizeUrl: 'https://github.com/login/oauth/authorize',
-    tokenUrl: 'https://github.com/login/oauth/access_token'
+    tokenUrl: 'https://zion-oauth.kwildfeuer.workers.dev'
   };
 
   // Storage keys
