@@ -279,12 +279,12 @@
       const state = npcStates.get(agent.id);
       if (!state) return;
 
-      // Decrement state timer
-      state.stateTimer -= deltaTime;
-
-      // Check if state should transition
-      if (state.stateTimer <= 0) {
-        transitionState(agent, state, timeSeed + index);
+      // Decrement state timer (walking/socializing run until destination reached)
+      if (state.currentState !== 'walking' && state.currentState !== 'socializing') {
+        state.stateTimer -= deltaTime;
+        if (state.stateTimer <= 0) {
+          transitionState(agent, state, timeSeed + index);
+        }
       }
 
       // Update behavior based on current state
