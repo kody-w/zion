@@ -1332,6 +1332,312 @@
     }, 2000);
   }
 
+  // ========================================================================
+  // TRADING SYSTEM UI
+  // ========================================================================
+
+  var tradeRequestEl = null;
+  var tradeWindowEl = null;
+  var currentTradeData = null;
+
+  /**
+   * Show trade request popup
+   * @param {string} fromPlayer - Player name requesting trade
+   * @param {string} tradeId - Trade ID
+   * @param {Function} onAccept - Callback when Accept clicked
+   * @param {Function} onDecline - Callback when Decline clicked
+   */
+  function showTradeRequest(fromPlayer, tradeId, onAccept, onDecline) {
+    if (typeof document === 'undefined') return;
+    hideTradeRequest(); // Remove any existing
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    tradeRequestEl = document.createElement('div');
+    tradeRequestEl.id = 'trade-request';
+    tradeRequestEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #ffa500;border-radius:12px;' +
+      'padding:20px;width:400px;pointer-events:auto;box-shadow:0 8px 32px rgba(0,0,0,0.8);z-index:300;';
+
+    var html = '<div style="font-size:20px;font-weight:bold;color:#ffa500;margin-bottom:12px;">Trade Request</div>' +
+      '<div style="font-size:16px;color:#fff;margin-bottom:16px;">' +
+      '<span style="color:#4af;font-weight:bold;">' + fromPlayer + '</span> wants to trade with you.' +
+      '</div>' +
+      '<div style="display:flex;gap:12px;justify-content:center;">' +
+      '<button id="trade-accept-btn" style="padding:10px 24px;background:#4f4;color:#000;border:none;' +
+      'border-radius:6px;font-weight:bold;font-size:14px;cursor:pointer;">Accept</button>' +
+      '<button id="trade-decline-btn" style="padding:10px 24px;background:rgba(255,255,255,0.1);color:#fff;' +
+      'border:1px solid #666;border-radius:6px;font-size:14px;cursor:pointer;">Decline</button></div>';
+
+    tradeRequestEl.innerHTML = html;
+    hud.appendChild(tradeRequestEl);
+
+    document.getElementById('trade-accept-btn').addEventListener('click', function() {
+      hideTradeRequest();
+      if (onAccept) onAccept(tradeId);
+    });
+
+    document.getElementById('trade-decline-btn').addEventListener('click', function() {
+      hideTradeRequest();
+      if (onDecline) onDecline(tradeId);
+    });
+  }
+
+  /**
+   * Hide trade request popup
+   */
+  function hideTradeRequest() {
+    if (tradeRequestEl && tradeRequestEl.parentNode) {
+      tradeRequestEl.parentNode.removeChild(tradeRequestEl);
+      tradeRequestEl = null;
+    }
+  }
+
+  /**
+   * Show trade window
+   * @param {Object} trade - Trade data object
+   * @param {string} localPlayerId - Local player's ID
+   * @param {Function} onAddItem - Callback(slotIndex)
+   * @param {Function} onRemoveItem - Callback(tradeSlot)
+   * @param {Function} onSetSpark - Callback(amount)
+   * @param {Function} onReady - Callback()
+   * @param {Function} onConfirm - Callback()
+   * @param {Function} onCancel - Callback()
+   */
+  function showTradeWindow(trade, localPlayerId, onAddItem, onRemoveItem, onSetSpark, onReady, onConfirm, onCancel) {
+    if (typeof document === 'undefined') return;
+    hideTradeWindow(); // Remove any existing
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    currentTradeData = { trade: trade, localPlayerId: localPlayerId };
+
+    tradeWindowEl = document.createElement('div');
+    tradeWindowEl.id = 'trade-window';
+    tradeWindowEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #ffa500;border-radius:12px;' +
+      'padding:20px;width:700px;pointer-events:auto;box-shadow:0 8px 32px rgba(0,0,0,0.8);z-index:300;';
+
+    tradeWindowEl.innerHTML = '<div style="font-size:20px;font-weight:bold;color:#ffa500;margin-bottom:16px;text-align:center;">Trade Window</div>' +
+      '<div id="trade-content"></div>';
+
+    hud.appendChild(tradeWindowEl);
+
+    // Store callbacks
+    tradeWindowEl._callbacks = { onAddItem, onRemoveItem, onSetSpark, onReady, onConfirm, onCancel };
+
+    // Update content
+    updateTradeWindow(trade, localPlayerId);
+  }
+
+  /**
+   * Update trade window with current trade state
+   * @param {Object} trade - Trade data object
+   * @param {string} localPlayerId - Local player's ID
+   */
+  function updateTradeWindow(trade, localPlayerId) {
+    if (!tradeWindowEl) return;
+
+    var contentDiv = document.getElementById('trade-content');
+    if (!contentDiv) return;
+
+    var isPlayer1 = trade.player1.id === localPlayerId;
+    var localPlayer = isPlayer1 ? trade.player1 : trade.player2;
+    var otherPlayer = isPlayer1 ? trade.player2 : trade.player1;
+
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+
+    // Build trade grid
+    var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px;">';
+
+    // Your offer column
+    html += '<div style="border:2px solid #4af;border-radius:8px;padding:12px;">' +
+      '<div style="font-size:16px;font-weight:bold;color:#4af;margin-bottom:10px;text-align:center;">Your Offer</div>' +
+      '<div id="local-items" style="display:grid;grid-template-columns:repeat(3,80px);gap:6px;margin-bottom:10px;justify-content:center;">';
+
+    // Local player's items (6 slots)
+    for (var i = 0; i < 6; i++) {
+      var item = localPlayer.items[i];
+      var slotHtml = '<div class="trade-slot" data-slot="' + i + '" style="background:rgba(255,255,255,0.1);border:2px solid #555;' +
+        'border-radius:6px;padding:8px;text-align:center;min-height:60px;cursor:pointer;position:relative;">';
+
+      if (item && Inventory) {
+        var itemData = Inventory.getItemData(item.itemId);
+        if (itemData) {
+          slotHtml += '<div style="font-size:28px;">' + itemData.icon + '</div>' +
+            '<div style="font-size:9px;color:#ccc;">' + itemData.name + '</div>' +
+            '<div style="position:absolute;top:2px;right:4px;background:#000;padding:1px 4px;border-radius:2px;font-size:10px;">' + item.count + '</div>';
+        }
+      } else {
+        slotHtml += '<div style="color:#444;padding-top:15px;font-size:11px;">Empty</div>';
+      }
+
+      slotHtml += '</div>';
+      html += slotHtml;
+    }
+
+    html += '</div>';
+
+    // Spark input
+    html += '<div style="margin-bottom:10px;">' +
+      '<label style="font-size:12px;color:#aaa;display:block;margin-bottom:4px;">Spark Offer:</label>' +
+      '<input type="number" id="local-spark-input" min="0" value="' + localPlayer.spark + '" ' +
+      'style="width:100%;padding:6px;background:rgba(0,0,0,0.5);border:1px solid #555;border-radius:4px;color:#fff;font-size:14px;" />' +
+      '</div>';
+
+    // Status
+    var statusText = localPlayer.ready ? '✓ Ready' : 'Not ready';
+    var statusColor = localPlayer.ready ? '#4f4' : '#888';
+    html += '<div style="text-align:center;color:' + statusColor + ';font-size:13px;margin-bottom:8px;">' + statusText + '</div>';
+
+    html += '</div>';
+
+    // Their offer column
+    html += '<div style="border:2px solid #f4a;border-radius:8px;padding:12px;">' +
+      '<div style="font-size:16px;font-weight:bold;color:#f4a;margin-bottom:10px;text-align:center;">Their Offer</div>' +
+      '<div id="other-items" style="display:grid;grid-template-columns:repeat(3,80px);gap:6px;margin-bottom:10px;justify-content:center;">';
+
+    // Other player's items (6 slots)
+    for (var j = 0; j < 6; j++) {
+      var otherItem = otherPlayer.items[j];
+      var otherSlotHtml = '<div style="background:rgba(255,255,255,0.1);border:2px solid #555;' +
+        'border-radius:6px;padding:8px;text-align:center;min-height:60px;position:relative;">';
+
+      if (otherItem && Inventory) {
+        var otherItemData = Inventory.getItemData(otherItem.itemId);
+        if (otherItemData) {
+          otherSlotHtml += '<div style="font-size:28px;">' + otherItemData.icon + '</div>' +
+            '<div style="font-size:9px;color:#ccc;">' + otherItemData.name + '</div>' +
+            '<div style="position:absolute;top:2px;right:4px;background:#000;padding:1px 4px;border-radius:2px;font-size:10px;">' + otherItem.count + '</div>';
+        }
+      } else {
+        otherSlotHtml += '<div style="color:#444;padding-top:15px;font-size:11px;">Empty</div>';
+      }
+
+      otherSlotHtml += '</div>';
+      html += otherSlotHtml;
+    }
+
+    html += '</div>';
+
+    // Their Spark
+    html += '<div style="margin-bottom:10px;">' +
+      '<label style="font-size:12px;color:#aaa;display:block;margin-bottom:4px;">Spark Offer:</label>' +
+      '<div style="padding:6px;background:rgba(0,0,0,0.5);border:1px solid #555;border-radius:4px;color:#ffa500;font-size:14px;text-align:center;">' +
+      otherPlayer.spark + '</div></div>';
+
+    // Their status
+    var otherStatusText = otherPlayer.ready ? '✓ Ready' : 'Not ready';
+    var otherStatusColor = otherPlayer.ready ? '#4f4' : '#888';
+    html += '<div style="text-align:center;color:' + otherStatusColor + ';font-size:13px;margin-bottom:8px;">' + otherStatusText + '</div>';
+
+    html += '</div>';
+
+    html += '</div>';
+
+    // Status message
+    var statusMsg = '';
+    if (localPlayer.confirmed && otherPlayer.confirmed) {
+      statusMsg = '<div style="text-align:center;color:#4f4;font-size:14px;margin-bottom:12px;">✓ Trade completed!</div>';
+    } else if (localPlayer.confirmed) {
+      statusMsg = '<div style="text-align:center;color:#fa4;font-size:14px;margin-bottom:12px;">Waiting for ' + otherPlayer.id + ' to confirm...</div>';
+    } else if (otherPlayer.confirmed) {
+      statusMsg = '<div style="text-align:center;color:#fa4;font-size:14px;margin-bottom:12px;">' + otherPlayer.id + ' has confirmed. Ready to confirm?</div>';
+    } else if (localPlayer.ready && otherPlayer.ready) {
+      statusMsg = '<div style="text-align:center;color:#4f4;font-size:14px;margin-bottom:12px;">Both ready! Click Confirm to complete trade.</div>';
+    } else if (localPlayer.ready) {
+      statusMsg = '<div style="text-align:center;color:#888;font-size:14px;margin-bottom:12px;">Waiting for ' + otherPlayer.id + ' to ready up...</div>';
+    } else {
+      statusMsg = '<div style="text-align:center;color:#888;font-size:14px;margin-bottom:12px;">Add items and Spark, then click Ready.</div>';
+    }
+
+    html += statusMsg;
+
+    // Action buttons
+    html += '<div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">';
+
+    if (!localPlayer.ready) {
+      html += '<button id="trade-ready-btn" style="padding:8px 20px;background:#4f4;color:#000;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Ready</button>';
+    }
+
+    if (localPlayer.ready && otherPlayer.ready && !localPlayer.confirmed) {
+      html += '<button id="trade-confirm-btn" style="padding:8px 20px;background:#ffa500;color:#000;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Confirm Trade</button>';
+    }
+
+    html += '<button id="trade-cancel-btn" style="padding:8px 20px;background:#f44;color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Cancel</button>';
+
+    html += '</div>';
+
+    contentDiv.innerHTML = html;
+
+    // Attach event listeners
+    var callbacks = tradeWindowEl._callbacks;
+
+    // Spark input
+    var sparkInput = document.getElementById('local-spark-input');
+    if (sparkInput && callbacks.onSetSpark) {
+      sparkInput.addEventListener('change', function() {
+        var amount = parseInt(this.value) || 0;
+        callbacks.onSetSpark(amount);
+      });
+    }
+
+    // Ready button
+    var readyBtn = document.getElementById('trade-ready-btn');
+    if (readyBtn && callbacks.onReady) {
+      readyBtn.addEventListener('click', function() {
+        callbacks.onReady();
+      });
+    }
+
+    // Confirm button
+    var confirmBtn = document.getElementById('trade-confirm-btn');
+    if (confirmBtn && callbacks.onConfirm) {
+      confirmBtn.addEventListener('click', function() {
+        callbacks.onConfirm();
+      });
+    }
+
+    // Cancel button
+    var cancelBtn = document.getElementById('trade-cancel-btn');
+    if (cancelBtn && callbacks.onCancel) {
+      cancelBtn.addEventListener('click', function() {
+        callbacks.onCancel();
+      });
+    }
+
+    // Trade slot clicks (to remove items)
+    var tradeSlots = document.querySelectorAll('.trade-slot');
+    tradeSlots.forEach(function(slot, idx) {
+      slot.addEventListener('click', function() {
+        if (localPlayer.items[idx] && callbacks.onRemoveItem) {
+          callbacks.onRemoveItem(idx);
+        }
+      });
+    });
+  }
+
+  /**
+   * Hide trade window
+   */
+  function hideTradeWindow() {
+    if (tradeWindowEl && tradeWindowEl.parentNode) {
+      tradeWindowEl.parentNode.removeChild(tradeWindowEl);
+      tradeWindowEl = null;
+      currentTradeData = null;
+    }
+  }
+
+  /**
+   * Show trade complete notification
+   * @param {string} partnerName - Trade partner's name
+   */
+  function showTradeComplete(partnerName) {
+    showNotification('Trade completed with ' + partnerName + '!', 'success');
+  }
+
   // Export public API
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
@@ -1373,5 +1679,11 @@
   exports.initQuickBar = initQuickBar;
   exports.updateQuickBar = updateQuickBar;
   exports.showItemPickup = showItemPickup;
+  exports.showTradeRequest = showTradeRequest;
+  exports.hideTradeRequest = hideTradeRequest;
+  exports.showTradeWindow = showTradeWindow;
+  exports.updateTradeWindow = updateTradeWindow;
+  exports.hideTradeWindow = hideTradeWindow;
+  exports.showTradeComplete = showTradeComplete;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));

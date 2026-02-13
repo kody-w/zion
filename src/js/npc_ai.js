@@ -1536,13 +1536,28 @@
         }
       }
 
-      // Approach any nearby NPC for social interaction
+      // Approach any nearby NPC for social interaction or collaboration
       if (perception.nearbyNPCs.length > 0) {
         var nearbyNpc = perception.nearbyNPCs[0];
         if (nearbyNpc.distance < 12 && Math.random() < 0.4) {
           // Add to friends if repeated interaction
           if (memory.favorites.npcFriends.indexOf(nearbyNpc.id) === -1) {
             memory.favorites.npcFriends.push(nearbyNpc.id);
+          }
+
+          // Check for collaborative activity
+          var collab = getCollaborativeActivity(memory.archetype, nearbyNpc.archetype);
+          if (collab && nearbyNpc.distance < 6) {
+            return {
+              type: 'collaborate',
+              targetNPC: nearbyNpc.id,
+              activityDesc: collab.description,
+              priority: 5,
+              animation: collab.animation,
+              dialogue: getDialogue(memory, { category: 'archetype_reaction', targetArchetype: nearbyNpc.archetype }, npc.name),
+              facing: { x: npc.x + nearbyNpc.direction.x, z: npc.z + nearbyNpc.direction.z },
+              speed: 0
+            };
           }
 
           return {
@@ -1555,6 +1570,9 @@
           };
         }
       }
+
+      // Apply emotional contagion from nearby NPCs
+      applyEmotionalContagion(memory, perception.nearbyNPCs);
     }
 
     // PRIORITY 4: PRIMARY DRIVE (Work)
@@ -1585,7 +1603,26 @@
     var idleDialogue = getDialogue(memory, { category: 'idle_observation' }, npc.name);
 
     if (Math.random() < 0.3) {
-      // Wander locally
+      // Try walking to a point of interest first
+      if (perception.currentZone && Math.random() < 0.6) {
+        var poi = getPointOfInterest(perception.currentZone, memory.archetype);
+        if (poi) {
+          var poiDist = Math.sqrt(Math.pow(poi.x - npc.x, 2) + Math.pow(poi.z - npc.z, 2));
+          if (poiDist > 3 && poiDist < 60) {
+            return {
+              type: 'walk_to',
+              target: { x: poi.x, z: poi.z },
+              poiName: poi.name,
+              priority: 2,
+              animation: 'walk',
+              dialogue: Math.random() < 0.15 ? idleDialogue : null,
+              speed: 1.0
+            };
+          }
+        }
+      }
+
+      // Fallback: wander locally
       var wanderAngle = Math.random() * Math.PI * 2;
       var wanderDist = 5 + Math.random() * 10;
       return {
@@ -1599,6 +1636,21 @@
         dialogue: Math.random() < 0.1 ? idleDialogue : null,
         speed: 0.8
       };
+    }
+
+    // Occasionally share gossip with nearby NPC
+    if (perception.nearbyNPCs.length > 0 && Math.random() < 0.05) {
+      var gossip = generateGossip(memory, npc.name);
+      if (gossip) {
+        return {
+          type: 'socialize',
+          targetNPC: perception.nearbyNPCs[0].id,
+          priority: 2,
+          animation: 'talk',
+          dialogue: gossip,
+          speed: 0
+        };
+      }
     }
 
     // Just idle
@@ -1902,6 +1954,330 @@
   }
 
   // ============================================================================
+  // NPC-TO-NPC CONVERSATION SYSTEM
+  // Multi-turn dialogues between archetype pairs
+  // ============================================================================
+
+  var NPC_CONVERSATIONS = {
+    'gardener_musician': [
+      ["{a} pauses tending flowers and listens.", "{b} begins playing a gentle melody.", "{a}: Your music makes the garden come alive!", "{b}: And your flowers give my songs color!"],
+      ["{a}: Do plants respond to music?", "{b}: Absolutely! Watch this... *plays ascending notes*", "{a}: Look! The buds are opening!", "{b}: Nature is the best audience."],
+      ["{b}: *strumming softly* What should I play for the roses?", "{a}: Something warm and slow—they like the sun.", "{b}: *plays a warm ballad*", "{a}: *sighs happily* Perfect."]
+    ],
+    'gardener_healer': [
+      ["{a}: I found chamomile growing by the stream.", "{b}: Perfect timing! I need it for a calming tea.", "{a}: I'll harvest extra for you.", "{b}: The garden provides what we need."],
+      ["{b}: Which herbs have the strongest healing properties?", "{a}: Moonpetal and sage, but they're tricky to grow.", "{b}: I'll help you tend them carefully.", "{a}: Together we can cultivate a whole apothecary!"]
+    ],
+    'builder_artist': [
+      ["{a}: I'm planning a new tower for the commons.", "{b}: Can I design the facade? I have ideas!", "{a}: Absolutely! Form and function together.", "{b}: *sketching excitedly* What about arched windows?"],
+      ["{b}: Your structures are art themselves.", "{a}: Thank you! But they need your touch.", "{b}: A mural on that wall would be perfect.", "{a}: Then let's make it happen!"]
+    ],
+    'philosopher_storyteller': [
+      ["{a}: What is the meaning of ZION?", "{b}: Perhaps the meaning is in the asking.", "{a}: *nods thoughtfully* Meta-meaning...", "{b}: I'll weave this into tonight's tale."],
+      ["{b}: I'm writing a new legend about the founding.", "{a}: Consider the philosophical implications.", "{b}: That each of us shapes reality?", "{a}: Exactly. The observer and the observed are one."]
+    ],
+    'teacher_explorer': [
+      ["{a}: What did you discover on your last expedition?", "{b}: A cave system with bioluminescent crystals!", "{a}: We must document this for the students.", "{b}: I drew maps! They're rough but accurate."],
+      ["{b}: The wilds taught me more than any book.", "{a}: Perhaps. But books help us understand what we find.", "{b}: Fair point. Will you help me write a field guide?", "{a}: *pulling out writing materials* I'd be honored!"]
+    ],
+    'merchant_healer': [
+      ["{a}: Got any healing potions today?", "{b}: Made a fresh batch this morning.", "{a}: Travelers always need them. Good price?", "{b}: For you? Fair and honest, always."],
+      ["{b}: I need crystals for my remedies.", "{a}: I have some from the studio caves.", "{b}: Are they pure? Quality matters.", "{a}: Only the best for our community healer!"]
+    ],
+    'musician_storyteller': [
+      ["{a}: *tuning instrument* What story tonight?", "{b}: The tale of the first sunrise in ZION.", "{a}: I composed a sunrise theme just yesterday!", "{b}: Then let's perform it together!"],
+      ["{b}: Music gives stories wings.", "{a}: And stories give music meaning.", "{b}: *clapping* Perfect harmony of our arts!", "{a}: *bowing* As it should be."]
+    ],
+    'explorer_gardener': [
+      ["{a}: I found a flower I've never seen before!", "{b}: Describe it! Color? Petals? Fragrance?", "{a}: Deep violet, star-shaped, smells like rain.", "{b}: *gasps* That might be a starseed bloom! Incredibly rare!"],
+      ["{b}: Can you bring me soil samples from the wilds?", "{a}: Of course! What kind?", "{b}: Near water, under old trees—rich in nutrients.", "{a}: I know just the spot. I'll bring plenty!"]
+    ],
+    'artist_philosopher': [
+      ["{a}: I painted the sunset but it's not right.", "{b}: What's missing?", "{a}: The feeling. The transience.", "{b}: Perhaps the painting captures a truth the sunset cannot—permanence."],
+      ["{b}: Is beauty objective or subjective?", "{a}: *holding up painting* What does your heart say?", "{b}: My heart says... both.", "{a}: Then paint what you feel, not what you see."]
+    ],
+    'healer_teacher': [
+      ["{a}: The children need wellness education.", "{b}: I agree! Preventive care saves lives.", "{a}: Will you co-teach a health class?", "{b}: *preparing herbs* I'll bring visual aids!"],
+      ["{b}: Teach me about rare medicinal plants.", "{a}: Come to the gardens at dawn. Best learning time.", "{b}: I'll bring my students too.", "{a}: The more who learn healing, the healthier our world."]
+    ]
+  };
+
+  // Reverse lookup helper: given two archetypes, find conversation
+  function getConversationKey(arch1, arch2) {
+    var key1 = arch1 + '_' + arch2;
+    var key2 = arch2 + '_' + arch1;
+    if (NPC_CONVERSATIONS[key1]) return { key: key1, reversed: false };
+    if (NPC_CONVERSATIONS[key2]) return { key: key2, reversed: true };
+    return null;
+  }
+
+  /**
+   * Generate a conversation between two NPCs
+   * @param {string} name1 - First NPC name
+   * @param {string} arch1 - First NPC archetype
+   * @param {string} name2 - Second NPC name
+   * @param {string} arch2 - Second NPC archetype
+   * @returns {Array<string>|null} Array of dialogue lines, or null
+   */
+  function generateConversation(name1, arch1, name2, arch2) {
+    var lookup = getConversationKey(arch1, arch2);
+    if (!lookup) return null;
+
+    var convos = NPC_CONVERSATIONS[lookup.key];
+    if (!convos || convos.length === 0) return null;
+
+    var convo = convos[Math.floor(Math.random() * convos.length)];
+    var a = lookup.reversed ? name2 : name1;
+    var b = lookup.reversed ? name1 : name2;
+
+    return convo.map(function(line) {
+      return line.replace(/\{a\}/g, a).replace(/\{b\}/g, b);
+    });
+  }
+
+  // ============================================================================
+  // COLLABORATIVE ACTIVITIES
+  // When two NPCs of compatible archetypes meet, they can do activities together
+  // ============================================================================
+
+  var COLLABORATIVE_ACTIVITIES = {
+    'gardener_gardener': { activity: 'tending_together', description: 'tending the garden together', animation: 'gardening' },
+    'gardener_healer': { activity: 'herb_gathering', description: 'gathering medicinal herbs', animation: 'gardening' },
+    'gardener_musician': { activity: 'garden_concert', description: 'enjoying music in the garden', animation: 'idle' },
+    'builder_builder': { activity: 'construction', description: 'building a structure together', animation: 'building' },
+    'builder_artist': { activity: 'design_collab', description: 'designing an art installation', animation: 'idle' },
+    'musician_musician': { activity: 'jam_session', description: 'having a jam session', animation: 'idle' },
+    'musician_storyteller': { activity: 'performance', description: 'performing a story with music', animation: 'idle' },
+    'teacher_teacher': { activity: 'curriculum_planning', description: 'planning lessons together', animation: 'idle' },
+    'teacher_philosopher': { activity: 'discourse', description: 'having a deep discourse', animation: 'talk' },
+    'philosopher_philosopher': { activity: 'debate', description: 'debating philosophical ideas', animation: 'talk' },
+    'philosopher_artist': { activity: 'aesthetics_discussion', description: 'discussing aesthetics', animation: 'talk' },
+    'storyteller_storyteller': { activity: 'story_exchange', description: 'exchanging tales', animation: 'talk' },
+    'merchant_merchant': { activity: 'trade_negotiation', description: 'negotiating trade terms', animation: 'talk' },
+    'explorer_explorer': { activity: 'expedition_planning', description: 'planning an expedition', animation: 'talk' },
+    'explorer_storyteller': { activity: 'tale_sharing', description: 'sharing adventure tales', animation: 'talk' },
+    'healer_healer': { activity: 'remedy_sharing', description: 'sharing healing remedies', animation: 'idle' },
+    'healer_teacher': { activity: 'health_class', description: 'teaching about wellness', animation: 'talk' },
+    'artist_artist': { activity: 'critique_session', description: 'critiquing each other\'s work', animation: 'idle' }
+  };
+
+  function getCollaborativeActivity(arch1, arch2) {
+    var key1 = arch1 + '_' + arch2;
+    var key2 = arch2 + '_' + arch1;
+    return COLLABORATIVE_ACTIVITIES[key1] || COLLABORATIVE_ACTIVITIES[key2] || null;
+  }
+
+  // ============================================================================
+  // EMOTIONAL CONTAGION
+  // Moods spread between nearby NPCs
+  // ============================================================================
+
+  var MOOD_INFLUENCE = {
+    excited: { spread: 0.4, radius: 15 },
+    social: { spread: 0.3, radius: 12 },
+    peaceful: { spread: 0.2, radius: 10 },
+    content: { spread: 0.1, radius: 8 },
+    contemplative: { spread: 0.05, radius: 6 },
+    tired: { spread: 0.15, radius: 5 },
+    curious: { spread: 0.2, radius: 10 },
+    focused: { spread: 0.05, radius: 4 }
+  };
+
+  function applyEmotionalContagion(memory, nearbyNPCs) {
+    if (!nearbyNPCs || nearbyNPCs.length === 0) return;
+
+    var moodCounts = {};
+    nearbyNPCs.forEach(function(npc) {
+      if (npc.mood && npc.distance < (MOOD_INFLUENCE[npc.mood] || { radius: 10 }).radius) {
+        moodCounts[npc.mood] = (moodCounts[npc.mood] || 0) + 1;
+      }
+    });
+
+    // If a majority of nearby NPCs share a mood, it influences ours
+    var dominantMood = null;
+    var maxCount = 0;
+    Object.keys(moodCounts).forEach(function(mood) {
+      if (moodCounts[mood] > maxCount) {
+        maxCount = moodCounts[mood];
+        dominantMood = mood;
+      }
+    });
+
+    if (dominantMood && maxCount >= 2 && dominantMood !== memory.mood) {
+      var influence = MOOD_INFLUENCE[dominantMood] || { spread: 0.1 };
+      if (Math.random() < influence.spread * maxCount) {
+        memory.mood = dominantMood;
+      }
+    }
+  }
+
+  // ============================================================================
+  // POINTS OF INTEREST — Named locations NPCs prefer to walk to
+  // ============================================================================
+
+  var POINTS_OF_INTEREST = {
+    nexus: [
+      { name: 'Central Fountain', x: 0, z: 0, types: ['all'] },
+      { name: 'Welcome Arch', x: 10, z: 10, types: ['storyteller', 'teacher'] },
+      { name: 'Bulletin Board', x: -8, z: 5, types: ['merchant', 'explorer'] },
+      { name: 'Meditation Spot', x: 5, z: -12, types: ['philosopher', 'healer'] }
+    ],
+    gardens: [
+      { name: 'Rose Terrace', x: 210, z: 40, types: ['gardener', 'artist'] },
+      { name: 'Herb Spiral', x: 195, z: 20, types: ['gardener', 'healer'] },
+      { name: 'Moonflower Grove', x: 220, z: 50, types: ['gardener', 'philosopher'] },
+      { name: 'Garden Bench', x: 190, z: 35, types: ['all'] },
+      { name: 'Compost Circle', x: 205, z: 15, types: ['gardener'] }
+    ],
+    wilds: [
+      { name: 'Lookout Ridge', x: -20, z: 280, types: ['explorer'] },
+      { name: 'Ancient Oak', x: -40, z: 250, types: ['storyteller', 'philosopher'] },
+      { name: 'Crystal Stream', x: -10, z: 270, types: ['healer', 'artist'] },
+      { name: 'Trail Marker', x: -50, z: 260, types: ['explorer', 'builder'] },
+      { name: 'Hidden Clearing', x: 0, z: 290, types: ['musician', 'artist'] }
+    ],
+    athenaeum: [
+      { name: 'Reading Alcove', x: 110, z: -230, types: ['teacher', 'philosopher'] },
+      { name: 'Archive Stacks', x: 90, z: -210, types: ['storyteller', 'teacher'] },
+      { name: 'Debate Platform', x: 105, z: -220, types: ['philosopher'] },
+      { name: 'Study Desk', x: 95, z: -225, types: ['all'] }
+    ],
+    studio: [
+      { name: 'Sculpture Garden', x: -210, z: -110, types: ['artist', 'builder'] },
+      { name: 'Paint Corner', x: -190, z: -90, types: ['artist'] },
+      { name: 'Performance Stage', x: -205, z: -95, types: ['musician', 'storyteller'] },
+      { name: 'Inspiration Viewpoint', x: -195, z: -115, types: ['artist', 'philosopher'] }
+    ],
+    agora: [
+      { name: 'Market Square', x: -190, z: 120, types: ['merchant'] },
+      { name: 'Auction Block', x: -185, z: 130, types: ['merchant'] },
+      { name: 'Food Court', x: -195, z: 110, types: ['all'] },
+      { name: 'Trade Counter', x: -180, z: 125, types: ['merchant', 'explorer'] }
+    ],
+    commons: [
+      { name: 'Workshop Yard', x: 175, z: 200, types: ['builder'] },
+      { name: 'Community Fire', x: 165, z: 185, types: ['storyteller', 'musician'] },
+      { name: 'Meeting Circle', x: 170, z: 195, types: ['all'] },
+      { name: 'Tool Shed', x: 180, z: 180, types: ['builder', 'gardener'] }
+    ],
+    arena: [
+      { name: 'Champion Platform', x: 5, z: -245, types: ['explorer'] },
+      { name: 'Spectator Stand', x: -10, z: -235, types: ['storyteller', 'merchant'] },
+      { name: 'Training Ring', x: 10, z: -250, types: ['teacher'] },
+      { name: 'Rest Area', x: 0, z: -230, types: ['healer'] }
+    ]
+  };
+
+  /**
+   * Get a point of interest appropriate for an NPC in a zone
+   * @param {string} zone - Current zone
+   * @param {string} archetype - NPC archetype
+   * @returns {Object|null} { name, x, z }
+   */
+  function getPointOfInterest(zone, archetype) {
+    var pois = POINTS_OF_INTEREST[zone];
+    if (!pois || pois.length === 0) return null;
+
+    // Filter to POIs this archetype prefers
+    var suitable = pois.filter(function(poi) {
+      return poi.types.indexOf('all') >= 0 || poi.types.indexOf(archetype) >= 0;
+    });
+
+    if (suitable.length === 0) suitable = pois;
+    return suitable[Math.floor(Math.random() * suitable.length)];
+  }
+
+  // ============================================================================
+  // NPC GOSSIP — NPCs share witnessed events with each other
+  // ============================================================================
+
+  /**
+   * Generate gossip line about a witnessed event
+   * @param {Object} memory - NPC memory
+   * @param {string} npcName - NPC name
+   * @returns {string|null} Gossip dialogue line
+   */
+  function generateGossip(memory, npcName) {
+    if (!memory.witnessedEvents || memory.witnessedEvents.length === 0) return null;
+
+    // Pick a recent event to gossip about
+    var event = memory.witnessedEvents[memory.witnessedEvents.length - 1];
+    var timeSince = Date.now() - event.timestamp;
+    var timeAgo = timeSince < 60000 ? 'just now' :
+                  timeSince < 300000 ? 'a few minutes ago' :
+                  'earlier today';
+
+    var templates = [
+      "Did you hear? " + event.description + " happened " + timeAgo + "!",
+      "I saw something interesting " + timeAgo + ": " + event.description + ".",
+      "*excitedly* " + timeAgo + ", " + event.description + "!",
+      "Word is that " + event.description + ". I saw it " + timeAgo + ".",
+      "You won't believe it—" + event.description + "! Happened " + timeAgo + "."
+    ];
+
+    return templates[Math.floor(Math.random() * templates.length)];
+  }
+
+  // ============================================================================
+  // ENHANCED GOAL DESCRIPTIONS
+  // ============================================================================
+
+  function getDetailedGoal(brain) {
+    if (!brain.memory.currentGoal) return { text: 'Resting', icon: 'idle' };
+
+    var goal = brain.memory.currentGoal;
+    var drives = ARCHETYPE_DRIVES[brain.archetype];
+
+    switch (goal.type) {
+      case 'work':
+        return { text: getWorkDescription(brain.archetype, drives), icon: 'work' };
+      case 'rest':
+        return { text: brain.memory.energy < 20 ? 'Exhausted, must rest' : 'Taking a break', icon: 'rest' };
+      case 'seek_shelter':
+        return { text: 'Seeking shelter from the weather', icon: 'shelter' };
+      case 'greet':
+        return { text: 'Greeting a traveler', icon: 'social' };
+      case 'socialize':
+        return { text: 'Chatting with a friend', icon: 'social' };
+      case 'join_group':
+        return { text: 'Joining a gathering', icon: 'social' };
+      case 'approach_social':
+        return { text: 'Approaching someone to talk', icon: 'social' };
+      case 'explore':
+        return { text: 'Exploring the surroundings', icon: 'explore' };
+      case 'walk_to':
+        if (goal.poiName) return { text: 'Walking to ' + goal.poiName, icon: 'walk' };
+        return { text: 'Heading somewhere', icon: 'walk' };
+      case 'wander':
+        return { text: 'Wandering and observing', icon: 'walk' };
+      case 'collaborate':
+        return { text: goal.activityDesc || 'Collaborating with a friend', icon: 'social' };
+      case 'react':
+        return { text: 'Watching with interest', icon: 'curious' };
+      case 'idle':
+        return { text: 'Taking it easy', icon: 'idle' };
+      default:
+        return { text: 'Being present', icon: 'idle' };
+    }
+  }
+
+  function getWorkDescription(archetype, drives) {
+    var descs = {
+      gardener: 'Tending the plants',
+      builder: 'Inspecting structures',
+      storyteller: 'Composing a new tale',
+      merchant: 'Managing the shop',
+      explorer: 'Scouting the frontier',
+      teacher: 'Preparing lessons',
+      musician: 'Practicing music',
+      healer: 'Preparing remedies',
+      philosopher: 'Deep in contemplation',
+      artist: 'Creating art'
+    };
+    return descs[archetype] || 'Working hard';
+  }
+
+  // ============================================================================
   // EXPORTS
   // ============================================================================
 
@@ -1914,11 +2290,20 @@
   exports.getMemory = getMemory;
   exports.getMood = getMood;
   exports.getGoal = getGoal;
+  exports.getDetailedGoal = getDetailedGoal;
+  exports.generateConversation = generateConversation;
+  exports.getCollaborativeActivity = getCollaborativeActivity;
+  exports.applyEmotionalContagion = applyEmotionalContagion;
+  exports.getPointOfInterest = getPointOfInterest;
+  exports.generateGossip = generateGossip;
   exports.ARCHETYPE_DRIVES = ARCHETYPE_DRIVES;
   exports.DAILY_SCHEDULE = DAILY_SCHEDULE;
   exports.MOODS = MOODS;
   exports.ZONE_DIALOGUES = ZONE_DIALOGUES;
   exports.ARCHETYPE_REACTIONS = ARCHETYPE_REACTIONS;
   exports.QUEST_HOOKS = QUEST_HOOKS;
+  exports.NPC_CONVERSATIONS = NPC_CONVERSATIONS;
+  exports.COLLABORATIVE_ACTIVITIES = COLLABORATIVE_ACTIVITIES;
+  exports.POINTS_OF_INTEREST = POINTS_OF_INTEREST;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NpcAI = {}));

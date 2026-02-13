@@ -1394,6 +1394,347 @@
       }
     }
 
+    // ---- LANDMARKS: unique structures per zone ----
+    if (Models.createLandmark) {
+      // Nexus: fountain (center), 4 obelisks (compass points), 2 signposts
+      var fountain = Models.createLandmark('fountain', 1.2);
+      fountain.position.set(nz.cx, terrainHeight(nz.cx, nz.cz), nz.cz);
+      scene.add(fountain);
+      animatedObjects.push({ mesh: fountain, type: 'landmark', params: {} });
+
+      for (var no = 0; no < 4; no++) {
+        var noa = (no / 4) * Math.PI * 2;
+        var nox = nz.cx + Math.cos(noa) * 35;
+        var noz = nz.cz + Math.sin(noa) * 35;
+        var obelisk = Models.createLandmark('obelisk', 1.0);
+        obelisk.position.set(nox, terrainHeight(nox, noz), noz);
+        scene.add(obelisk);
+        animatedObjects.push({ mesh: obelisk, type: 'landmark', params: {} });
+      }
+
+      for (var ns = 0; ns < 2; ns++) {
+        var nsa = (ns / 2) * Math.PI * 2 + Math.PI / 4;
+        var nsx = nz.cx + Math.cos(nsa) * 28;
+        var nsz = nz.cz + Math.sin(nsa) * 28;
+        var signpost = Models.createLandmark('signpost', 1.0);
+        signpost.position.set(nsx, terrainHeight(nsx, nsz), nsz);
+        signpost.rotation.y = nsa;
+        scene.add(signpost);
+      }
+
+      // Gardens: gazebo (center-ish), 4 campfires along paths, 6 flower beds, 4 herb patches
+      var gazebo = Models.createLandmark('gazebo', 1.0);
+      gazebo.position.set(gz.cx + 10, terrainHeight(gz.cx + 10, gz.cz + 10), gz.cz + 10);
+      scene.add(gazebo);
+
+      for (var gc = 0; gc < 4; gc++) {
+        var gca = (gc / 4) * Math.PI * 2 + Math.PI / 8;
+        var gcx = gz.cx + Math.cos(gca) * 40;
+        var gcz = gz.cz + Math.sin(gca) * 40;
+        var campfire = Models.createLandmark('campfire', 1.0);
+        campfire.position.set(gcx, terrainHeight(gcx, gcz), gcz);
+        scene.add(campfire);
+        animatedObjects.push({ mesh: campfire, type: 'landmark', params: {} });
+      }
+
+      for (var gf = 0; gf < 6; gf++) {
+        var gfa = hash2D(gf, 720) * Math.PI * 2;
+        var gfr = 20 + hash2D(gf, 721) * 35;
+        var gfx = gz.cx + Math.cos(gfa) * gfr;
+        var gfz = gz.cz + Math.sin(gfa) * gfr;
+        var flowerBed = Models.createResourceNode('flower_bed', 1.0);
+        flowerBed.position.set(gfx, terrainHeight(gfx, gfz), gfz);
+        flowerBed.rotation.y = hash2D(gf, 722) * Math.PI * 2;
+        scene.add(flowerBed);
+      }
+
+      for (var gh = 0; gh < 4; gh++) {
+        var gha = hash2D(gh, 730) * Math.PI * 2;
+        var ghr = 25 + hash2D(gh, 731) * 30;
+        var ghx = gz.cx + Math.cos(gha) * ghr;
+        var ghz = gz.cz + Math.sin(gha) * ghr;
+        var herbPatch = Models.createResourceNode('herb_patch', 1.0);
+        herbPatch.position.set(ghx, terrainHeight(ghx, ghz), ghz);
+        herbPatch.rotation.y = hash2D(gh, 732) * Math.PI * 2;
+        scene.add(herbPatch);
+      }
+
+      // Wilds: 2 campfires (explorer camps), 3 signposts, 8 ore veins, 4 wood piles
+      for (var wc = 0; wc < 2; wc++) {
+        var wca = hash2D(wc, 740) * Math.PI * 2;
+        var wcr = 30 + hash2D(wc, 741) * 25;
+        var wcx = wz.cx + Math.cos(wca) * wcr;
+        var wcz = wz.cz + Math.sin(wca) * wcr;
+        var wcampfire = Models.createLandmark('campfire', 1.0);
+        wcampfire.position.set(wcx, terrainHeight(wcx, wcz), wcz);
+        scene.add(wcampfire);
+        animatedObjects.push({ mesh: wcampfire, type: 'landmark', params: {} });
+      }
+
+      for (var ws = 0; ws < 3; ws++) {
+        var wsa = hash2D(ws, 750) * Math.PI * 2;
+        var wsr = 35 + hash2D(ws, 751) * 30;
+        var wsx = wz.cx + Math.cos(wsa) * wsr;
+        var wsz = wz.cz + Math.sin(wsa) * wsr;
+        var wsignpost = Models.createLandmark('signpost', 1.0);
+        wsignpost.position.set(wsx, terrainHeight(wsx, wsz), wsz);
+        wsignpost.rotation.y = wsa;
+        scene.add(wsignpost);
+      }
+
+      for (var wo = 0; wo < 8; wo++) {
+        var woa = hash2D(wo, 760) * Math.PI * 2;
+        var wor = 15 + hash2D(wo, 761) * 50;
+        var wox = wz.cx + Math.cos(woa) * wor;
+        var woz = wz.cz + Math.sin(woa) * wor;
+        var oreVein = Models.createResourceNode('ore_vein', 0.8 + hash2D(wo, 762) * 0.5);
+        oreVein.position.set(wox, terrainHeight(wox, woz), woz);
+        oreVein.rotation.y = hash2D(wo, 763) * Math.PI * 2;
+        scene.add(oreVein);
+      }
+
+      for (var ww = 0; ww < 4; ww++) {
+        var wwa = hash2D(ww, 770) * Math.PI * 2;
+        var wwr = 20 + hash2D(ww, 771) * 40;
+        var wwx = wz.cx + Math.cos(wwa) * wwr;
+        var wwz = wz.cz + Math.sin(wwa) * wwr;
+        var woodPile = Models.createResourceNode('wood_pile', 1.0);
+        woodPile.position.set(wwx, terrainHeight(wwx, wwz), wwz);
+        woodPile.rotation.y = hash2D(ww, 772) * Math.PI * 2;
+        scene.add(woodPile);
+      }
+
+      // Athenaeum: 2 statues (flanking entrance), 4 obelisks (mystical markers)
+      for (var ats = 0; ats < 2; ats++) {
+        var atsa = (ats / 2) * Math.PI * 2;
+        var atsx = atz.cx + Math.cos(atsa) * 25;
+        var atsz = atz.cz + Math.sin(atsa) * 25;
+        var statue = Models.createLandmark('statue', 1.1);
+        statue.position.set(atsx, terrainHeight(atsx, atsz), atsz);
+        statue.rotation.y = atsa + Math.PI;
+        scene.add(statue);
+      }
+
+      for (var ato = 0; ato < 4; ato++) {
+        var atoa = (ato / 4) * Math.PI * 2 + Math.PI / 8;
+        var atox = atz.cx + Math.cos(atoa) * 35;
+        var atoz = atz.cz + Math.sin(atoa) * 35;
+        var atobelisk = Models.createLandmark('obelisk', 0.9);
+        atobelisk.position.set(atox, terrainHeight(atox, atoz), atoz);
+        scene.add(atobelisk);
+        animatedObjects.push({ mesh: atobelisk, type: 'landmark', params: {} });
+      }
+
+      // Studio: 3 crystal clusters (inspiration points), 1 gazebo
+      for (var sc = 0; sc < 3; sc++) {
+        var sca = hash2D(sc, 780) * Math.PI * 2;
+        var scr = 25 + hash2D(sc, 781) * 20;
+        var scx = sz.cx + Math.cos(sca) * scr;
+        var scz = sz.cz + Math.sin(sca) * scr;
+        var crystalCluster = Models.createResourceNode('crystal_cluster', 0.9 + hash2D(sc, 782) * 0.4);
+        crystalCluster.position.set(scx, terrainHeight(scx, scz), scz);
+        crystalCluster.rotation.y = hash2D(sc, 783) * Math.PI * 2;
+        scene.add(crystalCluster);
+      }
+
+      var sgazebo = Models.createLandmark('gazebo', 0.9);
+      sgazebo.position.set(sz.cx + 15, terrainHeight(sz.cx + 15, sz.cz - 15), sz.cz - 15);
+      scene.add(sgazebo);
+
+      // Agora: 6 signposts, 2 campfires (merchant gathering), 3 flower beds
+      for (var ags = 0; ags < 6; ags++) {
+        var agsa = (ags / 6) * Math.PI * 2;
+        var agsx = az.cx + Math.cos(agsa) * 30;
+        var agsz = az.cz + Math.sin(agsa) * 30;
+        var agsignpost = Models.createLandmark('signpost', 1.0);
+        agsignpost.position.set(agsx, terrainHeight(agsx, agsz), agsz);
+        agsignpost.rotation.y = agsa;
+        scene.add(agsignpost);
+      }
+
+      for (var agc = 0; agc < 2; agc++) {
+        var agca = (agc / 2) * Math.PI * 2 + Math.PI / 4;
+        var agcx = az.cx + Math.cos(agca) * 20;
+        var agcz = az.cz + Math.sin(agca) * 20;
+        var agcampfire = Models.createLandmark('campfire', 1.0);
+        agcampfire.position.set(agcx, terrainHeight(agcx, agcz), agcz);
+        scene.add(agcampfire);
+        animatedObjects.push({ mesh: agcampfire, type: 'landmark', params: {} });
+      }
+
+      for (var agf = 0; agf < 3; agf++) {
+        var agfa = hash2D(agf, 790) * Math.PI * 2;
+        var agfr = 15 + hash2D(agf, 791) * 20;
+        var agfx = az.cx + Math.cos(agfa) * agfr;
+        var agfz = az.cz + Math.sin(agfa) * agfr;
+        var agflowerBed = Models.createResourceNode('flower_bed', 0.9);
+        agflowerBed.position.set(agfx, terrainHeight(agfx, agfz), agfz);
+        agflowerBed.rotation.y = hash2D(agf, 792) * Math.PI * 2;
+        scene.add(agflowerBed);
+      }
+
+      // Commons: 2 gazebos (gathering areas), 4 wood piles, 6 ore veins
+      for (var cg = 0; cg < 2; cg++) {
+        var cga = (cg / 2) * Math.PI * 2 + Math.PI / 3;
+        var cgx = cz.cx + Math.cos(cga) * 30;
+        var cgz = cz.cz + Math.sin(cga) * 30;
+        var cgazebo = Models.createLandmark('gazebo', 0.95);
+        cgazebo.position.set(cgx, terrainHeight(cgx, cgz), cgz);
+        scene.add(cgazebo);
+      }
+
+      for (var cw = 0; cw < 4; cw++) {
+        var cwa = hash2D(cw, 800) * Math.PI * 2;
+        var cwr = 20 + hash2D(cw, 801) * 25;
+        var cwx = cz.cx + Math.cos(cwa) * cwr;
+        var cwz = cz.cz + Math.sin(cwa) * cwr;
+        var cwoodPile = Models.createResourceNode('wood_pile', 1.0);
+        cwoodPile.position.set(cwx, terrainHeight(cwx, cwz), cwz);
+        cwoodPile.rotation.y = hash2D(cw, 802) * Math.PI * 2;
+        scene.add(cwoodPile);
+      }
+
+      for (var co = 0; co < 6; co++) {
+        var coa = hash2D(co, 810) * Math.PI * 2;
+        var cor = 18 + hash2D(co, 811) * 28;
+        var cox = cz.cx + Math.cos(coa) * cor;
+        var coz = cz.cz + Math.sin(coa) * cor;
+        var coreVein = Models.createResourceNode('ore_vein', 0.9 + hash2D(co, 812) * 0.4);
+        coreVein.position.set(cox, terrainHeight(cox, coz), coz);
+        coreVein.rotation.y = hash2D(co, 813) * Math.PI * 2;
+        scene.add(coreVein);
+      }
+
+      // Arena: 2 statues (champion statues), 4 campfires
+      for (var ars = 0; ars < 2; ars++) {
+        var arsa = (ars / 2) * Math.PI * 2 + Math.PI / 2;
+        var arsx = arz.cx + Math.cos(arsa) * 28;
+        var arsz = arz.cz + Math.sin(arsa) * 28;
+        var arstatue = Models.createLandmark('statue', 1.2);
+        arstatue.position.set(arsx, terrainHeight(arsx, arsz), arsz);
+        arstatue.rotation.y = arsa + Math.PI;
+        scene.add(arstatue);
+      }
+
+      for (var arc = 0; arc < 4; arc++) {
+        var arca = (arc / 4) * Math.PI * 2;
+        var arcx = arz.cx + Math.cos(arca) * 32;
+        var arcz = arz.cz + Math.sin(arca) * 32;
+        var arcampfire = Models.createLandmark('campfire', 1.0);
+        arcampfire.position.set(arcx, terrainHeight(arcx, arcz), arcz);
+        scene.add(arcampfire);
+        animatedObjects.push({ mesh: arcampfire, type: 'landmark', params: {} });
+      }
+    }
+
+    // ---- WILDLIFE: creatures scattered by zone ----
+    if (Models.createWildlife) {
+      // Gardens: 6 rabbits, 10 fireflies
+      for (var gr = 0; gr < 6; gr++) {
+        var gra = hash2D(gr, 820) * Math.PI * 2;
+        var grr = 15 + hash2D(gr, 821) * 40;
+        var grx = gz.cx + Math.cos(gra) * grr;
+        var grz = gz.cz + Math.sin(gra) * grr;
+        var gry = terrainHeight(grx, grz);
+        var rabbit = Models.createWildlife('rabbit');
+        rabbit.position.set(grx, gry, grz);
+        rabbit.rotation.y = hash2D(gr, 822) * Math.PI * 2;
+        scene.add(rabbit);
+        animatedObjects.push({ mesh: rabbit, type: 'creature', params: { speed: 0.8 + hash2D(gr, 823) * 0.4 } });
+      }
+
+      for (var gfl = 0; gfl < 10; gfl++) {
+        var gfla = hash2D(gfl, 830) * Math.PI * 2;
+        var gflr = 10 + hash2D(gfl, 831) * 50;
+        var gflx = gz.cx + Math.cos(gfla) * gflr;
+        var gflz = gz.cz + Math.sin(gfla) * gflr;
+        var gfly = terrainHeight(gflx, gflz) + 1.5 + hash2D(gfl, 832) * 1.5;
+        var firefly = Models.createWildlife('firefly');
+        firefly.position.set(gflx, gfly, gflz);
+        scene.add(firefly);
+        animatedObjects.push({ mesh: firefly, type: 'creature', params: { speed: 1.2 + hash2D(gfl, 833) * 0.6 } });
+      }
+
+      // Wilds: 4 deer, 6 rabbits, 15 fireflies, 4 frogs
+      for (var wd = 0; wd < 4; wd++) {
+        var wda = hash2D(wd, 840) * Math.PI * 2;
+        var wdr = 25 + hash2D(wd, 841) * 45;
+        var wdx = wz.cx + Math.cos(wda) * wdr;
+        var wdz = wz.cz + Math.sin(wda) * wdr;
+        var wdy = terrainHeight(wdx, wdz);
+        var deer = Models.createWildlife('deer');
+        deer.position.set(wdx, wdy, wdz);
+        deer.rotation.y = hash2D(wd, 842) * Math.PI * 2;
+        scene.add(deer);
+        animatedObjects.push({ mesh: deer, type: 'creature', params: { speed: 0.6 + hash2D(wd, 843) * 0.3 } });
+      }
+
+      for (var wr = 0; wr < 6; wr++) {
+        var wra = hash2D(wr, 850) * Math.PI * 2;
+        var wrr = 20 + hash2D(wr, 851) * 50;
+        var wrx = wz.cx + Math.cos(wra) * wrr;
+        var wrz = wz.cz + Math.sin(wra) * wrr;
+        var wry = terrainHeight(wrx, wrz);
+        var wrabbit = Models.createWildlife('rabbit');
+        wrabbit.position.set(wrx, wry, wrz);
+        wrabbit.rotation.y = hash2D(wr, 852) * Math.PI * 2;
+        scene.add(wrabbit);
+        animatedObjects.push({ mesh: wrabbit, type: 'creature', params: { speed: 0.8 + hash2D(wr, 853) * 0.4 } });
+      }
+
+      for (var wfl = 0; wfl < 15; wfl++) {
+        var wfla = hash2D(wfl, 860) * Math.PI * 2;
+        var wflr = 15 + hash2D(wfl, 861) * 60;
+        var wflx = wz.cx + Math.cos(wfla) * wflr;
+        var wflz = wz.cz + Math.sin(wfla) * wflr;
+        var wfly = terrainHeight(wflx, wflz) + 1.5 + hash2D(wfl, 862) * 1.5;
+        var wfirefly = Models.createWildlife('firefly');
+        wfirefly.position.set(wflx, wfly, wflz);
+        scene.add(wfirefly);
+        animatedObjects.push({ mesh: wfirefly, type: 'creature', params: { speed: 1.2 + hash2D(wfl, 863) * 0.6 } });
+      }
+
+      for (var wf = 0; wf < 4; wf++) {
+        var wfa = hash2D(wf, 870) * Math.PI * 2;
+        var wfr = 30 + hash2D(wf, 871) * 35;
+        var wfx = wz.cx + Math.cos(wfa) * wfr;
+        var wfz = wz.cz + Math.sin(wfa) * wfr;
+        var wfy = terrainHeight(wfx, wfz);
+        var frog = Models.createWildlife('frog');
+        frog.position.set(wfx, wfy, wfz);
+        frog.rotation.y = hash2D(wf, 872) * Math.PI * 2;
+        scene.add(frog);
+        animatedObjects.push({ mesh: frog, type: 'creature', params: { speed: 0.5 + hash2D(wf, 873) * 0.3 } });
+      }
+
+      // Commons: 3 rabbits
+      for (var cr = 0; cr < 3; cr++) {
+        var cra = hash2D(cr, 880) * Math.PI * 2;
+        var crr = 20 + hash2D(cr, 881) * 25;
+        var crx = cz.cx + Math.cos(cra) * crr;
+        var crz = cz.cz + Math.sin(cra) * crr;
+        var cry = terrainHeight(crx, crz);
+        var crabbit = Models.createWildlife('rabbit');
+        crabbit.position.set(crx, cry, crz);
+        crabbit.rotation.y = hash2D(cr, 882) * Math.PI * 2;
+        scene.add(crabbit);
+        animatedObjects.push({ mesh: crabbit, type: 'creature', params: { speed: 0.8 + hash2D(cr, 883) * 0.4 } });
+      }
+
+      // Nexus: 4 fireflies
+      for (var nfl = 0; nfl < 4; nfl++) {
+        var nfla = hash2D(nfl, 890) * Math.PI * 2;
+        var nflr = 15 + hash2D(nfl, 891) * 20;
+        var nflx = nz.cx + Math.cos(nfla) * nflr;
+        var nflz = nz.cz + Math.sin(nfla) * nflr;
+        var nfly = terrainHeight(nflx, nflz) + 1.5 + hash2D(nfl, 892) * 1.5;
+        var nfirefly = Models.createWildlife('firefly');
+        nfirefly.position.set(nflx, nfly, nflz);
+        scene.add(nfirefly);
+        animatedObjects.push({ mesh: nfirefly, type: 'creature', params: { speed: 1.2 + hash2D(nfl, 893) * 0.6 } });
+      }
+    }
+
     console.log('Environment populated with trees, rocks, furniture, and creatures');
   }
 
@@ -1409,6 +1750,9 @@
 
     var scene = new THREE.Scene();
     createSky(scene);
+
+    // Add distance fog for atmospheric depth
+    scene.fog = new THREE.Fog(0x87ceeb, 150, 500);
 
     var camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
     camera.position.set(0, 15, 25);
@@ -1803,6 +2147,11 @@
             // Fallback: simple bobbing motion
             obj.mesh.position.y += Math.sin(time * 0.003 * (p.speed || 1)) * 0.01;
             obj.mesh.rotation.y += deltaTime * (p.speed || 0.5);
+          }
+          break;
+        case 'landmark':
+          if (Models && Models.animateModel) {
+            Models.animateModel(obj.mesh, deltaTime, time);
           }
           break;
       }

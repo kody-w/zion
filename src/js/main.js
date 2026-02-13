@@ -7,6 +7,7 @@
   const Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
   const Economy = typeof require !== 'undefined' ? require('./economy') : window.Economy;
   const Inventory = typeof require !== 'undefined' ? require('./inventory') : window.Inventory;
+  const Trading = typeof require !== 'undefined' ? require('./trading') : window.Trading;
   const Intentions = typeof require !== 'undefined' ? require('./intentions') : window.Intentions;
   const Social = typeof require !== 'undefined' ? require('./social') : window.Social;
   const Creation = typeof require !== 'undefined' ? require('./creation') : window.Creation;
@@ -239,6 +240,14 @@
     if (Quests) {
       Quests.initPlayerQuests(username);
       console.log('Quest system initialized for player:', username);
+    }
+
+    // Initialize trading system
+    if (Trading && Network) {
+      Trading.initTrading(function(msg) {
+        Network.broadcastMessage(msg);
+      });
+      console.log('Trading system initialized');
     }
 
     // Initialize input
@@ -833,6 +842,11 @@
       case 'trade':
         handleTradeMessage(msg);
         break;
+      case 'trade_offer':
+      case 'trade_accept':
+      case 'trade_decline':
+        handleTradeProtocolMessage(msg);
+        break;
       default:
         console.log('Unknown message type:', msg.type);
     }
@@ -988,7 +1002,7 @@
   }
 
   /**
-   * Handle trade message
+   * Handle trade message (legacy)
    */
   function handleTradeMessage(msg) {
     if (Economy) {
@@ -1010,6 +1024,155 @@
         'success'
       );
     }
+  }
+
+  /**
+   * Handle trade protocol messages
+   */
+  function handleTradeProtocolMessage(msg) {
+    if (!Trading || !HUD) return;
+
+    var result = Trading.handleTradeMessage(msg);
+    if (!result) return;
+
+    switch (result.type) {
+      case 'trade_request':
+        // Only show to target player
+        if (result.data.to === localPlayer.id) {
+          HUD.showTradeRequest(
+            result.data.from,
+            result.data.tradeId,
+            function(tradeId) {
+              // Accept trade
+              var acceptResult = Trading.acceptTrade(tradeId, localPlayer.id, localPlayer.position);
+              if (acceptResult.success) {
+                showTradeWindowForActive(acceptResult.trade);
+              } else {
+                HUD.showNotification(acceptResult.message, 'error');
+              }
+            },
+            function(tradeId) {
+              // Decline trade
+              Trading.declineTrade(tradeId, localPlayer.id, localPlayer.position);
+            }
+          );
+        }
+        break;
+
+      case 'trade_accepted':
+        // Trade was accepted, show window
+        var activeTrade = Trading.getActiveTrade(localPlayer.id);
+        if (activeTrade) {
+          showTradeWindowForActive(activeTrade);
+          HUD.showNotification('Trade started!', 'success');
+        }
+        break;
+
+      case 'trade_update':
+        // Update trade window if open
+        var currentTrade = Trading.getActiveTrade(localPlayer.id);
+        if (currentTrade && HUD.updateTradeWindow) {
+          HUD.updateTradeWindow(currentTrade, localPlayer.id);
+        }
+        break;
+
+      case 'trade_confirm':
+        // Other player confirmed
+        var confirmTrade = Trading.getActiveTrade(localPlayer.id);
+        if (confirmTrade && HUD.updateTradeWindow) {
+          HUD.updateTradeWindow(confirmTrade, localPlayer.id);
+        }
+        break;
+
+      case 'trade_complete':
+        // Trade completed
+        HUD.hideTradeWindow();
+        HUD.showTradeComplete(msg.from);
+        if (Audio) Audio.playSound('trade');
+        // Update inventory display
+        if (HUD.updateInventoryDisplay && playerInventory) {
+          HUD.updateInventoryDisplay(playerInventory);
+          HUD.updateQuickBar(playerInventory);
+        }
+        // Update player info with new Spark balance
+        if (localPlayer && economyLedger) {
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          HUD.updatePlayerInfo(localPlayer);
+        }
+        break;
+
+      case 'trade_cancelled':
+        // Trade cancelled
+        HUD.hideTradeWindow();
+        HUD.hideTradeRequest();
+        HUD.showNotification('Trade cancelled', 'info');
+        break;
+    }
+  }
+
+  /**
+   * Show trade window for active trade
+   */
+  function showTradeWindowForActive(trade) {
+    if (!HUD || !Trading) return;
+
+    HUD.showTradeWindow(
+      trade,
+      localPlayer.id,
+      // onAddItem - not implemented yet (would need inventory selector UI)
+      null,
+      // onRemoveItem
+      function(tradeSlot) {
+        var result = Trading.removeItemFromTrade(trade.id, localPlayer.id, tradeSlot, localPlayer.position);
+        if (!result.success) {
+          HUD.showNotification(result.message, 'error');
+        }
+      },
+      // onSetSpark
+      function(amount) {
+        var result = Trading.setSparkOffer(trade.id, localPlayer.id, amount, economyLedger, localPlayer.position);
+        if (!result.success) {
+          HUD.showNotification(result.message, 'error');
+        }
+      },
+      // onReady
+      function() {
+        var result = Trading.setReady(trade.id, localPlayer.id, localPlayer.position);
+        if (!result.success) {
+          HUD.showNotification(result.message, 'error');
+        }
+      },
+      // onConfirm
+      function() {
+        // Get both player inventories (in real multiplayer, you'd only have your own)
+        // For demo purposes, we're using local inventories
+        var player1Inv = trade.player1.id === localPlayer.id ? playerInventory : playerInventory;
+        var player2Inv = trade.player2.id === localPlayer.id ? playerInventory : playerInventory;
+
+        var result = Trading.confirmTrade(trade.id, localPlayer.id, player1Inv, player2Inv, economyLedger, localPlayer.position);
+        if (result.success && result.executed) {
+          HUD.hideTradeWindow();
+          HUD.showTradeComplete(trade.player1.id === localPlayer.id ? trade.player2.id : trade.player1.id);
+          if (Audio) Audio.playSound('trade');
+          // Update displays
+          if (HUD.updateInventoryDisplay && playerInventory) {
+            HUD.updateInventoryDisplay(playerInventory);
+            HUD.updateQuickBar(playerInventory);
+          }
+          if (localPlayer && economyLedger) {
+            localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+            HUD.updatePlayerInfo(localPlayer);
+          }
+        } else if (!result.success) {
+          HUD.showNotification(result.message, 'error');
+        }
+      },
+      // onCancel
+      function() {
+        Trading.cancelTrade(trade.id, localPlayer.id, localPlayer.position);
+        HUD.hideTradeWindow();
+      }
+    );
   }
 
   /**
@@ -1219,6 +1382,36 @@
           var node = World.getResourceNodeAtMouse(raycaster, sceneContext.camera, payload.x, payload.y);
           if (node) {
             handleResourceHarvest(node);
+          }
+        }
+        break;
+
+      case 'initiate_trade':
+        // Initiate trade with nearest player
+        if (Trading && gameState && State && HUD) {
+          var players = State.getPlayers(gameState);
+          var nearbyPlayers = players
+            .filter(function(p) {
+              return p.id !== localPlayer.id && p.zone === currentZone;
+            })
+            .map(function(p) {
+              var dx = p.position.x - localPlayer.position.x;
+              var dz = p.position.z - localPlayer.position.z;
+              var distance = Math.sqrt(dx * dx + dz * dz);
+              return { player: p, distance: distance };
+            })
+            .sort(function(a, b) { return a.distance - b.distance; });
+
+          if (nearbyPlayers.length > 0 && nearbyPlayers[0].distance < 10) {
+            var targetPlayer = nearbyPlayers[0].player;
+            var result = Trading.requestTrade(localPlayer.id, targetPlayer.id, localPlayer.position);
+            if (result.success) {
+              HUD.showNotification('Trade request sent to ' + targetPlayer.name, 'info');
+            } else {
+              HUD.showNotification(result.message, 'warning');
+            }
+          } else {
+            HUD.showNotification('No players nearby to trade with', 'warning');
           }
         }
         break;

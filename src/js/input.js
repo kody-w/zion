@@ -138,6 +138,16 @@
           e.preventDefault();
         }
         break;
+
+      case 't':
+      case 'T':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('initiate_trade', {});
+          }
+          e.preventDefault();
+        }
+        break;
     }
   }
 

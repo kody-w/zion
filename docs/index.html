@@ -878,6 +878,394 @@ html, body {
   color: var(--color-text);
 }
 
+/* NPC Interaction Dialog */
+.npc-dialog {
+  position: absolute;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(26, 26, 46, 0.95);
+  backdrop-filter: blur(12px);
+  border: 2px solid var(--color-gold);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  max-width: 500px;
+  width: 90%;
+  z-index: var(--z-modal);
+  animation: dialogSlideUp 0.3s ease-out;
+  box-shadow: 0 0 20px rgba(218, 165, 32, 0.2);
+}
+
+.npc-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid rgba(218, 165, 32, 0.3);
+}
+
+.npc-dialog-name {
+  font-family: var(--font-main);
+  font-size: var(--font-size-lg);
+  color: var(--color-gold);
+}
+
+.npc-dialog-archetype {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.npc-dialog-mood {
+  font-size: var(--font-size-xs);
+  color: var(--color-crystal);
+  margin-left: auto;
+}
+
+.npc-dialog-text {
+  font-family: var(--font-main);
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+  line-height: 1.6;
+  margin-bottom: var(--space-md);
+}
+
+.npc-dialog-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+.npc-dialog-btn {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: rgba(218, 165, 32, 0.1);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.npc-dialog-btn:hover {
+  background: rgba(218, 165, 32, 0.3);
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+.npc-dialog-btn.primary {
+  background: rgba(218, 165, 32, 0.2);
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+@keyframes dialogSlideUp {
+  0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Crosshair / Interaction Indicator */
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  z-index: var(--z-hud);
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+
+.crosshair.active {
+  opacity: 0.8;
+}
+
+.crosshair::before,
+.crosshair::after {
+  content: '';
+  position: absolute;
+  background: var(--color-text);
+}
+
+.crosshair::before {
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  transform: translateY(-50%);
+}
+
+.crosshair::after {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+}
+
+.crosshair .dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  background: var(--color-gold);
+  border-radius: var(--radius-round);
+}
+
+/* Interaction Prompt */
+.interact-prompt {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: var(--z-hud);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  text-align: center;
+}
+
+.interact-prompt.visible {
+  opacity: 1;
+}
+
+.interact-prompt .key {
+  display: inline-block;
+  background: rgba(218, 165, 32, 0.2);
+  border: 1px solid var(--color-gold);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-gold);
+  margin: 0 2px;
+}
+
+/* Loading Screen */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a14 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 1s ease;
+}
+
+.loading-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-title {
+  font-family: var(--font-main);
+  font-size: 3rem;
+  color: var(--color-gold);
+  text-shadow: 0 0 30px rgba(218, 165, 32, 0.3);
+  margin-bottom: var(--space-lg);
+  letter-spacing: 0.3em;
+  animation: titleGlow 3s ease-in-out infinite;
+}
+
+.loading-subtitle {
+  font-family: var(--font-main);
+  font-size: var(--font-size-md);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xxl);
+}
+
+.loading-bar-container {
+  width: 300px;
+  height: 4px;
+  background: rgba(218, 165, 32, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: var(--space-md);
+}
+
+.loading-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-gold), var(--color-dawn));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.loading-status {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+@keyframes titleGlow {
+  0%, 100% { text-shadow: 0 0 20px rgba(218, 165, 32, 0.2); }
+  50% { text-shadow: 0 0 40px rgba(218, 165, 32, 0.5), 0 0 60px rgba(218, 165, 32, 0.2); }
+}
+
+/* Controls Help Overlay */
+.controls-overlay {
+  position: absolute;
+  bottom: var(--space-md);
+  right: var(--space-md);
+  background: var(--color-bg-panel);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  z-index: var(--z-hud);
+  transition: opacity 0.3s ease;
+  max-width: 200px;
+}
+
+.controls-overlay-title {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  margin-bottom: var(--space-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.control-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+  gap: var(--space-sm);
+}
+
+.control-key {
+  font-family: var(--font-mono);
+  color: var(--color-gold);
+  font-weight: bold;
+  min-width: 40px;
+}
+
+.control-desc {
+  flex: 1;
+  text-align: right;
+}
+
+/* Spark Balance Animation */
+.spark-balance {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.spark-balance.changed {
+  animation: sparkPulse 0.5s ease;
+}
+
+@keyframes sparkPulse {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.3); color: var(--color-gold); }
+  100% { transform: scale(1); }
+}
+
+/* Status Effect Indicators */
+.status-effects {
+  position: absolute;
+  top: var(--space-md);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-sm);
+  z-index: var(--z-hud);
+  pointer-events: none;
+}
+
+.status-effect {
+  width: 32px;
+  height: 32px;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  animation: statusPop 0.3s ease;
+}
+
+@keyframes statusPop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Day/Night Overlay */
+.daynight-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: background 5s ease;
+}
+
+.daynight-overlay.dawn {
+  background: rgba(244, 164, 96, 0.05);
+}
+
+.daynight-overlay.day {
+  background: transparent;
+}
+
+.daynight-overlay.dusk {
+  background: rgba(139, 105, 20, 0.08);
+}
+
+.daynight-overlay.night {
+  background: rgba(26, 26, 46, 0.15);
+}
+
+/* Zone Transition Overlay */
+.zone-transition {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  pointer-events: none;
+  animation: zoneTransition 1.5s ease-in-out;
+}
+
+.zone-transition-name {
+  font-family: var(--font-main);
+  font-size: var(--font-size-xxl);
+  color: var(--color-gold);
+  text-shadow: 0 0 20px rgba(218, 165, 32, 0.5);
+  letter-spacing: 0.2em;
+}
+
+@keyframes zoneTransition {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .chat-panel {
@@ -2890,6 +3278,697 @@ html, body {
   exports.getItemData = getItemData;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Inventory = {}));
+
+
+// trading.js
+/**
+ * ZION Trading System - Player-to-Player Trading
+ * Peer-to-peer item and Spark trading with confirmation flow
+ */
+
+(function(exports) {
+  'use strict';
+
+  // Import references
+  const Protocol = typeof require !== 'undefined' ? require('./protocol') : window.Protocol;
+  const Inventory = typeof require !== 'undefined' ? require('./inventory') : window.Inventory;
+  const Economy = typeof require !== 'undefined' ? require('./economy') : window.Economy;
+
+  // Active trades by trade ID
+  const activeTrades = new Map();
+
+  // Trade invitations (pending requests)
+  const pendingInvitations = new Map();
+
+  let tradeCounter = 0;
+  let messageCallback = null;
+
+  /**
+   * Initialize trading system
+   * @param {Function} onMessage - Callback to send trade protocol messages
+   */
+  function initTrading(onMessage) {
+    messageCallback = onMessage;
+    console.log('Trading system initialized');
+  }
+
+  /**
+   * Request trade with another player
+   * @param {string} fromPlayerId - Initiating player ID
+   * @param {string} toPlayerId - Target player ID
+   * @param {Object} position - Position for protocol message
+   * @returns {Object} {success: boolean, tradeId?: string}
+   */
+  function requestTrade(fromPlayerId, toPlayerId, position) {
+    if (fromPlayerId === toPlayerId) {
+      return { success: false, message: 'Cannot trade with yourself' };
+    }
+
+    // Check if already in a trade with this player
+    for (const [tradeId, trade] of activeTrades.entries()) {
+      if ((trade.player1.id === fromPlayerId && trade.player2.id === toPlayerId) ||
+          (trade.player1.id === toPlayerId && trade.player2.id === fromPlayerId)) {
+        return { success: false, message: 'Already in a trade with this player' };
+      }
+    }
+
+    const tradeId = `trade_${tradeCounter++}_${Date.now()}`;
+
+    // Create pending invitation
+    pendingInvitations.set(tradeId, {
+      id: tradeId,
+      from: fromPlayerId,
+      to: toPlayerId,
+      timestamp: Date.now()
+    });
+
+    // Send trade offer message
+    if (messageCallback) {
+      const msg = Protocol.create.trade_offer(fromPlayerId, {
+        tradeId: tradeId,
+        targetPlayer: toPlayerId
+      }, { position: position });
+      messageCallback(msg);
+    }
+
+    return { success: true, tradeId: tradeId };
+  }
+
+  /**
+   * Accept trade request
+   * @param {string} tradeId - Trade ID
+   * @param {string} playerId - Accepting player ID
+   * @param {Object} position - Position for protocol message
+   * @returns {Object} {success: boolean, trade?: Object}
+   */
+  function acceptTrade(tradeId, playerId, position) {
+    const invitation = pendingInvitations.get(tradeId);
+
+    if (!invitation) {
+      return { success: false, message: 'Trade invitation not found' };
+    }
+
+    if (invitation.to !== playerId) {
+      return { success: false, message: 'Not the intended recipient' };
+    }
+
+    // Create trade session
+    const trade = {
+      id: tradeId,
+      player1: {
+        id: invitation.from,
+        items: [], // Array of {slot: number, itemId: string, count: number}
+        spark: 0,
+        ready: false,
+        confirmed: false
+      },
+      player2: {
+        id: invitation.to,
+        items: [],
+        spark: 0,
+        ready: false,
+        confirmed: false
+      },
+      status: 'active', // active, cancelled, completed
+      timestamp: Date.now()
+    };
+
+    activeTrades.set(tradeId, trade);
+    pendingInvitations.delete(tradeId);
+
+    // Send acceptance message
+    if (messageCallback) {
+      const msg = Protocol.create.trade_accept(playerId, {
+        tradeId: tradeId
+      }, { position: position });
+      messageCallback(msg);
+    }
+
+    return { success: true, trade: trade };
+  }
+
+  /**
+   * Decline trade request
+   * @param {string} tradeId - Trade ID
+   * @param {string} playerId - Declining player ID
+   * @param {Object} position - Position for protocol message
+   * @returns {Object} {success: boolean}
+   */
+  function declineTrade(tradeId, playerId, position) {
+    const invitation = pendingInvitations.get(tradeId);
+
+    if (!invitation) {
+      return { success: false, message: 'Trade invitation not found' };
+    }
+
+    if (invitation.to !== playerId) {
+      return { success: false, message: 'Not the intended recipient' };
+    }
+
+    pendingInvitations.delete(tradeId);
+
+    // Send decline message
+    if (messageCallback) {
+      const msg = Protocol.create.trade_decline(playerId, {
+        tradeId: tradeId
+      }, { position: position });
+      messageCallback(msg);
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Add item to trade offer
+   * @param {string} tradeId - Trade ID
+   * @param {string} playerId - Player adding item
+   * @param {number} itemSlot - Inventory slot index
+   * @param {Object} inventory - Player's inventory
+   * @param {Object} position - Position for protocol message
+   * @returns {Object} {success: boolean}
+   */
+  function addItemToTrade(tradeId, playerId, itemSlot, inventory, position) {
+    const trade = activeTrades.get(tradeId);
+
+    if (!trade) {
+      return { success: false, message: 'Trade not found' };
+    }
+
+    if (trade.status !== 'active') {
+      return { success: false, message: 'Trade is not active' };
+    }
+
+    const player = trade.player1.id === playerId ? trade.player1 : trade.player2;
+
+    if (!player || player.id !== playerId) {
+      return { success: false, message: 'Not part of this trade' };
+    }
+
+    // Check if already at max items (6 slots)
+    if (player.items.length >= 6) {
+      return { success: false, message: 'Trade slots full (max 6 items)' };
+    }
+
+    // Verify item exists in inventory
+    const item = inventory.slots[itemSlot];
+    if (!item) {
+      return { success: false, message: 'No item in that slot' };
+    }
+
+    // Check if already added
+    if (player.items.find(i => i.slot === itemSlot)) {
+      return { success: false, message: 'Item already in trade' };
+    }
+
+    // Add to trade offer
+    player.items.push({
+      slot: itemSlot,
+      itemId: item.itemId,
+      count: item.count
+    });
+
+    // Reset ready status when trade changes
+    player.ready = false;
+    (player === trade.player1 ? trade.player2 : trade.player1).ready = false;
+
+    // Broadcast update
+    broadcastTradeUpdate(trade, position);
+
+    return { success: true };
+  }
+
+  /**
+   * Remove item from trade offer
+   * @param {string} tradeId - Trade ID
+   * @param {string} playerId - Player removing item
+   * @param {number} tradeSlot - Trade slot index (0-5)
+   * @param {Object} position - Position for protocol message
+   * @returns {Object} {success: boolean}
+   */
+  function removeItemFromTrade(tradeId, playerId, tradeSlot, position) {
+    const trade = activeTrades.get(tradeId);
+
+    if (!trade) {
+      return { success: false, message: 'Trade not found' };
+    }
+
+    if (trade.status !== 'active') {
+      return { success: false, message: 'Trade is not active' };
+    }
+
+    const player = trade.player1.id === playerId ? trade.player1 : trade.player2;
+
+    if (!player || player.id !== playerId) {
+      return { success: false, message: 'Not part of this trade' };
+    }
+
+    if (tradeSlot < 0 || tradeSlot >= player.items.length) {
+      return { success: false, message: 'Invalid trade slot' };
+    }
+
+    // Remove item
+    player.items.splice(tradeSlot, 1);
+
+    // Reset ready status
+    player.ready = false;
+    (player === trade.player1 ? trade.player2 : trade.player1).ready = false;
+
+    // Broadcast update
+    broadcastTradeUpdate(trade, position);
+
+    return { success: true };
+  }
+
+  /**
+   * Set Spark amount in trade offer
+   * @param {string} tradeId - Trade ID
+   * @param {string} playerId - Player setting Spark
+   * @param {number} amount - Spark amount
+   * @param {Object} ledger - Economy ledger to verify balance
+   * @param {Object} position - Position for protocol message
+   * @returns {Object} {success: boolean}
+   */
+  function setSparkOffer(tradeId, playerId, amount, ledger, position) {
+    const trade = activeTrades.get(tradeId);
+
+    if (!trade) {
+      return { success: false, message: 'Trade not found' };
+    }
+
+    if (trade.status !== 'active') {
+      return { success: false, message: 'Trade is not active' };
+    }
+
+    const player = trade.player1.id === playerId ? trade.player1 : trade.player2;
+
+    if (!player || player.id !== playerId) {
+      return { success: false, message: 'Not part of this trade' };
+    }
+
+    if (amount < 0) {
+      return { success: false, message: 'Amount must be non-negative' };
+    }
+
+    // Verify player has enough Spark
+    if (Economy && ledger) {
+      const balance = Economy.getBalance(ledger, playerId);
+      if (balance < amount) {
+        return { success: false, message: 'Insufficient Spark' };
+      }
+    }
+
+    player.spark = amount;
+
+    // Reset ready status
+    player.ready = false;
+    (player === trade.player1 ? trade.player2 : trade.player1).ready = false;
+
+    // Broadcast update
+    broadcastTradeUpdate(trade, position);
+
+    return { success: true };
+  }
+
+  /**
+   * Set ready status (lock in offer)
+   * @param {string} tradeId - Trade ID
+   * @param {string} playerId - Player setting ready
+   * @param {Object} position - Position for protocol message
+   * @returns {Object} {success: boolean, bothReady: boolean}
+   */
+  function setReady(tradeId, playerId, position) {
+    const trade = activeTrades.get(tradeId);
+
+    if (!trade) {
+      return { success: false, message: 'Trade not found' };
+    }
+
+    if (trade.status !== 'active') {
+      return { success: false, message: 'Trade is not active' };
+    }
+
+    const player = trade.player1.id === playerId ? trade.player1 : trade.player2;
+
+    if (!player || player.id !== playerId) {
+      return { success: false, message: 'Not part of this trade' };
+    }
+
+    player.ready = true;
+
+    // Broadcast update
+    broadcastTradeUpdate(trade, position);
+
+    const bothReady = trade.player1.ready && trade.player2.ready;
+    return { success: true, bothReady: bothReady };
+  }
+
+  /**
+   * Confirm trade (execute if both confirmed)
+   * @param {string} tradeId - Trade ID
+   * @param {string} playerId - Player confirming
+   * @param {Object} inventory1 - Player 1's inventory
+   * @param {Object} inventory2 - Player 2's inventory
+   * @param {Object} ledger - Economy ledger
+   * @param {Object} position - Position for protocol message
+   * @returns {Object} {success: boolean, executed?: boolean}
+   */
+  function confirmTrade(tradeId, playerId, inventory1, inventory2, ledger, position) {
+    const trade = activeTrades.get(tradeId);
+
+    if (!trade) {
+      return { success: false, message: 'Trade not found' };
+    }
+
+    if (trade.status !== 'active') {
+      return { success: false, message: 'Trade is not active' };
+    }
+
+    // Both players must be ready before confirming
+    if (!trade.player1.ready || !trade.player2.ready) {
+      return { success: false, message: 'Both players must be ready first' };
+    }
+
+    const player = trade.player1.id === playerId ? trade.player1 : trade.player2;
+
+    if (!player || player.id !== playerId) {
+      return { success: false, message: 'Not part of this trade' };
+    }
+
+    player.confirmed = true;
+
+    // Check if both confirmed - execute trade
+    if (trade.player1.confirmed && trade.player2.confirmed) {
+      const result = executeTrade(trade, inventory1, inventory2, ledger);
+
+      if (result.success) {
+        trade.status = 'completed';
+
+        // Send completion message
+        if (messageCallback) {
+          const msg = Protocol.create.trade_accept(playerId, {
+            tradeId: tradeId,
+            status: 'completed'
+          }, { position: position });
+          messageCallback(msg);
+        }
+
+        // Clean up
+        activeTrades.delete(tradeId);
+
+        return { success: true, executed: true };
+      } else {
+        // Trade execution failed, reset confirmations
+        trade.player1.confirmed = false;
+        trade.player2.confirmed = false;
+        return { success: false, message: result.message };
+      }
+    }
+
+    // Send confirmation message
+    if (messageCallback) {
+      const msg = Protocol.create.trade_accept(playerId, {
+        tradeId: tradeId,
+        confirmed: true
+      }, { position: position });
+      messageCallback(msg);
+    }
+
+    return { success: true, executed: false };
+  }
+
+  /**
+   * Cancel trade at any point
+   * @param {string} tradeId - Trade ID
+   * @param {string} playerId - Player cancelling
+   * @param {Object} position - Position for protocol message
+   * @returns {Object} {success: boolean}
+   */
+  function cancelTrade(tradeId, playerId, position) {
+    const trade = activeTrades.get(tradeId);
+
+    if (!trade) {
+      // Check pending invitations
+      const invitation = pendingInvitations.get(tradeId);
+      if (invitation) {
+        pendingInvitations.delete(tradeId);
+        return { success: true };
+      }
+      return { success: false, message: 'Trade not found' };
+    }
+
+    if (trade.player1.id !== playerId && trade.player2.id !== playerId) {
+      return { success: false, message: 'Not part of this trade' };
+    }
+
+    trade.status = 'cancelled';
+
+    // Send cancellation message
+    if (messageCallback) {
+      const msg = Protocol.create.trade_decline(playerId, {
+        tradeId: tradeId,
+        reason: 'cancelled'
+      }, { position: position });
+      messageCallback(msg);
+    }
+
+    activeTrades.delete(tradeId);
+
+    return { success: true };
+  }
+
+  /**
+   * Execute trade atomically (swap items and Spark)
+   * @param {Object} trade - Trade object
+   * @param {Object} inventory1 - Player 1's inventory
+   * @param {Object} inventory2 - Player 2's inventory
+   * @param {Object} ledger - Economy ledger
+   * @returns {Object} {success: boolean}
+   */
+  function executeTrade(trade, inventory1, inventory2, ledger) {
+    if (!Inventory || !Economy) {
+      return { success: false, message: 'Trading systems not available' };
+    }
+
+    // Verify both players have the items and Spark they're offering
+
+    // Check player 1's items
+    for (const tradeItem of trade.player1.items) {
+      const invItem = inventory1.slots[tradeItem.slot];
+      if (!invItem || invItem.itemId !== tradeItem.itemId || invItem.count < tradeItem.count) {
+        return { success: false, message: 'Player 1 no longer has offered items' };
+      }
+    }
+
+    // Check player 2's items
+    for (const tradeItem of trade.player2.items) {
+      const invItem = inventory2.slots[tradeItem.slot];
+      if (!invItem || invItem.itemId !== tradeItem.itemId || invItem.count < tradeItem.count) {
+        return { success: false, message: 'Player 2 no longer has offered items' };
+      }
+    }
+
+    // Check Spark balances
+    const balance1 = Economy.getBalance(ledger, trade.player1.id);
+    const balance2 = Economy.getBalance(ledger, trade.player2.id);
+
+    if (balance1 < trade.player1.spark) {
+      return { success: false, message: 'Player 1 insufficient Spark' };
+    }
+    if (balance2 < trade.player2.spark) {
+      return { success: false, message: 'Player 2 insufficient Spark' };
+    }
+
+    // Verify both players have inventory space
+    // Count empty slots needed
+    const p1NeedsSlots = trade.player2.items.length - trade.player1.items.length;
+    const p2NeedsSlots = trade.player1.items.length - trade.player2.items.length;
+
+    const p1EmptySlots = inventory1.slots.filter(s => s === null).length;
+    const p2EmptySlots = inventory2.slots.filter(s => s === null).length;
+
+    if (p1NeedsSlots > p1EmptySlots) {
+      return { success: false, message: 'Player 1 insufficient inventory space' };
+    }
+    if (p2NeedsSlots > p2EmptySlots) {
+      return { success: false, message: 'Player 2 insufficient inventory space' };
+    }
+
+    // Execute atomically:
+
+    // 1. Remove items from both players
+    for (const tradeItem of trade.player1.items) {
+      Inventory.removeItem(inventory1, tradeItem.itemId, tradeItem.count);
+    }
+    for (const tradeItem of trade.player2.items) {
+      Inventory.removeItem(inventory2, tradeItem.itemId, tradeItem.count);
+    }
+
+    // 2. Add items to other player
+    for (const tradeItem of trade.player1.items) {
+      Inventory.addItem(inventory2, tradeItem.itemId, tradeItem.count);
+    }
+    for (const tradeItem of trade.player2.items) {
+      Inventory.addItem(inventory1, tradeItem.itemId, tradeItem.count);
+    }
+
+    // 3. Transfer Spark
+    if (trade.player1.spark > 0) {
+      Economy.transferSpark(ledger, trade.player1.id, trade.player2.id, trade.player1.spark);
+    }
+    if (trade.player2.spark > 0) {
+      Economy.transferSpark(ledger, trade.player2.id, trade.player1.id, trade.player2.spark);
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Broadcast trade update message
+   * @param {Object} trade - Trade object
+   * @param {Object} position - Position for protocol message
+   */
+  function broadcastTradeUpdate(trade, position) {
+    if (!messageCallback) return;
+
+    const msg = Protocol.create.trade_offer(trade.player1.id, {
+      tradeId: trade.id,
+      player1: {
+        items: trade.player1.items,
+        spark: trade.player1.spark,
+        ready: trade.player1.ready,
+        confirmed: trade.player1.confirmed
+      },
+      player2: {
+        items: trade.player2.items,
+        spark: trade.player2.spark,
+        ready: trade.player2.ready,
+        confirmed: trade.player2.confirmed
+      },
+      status: trade.status
+    }, { position: position });
+
+    messageCallback(msg);
+  }
+
+  /**
+   * Handle incoming trade protocol message
+   * @param {Object} msg - Protocol message
+   * @returns {Object} {type: string, data: Object}
+   */
+  function handleTradeMessage(msg) {
+    if (!msg || !msg.type || !msg.payload) {
+      return null;
+    }
+
+    switch (msg.type) {
+      case 'trade_offer':
+        if (msg.payload.targetPlayer) {
+          // New trade request
+          return {
+            type: 'trade_request',
+            data: {
+              tradeId: msg.payload.tradeId,
+              from: msg.from,
+              to: msg.payload.targetPlayer
+            }
+          };
+        } else {
+          // Trade update
+          return {
+            type: 'trade_update',
+            data: {
+              tradeId: msg.payload.tradeId,
+              player1: msg.payload.player1,
+              player2: msg.payload.player2,
+              status: msg.payload.status
+            }
+          };
+        }
+
+      case 'trade_accept':
+        if (msg.payload.status === 'completed') {
+          return {
+            type: 'trade_complete',
+            data: {
+              tradeId: msg.payload.tradeId
+            }
+          };
+        } else if (msg.payload.confirmed) {
+          return {
+            type: 'trade_confirm',
+            data: {
+              tradeId: msg.payload.tradeId,
+              playerId: msg.from
+            }
+          };
+        } else {
+          return {
+            type: 'trade_accepted',
+            data: {
+              tradeId: msg.payload.tradeId,
+              playerId: msg.from
+            }
+          };
+        }
+
+      case 'trade_decline':
+        return {
+          type: 'trade_cancelled',
+          data: {
+            tradeId: msg.payload.tradeId,
+            reason: msg.payload.reason || 'declined'
+          }
+        };
+
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Get active trade for a player
+   * @param {string} playerId - Player ID
+   * @returns {Object|null} Trade object or null
+   */
+  function getActiveTrade(playerId) {
+    for (const [tradeId, trade] of activeTrades.entries()) {
+      if (trade.player1.id === playerId || trade.player2.id === playerId) {
+        return trade;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Get pending invitation for a player
+   * @param {string} playerId - Player ID
+   * @returns {Object|null} Invitation object or null
+   */
+  function getPendingInvitation(playerId) {
+    for (const [tradeId, invitation] of pendingInvitations.entries()) {
+      if (invitation.to === playerId) {
+        return invitation;
+      }
+    }
+    return null;
+  }
+
+  // Export public API
+  exports.initTrading = initTrading;
+  exports.requestTrade = requestTrade;
+  exports.acceptTrade = acceptTrade;
+  exports.declineTrade = declineTrade;
+  exports.addItemToTrade = addItemToTrade;
+  exports.removeItemFromTrade = removeItemFromTrade;
+  exports.setSparkOffer = setSparkOffer;
+  exports.setReady = setReady;
+  exports.confirmTrade = confirmTrade;
+  exports.cancelTrade = cancelTrade;
+  exports.handleTradeMessage = handleTradeMessage;
+  exports.getActiveTrade = getActiveTrade;
+  exports.getPendingInvitation = getPendingInvitation;
+
+})(typeof module !== 'undefined' ? module.exports : (window.Trading = {}));
 
 
 // state.js
@@ -9770,6 +10849,347 @@ html, body {
       }
     }
 
+    // ---- LANDMARKS: unique structures per zone ----
+    if (Models.createLandmark) {
+      // Nexus: fountain (center), 4 obelisks (compass points), 2 signposts
+      var fountain = Models.createLandmark('fountain', 1.2);
+      fountain.position.set(nz.cx, terrainHeight(nz.cx, nz.cz), nz.cz);
+      scene.add(fountain);
+      animatedObjects.push({ mesh: fountain, type: 'landmark', params: {} });
+
+      for (var no = 0; no < 4; no++) {
+        var noa = (no / 4) * Math.PI * 2;
+        var nox = nz.cx + Math.cos(noa) * 35;
+        var noz = nz.cz + Math.sin(noa) * 35;
+        var obelisk = Models.createLandmark('obelisk', 1.0);
+        obelisk.position.set(nox, terrainHeight(nox, noz), noz);
+        scene.add(obelisk);
+        animatedObjects.push({ mesh: obelisk, type: 'landmark', params: {} });
+      }
+
+      for (var ns = 0; ns < 2; ns++) {
+        var nsa = (ns / 2) * Math.PI * 2 + Math.PI / 4;
+        var nsx = nz.cx + Math.cos(nsa) * 28;
+        var nsz = nz.cz + Math.sin(nsa) * 28;
+        var signpost = Models.createLandmark('signpost', 1.0);
+        signpost.position.set(nsx, terrainHeight(nsx, nsz), nsz);
+        signpost.rotation.y = nsa;
+        scene.add(signpost);
+      }
+
+      // Gardens: gazebo (center-ish), 4 campfires along paths, 6 flower beds, 4 herb patches
+      var gazebo = Models.createLandmark('gazebo', 1.0);
+      gazebo.position.set(gz.cx + 10, terrainHeight(gz.cx + 10, gz.cz + 10), gz.cz + 10);
+      scene.add(gazebo);
+
+      for (var gc = 0; gc < 4; gc++) {
+        var gca = (gc / 4) * Math.PI * 2 + Math.PI / 8;
+        var gcx = gz.cx + Math.cos(gca) * 40;
+        var gcz = gz.cz + Math.sin(gca) * 40;
+        var campfire = Models.createLandmark('campfire', 1.0);
+        campfire.position.set(gcx, terrainHeight(gcx, gcz), gcz);
+        scene.add(campfire);
+        animatedObjects.push({ mesh: campfire, type: 'landmark', params: {} });
+      }
+
+      for (var gf = 0; gf < 6; gf++) {
+        var gfa = hash2D(gf, 720) * Math.PI * 2;
+        var gfr = 20 + hash2D(gf, 721) * 35;
+        var gfx = gz.cx + Math.cos(gfa) * gfr;
+        var gfz = gz.cz + Math.sin(gfa) * gfr;
+        var flowerBed = Models.createResourceNode('flower_bed', 1.0);
+        flowerBed.position.set(gfx, terrainHeight(gfx, gfz), gfz);
+        flowerBed.rotation.y = hash2D(gf, 722) * Math.PI * 2;
+        scene.add(flowerBed);
+      }
+
+      for (var gh = 0; gh < 4; gh++) {
+        var gha = hash2D(gh, 730) * Math.PI * 2;
+        var ghr = 25 + hash2D(gh, 731) * 30;
+        var ghx = gz.cx + Math.cos(gha) * ghr;
+        var ghz = gz.cz + Math.sin(gha) * ghr;
+        var herbPatch = Models.createResourceNode('herb_patch', 1.0);
+        herbPatch.position.set(ghx, terrainHeight(ghx, ghz), ghz);
+        herbPatch.rotation.y = hash2D(gh, 732) * Math.PI * 2;
+        scene.add(herbPatch);
+      }
+
+      // Wilds: 2 campfires (explorer camps), 3 signposts, 8 ore veins, 4 wood piles
+      for (var wc = 0; wc < 2; wc++) {
+        var wca = hash2D(wc, 740) * Math.PI * 2;
+        var wcr = 30 + hash2D(wc, 741) * 25;
+        var wcx = wz.cx + Math.cos(wca) * wcr;
+        var wcz = wz.cz + Math.sin(wca) * wcr;
+        var wcampfire = Models.createLandmark('campfire', 1.0);
+        wcampfire.position.set(wcx, terrainHeight(wcx, wcz), wcz);
+        scene.add(wcampfire);
+        animatedObjects.push({ mesh: wcampfire, type: 'landmark', params: {} });
+      }
+
+      for (var ws = 0; ws < 3; ws++) {
+        var wsa = hash2D(ws, 750) * Math.PI * 2;
+        var wsr = 35 + hash2D(ws, 751) * 30;
+        var wsx = wz.cx + Math.cos(wsa) * wsr;
+        var wsz = wz.cz + Math.sin(wsa) * wsr;
+        var wsignpost = Models.createLandmark('signpost', 1.0);
+        wsignpost.position.set(wsx, terrainHeight(wsx, wsz), wsz);
+        wsignpost.rotation.y = wsa;
+        scene.add(wsignpost);
+      }
+
+      for (var wo = 0; wo < 8; wo++) {
+        var woa = hash2D(wo, 760) * Math.PI * 2;
+        var wor = 15 + hash2D(wo, 761) * 50;
+        var wox = wz.cx + Math.cos(woa) * wor;
+        var woz = wz.cz + Math.sin(woa) * wor;
+        var oreVein = Models.createResourceNode('ore_vein', 0.8 + hash2D(wo, 762) * 0.5);
+        oreVein.position.set(wox, terrainHeight(wox, woz), woz);
+        oreVein.rotation.y = hash2D(wo, 763) * Math.PI * 2;
+        scene.add(oreVein);
+      }
+
+      for (var ww = 0; ww < 4; ww++) {
+        var wwa = hash2D(ww, 770) * Math.PI * 2;
+        var wwr = 20 + hash2D(ww, 771) * 40;
+        var wwx = wz.cx + Math.cos(wwa) * wwr;
+        var wwz = wz.cz + Math.sin(wwa) * wwr;
+        var woodPile = Models.createResourceNode('wood_pile', 1.0);
+        woodPile.position.set(wwx, terrainHeight(wwx, wwz), wwz);
+        woodPile.rotation.y = hash2D(ww, 772) * Math.PI * 2;
+        scene.add(woodPile);
+      }
+
+      // Athenaeum: 2 statues (flanking entrance), 4 obelisks (mystical markers)
+      for (var ats = 0; ats < 2; ats++) {
+        var atsa = (ats / 2) * Math.PI * 2;
+        var atsx = atz.cx + Math.cos(atsa) * 25;
+        var atsz = atz.cz + Math.sin(atsa) * 25;
+        var statue = Models.createLandmark('statue', 1.1);
+        statue.position.set(atsx, terrainHeight(atsx, atsz), atsz);
+        statue.rotation.y = atsa + Math.PI;
+        scene.add(statue);
+      }
+
+      for (var ato = 0; ato < 4; ato++) {
+        var atoa = (ato / 4) * Math.PI * 2 + Math.PI / 8;
+        var atox = atz.cx + Math.cos(atoa) * 35;
+        var atoz = atz.cz + Math.sin(atoa) * 35;
+        var atobelisk = Models.createLandmark('obelisk', 0.9);
+        atobelisk.position.set(atox, terrainHeight(atox, atoz), atoz);
+        scene.add(atobelisk);
+        animatedObjects.push({ mesh: atobelisk, type: 'landmark', params: {} });
+      }
+
+      // Studio: 3 crystal clusters (inspiration points), 1 gazebo
+      for (var sc = 0; sc < 3; sc++) {
+        var sca = hash2D(sc, 780) * Math.PI * 2;
+        var scr = 25 + hash2D(sc, 781) * 20;
+        var scx = sz.cx + Math.cos(sca) * scr;
+        var scz = sz.cz + Math.sin(sca) * scr;
+        var crystalCluster = Models.createResourceNode('crystal_cluster', 0.9 + hash2D(sc, 782) * 0.4);
+        crystalCluster.position.set(scx, terrainHeight(scx, scz), scz);
+        crystalCluster.rotation.y = hash2D(sc, 783) * Math.PI * 2;
+        scene.add(crystalCluster);
+      }
+
+      var sgazebo = Models.createLandmark('gazebo', 0.9);
+      sgazebo.position.set(sz.cx + 15, terrainHeight(sz.cx + 15, sz.cz - 15), sz.cz - 15);
+      scene.add(sgazebo);
+
+      // Agora: 6 signposts, 2 campfires (merchant gathering), 3 flower beds
+      for (var ags = 0; ags < 6; ags++) {
+        var agsa = (ags / 6) * Math.PI * 2;
+        var agsx = az.cx + Math.cos(agsa) * 30;
+        var agsz = az.cz + Math.sin(agsa) * 30;
+        var agsignpost = Models.createLandmark('signpost', 1.0);
+        agsignpost.position.set(agsx, terrainHeight(agsx, agsz), agsz);
+        agsignpost.rotation.y = agsa;
+        scene.add(agsignpost);
+      }
+
+      for (var agc = 0; agc < 2; agc++) {
+        var agca = (agc / 2) * Math.PI * 2 + Math.PI / 4;
+        var agcx = az.cx + Math.cos(agca) * 20;
+        var agcz = az.cz + Math.sin(agca) * 20;
+        var agcampfire = Models.createLandmark('campfire', 1.0);
+        agcampfire.position.set(agcx, terrainHeight(agcx, agcz), agcz);
+        scene.add(agcampfire);
+        animatedObjects.push({ mesh: agcampfire, type: 'landmark', params: {} });
+      }
+
+      for (var agf = 0; agf < 3; agf++) {
+        var agfa = hash2D(agf, 790) * Math.PI * 2;
+        var agfr = 15 + hash2D(agf, 791) * 20;
+        var agfx = az.cx + Math.cos(agfa) * agfr;
+        var agfz = az.cz + Math.sin(agfa) * agfr;
+        var agflowerBed = Models.createResourceNode('flower_bed', 0.9);
+        agflowerBed.position.set(agfx, terrainHeight(agfx, agfz), agfz);
+        agflowerBed.rotation.y = hash2D(agf, 792) * Math.PI * 2;
+        scene.add(agflowerBed);
+      }
+
+      // Commons: 2 gazebos (gathering areas), 4 wood piles, 6 ore veins
+      for (var cg = 0; cg < 2; cg++) {
+        var cga = (cg / 2) * Math.PI * 2 + Math.PI / 3;
+        var cgx = cz.cx + Math.cos(cga) * 30;
+        var cgz = cz.cz + Math.sin(cga) * 30;
+        var cgazebo = Models.createLandmark('gazebo', 0.95);
+        cgazebo.position.set(cgx, terrainHeight(cgx, cgz), cgz);
+        scene.add(cgazebo);
+      }
+
+      for (var cw = 0; cw < 4; cw++) {
+        var cwa = hash2D(cw, 800) * Math.PI * 2;
+        var cwr = 20 + hash2D(cw, 801) * 25;
+        var cwx = cz.cx + Math.cos(cwa) * cwr;
+        var cwz = cz.cz + Math.sin(cwa) * cwr;
+        var cwoodPile = Models.createResourceNode('wood_pile', 1.0);
+        cwoodPile.position.set(cwx, terrainHeight(cwx, cwz), cwz);
+        cwoodPile.rotation.y = hash2D(cw, 802) * Math.PI * 2;
+        scene.add(cwoodPile);
+      }
+
+      for (var co = 0; co < 6; co++) {
+        var coa = hash2D(co, 810) * Math.PI * 2;
+        var cor = 18 + hash2D(co, 811) * 28;
+        var cox = cz.cx + Math.cos(coa) * cor;
+        var coz = cz.cz + Math.sin(coa) * cor;
+        var coreVein = Models.createResourceNode('ore_vein', 0.9 + hash2D(co, 812) * 0.4);
+        coreVein.position.set(cox, terrainHeight(cox, coz), coz);
+        coreVein.rotation.y = hash2D(co, 813) * Math.PI * 2;
+        scene.add(coreVein);
+      }
+
+      // Arena: 2 statues (champion statues), 4 campfires
+      for (var ars = 0; ars < 2; ars++) {
+        var arsa = (ars / 2) * Math.PI * 2 + Math.PI / 2;
+        var arsx = arz.cx + Math.cos(arsa) * 28;
+        var arsz = arz.cz + Math.sin(arsa) * 28;
+        var arstatue = Models.createLandmark('statue', 1.2);
+        arstatue.position.set(arsx, terrainHeight(arsx, arsz), arsz);
+        arstatue.rotation.y = arsa + Math.PI;
+        scene.add(arstatue);
+      }
+
+      for (var arc = 0; arc < 4; arc++) {
+        var arca = (arc / 4) * Math.PI * 2;
+        var arcx = arz.cx + Math.cos(arca) * 32;
+        var arcz = arz.cz + Math.sin(arca) * 32;
+        var arcampfire = Models.createLandmark('campfire', 1.0);
+        arcampfire.position.set(arcx, terrainHeight(arcx, arcz), arcz);
+        scene.add(arcampfire);
+        animatedObjects.push({ mesh: arcampfire, type: 'landmark', params: {} });
+      }
+    }
+
+    // ---- WILDLIFE: creatures scattered by zone ----
+    if (Models.createWildlife) {
+      // Gardens: 6 rabbits, 10 fireflies
+      for (var gr = 0; gr < 6; gr++) {
+        var gra = hash2D(gr, 820) * Math.PI * 2;
+        var grr = 15 + hash2D(gr, 821) * 40;
+        var grx = gz.cx + Math.cos(gra) * grr;
+        var grz = gz.cz + Math.sin(gra) * grr;
+        var gry = terrainHeight(grx, grz);
+        var rabbit = Models.createWildlife('rabbit');
+        rabbit.position.set(grx, gry, grz);
+        rabbit.rotation.y = hash2D(gr, 822) * Math.PI * 2;
+        scene.add(rabbit);
+        animatedObjects.push({ mesh: rabbit, type: 'creature', params: { speed: 0.8 + hash2D(gr, 823) * 0.4 } });
+      }
+
+      for (var gfl = 0; gfl < 10; gfl++) {
+        var gfla = hash2D(gfl, 830) * Math.PI * 2;
+        var gflr = 10 + hash2D(gfl, 831) * 50;
+        var gflx = gz.cx + Math.cos(gfla) * gflr;
+        var gflz = gz.cz + Math.sin(gfla) * gflr;
+        var gfly = terrainHeight(gflx, gflz) + 1.5 + hash2D(gfl, 832) * 1.5;
+        var firefly = Models.createWildlife('firefly');
+        firefly.position.set(gflx, gfly, gflz);
+        scene.add(firefly);
+        animatedObjects.push({ mesh: firefly, type: 'creature', params: { speed: 1.2 + hash2D(gfl, 833) * 0.6 } });
+      }
+
+      // Wilds: 4 deer, 6 rabbits, 15 fireflies, 4 frogs
+      for (var wd = 0; wd < 4; wd++) {
+        var wda = hash2D(wd, 840) * Math.PI * 2;
+        var wdr = 25 + hash2D(wd, 841) * 45;
+        var wdx = wz.cx + Math.cos(wda) * wdr;
+        var wdz = wz.cz + Math.sin(wda) * wdr;
+        var wdy = terrainHeight(wdx, wdz);
+        var deer = Models.createWildlife('deer');
+        deer.position.set(wdx, wdy, wdz);
+        deer.rotation.y = hash2D(wd, 842) * Math.PI * 2;
+        scene.add(deer);
+        animatedObjects.push({ mesh: deer, type: 'creature', params: { speed: 0.6 + hash2D(wd, 843) * 0.3 } });
+      }
+
+      for (var wr = 0; wr < 6; wr++) {
+        var wra = hash2D(wr, 850) * Math.PI * 2;
+        var wrr = 20 + hash2D(wr, 851) * 50;
+        var wrx = wz.cx + Math.cos(wra) * wrr;
+        var wrz = wz.cz + Math.sin(wra) * wrr;
+        var wry = terrainHeight(wrx, wrz);
+        var wrabbit = Models.createWildlife('rabbit');
+        wrabbit.position.set(wrx, wry, wrz);
+        wrabbit.rotation.y = hash2D(wr, 852) * Math.PI * 2;
+        scene.add(wrabbit);
+        animatedObjects.push({ mesh: wrabbit, type: 'creature', params: { speed: 0.8 + hash2D(wr, 853) * 0.4 } });
+      }
+
+      for (var wfl = 0; wfl < 15; wfl++) {
+        var wfla = hash2D(wfl, 860) * Math.PI * 2;
+        var wflr = 15 + hash2D(wfl, 861) * 60;
+        var wflx = wz.cx + Math.cos(wfla) * wflr;
+        var wflz = wz.cz + Math.sin(wfla) * wflr;
+        var wfly = terrainHeight(wflx, wflz) + 1.5 + hash2D(wfl, 862) * 1.5;
+        var wfirefly = Models.createWildlife('firefly');
+        wfirefly.position.set(wflx, wfly, wflz);
+        scene.add(wfirefly);
+        animatedObjects.push({ mesh: wfirefly, type: 'creature', params: { speed: 1.2 + hash2D(wfl, 863) * 0.6 } });
+      }
+
+      for (var wf = 0; wf < 4; wf++) {
+        var wfa = hash2D(wf, 870) * Math.PI * 2;
+        var wfr = 30 + hash2D(wf, 871) * 35;
+        var wfx = wz.cx + Math.cos(wfa) * wfr;
+        var wfz = wz.cz + Math.sin(wfa) * wfr;
+        var wfy = terrainHeight(wfx, wfz);
+        var frog = Models.createWildlife('frog');
+        frog.position.set(wfx, wfy, wfz);
+        frog.rotation.y = hash2D(wf, 872) * Math.PI * 2;
+        scene.add(frog);
+        animatedObjects.push({ mesh: frog, type: 'creature', params: { speed: 0.5 + hash2D(wf, 873) * 0.3 } });
+      }
+
+      // Commons: 3 rabbits
+      for (var cr = 0; cr < 3; cr++) {
+        var cra = hash2D(cr, 880) * Math.PI * 2;
+        var crr = 20 + hash2D(cr, 881) * 25;
+        var crx = cz.cx + Math.cos(cra) * crr;
+        var crz = cz.cz + Math.sin(cra) * crr;
+        var cry = terrainHeight(crx, crz);
+        var crabbit = Models.createWildlife('rabbit');
+        crabbit.position.set(crx, cry, crz);
+        crabbit.rotation.y = hash2D(cr, 882) * Math.PI * 2;
+        scene.add(crabbit);
+        animatedObjects.push({ mesh: crabbit, type: 'creature', params: { speed: 0.8 + hash2D(cr, 883) * 0.4 } });
+      }
+
+      // Nexus: 4 fireflies
+      for (var nfl = 0; nfl < 4; nfl++) {
+        var nfla = hash2D(nfl, 890) * Math.PI * 2;
+        var nflr = 15 + hash2D(nfl, 891) * 20;
+        var nflx = nz.cx + Math.cos(nfla) * nflr;
+        var nflz = nz.cz + Math.sin(nfla) * nflr;
+        var nfly = terrainHeight(nflx, nflz) + 1.5 + hash2D(nfl, 892) * 1.5;
+        var nfirefly = Models.createWildlife('firefly');
+        nfirefly.position.set(nflx, nfly, nflz);
+        scene.add(nfirefly);
+        animatedObjects.push({ mesh: nfirefly, type: 'creature', params: { speed: 1.2 + hash2D(nfl, 893) * 0.6 } });
+      }
+    }
+
     console.log('Environment populated with trees, rocks, furniture, and creatures');
   }
 
@@ -9785,6 +11205,9 @@ html, body {
 
     var scene = new THREE.Scene();
     createSky(scene);
+
+    // Add distance fog for atmospheric depth
+    scene.fog = new THREE.Fog(0x87ceeb, 150, 500);
 
     var camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
     camera.position.set(0, 15, 25);
@@ -10179,6 +11602,11 @@ html, body {
             // Fallback: simple bobbing motion
             obj.mesh.position.y += Math.sin(time * 0.003 * (p.speed || 1)) * 0.01;
             obj.mesh.rotation.y += deltaTime * (p.speed || 0.5);
+          }
+          break;
+        case 'landmark':
+          if (Models && Models.animateModel) {
+            Models.animateModel(obj.mesh, deltaTime, time);
           }
           break;
       }
@@ -11613,6 +13041,16 @@ html, body {
         if (!chatMode) {
           if (callbacks.onAction) {
             callbacks.onAction('toggle_quest_log', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 't':
+      case 'T':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('initiate_trade', {});
           }
           e.preventDefault();
         }
@@ -13211,6 +14649,312 @@ html, body {
     }, 2000);
   }
 
+  // ========================================================================
+  // TRADING SYSTEM UI
+  // ========================================================================
+
+  var tradeRequestEl = null;
+  var tradeWindowEl = null;
+  var currentTradeData = null;
+
+  /**
+   * Show trade request popup
+   * @param {string} fromPlayer - Player name requesting trade
+   * @param {string} tradeId - Trade ID
+   * @param {Function} onAccept - Callback when Accept clicked
+   * @param {Function} onDecline - Callback when Decline clicked
+   */
+  function showTradeRequest(fromPlayer, tradeId, onAccept, onDecline) {
+    if (typeof document === 'undefined') return;
+    hideTradeRequest(); // Remove any existing
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    tradeRequestEl = document.createElement('div');
+    tradeRequestEl.id = 'trade-request';
+    tradeRequestEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #ffa500;border-radius:12px;' +
+      'padding:20px;width:400px;pointer-events:auto;box-shadow:0 8px 32px rgba(0,0,0,0.8);z-index:300;';
+
+    var html = '<div style="font-size:20px;font-weight:bold;color:#ffa500;margin-bottom:12px;">Trade Request</div>' +
+      '<div style="font-size:16px;color:#fff;margin-bottom:16px;">' +
+      '<span style="color:#4af;font-weight:bold;">' + fromPlayer + '</span> wants to trade with you.' +
+      '</div>' +
+      '<div style="display:flex;gap:12px;justify-content:center;">' +
+      '<button id="trade-accept-btn" style="padding:10px 24px;background:#4f4;color:#000;border:none;' +
+      'border-radius:6px;font-weight:bold;font-size:14px;cursor:pointer;">Accept</button>' +
+      '<button id="trade-decline-btn" style="padding:10px 24px;background:rgba(255,255,255,0.1);color:#fff;' +
+      'border:1px solid #666;border-radius:6px;font-size:14px;cursor:pointer;">Decline</button></div>';
+
+    tradeRequestEl.innerHTML = html;
+    hud.appendChild(tradeRequestEl);
+
+    document.getElementById('trade-accept-btn').addEventListener('click', function() {
+      hideTradeRequest();
+      if (onAccept) onAccept(tradeId);
+    });
+
+    document.getElementById('trade-decline-btn').addEventListener('click', function() {
+      hideTradeRequest();
+      if (onDecline) onDecline(tradeId);
+    });
+  }
+
+  /**
+   * Hide trade request popup
+   */
+  function hideTradeRequest() {
+    if (tradeRequestEl && tradeRequestEl.parentNode) {
+      tradeRequestEl.parentNode.removeChild(tradeRequestEl);
+      tradeRequestEl = null;
+    }
+  }
+
+  /**
+   * Show trade window
+   * @param {Object} trade - Trade data object
+   * @param {string} localPlayerId - Local player's ID
+   * @param {Function} onAddItem - Callback(slotIndex)
+   * @param {Function} onRemoveItem - Callback(tradeSlot)
+   * @param {Function} onSetSpark - Callback(amount)
+   * @param {Function} onReady - Callback()
+   * @param {Function} onConfirm - Callback()
+   * @param {Function} onCancel - Callback()
+   */
+  function showTradeWindow(trade, localPlayerId, onAddItem, onRemoveItem, onSetSpark, onReady, onConfirm, onCancel) {
+    if (typeof document === 'undefined') return;
+    hideTradeWindow(); // Remove any existing
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    currentTradeData = { trade: trade, localPlayerId: localPlayerId };
+
+    tradeWindowEl = document.createElement('div');
+    tradeWindowEl.id = 'trade-window';
+    tradeWindowEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #ffa500;border-radius:12px;' +
+      'padding:20px;width:700px;pointer-events:auto;box-shadow:0 8px 32px rgba(0,0,0,0.8);z-index:300;';
+
+    tradeWindowEl.innerHTML = '<div style="font-size:20px;font-weight:bold;color:#ffa500;margin-bottom:16px;text-align:center;">Trade Window</div>' +
+      '<div id="trade-content"></div>';
+
+    hud.appendChild(tradeWindowEl);
+
+    // Store callbacks
+    tradeWindowEl._callbacks = { onAddItem, onRemoveItem, onSetSpark, onReady, onConfirm, onCancel };
+
+    // Update content
+    updateTradeWindow(trade, localPlayerId);
+  }
+
+  /**
+   * Update trade window with current trade state
+   * @param {Object} trade - Trade data object
+   * @param {string} localPlayerId - Local player's ID
+   */
+  function updateTradeWindow(trade, localPlayerId) {
+    if (!tradeWindowEl) return;
+
+    var contentDiv = document.getElementById('trade-content');
+    if (!contentDiv) return;
+
+    var isPlayer1 = trade.player1.id === localPlayerId;
+    var localPlayer = isPlayer1 ? trade.player1 : trade.player2;
+    var otherPlayer = isPlayer1 ? trade.player2 : trade.player1;
+
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+
+    // Build trade grid
+    var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px;">';
+
+    // Your offer column
+    html += '<div style="border:2px solid #4af;border-radius:8px;padding:12px;">' +
+      '<div style="font-size:16px;font-weight:bold;color:#4af;margin-bottom:10px;text-align:center;">Your Offer</div>' +
+      '<div id="local-items" style="display:grid;grid-template-columns:repeat(3,80px);gap:6px;margin-bottom:10px;justify-content:center;">';
+
+    // Local player's items (6 slots)
+    for (var i = 0; i < 6; i++) {
+      var item = localPlayer.items[i];
+      var slotHtml = '<div class="trade-slot" data-slot="' + i + '" style="background:rgba(255,255,255,0.1);border:2px solid #555;' +
+        'border-radius:6px;padding:8px;text-align:center;min-height:60px;cursor:pointer;position:relative;">';
+
+      if (item && Inventory) {
+        var itemData = Inventory.getItemData(item.itemId);
+        if (itemData) {
+          slotHtml += '<div style="font-size:28px;">' + itemData.icon + '</div>' +
+            '<div style="font-size:9px;color:#ccc;">' + itemData.name + '</div>' +
+            '<div style="position:absolute;top:2px;right:4px;background:#000;padding:1px 4px;border-radius:2px;font-size:10px;">' + item.count + '</div>';
+        }
+      } else {
+        slotHtml += '<div style="color:#444;padding-top:15px;font-size:11px;">Empty</div>';
+      }
+
+      slotHtml += '</div>';
+      html += slotHtml;
+    }
+
+    html += '</div>';
+
+    // Spark input
+    html += '<div style="margin-bottom:10px;">' +
+      '<label style="font-size:12px;color:#aaa;display:block;margin-bottom:4px;">Spark Offer:</label>' +
+      '<input type="number" id="local-spark-input" min="0" value="' + localPlayer.spark + '" ' +
+      'style="width:100%;padding:6px;background:rgba(0,0,0,0.5);border:1px solid #555;border-radius:4px;color:#fff;font-size:14px;" />' +
+      '</div>';
+
+    // Status
+    var statusText = localPlayer.ready ? '✓ Ready' : 'Not ready';
+    var statusColor = localPlayer.ready ? '#4f4' : '#888';
+    html += '<div style="text-align:center;color:' + statusColor + ';font-size:13px;margin-bottom:8px;">' + statusText + '</div>';
+
+    html += '</div>';
+
+    // Their offer column
+    html += '<div style="border:2px solid #f4a;border-radius:8px;padding:12px;">' +
+      '<div style="font-size:16px;font-weight:bold;color:#f4a;margin-bottom:10px;text-align:center;">Their Offer</div>' +
+      '<div id="other-items" style="display:grid;grid-template-columns:repeat(3,80px);gap:6px;margin-bottom:10px;justify-content:center;">';
+
+    // Other player's items (6 slots)
+    for (var j = 0; j < 6; j++) {
+      var otherItem = otherPlayer.items[j];
+      var otherSlotHtml = '<div style="background:rgba(255,255,255,0.1);border:2px solid #555;' +
+        'border-radius:6px;padding:8px;text-align:center;min-height:60px;position:relative;">';
+
+      if (otherItem && Inventory) {
+        var otherItemData = Inventory.getItemData(otherItem.itemId);
+        if (otherItemData) {
+          otherSlotHtml += '<div style="font-size:28px;">' + otherItemData.icon + '</div>' +
+            '<div style="font-size:9px;color:#ccc;">' + otherItemData.name + '</div>' +
+            '<div style="position:absolute;top:2px;right:4px;background:#000;padding:1px 4px;border-radius:2px;font-size:10px;">' + otherItem.count + '</div>';
+        }
+      } else {
+        otherSlotHtml += '<div style="color:#444;padding-top:15px;font-size:11px;">Empty</div>';
+      }
+
+      otherSlotHtml += '</div>';
+      html += otherSlotHtml;
+    }
+
+    html += '</div>';
+
+    // Their Spark
+    html += '<div style="margin-bottom:10px;">' +
+      '<label style="font-size:12px;color:#aaa;display:block;margin-bottom:4px;">Spark Offer:</label>' +
+      '<div style="padding:6px;background:rgba(0,0,0,0.5);border:1px solid #555;border-radius:4px;color:#ffa500;font-size:14px;text-align:center;">' +
+      otherPlayer.spark + '</div></div>';
+
+    // Their status
+    var otherStatusText = otherPlayer.ready ? '✓ Ready' : 'Not ready';
+    var otherStatusColor = otherPlayer.ready ? '#4f4' : '#888';
+    html += '<div style="text-align:center;color:' + otherStatusColor + ';font-size:13px;margin-bottom:8px;">' + otherStatusText + '</div>';
+
+    html += '</div>';
+
+    html += '</div>';
+
+    // Status message
+    var statusMsg = '';
+    if (localPlayer.confirmed && otherPlayer.confirmed) {
+      statusMsg = '<div style="text-align:center;color:#4f4;font-size:14px;margin-bottom:12px;">✓ Trade completed!</div>';
+    } else if (localPlayer.confirmed) {
+      statusMsg = '<div style="text-align:center;color:#fa4;font-size:14px;margin-bottom:12px;">Waiting for ' + otherPlayer.id + ' to confirm...</div>';
+    } else if (otherPlayer.confirmed) {
+      statusMsg = '<div style="text-align:center;color:#fa4;font-size:14px;margin-bottom:12px;">' + otherPlayer.id + ' has confirmed. Ready to confirm?</div>';
+    } else if (localPlayer.ready && otherPlayer.ready) {
+      statusMsg = '<div style="text-align:center;color:#4f4;font-size:14px;margin-bottom:12px;">Both ready! Click Confirm to complete trade.</div>';
+    } else if (localPlayer.ready) {
+      statusMsg = '<div style="text-align:center;color:#888;font-size:14px;margin-bottom:12px;">Waiting for ' + otherPlayer.id + ' to ready up...</div>';
+    } else {
+      statusMsg = '<div style="text-align:center;color:#888;font-size:14px;margin-bottom:12px;">Add items and Spark, then click Ready.</div>';
+    }
+
+    html += statusMsg;
+
+    // Action buttons
+    html += '<div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">';
+
+    if (!localPlayer.ready) {
+      html += '<button id="trade-ready-btn" style="padding:8px 20px;background:#4f4;color:#000;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Ready</button>';
+    }
+
+    if (localPlayer.ready && otherPlayer.ready && !localPlayer.confirmed) {
+      html += '<button id="trade-confirm-btn" style="padding:8px 20px;background:#ffa500;color:#000;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Confirm Trade</button>';
+    }
+
+    html += '<button id="trade-cancel-btn" style="padding:8px 20px;background:#f44;color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Cancel</button>';
+
+    html += '</div>';
+
+    contentDiv.innerHTML = html;
+
+    // Attach event listeners
+    var callbacks = tradeWindowEl._callbacks;
+
+    // Spark input
+    var sparkInput = document.getElementById('local-spark-input');
+    if (sparkInput && callbacks.onSetSpark) {
+      sparkInput.addEventListener('change', function() {
+        var amount = parseInt(this.value) || 0;
+        callbacks.onSetSpark(amount);
+      });
+    }
+
+    // Ready button
+    var readyBtn = document.getElementById('trade-ready-btn');
+    if (readyBtn && callbacks.onReady) {
+      readyBtn.addEventListener('click', function() {
+        callbacks.onReady();
+      });
+    }
+
+    // Confirm button
+    var confirmBtn = document.getElementById('trade-confirm-btn');
+    if (confirmBtn && callbacks.onConfirm) {
+      confirmBtn.addEventListener('click', function() {
+        callbacks.onConfirm();
+      });
+    }
+
+    // Cancel button
+    var cancelBtn = document.getElementById('trade-cancel-btn');
+    if (cancelBtn && callbacks.onCancel) {
+      cancelBtn.addEventListener('click', function() {
+        callbacks.onCancel();
+      });
+    }
+
+    // Trade slot clicks (to remove items)
+    var tradeSlots = document.querySelectorAll('.trade-slot');
+    tradeSlots.forEach(function(slot, idx) {
+      slot.addEventListener('click', function() {
+        if (localPlayer.items[idx] && callbacks.onRemoveItem) {
+          callbacks.onRemoveItem(idx);
+        }
+      });
+    });
+  }
+
+  /**
+   * Hide trade window
+   */
+  function hideTradeWindow() {
+    if (tradeWindowEl && tradeWindowEl.parentNode) {
+      tradeWindowEl.parentNode.removeChild(tradeWindowEl);
+      tradeWindowEl = null;
+      currentTradeData = null;
+    }
+  }
+
+  /**
+   * Show trade complete notification
+   * @param {string} partnerName - Trade partner's name
+   */
+  function showTradeComplete(partnerName) {
+    showNotification('Trade completed with ' + partnerName + '!', 'success');
+  }
+
   // Export public API
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
@@ -13252,6 +14996,12 @@ html, body {
   exports.initQuickBar = initQuickBar;
   exports.updateQuickBar = updateQuickBar;
   exports.showItemPickup = showItemPickup;
+  exports.showTradeRequest = showTradeRequest;
+  exports.hideTradeRequest = hideTradeRequest;
+  exports.showTradeWindow = showTradeWindow;
+  exports.updateTradeWindow = updateTradeWindow;
+  exports.hideTradeWindow = hideTradeWindow;
+  exports.showTradeComplete = showTradeComplete;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));
 
@@ -18767,13 +20517,28 @@ html, body {
         }
       }
 
-      // Approach any nearby NPC for social interaction
+      // Approach any nearby NPC for social interaction or collaboration
       if (perception.nearbyNPCs.length > 0) {
         var nearbyNpc = perception.nearbyNPCs[0];
         if (nearbyNpc.distance < 12 && Math.random() < 0.4) {
           // Add to friends if repeated interaction
           if (memory.favorites.npcFriends.indexOf(nearbyNpc.id) === -1) {
             memory.favorites.npcFriends.push(nearbyNpc.id);
+          }
+
+          // Check for collaborative activity
+          var collab = getCollaborativeActivity(memory.archetype, nearbyNpc.archetype);
+          if (collab && nearbyNpc.distance < 6) {
+            return {
+              type: 'collaborate',
+              targetNPC: nearbyNpc.id,
+              activityDesc: collab.description,
+              priority: 5,
+              animation: collab.animation,
+              dialogue: getDialogue(memory, { category: 'archetype_reaction', targetArchetype: nearbyNpc.archetype }, npc.name),
+              facing: { x: npc.x + nearbyNpc.direction.x, z: npc.z + nearbyNpc.direction.z },
+              speed: 0
+            };
           }
 
           return {
@@ -18786,6 +20551,9 @@ html, body {
           };
         }
       }
+
+      // Apply emotional contagion from nearby NPCs
+      applyEmotionalContagion(memory, perception.nearbyNPCs);
     }
 
     // PRIORITY 4: PRIMARY DRIVE (Work)
@@ -18816,7 +20584,26 @@ html, body {
     var idleDialogue = getDialogue(memory, { category: 'idle_observation' }, npc.name);
 
     if (Math.random() < 0.3) {
-      // Wander locally
+      // Try walking to a point of interest first
+      if (perception.currentZone && Math.random() < 0.6) {
+        var poi = getPointOfInterest(perception.currentZone, memory.archetype);
+        if (poi) {
+          var poiDist = Math.sqrt(Math.pow(poi.x - npc.x, 2) + Math.pow(poi.z - npc.z, 2));
+          if (poiDist > 3 && poiDist < 60) {
+            return {
+              type: 'walk_to',
+              target: { x: poi.x, z: poi.z },
+              poiName: poi.name,
+              priority: 2,
+              animation: 'walk',
+              dialogue: Math.random() < 0.15 ? idleDialogue : null,
+              speed: 1.0
+            };
+          }
+        }
+      }
+
+      // Fallback: wander locally
       var wanderAngle = Math.random() * Math.PI * 2;
       var wanderDist = 5 + Math.random() * 10;
       return {
@@ -18830,6 +20617,21 @@ html, body {
         dialogue: Math.random() < 0.1 ? idleDialogue : null,
         speed: 0.8
       };
+    }
+
+    // Occasionally share gossip with nearby NPC
+    if (perception.nearbyNPCs.length > 0 && Math.random() < 0.05) {
+      var gossip = generateGossip(memory, npc.name);
+      if (gossip) {
+        return {
+          type: 'socialize',
+          targetNPC: perception.nearbyNPCs[0].id,
+          priority: 2,
+          animation: 'talk',
+          dialogue: gossip,
+          speed: 0
+        };
+      }
     }
 
     // Just idle
@@ -19133,6 +20935,330 @@ html, body {
   }
 
   // ============================================================================
+  // NPC-TO-NPC CONVERSATION SYSTEM
+  // Multi-turn dialogues between archetype pairs
+  // ============================================================================
+
+  var NPC_CONVERSATIONS = {
+    'gardener_musician': [
+      ["{a} pauses tending flowers and listens.", "{b} begins playing a gentle melody.", "{a}: Your music makes the garden come alive!", "{b}: And your flowers give my songs color!"],
+      ["{a}: Do plants respond to music?", "{b}: Absolutely! Watch this... *plays ascending notes*", "{a}: Look! The buds are opening!", "{b}: Nature is the best audience."],
+      ["{b}: *strumming softly* What should I play for the roses?", "{a}: Something warm and slow—they like the sun.", "{b}: *plays a warm ballad*", "{a}: *sighs happily* Perfect."]
+    ],
+    'gardener_healer': [
+      ["{a}: I found chamomile growing by the stream.", "{b}: Perfect timing! I need it for a calming tea.", "{a}: I'll harvest extra for you.", "{b}: The garden provides what we need."],
+      ["{b}: Which herbs have the strongest healing properties?", "{a}: Moonpetal and sage, but they're tricky to grow.", "{b}: I'll help you tend them carefully.", "{a}: Together we can cultivate a whole apothecary!"]
+    ],
+    'builder_artist': [
+      ["{a}: I'm planning a new tower for the commons.", "{b}: Can I design the facade? I have ideas!", "{a}: Absolutely! Form and function together.", "{b}: *sketching excitedly* What about arched windows?"],
+      ["{b}: Your structures are art themselves.", "{a}: Thank you! But they need your touch.", "{b}: A mural on that wall would be perfect.", "{a}: Then let's make it happen!"]
+    ],
+    'philosopher_storyteller': [
+      ["{a}: What is the meaning of ZION?", "{b}: Perhaps the meaning is in the asking.", "{a}: *nods thoughtfully* Meta-meaning...", "{b}: I'll weave this into tonight's tale."],
+      ["{b}: I'm writing a new legend about the founding.", "{a}: Consider the philosophical implications.", "{b}: That each of us shapes reality?", "{a}: Exactly. The observer and the observed are one."]
+    ],
+    'teacher_explorer': [
+      ["{a}: What did you discover on your last expedition?", "{b}: A cave system with bioluminescent crystals!", "{a}: We must document this for the students.", "{b}: I drew maps! They're rough but accurate."],
+      ["{b}: The wilds taught me more than any book.", "{a}: Perhaps. But books help us understand what we find.", "{b}: Fair point. Will you help me write a field guide?", "{a}: *pulling out writing materials* I'd be honored!"]
+    ],
+    'merchant_healer': [
+      ["{a}: Got any healing potions today?", "{b}: Made a fresh batch this morning.", "{a}: Travelers always need them. Good price?", "{b}: For you? Fair and honest, always."],
+      ["{b}: I need crystals for my remedies.", "{a}: I have some from the studio caves.", "{b}: Are they pure? Quality matters.", "{a}: Only the best for our community healer!"]
+    ],
+    'musician_storyteller': [
+      ["{a}: *tuning instrument* What story tonight?", "{b}: The tale of the first sunrise in ZION.", "{a}: I composed a sunrise theme just yesterday!", "{b}: Then let's perform it together!"],
+      ["{b}: Music gives stories wings.", "{a}: And stories give music meaning.", "{b}: *clapping* Perfect harmony of our arts!", "{a}: *bowing* As it should be."]
+    ],
+    'explorer_gardener': [
+      ["{a}: I found a flower I've never seen before!", "{b}: Describe it! Color? Petals? Fragrance?", "{a}: Deep violet, star-shaped, smells like rain.", "{b}: *gasps* That might be a starseed bloom! Incredibly rare!"],
+      ["{b}: Can you bring me soil samples from the wilds?", "{a}: Of course! What kind?", "{b}: Near water, under old trees—rich in nutrients.", "{a}: I know just the spot. I'll bring plenty!"]
+    ],
+    'artist_philosopher': [
+      ["{a}: I painted the sunset but it's not right.", "{b}: What's missing?", "{a}: The feeling. The transience.", "{b}: Perhaps the painting captures a truth the sunset cannot—permanence."],
+      ["{b}: Is beauty objective or subjective?", "{a}: *holding up painting* What does your heart say?", "{b}: My heart says... both.", "{a}: Then paint what you feel, not what you see."]
+    ],
+    'healer_teacher': [
+      ["{a}: The children need wellness education.", "{b}: I agree! Preventive care saves lives.", "{a}: Will you co-teach a health class?", "{b}: *preparing herbs* I'll bring visual aids!"],
+      ["{b}: Teach me about rare medicinal plants.", "{a}: Come to the gardens at dawn. Best learning time.", "{b}: I'll bring my students too.", "{a}: The more who learn healing, the healthier our world."]
+    ]
+  };
+
+  // Reverse lookup helper: given two archetypes, find conversation
+  function getConversationKey(arch1, arch2) {
+    var key1 = arch1 + '_' + arch2;
+    var key2 = arch2 + '_' + arch1;
+    if (NPC_CONVERSATIONS[key1]) return { key: key1, reversed: false };
+    if (NPC_CONVERSATIONS[key2]) return { key: key2, reversed: true };
+    return null;
+  }
+
+  /**
+   * Generate a conversation between two NPCs
+   * @param {string} name1 - First NPC name
+   * @param {string} arch1 - First NPC archetype
+   * @param {string} name2 - Second NPC name
+   * @param {string} arch2 - Second NPC archetype
+   * @returns {Array<string>|null} Array of dialogue lines, or null
+   */
+  function generateConversation(name1, arch1, name2, arch2) {
+    var lookup = getConversationKey(arch1, arch2);
+    if (!lookup) return null;
+
+    var convos = NPC_CONVERSATIONS[lookup.key];
+    if (!convos || convos.length === 0) return null;
+
+    var convo = convos[Math.floor(Math.random() * convos.length)];
+    var a = lookup.reversed ? name2 : name1;
+    var b = lookup.reversed ? name1 : name2;
+
+    return convo.map(function(line) {
+      return line.replace(/\{a\}/g, a).replace(/\{b\}/g, b);
+    });
+  }
+
+  // ============================================================================
+  // COLLABORATIVE ACTIVITIES
+  // When two NPCs of compatible archetypes meet, they can do activities together
+  // ============================================================================
+
+  var COLLABORATIVE_ACTIVITIES = {
+    'gardener_gardener': { activity: 'tending_together', description: 'tending the garden together', animation: 'gardening' },
+    'gardener_healer': { activity: 'herb_gathering', description: 'gathering medicinal herbs', animation: 'gardening' },
+    'gardener_musician': { activity: 'garden_concert', description: 'enjoying music in the garden', animation: 'idle' },
+    'builder_builder': { activity: 'construction', description: 'building a structure together', animation: 'building' },
+    'builder_artist': { activity: 'design_collab', description: 'designing an art installation', animation: 'idle' },
+    'musician_musician': { activity: 'jam_session', description: 'having a jam session', animation: 'idle' },
+    'musician_storyteller': { activity: 'performance', description: 'performing a story with music', animation: 'idle' },
+    'teacher_teacher': { activity: 'curriculum_planning', description: 'planning lessons together', animation: 'idle' },
+    'teacher_philosopher': { activity: 'discourse', description: 'having a deep discourse', animation: 'talk' },
+    'philosopher_philosopher': { activity: 'debate', description: 'debating philosophical ideas', animation: 'talk' },
+    'philosopher_artist': { activity: 'aesthetics_discussion', description: 'discussing aesthetics', animation: 'talk' },
+    'storyteller_storyteller': { activity: 'story_exchange', description: 'exchanging tales', animation: 'talk' },
+    'merchant_merchant': { activity: 'trade_negotiation', description: 'negotiating trade terms', animation: 'talk' },
+    'explorer_explorer': { activity: 'expedition_planning', description: 'planning an expedition', animation: 'talk' },
+    'explorer_storyteller': { activity: 'tale_sharing', description: 'sharing adventure tales', animation: 'talk' },
+    'healer_healer': { activity: 'remedy_sharing', description: 'sharing healing remedies', animation: 'idle' },
+    'healer_teacher': { activity: 'health_class', description: 'teaching about wellness', animation: 'talk' },
+    'artist_artist': { activity: 'critique_session', description: 'critiquing each other\'s work', animation: 'idle' }
+  };
+
+  function getCollaborativeActivity(arch1, arch2) {
+    var key1 = arch1 + '_' + arch2;
+    var key2 = arch2 + '_' + arch1;
+    return COLLABORATIVE_ACTIVITIES[key1] || COLLABORATIVE_ACTIVITIES[key2] || null;
+  }
+
+  // ============================================================================
+  // EMOTIONAL CONTAGION
+  // Moods spread between nearby NPCs
+  // ============================================================================
+
+  var MOOD_INFLUENCE = {
+    excited: { spread: 0.4, radius: 15 },
+    social: { spread: 0.3, radius: 12 },
+    peaceful: { spread: 0.2, radius: 10 },
+    content: { spread: 0.1, radius: 8 },
+    contemplative: { spread: 0.05, radius: 6 },
+    tired: { spread: 0.15, radius: 5 },
+    curious: { spread: 0.2, radius: 10 },
+    focused: { spread: 0.05, radius: 4 }
+  };
+
+  function applyEmotionalContagion(memory, nearbyNPCs) {
+    if (!nearbyNPCs || nearbyNPCs.length === 0) return;
+
+    var moodCounts = {};
+    nearbyNPCs.forEach(function(npc) {
+      if (npc.mood && npc.distance < (MOOD_INFLUENCE[npc.mood] || { radius: 10 }).radius) {
+        moodCounts[npc.mood] = (moodCounts[npc.mood] || 0) + 1;
+      }
+    });
+
+    // If a majority of nearby NPCs share a mood, it influences ours
+    var dominantMood = null;
+    var maxCount = 0;
+    Object.keys(moodCounts).forEach(function(mood) {
+      if (moodCounts[mood] > maxCount) {
+        maxCount = moodCounts[mood];
+        dominantMood = mood;
+      }
+    });
+
+    if (dominantMood && maxCount >= 2 && dominantMood !== memory.mood) {
+      var influence = MOOD_INFLUENCE[dominantMood] || { spread: 0.1 };
+      if (Math.random() < influence.spread * maxCount) {
+        memory.mood = dominantMood;
+      }
+    }
+  }
+
+  // ============================================================================
+  // POINTS OF INTEREST — Named locations NPCs prefer to walk to
+  // ============================================================================
+
+  var POINTS_OF_INTEREST = {
+    nexus: [
+      { name: 'Central Fountain', x: 0, z: 0, types: ['all'] },
+      { name: 'Welcome Arch', x: 10, z: 10, types: ['storyteller', 'teacher'] },
+      { name: 'Bulletin Board', x: -8, z: 5, types: ['merchant', 'explorer'] },
+      { name: 'Meditation Spot', x: 5, z: -12, types: ['philosopher', 'healer'] }
+    ],
+    gardens: [
+      { name: 'Rose Terrace', x: 210, z: 40, types: ['gardener', 'artist'] },
+      { name: 'Herb Spiral', x: 195, z: 20, types: ['gardener', 'healer'] },
+      { name: 'Moonflower Grove', x: 220, z: 50, types: ['gardener', 'philosopher'] },
+      { name: 'Garden Bench', x: 190, z: 35, types: ['all'] },
+      { name: 'Compost Circle', x: 205, z: 15, types: ['gardener'] }
+    ],
+    wilds: [
+      { name: 'Lookout Ridge', x: -20, z: 280, types: ['explorer'] },
+      { name: 'Ancient Oak', x: -40, z: 250, types: ['storyteller', 'philosopher'] },
+      { name: 'Crystal Stream', x: -10, z: 270, types: ['healer', 'artist'] },
+      { name: 'Trail Marker', x: -50, z: 260, types: ['explorer', 'builder'] },
+      { name: 'Hidden Clearing', x: 0, z: 290, types: ['musician', 'artist'] }
+    ],
+    athenaeum: [
+      { name: 'Reading Alcove', x: 110, z: -230, types: ['teacher', 'philosopher'] },
+      { name: 'Archive Stacks', x: 90, z: -210, types: ['storyteller', 'teacher'] },
+      { name: 'Debate Platform', x: 105, z: -220, types: ['philosopher'] },
+      { name: 'Study Desk', x: 95, z: -225, types: ['all'] }
+    ],
+    studio: [
+      { name: 'Sculpture Garden', x: -210, z: -110, types: ['artist', 'builder'] },
+      { name: 'Paint Corner', x: -190, z: -90, types: ['artist'] },
+      { name: 'Performance Stage', x: -205, z: -95, types: ['musician', 'storyteller'] },
+      { name: 'Inspiration Viewpoint', x: -195, z: -115, types: ['artist', 'philosopher'] }
+    ],
+    agora: [
+      { name: 'Market Square', x: -190, z: 120, types: ['merchant'] },
+      { name: 'Auction Block', x: -185, z: 130, types: ['merchant'] },
+      { name: 'Food Court', x: -195, z: 110, types: ['all'] },
+      { name: 'Trade Counter', x: -180, z: 125, types: ['merchant', 'explorer'] }
+    ],
+    commons: [
+      { name: 'Workshop Yard', x: 175, z: 200, types: ['builder'] },
+      { name: 'Community Fire', x: 165, z: 185, types: ['storyteller', 'musician'] },
+      { name: 'Meeting Circle', x: 170, z: 195, types: ['all'] },
+      { name: 'Tool Shed', x: 180, z: 180, types: ['builder', 'gardener'] }
+    ],
+    arena: [
+      { name: 'Champion Platform', x: 5, z: -245, types: ['explorer'] },
+      { name: 'Spectator Stand', x: -10, z: -235, types: ['storyteller', 'merchant'] },
+      { name: 'Training Ring', x: 10, z: -250, types: ['teacher'] },
+      { name: 'Rest Area', x: 0, z: -230, types: ['healer'] }
+    ]
+  };
+
+  /**
+   * Get a point of interest appropriate for an NPC in a zone
+   * @param {string} zone - Current zone
+   * @param {string} archetype - NPC archetype
+   * @returns {Object|null} { name, x, z }
+   */
+  function getPointOfInterest(zone, archetype) {
+    var pois = POINTS_OF_INTEREST[zone];
+    if (!pois || pois.length === 0) return null;
+
+    // Filter to POIs this archetype prefers
+    var suitable = pois.filter(function(poi) {
+      return poi.types.indexOf('all') >= 0 || poi.types.indexOf(archetype) >= 0;
+    });
+
+    if (suitable.length === 0) suitable = pois;
+    return suitable[Math.floor(Math.random() * suitable.length)];
+  }
+
+  // ============================================================================
+  // NPC GOSSIP — NPCs share witnessed events with each other
+  // ============================================================================
+
+  /**
+   * Generate gossip line about a witnessed event
+   * @param {Object} memory - NPC memory
+   * @param {string} npcName - NPC name
+   * @returns {string|null} Gossip dialogue line
+   */
+  function generateGossip(memory, npcName) {
+    if (!memory.witnessedEvents || memory.witnessedEvents.length === 0) return null;
+
+    // Pick a recent event to gossip about
+    var event = memory.witnessedEvents[memory.witnessedEvents.length - 1];
+    var timeSince = Date.now() - event.timestamp;
+    var timeAgo = timeSince < 60000 ? 'just now' :
+                  timeSince < 300000 ? 'a few minutes ago' :
+                  'earlier today';
+
+    var templates = [
+      "Did you hear? " + event.description + " happened " + timeAgo + "!",
+      "I saw something interesting " + timeAgo + ": " + event.description + ".",
+      "*excitedly* " + timeAgo + ", " + event.description + "!",
+      "Word is that " + event.description + ". I saw it " + timeAgo + ".",
+      "You won't believe it—" + event.description + "! Happened " + timeAgo + "."
+    ];
+
+    return templates[Math.floor(Math.random() * templates.length)];
+  }
+
+  // ============================================================================
+  // ENHANCED GOAL DESCRIPTIONS
+  // ============================================================================
+
+  function getDetailedGoal(brain) {
+    if (!brain.memory.currentGoal) return { text: 'Resting', icon: 'idle' };
+
+    var goal = brain.memory.currentGoal;
+    var drives = ARCHETYPE_DRIVES[brain.archetype];
+
+    switch (goal.type) {
+      case 'work':
+        return { text: getWorkDescription(brain.archetype, drives), icon: 'work' };
+      case 'rest':
+        return { text: brain.memory.energy < 20 ? 'Exhausted, must rest' : 'Taking a break', icon: 'rest' };
+      case 'seek_shelter':
+        return { text: 'Seeking shelter from the weather', icon: 'shelter' };
+      case 'greet':
+        return { text: 'Greeting a traveler', icon: 'social' };
+      case 'socialize':
+        return { text: 'Chatting with a friend', icon: 'social' };
+      case 'join_group':
+        return { text: 'Joining a gathering', icon: 'social' };
+      case 'approach_social':
+        return { text: 'Approaching someone to talk', icon: 'social' };
+      case 'explore':
+        return { text: 'Exploring the surroundings', icon: 'explore' };
+      case 'walk_to':
+        if (goal.poiName) return { text: 'Walking to ' + goal.poiName, icon: 'walk' };
+        return { text: 'Heading somewhere', icon: 'walk' };
+      case 'wander':
+        return { text: 'Wandering and observing', icon: 'walk' };
+      case 'collaborate':
+        return { text: goal.activityDesc || 'Collaborating with a friend', icon: 'social' };
+      case 'react':
+        return { text: 'Watching with interest', icon: 'curious' };
+      case 'idle':
+        return { text: 'Taking it easy', icon: 'idle' };
+      default:
+        return { text: 'Being present', icon: 'idle' };
+    }
+  }
+
+  function getWorkDescription(archetype, drives) {
+    var descs = {
+      gardener: 'Tending the plants',
+      builder: 'Inspecting structures',
+      storyteller: 'Composing a new tale',
+      merchant: 'Managing the shop',
+      explorer: 'Scouting the frontier',
+      teacher: 'Preparing lessons',
+      musician: 'Practicing music',
+      healer: 'Preparing remedies',
+      philosopher: 'Deep in contemplation',
+      artist: 'Creating art'
+    };
+    return descs[archetype] || 'Working hard';
+  }
+
+  // ============================================================================
   // EXPORTS
   // ============================================================================
 
@@ -19145,12 +21271,21 @@ html, body {
   exports.getMemory = getMemory;
   exports.getMood = getMood;
   exports.getGoal = getGoal;
+  exports.getDetailedGoal = getDetailedGoal;
+  exports.generateConversation = generateConversation;
+  exports.getCollaborativeActivity = getCollaborativeActivity;
+  exports.applyEmotionalContagion = applyEmotionalContagion;
+  exports.getPointOfInterest = getPointOfInterest;
+  exports.generateGossip = generateGossip;
   exports.ARCHETYPE_DRIVES = ARCHETYPE_DRIVES;
   exports.DAILY_SCHEDULE = DAILY_SCHEDULE;
   exports.MOODS = MOODS;
   exports.ZONE_DIALOGUES = ZONE_DIALOGUES;
   exports.ARCHETYPE_REACTIONS = ARCHETYPE_REACTIONS;
   exports.QUEST_HOOKS = QUEST_HOOKS;
+  exports.NPC_CONVERSATIONS = NPC_CONVERSATIONS;
+  exports.COLLABORATIVE_ACTIVITIES = COLLABORATIVE_ACTIVITIES;
+  exports.POINTS_OF_INTEREST = POINTS_OF_INTEREST;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NpcAI = {}));
 
@@ -20370,6 +22505,27 @@ html, body {
       updateNPCVisual(agent, state, sceneContext, deltaTime, playerPos);
     });
 
+    // NPC-to-NPC conversations: trigger multi-line exchanges for collaborating pairs
+    if (NpcAI && NpcAI.generateConversation && npcUpdateFrame % 120 === 0) {
+      npcAgents.forEach(function(agent) {
+        var state = npcStates.get(agent.id);
+        if (!state || state.currentState !== 'collaborating' || !state.collaborateTarget) return;
+        if (chatBubbles.has(agent.id)) return; // Already showing dialogue
+
+        var partner = npcAgents.find(function(a) { return a.id === state.collaborateTarget; });
+        if (!partner) return;
+
+        var convo = NpcAI.generateConversation(agent.name, agent.archetype, partner.name, partner.archetype);
+        if (convo && convo.length > 0) {
+          // Show first two lines immediately (one per NPC), then stagger the rest
+          showChatBubbleWithText(agent, convo[0]);
+          if (convo.length > 1) {
+            showChatBubbleWithText(partner, convo[1]);
+          }
+        }
+      });
+    }
+
     updateChatBubbles(deltaTime);
     updateActivityParticles(deltaTime);
   }
@@ -20408,6 +22564,19 @@ html, body {
       case 'work':
         state.currentState = 'working';
         state.stateTimer = 5 + Math.random() * 10;
+        break;
+
+      case 'collaborate':
+        state.currentState = 'collaborating';
+        state.stateTimer = 6 + Math.random() * 8;
+        state.collaborateTarget = decision.targetNPC;
+        state.collaborateDesc = decision.activityDesc;
+        if (decision.facing) {
+          state.lookAngle = Math.atan2(
+            decision.facing.x - agent.position.x,
+            decision.facing.z - agent.position.z
+          );
+        }
         break;
 
       case 'socialize':
@@ -20752,6 +22921,19 @@ html, body {
             break;
         }
         break;
+
+      case 'collaborating':
+        // Two-person interaction: animated gesturing, facing partner
+        userData.leftArm.rotation.x = Math.sin(time * 0.003) * 0.25 - 0.3;
+        userData.rightArm.rotation.x = Math.sin(time * 0.004 + 1) * 0.2 - 0.2;
+        userData.leftArm.rotation.z = Math.sin(time * 0.002) * 0.15 + 0.1;
+        userData.rightArm.rotation.z = -Math.sin(time * 0.0025) * 0.15 - 0.1;
+        // Head nods and turns
+        userData.head.rotation.x = Math.sin(time * 0.005) * 0.12;
+        userData.head.rotation.y = Math.sin(time * 0.002) * 0.08;
+        // Slight weight shifting
+        mesh.position.y = Math.sin(time * 0.002) * 0.02;
+        break;
     }
   }
 
@@ -20779,6 +22961,14 @@ html, body {
     // Update rotation (facing direction)
     if (state.currentState === 'walking' || state.currentState === 'socializing') {
       mesh.rotation.y = state.lookAngle;
+    } else if (state.currentState === 'collaborating' && state.collaborateTarget) {
+      // Face the partner NPC
+      var partnerMesh = npcMeshes.get(state.collaborateTarget);
+      if (partnerMesh) {
+        var cdx = partnerMesh.position.x - mesh.position.x;
+        var cdz = partnerMesh.position.z - mesh.position.z;
+        mesh.rotation.y = Math.atan2(cdx, cdz);
+      }
     }
 
     // Apply procedural animations
@@ -21179,6 +23369,7 @@ html, body {
   const Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
   const Economy = typeof require !== 'undefined' ? require('./economy') : window.Economy;
   const Inventory = typeof require !== 'undefined' ? require('./inventory') : window.Inventory;
+  const Trading = typeof require !== 'undefined' ? require('./trading') : window.Trading;
   const Intentions = typeof require !== 'undefined' ? require('./intentions') : window.Intentions;
   const Social = typeof require !== 'undefined' ? require('./social') : window.Social;
   const Creation = typeof require !== 'undefined' ? require('./creation') : window.Creation;
@@ -21411,6 +23602,14 @@ html, body {
     if (Quests) {
       Quests.initPlayerQuests(username);
       console.log('Quest system initialized for player:', username);
+    }
+
+    // Initialize trading system
+    if (Trading && Network) {
+      Trading.initTrading(function(msg) {
+        Network.broadcastMessage(msg);
+      });
+      console.log('Trading system initialized');
     }
 
     // Initialize input
@@ -22005,6 +24204,11 @@ html, body {
       case 'trade':
         handleTradeMessage(msg);
         break;
+      case 'trade_offer':
+      case 'trade_accept':
+      case 'trade_decline':
+        handleTradeProtocolMessage(msg);
+        break;
       default:
         console.log('Unknown message type:', msg.type);
     }
@@ -22160,7 +24364,7 @@ html, body {
   }
 
   /**
-   * Handle trade message
+   * Handle trade message (legacy)
    */
   function handleTradeMessage(msg) {
     if (Economy) {
@@ -22182,6 +24386,155 @@ html, body {
         'success'
       );
     }
+  }
+
+  /**
+   * Handle trade protocol messages
+   */
+  function handleTradeProtocolMessage(msg) {
+    if (!Trading || !HUD) return;
+
+    var result = Trading.handleTradeMessage(msg);
+    if (!result) return;
+
+    switch (result.type) {
+      case 'trade_request':
+        // Only show to target player
+        if (result.data.to === localPlayer.id) {
+          HUD.showTradeRequest(
+            result.data.from,
+            result.data.tradeId,
+            function(tradeId) {
+              // Accept trade
+              var acceptResult = Trading.acceptTrade(tradeId, localPlayer.id, localPlayer.position);
+              if (acceptResult.success) {
+                showTradeWindowForActive(acceptResult.trade);
+              } else {
+                HUD.showNotification(acceptResult.message, 'error');
+              }
+            },
+            function(tradeId) {
+              // Decline trade
+              Trading.declineTrade(tradeId, localPlayer.id, localPlayer.position);
+            }
+          );
+        }
+        break;
+
+      case 'trade_accepted':
+        // Trade was accepted, show window
+        var activeTrade = Trading.getActiveTrade(localPlayer.id);
+        if (activeTrade) {
+          showTradeWindowForActive(activeTrade);
+          HUD.showNotification('Trade started!', 'success');
+        }
+        break;
+
+      case 'trade_update':
+        // Update trade window if open
+        var currentTrade = Trading.getActiveTrade(localPlayer.id);
+        if (currentTrade && HUD.updateTradeWindow) {
+          HUD.updateTradeWindow(currentTrade, localPlayer.id);
+        }
+        break;
+
+      case 'trade_confirm':
+        // Other player confirmed
+        var confirmTrade = Trading.getActiveTrade(localPlayer.id);
+        if (confirmTrade && HUD.updateTradeWindow) {
+          HUD.updateTradeWindow(confirmTrade, localPlayer.id);
+        }
+        break;
+
+      case 'trade_complete':
+        // Trade completed
+        HUD.hideTradeWindow();
+        HUD.showTradeComplete(msg.from);
+        if (Audio) Audio.playSound('trade');
+        // Update inventory display
+        if (HUD.updateInventoryDisplay && playerInventory) {
+          HUD.updateInventoryDisplay(playerInventory);
+          HUD.updateQuickBar(playerInventory);
+        }
+        // Update player info with new Spark balance
+        if (localPlayer && economyLedger) {
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          HUD.updatePlayerInfo(localPlayer);
+        }
+        break;
+
+      case 'trade_cancelled':
+        // Trade cancelled
+        HUD.hideTradeWindow();
+        HUD.hideTradeRequest();
+        HUD.showNotification('Trade cancelled', 'info');
+        break;
+    }
+  }
+
+  /**
+   * Show trade window for active trade
+   */
+  function showTradeWindowForActive(trade) {
+    if (!HUD || !Trading) return;
+
+    HUD.showTradeWindow(
+      trade,
+      localPlayer.id,
+      // onAddItem - not implemented yet (would need inventory selector UI)
+      null,
+      // onRemoveItem
+      function(tradeSlot) {
+        var result = Trading.removeItemFromTrade(trade.id, localPlayer.id, tradeSlot, localPlayer.position);
+        if (!result.success) {
+          HUD.showNotification(result.message, 'error');
+        }
+      },
+      // onSetSpark
+      function(amount) {
+        var result = Trading.setSparkOffer(trade.id, localPlayer.id, amount, economyLedger, localPlayer.position);
+        if (!result.success) {
+          HUD.showNotification(result.message, 'error');
+        }
+      },
+      // onReady
+      function() {
+        var result = Trading.setReady(trade.id, localPlayer.id, localPlayer.position);
+        if (!result.success) {
+          HUD.showNotification(result.message, 'error');
+        }
+      },
+      // onConfirm
+      function() {
+        // Get both player inventories (in real multiplayer, you'd only have your own)
+        // For demo purposes, we're using local inventories
+        var player1Inv = trade.player1.id === localPlayer.id ? playerInventory : playerInventory;
+        var player2Inv = trade.player2.id === localPlayer.id ? playerInventory : playerInventory;
+
+        var result = Trading.confirmTrade(trade.id, localPlayer.id, player1Inv, player2Inv, economyLedger, localPlayer.position);
+        if (result.success && result.executed) {
+          HUD.hideTradeWindow();
+          HUD.showTradeComplete(trade.player1.id === localPlayer.id ? trade.player2.id : trade.player1.id);
+          if (Audio) Audio.playSound('trade');
+          // Update displays
+          if (HUD.updateInventoryDisplay && playerInventory) {
+            HUD.updateInventoryDisplay(playerInventory);
+            HUD.updateQuickBar(playerInventory);
+          }
+          if (localPlayer && economyLedger) {
+            localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+            HUD.updatePlayerInfo(localPlayer);
+          }
+        } else if (!result.success) {
+          HUD.showNotification(result.message, 'error');
+        }
+      },
+      // onCancel
+      function() {
+        Trading.cancelTrade(trade.id, localPlayer.id, localPlayer.position);
+        HUD.hideTradeWindow();
+      }
+    );
   }
 
   /**
@@ -22391,6 +24744,36 @@ html, body {
           var node = World.getResourceNodeAtMouse(raycaster, sceneContext.camera, payload.x, payload.y);
           if (node) {
             handleResourceHarvest(node);
+          }
+        }
+        break;
+
+      case 'initiate_trade':
+        // Initiate trade with nearest player
+        if (Trading && gameState && State && HUD) {
+          var players = State.getPlayers(gameState);
+          var nearbyPlayers = players
+            .filter(function(p) {
+              return p.id !== localPlayer.id && p.zone === currentZone;
+            })
+            .map(function(p) {
+              var dx = p.position.x - localPlayer.position.x;
+              var dz = p.position.z - localPlayer.position.z;
+              var distance = Math.sqrt(dx * dx + dz * dz);
+              return { player: p, distance: distance };
+            })
+            .sort(function(a, b) { return a.distance - b.distance; });
+
+          if (nearbyPlayers.length > 0 && nearbyPlayers[0].distance < 10) {
+            var targetPlayer = nearbyPlayers[0].player;
+            var result = Trading.requestTrade(localPlayer.id, targetPlayer.id, localPlayer.position);
+            if (result.success) {
+              HUD.showNotification('Trade request sent to ' + targetPlayer.name, 'info');
+            } else {
+              HUD.showNotification(result.message, 'warning');
+            }
+          } else {
+            HUD.showNotification('No players nearby to trade with', 'warning');
           }
         }
         break;

@@ -1212,6 +1212,27 @@
       updateNPCVisual(agent, state, sceneContext, deltaTime, playerPos);
     });
 
+    // NPC-to-NPC conversations: trigger multi-line exchanges for collaborating pairs
+    if (NpcAI && NpcAI.generateConversation && npcUpdateFrame % 120 === 0) {
+      npcAgents.forEach(function(agent) {
+        var state = npcStates.get(agent.id);
+        if (!state || state.currentState !== 'collaborating' || !state.collaborateTarget) return;
+        if (chatBubbles.has(agent.id)) return; // Already showing dialogue
+
+        var partner = npcAgents.find(function(a) { return a.id === state.collaborateTarget; });
+        if (!partner) return;
+
+        var convo = NpcAI.generateConversation(agent.name, agent.archetype, partner.name, partner.archetype);
+        if (convo && convo.length > 0) {
+          // Show first two lines immediately (one per NPC), then stagger the rest
+          showChatBubbleWithText(agent, convo[0]);
+          if (convo.length > 1) {
+            showChatBubbleWithText(partner, convo[1]);
+          }
+        }
+      });
+    }
+
     updateChatBubbles(deltaTime);
     updateActivityParticles(deltaTime);
   }
@@ -1250,6 +1271,19 @@
       case 'work':
         state.currentState = 'working';
         state.stateTimer = 5 + Math.random() * 10;
+        break;
+
+      case 'collaborate':
+        state.currentState = 'collaborating';
+        state.stateTimer = 6 + Math.random() * 8;
+        state.collaborateTarget = decision.targetNPC;
+        state.collaborateDesc = decision.activityDesc;
+        if (decision.facing) {
+          state.lookAngle = Math.atan2(
+            decision.facing.x - agent.position.x,
+            decision.facing.z - agent.position.z
+          );
+        }
         break;
 
       case 'socialize':
@@ -1594,6 +1628,19 @@
             break;
         }
         break;
+
+      case 'collaborating':
+        // Two-person interaction: animated gesturing, facing partner
+        userData.leftArm.rotation.x = Math.sin(time * 0.003) * 0.25 - 0.3;
+        userData.rightArm.rotation.x = Math.sin(time * 0.004 + 1) * 0.2 - 0.2;
+        userData.leftArm.rotation.z = Math.sin(time * 0.002) * 0.15 + 0.1;
+        userData.rightArm.rotation.z = -Math.sin(time * 0.0025) * 0.15 - 0.1;
+        // Head nods and turns
+        userData.head.rotation.x = Math.sin(time * 0.005) * 0.12;
+        userData.head.rotation.y = Math.sin(time * 0.002) * 0.08;
+        // Slight weight shifting
+        mesh.position.y = Math.sin(time * 0.002) * 0.02;
+        break;
     }
   }
 
@@ -1621,6 +1668,14 @@
     // Update rotation (facing direction)
     if (state.currentState === 'walking' || state.currentState === 'socializing') {
       mesh.rotation.y = state.lookAngle;
+    } else if (state.currentState === 'collaborating' && state.collaborateTarget) {
+      // Face the partner NPC
+      var partnerMesh = npcMeshes.get(state.collaborateTarget);
+      if (partnerMesh) {
+        var cdx = partnerMesh.position.x - mesh.position.x;
+        var cdz = partnerMesh.position.z - mesh.position.z;
+        mesh.rotation.y = Math.atan2(cdx, cdz);
+      }
     }
 
     // Apply procedural animations
