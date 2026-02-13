@@ -1291,6 +1291,145 @@ html, body {
   100% { opacity: 0; }
 }
 
+/* Achievement/Chain Completion Popup */
+.achievement-popup {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(20, 18, 25, 0.95), rgba(40, 35, 50, 0.95));
+  border: 2px solid var(--color-gold);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg) var(--space-xxl);
+  text-align: center;
+  z-index: 2000;
+  animation: achievementSlide 0.5s ease-out, achievementFade 4s ease-in-out;
+  box-shadow: 0 0 40px rgba(218, 165, 32, 0.3);
+  pointer-events: none;
+}
+
+.achievement-popup-title {
+  font-family: var(--font-main);
+  font-size: var(--font-size-sm);
+  color: var(--color-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: var(--space-xs);
+}
+
+.achievement-popup-name {
+  font-family: var(--font-main);
+  font-size: var(--font-size-xl);
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+.achievement-popup-reward {
+  font-size: var(--font-size-sm);
+  color: var(--color-gold);
+}
+
+@keyframes achievementSlide {
+  0% { transform: translateX(-50%) translateY(-30px); opacity: 0; }
+  100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+@keyframes achievementFade {
+  0%, 80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Tooltip system */
+.game-tooltip {
+  position: absolute;
+  background: rgba(15, 12, 20, 0.95);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  pointer-events: none;
+  z-index: 3000;
+  max-width: 200px;
+  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+}
+
+.game-tooltip-title {
+  color: var(--color-gold);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.game-tooltip-desc {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+/* Daily Quest Banner */
+.daily-quest-banner {
+  position: absolute;
+  top: var(--space-md);
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(218, 165, 32, 0.1), transparent);
+  padding: var(--space-xs) var(--space-lg);
+  color: var(--color-gold);
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.1em;
+  text-align: center;
+  pointer-events: none;
+  animation: fadeIn 1s ease;
+}
+
+/* Notification badge on HUD icons */
+.hud-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--color-quest-active);
+  color: white;
+  font-size: 0.6rem;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* Compass indicator */
+.compass {
+  position: absolute;
+  top: var(--space-md);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  letter-spacing: 0.3em;
+  opacity: 0.5;
+}
+
+/* Health/Energy bars (for future use) */
+.stat-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.stat-bar-fill.spark { background: linear-gradient(90deg, var(--color-gold), var(--color-dawn)); }
+.stat-bar-fill.energy { background: linear-gradient(90deg, #4caf50, #8bc34a); }
+.stat-bar-fill.social { background: linear-gradient(90deg, #2196f3, #03a9f4); }
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .chat-panel {
@@ -1628,7 +1767,7 @@ html, body {
         <span style="color:var(--color-text-muted); font-size:0.75rem; letter-spacing:0.1em;">or</span>
         <button class="login-btn" id="login-btn" style="width:100%;"
           onclick="Auth.initiateOAuth()">Enter with GitHub</button>
-        <p style="color:rgba(160,151,142,0.5); font-size:0.65rem; margin-top:1rem;">WASD to move / Mouse to look / E to interact / I for inventory</p>
+        <p style="color:rgba(160,151,142,0.5); font-size:0.65rem; margin-top:1rem;">WASD move / E interact / B build / M map / F emote / J quests</p>
       </div>
     </div>
 
@@ -1648,7 +1787,12 @@ html, body {
       <div class="control-row"><span class="control-key">C</span><span class="control-desc">Craft</span></div>
       <div class="control-row"><span class="control-key">J</span><span class="control-desc">Quests</span></div>
       <div class="control-row"><span class="control-key">T</span><span class="control-desc">Trade</span></div>
+      <div class="control-row"><span class="control-key">B</span><span class="control-desc">Build</span></div>
+      <div class="control-row"><span class="control-key">M</span><span class="control-desc">Map</span></div>
+      <div class="control-row"><span class="control-key">F</span><span class="control-desc">Emotes</span></div>
+      <div class="control-row"><span class="control-key">P</span><span class="control-desc">Profile</span></div>
       <div class="control-row"><span class="control-key">Enter</span><span class="control-desc">Chat</span></div>
+      <div class="control-row"><span class="control-key">Esc</span><span class="control-desc">Settings</span></div>
     </div>
 
     <div class="notification" id="notification" style="display:none;"></div>
@@ -2453,6 +2597,78 @@ html, body {
     );
   }
 
+  // ========================================================================
+  // ECONOMY STATISTICS & MARKET BROWSING
+  // ========================================================================
+
+  function getActiveListings(ledger) {
+    if (!ledger || !ledger.listings) return [];
+    return ledger.listings.filter(function(l) { return l.active; });
+  }
+
+  function getListingsByItem(ledger, itemId) {
+    return getActiveListings(ledger).filter(function(l) {
+      return l.item === itemId || (l.item && l.item.id === itemId);
+    });
+  }
+
+  function getListingsBySeller(ledger, sellerId) {
+    return getActiveListings(ledger).filter(function(l) {
+      return l.seller === sellerId;
+    });
+  }
+
+  function cancelListing(ledger, listingId, sellerId) {
+    if (!ledger || !ledger.listings) return { success: false, message: 'No ledger' };
+
+    var listing = ledger.listings.find(function(l) { return l.id === listingId; });
+    if (!listing) return { success: false, message: 'Listing not found' };
+    if (listing.seller !== sellerId) return { success: false, message: 'Not your listing' };
+    if (!listing.active) return { success: false, message: 'Already inactive' };
+
+    listing.active = false;
+    return { success: true, item: listing.item };
+  }
+
+  function getEconomyStats(ledger) {
+    if (!ledger) return {};
+
+    var totalSpark = 0;
+    var playerCount = 0;
+    for (var pid in ledger.balances) {
+      totalSpark += ledger.balances[pid] || 0;
+      playerCount++;
+    }
+
+    var activeListings = getActiveListings(ledger);
+    var totalTransactions = ledger.transactions ? ledger.transactions.length : 0;
+
+    // Calculate velocity (transactions per player)
+    var velocity = playerCount > 0 ? totalTransactions / playerCount : 0;
+
+    return {
+      totalSpark: totalSpark,
+      playerCount: playerCount,
+      averageSpark: playerCount > 0 ? Math.floor(totalSpark / playerCount) : 0,
+      activeListings: activeListings.length,
+      totalTransactions: totalTransactions,
+      velocity: Math.round(velocity * 100) / 100
+    };
+  }
+
+  function getLeaderboard(ledger, limit) {
+    if (!ledger || !ledger.balances) return [];
+    limit = limit || 10;
+
+    var players = [];
+    for (var pid in ledger.balances) {
+      players.push({ playerId: pid, spark: ledger.balances[pid] || 0 });
+    }
+
+    players.sort(function(a, b) { return b.spark - a.spark; });
+    return players.slice(0, limit);
+  }
+
   // Export public API
   exports.createLedger = createLedger;
   exports.earnSpark = earnSpark;
@@ -2462,6 +2678,12 @@ html, body {
   exports.createMarketListing = createMarketListing;
   exports.buyListing = buyListing;
   exports.getTransactionLog = getTransactionLog;
+  exports.getActiveListings = getActiveListings;
+  exports.getListingsByItem = getListingsByItem;
+  exports.getListingsBySeller = getListingsBySeller;
+  exports.cancelListing = cancelListing;
+  exports.getEconomyStats = getEconomyStats;
+  exports.getLeaderboard = getLeaderboard;
   exports.EARN_TABLE = EARN_TABLE;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Economy = {}));
@@ -3314,6 +3536,96 @@ html, body {
     return ITEM_CATALOG[itemId] || null;
   }
 
+  // ========================================================================
+  // INVENTORY UTILITIES
+  // ========================================================================
+
+  var RARITY_ORDER = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
+
+  function getInventoryStats(inventory) {
+    if (!inventory || !inventory.items) return { totalItems: 0, uniqueItems: 0, totalValue: 0 };
+
+    var totalItems = 0;
+    var uniqueItems = 0;
+    var byRarity = { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 0 };
+    var byType = {};
+
+    for (var i = 0; i < inventory.items.length; i++) {
+      var slot = inventory.items[i];
+      if (slot && slot.id) {
+        uniqueItems++;
+        totalItems += slot.count || 1;
+        var data = ITEM_CATALOG[slot.id];
+        if (data) {
+          var rarity = data.rarity || 'common';
+          byRarity[rarity] = (byRarity[rarity] || 0) + (slot.count || 1);
+          var type = data.type || 'misc';
+          byType[type] = (byType[type] || 0) + (slot.count || 1);
+        }
+      }
+    }
+
+    return {
+      totalItems: totalItems,
+      uniqueItems: uniqueItems,
+      byRarity: byRarity,
+      byType: byType,
+      slotsUsed: uniqueItems,
+      slotsTotal: inventory.maxSlots || 20
+    };
+  }
+
+  function sortInventory(inventory, sortBy) {
+    if (!inventory || !inventory.items) return;
+    sortBy = sortBy || 'type';
+
+    // Separate items from empty slots
+    var items = inventory.items.filter(function(s) { return s && s.id; });
+    var emptyCount = inventory.items.length - items.length;
+
+    items.sort(function(a, b) {
+      var dataA = ITEM_CATALOG[a.id] || {};
+      var dataB = ITEM_CATALOG[b.id] || {};
+
+      if (sortBy === 'rarity') {
+        var ra = RARITY_ORDER[dataA.rarity || 'common'] || 0;
+        var rb = RARITY_ORDER[dataB.rarity || 'common'] || 0;
+        if (ra !== rb) return rb - ra; // Higher rarity first
+      } else if (sortBy === 'type') {
+        if (dataA.type !== dataB.type) return (dataA.type || '').localeCompare(dataB.type || '');
+      } else if (sortBy === 'name') {
+        return (dataA.name || '').localeCompare(dataB.name || '');
+      }
+
+      return (dataA.name || '').localeCompare(dataB.name || '');
+    });
+
+    // Rebuild with empty slots at end
+    inventory.items = items;
+    for (var e = 0; e < emptyCount; e++) {
+      inventory.items.push(null);
+    }
+  }
+
+  function searchInventory(inventory, query) {
+    if (!inventory || !inventory.items || !query) return [];
+    query = query.toLowerCase();
+
+    var results = [];
+    for (var i = 0; i < inventory.items.length; i++) {
+      var slot = inventory.items[i];
+      if (slot && slot.id) {
+        var data = ITEM_CATALOG[slot.id] || {};
+        if ((data.name || '').toLowerCase().indexOf(query) !== -1 ||
+            (data.description || '').toLowerCase().indexOf(query) !== -1 ||
+            (data.type || '').toLowerCase().indexOf(query) !== -1) {
+          results.push({ slotIndex: i, item: slot, data: data });
+        }
+      }
+    }
+    return results;
+  }
+
   // Export public API
   exports.ITEM_CATALOG = ITEM_CATALOG;
   exports.RECIPES = RECIPES;
@@ -3328,6 +3640,9 @@ html, body {
   exports.getAvailableRecipes = getAvailableRecipes;
   exports.getAllRecipes = getAllRecipes;
   exports.getItemData = getItemData;
+  exports.getInventoryStats = getInventoryStats;
+  exports.sortInventory = sortInventory;
+  exports.searchInventory = searchInventory;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Inventory = {}));
 
@@ -6652,6 +6967,231 @@ html, body {
     return { success: true };
   }
 
+  // ========================================================================
+  // DAILY QUEST SYSTEM — Rotating quests that refresh daily
+  // ========================================================================
+
+  var DAILY_QUESTS = [
+    {
+      id: 'daily_social',
+      title: 'Social Butterfly',
+      description: 'Talk to 5 different NPCs today',
+      objectives: [{ type: 'talk_npcs', count: 5, current: 0 }],
+      rewards: { spark: 20, items: [] },
+      dialogue: {
+        offer: "Today's challenge: connect with 5 different citizens. Every conversation enriches ZION.",
+        progress: "You've chatted with {current} NPCs. {remaining} more to go!",
+        complete: "What a social day! Here's your daily Spark reward."
+      }
+    },
+    {
+      id: 'daily_explorer',
+      title: 'Daily Explorer',
+      description: 'Visit 4 different zones today',
+      objectives: [{ type: 'visit_zones', zones: [], required: 4, current: 0 }],
+      rewards: { spark: 25, items: [] },
+      dialogue: {
+        offer: "Stretch your legs! Visit 4 different zones to earn your daily exploration reward.",
+        progress: "You've visited {current} zones. {remaining} more await!",
+        complete: "A well-traveled day! The world rewards your curiosity."
+      }
+    },
+    {
+      id: 'daily_gatherer',
+      title: 'Daily Harvest',
+      description: 'Harvest 5 resources today',
+      objectives: [{ type: 'collect', item: 'resource', count: 5, current: 0 }],
+      rewards: { spark: 15, items: [] },
+      dialogue: {
+        offer: "The gardens are abundant today. Harvest 5 resources to earn your daily reward.",
+        progress: "Harvested {current} of 5 resources.",
+        complete: "A productive day! Nature provides for those who tend it."
+      }
+    },
+    {
+      id: 'daily_trader',
+      title: 'Market Day',
+      description: 'Complete 1 trade with another player',
+      objectives: [{ type: 'trade', count: 1, current: 0 }],
+      rewards: { spark: 30, items: [] },
+      dialogue: {
+        offer: "The Agora thrives on trade. Complete one trade today to keep the economy flowing.",
+        progress: "You haven't traded yet today. Find a partner!",
+        complete: "A fair trade benefits everyone. Well done, merchant!"
+      }
+    },
+    {
+      id: 'daily_crafter',
+      title: 'Creative Day',
+      description: 'Craft 2 items today',
+      objectives: [{ type: 'craft', count: 2, current: 0 }],
+      rewards: { spark: 20, items: [] },
+      dialogue: {
+        offer: "Creation is at the heart of ZION. Craft 2 items today to earn your reward.",
+        progress: "Crafted {current} of 2 items.",
+        complete: "Your hands have shaped the world today. Well crafted!"
+      }
+    },
+    {
+      id: 'daily_builder',
+      title: 'Construction Day',
+      description: 'Place 2 structures today',
+      objectives: [{ type: 'build', count: 2, current: 0 }],
+      rewards: { spark: 25, items: [] },
+      dialogue: {
+        offer: "The Commons could use some new structures. Place 2 buildings today.",
+        progress: "Placed {current} of 2 structures.",
+        complete: "Your buildings will stand as testament to today's work!"
+      }
+    },
+    {
+      id: 'daily_wanderer',
+      title: 'Long Walk',
+      description: 'Walk a total of 500 units today',
+      objectives: [{ type: 'walk_distance', distance: 500, current: 0 }],
+      rewards: { spark: 15, items: [] },
+      dialogue: {
+        offer: "Sometimes the journey matters more than the destination. Walk 500 units today.",
+        progress: "You've walked {current} of 500 units.",
+        complete: "Every step is a story. Well walked!"
+      }
+    }
+  ];
+
+  function getDailyQuests() {
+    // Use the day of year to rotate which 3 dailies are available
+    var now = new Date();
+    var dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    var dailies = [];
+    for (var i = 0; i < 3; i++) {
+      var idx = (dayOfYear + i) % DAILY_QUESTS.length;
+      var daily = JSON.parse(JSON.stringify(DAILY_QUESTS[idx]));
+      daily.id = 'daily_' + dayOfYear + '_' + i;
+      daily.type = 'daily';
+      daily.repeatable = false;
+      daily.requiredLevel = 0;
+      daily.prerequisiteQuests = [];
+      daily.timeLimit = 0;
+      daily.giverNpcId = 'ai_citizen_001'; // Default quest giver
+      daily.status = 'available';
+      dailies.push(daily);
+    }
+    return dailies;
+  }
+
+  function isDailyCompleted(playerId, dailyId) {
+    initPlayerQuests(playerId);
+    var state = playerQuestStates.get(playerId);
+    return state.turnedInQuests.indexOf(dailyId) !== -1;
+  }
+
+  // ========================================================================
+  // QUEST CHAINS — Multi-part story quests
+  // ========================================================================
+
+  var QUEST_CHAINS = {
+    'chain_origins': {
+      name: 'Origins of ZION',
+      description: 'Discover the history of how ZION came to be',
+      quests: ['quest_nexus_001', 'quest_nexus_002'],
+      reward: { spark: 100, title: 'Historian' }
+    },
+    'chain_garden_master': {
+      name: 'Garden Master',
+      description: 'Complete all garden quests to earn the title of Garden Master',
+      quests: ['quest_gardens_001', 'quest_gardens_002', 'quest_gardens_003', 'quest_gardens_004', 'quest_gardens_005'],
+      reward: { spark: 150, title: 'Garden Master' }
+    },
+    'chain_scholar': {
+      name: 'Scholar of the Athenaeum',
+      description: 'Complete all knowledge quests',
+      quests: ['quest_athenaeum_001', 'quest_athenaeum_002', 'quest_athenaeum_003'],
+      reward: { spark: 120, title: 'Scholar' }
+    },
+    'chain_artisan': {
+      name: 'Master Artisan',
+      description: 'Complete all studio crafting quests',
+      quests: ['quest_studio_001', 'quest_studio_002'],
+      reward: { spark: 100, title: 'Artisan' }
+    },
+    'chain_explorer': {
+      name: 'True Explorer',
+      description: 'Visit every zone and complete all exploration quests',
+      quests: ['quest_nexus_002', 'quest_wilds_001', 'quest_wilds_002', 'quest_wilds_003'],
+      reward: { spark: 200, title: 'True Explorer' }
+    }
+  };
+
+  function getChainProgress(playerId) {
+    initPlayerQuests(playerId);
+    var state = playerQuestStates.get(playerId);
+    var progress = {};
+
+    for (var chainId in QUEST_CHAINS) {
+      var chain = QUEST_CHAINS[chainId];
+      var completed = 0;
+      for (var i = 0; i < chain.quests.length; i++) {
+        if (state.turnedInQuests.indexOf(chain.quests[i]) !== -1) {
+          completed++;
+        }
+      }
+      progress[chainId] = {
+        name: chain.name,
+        description: chain.description,
+        completed: completed,
+        total: chain.quests.length,
+        isComplete: completed >= chain.quests.length,
+        reward: chain.reward
+      };
+    }
+
+    return progress;
+  }
+
+  function checkChainCompletion(playerId) {
+    var progress = getChainProgress(playerId);
+    var newlyCompleted = [];
+
+    for (var chainId in progress) {
+      var chain = progress[chainId];
+      if (chain.isComplete) {
+        initPlayerQuests(playerId);
+        var state = playerQuestStates.get(playerId);
+        if (!state.completedChains) state.completedChains = [];
+        if (state.completedChains.indexOf(chainId) === -1) {
+          state.completedChains.push(chainId);
+          newlyCompleted.push({
+            chainId: chainId,
+            name: chain.name,
+            reward: chain.reward
+          });
+        }
+      }
+    }
+
+    return newlyCompleted;
+  }
+
+  // ========================================================================
+  // PLAYER STATS from quests
+  // ========================================================================
+
+  function getPlayerQuestStats(playerId) {
+    initPlayerQuests(playerId);
+    var state = playerQuestStates.get(playerId);
+
+    return {
+      activeQuests: state.activeQuests.length,
+      completedQuests: state.turnedInQuests.length,
+      totalAvailable: Object.keys(QUEST_DATABASE).length,
+      completedChains: (state.completedChains || []).length,
+      totalChains: Object.keys(QUEST_CHAINS).length,
+      titles: (state.completedChains || []).map(function(chainId) {
+        return QUEST_CHAINS[chainId] ? QUEST_CHAINS[chainId].reward.title : null;
+      }).filter(Boolean)
+    };
+  }
+
   // Export public API
   exports.getAvailableQuests = getAvailableQuests;
   exports.acceptQuest = acceptQuest;
@@ -6663,6 +7203,13 @@ html, body {
   exports.getNpcQuests = getNpcQuests;
   exports.abandonQuest = abandonQuest;
   exports.initPlayerQuests = initPlayerQuests;
+  exports.getDailyQuests = getDailyQuests;
+  exports.isDailyCompleted = isDailyCompleted;
+  exports.getChainProgress = getChainProgress;
+  exports.checkChainCompletion = checkChainCompletion;
+  exports.getPlayerQuestStats = getPlayerQuestStats;
+  exports.QUEST_CHAINS = QUEST_CHAINS;
+  exports.DAILY_QUESTS = DAILY_QUESTS;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Quests = {}));
 
@@ -12818,6 +13365,10 @@ html, body {
     for (var j = 0; j < animatedObjects.length; j++) {
       var obj = animatedObjects[j];
       if (!obj.mesh || !obj.mesh.parent) continue;
+
+      // Skip animation if object is outside frustum (set by updateFrustumCulling)
+      if (obj.mesh.userData.inFrustum === false) continue;
+
       var p = obj.params;
 
       switch (obj.type) {
@@ -14461,6 +15012,241 @@ html, body {
   }
 
   // ========================================================================
+  // PERFORMANCE OPTIMIZATIONS
+  // ========================================================================
+
+  // Track LOD state for objects
+  var lodStates = new Map(); // objectId -> { level: 0/1/2, hiddenChildren: [] }
+
+  // Object pools for particles
+  var objectPools = {
+    sphere: [],
+    cube: [],
+    cone: []
+  };
+
+  /**
+   * Distance-based LOD for trees and structures
+   * - distance > 200: hide completely
+   * - distance > 100: simplify (hide small decorative pieces)
+   * - distance < 100: full detail
+   */
+  function updateLOD(sceneCtx, playerPos) {
+    if (!sceneCtx || !sceneCtx.scene || !playerPos) return;
+
+    var scene = sceneCtx.scene;
+
+    // Process all groups in scene with model_type userData
+    scene.traverse(function(obj) {
+      if (!obj.userData || !obj.userData.model_type) return;
+      if (!(obj instanceof THREE.Group)) return;
+
+      var objId = obj.uuid;
+      var dx = obj.position.x - playerPos.x;
+      var dz = obj.position.z - playerPos.z;
+      var distance = Math.sqrt(dx * dx + dz * dz);
+
+      var currentState = lodStates.get(objId);
+      var newLevel = 0;
+
+      if (distance > 200) {
+        newLevel = 2; // hidden
+      } else if (distance > 100) {
+        newLevel = 1; // simplified
+      } else {
+        newLevel = 0; // full detail
+      }
+
+      // Only update if LOD level changed
+      if (!currentState || currentState.level !== newLevel) {
+        if (newLevel === 2) {
+          // Hide completely
+          obj.visible = false;
+        } else if (newLevel === 1) {
+          // Simplify: hide small meshes (low vertex count decorative pieces)
+          obj.visible = true;
+          var hiddenChildren = [];
+          obj.traverse(function(child) {
+            if (child instanceof THREE.Mesh && child !== obj) {
+              var vertexCount = 0;
+              if (child.geometry && child.geometry.attributes && child.geometry.attributes.position) {
+                vertexCount = child.geometry.attributes.position.count;
+              }
+              // Hide meshes with fewer than 50 vertices (decorative details)
+              if (vertexCount < 50 && child.visible) {
+                child.visible = false;
+                hiddenChildren.push(child);
+              }
+            }
+          });
+          lodStates.set(objId, { level: 1, hiddenChildren: hiddenChildren });
+        } else {
+          // Full detail: restore everything
+          obj.visible = true;
+          if (currentState && currentState.hiddenChildren) {
+            for (var i = 0; i < currentState.hiddenChildren.length; i++) {
+              currentState.hiddenChildren[i].visible = true;
+            }
+          }
+          lodStates.set(objId, { level: 0, hiddenChildren: [] });
+        }
+      }
+    });
+  }
+
+  /**
+   * Frustum culling for animated objects and chunks
+   * Sets userData.inFrustum flag to skip animation updates for objects outside view
+   */
+  function updateFrustumCulling(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.camera) return;
+
+    var camera = sceneCtx.camera;
+    camera.updateMatrixWorld();
+
+    var frustum = new THREE.Frustum();
+    var projScreenMatrix = new THREE.Matrix4();
+    projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(projScreenMatrix);
+
+    // Cull animated objects
+    for (var i = 0; i < animatedObjects.length; i++) {
+      var obj = animatedObjects[i];
+      if (!obj.mesh) continue;
+
+      var inFrustum = frustum.intersectsObject(obj.mesh);
+      obj.mesh.userData.inFrustum = inFrustum;
+    }
+
+    // Cull chunks
+    loadedChunks.forEach(function(chunkData, key) {
+      if (!chunkData.group) return;
+      var inFrustum = frustum.intersectsObject(chunkData.group);
+      chunkData.group.userData.inFrustum = inFrustum;
+    });
+  }
+
+  /**
+   * Get object from pool (for particle systems)
+   */
+  function getFromPool(type) {
+    var pool = objectPools[type];
+    if (!pool) {
+      objectPools[type] = [];
+      pool = objectPools[type];
+    }
+
+    if (pool.length > 0) {
+      var obj = pool.pop();
+      obj.visible = true;
+      return obj;
+    }
+
+    // Create new object if pool is empty
+    var geometry, material, mesh;
+    switch (type) {
+      case 'sphere':
+        geometry = new THREE.SphereGeometry(0.1, 8, 8);
+        material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        mesh = new THREE.Mesh(geometry, material);
+        break;
+      case 'cube':
+        geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+        material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        mesh = new THREE.Mesh(geometry, material);
+        break;
+      case 'cone':
+        geometry = new THREE.ConeGeometry(0.1, 0.2, 8);
+        material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        mesh = new THREE.Mesh(geometry, material);
+        break;
+      default:
+        geometry = new THREE.SphereGeometry(0.1, 8, 8);
+        material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        mesh = new THREE.Mesh(geometry, material);
+    }
+    return mesh;
+  }
+
+  /**
+   * Return object to pool
+   */
+  function returnToPool(type, object) {
+    if (!object) return;
+
+    var pool = objectPools[type];
+    if (!pool) {
+      objectPools[type] = [];
+      pool = objectPools[type];
+    }
+
+    // Reset object state
+    object.visible = false;
+    object.position.set(0, 0, 0);
+    object.rotation.set(0, 0, 0);
+    object.scale.set(1, 1, 1);
+
+    // Add to pool if not too large
+    if (pool.length < 1000) {
+      pool.push(object);
+    } else {
+      // Dispose if pool is full
+      if (object.geometry) object.geometry.dispose();
+      if (object.material) {
+        if (Array.isArray(object.material)) {
+          for (var i = 0; i < object.material.length; i++) {
+            object.material[i].dispose();
+          }
+        } else {
+          object.material.dispose();
+        }
+      }
+    }
+  }
+
+  /**
+   * Get performance statistics
+   */
+  function getPerformanceStats() {
+    var stats = {
+      totalObjects: 0,
+      visibleObjects: 0,
+      activeAnimations: 0,
+      loadedChunks: loadedChunks.size,
+      estimatedTriangles: 0
+    };
+
+    // Count scene objects
+    if (sceneContext && sceneContext.scene) {
+      sceneContext.scene.traverse(function(obj) {
+        stats.totalObjects++;
+        if (obj.visible) {
+          stats.visibleObjects++;
+        }
+        // Estimate triangles for meshes
+        if (obj instanceof THREE.Mesh && obj.geometry) {
+          if (obj.geometry.index) {
+            stats.estimatedTriangles += obj.geometry.index.count / 3;
+          } else if (obj.geometry.attributes && obj.geometry.attributes.position) {
+            stats.estimatedTriangles += obj.geometry.attributes.position.count / 3;
+          }
+        }
+      });
+    }
+
+    // Count active animations (objects in frustum)
+    for (var i = 0; i < animatedObjects.length; i++) {
+      if (animatedObjects[i].mesh && animatedObjects[i].mesh.userData.inFrustum !== false) {
+        stats.activeAnimations++;
+      }
+    }
+
+    stats.estimatedTriangles = Math.floor(stats.estimatedTriangles);
+
+    return stats;
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -14501,6 +15287,11 @@ html, body {
   exports.updateBuildPreview = updateBuildPreview;
   exports.rotateBuildPreview = rotateBuildPreview;
   exports.getBuildMode = getBuildMode;
+  exports.updateLOD = updateLOD;
+  exports.updateFrustumCulling = updateFrustumCulling;
+  exports.getFromPool = getFromPool;
+  exports.returnToPool = returnToPool;
+  exports.getPerformanceStats = getPerformanceStats;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));
 
@@ -14580,7 +15371,7 @@ html, body {
         chatMode = false;
         buildMode = false;
         if (callbacks.onAction) {
-          callbacks.onAction('cancel', {});
+          callbacks.onAction('toggleSettings', {});
         }
         e.preventDefault();
         break;
@@ -14685,6 +15476,16 @@ html, body {
         if (!chatMode) {
           if (callbacks.onAction) {
             callbacks.onAction('toggleMap', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'p':
+      case 'P':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleProfile', {});
           }
           e.preventDefault();
         }
@@ -17328,6 +18129,609 @@ html, body {
     });
   }
 
+  // Settings Menu
+  let settingsMenuPanel = null;
+  let settingsData = {
+    masterVolume: 50,
+    musicVolume: 30,
+    sfxVolume: 70,
+    renderDistance: 'medium',
+    particleDensity: 'medium',
+    showFPS: false
+  };
+
+  function loadSettings() {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      var stored = localStorage.getItem('zion_settings');
+      if (stored) {
+        var parsed = JSON.parse(stored);
+        Object.assign(settingsData, parsed);
+      }
+    } catch (err) {
+      console.warn('Failed to load settings:', err);
+    }
+  }
+
+  function saveSettings() {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem('zion_settings', JSON.stringify(settingsData));
+    } catch (err) {
+      console.warn('Failed to save settings:', err);
+    }
+  }
+
+  function getSettings() {
+    return settingsData;
+  }
+
+  function showSettingsMenu() {
+    if (settingsMenuPanel) return;
+
+    var overlay = document.createElement('div');
+    overlay.id = 'settings-menu-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    `;
+
+    var panel = document.createElement('div');
+    panel.style.cssText = `
+      background: rgba(26, 26, 26, 0.95);
+      border: 2px solid rgba(218, 165, 32, 0.5);
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    `;
+
+    var title = document.createElement('h2');
+    title.textContent = 'Settings';
+    title.style.cssText = `
+      margin: 0 0 25px 0;
+      color: #DAA520;
+      font-size: 28px;
+      font-family: Georgia, serif;
+      text-align: center;
+      border-bottom: 2px solid rgba(218, 165, 32, 0.3);
+      padding-bottom: 15px;
+    `;
+    panel.appendChild(title);
+
+    // Volume Section
+    var volumeSection = document.createElement('div');
+    volumeSection.style.cssText = `
+      margin-bottom: 25px;
+    `;
+
+    var volumeTitle = document.createElement('h3');
+    volumeTitle.textContent = 'Audio';
+    volumeTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #E8E0D8;
+      font-size: 20px;
+      font-family: Georgia, serif;
+    `;
+    volumeSection.appendChild(volumeTitle);
+
+    // Master Volume
+    volumeSection.appendChild(createSlider('Master Volume', 'masterVolume', settingsData.masterVolume));
+    // Music Volume
+    volumeSection.appendChild(createSlider('Music Volume', 'musicVolume', settingsData.musicVolume));
+    // SFX Volume
+    volumeSection.appendChild(createSlider('SFX Volume', 'sfxVolume', settingsData.sfxVolume));
+
+    panel.appendChild(volumeSection);
+
+    // Graphics Section
+    var graphicsSection = document.createElement('div');
+    graphicsSection.style.cssText = `
+      margin-bottom: 25px;
+    `;
+
+    var graphicsTitle = document.createElement('h3');
+    graphicsTitle.textContent = 'Graphics';
+    graphicsTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #E8E0D8;
+      font-size: 20px;
+      font-family: Georgia, serif;
+    `;
+    graphicsSection.appendChild(graphicsTitle);
+
+    // Render Distance
+    graphicsSection.appendChild(createOptionButtons('Render Distance', 'renderDistance', ['low', 'medium', 'high'], settingsData.renderDistance));
+    // Particle Density
+    graphicsSection.appendChild(createOptionButtons('Particle Density', 'particleDensity', ['low', 'medium', 'high'], settingsData.particleDensity));
+    // Show FPS Counter
+    graphicsSection.appendChild(createCheckbox('Show FPS Counter', 'showFPS', settingsData.showFPS));
+
+    panel.appendChild(graphicsSection);
+
+    // Controls Section
+    var controlsSection = document.createElement('div');
+    controlsSection.style.cssText = `
+      margin-bottom: 25px;
+    `;
+
+    var controlsTitle = document.createElement('h3');
+    controlsTitle.textContent = 'Controls';
+    controlsTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #E8E0D8;
+      font-size: 20px;
+      font-family: Georgia, serif;
+    `;
+    controlsSection.appendChild(controlsTitle);
+
+    var controlsInfo = document.createElement('div');
+    controlsInfo.style.cssText = `
+      color: #A0978E;
+      font-size: 14px;
+      line-height: 1.8;
+      font-family: system-ui, sans-serif;
+    `;
+    controlsInfo.innerHTML = `
+      <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px;">
+        <div><strong>W/A/S/D</strong></div><div>Move</div>
+        <div><strong>Mouse</strong></div><div>Look around</div>
+        <div><strong>E</strong></div><div>Interact</div>
+        <div><strong>I</strong></div><div>Inventory</div>
+        <div><strong>C</strong></div><div>Crafting</div>
+        <div><strong>J</strong></div><div>Quest Log</div>
+        <div><strong>M</strong></div><div>World Map</div>
+        <div><strong>B</strong></div><div>Build Mode</div>
+        <div><strong>F</strong></div><div>Emote Menu</div>
+        <div><strong>T</strong></div><div>Trade</div>
+        <div><strong>P</strong></div><div>Player Profile</div>
+        <div><strong>Enter</strong></div><div>Chat</div>
+        <div><strong>Escape</strong></div><div>Settings / Cancel</div>
+      </div>
+    `;
+    controlsSection.appendChild(controlsInfo);
+
+    panel.appendChild(controlsSection);
+
+    // Resume Button
+    var resumeBtn = document.createElement('button');
+    resumeBtn.textContent = 'Resume';
+    resumeBtn.style.cssText = `
+      width: 100%;
+      padding: 15px;
+      background: rgba(218, 165, 32, 0.2);
+      color: #DAA520;
+      border: 2px solid #DAA520;
+      border-radius: 8px;
+      font-size: 18px;
+      font-family: Georgia, serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    `;
+    resumeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.3)';
+      this.style.borderColor = '#FFD700';
+    };
+    resumeBtn.onmouseout = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.2)';
+      this.style.borderColor = '#DAA520';
+    };
+    resumeBtn.onclick = function() {
+      hideSettingsMenu();
+    };
+    panel.appendChild(resumeBtn);
+
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    settingsMenuPanel = overlay;
+  }
+
+  function hideSettingsMenu() {
+    if (!settingsMenuPanel) return;
+    document.body.removeChild(settingsMenuPanel);
+    settingsMenuPanel = null;
+  }
+
+  function createSlider(label, key, value) {
+    var container = document.createElement('div');
+    container.style.cssText = `
+      margin-bottom: 15px;
+    `;
+
+    var labelEl = document.createElement('label');
+    labelEl.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+
+    var labelText = document.createElement('span');
+    labelText.textContent = label;
+
+    var valueDisplay = document.createElement('span');
+    valueDisplay.textContent = value;
+    valueDisplay.style.color = '#DAA520';
+    valueDisplay.style.fontWeight = 'bold';
+
+    labelEl.appendChild(labelText);
+    labelEl.appendChild(valueDisplay);
+    container.appendChild(labelEl);
+
+    var slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '0';
+    slider.max = '100';
+    slider.value = value;
+    slider.style.cssText = `
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+      -webkit-appearance: none;
+    `;
+
+    slider.oninput = function() {
+      valueDisplay.textContent = this.value;
+      settingsData[key] = parseInt(this.value);
+      saveSettings();
+      applySettings();
+    };
+
+    container.appendChild(slider);
+    return container;
+  }
+
+  function createOptionButtons(label, key, options, currentValue) {
+    var container = document.createElement('div');
+    container.style.cssText = `
+      margin-bottom: 15px;
+    `;
+
+    var labelEl = document.createElement('div');
+    labelEl.textContent = label;
+    labelEl.style.cssText = `
+      margin-bottom: 8px;
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+    container.appendChild(labelEl);
+
+    var buttonsContainer = document.createElement('div');
+    buttonsContainer.style.cssText = `
+      display: flex;
+      gap: 10px;
+    `;
+
+    options.forEach(function(option) {
+      var btn = document.createElement('button');
+      btn.textContent = option.charAt(0).toUpperCase() + option.slice(1);
+      btn.style.cssText = `
+        flex: 1;
+        padding: 10px;
+        background: ${option === currentValue ? 'rgba(218, 165, 32, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+        color: ${option === currentValue ? '#DAA520' : '#E8E0D8'};
+        border: 2px solid ${option === currentValue ? '#DAA520' : 'rgba(255, 255, 255, 0.3)'};
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      `;
+
+      btn.onclick = function() {
+        settingsData[key] = option;
+        saveSettings();
+        applySettings();
+
+        // Update button styles
+        Array.from(buttonsContainer.children).forEach(function(child) {
+          child.style.background = 'rgba(255, 255, 255, 0.1)';
+          child.style.color = '#E8E0D8';
+          child.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        });
+        btn.style.background = 'rgba(218, 165, 32, 0.3)';
+        btn.style.color = '#DAA520';
+        btn.style.borderColor = '#DAA520';
+      };
+
+      btn.onmouseover = function() {
+        if (option !== currentValue) {
+          this.style.background = 'rgba(255, 255, 255, 0.15)';
+        }
+      };
+
+      btn.onmouseout = function() {
+        if (option !== currentValue) {
+          this.style.background = 'rgba(255, 255, 255, 0.1)';
+        }
+      };
+
+      buttonsContainer.appendChild(btn);
+    });
+
+    container.appendChild(buttonsContainer);
+    return container;
+  }
+
+  function createCheckbox(label, key, checked) {
+    var container = document.createElement('div');
+    container.style.cssText = `
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    `;
+
+    var checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = checked;
+    checkbox.style.cssText = `
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    `;
+
+    checkbox.onchange = function() {
+      settingsData[key] = this.checked;
+      saveSettings();
+      applySettings();
+    };
+
+    var labelEl = document.createElement('label');
+    labelEl.textContent = label;
+    labelEl.style.cssText = `
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      cursor: pointer;
+    `;
+    labelEl.onclick = function() {
+      checkbox.checked = !checkbox.checked;
+      checkbox.onchange();
+    };
+
+    container.appendChild(checkbox);
+    container.appendChild(labelEl);
+    return container;
+  }
+
+  function applySettings() {
+    // Apply audio settings
+    if (typeof Audio !== 'undefined' && Audio.setVolume) {
+      Audio.setVolume('master', settingsData.masterVolume / 100);
+      Audio.setVolume('music', settingsData.musicVolume / 100);
+      Audio.setVolume('sfx', settingsData.sfxVolume / 100);
+    }
+
+    // FPS counter will be handled by main.js
+    // Render distance and particle density would be applied by renderer/world systems
+  }
+
+  // Player Profile Panel
+  let playerProfilePanel = null;
+
+  function showPlayerProfile(playerData) {
+    if (playerProfilePanel) {
+      hidePlayerProfile();
+      return;
+    }
+
+    var panel = document.createElement('div');
+    panel.id = 'player-profile-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 350px;
+      height: 100%;
+      background: rgba(26, 26, 26, 0.95);
+      border-left: 2px solid rgba(218, 165, 32, 0.5);
+      z-index: 200;
+      overflow-y: auto;
+      pointer-events: auto;
+      box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
+    `;
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 35px;
+      height: 35px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #E8E0D8;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    `;
+    closeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.3)';
+      this.style.borderColor = '#DAA520';
+      this.style.color = '#DAA520';
+    };
+    closeBtn.onmouseout = function() {
+      this.style.background = 'rgba(255, 255, 255, 0.1)';
+      this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+      this.style.color = '#E8E0D8';
+    };
+    closeBtn.onclick = function() {
+      hidePlayerProfile();
+    };
+    panel.appendChild(closeBtn);
+
+    // Content container
+    var content = document.createElement('div');
+    content.style.cssText = `
+      padding: 30px 25px;
+    `;
+
+    // Player header
+    var header = document.createElement('div');
+    header.style.cssText = `
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid rgba(218, 165, 32, 0.3);
+    `;
+
+    var playerName = document.createElement('h2');
+    playerName.textContent = playerData.name || 'Player';
+    playerName.style.cssText = `
+      margin: 0 0 10px 0;
+      color: #DAA520;
+      font-size: 24px;
+      font-family: Georgia, serif;
+    `;
+    header.appendChild(playerName);
+
+    var currentZone = document.createElement('div');
+    currentZone.textContent = 'Current Zone: ' + (playerData.zone || 'Unknown');
+    currentZone.style.cssText = `
+      color: #A0978E;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+    header.appendChild(currentZone);
+
+    content.appendChild(header);
+
+    // Stats section
+    var statsSection = document.createElement('div');
+    statsSection.style.cssText = `
+      margin-bottom: 25px;
+    `;
+
+    var statsTitle = document.createElement('h3');
+    statsTitle.textContent = 'Statistics';
+    statsTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #E8E0D8;
+      font-size: 18px;
+      font-family: Georgia, serif;
+    `;
+    statsSection.appendChild(statsTitle);
+
+    var stats = [
+      { label: 'Spark Balance', value: (playerData.sparkBalance || 0) + ' ✦', color: '#DAA520' },
+      { label: 'Time Played', value: formatPlayTime(playerData.playTimeSeconds || 0), color: '#E8E0D8' },
+      { label: 'Items Collected', value: playerData.itemsCollected || 0, color: '#E8E0D8' },
+      { label: 'Quests Completed', value: playerData.questsCompleted || 0, color: '#E8E0D8' },
+      { label: 'Quests Active', value: playerData.questsActive || 0, color: '#E8E0D8' },
+      { label: 'NPCs Met', value: playerData.npcsMet || 0, color: '#E8E0D8' },
+      { label: 'Zones Discovered', value: playerData.zonesDiscovered || 0, color: '#E8E0D8' },
+      { label: 'Structures Built', value: playerData.structuresBuilt || 0, color: '#E8E0D8' }
+    ];
+
+    stats.forEach(function(stat) {
+      var statRow = document.createElement('div');
+      statRow.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+      `;
+
+      var statLabel = document.createElement('span');
+      statLabel.textContent = stat.label;
+      statLabel.style.color = '#A0978E';
+
+      var statValue = document.createElement('span');
+      statValue.textContent = stat.value;
+      statValue.style.cssText = `
+        color: ${stat.color};
+        font-weight: bold;
+      `;
+
+      statRow.appendChild(statLabel);
+      statRow.appendChild(statValue);
+      statsSection.appendChild(statRow);
+    });
+
+    content.appendChild(statsSection);
+
+    // Recent Activity section
+    var activitySection = document.createElement('div');
+    activitySection.style.cssText = `
+      margin-bottom: 25px;
+    `;
+
+    var activityTitle = document.createElement('h3');
+    activityTitle.textContent = 'Recent Activity';
+    activityTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #E8E0D8;
+      font-size: 18px;
+      font-family: Georgia, serif;
+    `;
+    activitySection.appendChild(activityTitle);
+
+    var activities = playerData.recentActivities || [
+      'Started playing ZION'
+    ];
+
+    activities.slice(0, 5).forEach(function(activity) {
+      var activityItem = document.createElement('div');
+      activityItem.textContent = '• ' + activity;
+      activityItem.style.cssText = `
+        color: #A0978E;
+        font-size: 13px;
+        font-family: system-ui, sans-serif;
+        padding: 6px 0;
+        line-height: 1.5;
+      `;
+      activitySection.appendChild(activityItem);
+    });
+
+    content.appendChild(activitySection);
+
+    panel.appendChild(content);
+    document.body.appendChild(panel);
+    playerProfilePanel = panel;
+  }
+
+  function hidePlayerProfile() {
+    if (!playerProfilePanel) return;
+    document.body.removeChild(playerProfilePanel);
+    playerProfilePanel = null;
+  }
+
+  function formatPlayTime(seconds) {
+    var hours = Math.floor(seconds / 3600);
+    var minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return hours + 'h ' + minutes + 'm';
+    }
+    return minutes + 'm';
+  }
+
   // Export public API
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
@@ -17385,6 +18789,12 @@ html, body {
   exports.showWorldMap = showWorldMap;
   exports.hideWorldMap = hideWorldMap;
   exports.updateWorldMap = updateWorldMap;
+  exports.showSettingsMenu = showSettingsMenu;
+  exports.hideSettingsMenu = hideSettingsMenu;
+  exports.loadSettings = loadSettings;
+  exports.getSettings = getSettings;
+  exports.showPlayerProfile = showPlayerProfile;
+  exports.hidePlayerProfile = hidePlayerProfile;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));
 
@@ -26892,6 +28302,16 @@ html, body {
   let raycaster = null;
   let npcUpdateFrame = 0;
 
+  // Performance tracking
+  let frameCount = 0;
+  let fpsFrameTimes = [];
+  let currentFPS = 60;
+  let showDebug = false; // Set to true to show FPS counter
+
+  // Play time tracking
+  let playTimeSeconds = 0;
+  let recentActivities = [];
+
   // Platform detection
   let platform = 'desktop';
 
@@ -27073,6 +28493,26 @@ html, body {
       if (HUD.initQuickBar) {
         HUD.initQuickBar();
       }
+
+      // Load settings and apply them
+      if (HUD.loadSettings) {
+        HUD.loadSettings();
+        var settings = HUD.getSettings();
+        if (settings && Audio) {
+          if (Audio.setVolume) {
+            Audio.setVolume('master', settings.masterVolume / 100);
+            Audio.setVolume('music', settings.musicVolume / 100);
+            Audio.setVolume('sfx', settings.sfxVolume / 100);
+          }
+        }
+        // Set FPS counter visibility
+        if (settings) {
+          showDebug = settings.showFPS;
+        }
+      }
+
+      // Initialize play time tracking
+      getPlayTimeSeconds();
 
       // Add chat input
       HUD.addChatInput((text) => {
@@ -27294,6 +28734,32 @@ html, body {
 
     // Increment frame counter for periodic updates
     npcUpdateFrame++;
+    frameCount++;
+
+    // Track FPS
+    fpsFrameTimes.push(deltaTime);
+    if (fpsFrameTimes.length > 60) {
+      fpsFrameTimes.shift();
+    }
+    if (fpsFrameTimes.length > 10) {
+      var avgFrameTime = fpsFrameTimes.reduce(function(a, b) { return a + b; }, 0) / fpsFrameTimes.length;
+      currentFPS = avgFrameTime > 0 ? Math.round(1 / avgFrameTime) : 60;
+    }
+
+    // Track play time
+    playTimeSeconds += deltaTime;
+    // Save every 30 seconds
+    if (frameCount % 1800 === 0) {
+      savePlayTime();
+    }
+
+    // Update FPS counter visibility from settings
+    if (HUD && HUD.getSettings) {
+      var settings = HUD.getSettings();
+      if (settings) {
+        showDebug = settings.showFPS;
+      }
+    }
 
     // Process queued messages
     processMessageQueue();
@@ -27354,6 +28820,8 @@ html, body {
             var oldZone = currentZone;
             currentZone = detectedZone;
             console.log('Entered zone:', currentZone);
+            // Track activity
+            addRecentActivity('Entered ' + currentZone);
 
             if (HUD) {
               HUD.updateZoneLabel(currentZone);
@@ -27535,6 +29003,17 @@ html, body {
         World.cullLights(sceneContext, localPlayer.position, 40, 8);
       }
 
+      // Performance optimizations
+      // Update frustum culling every 10 frames
+      if (frameCount % 10 === 0 && World.updateFrustumCulling) {
+        World.updateFrustumCulling(sceneContext);
+      }
+
+      // Update LOD every 30 frames
+      if (frameCount % 30 === 0 && World.updateLOD) {
+        World.updateLOD(sceneContext, localPlayer.position);
+      }
+
       // Update environmental animations
       if (World.updateAnimations) {
         World.updateAnimations(sceneContext, deltaTime, worldTime);
@@ -27654,6 +29133,37 @@ html, body {
       // Update quest indicators on NPCs (every few frames)
       if (Quests && NPCs && NPCs.updateQuestIndicators && npcUpdateFrame % 60 === 0) {
         NPCs.updateQuestIndicators(localPlayer.id, localPlayer.position);
+      }
+
+      // Update FPS display if debug mode is enabled
+      if (showDebug && typeof document !== 'undefined') {
+        var fpsElement = document.getElementById('fps-counter');
+        if (!fpsElement) {
+          fpsElement = document.createElement('div');
+          fpsElement.id = 'fps-counter';
+          fpsElement.style.position = 'fixed';
+          fpsElement.style.top = '10px';
+          fpsElement.style.right = '10px';
+          fpsElement.style.padding = '8px 12px';
+          fpsElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+          fpsElement.style.color = '#00ff00';
+          fpsElement.style.fontFamily = 'monospace';
+          fpsElement.style.fontSize = '12px';
+          fpsElement.style.borderRadius = '4px';
+          fpsElement.style.zIndex = '10000';
+          document.body.appendChild(fpsElement);
+        }
+
+        // Get performance stats from World
+        var perfStats = World && World.getPerformanceStats ? World.getPerformanceStats() : null;
+        var statsText = 'FPS: ' + currentFPS;
+        if (perfStats) {
+          statsText += '\nObjects: ' + perfStats.visibleObjects + '/' + perfStats.totalObjects;
+          statsText += '\nAnimations: ' + perfStats.activeAnimations;
+          statsText += '\nChunks: ' + perfStats.loadedChunks;
+          statsText += '\nTriangles: ' + perfStats.estimatedTriangles;
+        }
+        fpsElement.innerText = statsText;
       }
     }
 
@@ -27907,6 +29417,11 @@ html, body {
     if (Audio) {
       Audio.playSound('build');
     }
+
+    if (msg.from === localPlayer.id) {
+      var structureName = msg.payload.structure.type || 'structure';
+      addRecentActivity('Built a ' + structureName);
+    }
   }
 
   /**
@@ -28124,6 +29639,9 @@ html, body {
       }
 
       if (Audio) Audio.playSound('harvest');
+
+      // Track activity
+      addRecentActivity('Collected ' + itemData.name);
     } else {
       if (HUD) HUD.showNotification(result.message, 'warning');
     }
@@ -28314,6 +29832,42 @@ html, body {
         }
         break;
 
+      case 'toggleSettings':
+        if (HUD) {
+          var settingsEl = document.getElementById('settings-menu-overlay');
+          if (settingsEl) {
+            HUD.hideSettingsMenu();
+          } else {
+            HUD.showSettingsMenu();
+          }
+        }
+        break;
+
+      case 'toggleProfile':
+        if (HUD && localPlayer) {
+          var profileEl = document.getElementById('player-profile-panel');
+          if (profileEl) {
+            HUD.hidePlayerProfile();
+          } else {
+            // Gather player stats
+            var playerData = {
+              name: localPlayer.name || 'Player',
+              zone: currentZone,
+              sparkBalance: economyLedger ? Economy.getBalance(economyLedger, localPlayer.id) : 0,
+              playTimeSeconds: getPlayTimeSeconds(),
+              itemsCollected: playerInventory ? playerInventory.items.length : 0,
+              questsCompleted: Quests ? Quests.getCompletedQuests(localPlayer.id).length : 0,
+              questsActive: Quests ? Quests.getActiveQuests(localPlayer.id).length : 0,
+              npcsMet: NPCs && NPCs.getMetNPCs ? NPCs.getMetNPCs(localPlayer.id).length : 0,
+              zonesDiscovered: Exploration ? Exploration.getDiscoveredZones(localPlayer.id).length : 1,
+              structuresBuilt: Creation ? Creation.getPlayerStructures(localPlayer.id).length : 0,
+              recentActivities: getRecentActivities()
+            };
+            HUD.showPlayerProfile(playerData);
+          }
+        }
+        break;
+
       case 'interact':
         // Check for nearby NPCs first
         if (NPCs && NPCs.interactWithNPC && localPlayer) {
@@ -28343,6 +29897,8 @@ html, body {
                   // Update player spark display
                   localPlayer.spark += result.rewards.spark;
                   HUD.updatePlayerInfo(localPlayer);
+                  // Track activity
+                  addRecentActivity('Completed quest: ' + result.quest.title);
                 }
               }
 
@@ -28351,6 +29907,8 @@ html, body {
             }
 
             if (Audio) Audio.playSound('chat');
+            // Track activity
+            addRecentActivity('Talked to ' + npcResponse.name);
             // Broadcast player interaction to other NPCs
             if (NPCs.broadcastEvent) {
               NPCs.broadcastEvent({ type: 'player_action', data: {
@@ -28517,6 +30075,73 @@ html, body {
     window.addEventListener('beforeunload', () => {
       leaveWorld();
     });
+  }
+
+  /**
+   * Get play time in seconds
+   */
+  function getPlayTimeSeconds() {
+    // Load from localStorage
+    if (typeof localStorage !== 'undefined') {
+      try {
+        var stored = localStorage.getItem('zion_playTime');
+        if (stored) {
+          playTimeSeconds = parseInt(stored) || 0;
+        }
+      } catch (err) {
+        console.warn('Failed to load play time:', err);
+      }
+    }
+    return playTimeSeconds;
+  }
+
+  /**
+   * Save play time to localStorage
+   */
+  function savePlayTime() {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('zion_playTime', playTimeSeconds.toString());
+      } catch (err) {
+        console.warn('Failed to save play time:', err);
+      }
+    }
+  }
+
+  /**
+   * Add recent activity
+   */
+  function addRecentActivity(activity) {
+    recentActivities.unshift(activity);
+    if (recentActivities.length > 10) {
+      recentActivities = recentActivities.slice(0, 10);
+    }
+    // Save to localStorage
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('zion_recentActivities', JSON.stringify(recentActivities));
+      } catch (err) {
+        console.warn('Failed to save activities:', err);
+      }
+    }
+  }
+
+  /**
+   * Get recent activities
+   */
+  function getRecentActivities() {
+    // Load from localStorage
+    if (typeof localStorage !== 'undefined' && recentActivities.length === 0) {
+      try {
+        var stored = localStorage.getItem('zion_recentActivities');
+        if (stored) {
+          recentActivities = JSON.parse(stored) || [];
+        }
+      } catch (err) {
+        console.warn('Failed to load activities:', err);
+      }
+    }
+    return recentActivities.length > 0 ? recentActivities : ['Started playing ZION'];
   }
 
   // Export public API

@@ -2327,6 +2327,609 @@
     });
   }
 
+  // Settings Menu
+  let settingsMenuPanel = null;
+  let settingsData = {
+    masterVolume: 50,
+    musicVolume: 30,
+    sfxVolume: 70,
+    renderDistance: 'medium',
+    particleDensity: 'medium',
+    showFPS: false
+  };
+
+  function loadSettings() {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      var stored = localStorage.getItem('zion_settings');
+      if (stored) {
+        var parsed = JSON.parse(stored);
+        Object.assign(settingsData, parsed);
+      }
+    } catch (err) {
+      console.warn('Failed to load settings:', err);
+    }
+  }
+
+  function saveSettings() {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem('zion_settings', JSON.stringify(settingsData));
+    } catch (err) {
+      console.warn('Failed to save settings:', err);
+    }
+  }
+
+  function getSettings() {
+    return settingsData;
+  }
+
+  function showSettingsMenu() {
+    if (settingsMenuPanel) return;
+
+    var overlay = document.createElement('div');
+    overlay.id = 'settings-menu-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    `;
+
+    var panel = document.createElement('div');
+    panel.style.cssText = `
+      background: rgba(26, 26, 26, 0.95);
+      border: 2px solid rgba(218, 165, 32, 0.5);
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    `;
+
+    var title = document.createElement('h2');
+    title.textContent = 'Settings';
+    title.style.cssText = `
+      margin: 0 0 25px 0;
+      color: #DAA520;
+      font-size: 28px;
+      font-family: Georgia, serif;
+      text-align: center;
+      border-bottom: 2px solid rgba(218, 165, 32, 0.3);
+      padding-bottom: 15px;
+    `;
+    panel.appendChild(title);
+
+    // Volume Section
+    var volumeSection = document.createElement('div');
+    volumeSection.style.cssText = `
+      margin-bottom: 25px;
+    `;
+
+    var volumeTitle = document.createElement('h3');
+    volumeTitle.textContent = 'Audio';
+    volumeTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #E8E0D8;
+      font-size: 20px;
+      font-family: Georgia, serif;
+    `;
+    volumeSection.appendChild(volumeTitle);
+
+    // Master Volume
+    volumeSection.appendChild(createSlider('Master Volume', 'masterVolume', settingsData.masterVolume));
+    // Music Volume
+    volumeSection.appendChild(createSlider('Music Volume', 'musicVolume', settingsData.musicVolume));
+    // SFX Volume
+    volumeSection.appendChild(createSlider('SFX Volume', 'sfxVolume', settingsData.sfxVolume));
+
+    panel.appendChild(volumeSection);
+
+    // Graphics Section
+    var graphicsSection = document.createElement('div');
+    graphicsSection.style.cssText = `
+      margin-bottom: 25px;
+    `;
+
+    var graphicsTitle = document.createElement('h3');
+    graphicsTitle.textContent = 'Graphics';
+    graphicsTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #E8E0D8;
+      font-size: 20px;
+      font-family: Georgia, serif;
+    `;
+    graphicsSection.appendChild(graphicsTitle);
+
+    // Render Distance
+    graphicsSection.appendChild(createOptionButtons('Render Distance', 'renderDistance', ['low', 'medium', 'high'], settingsData.renderDistance));
+    // Particle Density
+    graphicsSection.appendChild(createOptionButtons('Particle Density', 'particleDensity', ['low', 'medium', 'high'], settingsData.particleDensity));
+    // Show FPS Counter
+    graphicsSection.appendChild(createCheckbox('Show FPS Counter', 'showFPS', settingsData.showFPS));
+
+    panel.appendChild(graphicsSection);
+
+    // Controls Section
+    var controlsSection = document.createElement('div');
+    controlsSection.style.cssText = `
+      margin-bottom: 25px;
+    `;
+
+    var controlsTitle = document.createElement('h3');
+    controlsTitle.textContent = 'Controls';
+    controlsTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #E8E0D8;
+      font-size: 20px;
+      font-family: Georgia, serif;
+    `;
+    controlsSection.appendChild(controlsTitle);
+
+    var controlsInfo = document.createElement('div');
+    controlsInfo.style.cssText = `
+      color: #A0978E;
+      font-size: 14px;
+      line-height: 1.8;
+      font-family: system-ui, sans-serif;
+    `;
+    controlsInfo.innerHTML = `
+      <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px;">
+        <div><strong>W/A/S/D</strong></div><div>Move</div>
+        <div><strong>Mouse</strong></div><div>Look around</div>
+        <div><strong>E</strong></div><div>Interact</div>
+        <div><strong>I</strong></div><div>Inventory</div>
+        <div><strong>C</strong></div><div>Crafting</div>
+        <div><strong>J</strong></div><div>Quest Log</div>
+        <div><strong>M</strong></div><div>World Map</div>
+        <div><strong>B</strong></div><div>Build Mode</div>
+        <div><strong>F</strong></div><div>Emote Menu</div>
+        <div><strong>T</strong></div><div>Trade</div>
+        <div><strong>P</strong></div><div>Player Profile</div>
+        <div><strong>Enter</strong></div><div>Chat</div>
+        <div><strong>Escape</strong></div><div>Settings / Cancel</div>
+      </div>
+    `;
+    controlsSection.appendChild(controlsInfo);
+
+    panel.appendChild(controlsSection);
+
+    // Resume Button
+    var resumeBtn = document.createElement('button');
+    resumeBtn.textContent = 'Resume';
+    resumeBtn.style.cssText = `
+      width: 100%;
+      padding: 15px;
+      background: rgba(218, 165, 32, 0.2);
+      color: #DAA520;
+      border: 2px solid #DAA520;
+      border-radius: 8px;
+      font-size: 18px;
+      font-family: Georgia, serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    `;
+    resumeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.3)';
+      this.style.borderColor = '#FFD700';
+    };
+    resumeBtn.onmouseout = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.2)';
+      this.style.borderColor = '#DAA520';
+    };
+    resumeBtn.onclick = function() {
+      hideSettingsMenu();
+    };
+    panel.appendChild(resumeBtn);
+
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    settingsMenuPanel = overlay;
+  }
+
+  function hideSettingsMenu() {
+    if (!settingsMenuPanel) return;
+    document.body.removeChild(settingsMenuPanel);
+    settingsMenuPanel = null;
+  }
+
+  function createSlider(label, key, value) {
+    var container = document.createElement('div');
+    container.style.cssText = `
+      margin-bottom: 15px;
+    `;
+
+    var labelEl = document.createElement('label');
+    labelEl.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+
+    var labelText = document.createElement('span');
+    labelText.textContent = label;
+
+    var valueDisplay = document.createElement('span');
+    valueDisplay.textContent = value;
+    valueDisplay.style.color = '#DAA520';
+    valueDisplay.style.fontWeight = 'bold';
+
+    labelEl.appendChild(labelText);
+    labelEl.appendChild(valueDisplay);
+    container.appendChild(labelEl);
+
+    var slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '0';
+    slider.max = '100';
+    slider.value = value;
+    slider.style.cssText = `
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+      -webkit-appearance: none;
+    `;
+
+    slider.oninput = function() {
+      valueDisplay.textContent = this.value;
+      settingsData[key] = parseInt(this.value);
+      saveSettings();
+      applySettings();
+    };
+
+    container.appendChild(slider);
+    return container;
+  }
+
+  function createOptionButtons(label, key, options, currentValue) {
+    var container = document.createElement('div');
+    container.style.cssText = `
+      margin-bottom: 15px;
+    `;
+
+    var labelEl = document.createElement('div');
+    labelEl.textContent = label;
+    labelEl.style.cssText = `
+      margin-bottom: 8px;
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+    container.appendChild(labelEl);
+
+    var buttonsContainer = document.createElement('div');
+    buttonsContainer.style.cssText = `
+      display: flex;
+      gap: 10px;
+    `;
+
+    options.forEach(function(option) {
+      var btn = document.createElement('button');
+      btn.textContent = option.charAt(0).toUpperCase() + option.slice(1);
+      btn.style.cssText = `
+        flex: 1;
+        padding: 10px;
+        background: ${option === currentValue ? 'rgba(218, 165, 32, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+        color: ${option === currentValue ? '#DAA520' : '#E8E0D8'};
+        border: 2px solid ${option === currentValue ? '#DAA520' : 'rgba(255, 255, 255, 0.3)'};
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      `;
+
+      btn.onclick = function() {
+        settingsData[key] = option;
+        saveSettings();
+        applySettings();
+
+        // Update button styles
+        Array.from(buttonsContainer.children).forEach(function(child) {
+          child.style.background = 'rgba(255, 255, 255, 0.1)';
+          child.style.color = '#E8E0D8';
+          child.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        });
+        btn.style.background = 'rgba(218, 165, 32, 0.3)';
+        btn.style.color = '#DAA520';
+        btn.style.borderColor = '#DAA520';
+      };
+
+      btn.onmouseover = function() {
+        if (option !== currentValue) {
+          this.style.background = 'rgba(255, 255, 255, 0.15)';
+        }
+      };
+
+      btn.onmouseout = function() {
+        if (option !== currentValue) {
+          this.style.background = 'rgba(255, 255, 255, 0.1)';
+        }
+      };
+
+      buttonsContainer.appendChild(btn);
+    });
+
+    container.appendChild(buttonsContainer);
+    return container;
+  }
+
+  function createCheckbox(label, key, checked) {
+    var container = document.createElement('div');
+    container.style.cssText = `
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    `;
+
+    var checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = checked;
+    checkbox.style.cssText = `
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    `;
+
+    checkbox.onchange = function() {
+      settingsData[key] = this.checked;
+      saveSettings();
+      applySettings();
+    };
+
+    var labelEl = document.createElement('label');
+    labelEl.textContent = label;
+    labelEl.style.cssText = `
+      color: #E8E0D8;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      cursor: pointer;
+    `;
+    labelEl.onclick = function() {
+      checkbox.checked = !checkbox.checked;
+      checkbox.onchange();
+    };
+
+    container.appendChild(checkbox);
+    container.appendChild(labelEl);
+    return container;
+  }
+
+  function applySettings() {
+    // Apply audio settings
+    if (typeof Audio !== 'undefined' && Audio.setVolume) {
+      Audio.setVolume('master', settingsData.masterVolume / 100);
+      Audio.setVolume('music', settingsData.musicVolume / 100);
+      Audio.setVolume('sfx', settingsData.sfxVolume / 100);
+    }
+
+    // FPS counter will be handled by main.js
+    // Render distance and particle density would be applied by renderer/world systems
+  }
+
+  // Player Profile Panel
+  let playerProfilePanel = null;
+
+  function showPlayerProfile(playerData) {
+    if (playerProfilePanel) {
+      hidePlayerProfile();
+      return;
+    }
+
+    var panel = document.createElement('div');
+    panel.id = 'player-profile-panel';
+    panel.style.cssText = `
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 350px;
+      height: 100%;
+      background: rgba(26, 26, 26, 0.95);
+      border-left: 2px solid rgba(218, 165, 32, 0.5);
+      z-index: 200;
+      overflow-y: auto;
+      pointer-events: auto;
+      box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
+    `;
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 35px;
+      height: 35px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #E8E0D8;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    `;
+    closeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.3)';
+      this.style.borderColor = '#DAA520';
+      this.style.color = '#DAA520';
+    };
+    closeBtn.onmouseout = function() {
+      this.style.background = 'rgba(255, 255, 255, 0.1)';
+      this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+      this.style.color = '#E8E0D8';
+    };
+    closeBtn.onclick = function() {
+      hidePlayerProfile();
+    };
+    panel.appendChild(closeBtn);
+
+    // Content container
+    var content = document.createElement('div');
+    content.style.cssText = `
+      padding: 30px 25px;
+    `;
+
+    // Player header
+    var header = document.createElement('div');
+    header.style.cssText = `
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid rgba(218, 165, 32, 0.3);
+    `;
+
+    var playerName = document.createElement('h2');
+    playerName.textContent = playerData.name || 'Player';
+    playerName.style.cssText = `
+      margin: 0 0 10px 0;
+      color: #DAA520;
+      font-size: 24px;
+      font-family: Georgia, serif;
+    `;
+    header.appendChild(playerName);
+
+    var currentZone = document.createElement('div');
+    currentZone.textContent = 'Current Zone: ' + (playerData.zone || 'Unknown');
+    currentZone.style.cssText = `
+      color: #A0978E;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+    header.appendChild(currentZone);
+
+    content.appendChild(header);
+
+    // Stats section
+    var statsSection = document.createElement('div');
+    statsSection.style.cssText = `
+      margin-bottom: 25px;
+    `;
+
+    var statsTitle = document.createElement('h3');
+    statsTitle.textContent = 'Statistics';
+    statsTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #E8E0D8;
+      font-size: 18px;
+      font-family: Georgia, serif;
+    `;
+    statsSection.appendChild(statsTitle);
+
+    var stats = [
+      { label: 'Spark Balance', value: (playerData.sparkBalance || 0) + ' ✦', color: '#DAA520' },
+      { label: 'Time Played', value: formatPlayTime(playerData.playTimeSeconds || 0), color: '#E8E0D8' },
+      { label: 'Items Collected', value: playerData.itemsCollected || 0, color: '#E8E0D8' },
+      { label: 'Quests Completed', value: playerData.questsCompleted || 0, color: '#E8E0D8' },
+      { label: 'Quests Active', value: playerData.questsActive || 0, color: '#E8E0D8' },
+      { label: 'NPCs Met', value: playerData.npcsMet || 0, color: '#E8E0D8' },
+      { label: 'Zones Discovered', value: playerData.zonesDiscovered || 0, color: '#E8E0D8' },
+      { label: 'Structures Built', value: playerData.structuresBuilt || 0, color: '#E8E0D8' }
+    ];
+
+    stats.forEach(function(stat) {
+      var statRow = document.createElement('div');
+      statRow.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+      `;
+
+      var statLabel = document.createElement('span');
+      statLabel.textContent = stat.label;
+      statLabel.style.color = '#A0978E';
+
+      var statValue = document.createElement('span');
+      statValue.textContent = stat.value;
+      statValue.style.cssText = `
+        color: ${stat.color};
+        font-weight: bold;
+      `;
+
+      statRow.appendChild(statLabel);
+      statRow.appendChild(statValue);
+      statsSection.appendChild(statRow);
+    });
+
+    content.appendChild(statsSection);
+
+    // Recent Activity section
+    var activitySection = document.createElement('div');
+    activitySection.style.cssText = `
+      margin-bottom: 25px;
+    `;
+
+    var activityTitle = document.createElement('h3');
+    activityTitle.textContent = 'Recent Activity';
+    activityTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #E8E0D8;
+      font-size: 18px;
+      font-family: Georgia, serif;
+    `;
+    activitySection.appendChild(activityTitle);
+
+    var activities = playerData.recentActivities || [
+      'Started playing ZION'
+    ];
+
+    activities.slice(0, 5).forEach(function(activity) {
+      var activityItem = document.createElement('div');
+      activityItem.textContent = '• ' + activity;
+      activityItem.style.cssText = `
+        color: #A0978E;
+        font-size: 13px;
+        font-family: system-ui, sans-serif;
+        padding: 6px 0;
+        line-height: 1.5;
+      `;
+      activitySection.appendChild(activityItem);
+    });
+
+    content.appendChild(activitySection);
+
+    panel.appendChild(content);
+    document.body.appendChild(panel);
+    playerProfilePanel = panel;
+  }
+
+  function hidePlayerProfile() {
+    if (!playerProfilePanel) return;
+    document.body.removeChild(playerProfilePanel);
+    playerProfilePanel = null;
+  }
+
+  function formatPlayTime(seconds) {
+    var hours = Math.floor(seconds / 3600);
+    var minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return hours + 'h ' + minutes + 'm';
+    }
+    return minutes + 'm';
+  }
+
   // Export public API
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
@@ -2384,5 +2987,11 @@
   exports.showWorldMap = showWorldMap;
   exports.hideWorldMap = hideWorldMap;
   exports.updateWorldMap = updateWorldMap;
+  exports.showSettingsMenu = showSettingsMenu;
+  exports.hideSettingsMenu = hideSettingsMenu;
+  exports.loadSettings = loadSettings;
+  exports.getSettings = getSettings;
+  exports.showPlayerProfile = showPlayerProfile;
+  exports.hidePlayerProfile = hidePlayerProfile;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));

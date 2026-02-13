@@ -932,6 +932,231 @@
     return { success: true };
   }
 
+  // ========================================================================
+  // DAILY QUEST SYSTEM — Rotating quests that refresh daily
+  // ========================================================================
+
+  var DAILY_QUESTS = [
+    {
+      id: 'daily_social',
+      title: 'Social Butterfly',
+      description: 'Talk to 5 different NPCs today',
+      objectives: [{ type: 'talk_npcs', count: 5, current: 0 }],
+      rewards: { spark: 20, items: [] },
+      dialogue: {
+        offer: "Today's challenge: connect with 5 different citizens. Every conversation enriches ZION.",
+        progress: "You've chatted with {current} NPCs. {remaining} more to go!",
+        complete: "What a social day! Here's your daily Spark reward."
+      }
+    },
+    {
+      id: 'daily_explorer',
+      title: 'Daily Explorer',
+      description: 'Visit 4 different zones today',
+      objectives: [{ type: 'visit_zones', zones: [], required: 4, current: 0 }],
+      rewards: { spark: 25, items: [] },
+      dialogue: {
+        offer: "Stretch your legs! Visit 4 different zones to earn your daily exploration reward.",
+        progress: "You've visited {current} zones. {remaining} more await!",
+        complete: "A well-traveled day! The world rewards your curiosity."
+      }
+    },
+    {
+      id: 'daily_gatherer',
+      title: 'Daily Harvest',
+      description: 'Harvest 5 resources today',
+      objectives: [{ type: 'collect', item: 'resource', count: 5, current: 0 }],
+      rewards: { spark: 15, items: [] },
+      dialogue: {
+        offer: "The gardens are abundant today. Harvest 5 resources to earn your daily reward.",
+        progress: "Harvested {current} of 5 resources.",
+        complete: "A productive day! Nature provides for those who tend it."
+      }
+    },
+    {
+      id: 'daily_trader',
+      title: 'Market Day',
+      description: 'Complete 1 trade with another player',
+      objectives: [{ type: 'trade', count: 1, current: 0 }],
+      rewards: { spark: 30, items: [] },
+      dialogue: {
+        offer: "The Agora thrives on trade. Complete one trade today to keep the economy flowing.",
+        progress: "You haven't traded yet today. Find a partner!",
+        complete: "A fair trade benefits everyone. Well done, merchant!"
+      }
+    },
+    {
+      id: 'daily_crafter',
+      title: 'Creative Day',
+      description: 'Craft 2 items today',
+      objectives: [{ type: 'craft', count: 2, current: 0 }],
+      rewards: { spark: 20, items: [] },
+      dialogue: {
+        offer: "Creation is at the heart of ZION. Craft 2 items today to earn your reward.",
+        progress: "Crafted {current} of 2 items.",
+        complete: "Your hands have shaped the world today. Well crafted!"
+      }
+    },
+    {
+      id: 'daily_builder',
+      title: 'Construction Day',
+      description: 'Place 2 structures today',
+      objectives: [{ type: 'build', count: 2, current: 0 }],
+      rewards: { spark: 25, items: [] },
+      dialogue: {
+        offer: "The Commons could use some new structures. Place 2 buildings today.",
+        progress: "Placed {current} of 2 structures.",
+        complete: "Your buildings will stand as testament to today's work!"
+      }
+    },
+    {
+      id: 'daily_wanderer',
+      title: 'Long Walk',
+      description: 'Walk a total of 500 units today',
+      objectives: [{ type: 'walk_distance', distance: 500, current: 0 }],
+      rewards: { spark: 15, items: [] },
+      dialogue: {
+        offer: "Sometimes the journey matters more than the destination. Walk 500 units today.",
+        progress: "You've walked {current} of 500 units.",
+        complete: "Every step is a story. Well walked!"
+      }
+    }
+  ];
+
+  function getDailyQuests() {
+    // Use the day of year to rotate which 3 dailies are available
+    var now = new Date();
+    var dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    var dailies = [];
+    for (var i = 0; i < 3; i++) {
+      var idx = (dayOfYear + i) % DAILY_QUESTS.length;
+      var daily = JSON.parse(JSON.stringify(DAILY_QUESTS[idx]));
+      daily.id = 'daily_' + dayOfYear + '_' + i;
+      daily.type = 'daily';
+      daily.repeatable = false;
+      daily.requiredLevel = 0;
+      daily.prerequisiteQuests = [];
+      daily.timeLimit = 0;
+      daily.giverNpcId = 'ai_citizen_001'; // Default quest giver
+      daily.status = 'available';
+      dailies.push(daily);
+    }
+    return dailies;
+  }
+
+  function isDailyCompleted(playerId, dailyId) {
+    initPlayerQuests(playerId);
+    var state = playerQuestStates.get(playerId);
+    return state.turnedInQuests.indexOf(dailyId) !== -1;
+  }
+
+  // ========================================================================
+  // QUEST CHAINS — Multi-part story quests
+  // ========================================================================
+
+  var QUEST_CHAINS = {
+    'chain_origins': {
+      name: 'Origins of ZION',
+      description: 'Discover the history of how ZION came to be',
+      quests: ['quest_nexus_001', 'quest_nexus_002'],
+      reward: { spark: 100, title: 'Historian' }
+    },
+    'chain_garden_master': {
+      name: 'Garden Master',
+      description: 'Complete all garden quests to earn the title of Garden Master',
+      quests: ['quest_gardens_001', 'quest_gardens_002', 'quest_gardens_003', 'quest_gardens_004', 'quest_gardens_005'],
+      reward: { spark: 150, title: 'Garden Master' }
+    },
+    'chain_scholar': {
+      name: 'Scholar of the Athenaeum',
+      description: 'Complete all knowledge quests',
+      quests: ['quest_athenaeum_001', 'quest_athenaeum_002', 'quest_athenaeum_003'],
+      reward: { spark: 120, title: 'Scholar' }
+    },
+    'chain_artisan': {
+      name: 'Master Artisan',
+      description: 'Complete all studio crafting quests',
+      quests: ['quest_studio_001', 'quest_studio_002'],
+      reward: { spark: 100, title: 'Artisan' }
+    },
+    'chain_explorer': {
+      name: 'True Explorer',
+      description: 'Visit every zone and complete all exploration quests',
+      quests: ['quest_nexus_002', 'quest_wilds_001', 'quest_wilds_002', 'quest_wilds_003'],
+      reward: { spark: 200, title: 'True Explorer' }
+    }
+  };
+
+  function getChainProgress(playerId) {
+    initPlayerQuests(playerId);
+    var state = playerQuestStates.get(playerId);
+    var progress = {};
+
+    for (var chainId in QUEST_CHAINS) {
+      var chain = QUEST_CHAINS[chainId];
+      var completed = 0;
+      for (var i = 0; i < chain.quests.length; i++) {
+        if (state.turnedInQuests.indexOf(chain.quests[i]) !== -1) {
+          completed++;
+        }
+      }
+      progress[chainId] = {
+        name: chain.name,
+        description: chain.description,
+        completed: completed,
+        total: chain.quests.length,
+        isComplete: completed >= chain.quests.length,
+        reward: chain.reward
+      };
+    }
+
+    return progress;
+  }
+
+  function checkChainCompletion(playerId) {
+    var progress = getChainProgress(playerId);
+    var newlyCompleted = [];
+
+    for (var chainId in progress) {
+      var chain = progress[chainId];
+      if (chain.isComplete) {
+        initPlayerQuests(playerId);
+        var state = playerQuestStates.get(playerId);
+        if (!state.completedChains) state.completedChains = [];
+        if (state.completedChains.indexOf(chainId) === -1) {
+          state.completedChains.push(chainId);
+          newlyCompleted.push({
+            chainId: chainId,
+            name: chain.name,
+            reward: chain.reward
+          });
+        }
+      }
+    }
+
+    return newlyCompleted;
+  }
+
+  // ========================================================================
+  // PLAYER STATS from quests
+  // ========================================================================
+
+  function getPlayerQuestStats(playerId) {
+    initPlayerQuests(playerId);
+    var state = playerQuestStates.get(playerId);
+
+    return {
+      activeQuests: state.activeQuests.length,
+      completedQuests: state.turnedInQuests.length,
+      totalAvailable: Object.keys(QUEST_DATABASE).length,
+      completedChains: (state.completedChains || []).length,
+      totalChains: Object.keys(QUEST_CHAINS).length,
+      titles: (state.completedChains || []).map(function(chainId) {
+        return QUEST_CHAINS[chainId] ? QUEST_CHAINS[chainId].reward.title : null;
+      }).filter(Boolean)
+    };
+  }
+
   // Export public API
   exports.getAvailableQuests = getAvailableQuests;
   exports.acceptQuest = acceptQuest;
@@ -943,5 +1168,12 @@
   exports.getNpcQuests = getNpcQuests;
   exports.abandonQuest = abandonQuest;
   exports.initPlayerQuests = initPlayerQuests;
+  exports.getDailyQuests = getDailyQuests;
+  exports.isDailyCompleted = isDailyCompleted;
+  exports.getChainProgress = getChainProgress;
+  exports.checkChainCompletion = checkChainCompletion;
+  exports.getPlayerQuestStats = getPlayerQuestStats;
+  exports.QUEST_CHAINS = QUEST_CHAINS;
+  exports.DAILY_QUESTS = DAILY_QUESTS;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Quests = {}));

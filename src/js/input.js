@@ -72,7 +72,7 @@
         chatMode = false;
         buildMode = false;
         if (callbacks.onAction) {
-          callbacks.onAction('cancel', {});
+          callbacks.onAction('toggleSettings', {});
         }
         e.preventDefault();
         break;
@@ -177,6 +177,16 @@
         if (!chatMode) {
           if (callbacks.onAction) {
             callbacks.onAction('toggleMap', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'p':
+      case 'P':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleProfile', {});
           }
           e.preventDefault();
         }

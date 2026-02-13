@@ -844,6 +844,96 @@
     return ITEM_CATALOG[itemId] || null;
   }
 
+  // ========================================================================
+  // INVENTORY UTILITIES
+  // ========================================================================
+
+  var RARITY_ORDER = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
+
+  function getInventoryStats(inventory) {
+    if (!inventory || !inventory.items) return { totalItems: 0, uniqueItems: 0, totalValue: 0 };
+
+    var totalItems = 0;
+    var uniqueItems = 0;
+    var byRarity = { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 0 };
+    var byType = {};
+
+    for (var i = 0; i < inventory.items.length; i++) {
+      var slot = inventory.items[i];
+      if (slot && slot.id) {
+        uniqueItems++;
+        totalItems += slot.count || 1;
+        var data = ITEM_CATALOG[slot.id];
+        if (data) {
+          var rarity = data.rarity || 'common';
+          byRarity[rarity] = (byRarity[rarity] || 0) + (slot.count || 1);
+          var type = data.type || 'misc';
+          byType[type] = (byType[type] || 0) + (slot.count || 1);
+        }
+      }
+    }
+
+    return {
+      totalItems: totalItems,
+      uniqueItems: uniqueItems,
+      byRarity: byRarity,
+      byType: byType,
+      slotsUsed: uniqueItems,
+      slotsTotal: inventory.maxSlots || 20
+    };
+  }
+
+  function sortInventory(inventory, sortBy) {
+    if (!inventory || !inventory.items) return;
+    sortBy = sortBy || 'type';
+
+    // Separate items from empty slots
+    var items = inventory.items.filter(function(s) { return s && s.id; });
+    var emptyCount = inventory.items.length - items.length;
+
+    items.sort(function(a, b) {
+      var dataA = ITEM_CATALOG[a.id] || {};
+      var dataB = ITEM_CATALOG[b.id] || {};
+
+      if (sortBy === 'rarity') {
+        var ra = RARITY_ORDER[dataA.rarity || 'common'] || 0;
+        var rb = RARITY_ORDER[dataB.rarity || 'common'] || 0;
+        if (ra !== rb) return rb - ra; // Higher rarity first
+      } else if (sortBy === 'type') {
+        if (dataA.type !== dataB.type) return (dataA.type || '').localeCompare(dataB.type || '');
+      } else if (sortBy === 'name') {
+        return (dataA.name || '').localeCompare(dataB.name || '');
+      }
+
+      return (dataA.name || '').localeCompare(dataB.name || '');
+    });
+
+    // Rebuild with empty slots at end
+    inventory.items = items;
+    for (var e = 0; e < emptyCount; e++) {
+      inventory.items.push(null);
+    }
+  }
+
+  function searchInventory(inventory, query) {
+    if (!inventory || !inventory.items || !query) return [];
+    query = query.toLowerCase();
+
+    var results = [];
+    for (var i = 0; i < inventory.items.length; i++) {
+      var slot = inventory.items[i];
+      if (slot && slot.id) {
+        var data = ITEM_CATALOG[slot.id] || {};
+        if ((data.name || '').toLowerCase().indexOf(query) !== -1 ||
+            (data.description || '').toLowerCase().indexOf(query) !== -1 ||
+            (data.type || '').toLowerCase().indexOf(query) !== -1) {
+          results.push({ slotIndex: i, item: slot, data: data });
+        }
+      }
+    }
+    return results;
+  }
+
   // Export public API
   exports.ITEM_CATALOG = ITEM_CATALOG;
   exports.RECIPES = RECIPES;
@@ -858,5 +948,8 @@
   exports.getAvailableRecipes = getAvailableRecipes;
   exports.getAllRecipes = getAllRecipes;
   exports.getItemData = getItemData;
+  exports.getInventoryStats = getInventoryStats;
+  exports.sortInventory = sortInventory;
+  exports.searchInventory = searchInventory;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Inventory = {}));

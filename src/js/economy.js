@@ -275,6 +275,78 @@
     );
   }
 
+  // ========================================================================
+  // ECONOMY STATISTICS & MARKET BROWSING
+  // ========================================================================
+
+  function getActiveListings(ledger) {
+    if (!ledger || !ledger.listings) return [];
+    return ledger.listings.filter(function(l) { return l.active; });
+  }
+
+  function getListingsByItem(ledger, itemId) {
+    return getActiveListings(ledger).filter(function(l) {
+      return l.item === itemId || (l.item && l.item.id === itemId);
+    });
+  }
+
+  function getListingsBySeller(ledger, sellerId) {
+    return getActiveListings(ledger).filter(function(l) {
+      return l.seller === sellerId;
+    });
+  }
+
+  function cancelListing(ledger, listingId, sellerId) {
+    if (!ledger || !ledger.listings) return { success: false, message: 'No ledger' };
+
+    var listing = ledger.listings.find(function(l) { return l.id === listingId; });
+    if (!listing) return { success: false, message: 'Listing not found' };
+    if (listing.seller !== sellerId) return { success: false, message: 'Not your listing' };
+    if (!listing.active) return { success: false, message: 'Already inactive' };
+
+    listing.active = false;
+    return { success: true, item: listing.item };
+  }
+
+  function getEconomyStats(ledger) {
+    if (!ledger) return {};
+
+    var totalSpark = 0;
+    var playerCount = 0;
+    for (var pid in ledger.balances) {
+      totalSpark += ledger.balances[pid] || 0;
+      playerCount++;
+    }
+
+    var activeListings = getActiveListings(ledger);
+    var totalTransactions = ledger.transactions ? ledger.transactions.length : 0;
+
+    // Calculate velocity (transactions per player)
+    var velocity = playerCount > 0 ? totalTransactions / playerCount : 0;
+
+    return {
+      totalSpark: totalSpark,
+      playerCount: playerCount,
+      averageSpark: playerCount > 0 ? Math.floor(totalSpark / playerCount) : 0,
+      activeListings: activeListings.length,
+      totalTransactions: totalTransactions,
+      velocity: Math.round(velocity * 100) / 100
+    };
+  }
+
+  function getLeaderboard(ledger, limit) {
+    if (!ledger || !ledger.balances) return [];
+    limit = limit || 10;
+
+    var players = [];
+    for (var pid in ledger.balances) {
+      players.push({ playerId: pid, spark: ledger.balances[pid] || 0 });
+    }
+
+    players.sort(function(a, b) { return b.spark - a.spark; });
+    return players.slice(0, limit);
+  }
+
   // Export public API
   exports.createLedger = createLedger;
   exports.earnSpark = earnSpark;
@@ -284,6 +356,12 @@
   exports.createMarketListing = createMarketListing;
   exports.buyListing = buyListing;
   exports.getTransactionLog = getTransactionLog;
+  exports.getActiveListings = getActiveListings;
+  exports.getListingsByItem = getListingsByItem;
+  exports.getListingsBySeller = getListingsBySeller;
+  exports.cancelListing = cancelListing;
+  exports.getEconomyStats = getEconomyStats;
+  exports.getLeaderboard = getLeaderboard;
   exports.EARN_TABLE = EARN_TABLE;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Economy = {}));

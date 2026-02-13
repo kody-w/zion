@@ -48,6 +48,16 @@
   let raycaster = null;
   let npcUpdateFrame = 0;
 
+  // Performance tracking
+  let frameCount = 0;
+  let fpsFrameTimes = [];
+  let currentFPS = 60;
+  let showDebug = false; // Set to true to show FPS counter
+
+  // Play time tracking
+  let playTimeSeconds = 0;
+  let recentActivities = [];
+
   // Platform detection
   let platform = 'desktop';
 
@@ -229,6 +239,26 @@
       if (HUD.initQuickBar) {
         HUD.initQuickBar();
       }
+
+      // Load settings and apply them
+      if (HUD.loadSettings) {
+        HUD.loadSettings();
+        var settings = HUD.getSettings();
+        if (settings && Audio) {
+          if (Audio.setVolume) {
+            Audio.setVolume('master', settings.masterVolume / 100);
+            Audio.setVolume('music', settings.musicVolume / 100);
+            Audio.setVolume('sfx', settings.sfxVolume / 100);
+          }
+        }
+        // Set FPS counter visibility
+        if (settings) {
+          showDebug = settings.showFPS;
+        }
+      }
+
+      // Initialize play time tracking
+      getPlayTimeSeconds();
 
       // Add chat input
       HUD.addChatInput((text) => {
@@ -450,6 +480,32 @@
 
     // Increment frame counter for periodic updates
     npcUpdateFrame++;
+    frameCount++;
+
+    // Track FPS
+    fpsFrameTimes.push(deltaTime);
+    if (fpsFrameTimes.length > 60) {
+      fpsFrameTimes.shift();
+    }
+    if (fpsFrameTimes.length > 10) {
+      var avgFrameTime = fpsFrameTimes.reduce(function(a, b) { return a + b; }, 0) / fpsFrameTimes.length;
+      currentFPS = avgFrameTime > 0 ? Math.round(1 / avgFrameTime) : 60;
+    }
+
+    // Track play time
+    playTimeSeconds += deltaTime;
+    // Save every 30 seconds
+    if (frameCount % 1800 === 0) {
+      savePlayTime();
+    }
+
+    // Update FPS counter visibility from settings
+    if (HUD && HUD.getSettings) {
+      var settings = HUD.getSettings();
+      if (settings) {
+        showDebug = settings.showFPS;
+      }
+    }
 
     // Process queued messages
     processMessageQueue();
@@ -510,6 +566,8 @@
             var oldZone = currentZone;
             currentZone = detectedZone;
             console.log('Entered zone:', currentZone);
+            // Track activity
+            addRecentActivity('Entered ' + currentZone);
 
             if (HUD) {
               HUD.updateZoneLabel(currentZone);
@@ -691,6 +749,17 @@
         World.cullLights(sceneContext, localPlayer.position, 40, 8);
       }
 
+      // Performance optimizations
+      // Update frustum culling every 10 frames
+      if (frameCount % 10 === 0 && World.updateFrustumCulling) {
+        World.updateFrustumCulling(sceneContext);
+      }
+
+      // Update LOD every 30 frames
+      if (frameCount % 30 === 0 && World.updateLOD) {
+        World.updateLOD(sceneContext, localPlayer.position);
+      }
+
       // Update environmental animations
       if (World.updateAnimations) {
         World.updateAnimations(sceneContext, deltaTime, worldTime);
@@ -810,6 +879,37 @@
       // Update quest indicators on NPCs (every few frames)
       if (Quests && NPCs && NPCs.updateQuestIndicators && npcUpdateFrame % 60 === 0) {
         NPCs.updateQuestIndicators(localPlayer.id, localPlayer.position);
+      }
+
+      // Update FPS display if debug mode is enabled
+      if (showDebug && typeof document !== 'undefined') {
+        var fpsElement = document.getElementById('fps-counter');
+        if (!fpsElement) {
+          fpsElement = document.createElement('div');
+          fpsElement.id = 'fps-counter';
+          fpsElement.style.position = 'fixed';
+          fpsElement.style.top = '10px';
+          fpsElement.style.right = '10px';
+          fpsElement.style.padding = '8px 12px';
+          fpsElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+          fpsElement.style.color = '#00ff00';
+          fpsElement.style.fontFamily = 'monospace';
+          fpsElement.style.fontSize = '12px';
+          fpsElement.style.borderRadius = '4px';
+          fpsElement.style.zIndex = '10000';
+          document.body.appendChild(fpsElement);
+        }
+
+        // Get performance stats from World
+        var perfStats = World && World.getPerformanceStats ? World.getPerformanceStats() : null;
+        var statsText = 'FPS: ' + currentFPS;
+        if (perfStats) {
+          statsText += '\nObjects: ' + perfStats.visibleObjects + '/' + perfStats.totalObjects;
+          statsText += '\nAnimations: ' + perfStats.activeAnimations;
+          statsText += '\nChunks: ' + perfStats.loadedChunks;
+          statsText += '\nTriangles: ' + perfStats.estimatedTriangles;
+        }
+        fpsElement.innerText = statsText;
       }
     }
 
@@ -1063,6 +1163,11 @@
     if (Audio) {
       Audio.playSound('build');
     }
+
+    if (msg.from === localPlayer.id) {
+      var structureName = msg.payload.structure.type || 'structure';
+      addRecentActivity('Built a ' + structureName);
+    }
   }
 
   /**
@@ -1280,6 +1385,9 @@
       }
 
       if (Audio) Audio.playSound('harvest');
+
+      // Track activity
+      addRecentActivity('Collected ' + itemData.name);
     } else {
       if (HUD) HUD.showNotification(result.message, 'warning');
     }
@@ -1470,6 +1578,42 @@
         }
         break;
 
+      case 'toggleSettings':
+        if (HUD) {
+          var settingsEl = document.getElementById('settings-menu-overlay');
+          if (settingsEl) {
+            HUD.hideSettingsMenu();
+          } else {
+            HUD.showSettingsMenu();
+          }
+        }
+        break;
+
+      case 'toggleProfile':
+        if (HUD && localPlayer) {
+          var profileEl = document.getElementById('player-profile-panel');
+          if (profileEl) {
+            HUD.hidePlayerProfile();
+          } else {
+            // Gather player stats
+            var playerData = {
+              name: localPlayer.name || 'Player',
+              zone: currentZone,
+              sparkBalance: economyLedger ? Economy.getBalance(economyLedger, localPlayer.id) : 0,
+              playTimeSeconds: getPlayTimeSeconds(),
+              itemsCollected: playerInventory ? playerInventory.items.length : 0,
+              questsCompleted: Quests ? Quests.getCompletedQuests(localPlayer.id).length : 0,
+              questsActive: Quests ? Quests.getActiveQuests(localPlayer.id).length : 0,
+              npcsMet: NPCs && NPCs.getMetNPCs ? NPCs.getMetNPCs(localPlayer.id).length : 0,
+              zonesDiscovered: Exploration ? Exploration.getDiscoveredZones(localPlayer.id).length : 1,
+              structuresBuilt: Creation ? Creation.getPlayerStructures(localPlayer.id).length : 0,
+              recentActivities: getRecentActivities()
+            };
+            HUD.showPlayerProfile(playerData);
+          }
+        }
+        break;
+
       case 'interact':
         // Check for nearby NPCs first
         if (NPCs && NPCs.interactWithNPC && localPlayer) {
@@ -1499,6 +1643,8 @@
                   // Update player spark display
                   localPlayer.spark += result.rewards.spark;
                   HUD.updatePlayerInfo(localPlayer);
+                  // Track activity
+                  addRecentActivity('Completed quest: ' + result.quest.title);
                 }
               }
 
@@ -1507,6 +1653,8 @@
             }
 
             if (Audio) Audio.playSound('chat');
+            // Track activity
+            addRecentActivity('Talked to ' + npcResponse.name);
             // Broadcast player interaction to other NPCs
             if (NPCs.broadcastEvent) {
               NPCs.broadcastEvent({ type: 'player_action', data: {
@@ -1673,6 +1821,73 @@
     window.addEventListener('beforeunload', () => {
       leaveWorld();
     });
+  }
+
+  /**
+   * Get play time in seconds
+   */
+  function getPlayTimeSeconds() {
+    // Load from localStorage
+    if (typeof localStorage !== 'undefined') {
+      try {
+        var stored = localStorage.getItem('zion_playTime');
+        if (stored) {
+          playTimeSeconds = parseInt(stored) || 0;
+        }
+      } catch (err) {
+        console.warn('Failed to load play time:', err);
+      }
+    }
+    return playTimeSeconds;
+  }
+
+  /**
+   * Save play time to localStorage
+   */
+  function savePlayTime() {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('zion_playTime', playTimeSeconds.toString());
+      } catch (err) {
+        console.warn('Failed to save play time:', err);
+      }
+    }
+  }
+
+  /**
+   * Add recent activity
+   */
+  function addRecentActivity(activity) {
+    recentActivities.unshift(activity);
+    if (recentActivities.length > 10) {
+      recentActivities = recentActivities.slice(0, 10);
+    }
+    // Save to localStorage
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('zion_recentActivities', JSON.stringify(recentActivities));
+      } catch (err) {
+        console.warn('Failed to save activities:', err);
+      }
+    }
+  }
+
+  /**
+   * Get recent activities
+   */
+  function getRecentActivities() {
+    // Load from localStorage
+    if (typeof localStorage !== 'undefined' && recentActivities.length === 0) {
+      try {
+        var stored = localStorage.getItem('zion_recentActivities');
+        if (stored) {
+          recentActivities = JSON.parse(stored) || [];
+        }
+      } catch (err) {
+        console.warn('Failed to load activities:', err);
+      }
+    }
+    return recentActivities.length > 0 ? recentActivities : ['Started playing ZION'];
   }
 
   // Export public API

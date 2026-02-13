@@ -2346,6 +2346,10 @@
     for (var j = 0; j < animatedObjects.length; j++) {
       var obj = animatedObjects[j];
       if (!obj.mesh || !obj.mesh.parent) continue;
+
+      // Skip animation if object is outside frustum (set by updateFrustumCulling)
+      if (obj.mesh.userData.inFrustum === false) continue;
+
       var p = obj.params;
 
       switch (obj.type) {
@@ -3989,6 +3993,241 @@
   }
 
   // ========================================================================
+  // PERFORMANCE OPTIMIZATIONS
+  // ========================================================================
+
+  // Track LOD state for objects
+  var lodStates = new Map(); // objectId -> { level: 0/1/2, hiddenChildren: [] }
+
+  // Object pools for particles
+  var objectPools = {
+    sphere: [],
+    cube: [],
+    cone: []
+  };
+
+  /**
+   * Distance-based LOD for trees and structures
+   * - distance > 200: hide completely
+   * - distance > 100: simplify (hide small decorative pieces)
+   * - distance < 100: full detail
+   */
+  function updateLOD(sceneCtx, playerPos) {
+    if (!sceneCtx || !sceneCtx.scene || !playerPos) return;
+
+    var scene = sceneCtx.scene;
+
+    // Process all groups in scene with model_type userData
+    scene.traverse(function(obj) {
+      if (!obj.userData || !obj.userData.model_type) return;
+      if (!(obj instanceof THREE.Group)) return;
+
+      var objId = obj.uuid;
+      var dx = obj.position.x - playerPos.x;
+      var dz = obj.position.z - playerPos.z;
+      var distance = Math.sqrt(dx * dx + dz * dz);
+
+      var currentState = lodStates.get(objId);
+      var newLevel = 0;
+
+      if (distance > 200) {
+        newLevel = 2; // hidden
+      } else if (distance > 100) {
+        newLevel = 1; // simplified
+      } else {
+        newLevel = 0; // full detail
+      }
+
+      // Only update if LOD level changed
+      if (!currentState || currentState.level !== newLevel) {
+        if (newLevel === 2) {
+          // Hide completely
+          obj.visible = false;
+        } else if (newLevel === 1) {
+          // Simplify: hide small meshes (low vertex count decorative pieces)
+          obj.visible = true;
+          var hiddenChildren = [];
+          obj.traverse(function(child) {
+            if (child instanceof THREE.Mesh && child !== obj) {
+              var vertexCount = 0;
+              if (child.geometry && child.geometry.attributes && child.geometry.attributes.position) {
+                vertexCount = child.geometry.attributes.position.count;
+              }
+              // Hide meshes with fewer than 50 vertices (decorative details)
+              if (vertexCount < 50 && child.visible) {
+                child.visible = false;
+                hiddenChildren.push(child);
+              }
+            }
+          });
+          lodStates.set(objId, { level: 1, hiddenChildren: hiddenChildren });
+        } else {
+          // Full detail: restore everything
+          obj.visible = true;
+          if (currentState && currentState.hiddenChildren) {
+            for (var i = 0; i < currentState.hiddenChildren.length; i++) {
+              currentState.hiddenChildren[i].visible = true;
+            }
+          }
+          lodStates.set(objId, { level: 0, hiddenChildren: [] });
+        }
+      }
+    });
+  }
+
+  /**
+   * Frustum culling for animated objects and chunks
+   * Sets userData.inFrustum flag to skip animation updates for objects outside view
+   */
+  function updateFrustumCulling(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.camera) return;
+
+    var camera = sceneCtx.camera;
+    camera.updateMatrixWorld();
+
+    var frustum = new THREE.Frustum();
+    var projScreenMatrix = new THREE.Matrix4();
+    projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(projScreenMatrix);
+
+    // Cull animated objects
+    for (var i = 0; i < animatedObjects.length; i++) {
+      var obj = animatedObjects[i];
+      if (!obj.mesh) continue;
+
+      var inFrustum = frustum.intersectsObject(obj.mesh);
+      obj.mesh.userData.inFrustum = inFrustum;
+    }
+
+    // Cull chunks
+    loadedChunks.forEach(function(chunkData, key) {
+      if (!chunkData.group) return;
+      var inFrustum = frustum.intersectsObject(chunkData.group);
+      chunkData.group.userData.inFrustum = inFrustum;
+    });
+  }
+
+  /**
+   * Get object from pool (for particle systems)
+   */
+  function getFromPool(type) {
+    var pool = objectPools[type];
+    if (!pool) {
+      objectPools[type] = [];
+      pool = objectPools[type];
+    }
+
+    if (pool.length > 0) {
+      var obj = pool.pop();
+      obj.visible = true;
+      return obj;
+    }
+
+    // Create new object if pool is empty
+    var geometry, material, mesh;
+    switch (type) {
+      case 'sphere':
+        geometry = new THREE.SphereGeometry(0.1, 8, 8);
+        material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        mesh = new THREE.Mesh(geometry, material);
+        break;
+      case 'cube':
+        geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+        material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        mesh = new THREE.Mesh(geometry, material);
+        break;
+      case 'cone':
+        geometry = new THREE.ConeGeometry(0.1, 0.2, 8);
+        material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        mesh = new THREE.Mesh(geometry, material);
+        break;
+      default:
+        geometry = new THREE.SphereGeometry(0.1, 8, 8);
+        material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        mesh = new THREE.Mesh(geometry, material);
+    }
+    return mesh;
+  }
+
+  /**
+   * Return object to pool
+   */
+  function returnToPool(type, object) {
+    if (!object) return;
+
+    var pool = objectPools[type];
+    if (!pool) {
+      objectPools[type] = [];
+      pool = objectPools[type];
+    }
+
+    // Reset object state
+    object.visible = false;
+    object.position.set(0, 0, 0);
+    object.rotation.set(0, 0, 0);
+    object.scale.set(1, 1, 1);
+
+    // Add to pool if not too large
+    if (pool.length < 1000) {
+      pool.push(object);
+    } else {
+      // Dispose if pool is full
+      if (object.geometry) object.geometry.dispose();
+      if (object.material) {
+        if (Array.isArray(object.material)) {
+          for (var i = 0; i < object.material.length; i++) {
+            object.material[i].dispose();
+          }
+        } else {
+          object.material.dispose();
+        }
+      }
+    }
+  }
+
+  /**
+   * Get performance statistics
+   */
+  function getPerformanceStats() {
+    var stats = {
+      totalObjects: 0,
+      visibleObjects: 0,
+      activeAnimations: 0,
+      loadedChunks: loadedChunks.size,
+      estimatedTriangles: 0
+    };
+
+    // Count scene objects
+    if (sceneContext && sceneContext.scene) {
+      sceneContext.scene.traverse(function(obj) {
+        stats.totalObjects++;
+        if (obj.visible) {
+          stats.visibleObjects++;
+        }
+        // Estimate triangles for meshes
+        if (obj instanceof THREE.Mesh && obj.geometry) {
+          if (obj.geometry.index) {
+            stats.estimatedTriangles += obj.geometry.index.count / 3;
+          } else if (obj.geometry.attributes && obj.geometry.attributes.position) {
+            stats.estimatedTriangles += obj.geometry.attributes.position.count / 3;
+          }
+        }
+      });
+    }
+
+    // Count active animations (objects in frustum)
+    for (var i = 0; i < animatedObjects.length; i++) {
+      if (animatedObjects[i].mesh && animatedObjects[i].mesh.userData.inFrustum !== false) {
+        stats.activeAnimations++;
+      }
+    }
+
+    stats.estimatedTriangles = Math.floor(stats.estimatedTriangles);
+
+    return stats;
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -4029,5 +4268,10 @@
   exports.updateBuildPreview = updateBuildPreview;
   exports.rotateBuildPreview = rotateBuildPreview;
   exports.getBuildMode = getBuildMode;
+  exports.updateLOD = updateLOD;
+  exports.updateFrustumCulling = updateFrustumCulling;
+  exports.getFromPool = getFromPool;
+  exports.returnToPool = returnToPool;
+  exports.getPerformanceStats = getPerformanceStats;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));
