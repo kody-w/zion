@@ -6,7 +6,7 @@
 
 Open the URL. You're in.
 
-**[Enter ZION →](https://kodyw.github.io/zion/)**
+**[Enter ZION →](https://kody-w.github.io/zion/)**
 
 ## What Is ZION?
 
