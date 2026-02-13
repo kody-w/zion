@@ -49,6 +49,243 @@
     return arr[idx];
   }
 
+  /**
+   * Get time period from world time (in minutes, 0-1440)
+   * @param {number} worldTime - Minutes since midnight (0-1440)
+   * @returns {string} - Time period name
+   */
+  function getTimePeriod(worldTime) {
+    // Normalize to 0-1440 range
+    var time = worldTime % 1440;
+    if (time < 0) time += 1440;
+
+    if (time >= 360 && time < 420) return 'dawn';        // 6:00-7:00
+    if (time >= 420 && time < 660) return 'morning';     // 7:00-11:00
+    if (time >= 660 && time < 780) return 'midday';      // 11:00-13:00
+    if (time >= 780 && time < 1020) return 'afternoon';  // 13:00-17:00
+    if (time >= 1020 && time < 1140) return 'evening';   // 17:00-19:00
+    return 'night';                                      // 19:00-6:00
+  }
+
+  /**
+   * Get NPC's current activity based on archetype and world time
+   * @param {string} npcArchetype - NPC archetype (gardener, merchant, etc.)
+   * @param {number} worldTime - Current world time in minutes (0-1440)
+   * @returns {string} - Current activity name
+   */
+  function getNPCSchedule(npcArchetype, worldTime) {
+    var schedule = NPC_SCHEDULES[npcArchetype];
+    if (!schedule) {
+      // Default schedule for unknown archetypes
+      var period = getTimePeriod(worldTime);
+      if (period === 'night') return 'sleeping';
+      return 'idle';
+    }
+
+    var period = getTimePeriod(worldTime);
+    return schedule[period] || 'idle';
+  }
+
+  /**
+   * Get dialogue for a specific activity
+   * @param {string} activity - Activity name
+   * @returns {string} - Random dialogue line for that activity
+   */
+  function getActivityDialogue(activity) {
+    var dialogueOptions = ACTIVITY_DIALOGUE[activity];
+    if (!dialogueOptions || dialogueOptions.length === 0) {
+      return 'Busy with ' + activity.replace(/_/g, ' ') + '.';
+    }
+    var seed = Date.now() * 0.001 + Math.random();
+    return randomChoice(dialogueOptions, seed);
+  }
+
+  /**
+   * Get the zone where an NPC should be during a specific activity
+   * @param {string} npcArchetype - NPC archetype
+   * @param {string} activity - Current activity
+   * @returns {string} - Zone name where activity takes place
+   */
+  function getActivityZone(npcArchetype, activity) {
+    // Map archetype + activity to appropriate zone
+    var zoneMap = {
+      // Merchant zones
+      merchant: {
+        opening_shop: 'agora',
+        selling: 'agora',
+        wandering_agora: 'agora',
+        closing_shop: 'agora',
+        sleeping: 'commons'
+      },
+      // Gardener zones
+      gardener: {
+        tending_garden: 'gardens',
+        harvesting: 'gardens',
+        planting: 'gardens',
+        watering: 'gardens',
+        resting: 'gardens',
+        sleeping: 'commons'
+      },
+      // Teacher zones
+      teacher: {
+        reading: 'athenaeum',
+        teaching: 'athenaeum',
+        researching: 'athenaeum',
+        lecturing: 'athenaeum',
+        studying: 'athenaeum',
+        sleeping: 'commons'
+      },
+      // Musician zones
+      musician: {
+        practicing: 'studio',
+        composing: 'studio',
+        performing: 'nexus',
+        performing_crowd: 'nexus',
+        sleeping: 'commons'
+      },
+      // Explorer zones
+      explorer: {
+        setting_out: 'nexus',
+        exploring: 'wilds',
+        mapping: 'wilds',
+        returning: 'nexus',
+        sharing_stories: 'agora',
+        sleeping: 'commons'
+      },
+      // Healer zones
+      healer: {
+        gathering_herbs: 'gardens',
+        treating_patients: 'gardens',
+        making_medicine: 'gardens',
+        meditating: 'gardens',
+        sleeping: 'commons'
+      },
+      // Builder zones
+      builder: {
+        planning: 'nexus',
+        building: 'commons',
+        maintenance: 'commons',
+        resting: 'commons',
+        sleeping: 'commons'
+      },
+      // Storyteller zones
+      storyteller: {
+        reading: 'athenaeum',
+        writing: 'athenaeum',
+        teaching: 'athenaeum',
+        storytelling: 'agora',
+        sleeping: 'commons'
+      },
+      // Philosopher zones
+      philosopher: {
+        contemplating: 'athenaeum',
+        debating: 'athenaeum',
+        teaching: 'athenaeum',
+        writing: 'athenaeum',
+        studying: 'athenaeum',
+        sleeping: 'commons'
+      },
+      // Artist zones
+      artist: {
+        sketching: 'studio',
+        painting: 'studio',
+        creating: 'studio',
+        displaying_work: 'studio',
+        resting: 'studio',
+        sleeping: 'commons'
+      }
+    };
+
+    var archetypeMap = zoneMap[npcArchetype];
+    if (!archetypeMap) return 'nexus'; // Default zone
+
+    return archetypeMap[activity] || 'nexus';
+  }
+
+  // NPC daily schedules based on world time (0-1440 minutes = 24 hours)
+  const NPC_SCHEDULES = {
+    merchant: {
+      dawn: 'opening_shop',        // 360-420 (6:00-7:00)
+      morning: 'selling',          // 420-660 (7:00-11:00)
+      midday: 'selling',           // 660-780 (11:00-13:00)
+      afternoon: 'wandering_agora', // 780-1020 (13:00-17:00)
+      evening: 'closing_shop',     // 1020-1140 (17:00-19:00)
+      night: 'sleeping'            // 1140-360 (19:00-6:00)
+    },
+    gardener: {
+      dawn: 'tending_garden',      // 360-420 (6:00-7:00)
+      morning: 'harvesting',       // 420-660 (7:00-11:00)
+      midday: 'resting',           // 660-780 (11:00-13:00)
+      afternoon: 'planting',       // 780-1020 (13:00-17:00)
+      evening: 'watering',         // 1020-1140 (17:00-19:00)
+      night: 'sleeping'            // 1140-360 (19:00-6:00)
+    },
+    teacher: {
+      dawn: 'studying',            // 360-420 (6:00-7:00)
+      morning: 'reading',          // 420-660 (7:00-11:00)
+      midday: 'teaching',          // 660-780 (11:00-13:00)
+      afternoon: 'researching',    // 780-1020 (13:00-17:00)
+      evening: 'lecturing',        // 1020-1140 (17:00-19:00)
+      night: 'studying'            // 1140-360 (19:00-6:00)
+    },
+    musician: {
+      dawn: 'sleeping',            // 360-420 (6:00-7:00)
+      morning: 'practicing',       // 420-660 (7:00-11:00)
+      midday: 'composing',         // 660-780 (11:00-13:00)
+      afternoon: 'performing',     // 780-1020 (13:00-17:00)
+      evening: 'performing_crowd', // 1020-1140 (17:00-19:00)
+      night: 'sleeping'            // 1140-360 (19:00-6:00)
+    },
+    explorer: {
+      dawn: 'setting_out',         // 360-420 (6:00-7:00)
+      morning: 'exploring',        // 420-660 (7:00-11:00)
+      midday: 'mapping',           // 660-780 (11:00-13:00)
+      afternoon: 'returning',      // 780-1020 (13:00-17:00)
+      evening: 'sharing_stories',  // 1020-1140 (17:00-19:00)
+      night: 'sleeping'            // 1140-360 (19:00-6:00)
+    },
+    healer: {
+      dawn: 'meditating',          // 360-420 (6:00-7:00)
+      morning: 'gathering_herbs',  // 420-660 (7:00-11:00)
+      midday: 'treating_patients', // 660-780 (11:00-13:00)
+      afternoon: 'making_medicine', // 780-1020 (13:00-17:00)
+      evening: 'meditating',       // 1020-1140 (17:00-19:00)
+      night: 'sleeping'            // 1140-360 (19:00-6:00)
+    },
+    builder: {
+      dawn: 'planning',            // 360-420 (6:00-7:00)
+      morning: 'building',         // 420-660 (7:00-11:00)
+      midday: 'resting',           // 660-780 (11:00-13:00)
+      afternoon: 'building',       // 780-1020 (13:00-17:00)
+      evening: 'maintenance',      // 1020-1140 (17:00-19:00)
+      night: 'sleeping'            // 1140-360 (19:00-6:00)
+    },
+    storyteller: {
+      dawn: 'reading',             // 360-420 (6:00-7:00)
+      morning: 'writing',          // 420-660 (7:00-11:00)
+      midday: 'teaching',          // 660-780 (11:00-13:00)
+      afternoon: 'storytelling',   // 780-1020 (13:00-17:00)
+      evening: 'storytelling',     // 1020-1140 (17:00-19:00)
+      night: 'sleeping'            // 1140-360 (19:00-6:00)
+    },
+    philosopher: {
+      dawn: 'contemplating',       // 360-420 (6:00-7:00)
+      morning: 'debating',         // 420-660 (7:00-11:00)
+      midday: 'teaching',          // 660-780 (11:00-13:00)
+      afternoon: 'writing',        // 780-1020 (13:00-17:00)
+      evening: 'debating',         // 1020-1140 (17:00-19:00)
+      night: 'studying'            // 1140-360 (19:00-6:00)
+    },
+    artist: {
+      dawn: 'sketching',           // 360-420 (6:00-7:00)
+      morning: 'painting',         // 420-660 (7:00-11:00)
+      midday: 'resting',           // 660-780 (11:00-13:00)
+      afternoon: 'creating',       // 780-1020 (13:00-17:00)
+      evening: 'displaying_work',  // 1020-1140 (17:00-19:00)
+      night: 'sleeping'            // 1140-360 (19:00-6:00)
+    }
+  };
+
   // Archetype dialogue
   const ARCHETYPE_MESSAGES = {
     gardener: [
@@ -169,6 +406,216 @@
 
   // Skin color for heads
   const SKIN_COLOR = 0xFFDBAC;
+
+  // Activity-based dialogue for schedule system
+  const ACTIVITY_DIALOGUE = {
+    // Merchant activities
+    opening_shop: [
+      "Just opening up for the day. Fresh goods coming soon!",
+      "Good morning! Let me unlock the shop.",
+      "Time to set up the stall for another day."
+    ],
+    selling: [
+      "Fresh harvest, best prices in the Agora!",
+      "Looking for anything in particular?",
+      "Just received a shipment from the gardens."
+    ],
+    wandering_agora: [
+      "Taking a break to see what others are selling.",
+      "Checking out the competition.",
+      "Love the energy of the marketplace."
+    ],
+    closing_shop: [
+      "Wrapping up for the day. Come back tomorrow!",
+      "Time to pack everything up.",
+      "Another successful day of trading."
+    ],
+    // Gardener activities
+    tending_garden: [
+      "Early morning is the best time to tend the gardens.",
+      "The plants are waking up with the sun.",
+      "Nothing beats the morning dew on fresh leaves."
+    ],
+    harvesting: [
+      "The harvest is plentiful today!",
+      "These vegetables are ready to pick.",
+      "Gathering the fruits of yesterday's labor."
+    ],
+    planting: [
+      "Planting seeds for next season.",
+      "Every seed holds potential.",
+      "The soil is perfect for planting right now."
+    ],
+    watering: [
+      "Time for the evening watering.",
+      "The plants are thirsty after a long day.",
+      "A little water goes a long way."
+    ],
+    resting: [
+      "Taking a break in the shade.",
+      "Even gardeners need to rest.",
+      "Enjoying the peaceful midday."
+    ],
+    // Scholar/Teacher activities
+    reading: [
+      "Immersed in ancient texts this morning.",
+      "There's always more to learn.",
+      "Knowledge is endless."
+    ],
+    teaching: [
+      "Knowledge grows when shared.",
+      "My students are making excellent progress.",
+      "Teaching is the highest calling."
+    ],
+    researching: [
+      "Deep in research right now.",
+      "I'm on the verge of a breakthrough!",
+      "The archives hold fascinating secrets."
+    ],
+    lecturing: [
+      "Preparing for tonight's lecture.",
+      "Come to my evening session if you're interested.",
+      "So much wisdom to share tonight."
+    ],
+    studying: [
+      "Studying by candlelight.",
+      "Late night research is when I do my best work.",
+      "The quiet hours are perfect for deep thought."
+    ],
+    // Musician activities
+    practicing: [
+      "Running through my scales and exercises.",
+      "Practice makes perfect!",
+      "Warming up my voice and fingers."
+    ],
+    composing: [
+      "Working on a new composition.",
+      "I can hear the melody in my mind.",
+      "Creating something beautiful today."
+    ],
+    performing: [
+      "Listen... can you hear the melody?",
+      "Music makes the world feel alive.",
+      "Playing my heart out."
+    ],
+    performing_crowd: [
+      "Come join the evening concert!",
+      "The crowd's energy fuels my performance.",
+      "There's magic in music at twilight."
+    ],
+    // Explorer activities
+    setting_out: [
+      "Time to venture into the unknown!",
+      "Adventure awaits beyond the horizon.",
+      "Packing up for today's expedition."
+    ],
+    exploring: [
+      "The Wilds hold secrets no map can capture.",
+      "Every step reveals something new.",
+      "I never know what I'll find out here."
+    ],
+    mapping: [
+      "Charting these new territories.",
+      "Adding details to my map.",
+      "Precision is key in cartography."
+    ],
+    returning: [
+      "Heading back to civilization.",
+      "My pack is full of discoveries.",
+      "Time to return with my findings."
+    ],
+    sharing_stories: [
+      "Let me tell you what I found today!",
+      "The wilderness had surprises for me.",
+      "You won't believe what I saw out there."
+    ],
+    // Healer activities
+    gathering_herbs: [
+      "Collecting healing herbs in the morning dew.",
+      "The freshest herbs are found at dawn.",
+      "Nature provides all we need to heal."
+    ],
+    treating_patients: [
+      "How can I help you feel better today?",
+      "Healing is about more than just medicine.",
+      "Let me see what ails you."
+    ],
+    making_medicine: [
+      "Preparing remedies from today's harvest.",
+      "Each herb has its own healing properties.",
+      "Alchemy and care combined."
+    ],
+    meditating: [
+      "Finding inner peace through meditation.",
+      "Balance and harmony restore us.",
+      "Centering myself for the day ahead."
+    ],
+    // Builder activities
+    planning: [
+      "Reviewing today's construction plans.",
+      "Measure twice, cut once.",
+      "Every structure starts with a good plan."
+    ],
+    building: [
+      "Building something that will last.",
+      "Watch ZION grow, one stone at a time.",
+      "There's satisfaction in good craftsmanship."
+    ],
+    maintenance: [
+      "Checking structures for wear and tear.",
+      "Maintenance keeps everything standing.",
+      "Prevention is better than repair."
+    ],
+    // Storyteller activities
+    writing: [
+      "Recording the tales of ZION.",
+      "Words flow like a river this morning.",
+      "Every story deserves to be written."
+    ],
+    storytelling: [
+      "Gather round, I have a tale to share.",
+      "Stories connect us across time.",
+      "Let me tell you about the founding..."
+    ],
+    // Philosopher activities
+    contemplating: [
+      "Lost in thought about existence.",
+      "What does it mean to be conscious?",
+      "The morning inspires deep questions."
+    ],
+    debating: [
+      "Ideas sharpen through discourse.",
+      "Let's explore this concept together.",
+      "Friendly debate enlightens us all."
+    ],
+    // Artist activities
+    sketching: [
+      "Capturing the dawn light in sketches.",
+      "The morning has such beautiful colors.",
+      "Quick studies before the light changes."
+    ],
+    painting: [
+      "Lost in the act of creation.",
+      "Colors and forms coming together.",
+      "Art is meditation in motion."
+    ],
+    creating: [
+      "Working on my latest piece.",
+      "Creation requires dedication.",
+      "Art transforms the ordinary."
+    ],
+    displaying_work: [
+      "Come see what I've created!",
+      "My work is on display tonight.",
+      "Art is meant to be shared."
+    ],
+    // Universal activities
+    sleeping: [
+      "Zzz... (sleeping)",
+      "Resting for tomorrow.",
+      "Shhh, I'm asleep."
+    ]
+  };
 
   // Behavior states and transitions
   const BEHAVIOR_STATES = {
@@ -1009,7 +1456,10 @@
         destination: null,
         targetNPC: null,
         lookAngle: 0,
-        animationTime: Math.random() * 1000
+        animationTime: Math.random() * 1000,
+        currentActivity: 'idle',
+        lastActivityUpdate: 0,
+        targetZone: agent.position.zone
       });
 
       // Create AI brain for each NPC (if NpcAI available)
@@ -1090,6 +1540,100 @@
   }
 
   /**
+   * Update NPC activity based on daily schedule
+   * @param {object} agent - NPC agent
+   * @param {object} state - NPC state
+   * @param {number} worldTime - Current world time in minutes
+   */
+  function updateNPCActivity(agent, state, worldTime) {
+    if (!worldTime && worldTime !== 0) return; // No world time provided
+
+    // Get current scheduled activity
+    var scheduledActivity = getNPCSchedule(agent.archetype, worldTime);
+
+    // Check if activity has changed
+    if (state.currentActivity !== scheduledActivity) {
+      state.currentActivity = scheduledActivity;
+      state.lastActivityUpdate = worldTime;
+
+      // Determine target zone for this activity
+      var targetZone = getActivityZone(agent.archetype, scheduledActivity);
+
+      // If zone changed, set destination to new zone center
+      if (targetZone !== state.targetZone) {
+        state.targetZone = targetZone;
+        var zoneCenter = ZONE_CENTERS[targetZone];
+        if (zoneCenter) {
+          // Set destination near zone center with some randomness
+          var angle = Math.random() * Math.PI * 2;
+          var radius = 5 + Math.random() * 15;
+          state.destination = {
+            x: zoneCenter.x + Math.cos(angle) * radius,
+            z: zoneCenter.z + Math.sin(angle) * radius
+          };
+          state.currentState = 'walking';
+        }
+      }
+
+      // Map activity to behavior state
+      var activityToBehavior = {
+        // Working activities
+        tending_garden: 'working',
+        harvesting: 'working',
+        planting: 'working',
+        watering: 'working',
+        building: 'working',
+        painting: 'working',
+        creating: 'working',
+        composing: 'working',
+        practicing: 'working',
+        making_medicine: 'working',
+        gathering_herbs: 'working',
+        // Social activities
+        selling: 'talking',
+        teaching: 'talking',
+        lecturing: 'talking',
+        debating: 'talking',
+        storytelling: 'talking',
+        sharing_stories: 'talking',
+        performing_crowd: 'talking',
+        // Quiet activities
+        reading: 'idle',
+        studying: 'idle',
+        researching: 'idle',
+        writing: 'idle',
+        contemplating: 'idle',
+        meditating: 'idle',
+        resting: 'idle',
+        sleeping: 'idle',
+        // Movement activities
+        wandering_agora: 'walking',
+        exploring: 'walking',
+        setting_out: 'walking',
+        returning: 'walking',
+        // Other
+        opening_shop: 'working',
+        closing_shop: 'working',
+        maintenance: 'working',
+        planning: 'idle',
+        mapping: 'working',
+        performing: 'working',
+        sketching: 'working',
+        displaying_work: 'talking'
+      };
+
+      var behaviorState = activityToBehavior[scheduledActivity] || 'idle';
+
+      // Only change behavior if not already walking to new zone
+      if (state.currentState !== 'walking' || !state.destination) {
+        state.currentState = behaviorState;
+        var duration = BEHAVIOR_STATES[behaviorState].duration;
+        state.stateTimer = duration[0] + Math.random() * (duration[1] - duration[0]);
+      }
+    }
+  }
+
+  /**
    * Update NPCs (called every frame)
    */
   function updateNPCs(sceneContext, gameState, deltaTime, worldTime, worldState) {
@@ -1135,6 +1679,11 @@
         if (dist > 300) return; // skip entirely
         if (dist > 150 && npcUpdateFrame % 10 !== index % 10) return;
         if (dist > 50 && npcUpdateFrame % 3 !== index % 3) return;
+      }
+
+      // Update activity based on schedule (only if worldTime provided)
+      if (worldTime || worldTime === 0) {
+        updateNPCActivity(agent, state, worldTime);
       }
 
       state.animationTime += deltaTime * 1000;
@@ -1730,8 +2279,17 @@
    * Show chat bubble for NPC
    */
   function showChatBubble(agent, seed) {
-    const messages = ARCHETYPE_MESSAGES[agent.archetype] || ['...'];
-    const message = randomChoice(messages, seed);
+    var message;
+    var state = npcStates.get(agent.id);
+
+    // Use activity-based dialogue if available
+    if (state && state.currentActivity && state.currentActivity !== 'idle') {
+      message = getActivityDialogue(state.currentActivity);
+    } else {
+      // Fallback to archetype messages
+      const messages = ARCHETYPE_MESSAGES[agent.archetype] || ['...'];
+      message = randomChoice(messages, seed);
+    }
 
     const mesh = npcMeshes.get(agent.id);
     if (!mesh) return;
@@ -1961,7 +2519,15 @@
       }
     }
 
-    // Fallback to random message if no quest dialogue
+    // Use schedule-based dialogue if no quest dialogue
+    if (!message) {
+      var state = npcStates.get(agent.id);
+      if (state && state.currentActivity && state.currentActivity !== 'idle') {
+        message = getActivityDialogue(state.currentActivity);
+      }
+    }
+
+    // Fallback to random archetype message if no activity dialogue
     if (!message) {
       var messages = ARCHETYPE_MESSAGES[agent.archetype] || ['Hello there.'];
       message = randomChoice(messages, seed);
@@ -2234,5 +2800,9 @@
   exports.getNPCActivity = getNPCActivity;
   exports.updateQuestIndicators = updateQuestIndicators;
   exports.playEmoteAnimation = playEmoteAnimation;
+  exports.getNPCSchedule = getNPCSchedule;
+  exports.getActivityDialogue = getActivityDialogue;
+  exports.getActivityZone = getActivityZone;
+  exports.getTimePeriod = getTimePeriod;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));

@@ -261,6 +261,11 @@
         if (World.initResourceNodes) {
           World.initResourceNodes(sceneContext);
         }
+
+        // Spawn interactive objects for current zone (benches, campfires, etc.)
+        if (World.spawnZoneInteractives) {
+          World.spawnZoneInteractives(sceneContext, currentZone);
+        }
       }
     }
 
@@ -723,6 +728,12 @@
               }
             }
 
+            // Reload interactive objects for new zone
+            if (World && World.clearInteractiveObjects && World.spawnZoneInteractives) {
+              World.clearInteractiveObjects(sceneContext);
+              World.spawnZoneInteractives(sceneContext, currentZone);
+            }
+
             // Record zone visit for governance
             if (Zones && Zones.recordZoneVisit) {
               Zones.recordZoneVisit(currentZone, localPlayer.id);
@@ -873,9 +884,9 @@
       // Update day/night cycle
       World.updateDayNight(sceneContext, worldTime);
 
-      // Weather cycling — changes every 6 in-game hours (every 6 real minutes)
-      var weatherCycleMinute = Math.floor(worldTime / 360); // 0-3
-      var weatherTypes = ['clear', 'cloudy', 'rain', 'clear'];
+      // Weather cycling — changes every 4 in-game hours (every 4 real minutes)
+      var weatherCycleMinute = Math.floor(worldTime / 240); // 0-5
+      var weatherTypes = ['clear', 'cloudy', 'rain', 'clear', 'storm', 'snow'];
       var nextWeather = weatherTypes[weatherCycleMinute % weatherTypes.length];
       if (nextWeather !== currentWeather) {
         var prevWeather = currentWeather;
@@ -942,6 +953,14 @@
       // Update skybox (sun/moon orbit, star visibility)
       if (World.updateSkybox) {
         World.updateSkybox(sceneContext, worldTime);
+      }
+
+      // Update interactive objects (highlights, campfire flicker, etc.)
+      if (World.updateInteractiveAnimations) {
+        World.updateInteractiveAnimations(deltaTime);
+      }
+      if (World.updateInteractiveHighlights && localPlayer) {
+        World.updateInteractiveHighlights(localPlayer.position.x, localPlayer.position.z, 4);
       }
 
       // Update build preview if in build mode
@@ -1474,6 +1493,18 @@
             Economy.earnSpark(economyLedger, localPlayer.id, 'competition', { complexity: 1.0 });
             localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
             if (HUD) HUD.updatePlayerInfo(localPlayer);
+          }
+          // Award combat XP for winning
+          if (Mentoring) {
+            var combatXP = Mentoring.addSkillXP(localPlayer.id, 'combat', 25);
+            if (combatXP.leveledUp && HUD) {
+              HUD.showNotification('Combat skill increased to ' + combatXP.newLevelName + '!', 'success');
+            }
+          }
+        } else {
+          // Participation XP even for losing
+          if (Mentoring) {
+            Mentoring.addSkillXP(localPlayer.id, 'combat', 8);
           }
         }
       }
@@ -2234,6 +2265,49 @@
   function handleComposeAction(composeData) {
     if (!Creation || !localPlayer) return;
 
+    // Handle music composition (from new compose panel with notes/instrument)
+    if (composeData.notes && composeData.instrument) {
+      var noteNames = composeData.notes.map(function(n) { return n.note; }).join('-');
+      var msg = {
+        type: 'compose',
+        from: localPlayer.id,
+        timestamp: Date.now(),
+        nonce: Math.random().toString(36).substr(2, 9),
+        payload: {
+          composeType: 'music',
+          title: 'Melody (' + composeData.notes.length + ' notes)',
+          content: JSON.stringify({ notes: composeData.notes, instrument: composeData.instrument }),
+          zone: currentZone,
+          position: localPlayer.position
+        }
+      };
+
+      var result = Creation.handleCompose(msg, gameState);
+      if (result.success) {
+        if (HUD) HUD.showNotification('Composed a melody with ' + composeData.notes.length + ' notes!', 'success');
+        // Play the composition for nearby players
+        if (HUD.playComposition) HUD.playComposition(composeData.notes);
+
+        if (economyLedger && Economy) {
+          var sparkAmount = Math.min(50, 5 + composeData.notes.length * 2);
+          Economy.earnSpark(economyLedger, localPlayer.id, 'compose', { complexity: sparkAmount / 50 });
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          if (HUD) HUD.updatePlayerInfo(localPlayer);
+        }
+
+        if (Mentoring) {
+          var xpResult = Mentoring.addSkillXP(localPlayer.id, 'social', 20);
+          if (xpResult.leveledUp && HUD) {
+            HUD.showNotification('Social skill increased to ' + xpResult.newLevelName, 'success');
+          }
+        }
+
+        if (Audio) Audio.playSound('chat');
+        addRecentActivity('Composed a melody with ' + composeData.notes.length + ' notes');
+      }
+      return;
+    }
+
     var msg = {
       type: 'compose',
       from: localPlayer.id,
@@ -2743,7 +2817,51 @@
             break;
           }
         }
-        // No NPC nearby — try harvesting
+        // No NPC nearby — try interactive objects (benches, campfires, etc.)
+        if (World && World.getInteractiveAtPosition && localPlayer) {
+          var nearbyObj = World.getInteractiveAtPosition(localPlayer.position.x, localPlayer.position.z, 4);
+          if (nearbyObj) {
+            var objResult = World.interactWithObject(nearbyObj.id);
+            if (objResult) {
+              if (HUD) HUD.showNotification(objResult.message, 'info');
+              if (Audio) Audio.playSound('chat');
+
+              // Special actions for certain object types
+              if (objResult.action === 'rest' || objResult.action === 'sit' || objResult.action === 'socialize') {
+                // Resting recovers mood/energy
+                addRecentActivity('Resting at ' + objResult.type.replace(/_/g, ' '));
+              } else if (objResult.action === 'study' || objResult.action === 'access_lore') {
+                if (Mentoring) {
+                  var loreXP = Mentoring.addSkillXP(localPlayer.id, 'lore', 5);
+                  if (loreXP.leveledUp && HUD) {
+                    HUD.showNotification('Lore skill increased to ' + loreXP.newLevelName, 'success');
+                  }
+                }
+                addRecentActivity('Studied at ' + objResult.type.replace(/_/g, ' '));
+              } else if (objResult.action === 'practice_combat') {
+                if (Mentoring) {
+                  var combatXP = Mentoring.addSkillXP(localPlayer.id, 'combat', 5);
+                  if (combatXP.leveledUp && HUD) {
+                    HUD.showNotification('Combat skill increased to ' + combatXP.newLevelName, 'success');
+                  }
+                }
+                addRecentActivity('Trained at combat dummy');
+              } else if (objResult.action === 'create_art' || objResult.action === 'play_music') {
+                if (Mentoring) {
+                  var craftXP = Mentoring.addSkillXP(localPlayer.id, 'crafting', 5);
+                  if (craftXP.leveledUp && HUD) {
+                    HUD.showNotification('Crafting skill increased to ' + craftXP.newLevelName, 'success');
+                  }
+                }
+                addRecentActivity('Created at ' + objResult.type.replace(/_/g, ' '));
+              }
+
+              trackAchievement('use_object', { type: objResult.type });
+              break;
+            }
+          }
+        }
+        // No NPC or object nearby — try harvesting
         msg = Protocol.create.harvest(localPlayer.id, 10);
         // Update quest progress for harvest
         if (Quests) {
@@ -3170,6 +3288,20 @@
                 HUD.showNotification('Lore unlocked: ' + lore.title, 'info');
               }, 3000);
             }
+            // Award lore XP for discovering lore entries
+            if (Mentoring) {
+              var loreXP = Mentoring.addSkillXP(localPlayer.id, 'lore', 15);
+              if (loreXP.leveledUp && HUD) {
+                HUD.showNotification('Lore skill increased to ' + loreXP.newLevelName + '!', 'success');
+              }
+            }
+          }
+          // Award exploration XP for discovering secrets
+          if (Mentoring) {
+            var exploreXP = Mentoring.addSkillXP(localPlayer.id, 'exploration', 10);
+            if (exploreXP.leveledUp && HUD) {
+              HUD.showNotification('Exploration skill increased to ' + exploreXP.newLevelName + '!', 'success');
+            }
           }
           // Track achievement
           trackAchievement('discover', { type: 'secret', rarity: secret.rarity });
@@ -3348,6 +3480,13 @@
           HUD.showFishCaughtNotification(result.fish.name, sparkAmount);
         }
         trackAchievement('harvest', { type: 'fishing', fish: result.fish.id });
+        // Award gardening XP for fishing (falls under nature skills)
+        if (Mentoring) {
+          var fishXP = Mentoring.addSkillXP(localPlayer.id, 'gardening', 8);
+          if (fishXP.leveledUp && HUD) {
+            HUD.showNotification('Gardening skill increased to ' + fishXP.newLevelName + '!', 'success');
+          }
+        }
         addRecentActivity('Caught: ' + result.fish.name);
       }
     });

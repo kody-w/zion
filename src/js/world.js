@@ -3779,6 +3779,9 @@
 
   var weatherParticles = null; // Current active weather particle system
   var currentWeatherType = 'clear';
+  var lightningTimer = 0;
+  var lightningActive = false;
+  var lightningLight = null;
 
   function setWeather(sceneCtx, type) {
     if (!sceneCtx || !sceneCtx.scene) return;
@@ -3882,6 +3885,68 @@
       weatherParticles = new THREE.Points(snowGeo, snowMat);
       weatherParticles.userData.type = 'snow';
       sceneCtx.scene.add(weatherParticles);
+
+    } else if (type === 'storm') {
+      // Storm: heavy rain + darker + lightning
+      var stormCount = 3500;
+      var stormGeo = new THREE.BufferGeometry();
+      var stormPositions = new Float32Array(stormCount * 3);
+      var stormVelocities = new Float32Array(stormCount * 3);
+
+      for (var s = 0; s < stormCount; s++) {
+        var sidx = s * 3;
+        stormPositions[sidx] = (Math.random() - 0.5) * 120;
+        stormPositions[sidx + 1] = Math.random() * 80 + 20;
+        stormPositions[sidx + 2] = (Math.random() - 0.5) * 120;
+
+        stormVelocities[sidx] = (Math.random() - 0.5) * 1.5;       // stronger wind
+        stormVelocities[sidx + 1] = -1.2 - Math.random() * 0.6;    // faster rain
+        stormVelocities[sidx + 2] = (Math.random() - 0.5) * 1.5;
+      }
+
+      stormGeo.setAttribute('position', new THREE.Float32BufferAttribute(stormPositions, 3));
+      stormGeo.userData.velocities = stormVelocities;
+
+      var stormMat = new THREE.PointsMaterial({
+        color: 0x8899bb,
+        size: 0.18,
+        transparent: true,
+        opacity: 0.7,
+        depthWrite: false
+      });
+
+      weatherParticles = new THREE.Points(stormGeo, stormMat);
+      weatherParticles.userData.type = 'rain'; // reuse rain update logic
+      sceneCtx.scene.add(weatherParticles);
+
+      // Create lightning light (initially off)
+      if (!lightningLight) {
+        lightningLight = new THREE.PointLight(0xeeeeff, 0, 200);
+        lightningLight.position.set(0, 50, 0);
+        sceneCtx.scene.add(lightningLight);
+      }
+      lightningTimer = 0;
+      lightningActive = false;
+
+      // Darken ambient for storm
+      if (sceneCtx.ambientLight) {
+        sceneCtx.ambientLight.intensity = Math.max(0.15, sceneCtx.ambientLight.intensity * 0.6);
+      }
+
+    } else if (type === 'cloudy') {
+      // Cloudy: dim the lights slightly
+      if (sceneCtx.ambientLight) {
+        sceneCtx.ambientLight.intensity = Math.max(0.25, sceneCtx.ambientLight.intensity * 0.8);
+      }
+      if (sceneCtx.directionalLight) {
+        sceneCtx.directionalLight.intensity = Math.max(0.2, sceneCtx.directionalLight.intensity * 0.7);
+      }
+    } else {
+      // Clear: remove lightning light if it exists
+      if (lightningLight && sceneCtx.scene) {
+        sceneCtx.scene.remove(lightningLight);
+        lightningLight = null;
+      }
     }
   }
 
@@ -3970,6 +4035,35 @@
     }
 
     weatherParticles.geometry.attributes.position.needsUpdate = true;
+
+    // Lightning flash logic for storms
+    if (lightningLight && weatherParticles.userData.type === 'rain') {
+      lightningTimer += deltaTime;
+
+      if (lightningActive) {
+        // Flash is happening — fade out over 150ms
+        lightningLight.intensity *= 0.85;
+        if (lightningLight.intensity < 0.05) {
+          lightningLight.intensity = 0;
+          lightningActive = false;
+          lightningTimer = 0;
+        }
+      } else {
+        // Wait for next flash (random interval 3-8 seconds)
+        var flashInterval = 3000 + Math.random() * 5000;
+        if (lightningTimer > flashInterval) {
+          // Trigger lightning flash
+          lightningActive = true;
+          lightningLight.intensity = 2.5 + Math.random() * 1.5;
+          lightningLight.position.set(
+            (cameraPos.x || 0) + (Math.random() - 0.5) * 80,
+            45 + Math.random() * 15,
+            (cameraPos.z || 0) + (Math.random() - 0.5) * 80
+          );
+          lightningTimer = 0;
+        }
+      }
+    }
   }
 
   // ========================================================================
@@ -5179,6 +5273,634 @@
     }
   }
 
+  // ========================================================================
+  // INTERACTIVE OBJECTS SYSTEM
+  // ========================================================================
+
+  var interactiveObjects = [];
+  var nextInteractiveId = 1;
+
+  /**
+   * Interactive objects definitions per zone
+   */
+  var INTERACTIVE_OBJECTS = {
+    nexus: [
+      { type: 'fountain', position: { x: 0, z: 0 }, action: 'water_source', message: 'The fountain sparkles with pure energy. You feel restored.' },
+      { type: 'bulletin_board', position: { x: 15, z: 15 }, action: 'read_announcements', message: 'The bulletin board displays community announcements and events.' }
+    ],
+    gardens: [
+      { type: 'garden_bench', position: { x: 200, z: 40 }, action: 'rest', message: 'You sit on the garden bench, surrounded by fragrant flowers. Your mood improves.' },
+      { type: 'watering_well', position: { x: 210, z: 25 }, action: 'gather_water', message: 'The well provides fresh water for the gardens.' }
+    ],
+    athenaeum: [
+      { type: 'reading_desk', position: { x: 100, z: -215 }, action: 'study', message: 'You settle in at the reading desk. Knowledge flows more easily here.' },
+      { type: 'bookshelf', position: { x: 105, z: -225 }, action: 'access_lore', message: 'The bookshelf contains ancient tomes and scrolls of wisdom.' }
+    ],
+    wilds: [
+      { type: 'campfire', position: { x: -30, z: 265 }, action: 'warmth_cooking', message: 'The campfire crackles warmly. A perfect spot for cooking and gathering.' },
+      { type: 'fallen_log', position: { x: -25, z: 255 }, action: 'sit', message: 'You sit on the weathered log, taking in the wild surroundings.' }
+    ],
+    agora: [
+      { type: 'market_stall', position: { x: -185, z: 120 }, action: 'browse_goods', message: 'The market stall displays various wares and goods for trade.' },
+      { type: 'town_bell', position: { x: -190, z: 125 }, action: 'ring_bell', message: 'CLANG! The town bell rings out across the agora.' }
+    ],
+    commons: [
+      { type: 'park_bench', position: { x: 170, z: 195 }, action: 'socialize', message: 'A comfortable bench, perfect for meeting with friends.' },
+      { type: 'street_lamp', position: { x: 175, z: 185 }, action: 'light', message: 'The street lamp provides warm light in the evening hours.' }
+    ],
+    arena: [
+      { type: 'training_dummy', position: { x: 5, z: -240 }, action: 'practice_combat', message: 'The training dummy stands ready. Time to practice your skills.' },
+      { type: 'spectator_bench', position: { x: -5, z: -235 }, action: 'watch_fights', message: 'From here, you have a great view of the arena floor.' }
+    ],
+    studio: [
+      { type: 'easel', position: { x: -200, z: -95 }, action: 'create_art', message: 'The easel stands ready. Your creativity flows here.' },
+      { type: 'piano', position: { x: -205, z: -105 }, action: 'play_music', message: 'The piano is perfectly tuned. Music fills the studio.' }
+    ]
+  };
+
+  /**
+   * Create a 3D mesh for an interactive object
+   */
+  function createInteractiveObject(type, position) {
+    var group = new THREE.Group();
+    var baseY = getTerrainHeight(position.x, position.z) || 0;
+
+    // Create different objects based on type
+    if (type === 'garden_bench' || type === 'park_bench' || type === 'spectator_bench') {
+      // Bench seat
+      var seatGeo = new THREE.BoxGeometry(2.5, 0.3, 0.8);
+      var benchMat = new THREE.MeshPhongMaterial({ color: 0x8d6e63 });
+      var seat = new THREE.Mesh(seatGeo, benchMat);
+      seat.position.set(0, 0.4, 0);
+      seat.castShadow = true;
+      group.add(seat);
+
+      // Bench legs
+      for (var i = -1; i <= 1; i += 2) {
+        for (var j = -1; j <= 1; j += 2) {
+          var legGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.4, 8);
+          var leg = new THREE.Mesh(legGeo, benchMat);
+          leg.position.set(i * 1.0, 0.2, j * 0.3);
+          leg.castShadow = true;
+          group.add(leg);
+        }
+      }
+
+      // Backrest
+      var backGeo = new THREE.BoxGeometry(2.5, 0.8, 0.15);
+      var back = new THREE.Mesh(backGeo, benchMat);
+      back.position.set(0, 0.9, -0.4);
+      back.castShadow = true;
+      group.add(back);
+
+    } else if (type === 'campfire') {
+      // Fire pit stones
+      var pitGeo = new THREE.CylinderGeometry(0.8, 0.9, 0.3, 12);
+      var stoneMat = new THREE.MeshPhongMaterial({ color: 0x808080 });
+      var pit = new THREE.Mesh(pitGeo, stoneMat);
+      pit.position.set(0, 0.15, 0);
+      pit.castShadow = true;
+      group.add(pit);
+
+      // Logs arranged in cone
+      var logMat = new THREE.MeshPhongMaterial({ color: 0x4a2511 });
+      for (var l = 0; l < 4; l++) {
+        var angle = (l / 4) * Math.PI * 2;
+        var logGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8);
+        var log = new THREE.Mesh(logGeo, logMat);
+        log.position.set(Math.cos(angle) * 0.2, 0.5, Math.sin(angle) * 0.2);
+        log.rotation.z = Math.PI / 6;
+        log.rotation.y = angle;
+        log.castShadow = true;
+        group.add(log);
+      }
+
+      // Fire light
+      var fireLight = new THREE.PointLight(0xff6600, 1.5, 10);
+      fireLight.position.set(0, 1, 0);
+      fireLight.castShadow = false;
+      group.add(fireLight);
+
+      // Store light reference for animation
+      group.userData.fireLight = fireLight;
+
+    } else if (type === 'fountain') {
+      // Fountain base
+      var baseGeo = new THREE.CylinderGeometry(2, 2.5, 0.8, 16);
+      var stoneMat = new THREE.MeshPhongMaterial({ color: 0xc0c0d0 });
+      var base = new THREE.Mesh(baseGeo, stoneMat);
+      base.position.set(0, 0.4, 0);
+      base.castShadow = true;
+      group.add(base);
+
+      // Middle tier
+      var midGeo = new THREE.CylinderGeometry(1.2, 1.5, 0.5, 16);
+      var mid = new THREE.Mesh(midGeo, stoneMat);
+      mid.position.set(0, 1.2, 0);
+      mid.castShadow = true;
+      group.add(mid);
+
+      // Top bowl
+      var topGeo = new THREE.CylinderGeometry(0.6, 0.8, 0.3, 16);
+      var top = new THREE.Mesh(topGeo, stoneMat);
+      top.position.set(0, 1.8, 0);
+      top.castShadow = true;
+      group.add(top);
+
+      // Water pool
+      var waterGeo = new THREE.CylinderGeometry(1.8, 1.8, 0.2, 24);
+      var waterMat = new THREE.MeshStandardMaterial({
+        color: 0x4488ff,
+        emissive: 0x2244aa,
+        emissiveIntensity: 0.3,
+        transparent: true,
+        opacity: 0.7
+      });
+      var water = new THREE.Mesh(waterGeo, waterMat);
+      water.position.set(0, 0.8, 0);
+      water.castShadow = false;
+      group.add(water);
+
+    } else if (type === 'training_dummy') {
+      // Base
+      var baseGeo = new THREE.CylinderGeometry(0.4, 0.5, 0.3, 12);
+      var woodMat = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+      var base = new THREE.Mesh(baseGeo, woodMat);
+      base.position.set(0, 0.15, 0);
+      base.castShadow = true;
+      group.add(base);
+
+      // Post
+      var postGeo = new THREE.CylinderGeometry(0.15, 0.15, 2.5, 8);
+      var post = new THREE.Mesh(postGeo, woodMat);
+      post.position.set(0, 1.4, 0);
+      post.castShadow = true;
+      group.add(post);
+
+      // Body (burlap-wrapped)
+      var bodyGeo = new THREE.CylinderGeometry(0.4, 0.45, 1.2, 12);
+      var burlapMat = new THREE.MeshPhongMaterial({ color: 0xc4a574 });
+      var body = new THREE.Mesh(bodyGeo, burlapMat);
+      body.position.set(0, 1.8, 0);
+      body.castShadow = true;
+      group.add(body);
+
+      // Head
+      var headGeo = new THREE.SphereGeometry(0.3, 12, 12);
+      var head = new THREE.Mesh(headGeo, burlapMat);
+      head.position.set(0, 2.6, 0);
+      head.castShadow = true;
+      group.add(head);
+
+    } else if (type === 'fallen_log') {
+      // Large log lying horizontally
+      var logGeo = new THREE.CylinderGeometry(0.4, 0.45, 3, 12);
+      var barkMat = new THREE.MeshPhongMaterial({ color: 0x5d4037 });
+      var log = new THREE.Mesh(logGeo, barkMat);
+      log.position.set(0, 0.4, 0);
+      log.rotation.z = Math.PI / 2;
+      log.castShadow = true;
+      group.add(log);
+
+    } else if (type === 'bulletin_board') {
+      // Posts
+      var postMat = new THREE.MeshPhongMaterial({ color: 0x6d4c41 });
+      for (var p = -1; p <= 1; p += 2) {
+        var postGeo = new THREE.CylinderGeometry(0.1, 0.1, 2.5, 8);
+        var post = new THREE.Mesh(postGeo, postMat);
+        post.position.set(p * 0.8, 1.25, 0);
+        post.castShadow = true;
+        group.add(post);
+      }
+
+      // Board
+      var boardGeo = new THREE.BoxGeometry(2, 1.5, 0.1);
+      var boardMat = new THREE.MeshPhongMaterial({ color: 0x8d6e63 });
+      var board = new THREE.Mesh(boardGeo, boardMat);
+      board.position.set(0, 1.5, 0);
+      board.castShadow = true;
+      group.add(board);
+
+    } else if (type === 'watering_well') {
+      // Well base (stone cylinder)
+      var wellGeo = new THREE.CylinderGeometry(1, 1.2, 1.5, 16);
+      var stoneMat = new THREE.MeshPhongMaterial({ color: 0x808080 });
+      var well = new THREE.Mesh(wellGeo, stoneMat);
+      well.position.set(0, 0.75, 0);
+      well.castShadow = true;
+      group.add(well);
+
+      // Well posts
+      var postMat = new THREE.MeshPhongMaterial({ color: 0x6d4c41 });
+      for (var w = -1; w <= 1; w += 2) {
+        var postGeo = new THREE.CylinderGeometry(0.1, 0.1, 2, 8);
+        var post = new THREE.Mesh(postGeo, postMat);
+        post.position.set(w * 0.8, 1.75, 0);
+        post.castShadow = true;
+        group.add(post);
+      }
+
+      // Roof
+      var roofGeo = new THREE.ConeGeometry(1.2, 0.8, 4);
+      var roofMat = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+      var roof = new THREE.Mesh(roofGeo, roofMat);
+      roof.position.set(0, 3.2, 0);
+      roof.castShadow = true;
+      group.add(roof);
+
+    } else if (type === 'reading_desk') {
+      // Desk surface
+      var topGeo = new THREE.BoxGeometry(1.5, 0.1, 1);
+      var woodMat = new THREE.MeshPhongMaterial({ color: 0x5d4037 });
+      var top = new THREE.Mesh(topGeo, woodMat);
+      top.position.set(0, 0.8, 0);
+      top.castShadow = true;
+      group.add(top);
+
+      // Legs
+      for (var dx = -1; dx <= 1; dx += 2) {
+        for (var dz = -1; dz <= 1; dz += 2) {
+          var legGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.8, 8);
+          var leg = new THREE.Mesh(legGeo, woodMat);
+          leg.position.set(dx * 0.6, 0.4, dz * 0.4);
+          leg.castShadow = true;
+          group.add(leg);
+        }
+      }
+
+      // Book on desk
+      var bookGeo = new THREE.BoxGeometry(0.3, 0.05, 0.4);
+      var bookMat = new THREE.MeshPhongMaterial({ color: 0x8b0000 });
+      var book = new THREE.Mesh(bookGeo, bookMat);
+      book.position.set(0, 0.88, 0);
+      book.rotation.y = Math.PI / 6;
+      book.castShadow = true;
+      group.add(book);
+
+    } else if (type === 'bookshelf') {
+      // Frame
+      var frameMat = new THREE.MeshPhongMaterial({ color: 0x5d4037 });
+      var shelfGeo = new THREE.BoxGeometry(2, 2.5, 0.4);
+      var shelf = new THREE.Mesh(shelfGeo, frameMat);
+      shelf.position.set(0, 1.25, 0);
+      shelf.castShadow = true;
+      group.add(shelf);
+
+      // Books
+      var bookColors = [0x8b0000, 0x006400, 0x00008b, 0x8b4513, 0x4b0082];
+      for (var row = 0; row < 3; row++) {
+        for (var col = 0; col < 5; col++) {
+          var bookGeo = new THREE.BoxGeometry(0.3, 0.6, 0.15);
+          var bookMat = new THREE.MeshPhongMaterial({ color: bookColors[(row + col) % bookColors.length] });
+          var book = new THREE.Mesh(bookGeo, bookMat);
+          book.position.set(-0.7 + col * 0.35, 0.3 + row * 0.7, 0.1);
+          book.castShadow = true;
+          group.add(book);
+        }
+      }
+
+    } else if (type === 'market_stall') {
+      // Posts
+      var postMat = new THREE.MeshPhongMaterial({ color: 0x6d4c41 });
+      for (var mx = -1; mx <= 1; mx += 2) {
+        for (var mz = -1; mz <= 1; mz += 2) {
+          var postGeo = new THREE.CylinderGeometry(0.1, 0.1, 2.5, 8);
+          var post = new THREE.Mesh(postGeo, postMat);
+          post.position.set(mx * 1, 1.25, mz * 1);
+          post.castShadow = true;
+          group.add(post);
+        }
+      }
+
+      // Canopy
+      var canopyGeo = new THREE.BoxGeometry(2.5, 0.1, 2.5);
+      var canopyMat = new THREE.MeshPhongMaterial({ color: 0xd2691e });
+      var canopy = new THREE.Mesh(canopyGeo, canopyMat);
+      canopy.position.set(0, 2.5, 0);
+      canopy.castShadow = true;
+      group.add(canopy);
+
+      // Counter
+      var counterGeo = new THREE.BoxGeometry(2, 0.8, 1);
+      var counterMat = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+      var counter = new THREE.Mesh(counterGeo, counterMat);
+      counter.position.set(0, 0.4, 0);
+      counter.castShadow = true;
+      group.add(counter);
+
+    } else if (type === 'town_bell') {
+      // Bell post
+      var postGeo = new THREE.CylinderGeometry(0.15, 0.2, 3, 8);
+      var woodMat = new THREE.MeshPhongMaterial({ color: 0x6d4c41 });
+      var post = new THREE.Mesh(postGeo, woodMat);
+      post.position.set(0, 1.5, 0);
+      post.castShadow = true;
+      group.add(post);
+
+      // Cross beam
+      var beamGeo = new THREE.BoxGeometry(1.5, 0.15, 0.15);
+      var beam = new THREE.Mesh(beamGeo, woodMat);
+      beam.position.set(0, 2.8, 0);
+      beam.castShadow = true;
+      group.add(beam);
+
+      // Bell
+      var bellGeo = new THREE.SphereGeometry(0.4, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+      var bellMat = new THREE.MeshPhongMaterial({ color: 0xb8860b });
+      var bell = new THREE.Mesh(bellGeo, bellMat);
+      bell.position.set(0, 2.5, 0);
+      bell.rotation.x = Math.PI;
+      bell.castShadow = true;
+      group.add(bell);
+
+    } else if (type === 'street_lamp') {
+      // Lamp post
+      var postGeo = new THREE.CylinderGeometry(0.08, 0.1, 3, 8);
+      var metalMat = new THREE.MeshPhongMaterial({ color: 0x2f2f2f });
+      var post = new THREE.Mesh(postGeo, metalMat);
+      post.position.set(0, 1.5, 0);
+      post.castShadow = true;
+      group.add(post);
+
+      // Lamp housing
+      var housingGeo = new THREE.CylinderGeometry(0.3, 0.4, 0.5, 6);
+      var housingMat = new THREE.MeshPhongMaterial({ color: 0x1a1a1a });
+      var housing = new THREE.Mesh(housingGeo, housingMat);
+      housing.position.set(0, 3.2, 0);
+      housing.castShadow = true;
+      group.add(housing);
+
+      // Light
+      var lampLight = new THREE.PointLight(0xffdd88, 1.0, 12);
+      lampLight.position.set(0, 3, 0);
+      lampLight.castShadow = false;
+      group.add(lampLight);
+
+      group.userData.lampLight = lampLight;
+
+    } else if (type === 'easel') {
+      // Easel legs
+      var legMat = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+      var leg1Geo = new THREE.CylinderGeometry(0.05, 0.05, 1.8, 8);
+      var leg1 = new THREE.Mesh(leg1Geo, legMat);
+      leg1.position.set(0, 0.9, 0.3);
+      leg1.rotation.x = -0.2;
+      leg1.castShadow = true;
+      group.add(leg1);
+
+      var leg2 = new THREE.Mesh(leg1Geo, legMat);
+      leg2.position.set(-0.3, 0.9, -0.2);
+      leg2.rotation.z = 0.2;
+      leg2.rotation.x = 0.2;
+      leg2.castShadow = true;
+      group.add(leg2);
+
+      var leg3 = new THREE.Mesh(leg1Geo, legMat);
+      leg3.position.set(0.3, 0.9, -0.2);
+      leg3.rotation.z = -0.2;
+      leg3.rotation.x = 0.2;
+      leg3.castShadow = true;
+      group.add(leg3);
+
+      // Canvas
+      var canvasGeo = new THREE.BoxGeometry(1, 1.2, 0.05);
+      var canvasMat = new THREE.MeshPhongMaterial({ color: 0xf5f5dc });
+      var canvas = new THREE.Mesh(canvasGeo, canvasMat);
+      canvas.position.set(0, 1.4, 0.2);
+      canvas.rotation.x = -0.1;
+      canvas.castShadow = true;
+      group.add(canvas);
+
+    } else if (type === 'piano') {
+      // Piano body
+      var bodyGeo = new THREE.BoxGeometry(1.5, 0.8, 1);
+      var pianoMat = new THREE.MeshPhongMaterial({ color: 0x1a1a1a });
+      var body = new THREE.Mesh(bodyGeo, pianoMat);
+      body.position.set(0, 0.4, 0);
+      body.castShadow = true;
+      group.add(body);
+
+      // Keyboard
+      var keyboardGeo = new THREE.BoxGeometry(1.3, 0.05, 0.3);
+      var keyboardMat = new THREE.MeshPhongMaterial({ color: 0xffffff });
+      var keyboard = new THREE.Mesh(keyboardGeo, keyboardMat);
+      keyboard.position.set(0, 0.85, 0.4);
+      keyboard.castShadow = true;
+      group.add(keyboard);
+
+      // Legs
+      for (var px = -1; px <= 1; px += 2) {
+        for (var pz = -1; pz <= 1; pz += 2) {
+          var legGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8);
+          var leg = new THREE.Mesh(legGeo, pianoMat);
+          leg.position.set(px * 0.6, 0.2, pz * 0.4);
+          leg.castShadow = true;
+          group.add(leg);
+        }
+      }
+    }
+
+    // Position the group
+    group.position.set(position.x, baseY, position.z);
+
+    // Store interactive metadata
+    group.userData.isInteractive = true;
+    group.userData.interactiveType = type;
+    group.userData.originalEmissive = 0x000000;
+    group.userData.highlighted = false;
+
+    return group;
+  }
+
+  /**
+   * Spawn all interactive objects for a specific zone
+   */
+  function spawnZoneInteractives(sceneCtx, zoneId) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    if (!INTERACTIVE_OBJECTS[zoneId]) return;
+
+    var zoneObjects = INTERACTIVE_OBJECTS[zoneId];
+    for (var i = 0; i < zoneObjects.length; i++) {
+      var objDef = zoneObjects[i];
+      var mesh = createInteractiveObject(objDef.type, objDef.position);
+
+      if (mesh) {
+        sceneCtx.scene.add(mesh);
+
+        // Store interactive object data
+        var interactiveData = {
+          id: nextInteractiveId++,
+          type: objDef.type,
+          position: objDef.position,
+          action: objDef.action,
+          message: objDef.message,
+          mesh: mesh,
+          zone: zoneId
+        };
+
+        interactiveObjects.push(interactiveData);
+        mesh.userData.interactiveId = interactiveData.id;
+      }
+    }
+  }
+
+  /**
+   * Get the nearest interactive object within range
+   */
+  function getInteractiveAtPosition(x, z, range) {
+    var nearestObj = null;
+    var minDist = range;
+
+    for (var i = 0; i < interactiveObjects.length; i++) {
+      var obj = interactiveObjects[i];
+      var dx = obj.position.x - x;
+      var dz = obj.position.z - z;
+      var dist = Math.sqrt(dx * dx + dz * dz);
+
+      if (dist < minDist) {
+        minDist = dist;
+        nearestObj = obj;
+      }
+    }
+
+    return nearestObj;
+  }
+
+  /**
+   * Interact with an object by ID
+   */
+  function interactWithObject(objectId) {
+    for (var i = 0; i < interactiveObjects.length; i++) {
+      var obj = interactiveObjects[i];
+      if (obj.id === objectId) {
+        return {
+          type: obj.type,
+          action: obj.action,
+          message: obj.message,
+          zone: obj.zone
+        };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Highlight interactive objects near the player
+   */
+  function updateInteractiveHighlights(playerX, playerZ, highlightRange) {
+    if (!highlightRange) highlightRange = 3;
+
+    for (var i = 0; i < interactiveObjects.length; i++) {
+      var obj = interactiveObjects[i];
+      if (!obj.mesh) continue;
+
+      var dx = obj.position.x - playerX;
+      var dz = obj.position.z - playerZ;
+      var dist = Math.sqrt(dx * dx + dz * dz);
+
+      var shouldHighlight = dist < highlightRange;
+
+      if (shouldHighlight && !obj.mesh.userData.highlighted) {
+        // Turn on highlight
+        obj.mesh.traverse(function(child) {
+          if (child instanceof THREE.Mesh && child.material) {
+            if (child.material.emissive) {
+              child.userData.originalEmissive = child.material.emissive.getHex();
+              child.material.emissive.setHex(0x444400);
+              child.material.emissiveIntensity = 0.3;
+            }
+          }
+        });
+        obj.mesh.userData.highlighted = true;
+      } else if (!shouldHighlight && obj.mesh.userData.highlighted) {
+        // Turn off highlight
+        obj.mesh.traverse(function(child) {
+          if (child instanceof THREE.Mesh && child.material) {
+            if (child.material.emissive && child.userData.originalEmissive !== undefined) {
+              child.material.emissive.setHex(child.userData.originalEmissive);
+              child.material.emissiveIntensity = 0;
+            }
+          }
+        });
+        obj.mesh.userData.highlighted = false;
+      }
+    }
+  }
+
+  /**
+   * Animate interactive objects (fire flicker, etc.)
+   */
+  function updateInteractiveAnimations(deltaTime) {
+    var time = Date.now() * 0.001;
+
+    for (var i = 0; i < interactiveObjects.length; i++) {
+      var obj = interactiveObjects[i];
+      if (!obj.mesh) continue;
+
+      // Campfire light flicker
+      if (obj.type === 'campfire' && obj.mesh.userData.fireLight) {
+        var flicker = Math.sin(time * 5) * 0.3 + Math.sin(time * 13) * 0.2;
+        obj.mesh.userData.fireLight.intensity = 1.5 + flicker;
+      }
+
+      // Street lamp gentle sway
+      if (obj.type === 'street_lamp' && obj.mesh.userData.lampLight) {
+        var sway = Math.sin(time * 0.5) * 0.05;
+        obj.mesh.userData.lampLight.intensity = 1.0 + sway;
+      }
+    }
+  }
+
+  /**
+   * Remove all interactive objects (for cleanup)
+   */
+  function clearInteractiveObjects(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    for (var i = 0; i < interactiveObjects.length; i++) {
+      var obj = interactiveObjects[i];
+      if (obj.mesh) {
+        sceneCtx.scene.remove(obj.mesh);
+
+        // Dispose geometries and materials
+        obj.mesh.traverse(function(child) {
+          if (child instanceof THREE.Mesh) {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                for (var m = 0; m < child.material.length; m++) {
+                  child.material[m].dispose();
+                }
+              } else {
+                child.material.dispose();
+              }
+            }
+          }
+        });
+      }
+    }
+
+    interactiveObjects = [];
+    nextInteractiveId = 1;
+  }
+
+  /**
+   * Get all interactive objects for a zone
+   */
+  function getZoneInteractives(zoneId) {
+    var result = [];
+    for (var i = 0; i < interactiveObjects.length; i++) {
+      if (interactiveObjects[i].zone === zoneId) {
+        result.push(interactiveObjects[i]);
+      }
+    }
+    return result;
+  }
+
+  // ========================================================================
+  // END INTERACTIVE OBJECTS SYSTEM
+  // ========================================================================
+
   /**
    * Get performance statistics
    */
@@ -5268,5 +5990,13 @@
   exports.getFromPool = getFromPool;
   exports.returnToPool = returnToPool;
   exports.getPerformanceStats = getPerformanceStats;
+  exports.spawnZoneInteractives = spawnZoneInteractives;
+  exports.createInteractiveObject = createInteractiveObject;
+  exports.getInteractiveAtPosition = getInteractiveAtPosition;
+  exports.interactWithObject = interactWithObject;
+  exports.updateInteractiveHighlights = updateInteractiveHighlights;
+  exports.updateInteractiveAnimations = updateInteractiveAnimations;
+  exports.clearInteractiveObjects = clearInteractiveObjects;
+  exports.getZoneInteractives = getZoneInteractives;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));

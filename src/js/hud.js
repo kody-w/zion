@@ -4053,10 +4053,83 @@
   }
 
   // ============================================================================
-  // COMPOSE PANEL
+  // COMPOSE PANEL - Music Composition System
   // ============================================================================
 
   var composePanel = null;
+  var audioContext = null;
+  var recordedNotes = [];
+  var isRecording = false;
+  var recordingStartTime = 0;
+  var currentInstrument = 'sine';
+
+  // Note frequency map for C4 to C6 (2 octaves + middle C)
+  var noteFrequencies = {
+    'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00, 'A4': 440.00, 'B4': 493.88,
+    'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99, 'A5': 880.00, 'B5': 987.77,
+    'C6': 1046.50
+  };
+
+  var noteOrder = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5', 'B5', 'C6'];
+
+  function initAudioContext() {
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioContext;
+  }
+
+  function playNote(noteName, duration) {
+    var ctx = initAudioContext();
+    var frequency = noteFrequencies[noteName];
+    if (!frequency) return;
+
+    var oscillator = ctx.createOscillator();
+    var gainNode = ctx.createGain();
+
+    oscillator.type = currentInstrument;
+    oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
+
+    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + (duration || 0.5));
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + (duration || 0.5));
+  }
+
+  function playComposition(notes) {
+    if (!notes || notes.length === 0) {
+      showNotification('No notes to play', 'warning');
+      return;
+    }
+
+    var ctx = initAudioContext();
+    var currentTime = ctx.currentTime;
+
+    notes.forEach(function(note) {
+      var startTime = currentTime + (note.time / 1000);
+      var frequency = noteFrequencies[note.note];
+      if (!frequency) return;
+
+      var oscillator = ctx.createOscillator();
+      var gainNode = ctx.createGain();
+
+      oscillator.type = note.instrument || 'sine';
+      oscillator.frequency.setValueAtTime(frequency, startTime);
+
+      gainNode.gain.setValueAtTime(0.3, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.5);
+    });
+  }
 
   function showComposePanel(composeCallback) {
     if (composePanel) return;
@@ -4069,10 +4142,10 @@
       left: 50%;
       transform: translate(-50%, -50%);
       background: linear-gradient(135deg, rgba(20, 25, 35, 0.98), rgba(30, 35, 45, 0.98));
-      border: 2px solid rgba(150, 100, 255, 0.5);
+      border: 2px solid rgba(212, 175, 55, 0.7);
       border-radius: 12px;
       padding: 25px;
-      width: 500px;
+      width: 800px;
       z-index: 10000;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
       font-family: system-ui, sans-serif;
@@ -4080,7 +4153,7 @@
     `;
 
     var header = document.createElement('div');
-    header.innerHTML = '<h2 style="margin: 0 0 20px 0; color: #a8f; font-size: 24px;">Create Artwork</h2>';
+    header.innerHTML = '<h2 style="margin: 0 0 20px 0; color: #d4af37; font-size: 24px;">Compose Music</h2>';
     panel.appendChild(header);
 
     var closeBtn = document.createElement('button');
@@ -4090,130 +4163,305 @@
       top: 20px;
       right: 20px;
       padding: 8px 16px;
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(212, 175, 55, 0.2);
+      color: #d4af37;
+      border: 1px solid rgba(212, 175, 55, 0.5);
       border-radius: 6px;
       cursor: pointer;
+      font-weight: bold;
     `;
     closeBtn.onclick = hideComposePanel;
     panel.appendChild(closeBtn);
 
     var form = document.createElement('div');
 
-    var typeLabel = document.createElement('label');
-    typeLabel.textContent = 'Type:';
-    typeLabel.style.cssText = 'display: block; color: #fff; margin-bottom: 5px; font-size: 14px;';
-    form.appendChild(typeLabel);
+    // Instrument selector
+    var instrumentLabel = document.createElement('label');
+    instrumentLabel.textContent = 'Instrument:';
+    instrumentLabel.style.cssText = 'display: block; color: #d4af37; margin-bottom: 5px; font-size: 14px; font-weight: bold;';
+    form.appendChild(instrumentLabel);
 
-    var typeSelect = document.createElement('select');
-    typeSelect.id = 'compose-type-select';
-    typeSelect.style.cssText = `
+    var instrumentSelect = document.createElement('select');
+    instrumentSelect.style.cssText = `
       width: 100%;
       padding: 10px;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       background: rgba(0, 0, 0, 0.5);
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #d4af37;
+      border: 1px solid rgba(212, 175, 55, 0.3);
       border-radius: 6px;
       font-size: 14px;
+      cursor: pointer;
     `;
 
-    var composeTypes = ['poem', 'song', 'story', 'painting', 'sculpture', 'mural'];
-    composeTypes.forEach(function(type) {
+    var instruments = [
+      { value: 'sine', label: 'Flute (Sine)' },
+      { value: 'triangle', label: 'Soft Tone (Triangle)' },
+      { value: 'square', label: 'Reed (Square)' },
+      { value: 'sawtooth', label: 'Strings (Sawtooth)' }
+    ];
+
+    instruments.forEach(function(inst) {
       var option = document.createElement('option');
-      option.value = type;
-      option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
-      typeSelect.appendChild(option);
+      option.value = inst.value;
+      option.textContent = inst.label;
+      instrumentSelect.appendChild(option);
     });
-    form.appendChild(typeSelect);
 
-    var titleLabel = document.createElement('label');
-    titleLabel.textContent = 'Title:';
-    titleLabel.style.cssText = 'display: block; color: #fff; margin-bottom: 5px; font-size: 14px;';
-    form.appendChild(titleLabel);
+    instrumentSelect.onchange = function() {
+      currentInstrument = instrumentSelect.value;
+    };
+    form.appendChild(instrumentSelect);
 
-    var titleInput = document.createElement('input');
-    titleInput.id = 'compose-title-input';
-    titleInput.type = 'text';
-    titleInput.placeholder = 'Enter title...';
-    titleInput.style.cssText = `
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      background: rgba(0, 0, 0, 0.5);
+    // Piano keyboard
+    var keyboardContainer = document.createElement('div');
+    keyboardContainer.style.cssText = `
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      flex-wrap: wrap;
+    `;
+
+    noteOrder.forEach(function(noteName) {
+      var key = document.createElement('button');
+      var isBlackKey = noteName.includes('C') || noteName.includes('F');
+
+      key.textContent = noteName;
+      key.style.cssText = `
+        padding: 40px 12px;
+        background: ${isBlackKey ? 'linear-gradient(135deg, #d4af37, #f4d03f)' : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(230, 230, 230, 0.9))'};
+        color: ${isBlackKey ? '#000' : '#333'};
+        border: 2px solid ${isBlackKey ? '#d4af37' : '#999'};
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 12px;
+        min-width: 45px;
+        transition: all 0.1s;
+      `;
+
+      key.onmousedown = function() {
+        key.style.transform = 'scale(0.95)';
+        key.style.boxShadow = '0 0 10px rgba(212, 175, 55, 0.8)';
+        playNote(noteName, 0.5);
+
+        if (isRecording) {
+          var currentTime = Date.now() - recordingStartTime;
+          recordedNotes.push({
+            note: noteName,
+            time: currentTime,
+            instrument: currentInstrument
+          });
+          updateNoteDisplay();
+        }
+      };
+
+      key.onmouseup = function() {
+        key.style.transform = 'scale(1)';
+        key.style.boxShadow = 'none';
+      };
+
+      key.onmouseleave = function() {
+        key.style.transform = 'scale(1)';
+        key.style.boxShadow = 'none';
+      };
+
+      keyboardContainer.appendChild(key);
+    });
+
+    form.appendChild(keyboardContainer);
+
+    // Control buttons
+    var controlsContainer = document.createElement('div');
+    controlsContainer.style.cssText = `
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    `;
+
+    var recordBtn = document.createElement('button');
+    recordBtn.textContent = 'Record';
+    recordBtn.id = 'record-btn';
+    recordBtn.style.cssText = `
+      flex: 1;
+      padding: 12px;
+      background: linear-gradient(135deg, #ff4444, #cc0000);
       color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: none;
       border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
       font-size: 14px;
     `;
-    form.appendChild(titleInput);
+    recordBtn.onclick = function() {
+      if (!isRecording) {
+        isRecording = true;
+        recordedNotes = [];
+        recordingStartTime = Date.now();
+        recordBtn.textContent = 'Stop Recording';
+        recordBtn.style.background = 'linear-gradient(135deg, #ff8844, #ff4400)';
+        showNotification('Recording started...', 'info');
+      } else {
+        isRecording = false;
+        recordBtn.textContent = 'Record';
+        recordBtn.style.background = 'linear-gradient(135deg, #ff4444, #cc0000)';
+        showNotification('Recording stopped. ' + recordedNotes.length + ' notes captured.', 'success');
+      }
+    };
+    controlsContainer.appendChild(recordBtn);
 
-    var contentLabel = document.createElement('label');
-    contentLabel.textContent = 'Content:';
-    contentLabel.style.cssText = 'display: block; color: #fff; margin-bottom: 5px; font-size: 14px;';
-    form.appendChild(contentLabel);
+    var playbackBtn = document.createElement('button');
+    playbackBtn.textContent = 'Playback';
+    playbackBtn.style.cssText = `
+      flex: 1;
+      padding: 12px;
+      background: linear-gradient(135deg, #44ff44, #00cc00);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+    `;
+    playbackBtn.onclick = function() {
+      if (recordedNotes.length === 0) {
+        showNotification('No notes recorded yet', 'warning');
+        return;
+      }
+      playComposition(recordedNotes);
+      showNotification('Playing composition...', 'info');
+    };
+    controlsContainer.appendChild(playbackBtn);
 
-    var contentTextarea = document.createElement('textarea');
-    contentTextarea.id = 'compose-content-textarea';
-    contentTextarea.placeholder = 'Write your masterpiece...';
-    contentTextarea.rows = 8;
-    contentTextarea.style.cssText = `
+    var clearBtn = document.createElement('button');
+    clearBtn.textContent = 'Clear';
+    clearBtn.style.cssText = `
+      flex: 1;
+      padding: 12px;
+      background: linear-gradient(135deg, #ff9944, #cc6600);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+    `;
+    clearBtn.onclick = function() {
+      recordedNotes = [];
+      isRecording = false;
+      var recordButton = document.getElementById('record-btn');
+      if (recordButton) {
+        recordButton.textContent = 'Record';
+        recordButton.style.background = 'linear-gradient(135deg, #ff4444, #cc0000)';
+      }
+      updateNoteDisplay();
+      showNotification('Composition cleared', 'info');
+    };
+    controlsContainer.appendChild(clearBtn);
+
+    form.appendChild(controlsContainer);
+
+    // Note display
+    var noteDisplayLabel = document.createElement('label');
+    noteDisplayLabel.textContent = 'Composition:';
+    noteDisplayLabel.style.cssText = 'display: block; color: #d4af37; margin-bottom: 5px; font-size: 14px; font-weight: bold;';
+    form.appendChild(noteDisplayLabel);
+
+    var noteDisplay = document.createElement('div');
+    noteDisplay.id = 'note-display';
+    noteDisplay.style.cssText = `
       width: 100%;
-      padding: 10px;
+      min-height: 60px;
+      padding: 15px;
       margin-bottom: 15px;
       background: rgba(0, 0, 0, 0.5);
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #d4af37;
+      border: 1px solid rgba(212, 175, 55, 0.3);
       border-radius: 6px;
       font-size: 14px;
-      resize: vertical;
-      font-family: inherit;
+      font-family: monospace;
+      overflow-x: auto;
+      white-space: nowrap;
     `;
-    form.appendChild(contentTextarea);
+    noteDisplay.textContent = 'No notes recorded yet...';
+    form.appendChild(noteDisplay);
 
-    var submitBtn = document.createElement('button');
-    submitBtn.textContent = 'Create';
-    submitBtn.style.cssText = `
+    function updateNoteDisplay() {
+      var display = document.getElementById('note-display');
+      if (!display) return;
+
+      if (recordedNotes.length === 0) {
+        display.textContent = 'No notes recorded yet...';
+        return;
+      }
+
+      var noteSequence = recordedNotes.map(function(n) {
+        return n.note;
+      }).join(' - ');
+
+      display.textContent = noteSequence + ' (' + recordedNotes.length + ' notes)';
+    }
+
+    // Save button
+    var saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save Composition';
+    saveBtn.style.cssText = `
       width: 100%;
       padding: 12px;
-      background: linear-gradient(135deg, #a8f, #4af);
-      color: white;
+      background: linear-gradient(135deg, #d4af37, #f4d03f);
+      color: #000;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
       font-size: 16px;
     `;
-    submitBtn.onclick = function() {
-      var type = typeSelect.value;
-      var title = titleInput.value.trim();
-      var content = contentTextarea.value.trim();
-
-      if (!title) {
-        showNotification('Please enter a title', 'warning');
+    saveBtn.onclick = function() {
+      if (recordedNotes.length === 0) {
+        showNotification('Please record some notes first', 'warning');
         return;
       }
 
-      if (!content) {
-        showNotification('Please enter content', 'warning');
+      if (isRecording) {
+        showNotification('Please stop recording first', 'warning');
         return;
       }
 
-      composeCallback({ type: type, title: title, content: content });
+      var composition = {
+        notes: recordedNotes,
+        instrument: currentInstrument,
+        timestamp: Date.now()
+      };
+
+      if (composeCallback) {
+        composeCallback(composition);
+      }
+
+      showNotification('Composition saved!', 'success');
       hideComposePanel();
     };
-    form.appendChild(submitBtn);
+    form.appendChild(saveBtn);
 
     panel.appendChild(form);
     document.body.appendChild(panel);
     composePanel = panel;
+
+    // Reset state
+    recordedNotes = [];
+    isRecording = false;
+    currentInstrument = 'sine';
   }
 
   function hideComposePanel() {
     if (!composePanel) return;
     document.body.removeChild(composePanel);
     composePanel = null;
+    recordedNotes = [];
+    isRecording = false;
   }
 
   // Guild Panel
@@ -6854,6 +7102,7 @@
   exports.showLessonProgress = showLessonProgress;
   exports.showComposePanel = showComposePanel;
   exports.hideComposePanel = hideComposePanel;
+  exports.playComposition = playComposition;
   exports.showGuildPanel = showGuildPanel;
   exports.hideGuildPanel = hideGuildPanel;
   exports.showGuildCreate = showGuildCreate;
