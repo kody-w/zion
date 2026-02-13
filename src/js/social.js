@@ -228,6 +228,33 @@
     return consentStore.get(key) === true;
   }
 
+  /**
+   * Add a chat message to state
+   */
+  function addMessage(state, message) {
+    if (!state || !message) return;
+    if (!state.chat) state.chat = { messages: [] };
+    if (!state.chat.messages) state.chat.messages = [];
+    state.chat.messages.push({
+      user: message.user,
+      text: message.text,
+      timestamp: message.timestamp || new Date().toISOString()
+    });
+    // Keep last 100 messages
+    if (state.chat.messages.length > 100) {
+      state.chat.messages = state.chat.messages.slice(-100);
+    }
+  }
+
+  /**
+   * Get recent chat messages from state
+   */
+  function getRecentMessages(state, count) {
+    if (!state || !state.chat || !state.chat.messages) return [];
+    count = count || 50;
+    return state.chat.messages.slice(-count);
+  }
+
   // Export public API
   exports.handleSay = handleSay;
   exports.handleShout = handleShout;
@@ -239,5 +266,7 @@
   exports.checkRateLimit = checkRateLimit;
   exports.getDistance = getDistance;
   exports.getNearbyPlayers = getNearbyPlayers;
+  exports.addMessage = addMessage;
+  exports.getRecentMessages = getRecentMessages;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Social = {}));
