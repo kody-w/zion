@@ -3279,182 +3279,347 @@
   // Lore Book Panel
   var loreBookPanel = null;
 
-  function showLoreBook(loreEntries) {
-    if (loreBookPanel) return;
+  /**
+   * Show the Lore Journal panel
+   * @param {string} playerId - The player's ID
+   * @param {object} state - Game state object containing discoveries
+   */
+  function showLoreJournal(playerId, state) {
+    if (loreBookPanel) {
+      hideLoreJournal();
+      return;
+    }
 
+    // Get unlocked lore and lore categories from Exploration module
+    var unlockedLore = [];
+    var loreCategories = {};
+
+    if (typeof window !== 'undefined' && window.Exploration) {
+      unlockedLore = window.Exploration.getUnlockedLore(playerId, state);
+      loreCategories = window.Exploration.getLoreCategories();
+    }
+
+    // Group unlocked lore by category
+    var loreByCategory = {};
+    unlockedLore.forEach(function(entry) {
+      if (!loreByCategory[entry.category]) {
+        loreByCategory[entry.category] = [];
+      }
+      loreByCategory[entry.category].push(entry);
+    });
+
+    // Get all lore entries from Exploration module to show locked ones
+    var allLoreEntries = window.Exploration ? window.Exploration.LORE_ENTRIES : {};
+
+    // Panel overlay
     var panel = document.createElement('div');
-    panel.id = 'lore-book-overlay';
+    panel.className = 'lore-journal-panel';
     panel.style.cssText = `
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.85);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 85%;
+      max-width: 950px;
+      height: 85vh;
+      background: linear-gradient(135deg, #3d2817 0%, #2a1810 100%);
+      border: 3px solid #8b6914;
+      border-radius: 10px;
+      box-shadow: 0 15px 60px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(139, 105, 20, 0.1);
       z-index: 10000;
+      overflow: hidden;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-direction: column;
+      pointer-events: auto;
     `;
 
-    var content = document.createElement('div');
-    content.style.cssText = `
-      width: 80%;
-      max-width: 900px;
-      height: 80%;
-      background: linear-gradient(135deg, #2c1810 0%, #1a0f08 100%);
-      border-radius: 12px;
-      padding: 30px;
-      overflow-y: auto;
-      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
-      border: 2px solid #8b4513;
-    `;
-
+    // Header
     var header = document.createElement('div');
     header.style.cssText = `
+      background: linear-gradient(180deg, rgba(61, 40, 23, 0.9) 0%, rgba(42, 24, 16, 0.95) 100%);
+      padding: 20px 30px;
+      border-bottom: 2px solid #8b6914;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 25px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid #8b4513;
     `;
+
+    var titleContainer = document.createElement('div');
 
     var title = document.createElement('h2');
-    title.textContent = 'Lore Book';
+    title.textContent = 'Lore Journal';
     title.style.cssText = `
-      margin: 0;
+      margin: 0 0 5px 0;
       color: #f4e4c1;
-      font-size: 28px;
+      font-size: 30px;
       font-family: Georgia, serif;
       font-weight: 600;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
     `;
+    titleContainer.appendChild(title);
+
+    // Overall completion
+    var totalLore = Object.keys(allLoreEntries).length;
+    var unlockedCount = unlockedLore.length;
+    var completionPct = totalLore > 0 ? Math.round((unlockedCount / totalLore) * 100) : 0;
+
+    var completion = document.createElement('div');
+    completion.textContent = 'Completion: ' + unlockedCount + '/' + totalLore + ' (' + completionPct + '%)';
+    completion.style.cssText = `
+      color: #d4af37;
+      font-size: 14px;
+      font-family: Georgia, serif;
+    `;
+    titleContainer.appendChild(completion);
+
+    header.appendChild(titleContainer);
 
     var closeBtn = document.createElement('button');
-    closeBtn.textContent = 'X';
+    closeBtn.textContent = '\u00D7';
     closeBtn.style.cssText = `
-      background: #c0392b;
-      border: none;
-      color: white;
-      width: 35px;
-      height: 35px;
+      background: rgba(139, 69, 19, 0.6);
+      border: 2px solid #8b6914;
+      color: #f4e4c1;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       cursor: pointer;
-      font-size: 18px;
+      font-size: 28px;
       font-weight: bold;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
     `;
-    closeBtn.onclick = hideLoreBook;
-
-    header.appendChild(title);
-    header.appendChild(closeBtn);
-    content.appendChild(header);
-
-    // Organize lore by chapter
-    var chapters = {
-      'The Founding': [],
-      'The Zones': [],
-      'The People': [],
-      'The Economy': [],
-      'The Federation': []
+    closeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.4)';
+      this.style.borderColor = '#d4af37';
     };
+    closeBtn.onmouseout = function() {
+      this.style.background = 'rgba(139, 69, 19, 0.6)';
+      this.style.borderColor = '#8b6914';
+    };
+    closeBtn.onclick = hideLoreJournal;
+    header.appendChild(closeBtn);
 
-    if (loreEntries && loreEntries.length > 0) {
-      loreEntries.forEach(function(entry) {
-        var chapter = entry.chapter || 'The Founding';
-        if (chapters[chapter]) {
-          chapters[chapter].push(entry);
-        }
-      });
-    }
+    panel.appendChild(header);
 
-    // Display lore by chapter
-    Object.keys(chapters).forEach(function(chapterName) {
-      if (chapters[chapterName].length === 0) return;
+    // Category tabs
+    var tabsContainer = document.createElement('div');
+    tabsContainer.style.cssText = `
+      display: flex;
+      gap: 5px;
+      padding: 15px 20px 0 20px;
+      background: rgba(42, 24, 16, 0.7);
+      overflow-x: auto;
+      border-bottom: 2px solid #8b6914;
+    `;
 
-      var chapterSection = document.createElement('div');
-      chapterSection.style.cssText = `
-        margin-bottom: 30px;
+    // Content area
+    var contentArea = document.createElement('div');
+    contentArea.style.cssText = `
+      flex: 1;
+      overflow-y: auto;
+      padding: 25px 30px;
+      background: linear-gradient(180deg, rgba(42, 24, 16, 0.8) 0%, rgba(26, 15, 10, 0.9) 100%);
+    `;
+
+    // Category tabs array
+    var categories = ['origins', 'artifacts', 'landmarks', 'nature', 'mysteries', 'art', 'history'];
+    var currentCategory = categories[0];
+
+    // Function to render category content
+    function renderCategory(category) {
+      contentArea.innerHTML = '';
+
+      // Category header with progress
+      var categoryHeader = document.createElement('div');
+      categoryHeader.style.cssText = `
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.3);
       `;
 
-      var chapterHeader = document.createElement('div');
-      chapterHeader.textContent = chapterName;
-      chapterHeader.style.cssText = `
+      var categoryTitle = document.createElement('h3');
+      categoryTitle.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+      categoryTitle.style.cssText = `
+        margin: 0 0 8px 0;
         color: #d4af37;
-        font-size: 22px;
+        font-size: 24px;
+        font-family: Georgia, serif;
         font-weight: 600;
-        margin-bottom: 15px;
+      `;
+      categoryHeader.appendChild(categoryTitle);
+
+      // Count entries in this category
+      var categoryTotal = 0;
+      var categoryUnlocked = 0;
+      for (var loreId in allLoreEntries) {
+        if (allLoreEntries[loreId].category === category) {
+          categoryTotal++;
+          if (loreByCategory[category] && loreByCategory[category].some(function(e) { return e.id === loreId; })) {
+            categoryUnlocked++;
+          }
+        }
+      }
+
+      var categoryProgress = document.createElement('div');
+      categoryProgress.className = 'lore-progress';
+      categoryProgress.textContent = 'Discovered: ' + categoryUnlocked + '/' + categoryTotal;
+      categoryProgress.style.cssText = `
+        color: #c8b896;
+        font-size: 13px;
         font-family: Georgia, serif;
       `;
-      chapterSection.appendChild(chapterHeader);
+      categoryHeader.appendChild(categoryProgress);
 
-      chapters[chapterName].forEach(function(entry) {
-        var entryItem = document.createElement('div');
-        entryItem.style.cssText = `
-          background: rgba(244, 228, 193, 0.05);
-          border-left: 4px solid #d4af37;
-          padding: 15px;
-          margin-bottom: 15px;
+      contentArea.appendChild(categoryHeader);
+
+      // Render entries for this category
+      var entriesContainer = document.createElement('div');
+      entriesContainer.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      `;
+
+      // Show all entries (unlocked and locked)
+      for (var loreId in allLoreEntries) {
+        var loreEntry = allLoreEntries[loreId];
+        if (loreEntry.category !== category) continue;
+
+        var isUnlocked = loreByCategory[category] && loreByCategory[category].some(function(e) { return e.id === loreId; });
+
+        var entryDiv = document.createElement('div');
+        entryDiv.className = isUnlocked ? 'lore-entry' : 'lore-entry lore-entry-locked';
+        entryDiv.style.cssText = `
+          background: ${isUnlocked ? 'rgba(212, 175, 55, 0.08)' : 'rgba(100, 80, 60, 0.15)'};
+          border-left: 4px solid ${isUnlocked ? '#d4af37' : '#666'};
+          padding: 18px 20px;
           border-radius: 6px;
-          position: relative;
+          transition: background 0.2s ease;
+          ${!isUnlocked ? 'filter: blur(0.5px); opacity: 0.6;' : ''}
         `;
 
-        if (entry.unread) {
-          var unreadIndicator = document.createElement('div');
-          unreadIndicator.style.cssText = `
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #d4af37;
-            box-shadow: 0 0 10px #d4af37;
-          `;
-          entryItem.appendChild(unreadIndicator);
+        if (isUnlocked) {
+          entryDiv.onmouseover = function() {
+            this.style.background = 'rgba(212, 175, 55, 0.15)';
+          };
+          entryDiv.onmouseout = function() {
+            this.style.background = 'rgba(212, 175, 55, 0.08)';
+          };
         }
 
         var entryTitle = document.createElement('div');
-        entryTitle.textContent = entry.title;
+        entryTitle.textContent = isUnlocked ? loreEntry.title : '???';
         entryTitle.style.cssText = `
-          color: #f4e4c1;
+          color: ${isUnlocked ? '#f4e4c1' : '#888'};
           font-size: 18px;
           font-weight: 600;
           margin-bottom: 10px;
           font-family: Georgia, serif;
         `;
+        entryDiv.appendChild(entryTitle);
 
         var entryText = document.createElement('div');
-        entryText.textContent = entry.text || 'No content available';
-        entryText.style.cssText = `
-          color: #c8b896;
-          font-size: 14px;
-          line-height: 1.6;
-          font-family: Georgia, serif;
-        `;
+        if (isUnlocked) {
+          entryText.textContent = loreEntry.text;
+          entryText.style.cssText = `
+            color: #c8b896;
+            font-size: 14px;
+            line-height: 1.7;
+            font-family: Georgia, serif;
+          `;
+        } else {
+          // Show hint for locked entries
+          entryText.textContent = 'Undiscovered... Explore the world to unlock this lore.';
+          entryText.style.cssText = `
+            color: #777;
+            font-size: 13px;
+            font-style: italic;
+            line-height: 1.6;
+            font-family: Georgia, serif;
+          `;
+        }
+        entryDiv.appendChild(entryText);
 
-        entryItem.appendChild(entryTitle);
-        entryItem.appendChild(entryText);
-        chapterSection.appendChild(entryItem);
-      });
+        entriesContainer.appendChild(entryDiv);
+      }
 
-      content.appendChild(chapterSection);
+      contentArea.appendChild(entriesContainer);
+    }
+
+    // Create tabs
+    categories.forEach(function(category) {
+      var tab = document.createElement('button');
+      tab.className = 'lore-category-tab';
+      tab.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+      tab.style.cssText = `
+        background: ${category === currentCategory ? 'rgba(212, 175, 55, 0.3)' : 'rgba(100, 80, 60, 0.2)'};
+        border: 2px solid ${category === currentCategory ? '#d4af37' : '#666'};
+        border-bottom: none;
+        border-radius: 6px 6px 0 0;
+        color: ${category === currentCategory ? '#f4e4c1' : '#a0978e'};
+        padding: 10px 20px;
+        font-size: 14px;
+        font-family: Georgia, serif;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        font-weight: ${category === currentCategory ? '600' : '400'};
+      `;
+
+      tab.onclick = function() {
+        currentCategory = category;
+        // Update all tabs
+        var allTabs = tabsContainer.querySelectorAll('.lore-category-tab');
+        allTabs.forEach(function(t) {
+          var isActive = t.textContent.toLowerCase() === category;
+          t.style.background = isActive ? 'rgba(212, 175, 55, 0.3)' : 'rgba(100, 80, 60, 0.2)';
+          t.style.borderColor = isActive ? '#d4af37' : '#666';
+          t.style.color = isActive ? '#f4e4c1' : '#a0978e';
+          t.style.fontWeight = isActive ? '600' : '400';
+        });
+        renderCategory(category);
+      };
+
+      tab.onmouseover = function() {
+        if (this.textContent.toLowerCase() !== currentCategory) {
+          this.style.background = 'rgba(139, 105, 20, 0.3)';
+          this.style.color = '#d4af37';
+        }
+      };
+      tab.onmouseout = function() {
+        if (this.textContent.toLowerCase() !== currentCategory) {
+          this.style.background = 'rgba(100, 80, 60, 0.2)';
+          this.style.color = '#a0978e';
+        }
+      };
+
+      tabsContainer.appendChild(tab);
     });
 
-    panel.appendChild(content);
+    panel.appendChild(tabsContainer);
+    panel.appendChild(contentArea);
+
+    // Render initial category
+    renderCategory(currentCategory);
+
     document.body.appendChild(panel);
     loreBookPanel = panel;
 
     // Close on Escape
     var escapeHandler = function(e) {
       if (e.key === 'Escape') {
-        hideLoreBook();
+        hideLoreJournal();
       }
     };
     document.addEventListener('keydown', escapeHandler);
     panel.escapeHandler = escapeHandler;
   }
 
-  function hideLoreBook() {
+  function hideLoreJournal() {
     if (!loreBookPanel) return;
     if (loreBookPanel.escapeHandler) {
       document.removeEventListener('keydown', loreBookPanel.escapeHandler);
@@ -3463,78 +3628,58 @@
     loreBookPanel = null;
   }
 
+  function toggleLoreJournal(playerId, state) {
+    if (loreBookPanel) {
+      hideLoreJournal();
+    } else {
+      showLoreJournal(playerId, state);
+    }
+  }
+
+  // Legacy compatibility - keep old function names
+  function showLoreBook(playerId, state) {
+    showLoreJournal(playerId, state);
+  }
+
+  function hideLoreBook() {
+    hideLoreJournal();
+  }
+
   // Achievement Toast
   function showAchievementToast(achievement) {
-    var toast = document.createElement('div');
-    toast.style.cssText = `
-      position: fixed;
-      top: -100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: linear-gradient(135deg, #d4af37 0%, #c5a028 100%);
-      border: 3px solid #ffd700;
-      border-radius: 10px;
-      padding: 20px 30px;
-      min-width: 350px;
-      box-shadow: 0 0 30px rgba(212, 175, 55, 0.6);
-      z-index: 10001;
-      transition: top 0.5s ease;
-    `;
+    if (typeof document === 'undefined') return;
 
-    var header = document.createElement('div');
-    header.textContent = 'ACHIEVEMENT UNLOCKED';
-    header.style.cssText = `
-      color: #1a1a1a;
-      font-size: 14px;
-      font-weight: bold;
-      text-align: center;
-      margin-bottom: 8px;
-      font-family: system-ui, sans-serif;
-      letter-spacing: 1px;
-    `;
+    var toast = document.createElement('div');
+    toast.className = 'achievement-toast';
+
+    var icon = document.createElement('div');
+    icon.className = 'achievement-toast-icon';
+    icon.textContent = achievement.icon || '⭐';
+
+    var textContainer = document.createElement('div');
+    textContainer.className = 'achievement-toast-text';
+
+    var label = document.createElement('div');
+    label.className = 'achievement-toast-label';
+    label.textContent = 'ACHIEVEMENT UNLOCKED';
 
     var achievementName = document.createElement('div');
+    achievementName.className = 'achievement-toast-name';
     achievementName.textContent = achievement.name || 'Unknown Achievement';
-    achievementName.style.cssText = `
-      color: #ffffff;
-      font-size: 20px;
-      font-weight: bold;
-      text-align: center;
-      margin-bottom: 5px;
-      font-family: system-ui, sans-serif;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    `;
 
-    var achievementDesc = document.createElement('div');
-    achievementDesc.textContent = achievement.description || '';
-    achievementDesc.style.cssText = `
-      color: #f5f5f5;
-      font-size: 14px;
-      text-align: center;
-      font-family: system-ui, sans-serif;
-    `;
+    textContainer.appendChild(label);
+    textContainer.appendChild(achievementName);
 
-    toast.appendChild(header);
-    toast.appendChild(achievementName);
-    toast.appendChild(achievementDesc);
+    toast.appendChild(icon);
+    toast.appendChild(textContainer);
     document.body.appendChild(toast);
 
-    // Animate in
+    // Auto-remove after animation completes (4s total: 0.4s slide + 3s stay + 0.5s fade)
     setTimeout(function() {
-      toast.style.top = '20px';
-    }, 10);
-
-    // Fade out and remove after 5 seconds
-    setTimeout(function() {
-      toast.style.transition = 'top 0.5s ease, opacity 0.5s ease';
-      toast.style.opacity = '0';
-      toast.style.top = '-100px';
-      setTimeout(function() {
-        if (toast.parentNode) {
-          document.body.removeChild(toast);
-        }
-      }, 500);
-    }, 5000);
+      if (toast.parentNode) {
+        document.body.removeChild(toast);
+      }
+    }, 4000);
   }
 
   // Discovery Popup
@@ -5000,6 +5145,566 @@
   }
 
   // ========================================================================
+  // AUCTION HOUSE PANEL
+  // ========================================================================
+
+  var auctionHousePanel = null;
+  var auctionHouseVisible = false;
+  var auctionHouseCallback = null;
+  var currentAuctionTab = 'browse';
+
+  function initAuctionHousePanel(callback) {
+    auctionHouseCallback = callback;
+  }
+
+  function showAuctionHousePanel(ledger, playerId, inventory) {
+    if (typeof document === 'undefined') return;
+
+    var Economy = typeof window !== 'undefined' ? window.Economy : null;
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+    if (!Economy || !Inventory) return;
+
+    hideAuctionHousePanel();
+
+    auctionHousePanel = document.createElement('div');
+    auctionHousePanel.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px;
+      max-height: 80vh;
+      background: rgba(26, 26, 26, 0.95);
+      border: 2px solid rgba(218, 165, 32, 0.5);
+      border-radius: 8px;
+      z-index: 300;
+      overflow-y: auto;
+      pointer-events: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      padding: 25px;
+    `;
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 35px;
+      height: 35px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #E8E0D8;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    `;
+    closeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.3)';
+      this.style.borderColor = '#DAA520';
+      this.style.color = '#DAA520';
+    };
+    closeBtn.onmouseout = function() {
+      this.style.background = 'rgba(255, 255, 255, 0.1)';
+      this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+      this.style.color = '#E8E0D8';
+    };
+    closeBtn.onclick = hideAuctionHousePanel;
+    auctionHousePanel.appendChild(closeBtn);
+
+    // Header
+    var header = document.createElement('div');
+    header.style.cssText = `
+      margin-bottom: 20px;
+      border-bottom: 2px solid rgba(218, 165, 32, 0.3);
+      padding-bottom: 15px;
+    `;
+
+    var title = document.createElement('h2');
+    title.textContent = 'Auction House';
+    title.style.cssText = `
+      color: #DAA520;
+      font-size: 28px;
+      font-family: system-ui, sans-serif;
+      margin: 0 0 8px 0;
+      font-weight: bold;
+    `;
+    header.appendChild(title);
+
+    var subtitle = document.createElement('div');
+    var playerBalance = Economy.getBalance(ledger, playerId);
+    subtitle.textContent = 'Your Spark: ' + playerBalance;
+    subtitle.style.cssText = `
+      color: #A0978E;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+    `;
+    header.appendChild(subtitle);
+
+    auctionHousePanel.appendChild(header);
+
+    // Tab buttons
+    var tabsDiv = document.createElement('div');
+    tabsDiv.style.cssText = `
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    `;
+
+    var tabs = ['browse', 'myauctions', 'create'];
+    var tabLabels = { browse: 'Browse Auctions', myauctions: 'My Auctions', create: 'Create Auction' };
+
+    tabs.forEach(function(tabName) {
+      var tabBtn = document.createElement('button');
+      tabBtn.textContent = tabLabels[tabName];
+      tabBtn.setAttribute('data-tab', tabName);
+      tabBtn.style.cssText = `
+        flex: 1;
+        padding: 12px;
+        background: ${currentAuctionTab === tabName ? 'rgba(218, 165, 32, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
+        color: ${currentAuctionTab === tabName ? '#DAA520' : '#A0978E'};
+        border: 2px solid ${currentAuctionTab === tabName ? '#DAA520' : 'rgba(255, 255, 255, 0.3)'};
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      `;
+      tabBtn.onmouseover = function() {
+        if (currentAuctionTab !== tabName) {
+          this.style.background = 'rgba(218, 165, 32, 0.2)';
+          this.style.borderColor = 'rgba(218, 165, 32, 0.5)';
+        }
+      };
+      tabBtn.onmouseout = function() {
+        if (currentAuctionTab !== tabName) {
+          this.style.background = 'rgba(255, 255, 255, 0.1)';
+          this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        }
+      };
+      tabBtn.onclick = function() {
+        currentAuctionTab = tabName;
+        showAuctionHousePanel(ledger, playerId, inventory);
+      };
+      tabsDiv.appendChild(tabBtn);
+    });
+
+    auctionHousePanel.appendChild(tabsDiv);
+
+    // Tab content
+    var contentDiv = document.createElement('div');
+    contentDiv.id = 'auction-content';
+    contentDiv.style.cssText = `
+      min-height: 300px;
+    `;
+
+    if (currentAuctionTab === 'browse') {
+      renderBrowseTab(contentDiv, ledger, playerId);
+    } else if (currentAuctionTab === 'myauctions') {
+      renderMyAuctionsTab(contentDiv, ledger, playerId);
+    } else if (currentAuctionTab === 'create') {
+      renderCreateTab(contentDiv, ledger, playerId, inventory);
+    }
+
+    auctionHousePanel.appendChild(contentDiv);
+    document.body.appendChild(auctionHousePanel);
+    auctionHouseVisible = true;
+  }
+
+  function renderBrowseTab(container, ledger, playerId) {
+    var Economy = typeof window !== 'undefined' ? window.Economy : null;
+    if (!Economy) return;
+
+    var auctions = Economy.getActiveAuctions(ledger);
+
+    if (auctions.length === 0) {
+      var noAuctions = document.createElement('div');
+      noAuctions.textContent = 'No active auctions at the moment.';
+      noAuctions.style.cssText = `
+        color: #6B6B6B;
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+        font-style: italic;
+        text-align: center;
+        padding: 40px;
+      `;
+      container.appendChild(noAuctions);
+      return;
+    }
+
+    auctions.forEach(function(auction) {
+      var auctionItem = document.createElement('div');
+      auctionItem.style.cssText = `
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(218, 165, 32, 0.3);
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      `;
+
+      var itemInfo = document.createElement('div');
+      itemInfo.style.cssText = `
+        flex: 1;
+      `;
+
+      var itemName = document.createElement('div');
+      var itemData = auction.item;
+      var itemDisplayName = typeof itemData === 'string' ? itemData : (itemData.name || itemData.id || 'Unknown Item');
+      itemName.textContent = itemDisplayName;
+      itemName.style.cssText = `
+        color: #E8E0D8;
+        font-size: 16px;
+        font-family: system-ui, sans-serif;
+        font-weight: bold;
+        margin-bottom: 5px;
+      `;
+      itemInfo.appendChild(itemName);
+
+      var auctionDetails = document.createElement('div');
+      var currentBidText = auction.currentBid > 0 ? auction.currentBid + ' Spark' : 'Starting: ' + auction.startingBid + ' Spark';
+      var timeRemaining = Math.ceil((auction.endTime - Date.now()) / 60000);
+      var timeText = timeRemaining > 60 ? Math.floor(timeRemaining / 60) + 'h ' + (timeRemaining % 60) + 'm' : timeRemaining + 'm';
+
+      auctionDetails.textContent = 'Current Bid: ' + currentBidText + ' | Time: ' + timeText + ' | Seller: ' + auction.seller;
+      auctionDetails.style.cssText = `
+        color: #A0978E;
+        font-size: 12px;
+        font-family: system-ui, sans-serif;
+      `;
+      itemInfo.appendChild(auctionDetails);
+
+      auctionItem.appendChild(itemInfo);
+
+      // Bid button
+      if (auction.seller !== playerId) {
+        var bidBtn = document.createElement('button');
+        bidBtn.textContent = 'Bid';
+        bidBtn.style.cssText = `
+          padding: 8px 20px;
+          background: rgba(218, 165, 32, 0.6);
+          color: #000;
+          border: 2px solid #DAA520;
+          border-radius: 6px;
+          font-size: 14px;
+          font-family: system-ui, sans-serif;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        `;
+        bidBtn.onmouseover = function() {
+          this.style.background = 'rgba(218, 165, 32, 0.8)';
+        };
+        bidBtn.onmouseout = function() {
+          this.style.background = 'rgba(218, 165, 32, 0.6)';
+        };
+        bidBtn.onclick = function() {
+          var minBid = Math.max(auction.startingBid, auction.currentBid + 1);
+          var bidAmount = prompt('Enter your bid (minimum ' + minBid + ' Spark):');
+          if (bidAmount) {
+            var amount = parseInt(bidAmount, 10);
+            if (!isNaN(amount) && amount >= minBid) {
+              if (auctionHouseCallback) {
+                auctionHouseCallback('placeBid', { auctionId: auction.id, amount: amount });
+              }
+            } else {
+              alert('Invalid bid amount. Must be at least ' + minBid + ' Spark.');
+            }
+          }
+        };
+        auctionItem.appendChild(bidBtn);
+      } else {
+        var ownLabel = document.createElement('span');
+        ownLabel.textContent = 'Your Auction';
+        ownLabel.style.cssText = `
+          color: #4a4;
+          font-size: 12px;
+          font-family: system-ui, sans-serif;
+          font-style: italic;
+        `;
+        auctionItem.appendChild(ownLabel);
+      }
+
+      container.appendChild(auctionItem);
+    });
+  }
+
+  function renderMyAuctionsTab(container, ledger, playerId) {
+    var Economy = typeof window !== 'undefined' ? window.Economy : null;
+    if (!Economy) return;
+
+    var allAuctions = ledger.auctions || [];
+    var myAuctions = allAuctions.filter(function(a) { return a.seller === playerId; });
+
+    if (myAuctions.length === 0) {
+      var noAuctions = document.createElement('div');
+      noAuctions.textContent = 'You have not created any auctions yet.';
+      noAuctions.style.cssText = `
+        color: #6B6B6B;
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+        font-style: italic;
+        text-align: center;
+        padding: 40px;
+      `;
+      container.appendChild(noAuctions);
+      return;
+    }
+
+    myAuctions.forEach(function(auction) {
+      var auctionItem = document.createElement('div');
+      auctionItem.style.cssText = `
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(218, 165, 32, 0.3);
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 10px;
+      `;
+
+      var itemData = auction.item;
+      var itemDisplayName = typeof itemData === 'string' ? itemData : (itemData.name || itemData.id || 'Unknown Item');
+
+      var itemName = document.createElement('div');
+      itemName.textContent = itemDisplayName;
+      itemName.style.cssText = `
+        color: #E8E0D8;
+        font-size: 16px;
+        font-family: system-ui, sans-serif;
+        font-weight: bold;
+        margin-bottom: 5px;
+      `;
+      auctionItem.appendChild(itemName);
+
+      var statusText = 'Status: ' + auction.status.toUpperCase();
+      if (auction.status === 'active') {
+        var timeRemaining = Math.ceil((auction.endTime - Date.now()) / 60000);
+        var timeText = timeRemaining > 60 ? Math.floor(timeRemaining / 60) + 'h ' + (timeRemaining % 60) + 'm' : timeRemaining + 'm';
+        statusText += ' | Time Left: ' + timeText;
+        statusText += ' | Current Bid: ' + (auction.currentBid > 0 ? auction.currentBid + ' Spark' : 'No bids yet');
+      } else if (auction.status === 'sold') {
+        statusText += ' | Sold for: ' + auction.currentBid + ' Spark to ' + auction.currentBidder;
+      } else if (auction.status === 'expired') {
+        statusText += ' | No bids received';
+      }
+
+      var statusDiv = document.createElement('div');
+      statusDiv.textContent = statusText;
+      statusDiv.style.cssText = `
+        color: #A0978E;
+        font-size: 12px;
+        font-family: system-ui, sans-serif;
+      `;
+      auctionItem.appendChild(statusDiv);
+
+      container.appendChild(auctionItem);
+    });
+  }
+
+  function renderCreateTab(container, ledger, playerId, inventory) {
+    var Economy = typeof window !== 'undefined' ? window.Economy : null;
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+    if (!Economy || !Inventory) return;
+
+    var formDiv = document.createElement('div');
+    formDiv.style.cssText = `
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      padding: 20px;
+    `;
+
+    // Item selection
+    var itemLabel = document.createElement('div');
+    itemLabel.textContent = 'Select Item to Auction:';
+    itemLabel.style.cssText = `
+      color: #DAA520;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      margin-bottom: 10px;
+    `;
+    formDiv.appendChild(itemLabel);
+
+    var itemSelect = document.createElement('select');
+    itemSelect.id = 'auction-item-select';
+    itemSelect.style.cssText = `
+      width: 100%;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      color: #E8E0D8;
+      border: 1px solid rgba(218, 165, 32, 0.3);
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      margin-bottom: 20px;
+    `;
+
+    var items = Inventory.getInventory(inventory);
+    var hasItems = false;
+
+    items.forEach(function(item) {
+      if (item && item.count > 0) {
+        hasItems = true;
+        var option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.name + ' (x' + item.count + ')';
+        itemSelect.appendChild(option);
+      }
+    });
+
+    if (!hasItems) {
+      var noItems = document.createElement('div');
+      noItems.textContent = 'You have no items to auction.';
+      noItems.style.cssText = `
+        color: #6B6B6B;
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+        font-style: italic;
+        text-align: center;
+        padding: 40px;
+      `;
+      container.appendChild(noItems);
+      return;
+    }
+
+    formDiv.appendChild(itemSelect);
+
+    // Starting bid
+    var bidLabel = document.createElement('div');
+    bidLabel.textContent = 'Starting Bid (Spark):';
+    bidLabel.style.cssText = `
+      color: #DAA520;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      margin-bottom: 10px;
+    `;
+    formDiv.appendChild(bidLabel);
+
+    var bidInput = document.createElement('input');
+    bidInput.id = 'auction-starting-bid';
+    bidInput.type = 'number';
+    bidInput.min = '1';
+    bidInput.value = '10';
+    bidInput.style.cssText = `
+      width: 100%;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      color: #E8E0D8;
+      border: 1px solid rgba(218, 165, 32, 0.3);
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      margin-bottom: 20px;
+    `;
+    formDiv.appendChild(bidInput);
+
+    // Duration
+    var durationLabel = document.createElement('div');
+    durationLabel.textContent = 'Auction Duration:';
+    durationLabel.style.cssText = `
+      color: #DAA520;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      margin-bottom: 10px;
+    `;
+    formDiv.appendChild(durationLabel);
+
+    var durationSelect = document.createElement('select');
+    durationSelect.id = 'auction-duration';
+    durationSelect.style.cssText = `
+      width: 100%;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      color: #E8E0D8;
+      border: 1px solid rgba(218, 165, 32, 0.3);
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: system-ui, sans-serif;
+      margin-bottom: 20px;
+    `;
+
+    var durations = [
+      { label: '1 Hour', value: 3600000 },
+      { label: '6 Hours', value: 21600000 },
+      { label: '24 Hours', value: 86400000 }
+    ];
+
+    durations.forEach(function(dur) {
+      var option = document.createElement('option');
+      option.value = dur.value;
+      option.textContent = dur.label;
+      durationSelect.appendChild(option);
+    });
+
+    formDiv.appendChild(durationSelect);
+
+    // Create button
+    var createBtn = document.createElement('button');
+    createBtn.textContent = 'Create Auction';
+    createBtn.style.cssText = `
+      width: 100%;
+      padding: 12px;
+      background: rgba(218, 165, 32, 0.6);
+      color: #000;
+      border: 2px solid #DAA520;
+      border-radius: 6px;
+      font-size: 16px;
+      font-family: system-ui, sans-serif;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    `;
+    createBtn.onmouseover = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.8)';
+    };
+    createBtn.onmouseout = function() {
+      this.style.background = 'rgba(218, 165, 32, 0.6)';
+    };
+    createBtn.onclick = function() {
+      var itemId = itemSelect.value;
+      var startingBid = parseInt(bidInput.value, 10);
+      var duration = parseInt(durationSelect.value, 10);
+
+      if (!itemId || isNaN(startingBid) || startingBid < 1) {
+        alert('Please select an item and set a valid starting bid.');
+        return;
+      }
+
+      if (auctionHouseCallback) {
+        auctionHouseCallback('createAuction', { itemId: itemId, startingBid: startingBid, duration: duration });
+      }
+    };
+    formDiv.appendChild(createBtn);
+
+    container.appendChild(formDiv);
+  }
+
+  function hideAuctionHousePanel() {
+    if (auctionHousePanel) {
+      document.body.removeChild(auctionHousePanel);
+      auctionHousePanel = null;
+    }
+    auctionHouseVisible = false;
+  }
+
+  function toggleAuctionHousePanel(ledger, playerId, inventory) {
+    if (auctionHouseVisible) {
+      hideAuctionHousePanel();
+    } else {
+      showAuctionHousePanel(ledger, playerId, inventory);
+    }
+  }
+
+  // ========================================================================
   // REPUTATION DISPLAY
   // ========================================================================
 
@@ -5026,6 +5731,182 @@
 
     var color = tierColors[reputation.tier] || '#888';
     repEl.innerHTML = '<span style="color:' + color + ';">★</span> ' + reputation.tier + ' (' + reputation.score + ')';
+  }
+
+  // ========================================================================
+  // ACHIEVEMENT PANEL
+  // ========================================================================
+
+  var achievementPanel = null;
+
+  function showAchievementPanel(playerId) {
+    if (typeof document === 'undefined') return;
+
+    var Quests = typeof window !== 'undefined' ? window.Quests : null;
+    if (!Quests) {
+      console.warn('Quests module not available');
+      return;
+    }
+
+    // Toggle if already open
+    if (achievementPanel) {
+      hideAchievementPanel();
+      return;
+    }
+
+    var achievements = Quests.getAchievements(playerId);
+    var progress = Quests.getAchievementProgress(playerId);
+
+    var panel = document.createElement('div');
+    panel.className = 'achievement-panel';
+
+    // Header
+    var header = document.createElement('h2');
+    header.textContent = 'Achievements';
+    panel.appendChild(header);
+
+    // Overall progress
+    var progressText = document.createElement('div');
+    progressText.style.cssText = 'color:#E8E0D8;font-size:0.9rem;margin-bottom:4px;';
+    progressText.textContent = 'Progress: ' + progress.unlocked + ' / ' + progress.total + ' (' + progress.percentage.toFixed(1) + '%)';
+    panel.appendChild(progressText);
+
+    // Progress bar
+    var progressBarContainer = document.createElement('div');
+    progressBarContainer.className = 'achievement-progress-bar';
+    var progressBarFill = document.createElement('div');
+    progressBarFill.className = 'achievement-progress-fill';
+    progressBarFill.style.width = progress.percentage + '%';
+    progressBarContainer.appendChild(progressBarFill);
+    panel.appendChild(progressBarContainer);
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = 'position:absolute;top:15px;right:15px;width:30px;height:30px;' +
+      'background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.3);' +
+      'border-radius:50%;font-size:20px;cursor:pointer;transition:all 0.2s;';
+    closeBtn.onmouseover = function() {
+      this.style.background = 'rgba(218,165,32,0.3)';
+      this.style.borderColor = '#DAA520';
+    };
+    closeBtn.onmouseout = function() {
+      this.style.background = 'rgba(255,255,255,0.1)';
+      this.style.borderColor = 'rgba(255,255,255,0.3)';
+    };
+    closeBtn.onclick = hideAchievementPanel;
+    panel.appendChild(closeBtn);
+
+    // Group achievements by category
+    var categories = {
+      exploration: [],
+      social: [],
+      crafting: [],
+      building: [],
+      gardening: [],
+      economy: [],
+      competition: [],
+      quests: [],
+      guild: [],
+      art: [],
+      physical: [],
+      mentoring: []
+    };
+
+    achievements.forEach(function(ach) {
+      if (categories[ach.category]) {
+        categories[ach.category].push(ach);
+      }
+    });
+
+    // Category display names
+    var categoryNames = {
+      exploration: 'Exploration',
+      social: 'Social',
+      crafting: 'Crafting',
+      building: 'Building',
+      gardening: 'Gardening',
+      economy: 'Economy',
+      competition: 'Competition',
+      quests: 'Quests',
+      guild: 'Guild',
+      art: 'Art & Creativity',
+      physical: 'Physical Wellness',
+      mentoring: 'Mentoring'
+    };
+
+    // Render categories
+    Object.keys(categoryNames).forEach(function(catKey) {
+      var catAchievements = categories[catKey];
+      if (catAchievements.length === 0) return;
+
+      var categorySection = document.createElement('div');
+      categorySection.className = 'achievement-category';
+
+      var categoryTitle = document.createElement('div');
+      categoryTitle.className = 'achievement-category-title';
+      categoryTitle.textContent = categoryNames[catKey];
+      categorySection.appendChild(categoryTitle);
+
+      catAchievements.forEach(function(ach) {
+        var row = document.createElement('div');
+        row.className = 'achievement-row ' + (ach.unlocked ? 'unlocked' : 'locked');
+        if (ach.unlocked) {
+          row.style.borderLeft = '3px solid #daa520';
+          row.style.paddingLeft = '5px';
+        }
+
+        var icon = document.createElement('div');
+        icon.className = 'achievement-icon';
+        icon.textContent = ach.icon || '⭐';
+        row.appendChild(icon);
+
+        var info = document.createElement('div');
+        info.className = 'achievement-info';
+
+        var name = document.createElement('div');
+        name.className = 'achievement-name';
+        name.textContent = ach.name;
+        info.appendChild(name);
+
+        var desc = document.createElement('div');
+        desc.className = 'achievement-desc';
+        desc.textContent = ach.description;
+        info.appendChild(desc);
+
+        row.appendChild(info);
+
+        var reward = document.createElement('div');
+        reward.className = 'achievement-reward';
+        reward.textContent = '+' + ach.sparkReward + ' Spark';
+        row.appendChild(reward);
+
+        categorySection.appendChild(row);
+      });
+
+      panel.appendChild(categorySection);
+    });
+
+    document.body.appendChild(panel);
+    achievementPanel = panel;
+
+    // Close on Escape
+    var escapeHandler = function(e) {
+      if (e.key === 'Escape') {
+        hideAchievementPanel();
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    panel.escapeHandler = escapeHandler;
+  }
+
+  function hideAchievementPanel() {
+    if (!achievementPanel) return;
+    if (achievementPanel.escapeHandler) {
+      document.removeEventListener('keydown', achievementPanel.escapeHandler);
+    }
+    document.body.removeChild(achievementPanel);
+    achievementPanel = null;
   }
 
   // Export public API
@@ -5229,6 +6110,9 @@
   exports.hideDiscoveryLog = hideDiscoveryLog;
   exports.showLoreBook = showLoreBook;
   exports.hideLoreBook = hideLoreBook;
+  exports.showLoreJournal = showLoreJournal;
+  exports.hideLoreJournal = hideLoreJournal;
+  exports.toggleLoreJournal = toggleLoreJournal;
   exports.showAchievementToast = showAchievementToast;
   exports.showDiscoveryPopup = showDiscoveryPopup;
   exports.showSkillsPanel = showSkillsPanel;
@@ -5247,6 +6131,12 @@
   exports.showGovernancePanel = showGovernancePanel;
   exports.hideGovernancePanel = hideGovernancePanel;
   exports.toggleGovernancePanel = toggleGovernancePanel;
+  exports.initAuctionHousePanel = initAuctionHousePanel;
+  exports.showAuctionHousePanel = showAuctionHousePanel;
+  exports.hideAuctionHousePanel = hideAuctionHousePanel;
+  exports.toggleAuctionHousePanel = toggleAuctionHousePanel;
   exports.updateReputationDisplay = updateReputationDisplay;
+  exports.showAchievementPanel = showAchievementPanel;
+  exports.hideAchievementPanel = hideAchievementPanel;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));

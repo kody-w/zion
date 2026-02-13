@@ -60,6 +60,18 @@
   let playTimeSeconds = 0;
   let recentActivities = [];
 
+  // Auto-save tracking
+  let lastAutoSave = 0;
+  let AUTO_SAVE_INTERVAL = 60000; // 60 seconds
+
+  // Secret discovery tracking
+  let lastSecretCheck = 0;
+  let SECRET_CHECK_INTERVAL = 2000; // Check every 2 seconds
+
+  // Economic event tracking
+  let currentEconomicEvent = null;
+  let lastEventCheck = 0;
+
   // Warmth tracking (GPS-based outdoor play bonus)
   let gpsHistory = [];
   let gpsWatchId = null;
@@ -315,7 +327,24 @@
     // Initialize quest system for local player
     if (Quests) {
       Quests.initPlayerQuests(username);
+      if (Quests.initPlayerAchievements) {
+        Quests.initPlayerAchievements(username);
+      }
       console.log('Quest system initialized for player:', username);
+    }
+
+    // Restore saved player data (position, inventory, spark, etc.)
+    var wasRestored = restorePlayerData();
+    if (wasRestored) {
+      console.log('Restored saved player data');
+      var timeSince = Auth.getTimeSinceLastSave ? Auth.getTimeSinceLastSave() : Infinity;
+      if (timeSince < 86400000 && HUD) { // Less than 24 hours
+        var minsAgo = Math.floor(timeSince / 60000);
+        var timeStr = minsAgo < 60 ? minsAgo + ' minutes' : Math.floor(minsAgo / 60) + ' hours';
+        setTimeout(function() {
+          HUD.showNotification('Welcome back! Last seen ' + timeStr + ' ago', 'info');
+        }, 2000);
+      }
     }
 
     // Initialize trading system
@@ -394,6 +423,9 @@
       NPCs.initNPCs(null, gameState, sceneContext);
       NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
     }
+
+    // Initialize economic event display
+    updateEconomicEvent();
 
     // Send join message
     joinWorld();
@@ -693,6 +725,9 @@
                 });
               }
             }
+
+            // Track zone visit achievement
+            trackAchievement('zone_visit', { zone: currentZone });
           }
         }
 
@@ -1028,6 +1063,25 @@
       lastBreakReminder = minutesPlayed;
     }
 
+    // Auto-save player data periodically
+    var nowMs = Date.now();
+    if (nowMs - lastAutoSave > AUTO_SAVE_INTERVAL) {
+      lastAutoSave = nowMs;
+      autoSavePlayerData();
+    }
+
+    // Check for nearby secrets periodically
+    if (nowMs - lastSecretCheck > SECRET_CHECK_INTERVAL) {
+      lastSecretCheck = nowMs;
+      checkSecrets();
+    }
+
+    // Update economic event display periodically (every 30 seconds)
+    if (nowMs - lastEventCheck > 30000) {
+      lastEventCheck = nowMs;
+      updateEconomicEvent();
+    }
+
     // Request next frame
     if (typeof window !== 'undefined' && window.requestAnimationFrame) {
       window.requestAnimationFrame(gameLoop);
@@ -1241,6 +1295,9 @@
 
         // Track activity
         addRecentActivity('Discovered a ' + result.discovery.type);
+
+        // Track discovery achievement
+        trackAchievement('discover', { type: result.discovery.type, rarity: result.discovery.rarity });
 
         if (Audio) Audio.playSound('warp');
       }
@@ -1653,6 +1710,9 @@
         HUD.showTradeComplete(msg.from);
         if (Audio) Audio.playSound('trade');
 
+        // Track trade achievement
+        trackAchievement('trade', { with: msg.from });
+
         if (Mentoring) {
           var xpResult = Mentoring.addSkillXP(localPlayer.id, 'trading', 15);
           if (xpResult.leveledUp && HUD) {
@@ -1764,24 +1824,69 @@
       { id: 'rope', name: 'Rope', price: 12, description: 'Useful for climbing and building', icon: '&#129526;' },
       { id: 'compass', name: 'Compass', price: 20, description: 'Helps with navigation', icon: '&#129517;' },
       { id: 'map_fragment', name: 'Map Fragment', price: 15, description: 'Reveals hidden areas', icon: '&#128506;' },
-      { id: 'potion_energy', name: 'Energy Potion', price: 25, description: 'Restores energy', icon: '&#129514;' }
+      { id: 'potion_energy', name: 'Energy Potion', price: 25, description: 'Restores energy', icon: '&#129514;' },
+      { id: 'spyglass', name: 'Spyglass', price: 35, description: 'See far-off landmarks', icon: '&#128269;' },
+      { id: 'lantern_oil', name: 'Lantern Oil', price: 6, description: 'Fuel for lanterns', icon: '&#128167;' }
     ],
     trader: [
       { id: 'rare_seed', name: 'Rare Seed', price: 30, description: 'Grows into a rare plant', icon: '&#127793;' },
       { id: 'crystal_shard', name: 'Crystal Shard', price: 40, description: 'A glowing fragment', icon: '&#128142;' },
-      { id: 'ancient_coin', name: 'Ancient Coin', price: 50, description: 'A relic from the founding', icon: '&#129689;' }
+      { id: 'ancient_coin', name: 'Ancient Coin', price: 50, description: 'A relic from the founding', icon: '&#129689;' },
+      { id: 'silk_thread', name: 'Silk Thread', price: 22, description: 'Fine textile material', icon: '&#129525;' },
+      { id: 'copper_ingot', name: 'Copper Ingot', price: 18, description: 'Refined copper metal', icon: '&#129704;' }
     ],
     farmer: [
       { id: 'wheat_seed', name: 'Wheat Seeds', price: 5, description: 'Basic crop seeds', icon: '&#127806;' },
       { id: 'flower_seed', name: 'Flower Seeds', price: 8, description: 'Decorative flowers', icon: '&#127804;' },
       { id: 'herb_seed', name: 'Herb Seeds', price: 10, description: 'Medicinal herbs', icon: '&#127807;' },
-      { id: 'fertilizer', name: 'Fertilizer', price: 15, description: 'Speeds up growth', icon: '&#128169;' }
+      { id: 'fertilizer', name: 'Fertilizer', price: 15, description: 'Speeds up growth', icon: '&#128169;' },
+      { id: 'seed_wildflower', name: 'Wildflower Seeds', price: 4, description: 'Beautiful wildflowers', icon: '&#127803;' }
     ],
     artisan: [
-      { id: 'paint_set', name: 'Paint Set', price: 20, description: 'For creating art', icon: '&#127912;' },
-      { id: 'chisel', name: 'Chisel', price: 15, description: 'For sculpting stone', icon: '&#128296;' },
-      { id: 'loom_thread', name: 'Loom Thread', price: 12, description: 'For weaving', icon: '&#129525;' },
+      { id: 'pigment', name: 'Pigment', price: 12, description: 'Natural color pigment', icon: '&#127912;' },
+      { id: 'canvas', name: 'Canvas', price: 15, description: 'For painting masterworks', icon: '&#128444;' },
+      { id: 'clay', name: 'Clay', price: 8, description: 'Moldable material', icon: '&#129520;' },
+      { id: 'ink_bottle', name: 'Ink Bottle', price: 10, description: 'For writing and drawing', icon: '&#128395;' },
       { id: 'golden_frame', name: 'Golden Frame', price: 35, description: 'Display art beautifully', icon: '&#128444;' }
+    ],
+    gardener: [
+      { id: 'seed_wildflower', name: 'Wildflower Seeds', price: 4, description: 'Beautiful wildflowers', icon: '&#127803;' },
+      { id: 'herb_seed', name: 'Herb Seeds', price: 10, description: 'Medicinal herbs', icon: '&#127807;' },
+      { id: 'rare_seed', name: 'Rare Seed', price: 30, description: 'Unusual plant variety', icon: '&#127793;' },
+      { id: 'fertilizer', name: 'Fertilizer', price: 15, description: 'Speeds up growth', icon: '&#128169;' },
+      { id: 'garden_shears', name: 'Garden Shears', price: 18, description: 'For pruning and shaping', icon: '&#9986;' }
+    ],
+    scholar: [
+      { id: 'scroll_blank', name: 'Blank Scroll', price: 8, description: 'For recording knowledge', icon: '&#128220;' },
+      { id: 'ink_bottle', name: 'Ink Bottle', price: 10, description: 'For writing', icon: '&#128395;' },
+      { id: 'map_fragment', name: 'Map Fragment', price: 15, description: 'Reveals hidden areas', icon: '&#128506;' },
+      { id: 'lens', name: 'Magnifying Lens', price: 25, description: 'For studying fine details', icon: '&#128270;' },
+      { id: 'ancient_tome', name: 'Ancient Tome', price: 45, description: 'Contains forgotten wisdom', icon: '&#128214;' }
+    ],
+    warrior: [
+      { id: 'potion_energy', name: 'Energy Potion', price: 25, description: 'Restores energy', icon: '&#129514;' },
+      { id: 'training_weight', name: 'Training Weight', price: 15, description: 'For strength training', icon: '&#127947;' },
+      { id: 'bandage', name: 'Bandage', price: 8, description: 'First aid supply', icon: '&#129657;' },
+      { id: 'arena_token', name: 'Arena Token', price: 20, description: 'Entry to special events', icon: '&#127941;' }
+    ],
+    musician: [
+      { id: 'flute', name: 'Flute', price: 28, description: 'A simple wooden flute', icon: '&#127925;' },
+      { id: 'drum', name: 'Drum', price: 22, description: 'A hand drum', icon: '&#129345;' },
+      { id: 'bell', name: 'Bell', price: 15, description: 'A clear-toned bell', icon: '&#128276;' },
+      { id: 'sheet_music', name: 'Sheet Music', price: 12, description: 'Musical compositions', icon: '&#127926;' }
+    ],
+    explorer: [
+      { id: 'compass', name: 'Compass', price: 20, description: 'Never lose your way', icon: '&#129517;' },
+      { id: 'rope', name: 'Rope', price: 12, description: 'For difficult terrain', icon: '&#129526;' },
+      { id: 'spyglass', name: 'Spyglass', price: 35, description: 'See far-off landmarks', icon: '&#128269;' },
+      { id: 'trail_ration', name: 'Trail Ration', price: 8, description: 'Sustenance for the road', icon: '&#127838;' },
+      { id: 'map_fragment', name: 'Map Fragment', price: 15, description: 'Reveals hidden areas', icon: '&#128506;' }
+    ],
+    healer: [
+      { id: 'healing_herb', name: 'Healing Herb', price: 10, description: 'Soothing medicinal plant', icon: '&#127807;' },
+      { id: 'bandage', name: 'Bandage', price: 8, description: 'First aid supply', icon: '&#129657;' },
+      { id: 'potion_energy', name: 'Energy Potion', price: 25, description: 'Restores energy', icon: '&#129514;' },
+      { id: 'herbal_tea', name: 'Herbal Tea', price: 6, description: 'Calming warm drink', icon: '&#127861;' }
     ]
   };
 
@@ -1932,6 +2037,35 @@
         }
       }
 
+      // Roll for bonus zone loot drop
+      if (Inventory.rollHarvestDrop) {
+        var luck = Physical && localPlayer.warmth > 0 ? Physical.getWarmthBonus(localPlayer.warmth) : 1.0;
+        var bonusDrop = Inventory.rollHarvestDrop(currentZone, luck);
+        if (bonusDrop) {
+          var bonusResult = Inventory.addItem(playerInventory, bonusDrop.id, 1);
+          if (bonusResult.success) {
+            var bonusData = Inventory.getItemData(bonusDrop.id);
+            if (bonusData && HUD) {
+              setTimeout(function() {
+                HUD.showItemPickup(bonusData.name, 1, bonusData.icon);
+              }, 500);
+            }
+          }
+        }
+      }
+
+      // Apply economic event modifier to harvest spark
+      if (Economy && Economy.applyEventModifier && economyLedger) {
+        var eventBonus = Economy.applyEventModifier(0, 'harvest');
+        if (eventBonus > 0) {
+          Economy.earnSpark(economyLedger, localPlayer.id, 'harvest', { complexity: 0.2 });
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+        }
+      }
+
+      // Track harvest achievement
+      trackAchievement('harvest', { item: itemId, zone: currentZone });
+
       if (Audio) Audio.playSound('harvest');
 
       // Track activity
@@ -1974,6 +2108,9 @@
       if (Quests) {
         Quests.updateQuestProgress(localPlayer.id, 'craft', { item: result.output.itemId, amount: result.output.count });
       }
+
+      // Track craft achievement
+      trackAchievement('craft', { item: result.output.itemId, recipe: recipeId });
 
       if (Audio) Audio.playSound('build');
     } else {
@@ -2302,6 +2439,9 @@
             Network.broadcastMessage(buildMsg);
           }
 
+          // Track build achievement
+          trackAchievement('build', { type: result.type, zone: currentZone });
+
           // Save structure to state
           if (gameState) {
             if (!gameState.structures) gameState.structures = [];
@@ -2547,6 +2687,8 @@
             }
 
             if (Audio) Audio.playSound('chat');
+            // Track NPC interaction achievement
+            trackAchievement('npc_talk', { npcId: npcResponse.id, npcName: npcResponse.name });
             // Track activity
             addRecentActivity('Talked to ' + npcResponse.name);
             // Broadcast player interaction to other NPCs
@@ -2613,6 +2755,39 @@
             HUD.initGovernancePanel(handleGovernanceAction);
           }
           HUD.toggleGovernancePanel(currentZone, localPlayer);
+        }
+        break;
+
+      case 'toggleAchievements':
+        if (HUD && Quests && localPlayer) {
+          var achievementPanelEl = document.getElementById('achievement-panel');
+          if (achievementPanelEl) {
+            if (HUD.hideAchievementPanel) HUD.hideAchievementPanel();
+          } else {
+            if (HUD.showAchievementPanel) HUD.showAchievementPanel(localPlayer.id);
+          }
+        }
+        break;
+
+      case 'toggleAuctions':
+      case 'toggleAuctionHouse':
+        if (HUD && Economy && localPlayer) {
+          if (HUD.toggleAuctionHousePanel) {
+            HUD.toggleAuctionHousePanel(economyLedger, localPlayer.id, playerInventory);
+          } else if (HUD.showAuctionHousePanel) {
+            HUD.showAuctionHousePanel(economyLedger, localPlayer.id, playerInventory);
+          }
+        }
+        break;
+
+      case 'toggleLoreJournal':
+        if (HUD && Exploration && localPlayer) {
+          var lorePanelEl = document.getElementById('lore-journal-panel');
+          if (lorePanelEl) {
+            if (HUD.hideLoreJournal) HUD.hideLoreJournal();
+          } else {
+            if (HUD.showLoreJournal) HUD.showLoreJournal(localPlayer.id, gameState);
+          }
         }
         break;
 
@@ -2745,8 +2920,9 @@
   if (typeof window !== 'undefined') {
     window.addEventListener('DOMContentLoaded', init);
 
-    // Handle page unload
+    // Handle page unload — save and leave
     window.addEventListener('beforeunload', () => {
+      autoSavePlayerData();
       leaveWorld();
     });
   }
@@ -2816,6 +2992,166 @@
       }
     }
     return recentActivities.length > 0 ? recentActivities : ['Started playing ZION'];
+  }
+
+  /**
+   * Track an achievement event and show toast if earned
+   */
+  function trackAchievement(eventType, eventData) {
+    if (!Quests || !Quests.trackAchievementEvent || !localPlayer) return;
+    var earned = Quests.trackAchievementEvent(localPlayer.id, eventType, eventData);
+    if (earned && earned.length > 0) {
+      earned.forEach(function(achievement) {
+        // Show toast notification
+        if (HUD && HUD.showAchievementToast) {
+          HUD.showAchievementToast(achievement);
+        } else if (HUD) {
+          HUD.showNotification('Achievement unlocked: ' + achievement.name, 'success');
+        }
+        // Award bonus spark for achievements
+        if (economyLedger && Economy) {
+          var bonus = achievement.tier === 'gold' ? 50 : achievement.tier === 'silver' ? 25 : 10;
+          Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: bonus / 25 });
+          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          if (HUD) HUD.updatePlayerInfo(localPlayer);
+        }
+        if (Audio) Audio.playSound('warp');
+      });
+    }
+  }
+
+  /**
+   * Save full player state for session persistence
+   */
+  function autoSavePlayerData() {
+    if (!Auth || !Auth.savePlayerData || !localPlayer) return;
+    var saveData = {
+      inventory: playerInventory,
+      spark: localPlayer.spark || 0,
+      position: localPlayer.position,
+      zone: currentZone,
+      skills: Mentoring ? Mentoring.getPlayerSkills(localPlayer.id) : null,
+      questState: Quests ? { active: Quests.getActiveQuests(localPlayer.id), completed: Quests.getCompletedQuests(localPlayer.id) } : null,
+      achievements: Quests && Quests.getAchievements ? Quests.getAchievements(localPlayer.id) : null,
+      guild: Guilds ? Guilds.getPlayerGuild(localPlayer.id) : null,
+      discoveredSecrets: [],
+      warmth: localPlayer.warmth || 0,
+      playTime: playTimeSeconds
+    };
+    Auth.savePlayerData(saveData);
+  }
+
+  /**
+   * Restore player state from saved data
+   */
+  function restorePlayerData() {
+    if (!Auth || !Auth.loadPlayerData || !localPlayer) return false;
+    var data = Auth.loadPlayerData();
+    if (!data) return false;
+
+    // Restore position
+    if (data.position) {
+      localPlayer.position = data.position;
+    }
+    if (data.zone) {
+      currentZone = data.zone;
+    }
+    // Restore spark
+    if (data.spark && economyLedger && Economy) {
+      economyLedger.balances[localPlayer.id] = data.spark;
+      localPlayer.spark = data.spark;
+    }
+    // Restore inventory
+    if (data.inventory && Inventory) {
+      playerInventory = data.inventory;
+    }
+    // Restore play time
+    if (data.playTime) {
+      playTimeSeconds = data.playTime;
+    }
+    // Restore warmth
+    if (data.warmth) {
+      localPlayer.warmth = data.warmth;
+    }
+
+    console.log('Player data restored from save');
+    return true;
+  }
+
+  /**
+   * Check nearby secrets and trigger discovery
+   */
+  function checkSecrets() {
+    if (!Exploration || !Exploration.checkNearbySecrets || !localPlayer || !gameState) return;
+    var nearbySecrets = Exploration.checkNearbySecrets(localPlayer.id, localPlayer.position, currentZone, gameState);
+    if (nearbySecrets && nearbySecrets.length > 0) {
+      nearbySecrets.forEach(function(secret) {
+        var result = Exploration.discoverSecret(localPlayer.id, secret, gameState);
+        if (result && result.success) {
+          // Show discovery notification with lore
+          if (HUD) {
+            HUD.showNotification('Secret discovered: ' + secret.name, 'success');
+            if (HUD.showDiscoveryPopup) {
+              HUD.showDiscoveryPopup({
+                name: secret.name,
+                description: secret.description,
+                rarity: getRarityName(secret.rarity),
+                sparkReward: result.sparkAwarded || 0
+              });
+            }
+          }
+          // Award spark
+          if (economyLedger && Economy && result.sparkAwarded) {
+            Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: secret.rarity });
+            localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+            if (HUD) HUD.updatePlayerInfo(localPlayer);
+          }
+          // Get and show lore if available
+          if (secret.loreId && Exploration.getLoreEntry) {
+            var lore = Exploration.getLoreEntry(secret.loreId);
+            if (lore && HUD) {
+              setTimeout(function() {
+                HUD.showNotification('Lore unlocked: ' + lore.title, 'info');
+              }, 3000);
+            }
+          }
+          // Track achievement
+          trackAchievement('discover', { type: 'secret', rarity: secret.rarity });
+          if (Audio) Audio.playSound('warp');
+          addRecentActivity('Discovered: ' + secret.name);
+        }
+      });
+    }
+  }
+
+  /**
+   * Update economic event display and check for changes
+   */
+  function updateEconomicEvent() {
+    if (!Economy || !Economy.getCurrentEvent) return;
+    var event = Economy.getCurrentEvent();
+    if (event && (!currentEconomicEvent || currentEconomicEvent.id !== event.id)) {
+      currentEconomicEvent = event;
+      if (HUD) {
+        // Show event banner
+        var bannerEl = document.getElementById('economic-event-banner');
+        if (!bannerEl && typeof document !== 'undefined') {
+          bannerEl = document.createElement('div');
+          bannerEl.id = 'economic-event-banner';
+          bannerEl.className = 'economic-event-banner';
+          document.body.appendChild(bannerEl);
+        }
+        if (bannerEl) {
+          bannerEl.innerHTML = '<strong>' + event.name + '</strong> — ' + event.description;
+          bannerEl.style.display = 'block';
+        }
+        HUD.showNotification('Economic Event: ' + event.name + ' is active!', 'success');
+      }
+    } else if (!event && currentEconomicEvent) {
+      currentEconomicEvent = null;
+      var bannerEl = document.getElementById('economic-event-banner');
+      if (bannerEl) bannerEl.style.display = 'none';
+    }
   }
 
   // Export public API

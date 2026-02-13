@@ -226,7 +226,7 @@
       case 'L':
         if (!chatMode) {
           if (callbacks.onAction) {
-            callbacks.onAction('toggleLoreBook', {});
+            callbacks.onAction('toggleLoreJournal', {});
           }
           e.preventDefault();
         }
@@ -247,6 +247,26 @@
         if (!chatMode) {
           if (callbacks.onAction) {
             callbacks.onAction('toggleGovernance', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'u':
+      case 'U':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleAuctionHouse', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'y':
+      case 'Y':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleAchievements', {});
           }
           e.preventDefault();
         }

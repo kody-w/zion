@@ -1404,6 +1404,50 @@
   50% { opacity: 1; }
 }
 
+/* Lore Journal Panel */
+.lore-journal-panel {
+  font-family: Georgia, serif;
+}
+
+.lore-journal-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lore-journal-panel::-webkit-scrollbar-track {
+  background: rgba(42, 24, 16, 0.5);
+  border-radius: 4px;
+}
+
+.lore-journal-panel::-webkit-scrollbar-thumb {
+  background: rgba(139, 105, 20, 0.6);
+  border-radius: 4px;
+}
+
+.lore-journal-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.7);
+}
+
+.lore-category-tab {
+  outline: none;
+}
+
+.lore-category-tab:active {
+  transform: translateY(1px);
+}
+
+.lore-entry {
+  position: relative;
+}
+
+.lore-entry-locked {
+  cursor: not-allowed;
+  user-select: none;
+}
+
+.lore-progress {
+  font-weight: 500;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .chat-panel {
@@ -1416,6 +1460,16 @@
 
   .nearby-list {
     display: none;
+  }
+
+  .lore-journal-panel {
+    width: 95%;
+    height: 90vh;
+  }
+
+  .lore-category-tab {
+    padding: 8px 12px;
+    font-size: 12px;
   }
 }
 
