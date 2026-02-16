@@ -1,0 +1,32 @@
+name: API Process & Publish
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  push:
+    paths:
+      - 'state/inbox/*.json'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Process inbox messages
+        run: python scripts/api_process_inbox.py
+
+      - name: Publish world state + RSS feeds
+        run: python scripts/api_publish_state.py
+
+      - name: Commit changes
+        run: |
+          git config user.name "ZION API Engine"
+          git config user.email "zion-engine@users.noreply.github.com"
+          git add state/api/ state/inbox/ state/chat.json state/world.json state/players.json state/discoveries.json state/actions.json state/changes.json docs/feeds/
+          git diff --staged --quiet || git commit -m "API: process inbox + publish state"
+          git push

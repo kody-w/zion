@@ -18,7 +18,7 @@ MODULE_ORDER = [
     'protocol', 'zones', 'economy', 'inventory', 'trading',
     'state', 'intentions', 'social', 'creation', 'quests',
     'competition', 'exploration', 'physical', 'guilds', 'mentoring',
-    'models', 'auth', 'network', 'world', 'input',
+    'models', 'auth', 'network', 'api_bridge', 'world', 'input',
     'hud', 'xr', 'audio', 'npc_ai', 'npcs',
     'seasons', 'pets', 'main'
 ]
@@ -28,7 +28,7 @@ WINDOW_NAMES = [
     'Protocol', 'Zones', 'Economy', 'Inventory', 'Trading',
     'State', 'Intentions', 'Social', 'Creation', 'Quests',
     'Competition', 'Exploration', 'Physical', 'Guilds', 'Mentoring',
-    'Models', 'Auth', 'Network', 'World', 'Input',
+    'Models', 'Auth', 'Network', 'ApiBridge', 'World', 'Input',
     'HUD', 'XR', 'Audio', 'NpcAI', 'NPCs',
     'Seasons', 'Pets', 'Main'
 ]
@@ -114,9 +114,10 @@ class TestBundleIntegrity(unittest.TestCase):
 
     def test_bundle_js_syntax_valid(self):
         """Inline JS extracted from bundle should pass node -c."""
-        # Extract inline script blocks (not CDN src= tags)
+        # Extract inline script blocks (not CDN src= tags, not JSON-LD)
         blocks = re.findall(r'<script\b([^>]*)>([\s\S]*?)</script>', self.content)
-        inline = [content for attrs, content in blocks if 'src=' not in attrs]
+        inline = [content for attrs, content in blocks
+                  if 'src=' not in attrs and 'ld+json' not in attrs]
 
         self.assertTrue(len(inline) > 0,
             'No inline <script> blocks found in bundle')

@@ -1,0 +1,373 @@
+#!/usr/bin/env python3
+"""Process ZION inbox messages from AI agents.
+
+Reads JSON files from state/inbox/, validates them against the protocol,
+applies valid messages to canonical state, and moves processed files
+to state/inbox/_processed/.
+"""
+import json
+import os
+import shutil
+import sys
+from datetime import datetime, timezone
+
+PROTOCOL_VERSION = 1
+
+MESSAGE_TYPES = {
+    'join', 'leave', 'heartbeat', 'idle', 'move', 'warp',
+    'say', 'shout', 'whisper', 'emote',
+    'build', 'plant', 'craft', 'compose', 'harvest',
+    'trade_offer', 'trade_accept', 'trade_decline', 'buy', 'sell', 'gift',
+    'teach', 'learn', 'mentor_offer', 'mentor_accept',
+    'challenge', 'accept_challenge', 'forfeit', 'score',
+    'discover', 'anchor_place', 'inspect',
+    'intention_set', 'intention_clear',
+    'warp_fork', 'return_home',
+    'federation_announce', 'federation_handshake',
+    'reputation_adjust', 'report_griefing',
+    'election_start', 'election_vote', 'election_finalize',
+    'steward_set_welcome', 'steward_set_policy', 'steward_moderate',
+}
+
+PLATFORMS = {'desktop', 'phone', 'vr', 'ar', 'api'}
+
+# Types that API agents are allowed to use
+API_ALLOWED_TYPES = {
+    'say', 'shout', 'emote', 'move', 'warp',
+    'discover', 'build', 'plant', 'harvest', 'craft', 'compose',
+    'gift', 'trade_offer', 'trade_accept', 'trade_decline',
+    'intention_set', 'intention_clear',
+    'join', 'leave', 'heartbeat',
+}
+
+# Default rate limits
+DEFAULT_RATE = {'messages_per_minute': 2, 'messages_per_hour': 30}
+
+
+def load_json(path):
+    """Load a JSON file safely."""
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def save_json(path, data):
+    """Save data as JSON."""
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2)
+
+
+def validate_message(msg):
+    """Validate a protocol message. Returns (valid, errors)."""
+    errors = []
+
+    if not isinstance(msg, dict):
+        return False, ['Message must be a JSON object']
+
+    # Version
+    if msg.get('v') != PROTOCOL_VERSION:
+        errors.append('Invalid version: expected %d, got %s' % (PROTOCOL_VERSION, msg.get('v')))
+
+    # ID
+    if not isinstance(msg.get('id'), str) or not msg['id']:
+        errors.append('Invalid id: must be a non-empty string')
+
+    # Timestamp
+    ts = msg.get('ts')
+    if not isinstance(ts, str) or not ts:
+        errors.append('Invalid ts: must be a non-empty string')
+    else:
+        try:
+            datetime.fromisoformat(ts.replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            errors.append('Invalid ts: must be ISO-8601')
+
+    # Sequence
+    seq = msg.get('seq')
+    if not isinstance(seq, int) or seq < 0:
+        errors.append('Invalid seq: must be a non-negative integer')
+
+    # From
+    if not isinstance(msg.get('from'), str) or not msg['from']:
+        errors.append('Invalid from: must be a non-empty string')
+
+    # Type
+    if msg.get('type') not in MESSAGE_TYPES:
+        errors.append('Invalid type: %s' % msg.get('type'))
+
+    # Platform
+    if msg.get('platform') not in PLATFORMS:
+        errors.append('Invalid platform: %s' % msg.get('platform'))
+
+    # Position
+    pos = msg.get('position')
+    if not isinstance(pos, dict):
+        errors.append('Invalid position: must be an object')
+    else:
+        for coord in ('x', 'y', 'z'):
+            if not isinstance(pos.get(coord), (int, float)):
+                errors.append('Invalid position.%s: must be a number' % coord)
+        if not isinstance(pos.get('zone'), str) or not pos.get('zone'):
+            errors.append('Invalid position.zone: must be a non-empty string')
+
+    # Payload
+    if not isinstance(msg.get('payload'), dict):
+        errors.append('Invalid payload: must be an object')
+
+    return len(errors) == 0, errors
+
+
+def check_api_restrictions(msg):
+    """Check API-specific restrictions. Returns (allowed, reason)."""
+    # Must be api platform
+    if msg.get('platform') != 'api':
+        return False, 'API messages must have platform "api"'
+
+    # Must be an allowed type
+    if msg.get('type') not in API_ALLOWED_TYPES:
+        return False, 'Type "%s" is not allowed for API agents' % msg.get('type')
+
+    # Sanitize text payloads (max 500 chars)
+    payload = msg.get('payload', {})
+    text = payload.get('text', '')
+    if isinstance(text, str) and len(text) > 500:
+        return False, 'Text payload exceeds 500 character limit'
+
+    return True, None
+
+
+def check_rate_limit(agent_name, state_dir):
+    """Check if an agent has exceeded rate limits. Returns (allowed, reason)."""
+    # Load agent registration for custom limits
+    agent_file = os.path.join(state_dir, 'agents', '%s.json' % agent_name)
+    agent_data = load_json(agent_file)
+    rate = agent_data.get('rate_limit', DEFAULT_RATE)
+    max_per_hour = rate.get('messages_per_hour', DEFAULT_RATE['messages_per_hour'])
+
+    # Count processed messages in the last hour
+    processed_dir = os.path.join(state_dir, 'inbox', '_processed')
+    if not os.path.isdir(processed_dir):
+        return True, None
+
+    now = datetime.now(timezone.utc)
+    count = 0
+    for fname in os.listdir(processed_dir):
+        if fname.startswith(agent_name + '_') and fname.endswith('.json'):
+            count += 1
+
+    if count >= max_per_hour:
+        return False, 'Rate limit exceeded: %d messages in processed queue (max %d/hour)' % (count, max_per_hour)
+
+    return True, None
+
+
+def apply_to_state(msg, state_dir):
+    """Apply a validated message to canonical state files."""
+    msg_type = msg['type']
+    payload = msg.get('payload', {})
+    sender = msg['from']
+
+    if msg_type in ('say', 'shout', 'whisper', 'emote'):
+        # Append to chat
+        chat_path = os.path.join(state_dir, 'chat.json')
+        chat = load_json(chat_path)
+        messages = chat.get('messages', [])
+        messages.append(msg)
+        # Keep last 200 messages
+        chat['messages'] = messages[-200:]
+        save_json(chat_path, chat)
+
+    elif msg_type == 'move':
+        # Update player position in world.json citizens
+        world_path = os.path.join(state_dir, 'world.json')
+        world = load_json(world_path)
+        citizens = world.get('citizens', {})
+        if sender not in citizens:
+            citizens[sender] = {'id': sender, 'position': {}, 'lastSeen': '', 'actions': []}
+        citizens[sender]['position'] = msg.get('position', {})
+        citizens[sender]['lastSeen'] = msg.get('ts', '')
+        world['citizens'] = citizens
+        save_json(world_path, world)
+
+    elif msg_type == 'warp':
+        # Update position with new zone
+        world_path = os.path.join(state_dir, 'world.json')
+        world = load_json(world_path)
+        citizens = world.get('citizens', {})
+        if sender not in citizens:
+            citizens[sender] = {'id': sender, 'position': {}, 'lastSeen': '', 'actions': []}
+        zone = payload.get('zone', 'nexus')
+        citizens[sender]['position'] = {'x': 0, 'y': 0, 'z': 0, 'zone': zone}
+        citizens[sender]['lastSeen'] = msg.get('ts', '')
+        world['citizens'] = citizens
+        save_json(world_path, world)
+
+    elif msg_type == 'discover':
+        # Add discovery
+        disc_path = os.path.join(state_dir, 'discoveries.json')
+        discoveries = load_json(disc_path)
+        if 'discoveries' not in discoveries:
+            discoveries['discoveries'] = {}
+        disc_id = 'disc_%s_%s' % (sender, msg.get('ts', '').replace(':', ''))
+        discoveries['discoveries'][disc_id] = {
+            'name': payload.get('name', 'Unknown'),
+            'description': payload.get('description', ''),
+            'discoverer': sender,
+            'zone': msg.get('position', {}).get('zone', 'nexus'),
+            'ts': msg.get('ts', ''),
+        }
+        save_json(disc_path, discoveries)
+
+    elif msg_type == 'join':
+        # Add player
+        players_path = os.path.join(state_dir, 'players.json')
+        players = load_json(players_path)
+        if 'players' not in players:
+            players['players'] = {}
+        players['players'][sender] = {
+            'position': msg.get('position', {'x': 0, 'y': 0, 'z': 0, 'zone': 'nexus'}),
+            'joinedAt': msg.get('ts', ''),
+            'platform': 'api',
+        }
+        save_json(players_path, players)
+
+    elif msg_type == 'intention_set':
+        # Record intention in actions log
+        actions_path = os.path.join(state_dir, 'actions.json')
+        actions = load_json(actions_path)
+        if 'actions' not in actions:
+            actions['actions'] = []
+        actions['actions'].append({
+            'from': sender,
+            'type': 'intention_set',
+            'payload': payload,
+            'ts': msg.get('ts', ''),
+        })
+        actions['actions'] = actions['actions'][-100:]
+        save_json(actions_path, actions)
+
+    # Always record the action in changes
+    changes_path = os.path.join(state_dir, 'changes.json')
+    changes = load_json(changes_path)
+    if 'changes' not in changes:
+        changes['changes'] = []
+    changes['changes'].append({
+        'type': msg_type,
+        'from': sender,
+        'ts': msg.get('ts', ''),
+        'platform': 'api',
+    })
+    changes['changes'] = changes['changes'][-500:]
+    save_json(changes_path, changes)
+
+
+def process_inbox(state_dir):
+    """Process all messages in the inbox."""
+    inbox_dir = os.path.join(state_dir, 'inbox')
+    processed_dir = os.path.join(inbox_dir, '_processed')
+    os.makedirs(processed_dir, exist_ok=True)
+
+    results = {'processed': 0, 'rejected': 0, 'errors': []}
+
+    if not os.path.isdir(inbox_dir):
+        print('No inbox directory found at %s' % inbox_dir)
+        return results
+
+    # Get all JSON files in inbox (not in _processed)
+    inbox_files = sorted([
+        f for f in os.listdir(inbox_dir)
+        if f.endswith('.json') and os.path.isfile(os.path.join(inbox_dir, f))
+    ])
+
+    if not inbox_files:
+        print('No messages in inbox.')
+        return results
+
+    print('Processing %d inbox messages...' % len(inbox_files))
+
+    for filename in inbox_files:
+        filepath = os.path.join(inbox_dir, filename)
+        print('  %s: ' % filename, end='')
+
+        # Load message
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                msg = json.load(f)
+        except (json.JSONDecodeError, IOError) as e:
+            print('PARSE ERROR — %s' % e)
+            results['errors'].append('%s: parse error — %s' % (filename, e))
+            results['rejected'] += 1
+            # Move to processed with error suffix
+            shutil.move(filepath, os.path.join(processed_dir, filename + '.error'))
+            continue
+
+        # Validate protocol
+        valid, errors = validate_message(msg)
+        if not valid:
+            print('INVALID — %s' % '; '.join(errors))
+            results['errors'].append('%s: %s' % (filename, '; '.join(errors)))
+            results['rejected'] += 1
+            shutil.move(filepath, os.path.join(processed_dir, filename + '.rejected'))
+            continue
+
+        # Check API restrictions
+        allowed, reason = check_api_restrictions(msg)
+        if not allowed:
+            print('RESTRICTED — %s' % reason)
+            results['errors'].append('%s: %s' % (filename, reason))
+            results['rejected'] += 1
+            shutil.move(filepath, os.path.join(processed_dir, filename + '.rejected'))
+            continue
+
+        # Check rate limit
+        allowed, reason = check_rate_limit(msg['from'], state_dir)
+        if not allowed:
+            print('RATE LIMITED — %s' % reason)
+            results['errors'].append('%s: %s' % (filename, reason))
+            results['rejected'] += 1
+            shutil.move(filepath, os.path.join(processed_dir, filename + '.rejected'))
+            continue
+
+        # Apply to state
+        try:
+            apply_to_state(msg, state_dir)
+            print('OK (%s from %s)' % (msg['type'], msg['from']))
+            results['processed'] += 1
+            shutil.move(filepath, os.path.join(processed_dir, filename))
+        except Exception as e:
+            print('APPLY ERROR — %s' % e)
+            results['errors'].append('%s: apply error — %s' % (filename, e))
+            results['rejected'] += 1
+            shutil.move(filepath, os.path.join(processed_dir, filename + '.error'))
+
+    print('\nResults: %d processed, %d rejected' % (results['processed'], results['rejected']))
+    return results
+
+
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    state_dir = os.path.join(project_root, 'state')
+
+    print('ZION Inbox Processor')
+    print('  state_dir: %s' % state_dir)
+
+    results = process_inbox(state_dir)
+
+    # Write results summary
+    results_path = os.path.join(state_dir, 'api', 'last_process.json')
+    os.makedirs(os.path.dirname(results_path), exist_ok=True)
+    save_json(results_path, {
+        'ts': datetime.now(timezone.utc).isoformat(),
+        'processed': results['processed'],
+        'rejected': results['rejected'],
+        'errors': results['errors'],
+    })
+
+    return 0 if not results['errors'] else 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -27,6 +27,7 @@
   const Guilds = typeof require !== 'undefined' ? require('./guilds') : window.Guilds;
   const Seasons = typeof require !== 'undefined' ? require('./seasons') : window.Seasons;
   const Pets = typeof require !== 'undefined' ? require('./pets') : window.Pets;
+  const ApiBridge = typeof require !== 'undefined' ? require('./api_bridge') : window.ApiBridge;
 
   // Game state
   let gameState = null;
@@ -470,6 +471,11 @@
           Network.announceFederation();
         }
       }, 5000); // After 5 seconds to let connections establish
+    }
+
+    // Initialize API bridge for AI agent communication
+    if (ApiBridge && ApiBridge.init) {
+      ApiBridge.init();
     }
 
     // Initialize 3D scene
@@ -1477,6 +1483,11 @@
     if (nowMs - lastPetUpdate > PET_UPDATE_INTERVAL) {
       lastPetUpdate = nowMs;
       updatePetStatus();
+    }
+
+    // Update API bridge (state publishing + inbox polling)
+    if (ApiBridge && ApiBridge.update) {
+      ApiBridge.update(nowMs, gameState);
     }
 
     // Request next frame

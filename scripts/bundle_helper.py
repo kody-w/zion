@@ -24,6 +24,7 @@ JS_FILES = [
     'models.js',
     'auth.js',
     'network.js',
+    'api_bridge.js',
     'world.js',
     'input.js',
     'hud.js',
