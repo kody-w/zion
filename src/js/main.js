@@ -4058,6 +4058,22 @@
             }
           };
           panel.appendChild(row);
+        });
+      }
+    }
+
+    document.body.appendChild(panel);
+
+    // Close on Escape
+    var escHandler = function(e) {
+      if (e.key === 'Escape') {
+        panel.remove();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+  }
+
   // ========================================================================
   // WORLD EVENTS SYSTEM
   // ========================================================================
@@ -4377,22 +4393,6 @@
       // The actual firefly count increase is handled in World.updateWildlife
       // We just track the active state here
     }
-  }
-
-        });
-      }
-    }
-
-    document.body.appendChild(panel);
-
-    // Close on Escape
-    var escHandler = function(e) {
-      if (e.key === 'Escape') {
-        panel.remove();
-        document.removeEventListener('keydown', escHandler);
-      }
-    };
-    document.addEventListener('keydown', escHandler);
   }
 
   // Export public API
