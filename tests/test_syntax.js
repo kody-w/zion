@@ -1,0 +1,64 @@
+// test_syntax.js - Syntax validation gate for all source modules
+// Prevents: stray braces, syntax errors, missing files
+const { test, suite, report, assert } = require('./test_runner');
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
+var SRC_DIR = path.join(__dirname, '..', 'src', 'js');
+
+var EXPECTED_MODULES = [
+  'protocol.js', 'zones.js', 'economy.js', 'inventory.js', 'trading.js',
+  'state.js', 'intentions.js', 'social.js', 'creation.js', 'quests.js',
+  'competition.js', 'exploration.js', 'physical.js', 'guilds.js', 'mentoring.js',
+  'models.js', 'auth.js', 'network.js', 'world.js', 'input.js',
+  'hud.js', 'xr.js', 'audio.js', 'npc_ai.js', 'npcs.js',
+  'seasons.js', 'pets.js', 'main.js'
+];
+
+suite('Syntax Validation', function() {
+
+  test('All expected JS modules exist', function() {
+    var missing = EXPECTED_MODULES.filter(function(f) {
+      return !fs.existsSync(path.join(SRC_DIR, f));
+    });
+    assert.strictEqual(missing.length, 0, 'Missing modules: ' + missing.join(', '));
+  });
+
+  // node -c syntax check on every source file
+  EXPECTED_MODULES.forEach(function(file) {
+    test(file + ' has valid syntax', function() {
+      var filePath = path.join(SRC_DIR, file);
+      try {
+        execSync('node -c ' + JSON.stringify(filePath), { stdio: 'pipe' });
+      } catch (e) {
+        throw new Error('Syntax error in ' + file + ': ' + e.stderr.toString().trim());
+      }
+    });
+  });
+
+  // Brace balance heuristic (gives clearer errors than node -c for common mistakes)
+  EXPECTED_MODULES.forEach(function(file) {
+    test(file + ' has balanced braces', function() {
+      var filePath = path.join(SRC_DIR, file);
+      var src = fs.readFileSync(filePath, 'utf8');
+      // Combined single-pass regex strips comments and strings correctly
+      // (sequential stripping breaks when // appears inside strings)
+      var stripped = src.replace(
+        /\/\/[^\n]*|\/\*[\s\S]*?\*\/|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g,
+        '""'
+      );
+      var opens = (stripped.match(/\{/g) || []).length;
+      var closes = (stripped.match(/\}/g) || []).length;
+      var diff = Math.abs(opens - closes);
+      // Tolerance of 2: regex stripping is heuristic (complex template literals
+      // can leave minor residual). The node -c test above is the authoritative check.
+      assert.ok(diff <= 2,
+        file + ': ' + opens + ' open braces vs ' + closes + ' close braces (diff=' + diff + ', max 2)');
+    });
+  });
+
+});
+
+var success = report();
+process.exit(success ? 0 : 1);

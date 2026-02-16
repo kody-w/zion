@@ -522,7 +522,6 @@
 
         // Initialize vignette overlay with default intensity
         setVignetteIntensity(0.3);
-        }
 
         // Create zone boundary particles (golden floating markers at zone edges)
         if (World.createZoneBoundaryParticles && sceneContext.scene) {
