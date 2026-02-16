@@ -2335,6 +2335,9 @@
     if (channel === 'master' && masterGain) {
       masterGain.gain.value = clampedLevel;
     }
+    if (channel === 'music') {
+      setMusicVolume(clampedLevel);
+    }
   }
 
   /**

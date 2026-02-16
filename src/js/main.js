@@ -674,9 +674,10 @@
       });
     }
 
-    // Play ambient audio
+    // Play ambient audio and start music
     if (Audio) {
       Audio.playAmbient(currentZone);
+      if (Audio.startMusic) Audio.startMusic(currentZone, currentTimePeriod || 'midday');
     }
 
     // Initialize AI citizens
@@ -966,6 +967,7 @@
             if (Audio) {
               Audio.playAmbient(currentZone);
               if (Audio.setZoneAmbient) Audio.setZoneAmbient(currentZone);
+              if (Audio.updateMusic) Audio.updateMusic(currentZone, currentTimePeriod);
             }
 
             if (NPCs) {
@@ -1069,9 +1071,12 @@
       if (NPCs && NPCs.broadcastEvent) {
         NPCs.broadcastEvent({ type: 'time_change', data: { period: currentTimePeriod, hour: worldHour } });
       }
-      // Update ambient audio for time of day
+      // Update ambient audio and music for time of day
       if (Audio && Audio.updateAmbientTime) {
         Audio.updateAmbientTime(currentTimePeriod);
+      }
+      if (Audio && Audio.updateMusic) {
+        Audio.updateMusic(currentZone, currentTimePeriod);
       }
     }
 
