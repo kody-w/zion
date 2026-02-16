@@ -21937,16 +21937,23 @@ html, body {
     for (var i = 0; i < animatedObjects.length; i++) {
       var obj = animatedObjects[i];
       if (!obj.mesh) continue;
-
-      var inFrustum = frustum.intersectsObject(obj.mesh);
-      obj.mesh.userData.inFrustum = inFrustum;
+      try {
+        var inFrustum = frustum.intersectsObject(obj.mesh);
+        obj.mesh.userData.inFrustum = inFrustum;
+      } catch (e) {
+        obj.mesh.userData.inFrustum = true; // default visible if check fails
+      }
     }
 
     // Cull chunks
     loadedChunks.forEach(function(chunkData, key) {
       if (!chunkData.group) return;
-      var inFrustum = frustum.intersectsObject(chunkData.group);
-      chunkData.group.userData.inFrustum = inFrustum;
+      try {
+        var inFrustum = frustum.intersectsObject(chunkData.group);
+        chunkData.group.userData.inFrustum = inFrustum;
+      } catch (e) {
+        chunkData.group.userData.inFrustum = true;
+      }
     });
   }
 
