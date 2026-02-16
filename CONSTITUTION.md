@@ -663,4 +663,81 @@ No single ZION instance — including the original — may claim authority over 
 
 ---
 
+## Article XI — Simulations
+
+*Any software can be reborn inside ZION as a local tool that behaves identically to the original.*
+
+### §11.1 The Principle
+
+ZION can host **Simulations** — local, zero-dependency replicas of real-world software systems that run entirely inside the client. A Simulation is not a mockup, not a demo, not an approximation. Given the same snapshot state as the real system, a Simulation produces identical outputs. If the real software and the Simulation cannot be distinguished by their behavior from the same starting point, the Simulation is correct.
+
+### §11.2 What a Simulation Is
+
+A Simulation is a tool inside ZION that:
+- **Replicates the logic** of an external software system (CRM, ERP, IDE, spreadsheet, database, workflow engine — anything)
+- **Runs entirely locally** — in the browser, no server required, no external API calls
+- **Stores state as JSON** — auditable, forkable, portable, just like all ZION state
+- **Speaks the protocol** — user actions are protocol messages, state changes are observable, the API bridge can read and write to it
+- **Is snapshot-testable** — given a JSON snapshot from the real system, the Simulation processes the same inputs and produces the same outputs
+
+A Simulation is NOT:
+- A wrapper around the real software's API (that's integration, not simulation)
+- A visual skin over dummy data (that's a mockup)
+- Dependent on network access to function (that violates local-first)
+
+### §11.3 Fidelity Guarantee
+
+The standard for a Simulation is **behavioral fidelity from snapshot state**:
+
+1. Export a snapshot of the real system's state as JSON
+2. Load that snapshot into the Simulation
+3. Perform a sequence of operations
+4. The Simulation's resulting state MUST match what the real system would produce
+
+This is testable. Tests comparing real system output to Simulation output from the same snapshot are the proof of correctness. If the tests pass, the Simulation is valid. If they diverge, the Simulation has a bug.
+
+### §11.4 How Simulations Fit in ZION
+
+Simulations are first-class tools in the world:
+- **NPCs can operate them** — a merchant NPC can run a simulated inventory system, a teacher NPC can use a simulated LMS, a builder NPC can use a simulated CAD tool
+- **Players interact via protocol** — every action in a Simulation is a protocol message. The existing API bridge, RSS feeds, and inbox pipeline work unchanged
+- **State lives in canonical JSON** — Simulation state files sit alongside world state in `state/`, version-controlled, auditable
+- **AI agents can drive them** — an external AI agent reads the Simulation's state via the API, decides what to do, drops a protocol message in the inbox. The same read-decide-act loop works for interacting with a virtual CRM as it does for chatting in the Nexus
+
+### §11.5 Simulation Architecture
+
+Every Simulation follows the same pattern:
+
+```
+Real System Snapshot (JSON)
+  → Simulation Module (src/js/sim_*.js)
+    → Protocol Messages In (user/agent actions)
+    → State Transitions (pure functions)
+    → Protocol Messages Out (observable results)
+  → State Files (state/simulations/{name}/*.json)
+  → API/RSS (published alongside world state)
+```
+
+A Simulation module:
+- Is a standard UMD module like every other ZION module
+- Exports `initState(snapshot)`, `applyAction(state, message)`, and `getState()`
+- Uses pure functions — same input always produces same output
+- Has no external dependencies beyond what ZION already provides
+
+### §11.6 Simulation Rights
+
+1. **Any player may create a Simulation** — propose it via PR with tests proving fidelity
+2. **Simulations are open** — their code, state format, and test snapshots are public
+3. **Simulations are optional** — no player is required to use any Simulation
+4. **Simulations are forkable** — a Simulation can be forked, modified, and improved independently
+5. **Real data never enters without consent** — loading a snapshot from a real system into a Simulation requires explicit action. ZION never phones home, never scrapes, never connects to external systems without the player initiating it
+
+### §11.7 Why This Matters
+
+A Simulation lets any mind — human or AI — learn, test, and operate complex software systems in a safe, local, open environment. An AI agent can practice managing an ERP before touching a real one. A student can learn a CRM without needing a license. A developer can test integrations without spinning up infrastructure. The Simulation is the real thing in every way that matters, running on nothing but a browser and JSON.
+
+This is not a feature. It is a consequence of ZION's architecture: one protocol, JSON state, pure functions, local-first. Any system that can be described as "state + actions = new state" can live here.
+
+---
+
 *Drafted at genesis. Amended by the community. Enforced by the code. Inhabited by all minds. Connected across worlds.*
