@@ -51,6 +51,7 @@
   let economyLedger = null;
   let raycaster = null;
   let npcUpdateFrame = 0;
+  let visitedZones = { nexus: true }; // Track discovered zones for piano accents
 
   // Performance tracking
   let frameCount = 0;
@@ -968,7 +969,12 @@
               Audio.playAmbient(currentZone);
               if (Audio.setZoneAmbient) Audio.setZoneAmbient(currentZone);
               if (Audio.updateMusic) Audio.updateMusic(currentZone, currentTimePeriod);
+              // Piano accent on first zone discovery
+              if (Audio.playPianoAccent && !visitedZones[currentZone]) {
+                Audio.playPianoAccent('zone_discovery');
+              }
             }
+            visitedZones[currentZone] = true;
 
             if (NPCs) {
               NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
@@ -1077,6 +1083,13 @@
       }
       if (Audio && Audio.updateMusic) {
         Audio.updateMusic(currentZone, currentTimePeriod);
+      }
+      // Piano accent for time-of-day transitions (BotW-style)
+      if (Audio && Audio.playPianoAccent) {
+        if (currentTimePeriod === 'dawn') Audio.playPianoAccent('dawn');
+        else if (currentTimePeriod === 'morning') Audio.playPianoAccent('morning');
+        else if (currentTimePeriod === 'evening') Audio.playPianoAccent('dusk');
+        else if (currentTimePeriod === 'night') Audio.playPianoAccent('night');
       }
     }
 
@@ -3194,6 +3207,8 @@
                     World.emitParticles('sparkle', questPos, 15);
                     World.emitParticles('fountain', questPos, 15);
                   }
+                  // Piano accent for quest completion
+                  if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('quest_complete');
                   // Add quest completion screen effects
                   triggerCameraShake(0.2, 0.3);
                   triggerScreenFlash('#DAA520', 0.4);
@@ -3609,6 +3624,8 @@
     var earned = Quests.trackAchievementEvent(localPlayer.id, eventType, eventData);
     if (earned && earned.length > 0) {
       earned.forEach(function(achievement) {
+        // Piano accent for achievement unlock
+        if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('achievement');
         // Show toast notification
         if (HUD && HUD.showAchievementToast) {
           HUD.showAchievementToast(achievement);

@@ -4305,6 +4305,132 @@
     return musicState.playing;
   }
 
+  // ─── Piano Accent System (BotW-style environmental cues) ──────────────────
+
+  // Piano-like timbre: layered sine + soft triangle with fast attack, gentle decay
+  // Each accent is a short melodic phrase triggered by world events
+
+  var PIANO_ACCENTS = {
+    dawn: {
+      // Ascending bright arpeggio — C major pentatonic, hopeful
+      notes: [261.63, 329.63, 392.00, 523.25, 659.25],
+      noteSpacing: 0.12,
+      noteDuration: 0.6,
+      volume: 0.18
+    },
+    morning: {
+      // Warm arpeggiated phrase — G major, gentle awakening
+      notes: [392.00, 493.88, 587.33, 783.99, 987.77, 783.99],
+      noteSpacing: 0.1,
+      noteDuration: 0.5,
+      volume: 0.14
+    },
+    dusk: {
+      // Descending gentle — Am pentatonic, wistful
+      notes: [880.00, 659.25, 523.25, 440.00, 329.63],
+      noteSpacing: 0.15,
+      noteDuration: 0.7,
+      volume: 0.15
+    },
+    night: {
+      // Low mysterious — Dm tones, sparse and atmospheric
+      notes: [146.83, 174.61, 220.00, 196.00, 146.83],
+      noteSpacing: 0.22,
+      noteDuration: 0.9,
+      volume: 0.12
+    },
+    zone_discovery: {
+      // Flourish — ascending with a resolving turn, wonder
+      notes: [392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 659.25, 783.99],
+      noteSpacing: 0.09,
+      noteDuration: 0.45,
+      volume: 0.2
+    },
+    quest_complete: {
+      // Triumphant fanfare phrase — C major with octave leap
+      notes: [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50, 1318.51],
+      noteSpacing: 0.1,
+      noteDuration: 0.5,
+      volume: 0.22
+    },
+    achievement: {
+      // Playful ascending — sparkling discovery
+      notes: [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50],
+      noteSpacing: 0.08,
+      noteDuration: 0.4,
+      volume: 0.2
+    }
+  };
+
+  function playPianoAccent(type) {
+    if (!audioContext || !masterGain) return;
+    var accent = PIANO_ACCENTS[type];
+    if (!accent) return;
+
+    // Resume context if suspended
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    var musicVol = volumeLevels.music !== undefined ? volumeLevels.music : 0.5;
+    var baseVol = accent.volume * musicVol;
+
+    try {
+      for (var i = 0; i < accent.notes.length; i++) {
+        (function(idx) {
+          var freq = accent.notes[idx];
+          var startTime = audioContext.currentTime + idx * accent.noteSpacing;
+
+          // Layer 1: sine wave (fundamental — warm piano body)
+          var osc1 = audioContext.createOscillator();
+          var gain1 = audioContext.createGain();
+          osc1.type = 'sine';
+          osc1.frequency.value = freq;
+          gain1.gain.setValueAtTime(0, startTime);
+          gain1.gain.linearRampToValueAtTime(baseVol, startTime + 0.015);
+          gain1.gain.exponentialRampToValueAtTime(baseVol * 0.6, startTime + accent.noteDuration * 0.3);
+          gain1.gain.exponentialRampToValueAtTime(0.001, startTime + accent.noteDuration);
+          osc1.connect(gain1);
+          gain1.connect(masterGain);
+          osc1.start(startTime);
+          osc1.stop(startTime + accent.noteDuration + 0.05);
+
+          // Layer 2: triangle wave (soft harmonic — adds "hammer" brightness)
+          var osc2 = audioContext.createOscillator();
+          var gain2 = audioContext.createGain();
+          osc2.type = 'triangle';
+          osc2.frequency.value = freq * 2; // octave above for shimmer
+          gain2.gain.setValueAtTime(0, startTime);
+          gain2.gain.linearRampToValueAtTime(baseVol * 0.3, startTime + 0.01);
+          gain2.gain.exponentialRampToValueAtTime(0.001, startTime + accent.noteDuration * 0.5);
+          osc2.connect(gain2);
+          gain2.connect(masterGain);
+          osc2.start(startTime);
+          osc2.stop(startTime + accent.noteDuration * 0.5 + 0.05);
+
+          // Layer 3: very quiet high sine for "sparkle" attack
+          var osc3 = audioContext.createOscillator();
+          var gain3 = audioContext.createGain();
+          osc3.type = 'sine';
+          osc3.frequency.value = freq * 4; // two octaves up
+          gain3.gain.setValueAtTime(0, startTime);
+          gain3.gain.linearRampToValueAtTime(baseVol * 0.08, startTime + 0.005);
+          gain3.gain.exponentialRampToValueAtTime(0.001, startTime + 0.08);
+          osc3.connect(gain3);
+          gain3.connect(masterGain);
+          osc3.start(startTime);
+          osc3.stop(startTime + 0.1);
+        })(i);
+      }
+    } catch (err) {
+      // Graceful degradation — no crash if Web Audio fails
+    }
+  }
+
+  function getPianoAccentTypes() {
+    return PIANO_ACCENTS;
+  }
+
   // Export public API
   exports.initAudio = initAudio;
   exports.playAmbient = playAmbient;
@@ -4329,5 +4455,9 @@
   exports.updateMusic = updateMusic;
   exports.setMusicVolume = setMusicVolume;
   exports.isMusicPlaying = isMusicPlaying;
+
+  // Piano accent system
+  exports.playPianoAccent = playPianoAccent;
+  exports.getPianoAccentTypes = getPianoAccentTypes;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Audio = {}));
