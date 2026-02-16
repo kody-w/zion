@@ -1420,7 +1420,14 @@
     };
   }
 
+  function getCompletedQuests(playerId) {
+    initPlayerQuests(playerId);
+    var state = playerQuestStates.get(playerId);
+    return state ? state.turnedInQuests : [];
+  }
+
   // Export public API
+  exports.getCompletedQuests = getCompletedQuests;
   exports.getAvailableQuests = getAvailableQuests;
   exports.acceptQuest = acceptQuest;
   exports.updateQuestProgress = updateQuestProgress;
