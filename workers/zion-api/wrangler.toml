@@ -1,0 +1,10 @@
+name = "zion-api"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Deploy to: zion-api.kwildfeuer.workers.dev
+# Or add a route on existing zion-oauth worker domain:
+# routes = [{ pattern = "zion-oauth.kwildfeuer.workers.dev/api/*" }]
+
+[vars]
+ENVIRONMENT = "production"

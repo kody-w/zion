@@ -1,0 +1,44 @@
+name: Observer Agent
+on:
+  schedule:
+    - cron: '15 */2 * * *'  # Every 2 hours at :15
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Publish current state (ensure fresh snapshot)
+        run: python scripts/api_publish_state.py
+
+      - name: Run Observer Agent
+        run: python scripts/agent_observer.py
+
+      - name: Process inbox
+        run: python scripts/api_process_inbox.py
+
+      - name: Re-publish state with agent messages
+        run: python scripts/api_publish_state.py
+
+      - name: Commit changes
+        run: |
+          git config user.name "ZION Observer Agent"
+          git config user.email "zion-engine@users.noreply.github.com"
+          git add state/ docs/feeds/
+          git diff --staged --quiet || git commit -m "Observer: $(python3 -c "
+          import json, glob
+          files = sorted(glob.glob('state/inbox/_processed/zion-observer_*.json'))
+          if files:
+            msg = json.load(open(files[-1]))
+            text = msg.get('payload', {}).get('text', 'observed the world')
+            print(text[:70])
+          else:
+            print('wandered and observed')
+          ")"
+          git push

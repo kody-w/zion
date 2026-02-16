@@ -261,6 +261,7 @@
   // Compose types configuration
   const COMPOSE_TYPES = {
     poem: { name: 'Poem', maxLength: 500, sparkReward: [5, 20] },
+    poetry: { name: 'Poetry', maxLength: 500, sparkReward: [5, 20] },
     song: { name: 'Song', maxLength: 300, sparkReward: [10, 30] },
     story: { name: 'Short Story', maxLength: 1000, sparkReward: [10, 40] },
     painting: { name: 'Painting', sparkReward: [5, 25] },
@@ -270,18 +271,18 @@
 
   // Handle artistic composition
   function handleCompose(msg, state) {
-    const composeType = msg.payload.composeType || 'poem';
+    const medium = msg.payload.medium || msg.payload.composeType || 'poem';
     const title = msg.payload.title || 'Untitled';
     const content = msg.payload.content || '';
 
-    if (!COMPOSE_TYPES[composeType]) {
+    if (!COMPOSE_TYPES[medium]) {
       return {
         success: false,
         error: 'Invalid compose type'
       };
     }
 
-    const typeData = COMPOSE_TYPES[composeType];
+    const typeData = COMPOSE_TYPES[medium];
 
     // Check max length for text-based types
     if (typeData.maxLength && content.length > typeData.maxLength) {
@@ -291,10 +292,11 @@
       };
     }
 
-    const artwork = {
+    const composition = {
       id: generateId(),
       creator: msg.from,
-      type: composeType,
+      type: 'composition',
+      medium: medium,
       title: title,
       content: content,
       zone: msg.payload.zone || 'default',
@@ -305,11 +307,11 @@
       likedBy: []
     };
 
-    if (!state.artworks) {
-      state.artworks = [];
+    if (!state.structures) {
+      state.structures = [];
     }
 
-    state.artworks.push(artwork);
+    state.structures.push(composition);
 
     // Calculate spark reward
     const sparkMin = typeData.sparkReward[0];
@@ -319,7 +321,7 @@
     return {
       success: true,
       state: state,
-      artwork: artwork,
+      composition: composition,
       sparkReward: sparkReward
     };
   }
