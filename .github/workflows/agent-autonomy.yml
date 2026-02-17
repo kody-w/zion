@@ -16,19 +16,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Activate agents
+      - name: Activate agents and drop in inbox
         run: |
           python scripts/agent_autonomy.py > /tmp/agent_actions.json
-          # Apply actions to state
+          # Drop each action as a separate inbox file for api_process_inbox.py
           python -c "
-          import json
+          import json, os
           with open('/tmp/agent_actions.json') as f:
             actions = json.load(f)
-          with open('state/actions.json') as f:
-            state = json.load(f)
-          state['actions'].extend(actions)
-          with open('state/actions.json', 'w') as f:
-            json.dump(state, f, indent=2)
+          inbox = 'state/inbox'
+          os.makedirs(inbox, exist_ok=True)
+          for i, action in enumerate(actions):
+            agent = action.get('from', 'unknown')
+            ts = action.get('ts', '').replace(':', '').replace('-', '').replace('T', '')[:14]
+            fname = '%s_%s_%02d.json' % (agent, ts, i % 100)
+            with open(os.path.join(inbox, fname), 'w') as f:
+              json.dump(action, f, indent=2)
+            print('  [%s] %s → %s' % (action.get('type', '?'), agent, fname))
+          print('Dropped %d actions in inbox.' % len(actions))
           "
       - name: Commit
         run: |
