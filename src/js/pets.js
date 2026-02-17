@@ -6,7 +6,7 @@
     {
       id: 'cat',
       name: 'Mystic Cat',
-      description: 'A wise feline companion that brings good fortune to trades',
+      description: 'A wise feline Pingym that brings good fortune to trades',
       icon: '🐱',
       zone: 'commons',
       rarity: 'common',

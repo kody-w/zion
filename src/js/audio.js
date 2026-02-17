@@ -1457,6 +1457,9 @@
         case 'shutter':
           playShutterSound();
           break;
+        case 'coin':
+          playCoinSound();
+          break;
         default:
           console.warn('Unknown sound type:', type);
       }
@@ -2150,6 +2153,40 @@
       click2.stop(now + 0.04);
     } catch (err) {
       console.error('Error in shutter sound:', err);
+    }
+  }
+
+  /**
+   * Coin chime - quick ascending two-tone for Spark earn
+   */
+  function playCoinSound() {
+    if (!audioContext || !masterGain) return;
+    try {
+      var now = audioContext.currentTime;
+      // Tone 1: 880Hz sine, 40ms
+      var osc1 = audioContext.createOscillator();
+      var g1 = audioContext.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.value = 880;
+      g1.gain.setValueAtTime(0.12, now);
+      g1.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      osc1.connect(g1);
+      g1.connect(masterGain);
+      osc1.start(now);
+      osc1.stop(now + 0.05);
+      // Tone 2: 1320Hz sine, 60ms (starts at 50ms)
+      var osc2 = audioContext.createOscillator();
+      var g2 = audioContext.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.value = 1320;
+      g2.gain.setValueAtTime(0.12, now + 0.05);
+      g2.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+      osc2.connect(g2);
+      g2.connect(masterGain);
+      osc2.start(now + 0.05);
+      osc2.stop(now + 0.12);
+    } catch (err) {
+      console.error('Error in coin sound:', err);
     }
   }
 

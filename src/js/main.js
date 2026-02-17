@@ -345,6 +345,19 @@
     }, 1300);
   }
 
+  // Show floating Spark earn popup above the player
+  function showSparkPopup(amount) {
+    if (!amount || amount <= 0) return;
+    if (!sceneContext || !sceneContext.camera || !sceneContext.renderer || !localPlayer || !localPlayer.position) return;
+    if (!window.THREE) return;
+    var pos = new window.THREE.Vector3(localPlayer.position.x, localPlayer.position.y + 2.5, localPlayer.position.z);
+    pos.project(sceneContext.camera);
+    var sx = (pos.x * 0.5 + 0.5) * sceneContext.renderer.domElement.clientWidth;
+    var sy = (-pos.y * 0.5 + 0.5) * sceneContext.renderer.domElement.clientHeight;
+    showFloatingText('+' + amount + ' Spark', sx, sy);
+    if (Audio) Audio.playSound('coin');
+  }
+
   // Screen flash overlay element
   var screenFlashOverlay = null;
   var vignetteOverlay = null;
@@ -2083,9 +2096,10 @@
 
         // Award spark
         if (economyLedger && Economy && result.sparkAwarded) {
-          Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: result.discovery.rarity });
+          var discoverySpark = Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: result.discovery.rarity });
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+          showSparkPopup(discoverySpark);
         }
 
         // Track activity
@@ -2238,9 +2252,10 @@
             HUD.showNotification('You won the competition! +' + result.sparkAward + ' Spark', 'success');
           }
           if (economyLedger && Economy) {
-            Economy.earnSpark(economyLedger, localPlayer.id, 'competition', { complexity: 1.0 });
+            var compSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'competition', { complexity: 1.0 });
             localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
             if (HUD) HUD.updatePlayerInfo(localPlayer);
+            showSparkPopup(compSpark);
           }
           // Award combat XP for winning
           if (Mentoring) {
@@ -2793,9 +2808,10 @@
             if (teaching) {
               teachingMsg = npcData.name + ' teaches you about ' + teaching.topic + ': "' + teaching.description + '"';
               if (Economy && economyLedger) {
-                Economy.earnSpark(economyLedger, localPlayer.id, 'teach', { complexity: 0.5 });
+                var teachSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'teach', { complexity: 0.5 });
                 localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
                 HUD.updatePlayerInfo(localPlayer);
+                showSparkPopup(teachSpark);
               }
             } else {
               teachingMsg = npcData.name + ' has nothing more to teach you right now.';
@@ -2803,9 +2819,10 @@
           } else {
             teachingMsg = npcData.name + ' shares some wisdom with you.';
             if (Economy && economyLedger) {
-              Economy.earnSpark(economyLedger, localPlayer.id, 'teach', { complexity: 0.3 });
+              var teachSpark2 = Economy.earnSpark(economyLedger, localPlayer.id, 'teach', { complexity: 0.3 });
               localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
               HUD.updatePlayerInfo(localPlayer);
+              showSparkPopup(teachSpark2);
             }
           }
           HUD.showNotification(teachingMsg, 'info');
@@ -2867,6 +2884,7 @@
         if (localPlayer) {
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+          showSparkPopup(sparkEarned);
         }
       }
 
@@ -2966,10 +2984,11 @@
       }
 
       if (economyLedger && Economy && result.sparkEarned) {
-        Economy.earnSpark(economyLedger, localPlayer.id, 'craft', { complexity: result.sparkEarned / 50 });
+        var craftSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'craft', { complexity: result.sparkEarned / 50 });
         if (localPlayer) {
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+          showSparkPopup(craftSpark);
         }
       }
 
@@ -3099,9 +3118,10 @@
 
         if (economyLedger && Economy) {
           var sparkAmount = Math.min(50, 5 + composeData.notes.length * 2);
-          Economy.earnSpark(economyLedger, localPlayer.id, 'compose', { complexity: sparkAmount / 50 });
+          var composeSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'compose', { complexity: sparkAmount / 50 });
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+          showSparkPopup(composeSpark);
         }
 
         if (Mentoring) {
@@ -3139,10 +3159,11 @@
       }
 
       if (economyLedger && Economy && result.sparkReward) {
-        Economy.earnSpark(economyLedger, localPlayer.id, 'compose', { complexity: result.sparkReward / 50 });
+        var composeSpark2 = Economy.earnSpark(economyLedger, localPlayer.id, 'compose', { complexity: result.sparkReward / 50 });
         if (localPlayer) {
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+          showSparkPopup(composeSpark2);
         }
       }
 
@@ -3344,8 +3365,9 @@
 
           // Award building XP
           if (Economy) {
-            Economy.earnSpark(economyLedger, localPlayer.id, 'build', { complexity: 0.3 });
+            var buildSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'build', { complexity: 0.3 });
             localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+            showSparkPopup(buildSpark);
           }
 
           if (Mentoring) {
@@ -3651,6 +3673,7 @@
                   // Update player spark display
                   localPlayer.spark += result.rewards.spark;
                   HUD.updatePlayerInfo(localPlayer);
+                  showSparkPopup(result.rewards.spark);
                   // Track activity
                   addRecentActivity('Completed quest: ' + result.quest.title);
                   // Emit quest complete particles (rainbow burst - use sparkle and fountain for variety)
@@ -4095,9 +4118,10 @@
         // Award bonus spark for achievements
         if (economyLedger && Economy) {
           var bonus = achievement.tier === 'gold' ? 50 : achievement.tier === 'silver' ? 25 : 10;
-          Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: bonus / 25 });
+          var achSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: bonus / 25 });
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+          showSparkPopup(achSpark);
         }
         if (Audio) Audio.playSound('warp');
       });
@@ -4186,9 +4210,10 @@
           }
           // Award spark
           if (economyLedger && Economy && result.sparkAwarded) {
-            Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: secret.rarity });
+            var secretSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: secret.rarity });
             localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
             if (HUD) HUD.updatePlayerInfo(localPlayer);
+            showSparkPopup(secretSpark);
           }
           // Get and show lore if available
           if (secret.loreId && Exploration.getLoreEntry) {
@@ -4349,7 +4374,7 @@
     var mood = Pets.getPetMood(pet);
     if (mood === 'sad' && pet.hunger > 70) {
       if (HUD) {
-        HUD.showNotification(pet.name + ' is hungry! Feed your companion.', 'warning');
+        HUD.showNotification(pet.name + ' is hungry! Feed your Pingym.', 'warning');
       }
     }
   }
@@ -4387,6 +4412,7 @@
         if (economyLedger && Economy) {
           Economy.earnSpark(economyLedger, localPlayer.id, sparkAmount, 'fishing');
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          showSparkPopup(sparkAmount);
         }
         if (HUD && HUD.showFishCaughtNotification) {
           HUD.showFishCaughtNotification(result.fish.name, sparkAmount);

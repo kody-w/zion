@@ -6804,7 +6804,7 @@
 
     // Header
     var header = document.createElement('h2');
-    header.textContent = pet ? 'My Companion' : 'Adopt a Companion';
+    header.textContent = pet ? 'My Pingym' : 'Adopt a Pingym';
     panel.appendChild(header);
 
     // Close button
@@ -6948,7 +6948,7 @@
       var newName = prompt('Enter new name for ' + pet.name + ':');
       if (newName && newName.trim()) {
         if (Pets.renamePet(playerId, newName.trim())) {
-          showNotification('Pet renamed to ' + newName.trim());
+          showNotification('Pingym renamed to ' + newName.trim());
           hidePetPanel();
         }
       }
@@ -6977,7 +6977,7 @@
 
     // Info text
     var infoText = document.createElement('div');
-    infoText.textContent = 'Choose a companion to adopt in this zone:';
+    infoText.textContent = 'Choose a Pingym to adopt in this zone:';
     infoText.style.cssText = 'color:#B8B0A8;font-size:0.9rem;margin-bottom:16px;';
     panel.appendChild(infoText);
 
@@ -7049,7 +7049,7 @@
             showPetAdoptNotification(petName.trim(), petType);
             hidePetPanel();
           } else {
-            alert('Could not adopt pet. You may already have a companion.');
+            alert('Could not adopt. You may already have a Pingym.');
           }
         }
       };
@@ -7187,7 +7187,7 @@
     notification.appendChild(icon);
 
     var title = document.createElement('div');
-    title.textContent = 'Companion Adopted!';
+    title.textContent = 'Pingym Adopted!';
     title.style.cssText = 'font-size:0.9rem;color:#DAA520;text-transform:uppercase;' +
       'letter-spacing:0.15em;margin-bottom:8px;';
     notification.appendChild(title);

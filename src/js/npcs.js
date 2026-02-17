@@ -3184,6 +3184,13 @@
       }
     }
 
+    // NPC greeting gesture based on familiarity
+    var npcMesh = npcMeshes.get(agent.id);
+    if (npcMesh) {
+      var greetEmote = familiarity >= 75 ? 'cheer' : familiarity >= 25 ? 'bow' : 'wave';
+      playEmoteAnimation(npcMesh, greetEmote);
+    }
+
     // Use quest dialogue if available
     if (questInfo && questInfo.quest && questInfo.quest.dialogue) {
       if (questInfo.state === 'available') {

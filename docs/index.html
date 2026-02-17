@@ -33320,7 +33320,7 @@ html, body {
 
     // Header
     var header = document.createElement('h2');
-    header.textContent = pet ? 'My Companion' : 'Adopt a Companion';
+    header.textContent = pet ? 'My Pingym' : 'Adopt a Pingym';
     panel.appendChild(header);
 
     // Close button
@@ -33464,7 +33464,7 @@ html, body {
       var newName = prompt('Enter new name for ' + pet.name + ':');
       if (newName && newName.trim()) {
         if (Pets.renamePet(playerId, newName.trim())) {
-          showNotification('Pet renamed to ' + newName.trim());
+          showNotification('Pingym renamed to ' + newName.trim());
           hidePetPanel();
         }
       }
@@ -33493,7 +33493,7 @@ html, body {
 
     // Info text
     var infoText = document.createElement('div');
-    infoText.textContent = 'Choose a companion to adopt in this zone:';
+    infoText.textContent = 'Choose a Pingym to adopt in this zone:';
     infoText.style.cssText = 'color:#B8B0A8;font-size:0.9rem;margin-bottom:16px;';
     panel.appendChild(infoText);
 
@@ -33565,7 +33565,7 @@ html, body {
             showPetAdoptNotification(petName.trim(), petType);
             hidePetPanel();
           } else {
-            alert('Could not adopt pet. You may already have a companion.');
+            alert('Could not adopt. You may already have a Pingym.');
           }
         }
       };
@@ -33703,7 +33703,7 @@ html, body {
     notification.appendChild(icon);
 
     var title = document.createElement('div');
-    title.textContent = 'Companion Adopted!';
+    title.textContent = 'Pingym Adopted!';
     title.style.cssText = 'font-size:0.9rem;color:#DAA520;text-transform:uppercase;' +
       'letter-spacing:0.15em;margin-bottom:8px;';
     notification.appendChild(title);
@@ -35961,6 +35961,9 @@ html, body {
         case 'shutter':
           playShutterSound();
           break;
+        case 'coin':
+          playCoinSound();
+          break;
         default:
           console.warn('Unknown sound type:', type);
       }
@@ -36654,6 +36657,40 @@ html, body {
       click2.stop(now + 0.04);
     } catch (err) {
       console.error('Error in shutter sound:', err);
+    }
+  }
+
+  /**
+   * Coin chime - quick ascending two-tone for Spark earn
+   */
+  function playCoinSound() {
+    if (!audioContext || !masterGain) return;
+    try {
+      var now = audioContext.currentTime;
+      // Tone 1: 880Hz sine, 40ms
+      var osc1 = audioContext.createOscillator();
+      var g1 = audioContext.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.value = 880;
+      g1.gain.setValueAtTime(0.12, now);
+      g1.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      osc1.connect(g1);
+      g1.connect(masterGain);
+      osc1.start(now);
+      osc1.stop(now + 0.05);
+      // Tone 2: 1320Hz sine, 60ms (starts at 50ms)
+      var osc2 = audioContext.createOscillator();
+      var g2 = audioContext.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.value = 1320;
+      g2.gain.setValueAtTime(0.12, now + 0.05);
+      g2.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+      osc2.connect(g2);
+      g2.connect(masterGain);
+      osc2.start(now + 0.05);
+      osc2.stop(now + 0.12);
+    } catch (err) {
+      console.error('Error in coin sound:', err);
     }
   }
 
@@ -45215,6 +45252,13 @@ html, body {
       }
     }
 
+    // NPC greeting gesture based on familiarity
+    var npcMesh = npcMeshes.get(agent.id);
+    if (npcMesh) {
+      var greetEmote = familiarity >= 75 ? 'cheer' : familiarity >= 25 ? 'bow' : 'wave';
+      playEmoteAnimation(npcMesh, greetEmote);
+    }
+
     // Use quest dialogue if available
     if (questInfo && questInfo.quest && questInfo.quest.dialogue) {
       if (questInfo.state === 'available') {
@@ -46014,7 +46058,7 @@ html, body {
     {
       id: 'cat',
       name: 'Mystic Cat',
-      description: 'A wise feline companion that brings good fortune to trades',
+      description: 'A wise feline Pingym that brings good fortune to trades',
       icon: '🐱',
       zone: 'commons',
       rarity: 'common',
@@ -46752,6 +46796,19 @@ html, body {
     setTimeout(function() {
       if (el.parentNode) el.parentNode.removeChild(el);
     }, 1300);
+  }
+
+  // Show floating Spark earn popup above the player
+  function showSparkPopup(amount) {
+    if (!amount || amount <= 0) return;
+    if (!sceneContext || !sceneContext.camera || !sceneContext.renderer || !localPlayer || !localPlayer.position) return;
+    if (!window.THREE) return;
+    var pos = new window.THREE.Vector3(localPlayer.position.x, localPlayer.position.y + 2.5, localPlayer.position.z);
+    pos.project(sceneContext.camera);
+    var sx = (pos.x * 0.5 + 0.5) * sceneContext.renderer.domElement.clientWidth;
+    var sy = (-pos.y * 0.5 + 0.5) * sceneContext.renderer.domElement.clientHeight;
+    showFloatingText('+' + amount + ' Spark', sx, sy);
+    if (Audio) Audio.playSound('coin');
   }
 
   // Screen flash overlay element
@@ -48492,9 +48549,10 @@ html, body {
 
         // Award spark
         if (economyLedger && Economy && result.sparkAwarded) {
-          Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: result.discovery.rarity });
+          var discoverySpark = Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: result.discovery.rarity });
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+          showSparkPopup(discoverySpark);
         }
 
         // Track activity
@@ -48647,9 +48705,10 @@ html, body {
             HUD.showNotification('You won the competition! +' + result.sparkAward + ' Spark', 'success');
           }
           if (economyLedger && Economy) {
-            Economy.earnSpark(economyLedger, localPlayer.id, 'competition', { complexity: 1.0 });
+            var compSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'competition', { complexity: 1.0 });
             localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
             if (HUD) HUD.updatePlayerInfo(localPlayer);
+            showSparkPopup(compSpark);
           }
           // Award combat XP for winning
           if (Mentoring) {
@@ -49202,9 +49261,10 @@ html, body {
             if (teaching) {
               teachingMsg = npcData.name + ' teaches you about ' + teaching.topic + ': "' + teaching.description + '"';
               if (Economy && economyLedger) {
-                Economy.earnSpark(economyLedger, localPlayer.id, 'teach', { complexity: 0.5 });
+                var teachSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'teach', { complexity: 0.5 });
                 localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
                 HUD.updatePlayerInfo(localPlayer);
+                showSparkPopup(teachSpark);
               }
             } else {
               teachingMsg = npcData.name + ' has nothing more to teach you right now.';
@@ -49212,9 +49272,10 @@ html, body {
           } else {
             teachingMsg = npcData.name + ' shares some wisdom with you.';
             if (Economy && economyLedger) {
-              Economy.earnSpark(economyLedger, localPlayer.id, 'teach', { complexity: 0.3 });
+              var teachSpark2 = Economy.earnSpark(economyLedger, localPlayer.id, 'teach', { complexity: 0.3 });
               localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
               HUD.updatePlayerInfo(localPlayer);
+              showSparkPopup(teachSpark2);
             }
           }
           HUD.showNotification(teachingMsg, 'info');
@@ -49276,6 +49337,7 @@ html, body {
         if (localPlayer) {
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+          showSparkPopup(sparkEarned);
         }
       }
 
@@ -49375,10 +49437,11 @@ html, body {
       }
 
       if (economyLedger && Economy && result.sparkEarned) {
-        Economy.earnSpark(economyLedger, localPlayer.id, 'craft', { complexity: result.sparkEarned / 50 });
+        var craftSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'craft', { complexity: result.sparkEarned / 50 });
         if (localPlayer) {
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+          showSparkPopup(craftSpark);
         }
       }
 
@@ -49508,9 +49571,10 @@ html, body {
 
         if (economyLedger && Economy) {
           var sparkAmount = Math.min(50, 5 + composeData.notes.length * 2);
-          Economy.earnSpark(economyLedger, localPlayer.id, 'compose', { complexity: sparkAmount / 50 });
+          var composeSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'compose', { complexity: sparkAmount / 50 });
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+          showSparkPopup(composeSpark);
         }
 
         if (Mentoring) {
@@ -49548,10 +49612,11 @@ html, body {
       }
 
       if (economyLedger && Economy && result.sparkReward) {
-        Economy.earnSpark(economyLedger, localPlayer.id, 'compose', { complexity: result.sparkReward / 50 });
+        var composeSpark2 = Economy.earnSpark(economyLedger, localPlayer.id, 'compose', { complexity: result.sparkReward / 50 });
         if (localPlayer) {
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+          showSparkPopup(composeSpark2);
         }
       }
 
@@ -49753,8 +49818,9 @@ html, body {
 
           // Award building XP
           if (Economy) {
-            Economy.earnSpark(economyLedger, localPlayer.id, 'build', { complexity: 0.3 });
+            var buildSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'build', { complexity: 0.3 });
             localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+            showSparkPopup(buildSpark);
           }
 
           if (Mentoring) {
@@ -50060,6 +50126,7 @@ html, body {
                   // Update player spark display
                   localPlayer.spark += result.rewards.spark;
                   HUD.updatePlayerInfo(localPlayer);
+                  showSparkPopup(result.rewards.spark);
                   // Track activity
                   addRecentActivity('Completed quest: ' + result.quest.title);
                   // Emit quest complete particles (rainbow burst - use sparkle and fountain for variety)
@@ -50504,9 +50571,10 @@ html, body {
         // Award bonus spark for achievements
         if (economyLedger && Economy) {
           var bonus = achievement.tier === 'gold' ? 50 : achievement.tier === 'silver' ? 25 : 10;
-          Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: bonus / 25 });
+          var achSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: bonus / 25 });
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           if (HUD) HUD.updatePlayerInfo(localPlayer);
+          showSparkPopup(achSpark);
         }
         if (Audio) Audio.playSound('warp');
       });
@@ -50595,9 +50663,10 @@ html, body {
           }
           // Award spark
           if (economyLedger && Economy && result.sparkAwarded) {
-            Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: secret.rarity });
+            var secretSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: secret.rarity });
             localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
             if (HUD) HUD.updatePlayerInfo(localPlayer);
+            showSparkPopup(secretSpark);
           }
           // Get and show lore if available
           if (secret.loreId && Exploration.getLoreEntry) {
@@ -50758,7 +50827,7 @@ html, body {
     var mood = Pets.getPetMood(pet);
     if (mood === 'sad' && pet.hunger > 70) {
       if (HUD) {
-        HUD.showNotification(pet.name + ' is hungry! Feed your companion.', 'warning');
+        HUD.showNotification(pet.name + ' is hungry! Feed your Pingym.', 'warning');
       }
     }
   }
@@ -50796,6 +50865,7 @@ html, body {
         if (economyLedger && Economy) {
           Economy.earnSpark(economyLedger, localPlayer.id, sparkAmount, 'fishing');
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+          showSparkPopup(sparkAmount);
         }
         if (HUD && HUD.showFishCaughtNotification) {
           HUD.showFishCaughtNotification(result.fish.name, sparkAmount);
