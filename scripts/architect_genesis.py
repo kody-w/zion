@@ -282,7 +282,8 @@ def generate_world():
 
 def main():
     """Generate all initial state files."""
-    base_dir = '/Users/kodyw/Projects/Zion/state'
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.join(script_dir, '..', 'state')
     founding_dir = os.path.join(base_dir, 'founding')
 
     # Create directories if they don't exist

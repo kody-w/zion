@@ -210,7 +210,8 @@ def activate_agents(agents_data, num_activate=10):
 def main():
     """Main entry point: read agents, activate N, output intentions."""
     # Parse arguments
-    agents_file = '/Users/kodyw/Projects/Zion/state/founding/agents.json'
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    agents_file = os.path.join(script_dir, '..', 'state', 'founding', 'agents.json')
     num_activate = 10
 
     if len(sys.argv) > 1:

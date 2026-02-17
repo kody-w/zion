@@ -8222,6 +8222,22 @@
   }
 
   // ========================================================================
+  // Structure & portal helpers
+  // ========================================================================
+
+  function addStructure(sceneCtx, type, position, options) {
+    if (!sceneCtx || !sceneCtx.scene) return null;
+    var opts = options || {};
+    var result = confirmPlacement(sceneCtx, position, opts.zone || 'nexus');
+    return result;
+  }
+
+  function createPortal(sceneCtx, fromZone, toZone, position) {
+    if (!sceneCtx || !sceneCtx.scene) return null;
+    return { from: fromZone, to: toZone, position: position };
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -8305,5 +8321,7 @@
   exports.initZoneBorderShimmer = initZoneBorderShimmer;
   exports.updateZoneBorderShimmer = updateZoneBorderShimmer;
   exports.weatherCallbacks = weatherCallbacks;
+  exports.addStructure = addStructure;
+  exports.createPortal = createPortal;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));

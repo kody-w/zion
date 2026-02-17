@@ -9,6 +9,7 @@ import json
 import os
 import shutil
 import sys
+import time
 from datetime import datetime, timezone
 
 PROTOCOL_VERSION = 1
@@ -152,13 +153,21 @@ def check_rate_limit(agent_name, state_dir):
         return True, None
 
     now = datetime.now(timezone.utc)
+    one_hour_ago = now.timestamp() - 3600
     count = 0
     for fname in os.listdir(processed_dir):
         if fname.startswith(agent_name + '_') and fname.endswith('.json'):
-            count += 1
+            # Parse timestamp from filename: agentname_YYYYMMDDHHMMSS_NN.json
+            fpath = os.path.join(processed_dir, fname)
+            try:
+                mtime = os.path.getmtime(fpath)
+                if mtime >= one_hour_ago:
+                    count += 1
+            except OSError:
+                pass
 
     if count >= max_per_hour:
-        return False, 'Rate limit exceeded: %d messages in processed queue (max %d/hour)' % (count, max_per_hour)
+        return False, 'Rate limit exceeded: %d messages in last hour (max %d/hour)' % (count, max_per_hour)
 
     return True, None
 

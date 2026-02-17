@@ -197,7 +197,8 @@ def sync_inbox_files(inbox_dir, state_dir):
 
 def main():
     """Main entry point: sync inbox files to canonical state."""
-    base_dir = '/Users/kodyw/Projects/Zion/state'
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.join(script_dir, '..', 'state')
     inbox_dir = os.path.join(base_dir, 'inbox')
     state_dir = base_dir
 
