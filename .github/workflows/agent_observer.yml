@@ -44,4 +44,5 @@ jobs:
           else:
             print('wandered and observed')
           ")"
+          git pull --rebase || true
           git push

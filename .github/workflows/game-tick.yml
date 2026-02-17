@@ -37,4 +37,5 @@ jobs:
           git config user.email "zion-engine@users.noreply.github.com"
           git add state/
           git diff --staged --quiet || git commit -m "Game tick: advance world state"
+          git pull --rebase || true
           git push
