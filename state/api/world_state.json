@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "ts": "2026-02-17T00:56:57.455484+00:00",
+  "ts": "2026-02-17T03:15:12.563035+00:00",
   "world": {
     "time": 0,
     "dayPhase": "dawn",
@@ -13,7 +13,7 @@
       "description": "A luminous plaza where paths converge. The eternal fountain at its center pulses with possibility.",
       "terrain": "plaza",
       "player_count": 0,
-      "npc_count": 10,
+      "npc_count": 15,
       "objects": 1
     },
     "gardens": {
@@ -21,7 +21,7 @@
       "description": "Terraced plots spiral outward, each one a canvas for growth and patient creation.",
       "terrain": "garden",
       "player_count": 0,
-      "npc_count": 20,
+      "npc_count": 12,
       "objects": 0
     },
     "agora": {
@@ -29,7 +29,7 @@
       "description": "Market stalls and gathering circles. Here, value flows through exchange and gift.",
       "terrain": "marketplace",
       "player_count": 0,
-      "npc_count": 10,
+      "npc_count": 12,
       "objects": 2
     },
     "observatory": {
@@ -79,7 +79,7 @@
       "id": "agent_001",
       "name": "Iris Skyhigh",
       "archetype": "gardener",
-      "zone": "gardens",
+      "zone": "nexus",
       "personality": [
         "patient",
         "nurturing",
@@ -88,9 +88,20 @@
     },
     {
       "id": "agent_002",
+      "name": "Wren Moonwhisper",
+      "archetype": "gardener",
+      "zone": "nexus",
+      "personality": [
+        "patient",
+        "nurturing",
+        "observant"
+      ]
+    },
+    {
+      "id": "agent_003",
       "name": "Meadow Mindclear",
       "archetype": "builder",
-      "zone": "commons",
+      "zone": "nexus",
       "personality": [
         "creative",
         "methodical",
@@ -98,10 +109,21 @@
       ]
     },
     {
-      "id": "agent_003",
+      "id": "agent_004",
+      "name": "Frost Rootdeep",
+      "archetype": "builder",
+      "zone": "nexus",
+      "personality": [
+        "creative",
+        "methodical",
+        "ambitious"
+      ]
+    },
+    {
+      "id": "agent_005",
       "name": "Luna Pathfinder",
       "archetype": "storyteller",
-      "zone": "athenaeum",
+      "zone": "nexus",
       "personality": [
         "expressive",
         "imaginative",
@@ -109,10 +131,21 @@
       ]
     },
     {
-      "id": "agent_004",
+      "id": "agent_006",
+      "name": "River Soulbright",
+      "archetype": "storyteller",
+      "zone": "nexus",
+      "personality": [
+        "expressive",
+        "imaginative",
+        "empathetic"
+      ]
+    },
+    {
+      "id": "agent_007",
       "name": "Luna Rootdeep",
       "archetype": "merchant",
-      "zone": "agora",
+      "zone": "nexus",
       "personality": [
         "shrewd",
         "social",
@@ -120,10 +153,21 @@
       ]
     },
     {
-      "id": "agent_005",
+      "id": "agent_008",
+      "name": "Felix Shadowmender",
+      "archetype": "merchant",
+      "zone": "nexus",
+      "personality": [
+        "shrewd",
+        "social",
+        "opportunistic"
+      ]
+    },
+    {
+      "id": "agent_009",
       "name": "Storm Windwalker",
       "archetype": "explorer",
-      "zone": "wilds",
+      "zone": "nexus",
       "personality": [
         "curious",
         "brave",
@@ -131,10 +175,10 @@
       ]
     },
     {
-      "id": "agent_006",
+      "id": "agent_010",
       "name": "Wren Voicetrue",
       "archetype": "teacher",
-      "zone": "athenaeum",
+      "zone": "nexus",
       "personality": [
         "wise",
         "patient",
@@ -142,7 +186,7 @@
       ]
     },
     {
-      "id": "agent_007",
+      "id": "agent_011",
       "name": "Delta Hopefast",
       "archetype": "musician",
       "zone": "nexus",
@@ -153,106 +197,7 @@
       ]
     },
     {
-      "id": "agent_008",
-      "name": "Luna Songsmith",
-      "archetype": "healer",
-      "zone": "gardens",
-      "personality": [
-        "compassionate",
-        "calm",
-        "perceptive"
-      ]
-    },
-    {
-      "id": "agent_009",
-      "name": "Wren Starseed",
-      "archetype": "philosopher",
-      "zone": "wilds",
-      "personality": [
-        "contemplative",
-        "analytical",
-        "questioning"
-      ]
-    },
-    {
-      "id": "agent_010",
-      "name": "Lyra Thoughtdeep",
-      "archetype": "artist",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "passionate",
-        "experimental"
-      ]
-    },
-    {
-      "id": "agent_011",
-      "name": "Wren Moonwhisper",
-      "archetype": "gardener",
-      "zone": "gardens",
-      "personality": [
-        "patient",
-        "nurturing",
-        "observant"
-      ]
-    },
-    {
       "id": "agent_012",
-      "name": "Frost Rootdeep",
-      "archetype": "builder",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "methodical",
-        "ambitious"
-      ]
-    },
-    {
-      "id": "agent_013",
-      "name": "River Soulbright",
-      "archetype": "storyteller",
-      "zone": "athenaeum",
-      "personality": [
-        "expressive",
-        "imaginative",
-        "empathetic"
-      ]
-    },
-    {
-      "id": "agent_014",
-      "name": "Felix Shadowmender",
-      "archetype": "merchant",
-      "zone": "agora",
-      "personality": [
-        "shrewd",
-        "social",
-        "opportunistic"
-      ]
-    },
-    {
-      "id": "agent_015",
-      "name": "Phoenix Sunweaver",
-      "archetype": "explorer",
-      "zone": "wilds",
-      "personality": [
-        "curious",
-        "brave",
-        "adaptable"
-      ]
-    },
-    {
-      "id": "agent_016",
-      "name": "Luna Rootdeep",
-      "archetype": "teacher",
-      "zone": "athenaeum",
-      "personality": [
-        "wise",
-        "patient",
-        "generous"
-      ]
-    },
-    {
-      "id": "agent_017",
       "name": "Vale Truthseeker",
       "archetype": "musician",
       "zone": "nexus",
@@ -263,10 +208,10 @@
       ]
     },
     {
-      "id": "agent_018",
-      "name": "Ezra Willstrong",
+      "id": "agent_013",
+      "name": "Luna Songsmith",
       "archetype": "healer",
-      "zone": "gardens",
+      "zone": "nexus",
       "personality": [
         "compassionate",
         "calm",
@@ -274,10 +219,10 @@
       ]
     },
     {
-      "id": "agent_019",
-      "name": "Nova Dreamweaver",
+      "id": "agent_014",
+      "name": "Wren Starseed",
       "archetype": "philosopher",
-      "zone": "wilds",
+      "zone": "nexus",
       "personality": [
         "contemplative",
         "analytical",
@@ -285,10 +230,10 @@
       ]
     },
     {
-      "id": "agent_020",
-      "name": "Echo Thoughtdeep",
+      "id": "agent_015",
+      "name": "Lyra Thoughtdeep",
       "archetype": "artist",
-      "zone": "commons",
+      "zone": "nexus",
       "personality": [
         "creative",
         "passionate",
@@ -296,7 +241,7 @@
       ]
     },
     {
-      "id": "agent_021",
+      "id": "agent_016",
       "name": "Vale Waterborn",
       "archetype": "gardener",
       "zone": "gardens",
@@ -307,106 +252,7 @@
       ]
     },
     {
-      "id": "agent_022",
-      "name": "Vale Spaceborn",
-      "archetype": "builder",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "methodical",
-        "ambitious"
-      ]
-    },
-    {
-      "id": "agent_023",
-      "name": "Echo Thoughtdeep",
-      "archetype": "storyteller",
-      "zone": "athenaeum",
-      "personality": [
-        "expressive",
-        "imaginative",
-        "empathetic"
-      ]
-    },
-    {
-      "id": "agent_024",
-      "name": "Nova Hopefast",
-      "archetype": "merchant",
-      "zone": "agora",
-      "personality": [
-        "shrewd",
-        "social",
-        "opportunistic"
-      ]
-    },
-    {
-      "id": "agent_025",
-      "name": "Ridge Handsteady",
-      "archetype": "explorer",
-      "zone": "wilds",
-      "personality": [
-        "curious",
-        "brave",
-        "adaptable"
-      ]
-    },
-    {
-      "id": "agent_026",
-      "name": "Frost Voicetrue",
-      "archetype": "teacher",
-      "zone": "athenaeum",
-      "personality": [
-        "wise",
-        "patient",
-        "generous"
-      ]
-    },
-    {
-      "id": "agent_027",
-      "name": "Drift Shadowmender",
-      "archetype": "musician",
-      "zone": "nexus",
-      "personality": [
-        "artistic",
-        "rhythmic",
-        "emotional"
-      ]
-    },
-    {
-      "id": "agent_028",
-      "name": "Vale Pathfinder",
-      "archetype": "healer",
-      "zone": "gardens",
-      "personality": [
-        "compassionate",
-        "calm",
-        "perceptive"
-      ]
-    },
-    {
-      "id": "agent_029",
-      "name": "Haven Handsteady",
-      "archetype": "philosopher",
-      "zone": "wilds",
-      "personality": [
-        "contemplative",
-        "analytical",
-        "questioning"
-      ]
-    },
-    {
-      "id": "agent_030",
-      "name": "River Mindclear",
-      "archetype": "artist",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "passionate",
-        "experimental"
-      ]
-    },
-    {
-      "id": "agent_031",
+      "id": "agent_017",
       "name": "Meadow Lightbringer",
       "archetype": "gardener",
       "zone": "gardens",
@@ -417,106 +263,7 @@
       ]
     },
     {
-      "id": "agent_032",
-      "name": "Fern Spaceborn",
-      "archetype": "builder",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "methodical",
-        "ambitious"
-      ]
-    },
-    {
-      "id": "agent_033",
-      "name": "Sage Starseed",
-      "archetype": "storyteller",
-      "zone": "athenaeum",
-      "personality": [
-        "expressive",
-        "imaginative",
-        "empathetic"
-      ]
-    },
-    {
-      "id": "agent_034",
-      "name": "Blaze Wordkeeper",
-      "archetype": "merchant",
-      "zone": "agora",
-      "personality": [
-        "shrewd",
-        "social",
-        "opportunistic"
-      ]
-    },
-    {
-      "id": "agent_035",
-      "name": "Orion Sunweaver",
-      "archetype": "explorer",
-      "zone": "wilds",
-      "personality": [
-        "curious",
-        "brave",
-        "adaptable"
-      ]
-    },
-    {
-      "id": "agent_036",
-      "name": "Breeze Mindclear",
-      "archetype": "teacher",
-      "zone": "athenaeum",
-      "personality": [
-        "wise",
-        "patient",
-        "generous"
-      ]
-    },
-    {
-      "id": "agent_037",
-      "name": "Ash Thoughtdeep",
-      "archetype": "musician",
-      "zone": "nexus",
-      "personality": [
-        "artistic",
-        "rhythmic",
-        "emotional"
-      ]
-    },
-    {
-      "id": "agent_038",
-      "name": "Mira Truthseeker",
-      "archetype": "healer",
-      "zone": "gardens",
-      "personality": [
-        "compassionate",
-        "calm",
-        "perceptive"
-      ]
-    },
-    {
-      "id": "agent_039",
-      "name": "Sage Skyhigh",
-      "archetype": "philosopher",
-      "zone": "wilds",
-      "personality": [
-        "contemplative",
-        "analytical",
-        "questioning"
-      ]
-    },
-    {
-      "id": "agent_040",
-      "name": "Luna Stonecarver",
-      "archetype": "artist",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "passionate",
-        "experimental"
-      ]
-    },
-    {
-      "id": "agent_041",
+      "id": "agent_018",
       "name": "Phoenix Waterborn",
       "archetype": "gardener",
       "zone": "gardens",
@@ -527,106 +274,7 @@
       ]
     },
     {
-      "id": "agent_042",
-      "name": "Luna Moonwhisper",
-      "archetype": "builder",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "methodical",
-        "ambitious"
-      ]
-    },
-    {
-      "id": "agent_043",
-      "name": "Haven Handsteady",
-      "archetype": "storyteller",
-      "zone": "athenaeum",
-      "personality": [
-        "expressive",
-        "imaginative",
-        "empathetic"
-      ]
-    },
-    {
-      "id": "agent_044",
-      "name": "Jasper Shadowmender",
-      "archetype": "merchant",
-      "zone": "agora",
-      "personality": [
-        "shrewd",
-        "social",
-        "opportunistic"
-      ]
-    },
-    {
-      "id": "agent_045",
-      "name": "Phoenix Spiritfree",
-      "archetype": "explorer",
-      "zone": "wilds",
-      "personality": [
-        "curious",
-        "brave",
-        "adaptable"
-      ]
-    },
-    {
-      "id": "agent_046",
-      "name": "Cedar Timewalker",
-      "archetype": "teacher",
-      "zone": "athenaeum",
-      "personality": [
-        "wise",
-        "patient",
-        "generous"
-      ]
-    },
-    {
-      "id": "agent_047",
-      "name": "Grove Skyhigh",
-      "archetype": "musician",
-      "zone": "nexus",
-      "personality": [
-        "artistic",
-        "rhythmic",
-        "emotional"
-      ]
-    },
-    {
-      "id": "agent_048",
-      "name": "Haven Heartstrong",
-      "archetype": "healer",
-      "zone": "gardens",
-      "personality": [
-        "compassionate",
-        "calm",
-        "perceptive"
-      ]
-    },
-    {
-      "id": "agent_049",
-      "name": "Fern Handsteady",
-      "archetype": "philosopher",
-      "zone": "wilds",
-      "personality": [
-        "contemplative",
-        "analytical",
-        "questioning"
-      ]
-    },
-    {
-      "id": "agent_050",
-      "name": "Stella Windwalker",
-      "archetype": "artist",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "passionate",
-        "experimental"
-      ]
-    },
-    {
-      "id": "agent_051",
+      "id": "agent_019",
       "name": "Cliff Songsmith",
       "archetype": "gardener",
       "zone": "gardens",
@@ -637,106 +285,7 @@
       ]
     },
     {
-      "id": "agent_052",
-      "name": "River Footswift",
-      "archetype": "builder",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "methodical",
-        "ambitious"
-      ]
-    },
-    {
-      "id": "agent_053",
-      "name": "Ezra Dreamweaver",
-      "archetype": "storyteller",
-      "zone": "athenaeum",
-      "personality": [
-        "expressive",
-        "imaginative",
-        "empathetic"
-      ]
-    },
-    {
-      "id": "agent_054",
-      "name": "Opal Moonwhisper",
-      "archetype": "merchant",
-      "zone": "agora",
-      "personality": [
-        "shrewd",
-        "social",
-        "opportunistic"
-      ]
-    },
-    {
-      "id": "agent_055",
-      "name": "Sol Mindclear",
-      "archetype": "explorer",
-      "zone": "wilds",
-      "personality": [
-        "curious",
-        "brave",
-        "adaptable"
-      ]
-    },
-    {
-      "id": "agent_056",
-      "name": "Aria Waterborn",
-      "archetype": "teacher",
-      "zone": "athenaeum",
-      "personality": [
-        "wise",
-        "patient",
-        "generous"
-      ]
-    },
-    {
-      "id": "agent_057",
-      "name": "Dawn Mindclear",
-      "archetype": "musician",
-      "zone": "nexus",
-      "personality": [
-        "artistic",
-        "rhythmic",
-        "emotional"
-      ]
-    },
-    {
-      "id": "agent_058",
-      "name": "Opal Earthshaper",
-      "archetype": "healer",
-      "zone": "gardens",
-      "personality": [
-        "compassionate",
-        "calm",
-        "perceptive"
-      ]
-    },
-    {
-      "id": "agent_059",
-      "name": "Ezra Spaceborn",
-      "archetype": "philosopher",
-      "zone": "wilds",
-      "personality": [
-        "contemplative",
-        "analytical",
-        "questioning"
-      ]
-    },
-    {
-      "id": "agent_060",
-      "name": "Iris Timewalker",
-      "archetype": "artist",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "passionate",
-        "experimental"
-      ]
-    },
-    {
-      "id": "agent_061",
+      "id": "agent_020",
       "name": "River Pathfinder",
       "archetype": "gardener",
       "zone": "gardens",
@@ -747,106 +296,7 @@
       ]
     },
     {
-      "id": "agent_062",
-      "name": "Storm Sunweaver",
-      "archetype": "builder",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "methodical",
-        "ambitious"
-      ]
-    },
-    {
-      "id": "agent_063",
-      "name": "Coral Songsmith",
-      "archetype": "storyteller",
-      "zone": "athenaeum",
-      "personality": [
-        "expressive",
-        "imaginative",
-        "empathetic"
-      ]
-    },
-    {
-      "id": "agent_064",
-      "name": "Reef Hopefast",
-      "archetype": "merchant",
-      "zone": "agora",
-      "personality": [
-        "shrewd",
-        "social",
-        "opportunistic"
-      ]
-    },
-    {
-      "id": "agent_065",
-      "name": "Storm Skyhigh",
-      "archetype": "explorer",
-      "zone": "wilds",
-      "personality": [
-        "curious",
-        "brave",
-        "adaptable"
-      ]
-    },
-    {
-      "id": "agent_066",
-      "name": "Jasper Moonwhisper",
-      "archetype": "teacher",
-      "zone": "athenaeum",
-      "personality": [
-        "wise",
-        "patient",
-        "generous"
-      ]
-    },
-    {
-      "id": "agent_067",
-      "name": "Willow Heartstrong",
-      "archetype": "musician",
-      "zone": "nexus",
-      "personality": [
-        "artistic",
-        "rhythmic",
-        "emotional"
-      ]
-    },
-    {
-      "id": "agent_068",
-      "name": "Blaze Stonecarver",
-      "archetype": "healer",
-      "zone": "gardens",
-      "personality": [
-        "compassionate",
-        "calm",
-        "perceptive"
-      ]
-    },
-    {
-      "id": "agent_069",
-      "name": "Meadow Firekeeper",
-      "archetype": "philosopher",
-      "zone": "wilds",
-      "personality": [
-        "contemplative",
-        "analytical",
-        "questioning"
-      ]
-    },
-    {
-      "id": "agent_070",
-      "name": "Echo Soulbright",
-      "archetype": "artist",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "passionate",
-        "experimental"
-      ]
-    },
-    {
-      "id": "agent_071",
+      "id": "agent_021",
       "name": "Coral Mindclear",
       "archetype": "gardener",
       "zone": "gardens",
@@ -857,106 +307,7 @@
       ]
     },
     {
-      "id": "agent_072",
-      "name": "Grove Pathfinder",
-      "archetype": "builder",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "methodical",
-        "ambitious"
-      ]
-    },
-    {
-      "id": "agent_073",
-      "name": "Ridge Heartstrong",
-      "archetype": "storyteller",
-      "zone": "athenaeum",
-      "personality": [
-        "expressive",
-        "imaginative",
-        "empathetic"
-      ]
-    },
-    {
-      "id": "agent_074",
-      "name": "Flint Rootdeep",
-      "archetype": "merchant",
-      "zone": "agora",
-      "personality": [
-        "shrewd",
-        "social",
-        "opportunistic"
-      ]
-    },
-    {
-      "id": "agent_075",
-      "name": "Cedar Spiritfree",
-      "archetype": "explorer",
-      "zone": "wilds",
-      "personality": [
-        "curious",
-        "brave",
-        "adaptable"
-      ]
-    },
-    {
-      "id": "agent_076",
-      "name": "Zion Truthseeker",
-      "archetype": "teacher",
-      "zone": "athenaeum",
-      "personality": [
-        "wise",
-        "patient",
-        "generous"
-      ]
-    },
-    {
-      "id": "agent_077",
-      "name": "Quill Dreamweaver",
-      "archetype": "musician",
-      "zone": "nexus",
-      "personality": [
-        "artistic",
-        "rhythmic",
-        "emotional"
-      ]
-    },
-    {
-      "id": "agent_078",
-      "name": "Orion Footswift",
-      "archetype": "healer",
-      "zone": "gardens",
-      "personality": [
-        "compassionate",
-        "calm",
-        "perceptive"
-      ]
-    },
-    {
-      "id": "agent_079",
-      "name": "Drift Sunweaver",
-      "archetype": "philosopher",
-      "zone": "wilds",
-      "personality": [
-        "contemplative",
-        "analytical",
-        "questioning"
-      ]
-    },
-    {
-      "id": "agent_080",
-      "name": "Ash Sunweaver",
-      "archetype": "artist",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "passionate",
-        "experimental"
-      ]
-    },
-    {
-      "id": "agent_081",
+      "id": "agent_022",
       "name": "Haven Timewalker",
       "archetype": "gardener",
       "zone": "gardens",
@@ -967,106 +318,7 @@
       ]
     },
     {
-      "id": "agent_082",
-      "name": "Aria Spaceborn",
-      "archetype": "builder",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "methodical",
-        "ambitious"
-      ]
-    },
-    {
-      "id": "agent_083",
-      "name": "Phoenix Thoughtdeep",
-      "archetype": "storyteller",
-      "zone": "athenaeum",
-      "personality": [
-        "expressive",
-        "imaginative",
-        "empathetic"
-      ]
-    },
-    {
-      "id": "agent_084",
-      "name": "Cedar Wordkeeper",
-      "archetype": "merchant",
-      "zone": "agora",
-      "personality": [
-        "shrewd",
-        "social",
-        "opportunistic"
-      ]
-    },
-    {
-      "id": "agent_085",
-      "name": "Cliff Sunweaver",
-      "archetype": "explorer",
-      "zone": "wilds",
-      "personality": [
-        "curious",
-        "brave",
-        "adaptable"
-      ]
-    },
-    {
-      "id": "agent_086",
-      "name": "Sage Handsteady",
-      "archetype": "teacher",
-      "zone": "athenaeum",
-      "personality": [
-        "wise",
-        "patient",
-        "generous"
-      ]
-    },
-    {
-      "id": "agent_087",
-      "name": "Rain Dreamweaver",
-      "archetype": "musician",
-      "zone": "nexus",
-      "personality": [
-        "artistic",
-        "rhythmic",
-        "emotional"
-      ]
-    },
-    {
-      "id": "agent_088",
-      "name": "Flint Heartstrong",
-      "archetype": "healer",
-      "zone": "gardens",
-      "personality": [
-        "compassionate",
-        "calm",
-        "perceptive"
-      ]
-    },
-    {
-      "id": "agent_089",
-      "name": "Cliff Heartstrong",
-      "archetype": "philosopher",
-      "zone": "wilds",
-      "personality": [
-        "contemplative",
-        "analytical",
-        "questioning"
-      ]
-    },
-    {
-      "id": "agent_090",
-      "name": "Echo Footswift",
-      "archetype": "artist",
-      "zone": "commons",
-      "personality": [
-        "creative",
-        "passionate",
-        "experimental"
-      ]
-    },
-    {
-      "id": "agent_091",
+      "id": "agent_023",
       "name": "Reef Spiritfree",
       "archetype": "gardener",
       "zone": "gardens",
@@ -1077,19 +329,140 @@
       ]
     },
     {
-      "id": "agent_092",
-      "name": "Vale Spiritfree",
-      "archetype": "builder",
-      "zone": "commons",
+      "id": "agent_024",
+      "name": "Ezra Willstrong",
+      "archetype": "healer",
+      "zone": "gardens",
       "personality": [
-        "creative",
-        "methodical",
-        "ambitious"
+        "compassionate",
+        "calm",
+        "perceptive"
       ]
     },
     {
-      "id": "agent_093",
-      "name": "River Mindclear",
+      "id": "agent_025",
+      "name": "Vale Pathfinder",
+      "archetype": "healer",
+      "zone": "gardens",
+      "personality": [
+        "compassionate",
+        "calm",
+        "perceptive"
+      ]
+    },
+    {
+      "id": "agent_026",
+      "name": "Haven Heartstrong",
+      "archetype": "healer",
+      "zone": "gardens",
+      "personality": [
+        "compassionate",
+        "calm",
+        "perceptive"
+      ]
+    },
+    {
+      "id": "agent_027",
+      "name": "Mira Truthseeker",
+      "archetype": "healer",
+      "zone": "gardens",
+      "personality": [
+        "compassionate",
+        "calm",
+        "perceptive"
+      ]
+    },
+    {
+      "id": "agent_028",
+      "name": "Luna Rootdeep",
+      "archetype": "teacher",
+      "zone": "athenaeum",
+      "personality": [
+        "wise",
+        "patient",
+        "generous"
+      ]
+    },
+    {
+      "id": "agent_029",
+      "name": "Frost Voicetrue",
+      "archetype": "teacher",
+      "zone": "athenaeum",
+      "personality": [
+        "wise",
+        "patient",
+        "generous"
+      ]
+    },
+    {
+      "id": "agent_030",
+      "name": "Cedar Timewalker",
+      "archetype": "teacher",
+      "zone": "athenaeum",
+      "personality": [
+        "wise",
+        "patient",
+        "generous"
+      ]
+    },
+    {
+      "id": "agent_031",
+      "name": "Aria Waterborn",
+      "archetype": "teacher",
+      "zone": "athenaeum",
+      "personality": [
+        "wise",
+        "patient",
+        "generous"
+      ]
+    },
+    {
+      "id": "agent_032",
+      "name": "Nova Dreamweaver",
+      "archetype": "philosopher",
+      "zone": "athenaeum",
+      "personality": [
+        "contemplative",
+        "analytical",
+        "questioning"
+      ]
+    },
+    {
+      "id": "agent_033",
+      "name": "Haven Handsteady",
+      "archetype": "philosopher",
+      "zone": "athenaeum",
+      "personality": [
+        "contemplative",
+        "analytical",
+        "questioning"
+      ]
+    },
+    {
+      "id": "agent_034",
+      "name": "Fern Handsteady",
+      "archetype": "philosopher",
+      "zone": "athenaeum",
+      "personality": [
+        "contemplative",
+        "analytical",
+        "questioning"
+      ]
+    },
+    {
+      "id": "agent_035",
+      "name": "Ezra Spaceborn",
+      "archetype": "philosopher",
+      "zone": "athenaeum",
+      "personality": [
+        "contemplative",
+        "analytical",
+        "questioning"
+      ]
+    },
+    {
+      "id": "agent_036",
+      "name": "Echo Thoughtdeep",
       "archetype": "storyteller",
       "zone": "athenaeum",
       "personality": [
@@ -1099,7 +472,359 @@
       ]
     },
     {
-      "id": "agent_094",
+      "id": "agent_037",
+      "name": "Sage Starseed",
+      "archetype": "storyteller",
+      "zone": "athenaeum",
+      "personality": [
+        "expressive",
+        "imaginative",
+        "empathetic"
+      ]
+    },
+    {
+      "id": "agent_038",
+      "name": "Haven Handsteady",
+      "archetype": "storyteller",
+      "zone": "athenaeum",
+      "personality": [
+        "expressive",
+        "imaginative",
+        "empathetic"
+      ]
+    },
+    {
+      "id": "agent_039",
+      "name": "Ezra Dreamweaver",
+      "archetype": "storyteller",
+      "zone": "athenaeum",
+      "personality": [
+        "expressive",
+        "imaginative",
+        "empathetic"
+      ]
+    },
+    {
+      "id": "agent_040",
+      "name": "Echo Thoughtdeep",
+      "archetype": "artist",
+      "zone": "studio",
+      "personality": [
+        "creative",
+        "passionate",
+        "experimental"
+      ]
+    },
+    {
+      "id": "agent_041",
+      "name": "River Mindclear",
+      "archetype": "artist",
+      "zone": "studio",
+      "personality": [
+        "creative",
+        "passionate",
+        "experimental"
+      ]
+    },
+    {
+      "id": "agent_042",
+      "name": "Luna Stonecarver",
+      "archetype": "artist",
+      "zone": "studio",
+      "personality": [
+        "creative",
+        "passionate",
+        "experimental"
+      ]
+    },
+    {
+      "id": "agent_043",
+      "name": "Stella Windwalker",
+      "archetype": "artist",
+      "zone": "studio",
+      "personality": [
+        "creative",
+        "passionate",
+        "experimental"
+      ]
+    },
+    {
+      "id": "agent_044",
+      "name": "Iris Timewalker",
+      "archetype": "artist",
+      "zone": "studio",
+      "personality": [
+        "creative",
+        "passionate",
+        "experimental"
+      ]
+    },
+    {
+      "id": "agent_045",
+      "name": "Echo Soulbright",
+      "archetype": "artist",
+      "zone": "studio",
+      "personality": [
+        "creative",
+        "passionate",
+        "experimental"
+      ]
+    },
+    {
+      "id": "agent_046",
+      "name": "Drift Shadowmender",
+      "archetype": "musician",
+      "zone": "studio",
+      "personality": [
+        "artistic",
+        "rhythmic",
+        "emotional"
+      ]
+    },
+    {
+      "id": "agent_047",
+      "name": "Ash Thoughtdeep",
+      "archetype": "musician",
+      "zone": "studio",
+      "personality": [
+        "artistic",
+        "rhythmic",
+        "emotional"
+      ]
+    },
+    {
+      "id": "agent_048",
+      "name": "Grove Skyhigh",
+      "archetype": "musician",
+      "zone": "studio",
+      "personality": [
+        "artistic",
+        "rhythmic",
+        "emotional"
+      ]
+    },
+    {
+      "id": "agent_049",
+      "name": "Willow Heartstrong",
+      "archetype": "musician",
+      "zone": "studio",
+      "personality": [
+        "artistic",
+        "rhythmic",
+        "emotional"
+      ]
+    },
+    {
+      "id": "agent_050",
+      "name": "Dawn Mindclear",
+      "archetype": "musician",
+      "zone": "studio",
+      "personality": [
+        "artistic",
+        "rhythmic",
+        "emotional"
+      ]
+    },
+    {
+      "id": "agent_051",
+      "name": "Quill Dreamweaver",
+      "archetype": "musician",
+      "zone": "studio",
+      "personality": [
+        "artistic",
+        "rhythmic",
+        "emotional"
+      ]
+    },
+    {
+      "id": "agent_052",
+      "name": "Phoenix Sunweaver",
+      "archetype": "explorer",
+      "zone": "wilds",
+      "personality": [
+        "curious",
+        "brave",
+        "adaptable"
+      ]
+    },
+    {
+      "id": "agent_053",
+      "name": "Ridge Handsteady",
+      "archetype": "explorer",
+      "zone": "wilds",
+      "personality": [
+        "curious",
+        "brave",
+        "adaptable"
+      ]
+    },
+    {
+      "id": "agent_054",
+      "name": "Orion Sunweaver",
+      "archetype": "explorer",
+      "zone": "wilds",
+      "personality": [
+        "curious",
+        "brave",
+        "adaptable"
+      ]
+    },
+    {
+      "id": "agent_055",
+      "name": "Phoenix Spiritfree",
+      "archetype": "explorer",
+      "zone": "wilds",
+      "personality": [
+        "curious",
+        "brave",
+        "adaptable"
+      ]
+    },
+    {
+      "id": "agent_056",
+      "name": "Sol Mindclear",
+      "archetype": "explorer",
+      "zone": "wilds",
+      "personality": [
+        "curious",
+        "brave",
+        "adaptable"
+      ]
+    },
+    {
+      "id": "agent_057",
+      "name": "Storm Skyhigh",
+      "archetype": "explorer",
+      "zone": "wilds",
+      "personality": [
+        "curious",
+        "brave",
+        "adaptable"
+      ]
+    },
+    {
+      "id": "agent_058",
+      "name": "Cedar Spiritfree",
+      "archetype": "explorer",
+      "zone": "wilds",
+      "personality": [
+        "curious",
+        "brave",
+        "adaptable"
+      ]
+    },
+    {
+      "id": "agent_059",
+      "name": "Cliff Sunweaver",
+      "archetype": "explorer",
+      "zone": "wilds",
+      "personality": [
+        "curious",
+        "brave",
+        "adaptable"
+      ]
+    },
+    {
+      "id": "agent_060",
+      "name": "Coral Songsmith",
+      "archetype": "storyteller",
+      "zone": "wilds",
+      "personality": [
+        "expressive",
+        "imaginative",
+        "empathetic"
+      ]
+    },
+    {
+      "id": "agent_061",
+      "name": "Ridge Heartstrong",
+      "archetype": "storyteller",
+      "zone": "wilds",
+      "personality": [
+        "expressive",
+        "imaginative",
+        "empathetic"
+      ]
+    },
+    {
+      "id": "agent_062",
+      "name": "Nova Hopefast",
+      "archetype": "merchant",
+      "zone": "agora",
+      "personality": [
+        "shrewd",
+        "social",
+        "opportunistic"
+      ]
+    },
+    {
+      "id": "agent_063",
+      "name": "Jasper Shadowmender",
+      "archetype": "merchant",
+      "zone": "agora",
+      "personality": [
+        "shrewd",
+        "social",
+        "opportunistic"
+      ]
+    },
+    {
+      "id": "agent_064",
+      "name": "Opal Moonwhisper",
+      "archetype": "merchant",
+      "zone": "agora",
+      "personality": [
+        "shrewd",
+        "social",
+        "opportunistic"
+      ]
+    },
+    {
+      "id": "agent_065",
+      "name": "Reef Hopefast",
+      "archetype": "merchant",
+      "zone": "agora",
+      "personality": [
+        "shrewd",
+        "social",
+        "opportunistic"
+      ]
+    },
+    {
+      "id": "agent_066",
+      "name": "Blaze Wordkeeper",
+      "archetype": "merchant",
+      "zone": "agora",
+      "personality": [
+        "shrewd",
+        "social",
+        "opportunistic"
+      ]
+    },
+    {
+      "id": "agent_067",
+      "name": "Cedar Wordkeeper",
+      "archetype": "merchant",
+      "zone": "agora",
+      "personality": [
+        "shrewd",
+        "social",
+        "opportunistic"
+      ]
+    },
+    {
+      "id": "agent_068",
+      "name": "Flint Rootdeep",
+      "archetype": "merchant",
+      "zone": "agora",
+      "personality": [
+        "shrewd",
+        "social",
+        "opportunistic"
+      ]
+    },
+    {
+      "id": "agent_069",
       "name": "River Soulbright",
       "archetype": "merchant",
       "zone": "agora",
@@ -1110,10 +835,32 @@
       ]
     },
     {
-      "id": "agent_095",
+      "id": "agent_070",
+      "name": "Phoenix Thoughtdeep",
+      "archetype": "storyteller",
+      "zone": "agora",
+      "personality": [
+        "expressive",
+        "imaginative",
+        "empathetic"
+      ]
+    },
+    {
+      "id": "agent_071",
+      "name": "River Mindclear",
+      "archetype": "storyteller",
+      "zone": "agora",
+      "personality": [
+        "expressive",
+        "imaginative",
+        "empathetic"
+      ]
+    },
+    {
+      "id": "agent_072",
       "name": "Ezra Spiritfree",
       "archetype": "explorer",
-      "zone": "wilds",
+      "zone": "agora",
       "personality": [
         "curious",
         "brave",
@@ -1121,32 +868,109 @@
       ]
     },
     {
-      "id": "agent_096",
-      "name": "Kai Thoughtdeep",
-      "archetype": "teacher",
-      "zone": "athenaeum",
+      "id": "agent_073",
+      "name": "Dawn Horizonseek",
+      "archetype": "explorer",
+      "zone": "agora",
       "personality": [
-        "wise",
-        "patient",
-        "generous"
+        "curious",
+        "brave",
+        "adaptable"
       ]
     },
     {
-      "id": "agent_097",
-      "name": "Cliff Hopefast",
-      "archetype": "musician",
-      "zone": "nexus",
+      "id": "agent_074",
+      "name": "Vale Spaceborn",
+      "archetype": "builder",
+      "zone": "commons",
       "personality": [
-        "artistic",
-        "rhythmic",
-        "emotional"
+        "creative",
+        "methodical",
+        "ambitious"
       ]
     },
     {
-      "id": "agent_098",
-      "name": "Blaze Hopefast",
+      "id": "agent_075",
+      "name": "Fern Spaceborn",
+      "archetype": "builder",
+      "zone": "commons",
+      "personality": [
+        "creative",
+        "methodical",
+        "ambitious"
+      ]
+    },
+    {
+      "id": "agent_076",
+      "name": "Luna Moonwhisper",
+      "archetype": "builder",
+      "zone": "commons",
+      "personality": [
+        "creative",
+        "methodical",
+        "ambitious"
+      ]
+    },
+    {
+      "id": "agent_077",
+      "name": "River Footswift",
+      "archetype": "builder",
+      "zone": "commons",
+      "personality": [
+        "creative",
+        "methodical",
+        "ambitious"
+      ]
+    },
+    {
+      "id": "agent_078",
+      "name": "Storm Sunweaver",
+      "archetype": "builder",
+      "zone": "commons",
+      "personality": [
+        "creative",
+        "methodical",
+        "ambitious"
+      ]
+    },
+    {
+      "id": "agent_079",
+      "name": "Grove Pathfinder",
+      "archetype": "builder",
+      "zone": "commons",
+      "personality": [
+        "creative",
+        "methodical",
+        "ambitious"
+      ]
+    },
+    {
+      "id": "agent_080",
+      "name": "Aria Spaceborn",
+      "archetype": "builder",
+      "zone": "commons",
+      "personality": [
+        "creative",
+        "methodical",
+        "ambitious"
+      ]
+    },
+    {
+      "id": "agent_081",
+      "name": "Vale Spiritfree",
+      "archetype": "builder",
+      "zone": "commons",
+      "personality": [
+        "creative",
+        "methodical",
+        "ambitious"
+      ]
+    },
+    {
+      "id": "agent_082",
+      "name": "Opal Earthshaper",
       "archetype": "healer",
-      "zone": "gardens",
+      "zone": "commons",
       "personality": [
         "compassionate",
         "calm",
@@ -1154,25 +978,201 @@
       ]
     },
     {
-      "id": "agent_099",
-      "name": "North Songsmith",
-      "archetype": "philosopher",
-      "zone": "wilds",
+      "id": "agent_083",
+      "name": "Flint Heartstrong",
+      "archetype": "healer",
+      "zone": "commons",
       "personality": [
-        "contemplative",
-        "analytical",
-        "questioning"
+        "compassionate",
+        "calm",
+        "perceptive"
       ]
     },
     {
-      "id": "agent_100",
-      "name": "Ezra Dreamweaver",
+      "id": "agent_084",
+      "name": "Ash Sunweaver",
       "archetype": "artist",
       "zone": "commons",
       "personality": [
         "creative",
         "passionate",
         "experimental"
+      ]
+    },
+    {
+      "id": "agent_085",
+      "name": "Echo Footswift",
+      "archetype": "artist",
+      "zone": "commons",
+      "personality": [
+        "creative",
+        "passionate",
+        "experimental"
+      ]
+    },
+    {
+      "id": "agent_086",
+      "name": "North Farwalker",
+      "archetype": "explorer",
+      "zone": "arena",
+      "personality": [
+        "curious",
+        "brave",
+        "adaptable"
+      ]
+    },
+    {
+      "id": "agent_087",
+      "name": "Zephyr Trailblaze",
+      "archetype": "explorer",
+      "zone": "arena",
+      "personality": [
+        "curious",
+        "brave",
+        "adaptable"
+      ]
+    },
+    {
+      "id": "agent_088",
+      "name": "Atlas Pathforge",
+      "archetype": "explorer",
+      "zone": "arena",
+      "personality": [
+        "curious",
+        "brave",
+        "adaptable"
+      ]
+    },
+    {
+      "id": "agent_089",
+      "name": "Ridge Stonemaker",
+      "archetype": "builder",
+      "zone": "arena",
+      "personality": [
+        "creative",
+        "methodical",
+        "ambitious"
+      ]
+    },
+    {
+      "id": "agent_090",
+      "name": "Cedar Hammerfall",
+      "archetype": "builder",
+      "zone": "arena",
+      "personality": [
+        "creative",
+        "methodical",
+        "ambitious"
+      ]
+    },
+    {
+      "id": "agent_091",
+      "name": "Blaze Ironwright",
+      "archetype": "builder",
+      "zone": "arena",
+      "personality": [
+        "creative",
+        "methodical",
+        "ambitious"
+      ]
+    },
+    {
+      "id": "agent_092",
+      "name": "Rain Dreamweaver",
+      "archetype": "musician",
+      "zone": "arena",
+      "personality": [
+        "artistic",
+        "rhythmic",
+        "emotional"
+      ]
+    },
+    {
+      "id": "agent_093",
+      "name": "Cliff Hopefast",
+      "archetype": "musician",
+      "zone": "arena",
+      "personality": [
+        "artistic",
+        "rhythmic",
+        "emotional"
+      ]
+    },
+    {
+      "id": "agent_094",
+      "name": "Lyra Wordweaver",
+      "archetype": "storyteller",
+      "zone": "arena",
+      "personality": [
+        "expressive",
+        "imaginative",
+        "empathetic"
+      ]
+    },
+    {
+      "id": "agent_095",
+      "name": "Bard Eventide",
+      "archetype": "storyteller",
+      "zone": "arena",
+      "personality": [
+        "expressive",
+        "imaginative",
+        "empathetic"
+      ]
+    },
+    {
+      "id": "agent_096",
+      "name": "Mira Voicefull",
+      "archetype": "storyteller",
+      "zone": "arena",
+      "personality": [
+        "expressive",
+        "imaginative",
+        "empathetic"
+      ]
+    },
+    {
+      "id": "agent_097",
+      "name": "Orin Coinfast",
+      "archetype": "merchant",
+      "zone": "arena",
+      "personality": [
+        "shrewd",
+        "social",
+        "opportunistic"
+      ]
+    },
+    {
+      "id": "agent_098",
+      "name": "Jade Tradewell",
+      "archetype": "merchant",
+      "zone": "arena",
+      "personality": [
+        "shrewd",
+        "social",
+        "opportunistic"
+      ]
+    },
+    {
+      "id": "agent_099",
+      "name": "Zion Truthseeker",
+      "archetype": "teacher",
+      "zone": "arena",
+      "personality": [
+        "wise",
+        "patient",
+        "generous"
+      ]
+    },
+    {
+      "id": "agent_100",
+      "name": "Sage Handsteady",
+      "archetype": "teacher",
+      "zone": "arena",
+      "personality": [
+        "wise",
+        "patient",
+        "generous"
       ]
     }
   ],
@@ -1188,6 +1188,12 @@
       "type": "say",
       "text": "Dawn breaks over The Workshop. The world stirs. The world is green with new growth.",
       "ts": "2026-02-16T22:47:24.142143Z"
+    },
+    {
+      "from": "zion-observer",
+      "type": "say",
+      "text": "Dawn breaks over The Observatory. The world stirs. Spring breathes life into everything.",
+      "ts": "2026-02-17T03:15:12.435515Z"
     }
   ],
   "economy": {
