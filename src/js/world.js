@@ -286,6 +286,15 @@
           }
         }
 
+        // World Memory: footpath darkening
+        var memCell = getMemoryAtPosition(px, pz);
+        if (memCell && memCell.steps > 5) {
+          var pathStr = Math.min(1, (memCell.steps - 5) / 45);
+          r = r * (1 - pathStr * 0.4) + 0.45 * pathStr * 0.4;
+          g = g * (1 - pathStr * 0.4) + 0.35 * pathStr * 0.4;
+          b = b * (1 - pathStr * 0.4) + 0.25 * pathStr * 0.4;
+        }
+
         colors[idx * 3] = Math.min(1, r);
         colors[idx * 3 + 1] = Math.min(1, g);
         colors[idx * 3 + 2] = Math.min(1, b);
@@ -314,11 +323,80 @@
     mesh.receiveShadow = false;
     group.add(mesh);
 
+    // ---- WORLD MEMORY OBJECTS (flowers, gathering spots) ----
+    generateMemoryObjects(group, cx, cz, wx, wz);
+
     // ---- DETAIL OBJECTS ----
     generateChunkDetails(group, cx, cz, zone, wx, wz);
 
     scene.add(group);
     loadedChunks.set(chunkKey(cx, cz), { group: group });
+  }
+
+  // ========================================================================
+  // WORLD MEMORY OBJECTS — Flowers and gathering spot campfires
+  // ========================================================================
+
+  function generateMemoryObjects(group, cx, cz, wx, wz) {
+    // Scan worldMemory cells that fall in this chunk
+    for (var gx = Math.floor(wx / MEMORY_GRID_SIZE); gx <= Math.floor((wx + CHUNK_SIZE) / MEMORY_GRID_SIZE); gx++) {
+      for (var gz = Math.floor(wz / MEMORY_GRID_SIZE); gz <= Math.floor((wz + CHUNK_SIZE) / MEMORY_GRID_SIZE); gz++) {
+        var key = gx + '_' + gz;
+        var cell = worldMemory[key];
+        if (!cell) continue;
+
+        var cellX = gx * MEMORY_GRID_SIZE + MEMORY_GRID_SIZE / 2;
+        var cellZ = gz * MEMORY_GRID_SIZE + MEMORY_GRID_SIZE / 2;
+        var cellY = terrainHeight(cellX, cellZ);
+
+        // Flowers
+        if (cell.flowers) {
+          for (var f = 0; f < 3; f++) {
+            var fx = cellX + (f - 1) * 0.5;
+            var fz = cellZ + (f * 0.7 - 0.7);
+            var fy = terrainHeight(fx, fz);
+
+            // Stem
+            var stemGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.3, 4);
+            var stemMat = new THREE.MeshLambertMaterial({ color: 0x228822 });
+            var stem = new THREE.Mesh(stemGeo, stemMat);
+            stem.position.set(fx - wx, fy + 0.15, fz - wz);
+            group.add(stem);
+
+            // Petal
+            var petalColors = [0xff6699, 0xffcc33, 0xff3366, 0x9966ff, 0xff9933];
+            var petalGeo = new THREE.SphereGeometry(0.12, 6, 4);
+            var petalMat = new THREE.MeshLambertMaterial({ color: petalColors[f % petalColors.length] });
+            var petal = new THREE.Mesh(petalGeo, petalMat);
+            petal.position.set(fx - wx, fy + 0.32, fz - wz);
+            group.add(petal);
+          }
+        }
+
+        // Gathering spots (campfire ring)
+        if (cell.gathering > 3) {
+          // 3 rocks in a ring
+          for (var ri = 0; ri < 3; ri++) {
+            var rockAngle = (ri / 3) * Math.PI * 2;
+            var rockX = cellX + Math.cos(rockAngle) * 0.8;
+            var rockZ = cellZ + Math.sin(rockAngle) * 0.8;
+            var rockY = terrainHeight(rockX, rockZ);
+
+            var rockGeo = new THREE.SphereGeometry(0.2, 4, 3);
+            var rockMat = new THREE.MeshLambertMaterial({ color: 0x666666 });
+            var rock = new THREE.Mesh(rockGeo, rockMat);
+            rock.position.set(rockX - wx, rockY + 0.1, rockZ - wz);
+            rock.scale.y = 0.5;
+            group.add(rock);
+          }
+
+          // Orange glow
+          var glowLight = new THREE.PointLight(0xff6622, 0.5, 5);
+          glowLight.position.set(cellX - wx, cellY + 0.3, cellZ - wz);
+          group.add(glowLight);
+        }
+      }
+    }
   }
 
   // ========================================================================
@@ -3414,8 +3492,10 @@
 
       switch (obj.type) {
         case 'tree':
-          obj.mesh.rotation.z = Math.sin(time * 0.001 * p.speed + p.seed) * 0.04;
-          obj.mesh.rotation.x = Math.sin(time * 0.0008 * p.speed + p.seed * 1.5) * 0.02;
+          var windMult = windState ? windState.strength : 1.0;
+          var swayFreq = currentWeatherType === 'storm' ? 0.003 : 0.001;
+          obj.mesh.rotation.z = Math.sin(time * swayFreq * p.speed + p.seed) * 0.04 * windMult;
+          obj.mesh.rotation.x = Math.sin(time * swayFreq * 0.8 * p.speed + p.seed * 1.5) * 0.02 * windMult;
           break;
         case 'crystal':
           obj.mesh.rotation.y += deltaTime * (p.speed || 0.3);
@@ -3887,6 +3967,7 @@
   var lightningTimer = 0;
   var lightningActive = false;
   var lightningLight = null;
+  var weatherCallbacks = {}; // { onLightningStrike: function(x,z) }
 
   function setWeather(sceneCtx, type) {
     if (!sceneCtx || !sceneCtx.scene) return;
@@ -4144,6 +4225,17 @@
 
     weatherParticles.geometry.attributes.position.needsUpdate = true;
 
+    // Rain splash spawning — when rain particles hit ground
+    if (type === 'rain' && splashPool.length > 0) {
+      for (var si = 0; si < positions.length / 3; si += 10) { // sample every 10th
+        var sidx = si * 3;
+        var groundH = terrainHeight(positions[sidx], positions[sidx + 2]);
+        if (positions[sidx + 1] < groundH + 0.5 && positions[sidx + 1] > groundH - 1) {
+          spawnSplash(positions[sidx], groundH, positions[sidx + 2]);
+        }
+      }
+    }
+
     // Lightning flash logic for storms
     if (lightningLight && weatherParticles.userData.type === 'rain') {
       lightningTimer += deltaTime;
@@ -4151,10 +4243,20 @@
       if (lightningActive) {
         // Flash is happening — fade out over 150ms
         lightningLight.intensity *= 0.85;
+
+        // Flash ambient intensity
+        if (sceneCtx && sceneCtx.ambientLight && lightningLight.intensity > 1.0) {
+          sceneCtx.ambientLight.intensity = Math.min(2.0, lightningLight.intensity * 0.5);
+        }
+
         if (lightningLight.intensity < 0.05) {
           lightningLight.intensity = 0;
           lightningActive = false;
           lightningTimer = 0;
+          // Restore ambient
+          if (sceneCtx && sceneCtx.ambientLight) {
+            sceneCtx.ambientLight.intensity = 0.15;
+          }
         }
       } else {
         // Wait for next flash (random interval 3-8 seconds)
@@ -4163,15 +4265,27 @@
           // Trigger lightning flash
           lightningActive = true;
           lightningLight.intensity = 2.5 + Math.random() * 1.5;
-          lightningLight.position.set(
-            (cameraPos.x || 0) + (Math.random() - 0.5) * 80,
-            45 + Math.random() * 15,
-            (cameraPos.z || 0) + (Math.random() - 0.5) * 80
-          );
+          var boltX = (cameraPos.x || 0) + (Math.random() - 0.5) * 80;
+          var boltZ = (cameraPos.z || 0) + (Math.random() - 0.5) * 80;
+          lightningLight.position.set(boltX, 45 + Math.random() * 15, boltZ);
           lightningTimer = 0;
+
+          // Create visible bolt
+          createLightningBolt(sceneCtx, boltX, boltZ);
+
+          // Trigger camera shake via callback
+          if (weatherCallbacks.onLightningStrike) {
+            weatherCallbacks.onLightningStrike(boltX, boltZ);
+          }
         }
       }
     }
+
+    // Update lightning bolt visibility
+    updateLightningBolt(sceneCtx, deltaTime);
+
+    // Update rain splashes
+    updateRainSplashes(deltaTime);
   }
 
   function getCurrentWeather() {
@@ -4494,6 +4608,77 @@
   // SKYBOX / SKY DOME SYSTEM
   // ========================================================================
 
+  var playerStarsMesh = null;
+
+  function initPlayerStars(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    // Load player stars from localStorage
+    var stored = null;
+    if (typeof localStorage !== 'undefined') {
+      try { stored = JSON.parse(localStorage.getItem('zion_playerStars') || '{}'); } catch(e) { stored = {}; }
+    }
+    if (!stored || Object.keys(stored).length === 0) return;
+
+    var psPos = [];
+    var psSizes = [];
+    var psColors = [];
+    for (var pid in stored) {
+      var ps = stored[pid];
+      psPos.push(ps.x || 0, ps.y || 0, ps.z || 0);
+      psSizes.push(2.5);
+      psColors.push(1.0, 0.87, 0.53); // warm gold 0xFFDD88
+    }
+
+    if (psPos.length === 0) return;
+
+    var psGeo = new THREE.BufferGeometry();
+    psGeo.setAttribute('position', new THREE.Float32BufferAttribute(psPos, 3));
+    psGeo.setAttribute('size', new THREE.Float32BufferAttribute(psSizes, 1));
+    psGeo.setAttribute('color', new THREE.Float32BufferAttribute(psColors, 3));
+
+    var psMat = new THREE.PointsMaterial({
+      size: 2.5,
+      sizeAttenuation: false,
+      transparent: true,
+      opacity: 0.0,
+      fog: false,
+      vertexColors: true
+    });
+
+    playerStarsMesh = new THREE.Points(psGeo, psMat);
+    sceneCtx.scene.add(playerStarsMesh);
+  }
+
+  function registerPlayerStar(playerId, playerName) {
+    // Place star at a deterministic position based on player ID hash
+    var hash = 0;
+    for (var i = 0; i < playerId.length; i++) {
+      hash = ((hash << 5) - hash) + playerId.charCodeAt(i);
+      hash |= 0;
+    }
+    var theta = (Math.abs(hash) % 10000) / 10000 * Math.PI * 2;
+    var phi = (Math.abs(hash * 7919) % 10000) / 10000 * Math.PI * 0.6 + 0.2; // keep above horizon
+    var R = 750;
+    var starData = {
+      name: playerName || playerId,
+      x: R * Math.sin(phi) * Math.cos(theta),
+      y: R * Math.cos(phi),
+      z: R * Math.sin(phi) * Math.sin(theta),
+      color: 0xFFDD88,
+      ts: new Date().toISOString()
+    };
+
+    // Save to localStorage
+    if (typeof localStorage !== 'undefined') {
+      try {
+        var stored = JSON.parse(localStorage.getItem('zion_playerStars') || '{}');
+        stored[playerId] = starData;
+        localStorage.setItem('zion_playerStars', JSON.stringify(stored));
+      } catch(e) {}
+    }
+    return starData;
+  }
+
   function initSkybox(sceneCtx) {
     if (!sceneCtx || !sceneCtx.scene) return;
 
@@ -4536,41 +4721,91 @@
     skyDome = new THREE.Mesh(skyGeo, skyMat);
     sceneCtx.scene.add(skyDome);
 
-    // Create starfield using THREE.Points
+    // ── Constellation Data ──
+    var CONSTELLATIONS = {
+      orion: { stars: [
+        {theta:1.55,phi:1.20},{theta:1.60,phi:1.10},{theta:1.58,phi:1.00},
+        {theta:1.50,phi:0.95},{theta:1.65,phi:0.95},
+        {theta:1.52,phi:0.85},{theta:1.63,phi:0.85}
+      ]},
+      bigDipper: { stars: [
+        {theta:0.80,phi:0.50},{theta:0.85,phi:0.52},{theta:0.92,phi:0.50},
+        {theta:0.98,phi:0.53},{theta:1.05,phi:0.48},
+        {theta:1.10,phi:0.55},{theta:1.15,phi:0.50}
+      ]},
+      cassiopeia: { stars: [
+        {theta:2.50,phi:0.40},{theta:2.55,phi:0.35},{theta:2.60,phi:0.40},
+        {theta:2.65,phi:0.35},{theta:2.70,phi:0.40}
+      ]},
+      scorpius: { stars: [
+        {theta:4.20,phi:1.30},{theta:4.22,phi:1.25},{theta:4.25,phi:1.20},
+        {theta:4.27,phi:1.15},{theta:4.30,phi:1.10},
+        {theta:4.35,phi:1.12},{theta:4.40,phi:1.15},
+        {theta:4.45,phi:1.20},{theta:4.50,phi:1.25}
+      ]},
+      leo: { stars: [
+        {theta:3.10,phi:0.80},{theta:3.15,phi:0.75},{theta:3.20,phi:0.78},
+        {theta:3.25,phi:0.82},{theta:3.18,phi:0.88},{theta:3.22,phi:0.85}
+      ]},
+      southernCross: { stars: [
+        {theta:5.00,phi:2.10},{theta:5.05,phi:2.00},{theta:5.00,phi:1.90},
+        {theta:4.95,phi:2.00},{theta:5.03,phi:2.00}
+      ]}
+    };
+
+    // Create starfield: 1800 random + constellation stars
     var starGeo = new THREE.BufferGeometry();
     var starPos = [];
     var starSizes = [];
+    var starColors = [];
+    var starPhases = []; // for twinkling
 
-    for (var i = 0; i < 2000; i++) {
-      // Random position on sphere (radius 750)
+    // 1800 random background stars
+    for (var i = 0; i < 1800; i++) {
       var theta = Math.random() * Math.PI * 2;
       var phi = Math.random() * Math.PI;
       var r = 750;
-
-      var x = r * Math.sin(phi) * Math.cos(theta);
-      var y = r * Math.cos(phi);
-      var z = r * Math.sin(phi) * Math.sin(theta);
-
-      starPos.push(x, y, z);
-
-      // Varying sizes (0.3 - 1.5)
+      starPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi), r * Math.sin(phi) * Math.sin(theta));
       starSizes.push(0.3 + Math.random() * 1.2);
+      starColors.push(1.0, 1.0, 1.0); // white
+      starPhases.push(Math.random() * Math.PI * 2);
     }
 
+    // Add constellation stars (brighter, slightly warm-tinted)
+    for (var cKey in CONSTELLATIONS) {
+      var cStars = CONSTELLATIONS[cKey].stars;
+      for (var cs = 0; cs < cStars.length; cs++) {
+        var s = cStars[cs];
+        var cr = 750;
+        starPos.push(cr * Math.sin(s.phi) * Math.cos(s.theta), cr * Math.cos(s.phi), cr * Math.sin(s.phi) * Math.sin(s.theta));
+        starSizes.push(1.8 + Math.random() * 0.5); // brighter
+        starColors.push(1.0, 0.95, 0.85); // warm white
+        starPhases.push(Math.random() * Math.PI * 2);
+      }
+    }
+
+    var totalStars = starPos.length / 3;
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
     starGeo.setAttribute('size', new THREE.Float32BufferAttribute(starSizes, 1));
+    starGeo.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
+    starGeo.userData.phases = new Float32Array(starPhases);
+    starGeo.userData.baseSizes = new Float32Array(starSizes);
+    starGeo.userData.starCount = totalStars;
 
     var starMat = new THREE.PointsMaterial({
-      color: 0xffffff,
       size: 1.0,
       sizeAttenuation: false,
       transparent: true,
       opacity: 0.0,
-      fog: false
+      fog: false,
+      vertexColors: true
     });
 
     stars = new THREE.Points(starGeo, starMat);
     sceneCtx.scene.add(stars);
+
+    // ── Player Constellation Stars (separate Points group) ──
+    initPlayerStars(sceneCtx);
 
     // Create Sun
     var sunGeo = new THREE.SphereGeometry(5, 16, 16);
@@ -4654,8 +4889,26 @@
       stars.material.opacity = opacity;
       stars.material.transparent = true;
 
+      // Star twinkling (only when visible)
+      if (opacity > 0.05 && stars.geometry.userData.phases) {
+        var phases = stars.geometry.userData.phases;
+        var baseSizes = stars.geometry.userData.baseSizes;
+        var sizes = stars.geometry.attributes.size.array;
+        var twinkleTime = Date.now() * 0.001;
+        for (var si = 0; si < phases.length; si++) {
+          sizes[si] = baseSizes[si] + Math.sin(twinkleTime * 1.5 + phases[si]) * 0.4;
+        }
+        stars.geometry.attributes.size.needsUpdate = true;
+      }
+
       // Make stars follow camera
       stars.position.copy(sceneCtx.camera.position);
+    }
+
+    // Update player stars visibility + position
+    if (playerStarsMesh && playerStarsMesh.material) {
+      playerStarsMesh.material.opacity = stars ? stars.material.opacity : 0;
+      playerStarsMesh.position.copy(sceneCtx.camera.position);
     }
   }
 
@@ -6818,6 +7071,593 @@
   }
 
   // ========================================================================
+  // WORLD MEMORY — Footpaths, Gathering Spots, Flowers
+  // ========================================================================
+
+  var worldMemory = {};
+  var worldMemoryLastStep = 0;
+  var MEMORY_GRID_SIZE = 4;
+  var MEMORY_MAX_CELLS = 2000;
+  var stillTimer = 0;
+  var lastPlayerVelocity = 0;
+  var lastPlayerPos = null;
+
+  function loadWorldMemory() {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      var stored = localStorage.getItem('zion_worldMemory');
+      if (stored) {
+        worldMemory = JSON.parse(stored);
+        // Apply decay on load
+        var keys = Object.keys(worldMemory);
+        for (var i = keys.length - 1; i >= 0; i--) {
+          var cell = worldMemory[keys[i]];
+          cell.steps *= 0.9;
+          cell.gathering *= 0.95;
+          if (cell.steps < 1 && cell.gathering < 1 && !cell.flowers) {
+            delete worldMemory[keys[i]];
+          }
+        }
+      }
+    } catch(e) {}
+  }
+
+  function saveWorldMemory() {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem('zion_worldMemory', JSON.stringify(worldMemory));
+    } catch(e) {}
+  }
+
+  function memoryKey(x, z) {
+    return Math.floor(x / MEMORY_GRID_SIZE) + '_' + Math.floor(z / MEMORY_GRID_SIZE);
+  }
+
+  function recordStep(x, z) {
+    var key = memoryKey(x, z);
+    if (!worldMemory[key]) {
+      worldMemory[key] = { steps: 0, lastStep: 0, gathering: 0, flowers: false };
+    }
+    worldMemory[key].steps++;
+    worldMemory[key].lastStep = Date.now();
+
+    // Cap at max cells
+    var keys = Object.keys(worldMemory);
+    if (keys.length > MEMORY_MAX_CELLS) {
+      keys.sort(function(a, b) { return worldMemory[a].steps - worldMemory[b].steps; });
+      var toRemove = keys.length - MEMORY_MAX_CELLS;
+      for (var i = 0; i < toRemove; i++) {
+        if (!worldMemory[keys[i]].flowers) delete worldMemory[keys[i]];
+      }
+    }
+  }
+
+  function updateWorldMemory(playerPos, nearbyEntities, deltaTime) {
+    if (!playerPos) return;
+    var now = Date.now();
+
+    // Record step every 500ms
+    if (now - worldMemoryLastStep > 500) {
+      recordStep(playerPos.x, playerPos.z);
+      worldMemoryLastStep = now;
+    }
+
+    // Track velocity for stillness
+    var velocity = 0;
+    if (lastPlayerPos) {
+      var dx = playerPos.x - lastPlayerPos.x;
+      var dz = playerPos.z - lastPlayerPos.z;
+      velocity = Math.sqrt(dx * dx + dz * dz) / Math.max(deltaTime, 0.001);
+    }
+    lastPlayerPos = { x: playerPos.x, y: playerPos.y, z: playerPos.z };
+    lastPlayerVelocity = velocity;
+
+    if (velocity < 0.5) {
+      stillTimer += deltaTime;
+    } else {
+      stillTimer = 0;
+    }
+
+    var key = memoryKey(playerPos.x, playerPos.z);
+    if (!worldMemory[key]) {
+      worldMemory[key] = { steps: 0, lastStep: 0, gathering: 0, flowers: false };
+    }
+
+    // Gathering detection: still 10+ seconds near entity
+    if (stillTimer >= 10 && nearbyEntities > 0) {
+      worldMemory[key].gathering++;
+    }
+
+    // Flower growth: still 30+ seconds alone
+    if (stillTimer >= 30 && nearbyEntities === 0) {
+      worldMemory[key].flowers = true;
+    }
+
+    // Periodically save (every 10 seconds)
+    if (now % 10000 < 500) {
+      saveWorldMemory();
+    }
+  }
+
+  function getMemoryAtPosition(wx, wz) {
+    var key = memoryKey(wx, wz);
+    return worldMemory[key] || null;
+  }
+
+  // ========================================================================
+  // BILLBOARD CLOUDS
+  // ========================================================================
+
+  var billboardClouds = [];
+
+  function initBillboardClouds(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    var cloudCount = 8 + Math.floor(Math.random() * 5); // 8-12
+
+    for (var i = 0; i < cloudCount; i++) {
+      var group = new THREE.Group();
+      var puffCount = 4 + Math.floor(Math.random() * 3); // 4-6
+
+      for (var p = 0; p < puffCount; p++) {
+        var radius = 3 + Math.random() * 4;
+        var puffGeo = new THREE.SphereGeometry(radius, 8, 6);
+        var puffMat = new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.5 + Math.random() * 0.2,
+          fog: false,
+          depthWrite: false
+        });
+        var puff = new THREE.Mesh(puffGeo, puffMat);
+        puff.position.set(
+          (Math.random() - 0.5) * 8,
+          (Math.random() - 0.5) * 2,
+          (Math.random() - 0.5) * 6
+        );
+        puff.scale.y = 0.5 + Math.random() * 0.3; // flatten
+        group.add(puff);
+      }
+
+      group.position.set(
+        (Math.random() - 0.5) * 500,
+        80 + Math.random() * 40,
+        (Math.random() - 0.5) * 500
+      );
+      group.userData.driftSpeed = 0.5 + Math.random() * 1.0;
+      group.userData.driftAngle = Math.random() * Math.PI * 2;
+      group.visible = false; // hidden until weather needs them
+
+      sceneCtx.scene.add(group);
+      billboardClouds.push(group);
+    }
+  }
+
+  function updateBillboardClouds(deltaTime, weatherType) {
+    var showClouds = (weatherType === 'cloudy' || weatherType === 'rain' || weatherType === 'storm');
+    for (var i = 0; i < billboardClouds.length; i++) {
+      var cloud = billboardClouds[i];
+      cloud.visible = showClouds;
+      if (!showClouds) continue;
+
+      cloud.position.x += Math.cos(cloud.userData.driftAngle) * cloud.userData.driftSpeed * deltaTime;
+      cloud.position.z += Math.sin(cloud.userData.driftAngle) * cloud.userData.driftSpeed * deltaTime;
+
+      // Wrap around
+      if (cloud.position.x > 300) cloud.position.x = -300;
+      if (cloud.position.x < -300) cloud.position.x = 300;
+      if (cloud.position.z > 300) cloud.position.z = -300;
+      if (cloud.position.z < -300) cloud.position.z = 300;
+    }
+  }
+
+  // ========================================================================
+  // RAIN SPLASH PARTICLES
+  // ========================================================================
+
+  var splashPool = [];
+  var splashMesh = null;
+  var MAX_SPLASHES = 200;
+
+  function initRainSplashes(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    var geo = new THREE.BufferGeometry();
+    var positions = new Float32Array(MAX_SPLASHES * 3);
+    var sizes = new Float32Array(MAX_SPLASHES);
+
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
+
+    var mat = new THREE.PointsMaterial({
+      color: 0xaaddff,
+      size: 0.3,
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+      sizeAttenuation: true
+    });
+
+    splashMesh = new THREE.Points(geo, mat);
+    sceneCtx.scene.add(splashMesh);
+
+    for (var i = 0; i < MAX_SPLASHES; i++) {
+      splashPool.push({
+        active: false,
+        x: 0, y: 0, z: 0,
+        vx: 0, vy: 0, vz: 0,
+        life: 0, maxLife: 0.3
+      });
+    }
+  }
+
+  function spawnSplash(x, y, z) {
+    for (var i = 0; i < 3; i++) {
+      for (var j = 0; j < splashPool.length; j++) {
+        if (!splashPool[j].active) {
+          splashPool[j].active = true;
+          splashPool[j].x = x;
+          splashPool[j].y = y;
+          splashPool[j].z = z;
+          splashPool[j].vx = (Math.random() - 0.5) * 2;
+          splashPool[j].vy = 1 + Math.random() * 2;
+          splashPool[j].vz = (Math.random() - 0.5) * 2;
+          splashPool[j].life = 0;
+          break;
+        }
+      }
+    }
+  }
+
+  function updateRainSplashes(deltaTime) {
+    if (!splashMesh) return;
+    var positions = splashMesh.geometry.attributes.position.array;
+    var sizes = splashMesh.geometry.attributes.size.array;
+
+    for (var i = 0; i < splashPool.length; i++) {
+      var sp = splashPool[i];
+      if (sp.active) {
+        sp.life += deltaTime * 0.001;
+        sp.x += sp.vx * deltaTime * 0.001;
+        sp.y += (sp.vy - 9.8 * sp.life) * deltaTime * 0.001;
+        sp.z += sp.vz * deltaTime * 0.001;
+
+        if (sp.life >= sp.maxLife) {
+          sp.active = false;
+        }
+
+        positions[i * 3] = sp.x;
+        positions[i * 3 + 1] = sp.y;
+        positions[i * 3 + 2] = sp.z;
+        sizes[i] = sp.active ? (0.3 * (1 - sp.life / sp.maxLife)) : 0;
+      } else {
+        sizes[i] = 0;
+      }
+    }
+
+    splashMesh.geometry.attributes.position.needsUpdate = true;
+    splashMesh.geometry.attributes.size.needsUpdate = true;
+  }
+
+  // ========================================================================
+  // LIGHTNING BOLT GEOMETRY
+  // ========================================================================
+
+  var lightningBoltMesh = null;
+  var lightningBoltTimer = 0;
+
+  function createLightningBolt(sceneCtx, startX, startZ) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    // Remove old bolt
+    if (lightningBoltMesh) {
+      sceneCtx.scene.remove(lightningBoltMesh);
+      lightningBoltMesh.geometry.dispose();
+      lightningBoltMesh.material.dispose();
+      lightningBoltMesh = null;
+    }
+
+    var segments = 5 + Math.floor(Math.random() * 3);
+    var startY = 75 + Math.random() * 15;
+    var groundY = terrainHeight(startX, startZ);
+    var points = [];
+
+    for (var i = 0; i <= segments; i++) {
+      var t = i / segments;
+      var y = startY + (groundY - startY) * t;
+      var jitterX = (Math.random() - 0.5) * 12 * (1 - t * 0.5);
+      var jitterZ = (Math.random() - 0.5) * 12 * (1 - t * 0.5);
+      points.push(new THREE.Vector3(startX + jitterX, y, startZ + jitterZ));
+    }
+
+    var geo = new THREE.BufferGeometry().setFromPoints(points);
+    var mat = new THREE.LineBasicMaterial({
+      color: 0xeeeeff,
+      linewidth: 2,
+      transparent: true,
+      opacity: 1.0
+    });
+
+    lightningBoltMesh = new THREE.Line(geo, mat);
+    sceneCtx.scene.add(lightningBoltMesh);
+    lightningBoltTimer = 0.15; // visible for 150ms
+  }
+
+  function updateLightningBolt(sceneCtx, deltaTime) {
+    if (!lightningBoltMesh) return;
+    lightningBoltTimer -= deltaTime * 0.001;
+    if (lightningBoltTimer <= 0) {
+      if (sceneCtx && sceneCtx.scene) {
+        sceneCtx.scene.remove(lightningBoltMesh);
+      }
+      lightningBoltMesh.geometry.dispose();
+      lightningBoltMesh.material.dispose();
+      lightningBoltMesh = null;
+    } else {
+      lightningBoltMesh.material.opacity = lightningBoltTimer / 0.15;
+    }
+  }
+
+  // ========================================================================
+  // SNOW ACCUMULATION
+  // ========================================================================
+
+  var snowAccumulating = false;
+  var snowAccumTimer = 0;
+
+  function updateSnowAccumulation(deltaTime, weatherType) {
+    var isSnow = (weatherType === 'snow');
+    snowAccumulating = isSnow;
+
+    snowAccumTimer += deltaTime;
+    if (snowAccumTimer < 2000) return; // every 2 seconds
+    snowAccumTimer = 0;
+
+    loadedChunks.forEach(function(chunk) {
+      if (!chunk.group) return;
+      var terrain = chunk.group.children[0]; // first child is terrain mesh
+      if (!terrain || !terrain.geometry || !terrain.geometry.attributes.color) return;
+
+      var colors = terrain.geometry.attributes.color.array;
+
+      // Store original colors on first encounter
+      if (!terrain.userData.originalColors) {
+        terrain.userData.originalColors = new Float32Array(colors);
+      }
+
+      var origColors = terrain.userData.originalColors;
+
+      if (isSnow) {
+        // Lerp 2% toward white
+        for (var i = 0; i < colors.length; i += 3) {
+          colors[i] += (0.95 - colors[i]) * 0.02;
+          colors[i + 1] += (0.95 - colors[i + 1]) * 0.02;
+          colors[i + 2] += (0.98 - colors[i + 2]) * 0.02;
+        }
+      } else {
+        // Lerp 1% back toward original
+        for (var j = 0; j < colors.length; j += 3) {
+          colors[j] += (origColors[j] - colors[j]) * 0.01;
+          colors[j + 1] += (origColors[j + 1] - colors[j + 1]) * 0.01;
+          colors[j + 2] += (origColors[j + 2] - colors[j + 2]) * 0.01;
+        }
+      }
+
+      terrain.geometry.attributes.color.needsUpdate = true;
+    });
+  }
+
+  // ========================================================================
+  // VALLEY FOG
+  // ========================================================================
+
+  var fogPlanes = [];
+
+  function initValleyFog(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    // Sample terrain to find valleys
+    var valleySpots = [];
+    for (var x = -400; x < 400; x += 80) {
+      for (var z = -400; z < 400; z += 80) {
+        var h = terrainHeight(x, z);
+        if (h < -2) {
+          valleySpots.push({ x: x, z: z, h: h });
+        }
+      }
+    }
+
+    // Place up to 8 fog planes
+    var count = Math.min(8, valleySpots.length);
+    for (var i = 0; i < count; i++) {
+      var spot = valleySpots[i];
+      var fogGeo = new THREE.PlaneBufferGeometry(40, 40);
+      var fogMat = new THREE.MeshBasicMaterial({
+        color: 0xdddddd,
+        transparent: true,
+        opacity: 0.15 + Math.random() * 0.1,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        fog: false
+      });
+
+      var fogMesh = new THREE.Mesh(fogGeo, fogMat);
+      fogMesh.rotation.x = -Math.PI / 2;
+      fogMesh.position.set(spot.x, spot.h + 2, spot.z);
+      fogMesh.userData.baseY = spot.h + 2;
+      fogMesh.userData.bobPhase = Math.random() * Math.PI * 2;
+      fogMesh.visible = false;
+
+      sceneCtx.scene.add(fogMesh);
+      fogPlanes.push(fogMesh);
+    }
+  }
+
+  function updateValleyFog(worldTime, weatherType) {
+    // Show during morning (dawn: 300-420) and rain/storm
+    var isDawn = (worldTime >= 240 && worldTime <= 480);
+    var isRain = (weatherType === 'rain' || weatherType === 'storm');
+    var showFog = isDawn || isRain;
+    var time = Date.now() * 0.001;
+
+    for (var i = 0; i < fogPlanes.length; i++) {
+      var fp = fogPlanes[i];
+      fp.visible = showFog;
+      if (!showFog) continue;
+
+      // Gentle vertical bob
+      fp.position.y = fp.userData.baseY + Math.sin(time * 0.3 + fp.userData.bobPhase) * 0.5;
+    }
+  }
+
+  // ========================================================================
+  // TERRAIN BREATHING — Subtle undulation making the world feel alive
+  // ========================================================================
+
+  var terrainBreathTime = 0;
+
+  function updateTerrainBreathing(deltaTime, worldTime) {
+    terrainBreathTime += deltaTime;
+
+    // Only update every 3rd frame for performance
+    if (Math.floor(terrainBreathTime * 60) % 3 !== 0) return;
+
+    loadedChunks.forEach(function(chunk) {
+      if (!chunk.group) return;
+      var terrain = chunk.group.children[0];
+      if (!terrain || !terrain.geometry || !terrain.geometry.attributes.position) return;
+
+      var positions = terrain.geometry.attributes.position.array;
+
+      // Store base heights on first encounter
+      if (!terrain.userData.baseHeights) {
+        terrain.userData.baseHeights = new Float32Array(positions.length / 3);
+        for (var i = 0; i < positions.length; i += 3) {
+          terrain.userData.baseHeights[i / 3] = positions[i + 1]; // Y component
+        }
+      }
+
+      var baseHeights = terrain.userData.baseHeights;
+      var time = terrainBreathTime;
+      var wx = terrain.position.x;
+      var wz = terrain.position.z;
+
+      for (var j = 0; j < positions.length; j += 3) {
+        var localX = positions[j] + wx;
+        var localZ = positions[j + 2] + wz;
+        var breathOffset = Math.sin(time * 0.3 + localX * 0.02 + localZ * 0.015) * 0.12;
+        breathOffset += Math.sin(time * 0.5 + localX * 0.01 - localZ * 0.02) * 0.06;
+        positions[j + 1] = baseHeights[j / 3] + breathOffset;
+      }
+
+      terrain.geometry.attributes.position.needsUpdate = true;
+      terrain.geometry.computeVertexNormals();
+    });
+  }
+
+  // ========================================================================
+  // WIND SYSTEM — Synced gusts affecting trees and weather
+  // ========================================================================
+
+  var windState = { strength: 1.0, gustTimer: 0, gustTarget: 1.0 };
+
+  function updateWindSystem(deltaTime, weatherType) {
+    // Wind strength varies by weather
+    var baseWind = 1.0;
+    if (weatherType === 'storm') baseWind = 3.0;
+    else if (weatherType === 'rain') baseWind = 1.5;
+    else if (weatherType === 'cloudy') baseWind = 1.2;
+    else if (weatherType === 'snow') baseWind = 0.8;
+
+    // Periodic gusts
+    windState.gustTimer += deltaTime;
+    if (windState.gustTimer > 3 + Math.random() * 5) {
+      windState.gustTarget = baseWind * (0.7 + Math.random() * 0.6);
+      windState.gustTimer = 0;
+    }
+
+    // Smooth lerp to target
+    windState.strength += (windState.gustTarget - windState.strength) * deltaTime * 0.5;
+    windState.strength = Math.max(0.3, Math.min(windState.strength, baseWind * 1.3));
+  }
+
+  function getWindStrength() {
+    return windState.strength;
+  }
+
+  // ========================================================================
+  // ZONE BOUNDARY SHIMMER ENHANCEMENT
+  // ========================================================================
+
+  var zoneBorderParticles = [];
+
+  function initZoneBorderShimmer(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    for (var zId in ZONES) {
+      var zone = ZONES[zId];
+      if (!zone.radius) continue;
+
+      // Create ring of shimmer particles at zone boundary
+      var particleCount = 60;
+      var geo = new THREE.BufferGeometry();
+      var positions = new Float32Array(particleCount * 3);
+      var colors = new Float32Array(particleCount * 3);
+
+      var zoneColor = zone.groundColor || 0x88aa88;
+      var cr = ((zoneColor >> 16) & 0xff) / 255;
+      var cg = ((zoneColor >> 8) & 0xff) / 255;
+      var cb = (zoneColor & 0xff) / 255;
+
+      for (var i = 0; i < particleCount; i++) {
+        var angle = (i / particleCount) * Math.PI * 2;
+        var r = zone.radius;
+        positions[i * 3] = zone.cx + Math.cos(angle) * r;
+        positions[i * 3 + 1] = terrainHeight(zone.cx + Math.cos(angle) * r, zone.cz + Math.sin(angle) * r) + 1;
+        positions[i * 3 + 2] = zone.cz + Math.sin(angle) * r;
+
+        colors[i * 3] = cr;
+        colors[i * 3 + 1] = cg;
+        colors[i * 3 + 2] = cb;
+      }
+
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+      var mat = new THREE.PointsMaterial({
+        size: 0.8,
+        transparent: true,
+        opacity: 0.3,
+        vertexColors: true,
+        depthWrite: false,
+        sizeAttenuation: true
+      });
+
+      var points = new THREE.Points(geo, mat);
+      points.userData.zoneId = zId;
+      points.userData.basePositions = new Float32Array(positions);
+      sceneCtx.scene.add(points);
+      zoneBorderParticles.push(points);
+    }
+  }
+
+  function updateZoneBorderShimmer(worldTime) {
+    var time = Date.now() * 0.001;
+    for (var i = 0; i < zoneBorderParticles.length; i++) {
+      var bp = zoneBorderParticles[i];
+      var positions = bp.geometry.attributes.position.array;
+      var basePos = bp.userData.basePositions;
+
+      for (var j = 0; j < positions.length; j += 3) {
+        // Vertical shimmer
+        positions[j + 1] = basePos[j + 1] + Math.sin(time * 2 + j * 0.5) * 0.5;
+      }
+
+      bp.geometry.attributes.position.needsUpdate = true;
+      // Pulse opacity
+      bp.material.opacity = 0.2 + Math.sin(time * 1.5 + i) * 0.15;
+    }
+  }
+
+  // ========================================================================
   // EXPORTS
   // ========================================================================
 
@@ -6883,5 +7723,21 @@
   exports.clearWildlife = clearWildlife;
   exports.initZoneAmbience = initZoneAmbience;
   exports.updateZoneAmbience = updateZoneAmbience;
+  exports.registerPlayerStar = registerPlayerStar;
+  exports.loadWorldMemory = loadWorldMemory;
+  exports.saveWorldMemory = saveWorldMemory;
+  exports.updateWorldMemory = updateWorldMemory;
+  exports.initBillboardClouds = initBillboardClouds;
+  exports.updateBillboardClouds = updateBillboardClouds;
+  exports.initRainSplashes = initRainSplashes;
+  exports.updateSnowAccumulation = updateSnowAccumulation;
+  exports.initValleyFog = initValleyFog;
+  exports.updateValleyFog = updateValleyFog;
+  exports.updateTerrainBreathing = updateTerrainBreathing;
+  exports.updateWindSystem = updateWindSystem;
+  exports.getWindStrength = getWindStrength;
+  exports.initZoneBorderShimmer = initZoneBorderShimmer;
+  exports.updateZoneBorderShimmer = updateZoneBorderShimmer;
+  exports.weatherCallbacks = weatherCallbacks;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));

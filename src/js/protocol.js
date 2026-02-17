@@ -52,7 +52,8 @@
     'election_finalize',
     'steward_set_welcome',
     'steward_set_policy',
-    'steward_moderate'
+    'steward_moderate',
+    'star_register'
   ]);
 
   // Message types that require consent

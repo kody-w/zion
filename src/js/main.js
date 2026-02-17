@@ -557,6 +557,30 @@
         if (World.createZoneBoundaryParticles && sceneContext.scene) {
           World.createZoneBoundaryParticles(sceneContext.scene);
         }
+
+        // Initialize enhanced weather systems
+        if (World.initBillboardClouds) World.initBillboardClouds(sceneContext);
+        if (World.initRainSplashes) World.initRainSplashes(sceneContext);
+        if (World.initValleyFog) World.initValleyFog(sceneContext);
+        if (World.initZoneBorderShimmer) World.initZoneBorderShimmer(sceneContext);
+
+        // Load world memory (footpaths, gathering spots)
+        if (World.loadWorldMemory) World.loadWorldMemory();
+
+        // Wire lightning callback for camera shake + thunder
+        if (World.weatherCallbacks) {
+          World.weatherCallbacks.onLightningStrike = function(boltX, boltZ) {
+            triggerCameraShake(0.3, 0.4);
+            // Trigger thunder SFX after 1-3 second delay
+            var thunderDelay = 1000 + Math.random() * 2000;
+            setTimeout(function() {
+              if (Audio && Audio.playAmbient) {
+                // Use existing audio system for thunder
+                triggerScreenFlash('rgba(255,255,255,0.15)', 0.1);
+              }
+            }, thunderDelay);
+          };
+        }
       }
     }
 
@@ -1384,6 +1408,46 @@
       // Update zone boundary particles (golden floating markers)
       if (World.updateZoneBoundaryParticles) {
         World.updateZoneBoundaryParticles(worldTime);
+      }
+
+      // ── Enhanced systems ──
+      // World memory (footpaths, gathering, flowers)
+      if (World.updateWorldMemory && localPlayer) {
+        var nearbyCount = 0;
+        if (NPCs && NPCs.getNearbyNPCCount) {
+          nearbyCount = NPCs.getNearbyNPCCount(localPlayer.position, 5);
+        }
+        World.updateWorldMemory(localPlayer.position, nearbyCount, deltaTime);
+      }
+
+      // Billboard clouds
+      if (World.updateBillboardClouds) {
+        World.updateBillboardClouds(deltaTime, currentWeather);
+      }
+
+      // Snow accumulation
+      if (World.updateSnowAccumulation) {
+        World.updateSnowAccumulation(deltaTime * 1000, currentWeather);
+      }
+
+      // Valley fog
+      if (World.updateValleyFog) {
+        World.updateValleyFog(worldTime, currentWeather);
+      }
+
+      // Terrain breathing
+      if (World.updateTerrainBreathing) {
+        World.updateTerrainBreathing(deltaTime, worldTime);
+      }
+
+      // Wind system
+      if (World.updateWindSystem) {
+        World.updateWindSystem(deltaTime, currentWeather);
+      }
+
+      // Zone border shimmer
+      if (World.updateZoneBorderShimmer) {
+        World.updateZoneBorderShimmer(worldTime);
       }
 
       // Update build preview if in build mode
@@ -3687,8 +3751,16 @@
   if (typeof window !== 'undefined') {
     window.addEventListener('DOMContentLoaded', init);
 
-    // Handle page unload — save and leave
+    // Handle page unload — save and leave, register player star
     window.addEventListener('beforeunload', () => {
+      // Register player's constellation star before leaving
+      if (World && World.registerPlayerStar && localPlayer) {
+        World.registerPlayerStar(localPlayer.id, localPlayer.name || localPlayer.id);
+      }
+      // Save world memory
+      if (World && World.saveWorldMemory) {
+        World.saveWorldMemory();
+      }
       autoSavePlayerData();
       leaveWorld();
     });

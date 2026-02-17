@@ -3290,6 +3290,8 @@
    * Set zone-specific ambient layer (on top of base ambient)
    * @param {string} zone - Zone identifier
    */
+  var crossfadeTimer = null;
+
   function setZoneAmbient(zone) {
     if (!audioContext || !masterGain) return;
 
@@ -3298,9 +3300,55 @@
       audioContext.resume();
     }
 
-    // Stop current zone ambient
-    stopZoneAmbient();
+    // Clear any pending crossfade
+    if (crossfadeTimer) {
+      clearTimeout(crossfadeTimer);
+      crossfadeTimer = null;
+    }
 
+    // Crossfade: fade out old ambient over 3 seconds, then start new
+    var oldAmbient = currentZoneAmbient;
+    if (oldAmbient) {
+      // Fade out old ambient gracefully over 3 seconds
+      try {
+        if (oldAmbient.gainNode) {
+          oldAmbient.gainNode.gain.setValueAtTime(oldAmbient.gainNode.gain.value, audioContext.currentTime);
+          oldAmbient.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 3);
+        }
+      } catch(e) {}
+
+      // Schedule cleanup after fade
+      crossfadeTimer = setTimeout(function() {
+        try {
+          if (oldAmbient.oscillators && Array.isArray(oldAmbient.oscillators)) {
+            oldAmbient.oscillators.forEach(function(osc) {
+              if (osc && osc.stop) { try { osc.stop(); } catch(e) {} }
+            });
+          }
+          if (oldAmbient.nodes && Array.isArray(oldAmbient.nodes)) {
+            oldAmbient.nodes.forEach(function(node) {
+              if (node) {
+                if (node.stop) { try { node.stop(); } catch(e) {} }
+                if (node.disconnect) { try { node.disconnect(); } catch(e) {} }
+              }
+            });
+          }
+          if (oldAmbient.intervals && Array.isArray(oldAmbient.intervals)) {
+            oldAmbient.intervals.forEach(function(id) { clearInterval(id); });
+          }
+          if (oldAmbient.timeouts && Array.isArray(oldAmbient.timeouts)) {
+            oldAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
+          }
+          if (oldAmbient.cleanup && typeof oldAmbient.cleanup === 'function') {
+            oldAmbient.cleanup();
+          }
+        } catch(err) {}
+      }, 3100);
+
+      currentZoneAmbient = null;
+    }
+
+    // Start new zone ambient immediately (will overlap with fading old one)
     try {
       switch (zone) {
         case 'nexus':
@@ -3329,6 +3377,14 @@
           break;
         default:
           currentZoneAmbient = null;
+      }
+
+      // Fade in new ambient over 3 seconds
+      if (currentZoneAmbient && currentZoneAmbient.gainNode) {
+        var gain = currentZoneAmbient.gainNode;
+        var targetVal = gain.gain.value || 0.3;
+        gain.gain.setValueAtTime(0, audioContext.currentTime);
+        gain.gain.linearRampToValueAtTime(targetVal, audioContext.currentTime + 3);
       }
     } catch (err) {
       console.error('Error setting zone ambient:', err);

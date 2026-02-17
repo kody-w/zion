@@ -3270,5 +3270,17 @@
   exports.updateSpeechBubbles = updateSpeechBubbles;
   exports.clearSpeechBubbles = clearSpeechBubbles;
   exports.getAgents = function() { return npcAgents; };
+  exports.getNearbyNPCCount = function(playerPos, radius) {
+    if (!playerPos || !npcAgents) return 0;
+    var count = 0;
+    for (var i = 0; i < npcAgents.length; i++) {
+      var npc = npcAgents[i];
+      if (!npc || !npc.x) continue;
+      var dx = npc.x - playerPos.x;
+      var dz = npc.z - playerPos.z;
+      if (Math.sqrt(dx * dx + dz * dz) <= radius) count++;
+    }
+    return count;
+  };
 
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));

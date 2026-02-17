@@ -37,7 +37,8 @@
       competitions: {},
       federation: {
         federations: []
-      }
+      },
+      playerStars: {}
     };
   }
 
@@ -541,6 +542,20 @@
             fed.handshake_complete = true;
             fed.handshake_at = timestamp;
           }
+        }
+        break;
+
+      case 'star_register':
+        if (!newState.playerStars) newState.playerStars = {};
+        if (payload) {
+          newState.playerStars[from] = {
+            name: payload.name || from,
+            x: payload.x || 0,
+            y: payload.y || 0,
+            z: payload.z || 0,
+            color: payload.color || 0xFFDD88,
+            ts: timestamp
+          };
         }
         break;
 
