@@ -256,10 +256,10 @@
         var pz = wz + i * step;
         var h = terrainHeight(px, pz);
 
-        // Set vertex position (PlaneGeometry is in XY, we rotate to XZ)
+        // Set vertex position directly in XZ plane (y-up)
         positions[idx * 3] = j * step;     // local x
-        positions[idx * 3 + 1] = i * step; // local z (will become z after rotation)
-        positions[idx * 3 + 2] = h;        // height (will become y after rotation)
+        positions[idx * 3 + 1] = h;        // height (y-up)
+        positions[idx * 3 + 2] = i * step; // local z
 
         // Vertex color based on zone/height
         var localZone = getZoneAtPosition(px, pz);
@@ -310,7 +310,6 @@
     }
 
     var mesh = new THREE.Mesh(geo, mat);
-    mesh.rotation.x = -Math.PI / 2;
     mesh.position.set(wx, 0, wz);
     mesh.receiveShadow = false;
     group.add(mesh);
