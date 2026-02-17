@@ -324,6 +324,15 @@
           e.preventDefault();
         }
         break;
+
+      case 'F2':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('togglePhotoMode', {});
+          }
+          e.preventDefault();
+        }
+        break;
     }
 
     // Emote hotkeys: F+Number

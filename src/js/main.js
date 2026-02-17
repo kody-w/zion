@@ -155,6 +155,167 @@
     cameraShake.active = true;
   }
 
+  function startZoneCinematic() {
+    if (!sceneContext || !localPlayer) return;
+    var cam = sceneContext.camera;
+    cinematicCamera.active = true;
+    cinematicCamera.elapsed = 0;
+    cinematicCamera.startPos = { x: cam.position.x, y: cam.position.y, z: cam.position.z };
+    cinematicCamera.peakPos = {
+      x: cam.position.x,
+      y: cam.position.y + 15,
+      z: cam.position.z - 8
+    };
+    // Look toward zone center
+    var Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
+    var zoneInfo = Zones && Zones.ZONES ? Zones.ZONES[currentZone] : null;
+    var lookX = zoneInfo ? zoneInfo.cx : localPlayer.position.x;
+    var lookZ = zoneInfo ? zoneInfo.cz : localPlayer.position.z;
+    var lookY = (World && World.getTerrainHeight) ? World.getTerrainHeight(lookX, lookZ) + 1.5 : 1.5;
+    cinematicCamera.startLookAt = {
+      x: localPlayer.position.x,
+      y: ((World && World.getTerrainHeight) ? World.getTerrainHeight(localPlayer.position.x, localPlayer.position.z) : 0) + 1.5,
+      z: localPlayer.position.z
+    };
+    cinematicCamera.targetLookAt = { x: lookX, y: lookY, z: lookZ };
+  }
+
+  function updateCinematicCamera(deltaTime) {
+    if (!cinematicCamera.active || !sceneContext) return false;
+    cinematicCamera.elapsed += deltaTime;
+    var progress = Math.min(cinematicCamera.elapsed / cinematicCamera.duration, 1.0);
+    // Smooth ease-in-out
+    var ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+    var cam = sceneContext.camera;
+    var sp = cinematicCamera.startPos;
+    var pp = cinematicCamera.peakPos;
+
+    if (progress < 0.5) {
+      // First half: ease up to peak
+      var t = ease * 2; // 0 to 1 over first half
+      cam.position.x = sp.x + (pp.x - sp.x) * t;
+      cam.position.y = sp.y + (pp.y - sp.y) * t;
+      cam.position.z = sp.z + (pp.z - sp.z) * t;
+    } else {
+      // Second half: ease back down to where normal orbit would be
+      var inputDist = Input && Input.getCameraDistance ? Input.getCameraDistance() : cameraDistance;
+      var inputOrbit = Input && Input.getCameraOrbit ? Input.getCameraOrbit() : cameraYaw;
+      var terrY = (World && World.getTerrainHeight) ? World.getTerrainHeight(localPlayer.position.x, localPlayer.position.z) : 0;
+      var normalX = localPlayer.position.x + Math.sin(inputOrbit) * Math.cos(cameraPitch) * inputDist;
+      var normalY = terrY + Math.sin(cameraPitch) * inputDist + 2;
+      var normalZ = localPlayer.position.z + Math.cos(inputOrbit) * Math.cos(cameraPitch) * inputDist;
+      var t2 = (ease - 0.5) * 2; // 0 to 1 over second half
+      cam.position.x = pp.x + (normalX - pp.x) * t2;
+      cam.position.y = pp.y + (normalY - pp.y) * t2;
+      cam.position.z = pp.z + (normalZ - pp.z) * t2;
+    }
+
+    // Blend lookAt from start to target
+    var sl = cinematicCamera.startLookAt;
+    var tl = cinematicCamera.targetLookAt;
+    var lookBlend = Math.min(ease * 1.5, 1.0); // Look moves faster than camera
+    cam.lookAt(
+      sl.x + (tl.x - sl.x) * lookBlend,
+      sl.y + (tl.y - sl.y) * lookBlend,
+      sl.z + (tl.z - sl.z) * lookBlend
+    );
+
+    if (progress >= 1.0) {
+      cinematicCamera.active = false;
+    }
+    return true;
+  }
+
+  function togglePhotoMode() {
+    photoMode.active = !photoMode.active;
+    var hudContainer = document.getElementById('hud-container');
+    if (photoMode.active) {
+      // Enter photo mode
+      if (sceneContext && sceneContext.camera) {
+        photoMode.freeLookAt = {
+          x: localPlayer ? localPlayer.position.x : 0,
+          y: localPlayer ? ((World && World.getTerrainHeight) ? World.getTerrainHeight(localPlayer.position.x, localPlayer.position.z) : 0) + 1.5 : 1.5,
+          z: localPlayer ? localPlayer.position.z : 0
+        };
+      }
+      if (hudContainer) {
+        photoMode.savedHUDDisplay = hudContainer.style.display;
+        hudContainer.style.display = 'none';
+      }
+      // Show photo mode label
+      if (!photoMode.labelEl) {
+        photoMode.labelEl = document.createElement('div');
+        photoMode.labelEl.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;padding:6px 16px;border-radius:4px;font:13px monospace;z-index:9999;pointer-events:none;';
+        photoMode.labelEl.textContent = 'PHOTO MODE — F2 to exit';
+        document.body.appendChild(photoMode.labelEl);
+      }
+      photoMode.labelEl.style.display = 'block';
+      setVignetteIntensity(0.6);
+    } else {
+      // Exit photo mode
+      if (hudContainer) {
+        hudContainer.style.display = photoMode.savedHUDDisplay || '';
+      }
+      if (photoMode.labelEl) {
+        photoMode.labelEl.style.display = 'none';
+      }
+      setVignetteIntensity(0.3);
+    }
+  }
+
+  function updatePhotoModeCamera(deltaTime) {
+    if (!photoMode.active || !sceneContext || !Input) return false;
+    var delta = Input.getMovementDelta();
+    var inputOrbit = Input.getCameraOrbit ? Input.getCameraOrbit() : cameraYaw;
+    var inputDist = Input.getCameraDistance ? Input.getCameraDistance() : cameraDistance;
+
+    // Pan freeLookAt with camera-relative WASD
+    var speed = 0.3;
+    if (delta.x !== 0 || delta.z !== 0) {
+      var sinY = Math.sin(inputOrbit);
+      var cosY = Math.cos(inputOrbit);
+      photoMode.freeLookAt.x += (delta.x * cosY - delta.z * sinY) * speed;
+      photoMode.freeLookAt.z += (delta.x * sinY + delta.z * cosY) * speed;
+      // Follow terrain
+      var ty = (World && World.getTerrainHeight) ? World.getTerrainHeight(photoMode.freeLookAt.x, photoMode.freeLookAt.z) : 0;
+      photoMode.freeLookAt.y = ty + 1.5;
+    }
+
+    // Orbit around freeLookAt
+    var camX = photoMode.freeLookAt.x + Math.sin(inputOrbit) * Math.cos(cameraPitch) * inputDist;
+    var camY = photoMode.freeLookAt.y + Math.sin(cameraPitch) * inputDist;
+    var camZ = photoMode.freeLookAt.z + Math.cos(inputOrbit) * Math.cos(cameraPitch) * inputDist;
+
+    // Smooth lerp
+    var lf = 0.12;
+    sceneContext.camera.position.x += (camX - sceneContext.camera.position.x) * lf;
+    sceneContext.camera.position.y += (camY - sceneContext.camera.position.y) * lf;
+    sceneContext.camera.position.z += (camZ - sceneContext.camera.position.z) * lf;
+
+    sceneContext.camera.lookAt(
+      photoMode.freeLookAt.x,
+      photoMode.freeLookAt.y,
+      photoMode.freeLookAt.z
+    );
+    return true;
+  }
+
+  // Cinematic zone entry swoop
+  var cinematicCamera = {
+    active: false, elapsed: 0, duration: 1.2,
+    startPos: null, peakPos: null,
+    startLookAt: null, targetLookAt: null
+  };
+
+  // Photo mode (F2 toggle)
+  var photoMode = {
+    active: false,
+    freeLookAt: null,
+    savedHUDDisplay: '',
+    labelEl: null
+  };
+
   // Interaction target tracking for hover highlights and tooltips
   var currentInteractionTarget = null; // { object, type, name, distance, action, mesh }
   var tooltipEl = null;
@@ -953,8 +1114,8 @@
     // Process queued messages
     processMessageQueue();
 
-    // Process local player movement
-    if (Input && localPlayer && gameState) {
+    // Process local player movement (skip in photo mode)
+    if (Input && localPlayer && gameState && !photoMode.active) {
       const delta = Input.getMovementDelta();
       if (delta.x !== 0 || delta.z !== 0) {
         // Rotate movement delta by camera yaw so WASD is camera-relative
@@ -1009,6 +1170,10 @@
             var oldZone = currentZone;
             currentZone = detectedZone;
             console.log('Entered zone:', currentZone);
+
+            // Start cinematic zone entry swoop
+            startZoneCinematic();
+
             // Track activity
             addRecentActivity('Entered ' + currentZone);
 
@@ -1232,6 +1397,15 @@
         }
         localPlayer.position.y = terrainY;
 
+        // Photo mode camera overrides normal follow
+        if (photoMode.active) {
+          updatePhotoModeCamera(deltaTime);
+        }
+        // Cinematic camera overrides normal follow
+        else if (cinematicCamera.active) {
+          updateCinematicCamera(deltaTime);
+        }
+        else {
         // Get camera controls from Input module
         var inputCameraDistance = Input && Input.getCameraDistance ? Input.getCameraDistance() : cameraDistance;
         var inputCameraOrbit = Input && Input.getCameraOrbit ? Input.getCameraOrbit() : cameraYaw;
@@ -1275,6 +1449,7 @@
           terrainY + 1.5,
           localPlayer.position.z
         );
+        } // end normal camera else block
       }
 
       // Update day/night cycle
@@ -1308,9 +1483,9 @@
         }
       }
 
-      // Cull distant lights for performance (max 8 nearest within 40 units)
+      // Cull distant lights for performance (max 12 nearest within 40 units)
       if (World.cullLights) {
-        World.cullLights(sceneContext, localPlayer.position, 40, 8);
+        World.cullLights(sceneContext, localPlayer.position, 40, 12);
       }
 
       // Performance optimizations
@@ -3257,6 +3432,10 @@
         }
         break;
 
+      case 'togglePhotoMode':
+        togglePhotoMode();
+        break;
+
       case 'toggleSettings':
         if (HUD) {
           // Close any open panels/dialogs first
@@ -4031,7 +4210,7 @@
         banner.className = 'seasonal-banner season-' + currentSeason.id;
         document.body.appendChild(banner);
       }
-      banner.innerHTML = '<div class="seasonal-banner-title">' + currentSeason.festival + '</div>' +
+      banner.innerHTML = '<div class="seasonal-banner-title">' + (currentSeason.festival && currentSeason.festival.name ? currentSeason.festival.name : currentSeason.name) + '</div>' +
         '<div class="seasonal-banner-desc">' + currentSeason.description + '</div>' +
         '<div class="seasonal-banner-countdown">' + daysLeft + ' days remaining</div>';
       banner.style.display = 'block';

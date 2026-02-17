@@ -10,6 +10,7 @@
   var animatedObjects = [];
   var loadedChunks = new Map(); // "cx_cz" -> { group, objects[] }
   var activeZone = 'nexus';
+  var zoneLights = []; // Night-time point lights at zone landmarks
 
   // Texture loader and cache
   var textureLoader = null;
@@ -648,6 +649,63 @@
     createCommonsStructure(scene);
     createArenaStructure(scene);
     createPortals(scene);
+  }
+
+  // Night-time warm point lights at zone landmarks
+  function createZoneNightLights(scene) {
+    var lightDefs = [
+      // nexus: pillars + obelisk
+      { x: 5, z: 5, y: 4, zone: 'nexus' },
+      { x: -5, z: 5, y: 4, zone: 'nexus' },
+      { x: -5, z: -5, y: 4, zone: 'nexus' },
+      { x: 0, z: 0, y: 6, zone: 'nexus' },
+      // gardens: fountain + paths
+      { x: 200, z: 30, y: 3, zone: 'gardens' },
+      { x: 210, z: 40, y: 2.5, zone: 'gardens' },
+      { x: 190, z: 20, y: 2.5, zone: 'gardens' },
+      // athenaeum: library windows + entrance
+      { x: 100, z: -220, y: 4, zone: 'athenaeum' },
+      { x: 105, z: -215, y: 4, zone: 'athenaeum' },
+      { x: 95, z: -225, y: 3, zone: 'athenaeum' },
+      // studio: workbenches
+      { x: -200, z: -100, y: 3, zone: 'studio' },
+      { x: -195, z: -95, y: 3, zone: 'studio' },
+      // agora: market stalls + central
+      { x: -190, z: 120, y: 3, zone: 'agora' },
+      { x: -185, z: 125, y: 3, zone: 'agora' },
+      { x: -195, z: 115, y: 3.5, zone: 'agora' },
+      // commons: near buildings
+      { x: 170, z: 190, y: 3, zone: 'commons' },
+      { x: 175, z: 195, y: 3, zone: 'commons' },
+      // wilds: campfire clearing
+      { x: -30, z: 260, y: 2.5, zone: 'wilds' },
+      // arena: perimeter braziers
+      { x: 8, z: -240, y: 3.5, zone: 'arena' },
+      { x: -8, z: -240, y: 3.5, zone: 'arena' }
+    ];
+
+    var glowGeo = new THREE.SphereGeometry(0.15, 8, 8);
+
+    for (var i = 0; i < lightDefs.length; i++) {
+      var def = lightDefs[i];
+      var ty = terrainHeight(def.x, def.z) + def.y;
+
+      var light = new THREE.PointLight(0xffaa55, 0, 15, 2);
+      light.position.set(def.x, ty, def.z);
+      scene.add(light);
+
+      // Visible glow sphere
+      var glowMat = new THREE.MeshBasicMaterial({
+        color: 0xffcc66,
+        transparent: true,
+        opacity: 0
+      });
+      var glow = new THREE.Mesh(glowGeo, glowMat);
+      glow.position.set(def.x, ty, def.z);
+      scene.add(glow);
+
+      zoneLights.push({ light: light, glow: glow, zone: def.zone });
+    }
   }
 
   function createNexusStructure(scene) {
@@ -2177,16 +2235,99 @@
   // PLAYER MODELS
   // ========================================================================
 
+  // 8-tone skin palette for character variety
+  var SKIN_TONES = [
+    0xFFDBAC, 0xF1C27D, 0xE0AC69, 0xC68642,
+    0x8D5524, 0x6B3A2A, 0xF5D6C3, 0xD4A574
+  ];
+
+  function getSkinTone(seed) {
+    var hash = 0;
+    if (typeof seed === 'string') {
+      for (var i = 0; i < seed.length; i++) {
+        hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+        hash = hash & hash;
+      }
+    } else {
+      hash = seed || 0;
+    }
+    return SKIN_TONES[Math.abs(hash) % SKIN_TONES.length];
+  }
+
   function createHumanoidModel(color) {
     var player = new THREE.Group();
+    var skinColor = getSkinTone(color || 0x4169e1);
+    var skinMat = new THREE.MeshLambertMaterial({ color: skinColor });
 
     // Head - SphereGeometry, skin-toned
     var headGeo = new THREE.SphereGeometry(0.3, 16, 16);
-    var headMat = new THREE.MeshLambertMaterial({ color: 0xffdbac });
-    var head = new THREE.Mesh(headGeo, headMat);
+    var head = new THREE.Mesh(headGeo, skinMat.clone());
     head.position.y = 1.5;
     head.castShadow = false;
     player.add(head);
+
+    // Eyes - white with dark pupils
+    var eyeGeo = new THREE.SphereGeometry(0.04, 8, 8);
+    var eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    var pupilGeo = new THREE.SphereGeometry(0.02, 8, 8);
+    var pupilMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+
+    var leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+    leftEye.position.set(-0.1, 0.05, 0.26);
+    var leftPupil = new THREE.Mesh(pupilGeo, pupilMat);
+    leftPupil.position.set(0, 0, 0.03);
+    leftEye.add(leftPupil);
+    head.add(leftEye);
+
+    var rightEye = new THREE.Mesh(eyeGeo, eyeMat.clone());
+    rightEye.position.set(0.1, 0.05, 0.26);
+    var rightPupil = new THREE.Mesh(pupilGeo, pupilMat.clone());
+    rightPupil.position.set(0, 0, 0.03);
+    rightEye.add(rightPupil);
+    head.add(rightEye);
+
+    // Hair - pick style based on color hash
+    var hairHash = (color || 0x4169e1) % 4;
+    var hairColors = [0x1a1a1a, 0x4a3000, 0x8B4513, 0xd4a574];
+    var hairMat = new THREE.MeshLambertMaterial({ color: hairColors[hairHash] });
+    if (hairHash === 0) {
+      // Buzz cut - slightly oversized sphere
+      var buzzGeo = new THREE.SphereGeometry(0.31, 16, 16);
+      var buzz = new THREE.Mesh(buzzGeo, hairMat);
+      buzz.position.y = 0.02;
+      buzz.scale.y = 0.9;
+      head.add(buzz);
+    } else if (hairHash === 1) {
+      // Long hair - sphere + box behind
+      var longTopGeo = new THREE.SphereGeometry(0.32, 16, 16);
+      var longTop = new THREE.Mesh(longTopGeo, hairMat);
+      longTop.position.y = 0.05;
+      longTop.scale.y = 0.85;
+      head.add(longTop);
+      var longBackGeo = new THREE.BoxGeometry(0.4, 0.35, 0.15);
+      var longBack = new THREE.Mesh(longBackGeo, hairMat.clone());
+      longBack.position.set(0, -0.15, -0.18);
+      head.add(longBack);
+    } else if (hairHash === 2) {
+      // Mohawk - narrow box on top
+      var mohawkGeo = new THREE.BoxGeometry(0.08, 0.2, 0.4);
+      var mohawk = new THREE.Mesh(mohawkGeo, hairMat);
+      mohawk.position.y = 0.25;
+      head.add(mohawk);
+    } else {
+      // Bun - small sphere on back
+      var bunGeo = new THREE.SphereGeometry(0.12, 8, 8);
+      var bun = new THREE.Mesh(bunGeo, hairMat);
+      bun.position.set(0, 0.1, -0.28);
+      head.add(bun);
+    }
+
+    // Neck
+    var neckGeo = new THREE.CylinderGeometry(0.1, 0.12, 0.15, 8);
+    var neck = new THREE.Mesh(neckGeo, skinMat.clone());
+    neck.position.y = 1.28;
+    neck.castShadow = false;
+    player.add(neck);
 
     // Torso - BoxGeometry, colored shirt
     var torsoGeo = new THREE.BoxGeometry(0.5, 0.6, 0.3);
@@ -2196,19 +2337,40 @@
     torso.castShadow = false;
     player.add(torso);
 
+    // Shoulder joints
+    var shoulderGeo = new THREE.SphereGeometry(0.1, 8, 8);
+    var leftShoulder = new THREE.Mesh(shoulderGeo, skinMat.clone());
+    leftShoulder.position.set(-0.35, 1.2, 0);
+    leftShoulder.castShadow = false;
+    player.add(leftShoulder);
+
+    var rightShoulder = new THREE.Mesh(shoulderGeo, skinMat.clone());
+    rightShoulder.position.set(0.35, 1.2, 0);
+    rightShoulder.castShadow = false;
+    player.add(rightShoulder);
+
     // Arms - CylinderGeometry, attached at shoulders
     var armGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8);
-    var armMat = new THREE.MeshLambertMaterial({ color: 0xffdbac });
 
-    var leftArm = new THREE.Mesh(armGeo, armMat);
+    var leftArm = new THREE.Mesh(armGeo, skinMat.clone());
     leftArm.position.set(-0.35, 1.05, 0);
     leftArm.castShadow = false;
     player.add(leftArm);
 
-    var rightArm = new THREE.Mesh(armGeo, armMat.clone());
+    // Hands as children of arms
+    var handGeo = new THREE.SphereGeometry(0.07, 8, 8);
+    var leftHand = new THREE.Mesh(handGeo, skinMat.clone());
+    leftHand.position.y = -0.3;
+    leftArm.add(leftHand);
+
+    var rightArm = new THREE.Mesh(armGeo, skinMat.clone());
     rightArm.position.set(0.35, 1.05, 0);
     rightArm.castShadow = false;
     player.add(rightArm);
+
+    var rightHand = new THREE.Mesh(handGeo, skinMat.clone());
+    rightHand.position.y = -0.3;
+    rightArm.add(rightHand);
 
     // Legs - CylinderGeometry, attached at hips
     var legGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 8);
@@ -3080,6 +3242,9 @@
     // Create all zone structures (one-time, persistent)
     createZoneStructures(scene);
 
+    // Place warm night lights at zone landmarks
+    createZoneNightLights(scene);
+
     // Populate world with environmental objects (trees, rocks, furniture)
     populateEnvironment(scene);
 
@@ -3335,7 +3500,7 @@
     // Sync renderer background with fog to prevent visible horizon seam
     if (sceneCtx.renderer) sceneCtx.renderer.setClearColor(fogColor);
     if (sceneCtx.directionalLight) {
-      sceneCtx.directionalLight.intensity = Math.max(0.05, sunIntensity);
+      sceneCtx.directionalLight.intensity = Math.max(0.15, sunIntensity);
       sceneCtx.directionalLight.position.set(
         Math.cos(sunAngle) * 50,
         Math.max(10, Math.sin(sunAngle) * 100),
@@ -3419,6 +3584,26 @@
       // Only adjust fog if weather isn't overriding it
       if (currentWeatherType === 'clear' || !currentWeatherType) {
         sceneCtx.scene.fog.density = baseDensity * timeFogMult;
+      }
+    }
+
+    // Fade zone night lights based on time of day
+    var nightIntensity = 0;
+    if (normalizedTime < 0.2 || normalizedTime > 0.8) {
+      // Full night
+      nightIntensity = 1.0;
+    } else if (normalizedTime < 0.3) {
+      // Dawn fade out
+      nightIntensity = 1.0 - (normalizedTime - 0.2) / 0.1;
+    } else if (normalizedTime > 0.7) {
+      // Dusk fade in
+      nightIntensity = (normalizedTime - 0.7) / 0.1;
+    }
+    for (var li = 0; li < zoneLights.length; li++) {
+      var zl = zoneLights[li];
+      zl.light.intensity = nightIntensity * 1.2;
+      if (zl.glow && zl.glow.material) {
+        zl.glow.material.opacity = nightIntensity * 0.8;
       }
     }
   }
@@ -3526,7 +3711,12 @@
           var flicker = 0.7 + Math.sin(time * 0.01 + (p.seed || 0)) * 0.15 + Math.sin(time * 0.023 + (p.seed || 0) * 2) * 0.15;
           obj.mesh.scale.set(flicker, 0.8 + flicker * 0.4, flicker);
           if (p.light) {
-            p.light.intensity = 0.5 + flicker * 0.5;
+            var torchBase = 0.5 + flicker * 0.5;
+            // Boost torch brightness at night (worldTime passed as 3rd arg)
+            var wt = (typeof worldTime === 'number') ? worldTime : 720;
+            var nt = wt / 1440;
+            var nightBoost = (nt < 0.2 || nt > 0.8) ? 1.5 : (nt < 0.3 ? (1.0 + 0.5 * (1.0 - (nt - 0.2) / 0.1)) : (nt > 0.7 ? (1.0 + 0.5 * ((nt - 0.7) / 0.1)) : 1.0));
+            p.light.intensity = torchBase * nightBoost;
           }
           break;
         case 'water':

@@ -407,8 +407,21 @@
     artist: 0xFF69B4       // pink
   };
 
-  // Skin color for heads
-  const SKIN_COLOR = 0xFFDBAC;
+  // 8-tone skin palette for NPC variety
+  var NPC_SKIN_TONES = [
+    0xFFDBAC, 0xF1C27D, 0xE0AC69, 0xC68642,
+    0x8D5524, 0x6B3A2A, 0xF5D6C3, 0xD4A574
+  ];
+
+  function getNpcSkinTone(agentId) {
+    var hash = 0;
+    var str = String(agentId || '');
+    for (var i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return NPC_SKIN_TONES[Math.abs(hash) % NPC_SKIN_TONES.length];
+  }
 
   // Activity-based dialogue for schedule system
   const ACTIVITY_DIALOGUE = {
@@ -714,52 +727,133 @@
   /**
    * Create a detailed humanoid NPC model
    */
-  function createHumanoidNPC(archetype, THREE) {
-    const group = new THREE.Group();
-    const color = ARCHETYPE_COLORS[archetype] || 0xCCCCCC;
+  function createHumanoidNPC(archetype, THREE, agentId) {
+    var group = new THREE.Group();
+    var color = ARCHETYPE_COLORS[archetype] || 0xCCCCCC;
+    var skinColor = getNpcSkinTone(agentId);
+    var skinMat = new THREE.MeshStandardMaterial({ color: skinColor });
 
     // Head - skin colored sphere
-    const headGeometry = new THREE.SphereGeometry(0.2, 16, 16);
-    const headMaterial = new THREE.MeshStandardMaterial({ color: SKIN_COLOR });
-    const head = new THREE.Mesh(headGeometry, headMaterial);
+    var headGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+    var head = new THREE.Mesh(headGeometry, skinMat.clone());
     head.position.y = 1.6;
     head.castShadow = false;
     group.add(head);
 
+    // Eyes
+    var eyeGeo = new THREE.SphereGeometry(0.03, 8, 8);
+    var eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    var pupilGeo = new THREE.SphereGeometry(0.015, 8, 8);
+    var pupilMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+
+    var leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+    leftEye.position.set(-0.07, 0.03, 0.18);
+    var leftPupil = new THREE.Mesh(pupilGeo, pupilMat);
+    leftPupil.position.z = 0.025;
+    leftEye.add(leftPupil);
+    head.add(leftEye);
+
+    var rightEye = new THREE.Mesh(eyeGeo, eyeMat.clone());
+    rightEye.position.set(0.07, 0.03, 0.18);
+    var rightPupil = new THREE.Mesh(pupilGeo, pupilMat.clone());
+    rightPupil.position.z = 0.025;
+    rightEye.add(rightPupil);
+    head.add(rightEye);
+
+    // Hair based on agentId hash
+    var hairHash = Math.abs((agentId || '').length * 7 + (agentId || '').charCodeAt(0) || 0) % 4;
+    var hairColors = [0x1a1a1a, 0x4a3000, 0x8B4513, 0xd4a574];
+    var hairMat = new THREE.MeshStandardMaterial({ color: hairColors[hairHash] });
+    if (hairHash === 0) {
+      var buzzGeo = new THREE.SphereGeometry(0.21, 12, 12);
+      var buzz = new THREE.Mesh(buzzGeo, hairMat);
+      buzz.position.y = 0.02;
+      buzz.scale.y = 0.85;
+      head.add(buzz);
+    } else if (hairHash === 1) {
+      var longTopGeo = new THREE.SphereGeometry(0.22, 12, 12);
+      var longTop = new THREE.Mesh(longTopGeo, hairMat);
+      longTop.position.y = 0.04;
+      longTop.scale.y = 0.8;
+      head.add(longTop);
+      var longBackGeo = new THREE.BoxGeometry(0.3, 0.25, 0.12);
+      var longBack = new THREE.Mesh(longBackGeo, hairMat.clone());
+      longBack.position.set(0, -0.12, -0.14);
+      head.add(longBack);
+    } else if (hairHash === 2) {
+      var mohawkGeo = new THREE.BoxGeometry(0.06, 0.15, 0.3);
+      var mohawk = new THREE.Mesh(mohawkGeo, hairMat);
+      mohawk.position.y = 0.18;
+      head.add(mohawk);
+    } else {
+      var bunGeo = new THREE.SphereGeometry(0.09, 8, 8);
+      var bun = new THREE.Mesh(bunGeo, hairMat);
+      bun.position.set(0, 0.08, -0.2);
+      head.add(bun);
+    }
+
+    // Neck
+    var neckGeo = new THREE.CylinderGeometry(0.07, 0.09, 0.12, 8);
+    var neck = new THREE.Mesh(neckGeo, skinMat.clone());
+    neck.position.y = 1.42;
+    neck.castShadow = false;
+    group.add(neck);
+
     // Torso - archetype colored box
-    const torsoGeometry = new THREE.BoxGeometry(0.4, 0.5, 0.25);
-    const torsoMaterial = new THREE.MeshStandardMaterial({ color: color });
-    const torso = new THREE.Mesh(torsoGeometry, torsoMaterial);
+    var torsoGeometry = new THREE.BoxGeometry(0.4, 0.5, 0.25);
+    var torsoMaterial = new THREE.MeshStandardMaterial({ color: color });
+    var torso = new THREE.Mesh(torsoGeometry, torsoMaterial);
     torso.position.y = 1.15;
     torso.castShadow = false;
     group.add(torso);
 
-    // Left Arm - cylinder
-    const armGeometry = new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8);
-    const armMaterial = new THREE.MeshStandardMaterial({ color: SKIN_COLOR });
+    // Shoulder joints
+    var shoulderGeo = new THREE.SphereGeometry(0.08, 8, 8);
+    var leftShoulder = new THREE.Mesh(shoulderGeo, skinMat.clone());
+    leftShoulder.position.set(-0.28, 1.35, 0);
+    leftShoulder.castShadow = false;
+    group.add(leftShoulder);
 
-    const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+    var rightShoulder = new THREE.Mesh(shoulderGeo, skinMat.clone());
+    rightShoulder.position.set(0.28, 1.35, 0);
+    rightShoulder.castShadow = false;
+    group.add(rightShoulder);
+
+    // Left Arm - cylinder
+    var armGeometry = new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8);
+
+    var leftArm = new THREE.Mesh(armGeometry, skinMat.clone());
     leftArm.position.set(-0.28, 1.15, 0);
     leftArm.castShadow = false;
     group.add(leftArm);
 
+    // Hands as children of arms
+    var handGeo = new THREE.SphereGeometry(0.05, 8, 8);
+    var leftHand = new THREE.Mesh(handGeo, skinMat.clone());
+    leftHand.position.y = -0.3;
+    leftArm.add(leftHand);
+
     // Right Arm - cylinder
-    const rightArm = new THREE.Mesh(armGeometry, armMaterial.clone());
+    var rightArm = new THREE.Mesh(armGeometry, skinMat.clone());
     rightArm.position.set(0.28, 1.15, 0);
     rightArm.castShadow = false;
     group.add(rightArm);
 
-    // Left Leg - cylinder
-    const legGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.55, 8);
-    const legMaterial = new THREE.MeshStandardMaterial({ color: color });
+    var rightHand = new THREE.Mesh(handGeo, skinMat.clone());
+    rightHand.position.y = -0.3;
+    rightArm.add(rightHand);
 
-    const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+    // Left Leg - cylinder
+    var legGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.55, 8);
+    var legMaterial = new THREE.MeshStandardMaterial({ color: color });
+
+    var leftLeg = new THREE.Mesh(legGeometry, legMaterial);
     leftLeg.position.set(-0.12, 0.45, 0);
     leftLeg.castShadow = false;
     group.add(leftLeg);
 
     // Right Leg - cylinder
-    const rightLeg = new THREE.Mesh(legGeometry, legMaterial.clone());
+    var rightLeg = new THREE.Mesh(legGeometry, legMaterial.clone());
     rightLeg.position.set(0.12, 0.45, 0);
     rightLeg.castShadow = false;
     group.add(rightLeg);
@@ -773,16 +867,16 @@
     group.userData.rightLeg = rightLeg;
 
     // Add glow ring beneath NPC's feet
-    const glowGeometry = new THREE.CircleGeometry(0.35, 16);
-    const glowMaterial = new THREE.MeshBasicMaterial({
+    var glowGeometry = new THREE.CircleGeometry(0.35, 16);
+    var glowMaterial = new THREE.MeshBasicMaterial({
       color: color,
       transparent: true,
       opacity: 0.4,
       side: THREE.DoubleSide
     });
-    const glowRing = new THREE.Mesh(glowGeometry, glowMaterial);
-    glowRing.rotation.x = -Math.PI / 2; // Lay flat on ground
-    glowRing.position.y = 0.02; // Slightly above ground to prevent z-fighting
+    var glowRing = new THREE.Mesh(glowGeometry, glowMaterial);
+    glowRing.rotation.x = -Math.PI / 2;
+    glowRing.position.y = 0.02;
     glowRing.castShadow = false;
     glowRing.receiveShadow = false;
     group.add(glowRing);
@@ -798,48 +892,70 @@
    * Add archetype-specific accessories to humanoid model
    */
   function addAccessories(group, archetype, color, THREE) {
-    const head = group.userData.head;
-    const torso = group.userData.torso;
-    const rightArm = group.userData.rightArm;
+    var head = group.userData.head;
+    var torso = group.userData.torso;
+    var rightArm = group.userData.rightArm;
 
     switch (archetype) {
       case 'gardener':
         // Small green hat (flattened cylinder)
-        const hatGeom = new THREE.CylinderGeometry(0.25, 0.25, 0.08, 16);
-        const hatMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
-        const hat = new THREE.Mesh(hatGeom, hatMat);
+        var hatGeom = new THREE.CylinderGeometry(0.25, 0.25, 0.08, 16);
+        var hatMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
+        var hat = new THREE.Mesh(hatGeom, hatMat);
         hat.position.y = 0.24;
         hat.castShadow = false;
         head.add(hat);
+        // Small apron
+        var gApronGeo = new THREE.BoxGeometry(0.32, 0.3, 0.02);
+        var gApronMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
+        var gApron = new THREE.Mesh(gApronGeo, gApronMat);
+        gApron.position.set(0, -0.08, 0.14);
+        gApron.castShadow = false;
+        torso.add(gApron);
         break;
 
       case 'builder':
         // Hard hat (yellow half-sphere)
-        const hardHatGeom = new THREE.SphereGeometry(0.22, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-        const hardHatMat = new THREE.MeshStandardMaterial({ color: 0xFFEB3B });
-        const hardHat = new THREE.Mesh(hardHatGeom, hardHatMat);
+        var hardHatGeom = new THREE.SphereGeometry(0.22, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        var hardHatMat = new THREE.MeshStandardMaterial({ color: 0xFFEB3B });
+        var hardHat = new THREE.Mesh(hardHatGeom, hardHatMat);
         hardHat.position.y = 0.2;
         hardHat.castShadow = false;
         head.add(hardHat);
+        // Tool belt (thin torus around waist)
+        var beltGeo = new THREE.TorusGeometry(0.25, 0.03, 8, 16);
+        var beltMat = new THREE.MeshStandardMaterial({ color: 0x5D4037 });
+        var belt = new THREE.Mesh(beltGeo, beltMat);
+        belt.position.set(0, -0.2, 0);
+        belt.rotation.x = Math.PI / 2;
+        belt.castShadow = false;
+        torso.add(belt);
         break;
 
       case 'storyteller':
         // Book in hand (small box)
-        const bookGeom = new THREE.BoxGeometry(0.08, 0.12, 0.02);
-        const bookMat = new THREE.MeshStandardMaterial({ color: 0x6A1B9A });
-        const book = new THREE.Mesh(bookGeom, bookMat);
+        var bookGeom = new THREE.BoxGeometry(0.08, 0.12, 0.02);
+        var bookMat = new THREE.MeshStandardMaterial({ color: 0x6A1B9A });
+        var book = new THREE.Mesh(bookGeom, bookMat);
         book.position.set(0.08, -0.15, 0.08);
         book.rotation.z = Math.PI / 6;
         book.castShadow = false;
         rightArm.add(book);
         group.userData.accessory = book;
+        // Cape/cloak behind torso
+        var capeGeo = new THREE.ConeGeometry(0.3, 0.9, 12);
+        var capeMat = new THREE.MeshStandardMaterial({ color: 0x4A148C });
+        var cape = new THREE.Mesh(capeGeo, capeMat);
+        cape.position.set(0, -0.1, -0.18);
+        cape.castShadow = false;
+        torso.add(cape);
         break;
 
       case 'merchant':
         // Apron (flat box in front of torso)
-        const apronGeom = new THREE.BoxGeometry(0.35, 0.4, 0.02);
-        const apronMat = new THREE.MeshStandardMaterial({ color: 0xC5A400 });
-        const apron = new THREE.Mesh(apronGeom, apronMat);
+        var apronGeom = new THREE.BoxGeometry(0.35, 0.4, 0.02);
+        var apronMat = new THREE.MeshStandardMaterial({ color: 0xC5A400 });
+        var apron = new THREE.Mesh(apronGeom, apronMat);
         apron.position.set(0, 0, 0.14);
         apron.castShadow = false;
         torso.add(apron);
@@ -847,9 +963,9 @@
 
       case 'explorer':
         // Backpack (box behind torso)
-        const backpackGeom = new THREE.BoxGeometry(0.3, 0.35, 0.15);
-        const backpackMat = new THREE.MeshStandardMaterial({ color: 0x00838F });
-        const backpack = new THREE.Mesh(backpackGeom, backpackMat);
+        var backpackGeom = new THREE.BoxGeometry(0.3, 0.35, 0.15);
+        var backpackMat = new THREE.MeshStandardMaterial({ color: 0x00838F });
+        var backpack = new THREE.Mesh(backpackGeom, backpackMat);
         backpack.position.set(0, 0.05, -0.2);
         backpack.castShadow = false;
         torso.add(backpack);
@@ -857,9 +973,9 @@
 
       case 'teacher':
         // Glasses (thin torus in front of head)
-        const glassesGeom = new THREE.TorusGeometry(0.12, 0.015, 8, 16);
-        const glassesMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
-        const glasses = new THREE.Mesh(glassesGeom, glassesMat);
+        var glassesGeom = new THREE.TorusGeometry(0.12, 0.015, 8, 16);
+        var glassesMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+        var glasses = new THREE.Mesh(glassesGeom, glassesMat);
         glasses.position.set(0, 0, 0.18);
         glasses.rotation.y = Math.PI / 2;
         glasses.castShadow = false;
@@ -868,9 +984,9 @@
 
       case 'musician':
         // Instrument (cylinder next to body)
-        const instrumentGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.6, 12);
-        const instrumentMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-        const instrument = new THREE.Mesh(instrumentGeom, instrumentMat);
+        var instrumentGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.6, 12);
+        var instrumentMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+        var instrument = new THREE.Mesh(instrumentGeom, instrumentMat);
         instrument.position.set(0.35, 1.0, 0);
         instrument.rotation.z = Math.PI / 4;
         instrument.castShadow = false;
@@ -880,24 +996,31 @@
 
       case 'healer':
         // Cross emblem (two thin crossed boxes)
-        const crossMat = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
-        const crossVertGeom = new THREE.BoxGeometry(0.06, 0.2, 0.02);
-        const crossHorGeom = new THREE.BoxGeometry(0.2, 0.06, 0.02);
-        const crossVert = new THREE.Mesh(crossVertGeom, crossMat);
-        const crossHor = new THREE.Mesh(crossHorGeom, crossMat.clone());
+        var crossMat = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
+        var crossVertGeom = new THREE.BoxGeometry(0.06, 0.2, 0.02);
+        var crossHorGeom = new THREE.BoxGeometry(0.2, 0.06, 0.02);
+        var crossVert = new THREE.Mesh(crossVertGeom, crossMat);
+        var crossHor = new THREE.Mesh(crossHorGeom, crossMat.clone());
         crossVert.position.set(0, 0.05, 0.14);
         crossHor.position.set(0, 0.05, 0.14);
         crossVert.castShadow = false;
         crossHor.castShadow = false;
         torso.add(crossVert);
         torso.add(crossHor);
+        // White robe from waist
+        var healRobeGeo = new THREE.ConeGeometry(0.3, 0.9, 12);
+        var healRobeMat = new THREE.MeshStandardMaterial({ color: 0xF5F5F5 });
+        var healRobe = new THREE.Mesh(healRobeGeo, healRobeMat);
+        healRobe.position.y = 0.35;
+        healRobe.castShadow = false;
+        group.add(healRobe);
         break;
 
       case 'philosopher':
         // Long robe (cone extending from torso to ground)
-        const robeGeom = new THREE.ConeGeometry(0.35, 1.2, 16);
-        const robeMat = new THREE.MeshStandardMaterial({ color: 0x303F9F });
-        const robe = new THREE.Mesh(robeGeom, robeMat);
+        var robeGeom = new THREE.ConeGeometry(0.35, 1.2, 16);
+        var robeMat = new THREE.MeshStandardMaterial({ color: 0x303F9F });
+        var robe = new THREE.Mesh(robeGeom, robeMat);
         robe.position.y = 0.3;
         robe.castShadow = false;
         group.add(robe);
@@ -905,9 +1028,9 @@
 
       case 'artist':
         // Beret (flattened sphere on head, tilted)
-        const beretGeom = new THREE.SphereGeometry(0.22, 16, 16);
-        const beretMat = new THREE.MeshStandardMaterial({ color: 0xD84315 });
-        const beret = new THREE.Mesh(beretGeom, beretMat);
+        var beretGeom = new THREE.SphereGeometry(0.22, 16, 16);
+        var beretMat = new THREE.MeshStandardMaterial({ color: 0xD84315 });
+        var beret = new THREE.Mesh(beretGeom, beretMat);
         beret.scale.set(1, 0.4, 1);
         beret.position.set(0.05, 0.22, 0);
         beret.rotation.z = Math.PI / 8;
@@ -1691,8 +1814,8 @@
     storedSceneContext = sceneContext;
 
     npcAgents.forEach(agent => {
-      // Create detailed humanoid NPC
-      const group = createHumanoidNPC(agent.archetype, THREE);
+      // Create detailed humanoid NPC with unique skin tone
+      const group = createHumanoidNPC(agent.archetype, THREE, agent.id);
 
       // Name label with archetype subtitle
       const canvas = document.createElement('canvas');

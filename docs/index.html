@@ -17660,6 +17660,7 @@ html, body {
   var animatedObjects = [];
   var loadedChunks = new Map(); // "cx_cz" -> { group, objects[] }
   var activeZone = 'nexus';
+  var zoneLights = []; // Night-time point lights at zone landmarks
 
   // Texture loader and cache
   var textureLoader = null;
@@ -18298,6 +18299,63 @@ html, body {
     createCommonsStructure(scene);
     createArenaStructure(scene);
     createPortals(scene);
+  }
+
+  // Night-time warm point lights at zone landmarks
+  function createZoneNightLights(scene) {
+    var lightDefs = [
+      // nexus: pillars + obelisk
+      { x: 5, z: 5, y: 4, zone: 'nexus' },
+      { x: -5, z: 5, y: 4, zone: 'nexus' },
+      { x: -5, z: -5, y: 4, zone: 'nexus' },
+      { x: 0, z: 0, y: 6, zone: 'nexus' },
+      // gardens: fountain + paths
+      { x: 200, z: 30, y: 3, zone: 'gardens' },
+      { x: 210, z: 40, y: 2.5, zone: 'gardens' },
+      { x: 190, z: 20, y: 2.5, zone: 'gardens' },
+      // athenaeum: library windows + entrance
+      { x: 100, z: -220, y: 4, zone: 'athenaeum' },
+      { x: 105, z: -215, y: 4, zone: 'athenaeum' },
+      { x: 95, z: -225, y: 3, zone: 'athenaeum' },
+      // studio: workbenches
+      { x: -200, z: -100, y: 3, zone: 'studio' },
+      { x: -195, z: -95, y: 3, zone: 'studio' },
+      // agora: market stalls + central
+      { x: -190, z: 120, y: 3, zone: 'agora' },
+      { x: -185, z: 125, y: 3, zone: 'agora' },
+      { x: -195, z: 115, y: 3.5, zone: 'agora' },
+      // commons: near buildings
+      { x: 170, z: 190, y: 3, zone: 'commons' },
+      { x: 175, z: 195, y: 3, zone: 'commons' },
+      // wilds: campfire clearing
+      { x: -30, z: 260, y: 2.5, zone: 'wilds' },
+      // arena: perimeter braziers
+      { x: 8, z: -240, y: 3.5, zone: 'arena' },
+      { x: -8, z: -240, y: 3.5, zone: 'arena' }
+    ];
+
+    var glowGeo = new THREE.SphereGeometry(0.15, 8, 8);
+
+    for (var i = 0; i < lightDefs.length; i++) {
+      var def = lightDefs[i];
+      var ty = terrainHeight(def.x, def.z) + def.y;
+
+      var light = new THREE.PointLight(0xffaa55, 0, 15, 2);
+      light.position.set(def.x, ty, def.z);
+      scene.add(light);
+
+      // Visible glow sphere
+      var glowMat = new THREE.MeshBasicMaterial({
+        color: 0xffcc66,
+        transparent: true,
+        opacity: 0
+      });
+      var glow = new THREE.Mesh(glowGeo, glowMat);
+      glow.position.set(def.x, ty, def.z);
+      scene.add(glow);
+
+      zoneLights.push({ light: light, glow: glow, zone: def.zone });
+    }
   }
 
   function createNexusStructure(scene) {
@@ -19827,16 +19885,99 @@ html, body {
   // PLAYER MODELS
   // ========================================================================
 
+  // 8-tone skin palette for character variety
+  var SKIN_TONES = [
+    0xFFDBAC, 0xF1C27D, 0xE0AC69, 0xC68642,
+    0x8D5524, 0x6B3A2A, 0xF5D6C3, 0xD4A574
+  ];
+
+  function getSkinTone(seed) {
+    var hash = 0;
+    if (typeof seed === 'string') {
+      for (var i = 0; i < seed.length; i++) {
+        hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+        hash = hash & hash;
+      }
+    } else {
+      hash = seed || 0;
+    }
+    return SKIN_TONES[Math.abs(hash) % SKIN_TONES.length];
+  }
+
   function createHumanoidModel(color) {
     var player = new THREE.Group();
+    var skinColor = getSkinTone(color || 0x4169e1);
+    var skinMat = new THREE.MeshLambertMaterial({ color: skinColor });
 
     // Head - SphereGeometry, skin-toned
     var headGeo = new THREE.SphereGeometry(0.3, 16, 16);
-    var headMat = new THREE.MeshLambertMaterial({ color: 0xffdbac });
-    var head = new THREE.Mesh(headGeo, headMat);
+    var head = new THREE.Mesh(headGeo, skinMat.clone());
     head.position.y = 1.5;
     head.castShadow = false;
     player.add(head);
+
+    // Eyes - white with dark pupils
+    var eyeGeo = new THREE.SphereGeometry(0.04, 8, 8);
+    var eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    var pupilGeo = new THREE.SphereGeometry(0.02, 8, 8);
+    var pupilMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+
+    var leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+    leftEye.position.set(-0.1, 0.05, 0.26);
+    var leftPupil = new THREE.Mesh(pupilGeo, pupilMat);
+    leftPupil.position.set(0, 0, 0.03);
+    leftEye.add(leftPupil);
+    head.add(leftEye);
+
+    var rightEye = new THREE.Mesh(eyeGeo, eyeMat.clone());
+    rightEye.position.set(0.1, 0.05, 0.26);
+    var rightPupil = new THREE.Mesh(pupilGeo, pupilMat.clone());
+    rightPupil.position.set(0, 0, 0.03);
+    rightEye.add(rightPupil);
+    head.add(rightEye);
+
+    // Hair - pick style based on color hash
+    var hairHash = (color || 0x4169e1) % 4;
+    var hairColors = [0x1a1a1a, 0x4a3000, 0x8B4513, 0xd4a574];
+    var hairMat = new THREE.MeshLambertMaterial({ color: hairColors[hairHash] });
+    if (hairHash === 0) {
+      // Buzz cut - slightly oversized sphere
+      var buzzGeo = new THREE.SphereGeometry(0.31, 16, 16);
+      var buzz = new THREE.Mesh(buzzGeo, hairMat);
+      buzz.position.y = 0.02;
+      buzz.scale.y = 0.9;
+      head.add(buzz);
+    } else if (hairHash === 1) {
+      // Long hair - sphere + box behind
+      var longTopGeo = new THREE.SphereGeometry(0.32, 16, 16);
+      var longTop = new THREE.Mesh(longTopGeo, hairMat);
+      longTop.position.y = 0.05;
+      longTop.scale.y = 0.85;
+      head.add(longTop);
+      var longBackGeo = new THREE.BoxGeometry(0.4, 0.35, 0.15);
+      var longBack = new THREE.Mesh(longBackGeo, hairMat.clone());
+      longBack.position.set(0, -0.15, -0.18);
+      head.add(longBack);
+    } else if (hairHash === 2) {
+      // Mohawk - narrow box on top
+      var mohawkGeo = new THREE.BoxGeometry(0.08, 0.2, 0.4);
+      var mohawk = new THREE.Mesh(mohawkGeo, hairMat);
+      mohawk.position.y = 0.25;
+      head.add(mohawk);
+    } else {
+      // Bun - small sphere on back
+      var bunGeo = new THREE.SphereGeometry(0.12, 8, 8);
+      var bun = new THREE.Mesh(bunGeo, hairMat);
+      bun.position.set(0, 0.1, -0.28);
+      head.add(bun);
+    }
+
+    // Neck
+    var neckGeo = new THREE.CylinderGeometry(0.1, 0.12, 0.15, 8);
+    var neck = new THREE.Mesh(neckGeo, skinMat.clone());
+    neck.position.y = 1.28;
+    neck.castShadow = false;
+    player.add(neck);
 
     // Torso - BoxGeometry, colored shirt
     var torsoGeo = new THREE.BoxGeometry(0.5, 0.6, 0.3);
@@ -19846,19 +19987,40 @@ html, body {
     torso.castShadow = false;
     player.add(torso);
 
+    // Shoulder joints
+    var shoulderGeo = new THREE.SphereGeometry(0.1, 8, 8);
+    var leftShoulder = new THREE.Mesh(shoulderGeo, skinMat.clone());
+    leftShoulder.position.set(-0.35, 1.2, 0);
+    leftShoulder.castShadow = false;
+    player.add(leftShoulder);
+
+    var rightShoulder = new THREE.Mesh(shoulderGeo, skinMat.clone());
+    rightShoulder.position.set(0.35, 1.2, 0);
+    rightShoulder.castShadow = false;
+    player.add(rightShoulder);
+
     // Arms - CylinderGeometry, attached at shoulders
     var armGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8);
-    var armMat = new THREE.MeshLambertMaterial({ color: 0xffdbac });
 
-    var leftArm = new THREE.Mesh(armGeo, armMat);
+    var leftArm = new THREE.Mesh(armGeo, skinMat.clone());
     leftArm.position.set(-0.35, 1.05, 0);
     leftArm.castShadow = false;
     player.add(leftArm);
 
-    var rightArm = new THREE.Mesh(armGeo, armMat.clone());
+    // Hands as children of arms
+    var handGeo = new THREE.SphereGeometry(0.07, 8, 8);
+    var leftHand = new THREE.Mesh(handGeo, skinMat.clone());
+    leftHand.position.y = -0.3;
+    leftArm.add(leftHand);
+
+    var rightArm = new THREE.Mesh(armGeo, skinMat.clone());
     rightArm.position.set(0.35, 1.05, 0);
     rightArm.castShadow = false;
     player.add(rightArm);
+
+    var rightHand = new THREE.Mesh(handGeo, skinMat.clone());
+    rightHand.position.y = -0.3;
+    rightArm.add(rightHand);
 
     // Legs - CylinderGeometry, attached at hips
     var legGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 8);
@@ -20730,6 +20892,9 @@ html, body {
     // Create all zone structures (one-time, persistent)
     createZoneStructures(scene);
 
+    // Place warm night lights at zone landmarks
+    createZoneNightLights(scene);
+
     // Populate world with environmental objects (trees, rocks, furniture)
     populateEnvironment(scene);
 
@@ -20985,7 +21150,7 @@ html, body {
     // Sync renderer background with fog to prevent visible horizon seam
     if (sceneCtx.renderer) sceneCtx.renderer.setClearColor(fogColor);
     if (sceneCtx.directionalLight) {
-      sceneCtx.directionalLight.intensity = Math.max(0.05, sunIntensity);
+      sceneCtx.directionalLight.intensity = Math.max(0.15, sunIntensity);
       sceneCtx.directionalLight.position.set(
         Math.cos(sunAngle) * 50,
         Math.max(10, Math.sin(sunAngle) * 100),
@@ -21069,6 +21234,26 @@ html, body {
       // Only adjust fog if weather isn't overriding it
       if (currentWeatherType === 'clear' || !currentWeatherType) {
         sceneCtx.scene.fog.density = baseDensity * timeFogMult;
+      }
+    }
+
+    // Fade zone night lights based on time of day
+    var nightIntensity = 0;
+    if (normalizedTime < 0.2 || normalizedTime > 0.8) {
+      // Full night
+      nightIntensity = 1.0;
+    } else if (normalizedTime < 0.3) {
+      // Dawn fade out
+      nightIntensity = 1.0 - (normalizedTime - 0.2) / 0.1;
+    } else if (normalizedTime > 0.7) {
+      // Dusk fade in
+      nightIntensity = (normalizedTime - 0.7) / 0.1;
+    }
+    for (var li = 0; li < zoneLights.length; li++) {
+      var zl = zoneLights[li];
+      zl.light.intensity = nightIntensity * 1.2;
+      if (zl.glow && zl.glow.material) {
+        zl.glow.material.opacity = nightIntensity * 0.8;
       }
     }
   }
@@ -21176,7 +21361,12 @@ html, body {
           var flicker = 0.7 + Math.sin(time * 0.01 + (p.seed || 0)) * 0.15 + Math.sin(time * 0.023 + (p.seed || 0) * 2) * 0.15;
           obj.mesh.scale.set(flicker, 0.8 + flicker * 0.4, flicker);
           if (p.light) {
-            p.light.intensity = 0.5 + flicker * 0.5;
+            var torchBase = 0.5 + flicker * 0.5;
+            // Boost torch brightness at night (worldTime passed as 3rd arg)
+            var wt = (typeof worldTime === 'number') ? worldTime : 720;
+            var nt = wt / 1440;
+            var nightBoost = (nt < 0.2 || nt > 0.8) ? 1.5 : (nt < 0.3 ? (1.0 + 0.5 * (1.0 - (nt - 0.2) / 0.1)) : (nt > 0.7 ? (1.0 + 0.5 * ((nt - 0.7) / 0.1)) : 1.0));
+            p.light.intensity = torchBase * nightBoost;
           }
           break;
         case 'water':
@@ -25716,6 +25906,15 @@ html, body {
         if (!chatMode) {
           if (callbacks.onAction) {
             callbacks.onAction('toggleHousing', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'F2':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('togglePhotoMode', {});
           }
           e.preventDefault();
         }
@@ -41914,8 +42113,21 @@ html, body {
     artist: 0xFF69B4       // pink
   };
 
-  // Skin color for heads
-  const SKIN_COLOR = 0xFFDBAC;
+  // 8-tone skin palette for NPC variety
+  var NPC_SKIN_TONES = [
+    0xFFDBAC, 0xF1C27D, 0xE0AC69, 0xC68642,
+    0x8D5524, 0x6B3A2A, 0xF5D6C3, 0xD4A574
+  ];
+
+  function getNpcSkinTone(agentId) {
+    var hash = 0;
+    var str = String(agentId || '');
+    for (var i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return NPC_SKIN_TONES[Math.abs(hash) % NPC_SKIN_TONES.length];
+  }
 
   // Activity-based dialogue for schedule system
   const ACTIVITY_DIALOGUE = {
@@ -42221,52 +42433,133 @@ html, body {
   /**
    * Create a detailed humanoid NPC model
    */
-  function createHumanoidNPC(archetype, THREE) {
-    const group = new THREE.Group();
-    const color = ARCHETYPE_COLORS[archetype] || 0xCCCCCC;
+  function createHumanoidNPC(archetype, THREE, agentId) {
+    var group = new THREE.Group();
+    var color = ARCHETYPE_COLORS[archetype] || 0xCCCCCC;
+    var skinColor = getNpcSkinTone(agentId);
+    var skinMat = new THREE.MeshStandardMaterial({ color: skinColor });
 
     // Head - skin colored sphere
-    const headGeometry = new THREE.SphereGeometry(0.2, 16, 16);
-    const headMaterial = new THREE.MeshStandardMaterial({ color: SKIN_COLOR });
-    const head = new THREE.Mesh(headGeometry, headMaterial);
+    var headGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+    var head = new THREE.Mesh(headGeometry, skinMat.clone());
     head.position.y = 1.6;
     head.castShadow = false;
     group.add(head);
 
+    // Eyes
+    var eyeGeo = new THREE.SphereGeometry(0.03, 8, 8);
+    var eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    var pupilGeo = new THREE.SphereGeometry(0.015, 8, 8);
+    var pupilMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+
+    var leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+    leftEye.position.set(-0.07, 0.03, 0.18);
+    var leftPupil = new THREE.Mesh(pupilGeo, pupilMat);
+    leftPupil.position.z = 0.025;
+    leftEye.add(leftPupil);
+    head.add(leftEye);
+
+    var rightEye = new THREE.Mesh(eyeGeo, eyeMat.clone());
+    rightEye.position.set(0.07, 0.03, 0.18);
+    var rightPupil = new THREE.Mesh(pupilGeo, pupilMat.clone());
+    rightPupil.position.z = 0.025;
+    rightEye.add(rightPupil);
+    head.add(rightEye);
+
+    // Hair based on agentId hash
+    var hairHash = Math.abs((agentId || '').length * 7 + (agentId || '').charCodeAt(0) || 0) % 4;
+    var hairColors = [0x1a1a1a, 0x4a3000, 0x8B4513, 0xd4a574];
+    var hairMat = new THREE.MeshStandardMaterial({ color: hairColors[hairHash] });
+    if (hairHash === 0) {
+      var buzzGeo = new THREE.SphereGeometry(0.21, 12, 12);
+      var buzz = new THREE.Mesh(buzzGeo, hairMat);
+      buzz.position.y = 0.02;
+      buzz.scale.y = 0.85;
+      head.add(buzz);
+    } else if (hairHash === 1) {
+      var longTopGeo = new THREE.SphereGeometry(0.22, 12, 12);
+      var longTop = new THREE.Mesh(longTopGeo, hairMat);
+      longTop.position.y = 0.04;
+      longTop.scale.y = 0.8;
+      head.add(longTop);
+      var longBackGeo = new THREE.BoxGeometry(0.3, 0.25, 0.12);
+      var longBack = new THREE.Mesh(longBackGeo, hairMat.clone());
+      longBack.position.set(0, -0.12, -0.14);
+      head.add(longBack);
+    } else if (hairHash === 2) {
+      var mohawkGeo = new THREE.BoxGeometry(0.06, 0.15, 0.3);
+      var mohawk = new THREE.Mesh(mohawkGeo, hairMat);
+      mohawk.position.y = 0.18;
+      head.add(mohawk);
+    } else {
+      var bunGeo = new THREE.SphereGeometry(0.09, 8, 8);
+      var bun = new THREE.Mesh(bunGeo, hairMat);
+      bun.position.set(0, 0.08, -0.2);
+      head.add(bun);
+    }
+
+    // Neck
+    var neckGeo = new THREE.CylinderGeometry(0.07, 0.09, 0.12, 8);
+    var neck = new THREE.Mesh(neckGeo, skinMat.clone());
+    neck.position.y = 1.42;
+    neck.castShadow = false;
+    group.add(neck);
+
     // Torso - archetype colored box
-    const torsoGeometry = new THREE.BoxGeometry(0.4, 0.5, 0.25);
-    const torsoMaterial = new THREE.MeshStandardMaterial({ color: color });
-    const torso = new THREE.Mesh(torsoGeometry, torsoMaterial);
+    var torsoGeometry = new THREE.BoxGeometry(0.4, 0.5, 0.25);
+    var torsoMaterial = new THREE.MeshStandardMaterial({ color: color });
+    var torso = new THREE.Mesh(torsoGeometry, torsoMaterial);
     torso.position.y = 1.15;
     torso.castShadow = false;
     group.add(torso);
 
-    // Left Arm - cylinder
-    const armGeometry = new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8);
-    const armMaterial = new THREE.MeshStandardMaterial({ color: SKIN_COLOR });
+    // Shoulder joints
+    var shoulderGeo = new THREE.SphereGeometry(0.08, 8, 8);
+    var leftShoulder = new THREE.Mesh(shoulderGeo, skinMat.clone());
+    leftShoulder.position.set(-0.28, 1.35, 0);
+    leftShoulder.castShadow = false;
+    group.add(leftShoulder);
 
-    const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+    var rightShoulder = new THREE.Mesh(shoulderGeo, skinMat.clone());
+    rightShoulder.position.set(0.28, 1.35, 0);
+    rightShoulder.castShadow = false;
+    group.add(rightShoulder);
+
+    // Left Arm - cylinder
+    var armGeometry = new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8);
+
+    var leftArm = new THREE.Mesh(armGeometry, skinMat.clone());
     leftArm.position.set(-0.28, 1.15, 0);
     leftArm.castShadow = false;
     group.add(leftArm);
 
+    // Hands as children of arms
+    var handGeo = new THREE.SphereGeometry(0.05, 8, 8);
+    var leftHand = new THREE.Mesh(handGeo, skinMat.clone());
+    leftHand.position.y = -0.3;
+    leftArm.add(leftHand);
+
     // Right Arm - cylinder
-    const rightArm = new THREE.Mesh(armGeometry, armMaterial.clone());
+    var rightArm = new THREE.Mesh(armGeometry, skinMat.clone());
     rightArm.position.set(0.28, 1.15, 0);
     rightArm.castShadow = false;
     group.add(rightArm);
 
-    // Left Leg - cylinder
-    const legGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.55, 8);
-    const legMaterial = new THREE.MeshStandardMaterial({ color: color });
+    var rightHand = new THREE.Mesh(handGeo, skinMat.clone());
+    rightHand.position.y = -0.3;
+    rightArm.add(rightHand);
 
-    const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+    // Left Leg - cylinder
+    var legGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.55, 8);
+    var legMaterial = new THREE.MeshStandardMaterial({ color: color });
+
+    var leftLeg = new THREE.Mesh(legGeometry, legMaterial);
     leftLeg.position.set(-0.12, 0.45, 0);
     leftLeg.castShadow = false;
     group.add(leftLeg);
 
     // Right Leg - cylinder
-    const rightLeg = new THREE.Mesh(legGeometry, legMaterial.clone());
+    var rightLeg = new THREE.Mesh(legGeometry, legMaterial.clone());
     rightLeg.position.set(0.12, 0.45, 0);
     rightLeg.castShadow = false;
     group.add(rightLeg);
@@ -42280,16 +42573,16 @@ html, body {
     group.userData.rightLeg = rightLeg;
 
     // Add glow ring beneath NPC's feet
-    const glowGeometry = new THREE.CircleGeometry(0.35, 16);
-    const glowMaterial = new THREE.MeshBasicMaterial({
+    var glowGeometry = new THREE.CircleGeometry(0.35, 16);
+    var glowMaterial = new THREE.MeshBasicMaterial({
       color: color,
       transparent: true,
       opacity: 0.4,
       side: THREE.DoubleSide
     });
-    const glowRing = new THREE.Mesh(glowGeometry, glowMaterial);
-    glowRing.rotation.x = -Math.PI / 2; // Lay flat on ground
-    glowRing.position.y = 0.02; // Slightly above ground to prevent z-fighting
+    var glowRing = new THREE.Mesh(glowGeometry, glowMaterial);
+    glowRing.rotation.x = -Math.PI / 2;
+    glowRing.position.y = 0.02;
     glowRing.castShadow = false;
     glowRing.receiveShadow = false;
     group.add(glowRing);
@@ -42305,48 +42598,70 @@ html, body {
    * Add archetype-specific accessories to humanoid model
    */
   function addAccessories(group, archetype, color, THREE) {
-    const head = group.userData.head;
-    const torso = group.userData.torso;
-    const rightArm = group.userData.rightArm;
+    var head = group.userData.head;
+    var torso = group.userData.torso;
+    var rightArm = group.userData.rightArm;
 
     switch (archetype) {
       case 'gardener':
         // Small green hat (flattened cylinder)
-        const hatGeom = new THREE.CylinderGeometry(0.25, 0.25, 0.08, 16);
-        const hatMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
-        const hat = new THREE.Mesh(hatGeom, hatMat);
+        var hatGeom = new THREE.CylinderGeometry(0.25, 0.25, 0.08, 16);
+        var hatMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
+        var hat = new THREE.Mesh(hatGeom, hatMat);
         hat.position.y = 0.24;
         hat.castShadow = false;
         head.add(hat);
+        // Small apron
+        var gApronGeo = new THREE.BoxGeometry(0.32, 0.3, 0.02);
+        var gApronMat = new THREE.MeshStandardMaterial({ color: 0x8B7355 });
+        var gApron = new THREE.Mesh(gApronGeo, gApronMat);
+        gApron.position.set(0, -0.08, 0.14);
+        gApron.castShadow = false;
+        torso.add(gApron);
         break;
 
       case 'builder':
         // Hard hat (yellow half-sphere)
-        const hardHatGeom = new THREE.SphereGeometry(0.22, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-        const hardHatMat = new THREE.MeshStandardMaterial({ color: 0xFFEB3B });
-        const hardHat = new THREE.Mesh(hardHatGeom, hardHatMat);
+        var hardHatGeom = new THREE.SphereGeometry(0.22, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        var hardHatMat = new THREE.MeshStandardMaterial({ color: 0xFFEB3B });
+        var hardHat = new THREE.Mesh(hardHatGeom, hardHatMat);
         hardHat.position.y = 0.2;
         hardHat.castShadow = false;
         head.add(hardHat);
+        // Tool belt (thin torus around waist)
+        var beltGeo = new THREE.TorusGeometry(0.25, 0.03, 8, 16);
+        var beltMat = new THREE.MeshStandardMaterial({ color: 0x5D4037 });
+        var belt = new THREE.Mesh(beltGeo, beltMat);
+        belt.position.set(0, -0.2, 0);
+        belt.rotation.x = Math.PI / 2;
+        belt.castShadow = false;
+        torso.add(belt);
         break;
 
       case 'storyteller':
         // Book in hand (small box)
-        const bookGeom = new THREE.BoxGeometry(0.08, 0.12, 0.02);
-        const bookMat = new THREE.MeshStandardMaterial({ color: 0x6A1B9A });
-        const book = new THREE.Mesh(bookGeom, bookMat);
+        var bookGeom = new THREE.BoxGeometry(0.08, 0.12, 0.02);
+        var bookMat = new THREE.MeshStandardMaterial({ color: 0x6A1B9A });
+        var book = new THREE.Mesh(bookGeom, bookMat);
         book.position.set(0.08, -0.15, 0.08);
         book.rotation.z = Math.PI / 6;
         book.castShadow = false;
         rightArm.add(book);
         group.userData.accessory = book;
+        // Cape/cloak behind torso
+        var capeGeo = new THREE.ConeGeometry(0.3, 0.9, 12);
+        var capeMat = new THREE.MeshStandardMaterial({ color: 0x4A148C });
+        var cape = new THREE.Mesh(capeGeo, capeMat);
+        cape.position.set(0, -0.1, -0.18);
+        cape.castShadow = false;
+        torso.add(cape);
         break;
 
       case 'merchant':
         // Apron (flat box in front of torso)
-        const apronGeom = new THREE.BoxGeometry(0.35, 0.4, 0.02);
-        const apronMat = new THREE.MeshStandardMaterial({ color: 0xC5A400 });
-        const apron = new THREE.Mesh(apronGeom, apronMat);
+        var apronGeom = new THREE.BoxGeometry(0.35, 0.4, 0.02);
+        var apronMat = new THREE.MeshStandardMaterial({ color: 0xC5A400 });
+        var apron = new THREE.Mesh(apronGeom, apronMat);
         apron.position.set(0, 0, 0.14);
         apron.castShadow = false;
         torso.add(apron);
@@ -42354,9 +42669,9 @@ html, body {
 
       case 'explorer':
         // Backpack (box behind torso)
-        const backpackGeom = new THREE.BoxGeometry(0.3, 0.35, 0.15);
-        const backpackMat = new THREE.MeshStandardMaterial({ color: 0x00838F });
-        const backpack = new THREE.Mesh(backpackGeom, backpackMat);
+        var backpackGeom = new THREE.BoxGeometry(0.3, 0.35, 0.15);
+        var backpackMat = new THREE.MeshStandardMaterial({ color: 0x00838F });
+        var backpack = new THREE.Mesh(backpackGeom, backpackMat);
         backpack.position.set(0, 0.05, -0.2);
         backpack.castShadow = false;
         torso.add(backpack);
@@ -42364,9 +42679,9 @@ html, body {
 
       case 'teacher':
         // Glasses (thin torus in front of head)
-        const glassesGeom = new THREE.TorusGeometry(0.12, 0.015, 8, 16);
-        const glassesMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
-        const glasses = new THREE.Mesh(glassesGeom, glassesMat);
+        var glassesGeom = new THREE.TorusGeometry(0.12, 0.015, 8, 16);
+        var glassesMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+        var glasses = new THREE.Mesh(glassesGeom, glassesMat);
         glasses.position.set(0, 0, 0.18);
         glasses.rotation.y = Math.PI / 2;
         glasses.castShadow = false;
@@ -42375,9 +42690,9 @@ html, body {
 
       case 'musician':
         // Instrument (cylinder next to body)
-        const instrumentGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.6, 12);
-        const instrumentMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-        const instrument = new THREE.Mesh(instrumentGeom, instrumentMat);
+        var instrumentGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.6, 12);
+        var instrumentMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+        var instrument = new THREE.Mesh(instrumentGeom, instrumentMat);
         instrument.position.set(0.35, 1.0, 0);
         instrument.rotation.z = Math.PI / 4;
         instrument.castShadow = false;
@@ -42387,24 +42702,31 @@ html, body {
 
       case 'healer':
         // Cross emblem (two thin crossed boxes)
-        const crossMat = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
-        const crossVertGeom = new THREE.BoxGeometry(0.06, 0.2, 0.02);
-        const crossHorGeom = new THREE.BoxGeometry(0.2, 0.06, 0.02);
-        const crossVert = new THREE.Mesh(crossVertGeom, crossMat);
-        const crossHor = new THREE.Mesh(crossHorGeom, crossMat.clone());
+        var crossMat = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
+        var crossVertGeom = new THREE.BoxGeometry(0.06, 0.2, 0.02);
+        var crossHorGeom = new THREE.BoxGeometry(0.2, 0.06, 0.02);
+        var crossVert = new THREE.Mesh(crossVertGeom, crossMat);
+        var crossHor = new THREE.Mesh(crossHorGeom, crossMat.clone());
         crossVert.position.set(0, 0.05, 0.14);
         crossHor.position.set(0, 0.05, 0.14);
         crossVert.castShadow = false;
         crossHor.castShadow = false;
         torso.add(crossVert);
         torso.add(crossHor);
+        // White robe from waist
+        var healRobeGeo = new THREE.ConeGeometry(0.3, 0.9, 12);
+        var healRobeMat = new THREE.MeshStandardMaterial({ color: 0xF5F5F5 });
+        var healRobe = new THREE.Mesh(healRobeGeo, healRobeMat);
+        healRobe.position.y = 0.35;
+        healRobe.castShadow = false;
+        group.add(healRobe);
         break;
 
       case 'philosopher':
         // Long robe (cone extending from torso to ground)
-        const robeGeom = new THREE.ConeGeometry(0.35, 1.2, 16);
-        const robeMat = new THREE.MeshStandardMaterial({ color: 0x303F9F });
-        const robe = new THREE.Mesh(robeGeom, robeMat);
+        var robeGeom = new THREE.ConeGeometry(0.35, 1.2, 16);
+        var robeMat = new THREE.MeshStandardMaterial({ color: 0x303F9F });
+        var robe = new THREE.Mesh(robeGeom, robeMat);
         robe.position.y = 0.3;
         robe.castShadow = false;
         group.add(robe);
@@ -42412,9 +42734,9 @@ html, body {
 
       case 'artist':
         // Beret (flattened sphere on head, tilted)
-        const beretGeom = new THREE.SphereGeometry(0.22, 16, 16);
-        const beretMat = new THREE.MeshStandardMaterial({ color: 0xD84315 });
-        const beret = new THREE.Mesh(beretGeom, beretMat);
+        var beretGeom = new THREE.SphereGeometry(0.22, 16, 16);
+        var beretMat = new THREE.MeshStandardMaterial({ color: 0xD84315 });
+        var beret = new THREE.Mesh(beretGeom, beretMat);
         beret.scale.set(1, 0.4, 1);
         beret.position.set(0.05, 0.22, 0);
         beret.rotation.z = Math.PI / 8;
@@ -43198,8 +43520,8 @@ html, body {
     storedSceneContext = sceneContext;
 
     npcAgents.forEach(agent => {
-      // Create detailed humanoid NPC
-      const group = createHumanoidNPC(agent.archetype, THREE);
+      // Create detailed humanoid NPC with unique skin tone
+      const group = createHumanoidNPC(agent.archetype, THREE, agent.id);
 
       // Name label with archetype subtitle
       const canvas = document.createElement('canvas');
@@ -45826,6 +46148,167 @@ html, body {
     cameraShake.active = true;
   }
 
+  function startZoneCinematic() {
+    if (!sceneContext || !localPlayer) return;
+    var cam = sceneContext.camera;
+    cinematicCamera.active = true;
+    cinematicCamera.elapsed = 0;
+    cinematicCamera.startPos = { x: cam.position.x, y: cam.position.y, z: cam.position.z };
+    cinematicCamera.peakPos = {
+      x: cam.position.x,
+      y: cam.position.y + 15,
+      z: cam.position.z - 8
+    };
+    // Look toward zone center
+    var Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
+    var zoneInfo = Zones && Zones.ZONES ? Zones.ZONES[currentZone] : null;
+    var lookX = zoneInfo ? zoneInfo.cx : localPlayer.position.x;
+    var lookZ = zoneInfo ? zoneInfo.cz : localPlayer.position.z;
+    var lookY = (World && World.getTerrainHeight) ? World.getTerrainHeight(lookX, lookZ) + 1.5 : 1.5;
+    cinematicCamera.startLookAt = {
+      x: localPlayer.position.x,
+      y: ((World && World.getTerrainHeight) ? World.getTerrainHeight(localPlayer.position.x, localPlayer.position.z) : 0) + 1.5,
+      z: localPlayer.position.z
+    };
+    cinematicCamera.targetLookAt = { x: lookX, y: lookY, z: lookZ };
+  }
+
+  function updateCinematicCamera(deltaTime) {
+    if (!cinematicCamera.active || !sceneContext) return false;
+    cinematicCamera.elapsed += deltaTime;
+    var progress = Math.min(cinematicCamera.elapsed / cinematicCamera.duration, 1.0);
+    // Smooth ease-in-out
+    var ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+    var cam = sceneContext.camera;
+    var sp = cinematicCamera.startPos;
+    var pp = cinematicCamera.peakPos;
+
+    if (progress < 0.5) {
+      // First half: ease up to peak
+      var t = ease * 2; // 0 to 1 over first half
+      cam.position.x = sp.x + (pp.x - sp.x) * t;
+      cam.position.y = sp.y + (pp.y - sp.y) * t;
+      cam.position.z = sp.z + (pp.z - sp.z) * t;
+    } else {
+      // Second half: ease back down to where normal orbit would be
+      var inputDist = Input && Input.getCameraDistance ? Input.getCameraDistance() : cameraDistance;
+      var inputOrbit = Input && Input.getCameraOrbit ? Input.getCameraOrbit() : cameraYaw;
+      var terrY = (World && World.getTerrainHeight) ? World.getTerrainHeight(localPlayer.position.x, localPlayer.position.z) : 0;
+      var normalX = localPlayer.position.x + Math.sin(inputOrbit) * Math.cos(cameraPitch) * inputDist;
+      var normalY = terrY + Math.sin(cameraPitch) * inputDist + 2;
+      var normalZ = localPlayer.position.z + Math.cos(inputOrbit) * Math.cos(cameraPitch) * inputDist;
+      var t2 = (ease - 0.5) * 2; // 0 to 1 over second half
+      cam.position.x = pp.x + (normalX - pp.x) * t2;
+      cam.position.y = pp.y + (normalY - pp.y) * t2;
+      cam.position.z = pp.z + (normalZ - pp.z) * t2;
+    }
+
+    // Blend lookAt from start to target
+    var sl = cinematicCamera.startLookAt;
+    var tl = cinematicCamera.targetLookAt;
+    var lookBlend = Math.min(ease * 1.5, 1.0); // Look moves faster than camera
+    cam.lookAt(
+      sl.x + (tl.x - sl.x) * lookBlend,
+      sl.y + (tl.y - sl.y) * lookBlend,
+      sl.z + (tl.z - sl.z) * lookBlend
+    );
+
+    if (progress >= 1.0) {
+      cinematicCamera.active = false;
+    }
+    return true;
+  }
+
+  function togglePhotoMode() {
+    photoMode.active = !photoMode.active;
+    var hudContainer = document.getElementById('hud-container');
+    if (photoMode.active) {
+      // Enter photo mode
+      if (sceneContext && sceneContext.camera) {
+        photoMode.freeLookAt = {
+          x: localPlayer ? localPlayer.position.x : 0,
+          y: localPlayer ? ((World && World.getTerrainHeight) ? World.getTerrainHeight(localPlayer.position.x, localPlayer.position.z) : 0) + 1.5 : 1.5,
+          z: localPlayer ? localPlayer.position.z : 0
+        };
+      }
+      if (hudContainer) {
+        photoMode.savedHUDDisplay = hudContainer.style.display;
+        hudContainer.style.display = 'none';
+      }
+      // Show photo mode label
+      if (!photoMode.labelEl) {
+        photoMode.labelEl = document.createElement('div');
+        photoMode.labelEl.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;padding:6px 16px;border-radius:4px;font:13px monospace;z-index:9999;pointer-events:none;';
+        photoMode.labelEl.textContent = 'PHOTO MODE — F2 to exit';
+        document.body.appendChild(photoMode.labelEl);
+      }
+      photoMode.labelEl.style.display = 'block';
+      setVignetteIntensity(0.6);
+    } else {
+      // Exit photo mode
+      if (hudContainer) {
+        hudContainer.style.display = photoMode.savedHUDDisplay || '';
+      }
+      if (photoMode.labelEl) {
+        photoMode.labelEl.style.display = 'none';
+      }
+      setVignetteIntensity(0.3);
+    }
+  }
+
+  function updatePhotoModeCamera(deltaTime) {
+    if (!photoMode.active || !sceneContext || !Input) return false;
+    var delta = Input.getMovementDelta();
+    var inputOrbit = Input.getCameraOrbit ? Input.getCameraOrbit() : cameraYaw;
+    var inputDist = Input.getCameraDistance ? Input.getCameraDistance() : cameraDistance;
+
+    // Pan freeLookAt with camera-relative WASD
+    var speed = 0.3;
+    if (delta.x !== 0 || delta.z !== 0) {
+      var sinY = Math.sin(inputOrbit);
+      var cosY = Math.cos(inputOrbit);
+      photoMode.freeLookAt.x += (delta.x * cosY - delta.z * sinY) * speed;
+      photoMode.freeLookAt.z += (delta.x * sinY + delta.z * cosY) * speed;
+      // Follow terrain
+      var ty = (World && World.getTerrainHeight) ? World.getTerrainHeight(photoMode.freeLookAt.x, photoMode.freeLookAt.z) : 0;
+      photoMode.freeLookAt.y = ty + 1.5;
+    }
+
+    // Orbit around freeLookAt
+    var camX = photoMode.freeLookAt.x + Math.sin(inputOrbit) * Math.cos(cameraPitch) * inputDist;
+    var camY = photoMode.freeLookAt.y + Math.sin(cameraPitch) * inputDist;
+    var camZ = photoMode.freeLookAt.z + Math.cos(inputOrbit) * Math.cos(cameraPitch) * inputDist;
+
+    // Smooth lerp
+    var lf = 0.12;
+    sceneContext.camera.position.x += (camX - sceneContext.camera.position.x) * lf;
+    sceneContext.camera.position.y += (camY - sceneContext.camera.position.y) * lf;
+    sceneContext.camera.position.z += (camZ - sceneContext.camera.position.z) * lf;
+
+    sceneContext.camera.lookAt(
+      photoMode.freeLookAt.x,
+      photoMode.freeLookAt.y,
+      photoMode.freeLookAt.z
+    );
+    return true;
+  }
+
+  // Cinematic zone entry swoop
+  var cinematicCamera = {
+    active: false, elapsed: 0, duration: 1.2,
+    startPos: null, peakPos: null,
+    startLookAt: null, targetLookAt: null
+  };
+
+  // Photo mode (F2 toggle)
+  var photoMode = {
+    active: false,
+    freeLookAt: null,
+    savedHUDDisplay: '',
+    labelEl: null
+  };
+
   // Interaction target tracking for hover highlights and tooltips
   var currentInteractionTarget = null; // { object, type, name, distance, action, mesh }
   var tooltipEl = null;
@@ -46624,8 +47107,8 @@ html, body {
     // Process queued messages
     processMessageQueue();
 
-    // Process local player movement
-    if (Input && localPlayer && gameState) {
+    // Process local player movement (skip in photo mode)
+    if (Input && localPlayer && gameState && !photoMode.active) {
       const delta = Input.getMovementDelta();
       if (delta.x !== 0 || delta.z !== 0) {
         // Rotate movement delta by camera yaw so WASD is camera-relative
@@ -46680,6 +47163,10 @@ html, body {
             var oldZone = currentZone;
             currentZone = detectedZone;
             console.log('Entered zone:', currentZone);
+
+            // Start cinematic zone entry swoop
+            startZoneCinematic();
+
             // Track activity
             addRecentActivity('Entered ' + currentZone);
 
@@ -46903,6 +47390,15 @@ html, body {
         }
         localPlayer.position.y = terrainY;
 
+        // Photo mode camera overrides normal follow
+        if (photoMode.active) {
+          updatePhotoModeCamera(deltaTime);
+        }
+        // Cinematic camera overrides normal follow
+        else if (cinematicCamera.active) {
+          updateCinematicCamera(deltaTime);
+        }
+        else {
         // Get camera controls from Input module
         var inputCameraDistance = Input && Input.getCameraDistance ? Input.getCameraDistance() : cameraDistance;
         var inputCameraOrbit = Input && Input.getCameraOrbit ? Input.getCameraOrbit() : cameraYaw;
@@ -46946,6 +47442,7 @@ html, body {
           terrainY + 1.5,
           localPlayer.position.z
         );
+        } // end normal camera else block
       }
 
       // Update day/night cycle
@@ -46979,9 +47476,9 @@ html, body {
         }
       }
 
-      // Cull distant lights for performance (max 8 nearest within 40 units)
+      // Cull distant lights for performance (max 12 nearest within 40 units)
       if (World.cullLights) {
-        World.cullLights(sceneContext, localPlayer.position, 40, 8);
+        World.cullLights(sceneContext, localPlayer.position, 40, 12);
       }
 
       // Performance optimizations
@@ -48928,6 +49425,10 @@ html, body {
         }
         break;
 
+      case 'togglePhotoMode':
+        togglePhotoMode();
+        break;
+
       case 'toggleSettings':
         if (HUD) {
           // Close any open panels/dialogs first
@@ -49702,7 +50203,7 @@ html, body {
         banner.className = 'seasonal-banner season-' + currentSeason.id;
         document.body.appendChild(banner);
       }
-      banner.innerHTML = '<div class="seasonal-banner-title">' + currentSeason.festival + '</div>' +
+      banner.innerHTML = '<div class="seasonal-banner-title">' + (currentSeason.festival && currentSeason.festival.name ? currentSeason.festival.name : currentSeason.name) + '</div>' +
         '<div class="seasonal-banner-desc">' + currentSeason.description + '</div>' +
         '<div class="seasonal-banner-countdown">' + daysLeft + ' days remaining</div>';
       banner.style.display = 'block';
