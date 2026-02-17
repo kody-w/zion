@@ -41,9 +41,14 @@
     });
 
     peer.on('error', (err) => {
+      // peer-unavailable is normal when lobby/seed peers don't exist yet
+      if (err.type === 'peer-unavailable') {
+        // Silently ignore — this just means no other players are online
+        return;
+      }
       console.error('Peer error:', err);
-      // Auto-reconnect on certain errors
-      if (err.type === 'peer-unavailable' || err.type === 'network') {
+      // Auto-reconnect on network errors only
+      if (err.type === 'network') {
         attemptReconnect(peerId, 0);
       }
     });
@@ -80,7 +85,10 @@
     });
 
     conn.on('error', (err) => {
-      console.error('Connection error with peer', remotePeerId, ':', err);
+      // Don't log errors for expected lobby/seed peer failures
+      if (err && err.type !== 'peer-unavailable') {
+        console.warn('Connection error with peer', remotePeerId, ':', err);
+      }
       connections.delete(remotePeerId);
       peerDisconnectCallback(remotePeerId);
     });
@@ -259,7 +267,7 @@
   function attemptReconnect(peerId, attempt) {
     const maxAttempts = 3;
     if (attempt >= maxAttempts) {
-      console.error('Max reconnection attempts reached');
+      console.log('Max reconnection attempts reached, will retry on next discovery cycle');
       return;
     }
 
