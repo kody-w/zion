@@ -315,6 +315,26 @@
         }
         break;
 
+      case 'j':
+      case 'J':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleAnchorPanel', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'n':
+      case 'N':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleFederationProposal', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
       case 'z':
       case 'Z':
         if (!chatMode) {

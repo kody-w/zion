@@ -3774,6 +3774,10 @@
           if (Models && Models.animateModel) {
             Models.animateModel(obj.mesh, deltaTime, time);
           }
+          // Rift Portal shimmer animation
+          if (p.shimmer && p.shimmer.material) {
+            p.shimmer.material.opacity = 0.15 + Math.sin(time * 0.002) * 0.1;
+          }
           break;
       }
     }

@@ -8,8 +8,12 @@
       "terrain": "plaza",
       "portals": [
         "gardens",
+        "athenaeum",
+        "studio",
+        "wilds",
         "agora",
-        "observatory"
+        "commons",
+        "arena"
       ],
       "objects": [
         {
@@ -29,7 +33,8 @@
       "terrain": "garden",
       "portals": [
         "nexus",
-        "grove"
+        "wilds",
+        "athenaeum"
       ],
       "objects": []
     },
@@ -40,7 +45,8 @@
       "terrain": "marketplace",
       "portals": [
         "nexus",
-        "workshop"
+        "studio",
+        "commons"
       ],
       "objects": [
         {
@@ -61,80 +67,15 @@
         }
       ]
     },
-    "observatory": {
-      "id": "observatory",
-      "name": "The Observatory",
-      "description": "Star maps and telescopes chart the cosmos. Discovery awaits the curious.",
-      "terrain": "observatory",
+    "athenaeum": {
+      "id": "athenaeum",
+      "name": "The Athenaeum",
+      "description": "A grand library and hall of learning. Scholars gather here to study, teach, and share knowledge.",
+      "terrain": "marble halls",
       "portals": [
         "nexus",
-        "library"
-      ],
-      "objects": [
-        {
-          "id": "telescope_001",
-          "type": "telescope",
-          "x": 0,
-          "y": 5,
-          "z": 0,
-          "interactive": true
-        }
-      ]
-    },
-    "workshop": {
-      "id": "workshop",
-      "name": "The Workshop",
-      "description": "Forges and crafting tables. Raw materials become art and utility.",
-      "terrain": "workshop",
-      "portals": [
-        "agora",
-        "forge"
-      ],
-      "objects": [
-        {
-          "id": "anvil_001",
-          "type": "anvil",
-          "x": 5,
-          "y": 0,
-          "z": 0,
-          "interactive": true
-        },
-        {
-          "id": "workbench_001",
-          "type": "workbench",
-          "x": -5,
-          "y": 0,
-          "z": 0,
-          "interactive": true
-        }
-      ]
-    },
-    "grove": {
-      "id": "grove",
-      "name": "The Sacred Grove",
-      "description": "Ancient trees whisper wisdom. A place for reflection and ceremony.",
-      "terrain": "forest",
-      "portals": [
-        "gardens"
-      ],
-      "objects": [
-        {
-          "id": "ancient_tree_001",
-          "type": "ancient_tree",
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "interactive": true
-        }
-      ]
-    },
-    "library": {
-      "id": "library",
-      "name": "The Library",
-      "description": "Infinite shelves hold stories, knowledge, and songs. Contribute your verse.",
-      "terrain": "library",
-      "portals": [
-        "observatory"
+        "gardens",
+        "studio"
       ],
       "objects": [
         {
@@ -147,18 +88,83 @@
         }
       ]
     },
-    "forge": {
-      "id": "forge",
-      "name": "The Eternal Forge",
-      "description": "Where creation meets transformation. Heat, pressure, and intention shape reality.",
-      "terrain": "forge",
+    "studio": {
+      "id": "studio",
+      "name": "The Studio",
+      "description": "A creative workshop where artists, composers, and craftspeople collaborate on their works.",
+      "terrain": "artisan workshops",
       "portals": [
-        "workshop"
+        "nexus",
+        "athenaeum",
+        "agora"
       ],
       "objects": [
         {
-          "id": "forge_001",
-          "type": "forge",
+          "id": "workbench_001",
+          "type": "workbench",
+          "x": -5,
+          "y": 0,
+          "z": 0,
+          "interactive": true
+        }
+      ]
+    },
+    "wilds": {
+      "id": "wilds",
+      "name": "The Wilds",
+      "description": "Untamed wilderness filled with rare resources and natural wonders.",
+      "terrain": "wilderness",
+      "portals": [
+        "nexus",
+        "gardens",
+        "arena"
+      ],
+      "objects": [
+        {
+          "id": "ancient_tree_001",
+          "type": "ancient_tree",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "interactive": true
+        }
+      ]
+    },
+    "commons": {
+      "id": "commons",
+      "name": "The Commons",
+      "description": "A collaborative building space where communities construct shared infrastructure.",
+      "terrain": "building grounds",
+      "portals": [
+        "nexus",
+        "agora",
+        "arena"
+      ],
+      "objects": [
+        {
+          "id": "anvil_001",
+          "type": "anvil",
+          "x": 5,
+          "y": 0,
+          "z": 0,
+          "interactive": true
+        }
+      ]
+    },
+    "arena": {
+      "id": "arena",
+      "name": "The Arena",
+      "description": "A proving ground for competitive challenges and contests of skill.",
+      "terrain": "combat grounds",
+      "portals": [
+        "nexus",
+        "wilds",
+        "commons"
+      ],
+      "objects": [
+        {
+          "id": "arena_pit_001",
+          "type": "arena",
           "x": 0,
           "y": 0,
           "z": 0,
@@ -198,7 +204,7 @@
         "x": 0,
         "y": 0,
         "z": 0,
-        "zone": "workshop"
+        "zone": "nexus"
       },
       "lastSeen": "2026-02-17T11:08:42.393897Z",
       "actions": []

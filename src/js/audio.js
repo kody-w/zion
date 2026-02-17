@@ -7,6 +7,7 @@
   var isMuted = false;
   var currentAmbient = null;
   var volumeLevels = { master: 0.5, music: 0.5, sfx: 0.5 };
+  var activeNoiseSources = []; // Global tracker for all white noise sources
 
   /**
    * Initialize audio context
@@ -52,7 +53,7 @@
    * Create white noise buffer
    * @returns {AudioBufferSourceNode|null}
    */
-  function createWhiteNoise() {
+  function createWhiteNoise(maxDurationSec) {
     if (!audioContext) return null;
 
     try {
@@ -69,11 +70,36 @@
       whiteNoise.loop = true;
       whiteNoise.start();
 
+      // Track globally so we can kill orphans
+      activeNoiseSources.push(whiteNoise);
+      whiteNoise.onended = function() {
+        var idx = activeNoiseSources.indexOf(whiteNoise);
+        if (idx !== -1) activeNoiseSources.splice(idx, 1);
+      };
+
+      // Safety cutoff: auto-stop after maxDurationSec (default 60s)
+      var safeDur = maxDurationSec || 60;
+      setTimeout(function() {
+        try { whiteNoise.stop(); } catch(e) {}
+        try { whiteNoise.disconnect(); } catch(e) {}
+      }, safeDur * 1000);
+
       return whiteNoise;
     } catch (err) {
       console.error('Error creating white noise:', err);
       return null;
     }
+  }
+
+  /**
+   * Stop and disconnect all tracked noise sources (safety net for orphans)
+   */
+  function killAllNoiseSources() {
+    for (var i = 0; i < activeNoiseSources.length; i++) {
+      try { activeNoiseSources[i].stop(); } catch(e) {}
+      try { activeNoiseSources[i].disconnect(); } catch(e) {}
+    }
+    activeNoiseSources = [];
   }
 
   /**
@@ -181,6 +207,7 @@
     }
 
     currentAmbient = null;
+    killAllNoiseSources();
   }
 
   /**
@@ -419,7 +446,7 @@
       function rustle() {
         if (!audioContext || !masterGain) return;
 
-        const noise = createWhiteNoise();
+        const noise = createWhiteNoise(2);
         if (noise) {
           const rustleFilter = audioContext.createBiquadFilter();
           const rustleGain = audioContext.createGain();
@@ -486,7 +513,7 @@
       function turnPage() {
         if (!audioContext || !masterGain) return;
 
-        const page = createWhiteNoise();
+        const page = createWhiteNoise(2);
         if (page) {
           const pageFilter = audioContext.createBiquadFilter();
           const pageGain = audioContext.createGain();
@@ -521,7 +548,7 @@
       function writeQuill() {
         if (!audioContext || !masterGain) return;
 
-        const quill = createWhiteNoise();
+        const quill = createWhiteNoise(2);
         if (quill) {
           const quillFilter = audioContext.createBiquadFilter();
           const quillGain = audioContext.createGain();
@@ -824,7 +851,7 @@
       function thunder() {
         if (!audioContext || !masterGain) return;
 
-        const rumble = createWhiteNoise();
+        const rumble = createWhiteNoise(2);
         if (rumble) {
           const rumbleFilter = audioContext.createBiquadFilter();
           const rumbleGain = audioContext.createGain();
@@ -859,7 +886,7 @@
       function rustle() {
         if (!audioContext || !masterGain) return;
 
-        const brush = createWhiteNoise();
+        const brush = createWhiteNoise(2);
         if (brush) {
           const brushFilter = audioContext.createBiquadFilter();
           const brushGain = audioContext.createGain();
@@ -1047,7 +1074,7 @@
       function cartRumble() {
         if (!audioContext || !masterGain) return;
 
-        const cart = createWhiteNoise();
+        const cart = createWhiteNoise(2);
         if (cart) {
           const cartFilter = audioContext.createBiquadFilter();
           const cartGain = audioContext.createGain();
@@ -1120,7 +1147,7 @@
       function crackle() {
         if (!audioContext || !masterGain) return;
 
-        const fire = createWhiteNoise();
+        const fire = createWhiteNoise(2);
         if (fire) {
           const fireFilter = audioContext.createBiquadFilter();
           const fireGain = audioContext.createGain();
@@ -1195,7 +1222,7 @@
       function saw() {
         if (!audioContext || !masterGain || !sawActive) return;
 
-        const sawNoise = createWhiteNoise();
+        const sawNoise = createWhiteNoise(2);
         if (sawNoise) {
           const sawFilter = audioContext.createBiquadFilter();
           const sawGain = audioContext.createGain();
@@ -1310,7 +1337,7 @@
       function clash() {
         if (!audioContext || !masterGain) return;
 
-        const metal = createWhiteNoise();
+        const metal = createWhiteNoise(2);
         if (metal) {
           const metalFilter = audioContext.createBiquadFilter();
           const metalGain = audioContext.createGain();
@@ -2272,7 +2299,7 @@
   function playGrassFootstep() {
     if (!audioContext || !masterGain) return;
 
-    const grass = createWhiteNoise();
+    const grass = createWhiteNoise(2);
     if (grass) {
       const grassFilter = audioContext.createBiquadFilter();
       const grassGain = audioContext.createGain();
@@ -2340,7 +2367,7 @@
   function playSandFootstep() {
     if (!audioContext || !masterGain) return;
 
-    const sand = createWhiteNoise();
+    const sand = createWhiteNoise(2);
     if (sand) {
       const sandFilter = audioContext.createBiquadFilter();
       const sandGain = audioContext.createGain();
@@ -2371,7 +2398,7 @@
   function playWaterFootstep() {
     if (!audioContext || !masterGain) return;
 
-    const splash = createWhiteNoise();
+    const splash = createWhiteNoise(2);
     if (splash) {
       const splashFilter = audioContext.createBiquadFilter();
       const splashGain = audioContext.createGain();
@@ -2509,7 +2536,7 @@
     stopTimeAmbient();
     stopWeatherAmbient();
     stopZoneAmbient();
-    // Individual sound effects stop themselves automatically
+    killAllNoiseSources();
   }
 
   // ============================================================================
@@ -2692,6 +2719,7 @@
     }
 
     currentTimeAmbient = null;
+    killAllNoiseSources();
   }
 
   /**
@@ -2995,7 +3023,7 @@
       function rustle() {
         if (!audioContext || !masterGain) return;
 
-        const noise = createWhiteNoise();
+        const noise = createWhiteNoise(2);
         if (noise) {
           const rustleFilter = audioContext.createBiquadFilter();
           const rustleGain = audioContext.createGain();
@@ -3363,6 +3391,7 @@
     }
 
     currentWeatherAmbient = null;
+    killAllNoiseSources();
   }
 
   /**
@@ -3430,7 +3459,7 @@
       function thunder() {
         if (!audioContext || !masterGain) return;
 
-        const rumble = createWhiteNoise();
+        const rumble = createWhiteNoise(2);
         if (rumble) {
           const rumbleFilter = audioContext.createBiquadFilter();
           const rumbleGain = audioContext.createGain();
@@ -3527,45 +3556,44 @@
       crossfadeTimer = null;
     }
 
-    // Crossfade: fade out old ambient over 3 seconds, then start new
+    // Crossfade: stop old ambient immediately (kill noise sources), keep gain fade for smoothness
     var oldAmbient = currentZoneAmbient;
     if (oldAmbient) {
-      // Fade out old ambient gracefully over 3 seconds
+      // Fade out gain gracefully
       try {
         if (oldAmbient.gainNode) {
           oldAmbient.gainNode.gain.setValueAtTime(oldAmbient.gainNode.gain.value, audioContext.currentTime);
-          oldAmbient.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 3);
+          oldAmbient.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
         }
       } catch(e) {}
 
-      // Schedule cleanup after fade
-      crossfadeTimer = setTimeout(function() {
-        try {
-          if (oldAmbient.oscillators && Array.isArray(oldAmbient.oscillators)) {
-            oldAmbient.oscillators.forEach(function(osc) {
-              if (osc && osc.stop) { try { osc.stop(); } catch(e) {} }
-            });
-          }
-          if (oldAmbient.nodes && Array.isArray(oldAmbient.nodes)) {
-            oldAmbient.nodes.forEach(function(node) {
-              if (node) {
-                if (node.stop) { try { node.stop(); } catch(e) {} }
-                if (node.disconnect) { try { node.disconnect(); } catch(e) {} }
-              }
-            });
-          }
-          if (oldAmbient.intervals && Array.isArray(oldAmbient.intervals)) {
-            oldAmbient.intervals.forEach(function(id) { clearInterval(id); });
-          }
-          if (oldAmbient.timeouts && Array.isArray(oldAmbient.timeouts)) {
-            oldAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
-          }
-          if (oldAmbient.cleanup && typeof oldAmbient.cleanup === 'function') {
-            oldAmbient.cleanup();
-          }
-        } catch(err) {}
-      }, 3100);
+      // Stop all sources immediately to prevent orphaned noise
+      try {
+        if (oldAmbient.oscillators && Array.isArray(oldAmbient.oscillators)) {
+          oldAmbient.oscillators.forEach(function(osc) {
+            if (osc && osc.stop) { try { osc.stop(); } catch(e) {} }
+          });
+        }
+        if (oldAmbient.nodes && Array.isArray(oldAmbient.nodes)) {
+          oldAmbient.nodes.forEach(function(node) {
+            if (node) {
+              if (node.stop) { try { node.stop(); } catch(e) {} }
+              if (node.disconnect) { try { node.disconnect(); } catch(e) {} }
+            }
+          });
+        }
+        if (oldAmbient.intervals && Array.isArray(oldAmbient.intervals)) {
+          oldAmbient.intervals.forEach(function(id) { clearInterval(id); });
+        }
+        if (oldAmbient.timeouts && Array.isArray(oldAmbient.timeouts)) {
+          oldAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
+        }
+        if (oldAmbient.cleanup && typeof oldAmbient.cleanup === 'function') {
+          oldAmbient.cleanup();
+        }
+      } catch(err) {}
 
+      killAllNoiseSources();
       currentZoneAmbient = null;
     }
 
@@ -3656,6 +3684,7 @@
     }
 
     currentZoneAmbient = null;
+    killAllNoiseSources();
   }
 
   /**
@@ -3769,7 +3798,7 @@
       function pageRustle() {
         if (!audioContext || !masterGain) return;
 
-        const page = createWhiteNoise();
+        const page = createWhiteNoise(2);
         if (page) {
           const pageFilter = audioContext.createBiquadFilter();
           const pageGain = audioContext.createGain();
@@ -3975,7 +4004,7 @@
 
     try {
       // Subtle echo ambiance
-      const echo = createWhiteNoise();
+      const echo = createWhiteNoise(2);
       if (echo) {
         const echoFilter = audioContext.createBiquadFilter();
         const echoDelay = audioContext.createDelay();
@@ -4124,7 +4153,7 @@
   function playNPCGardenSound() {
     if (!audioContext || !masterGain) return;
 
-    const rustle = createWhiteNoise();
+    const rustle = createWhiteNoise(2);
     if (rustle) {
       const rustleFilter = audioContext.createBiquadFilter();
       const rustleGain = audioContext.createGain();
@@ -4196,7 +4225,7 @@
 
     // Page turn
     setTimeout(() => {
-      const page = createWhiteNoise();
+      const page = createWhiteNoise(2);
       if (page) {
         const pageFilter = audioContext.createBiquadFilter();
         const pageGain = audioContext.createGain();

@@ -21934,6 +21934,10 @@ html, body {
           if (Models && Models.animateModel) {
             Models.animateModel(obj.mesh, deltaTime, time);
           }
+          // Rift Portal shimmer animation
+          if (p.shimmer && p.shimmer.material) {
+            p.shimmer.material.opacity = 0.15 + Math.sin(time * 0.002) * 0.1;
+          }
           break;
       }
     }
@@ -26778,6 +26782,26 @@ html, body {
         if (!chatMode) {
           if (callbacks.onAction) {
             callbacks.onAction('startFishing', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'j':
+      case 'J':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleAnchorPanel', {});
+          }
+          e.preventDefault();
+        }
+        break;
+
+      case 'n':
+      case 'N':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleFederationProposal', {});
           }
           e.preventDefault();
         }
@@ -35639,6 +35663,7 @@ html, body {
   var isMuted = false;
   var currentAmbient = null;
   var volumeLevels = { master: 0.5, music: 0.5, sfx: 0.5 };
+  var activeNoiseSources = []; // Global tracker for all white noise sources
 
   /**
    * Initialize audio context
@@ -35684,7 +35709,7 @@ html, body {
    * Create white noise buffer
    * @returns {AudioBufferSourceNode|null}
    */
-  function createWhiteNoise() {
+  function createWhiteNoise(maxDurationSec) {
     if (!audioContext) return null;
 
     try {
@@ -35701,11 +35726,36 @@ html, body {
       whiteNoise.loop = true;
       whiteNoise.start();
 
+      // Track globally so we can kill orphans
+      activeNoiseSources.push(whiteNoise);
+      whiteNoise.onended = function() {
+        var idx = activeNoiseSources.indexOf(whiteNoise);
+        if (idx !== -1) activeNoiseSources.splice(idx, 1);
+      };
+
+      // Safety cutoff: auto-stop after maxDurationSec (default 60s)
+      var safeDur = maxDurationSec || 60;
+      setTimeout(function() {
+        try { whiteNoise.stop(); } catch(e) {}
+        try { whiteNoise.disconnect(); } catch(e) {}
+      }, safeDur * 1000);
+
       return whiteNoise;
     } catch (err) {
       console.error('Error creating white noise:', err);
       return null;
     }
+  }
+
+  /**
+   * Stop and disconnect all tracked noise sources (safety net for orphans)
+   */
+  function killAllNoiseSources() {
+    for (var i = 0; i < activeNoiseSources.length; i++) {
+      try { activeNoiseSources[i].stop(); } catch(e) {}
+      try { activeNoiseSources[i].disconnect(); } catch(e) {}
+    }
+    activeNoiseSources = [];
   }
 
   /**
@@ -35813,6 +35863,7 @@ html, body {
     }
 
     currentAmbient = null;
+    killAllNoiseSources();
   }
 
   /**
@@ -36051,7 +36102,7 @@ html, body {
       function rustle() {
         if (!audioContext || !masterGain) return;
 
-        const noise = createWhiteNoise();
+        const noise = createWhiteNoise(2);
         if (noise) {
           const rustleFilter = audioContext.createBiquadFilter();
           const rustleGain = audioContext.createGain();
@@ -36118,7 +36169,7 @@ html, body {
       function turnPage() {
         if (!audioContext || !masterGain) return;
 
-        const page = createWhiteNoise();
+        const page = createWhiteNoise(2);
         if (page) {
           const pageFilter = audioContext.createBiquadFilter();
           const pageGain = audioContext.createGain();
@@ -36153,7 +36204,7 @@ html, body {
       function writeQuill() {
         if (!audioContext || !masterGain) return;
 
-        const quill = createWhiteNoise();
+        const quill = createWhiteNoise(2);
         if (quill) {
           const quillFilter = audioContext.createBiquadFilter();
           const quillGain = audioContext.createGain();
@@ -36456,7 +36507,7 @@ html, body {
       function thunder() {
         if (!audioContext || !masterGain) return;
 
-        const rumble = createWhiteNoise();
+        const rumble = createWhiteNoise(2);
         if (rumble) {
           const rumbleFilter = audioContext.createBiquadFilter();
           const rumbleGain = audioContext.createGain();
@@ -36491,7 +36542,7 @@ html, body {
       function rustle() {
         if (!audioContext || !masterGain) return;
 
-        const brush = createWhiteNoise();
+        const brush = createWhiteNoise(2);
         if (brush) {
           const brushFilter = audioContext.createBiquadFilter();
           const brushGain = audioContext.createGain();
@@ -36679,7 +36730,7 @@ html, body {
       function cartRumble() {
         if (!audioContext || !masterGain) return;
 
-        const cart = createWhiteNoise();
+        const cart = createWhiteNoise(2);
         if (cart) {
           const cartFilter = audioContext.createBiquadFilter();
           const cartGain = audioContext.createGain();
@@ -36752,7 +36803,7 @@ html, body {
       function crackle() {
         if (!audioContext || !masterGain) return;
 
-        const fire = createWhiteNoise();
+        const fire = createWhiteNoise(2);
         if (fire) {
           const fireFilter = audioContext.createBiquadFilter();
           const fireGain = audioContext.createGain();
@@ -36827,7 +36878,7 @@ html, body {
       function saw() {
         if (!audioContext || !masterGain || !sawActive) return;
 
-        const sawNoise = createWhiteNoise();
+        const sawNoise = createWhiteNoise(2);
         if (sawNoise) {
           const sawFilter = audioContext.createBiquadFilter();
           const sawGain = audioContext.createGain();
@@ -36942,7 +36993,7 @@ html, body {
       function clash() {
         if (!audioContext || !masterGain) return;
 
-        const metal = createWhiteNoise();
+        const metal = createWhiteNoise(2);
         if (metal) {
           const metalFilter = audioContext.createBiquadFilter();
           const metalGain = audioContext.createGain();
@@ -37904,7 +37955,7 @@ html, body {
   function playGrassFootstep() {
     if (!audioContext || !masterGain) return;
 
-    const grass = createWhiteNoise();
+    const grass = createWhiteNoise(2);
     if (grass) {
       const grassFilter = audioContext.createBiquadFilter();
       const grassGain = audioContext.createGain();
@@ -37972,7 +38023,7 @@ html, body {
   function playSandFootstep() {
     if (!audioContext || !masterGain) return;
 
-    const sand = createWhiteNoise();
+    const sand = createWhiteNoise(2);
     if (sand) {
       const sandFilter = audioContext.createBiquadFilter();
       const sandGain = audioContext.createGain();
@@ -38003,7 +38054,7 @@ html, body {
   function playWaterFootstep() {
     if (!audioContext || !masterGain) return;
 
-    const splash = createWhiteNoise();
+    const splash = createWhiteNoise(2);
     if (splash) {
       const splashFilter = audioContext.createBiquadFilter();
       const splashGain = audioContext.createGain();
@@ -38141,7 +38192,7 @@ html, body {
     stopTimeAmbient();
     stopWeatherAmbient();
     stopZoneAmbient();
-    // Individual sound effects stop themselves automatically
+    killAllNoiseSources();
   }
 
   // ============================================================================
@@ -38324,6 +38375,7 @@ html, body {
     }
 
     currentTimeAmbient = null;
+    killAllNoiseSources();
   }
 
   /**
@@ -38627,7 +38679,7 @@ html, body {
       function rustle() {
         if (!audioContext || !masterGain) return;
 
-        const noise = createWhiteNoise();
+        const noise = createWhiteNoise(2);
         if (noise) {
           const rustleFilter = audioContext.createBiquadFilter();
           const rustleGain = audioContext.createGain();
@@ -38995,6 +39047,7 @@ html, body {
     }
 
     currentWeatherAmbient = null;
+    killAllNoiseSources();
   }
 
   /**
@@ -39062,7 +39115,7 @@ html, body {
       function thunder() {
         if (!audioContext || !masterGain) return;
 
-        const rumble = createWhiteNoise();
+        const rumble = createWhiteNoise(2);
         if (rumble) {
           const rumbleFilter = audioContext.createBiquadFilter();
           const rumbleGain = audioContext.createGain();
@@ -39159,45 +39212,44 @@ html, body {
       crossfadeTimer = null;
     }
 
-    // Crossfade: fade out old ambient over 3 seconds, then start new
+    // Crossfade: stop old ambient immediately (kill noise sources), keep gain fade for smoothness
     var oldAmbient = currentZoneAmbient;
     if (oldAmbient) {
-      // Fade out old ambient gracefully over 3 seconds
+      // Fade out gain gracefully
       try {
         if (oldAmbient.gainNode) {
           oldAmbient.gainNode.gain.setValueAtTime(oldAmbient.gainNode.gain.value, audioContext.currentTime);
-          oldAmbient.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 3);
+          oldAmbient.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
         }
       } catch(e) {}
 
-      // Schedule cleanup after fade
-      crossfadeTimer = setTimeout(function() {
-        try {
-          if (oldAmbient.oscillators && Array.isArray(oldAmbient.oscillators)) {
-            oldAmbient.oscillators.forEach(function(osc) {
-              if (osc && osc.stop) { try { osc.stop(); } catch(e) {} }
-            });
-          }
-          if (oldAmbient.nodes && Array.isArray(oldAmbient.nodes)) {
-            oldAmbient.nodes.forEach(function(node) {
-              if (node) {
-                if (node.stop) { try { node.stop(); } catch(e) {} }
-                if (node.disconnect) { try { node.disconnect(); } catch(e) {} }
-              }
-            });
-          }
-          if (oldAmbient.intervals && Array.isArray(oldAmbient.intervals)) {
-            oldAmbient.intervals.forEach(function(id) { clearInterval(id); });
-          }
-          if (oldAmbient.timeouts && Array.isArray(oldAmbient.timeouts)) {
-            oldAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
-          }
-          if (oldAmbient.cleanup && typeof oldAmbient.cleanup === 'function') {
-            oldAmbient.cleanup();
-          }
-        } catch(err) {}
-      }, 3100);
+      // Stop all sources immediately to prevent orphaned noise
+      try {
+        if (oldAmbient.oscillators && Array.isArray(oldAmbient.oscillators)) {
+          oldAmbient.oscillators.forEach(function(osc) {
+            if (osc && osc.stop) { try { osc.stop(); } catch(e) {} }
+          });
+        }
+        if (oldAmbient.nodes && Array.isArray(oldAmbient.nodes)) {
+          oldAmbient.nodes.forEach(function(node) {
+            if (node) {
+              if (node.stop) { try { node.stop(); } catch(e) {} }
+              if (node.disconnect) { try { node.disconnect(); } catch(e) {} }
+            }
+          });
+        }
+        if (oldAmbient.intervals && Array.isArray(oldAmbient.intervals)) {
+          oldAmbient.intervals.forEach(function(id) { clearInterval(id); });
+        }
+        if (oldAmbient.timeouts && Array.isArray(oldAmbient.timeouts)) {
+          oldAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
+        }
+        if (oldAmbient.cleanup && typeof oldAmbient.cleanup === 'function') {
+          oldAmbient.cleanup();
+        }
+      } catch(err) {}
 
+      killAllNoiseSources();
       currentZoneAmbient = null;
     }
 
@@ -39288,6 +39340,7 @@ html, body {
     }
 
     currentZoneAmbient = null;
+    killAllNoiseSources();
   }
 
   /**
@@ -39401,7 +39454,7 @@ html, body {
       function pageRustle() {
         if (!audioContext || !masterGain) return;
 
-        const page = createWhiteNoise();
+        const page = createWhiteNoise(2);
         if (page) {
           const pageFilter = audioContext.createBiquadFilter();
           const pageGain = audioContext.createGain();
@@ -39607,7 +39660,7 @@ html, body {
 
     try {
       // Subtle echo ambiance
-      const echo = createWhiteNoise();
+      const echo = createWhiteNoise(2);
       if (echo) {
         const echoFilter = audioContext.createBiquadFilter();
         const echoDelay = audioContext.createDelay();
@@ -39756,7 +39809,7 @@ html, body {
   function playNPCGardenSound() {
     if (!audioContext || !masterGain) return;
 
-    const rustle = createWhiteNoise();
+    const rustle = createWhiteNoise(2);
     if (rustle) {
       const rustleFilter = audioContext.createBiquadFilter();
       const rustleGain = audioContext.createGain();
@@ -39828,7 +39881,7 @@ html, body {
 
     // Page turn
     setTimeout(() => {
-      const page = createWhiteNoise();
+      const page = createWhiteNoise(2);
       if (page) {
         const pageFilter = audioContext.createBiquadFilter();
         const pageGain = audioContext.createGain();
@@ -47673,6 +47726,10 @@ html, body {
   let lastPetUpdate = 0;
   let PET_UPDATE_INTERVAL = 30000; // Update pet every 30s
 
+  // Race checkpoint tracking
+  var lastRaceCheck = 0;
+  var RACE_CHECK_INTERVAL = 500; // Check every 500ms
+
   // Fishing state
   let isFishing = false;
 
@@ -49506,6 +49563,29 @@ html, body {
       updatePetStatus();
     }
 
+    // Check race checkpoint progress periodically
+    if (nowMs - lastRaceCheck > RACE_CHECK_INTERVAL && localPlayer && gameState && Competition && Competition.checkRaceProgress) {
+      lastRaceCheck = nowMs;
+      var comps = gameState.competitions;
+      if (comps && comps.length > 0) {
+        for (var ri = 0; ri < comps.length; ri++) {
+          var rc = comps[ri];
+          if (rc.type === 'race' && rc.status === 'active' && rc.participants && rc.participants.indexOf(localPlayer.id) !== -1) {
+            var raceResult = Competition.checkRaceProgress(rc.id, localPlayer.id, localPlayer.position, gameState);
+            if (raceResult.checkpointHit) {
+              if (raceResult.finished) {
+                HUD.showNotification('Race complete! Time: ' + (raceResult.time / 1000).toFixed(1) + 's', 'success');
+                if (Audio) Audio.playSound('coin');
+              } else {
+                HUD.showNotification('Checkpoint ' + raceResult.currentCheckpoint + '/' + rc.checkpoints.length + '!', 'info');
+                if (Audio) Audio.playSound('item_pickup');
+              }
+            }
+          }
+        }
+      }
+    }
+
     // Tick CRM simulation periodically
     if (typeof SimCRM !== 'undefined' && SimCRM.simulateTick && simCrmState && nowMs - lastSimCrmTick >= SIM_CRM_TICK_INTERVAL) {
       lastSimCrmTick = nowMs;
@@ -50268,8 +50348,15 @@ html, body {
     HUD.showTradeWindow(
       trade,
       localPlayer.id,
-      // onAddItem - not implemented yet (would need inventory selector UI)
-      null,
+      // onAddItem — opens inventory picker, adds selected item to trade
+      function(slotIndex, itemId) {
+        if (Trading && playerInventory) {
+          var result = Trading.addItemToTrade(trade.id, localPlayer.id, itemId, playerInventory, localPlayer.position);
+          if (result && !result.success) {
+            HUD.showNotification(result.message || 'Cannot add item', 'error');
+          }
+        }
+      },
       // onRemoveItem
       function(tradeSlot) {
         var result = Trading.removeItemFromTrade(trade.id, localPlayer.id, tradeSlot, localPlayer.position);
@@ -50293,10 +50380,11 @@ html, body {
       },
       // onConfirm
       function() {
-        // Get both player inventories (in real multiplayer, you'd only have your own)
-        // For demo purposes, we're using local inventories
-        var player1Inv = trade.player1.id === localPlayer.id ? playerInventory : playerInventory;
-        var player2Inv = trade.player2.id === localPlayer.id ? playerInventory : playerInventory;
+        // In P2P, each client only has their own inventory.
+        // Pass local inventory for the local player's side; null for remote
+        // (the remote peer confirms with their own inventory on their end).
+        var player1Inv = trade.player1.id === localPlayer.id ? playerInventory : null;
+        var player2Inv = trade.player2.id === localPlayer.id ? playerInventory : null;
 
         var result = Trading.confirmTrade(trade.id, localPlayer.id, player1Inv, player2Inv, economyLedger, localPlayer.position);
         if (result.success && result.executed) {
@@ -50862,7 +50950,7 @@ html, body {
             electionId: election.id,
             candidates: candidates
           });
-          Network.broadcast(msg);
+          Network.broadcastMessage(msg);
         }
         break;
 
@@ -50884,7 +50972,7 @@ html, body {
               electionId: electionId,
               candidateId: candidateId
             });
-            Network.broadcast(msg);
+            Network.broadcastMessage(msg);
           }
         } else {
           if (HUD) HUD.showNotification(voteResult.error, 'error');
@@ -50930,7 +51018,7 @@ html, body {
               chatModerated: data.chatModerated
             }
           });
-          Network.broadcast(msg);
+          Network.broadcastMessage(msg);
         }
         break;
     }
@@ -51597,6 +51685,18 @@ html, body {
 
       case 'toggleHousing':
         showHousingPanel();
+        break;
+
+      case 'toggleAnchorPanel':
+        if (HUD && HUD.showAnchorPanel) {
+          HUD.showAnchorPanel(localPlayer.position, currentZone);
+        }
+        break;
+
+      case 'toggleFederationProposal':
+        if (HUD && HUD.showFederationProposal) {
+          HUD.showFederationProposal();
+        }
         break;
 
       default:

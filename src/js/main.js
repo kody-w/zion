@@ -92,6 +92,10 @@
   let lastPetUpdate = 0;
   let PET_UPDATE_INTERVAL = 30000; // Update pet every 30s
 
+  // Race checkpoint tracking
+  var lastRaceCheck = 0;
+  var RACE_CHECK_INTERVAL = 500; // Check every 500ms
+
   // Fishing state
   let isFishing = false;
 
@@ -1925,6 +1929,29 @@
       updatePetStatus();
     }
 
+    // Check race checkpoint progress periodically
+    if (nowMs - lastRaceCheck > RACE_CHECK_INTERVAL && localPlayer && gameState && Competition && Competition.checkRaceProgress) {
+      lastRaceCheck = nowMs;
+      var comps = gameState.competitions;
+      if (comps && comps.length > 0) {
+        for (var ri = 0; ri < comps.length; ri++) {
+          var rc = comps[ri];
+          if (rc.type === 'race' && rc.status === 'active' && rc.participants && rc.participants.indexOf(localPlayer.id) !== -1) {
+            var raceResult = Competition.checkRaceProgress(rc.id, localPlayer.id, localPlayer.position, gameState);
+            if (raceResult.checkpointHit) {
+              if (raceResult.finished) {
+                HUD.showNotification('Race complete! Time: ' + (raceResult.time / 1000).toFixed(1) + 's', 'success');
+                if (Audio) Audio.playSound('coin');
+              } else {
+                HUD.showNotification('Checkpoint ' + raceResult.currentCheckpoint + '/' + rc.checkpoints.length + '!', 'info');
+                if (Audio) Audio.playSound('item_pickup');
+              }
+            }
+          }
+        }
+      }
+    }
+
     // Tick CRM simulation periodically
     if (typeof SimCRM !== 'undefined' && SimCRM.simulateTick && simCrmState && nowMs - lastSimCrmTick >= SIM_CRM_TICK_INTERVAL) {
       lastSimCrmTick = nowMs;
@@ -2687,8 +2714,15 @@
     HUD.showTradeWindow(
       trade,
       localPlayer.id,
-      // onAddItem - not implemented yet (would need inventory selector UI)
-      null,
+      // onAddItem — opens inventory picker, adds selected item to trade
+      function(slotIndex, itemId) {
+        if (Trading && playerInventory) {
+          var result = Trading.addItemToTrade(trade.id, localPlayer.id, itemId, playerInventory, localPlayer.position);
+          if (result && !result.success) {
+            HUD.showNotification(result.message || 'Cannot add item', 'error');
+          }
+        }
+      },
       // onRemoveItem
       function(tradeSlot) {
         var result = Trading.removeItemFromTrade(trade.id, localPlayer.id, tradeSlot, localPlayer.position);
@@ -2712,10 +2746,11 @@
       },
       // onConfirm
       function() {
-        // Get both player inventories (in real multiplayer, you'd only have your own)
-        // For demo purposes, we're using local inventories
-        var player1Inv = trade.player1.id === localPlayer.id ? playerInventory : playerInventory;
-        var player2Inv = trade.player2.id === localPlayer.id ? playerInventory : playerInventory;
+        // In P2P, each client only has their own inventory.
+        // Pass local inventory for the local player's side; null for remote
+        // (the remote peer confirms with their own inventory on their end).
+        var player1Inv = trade.player1.id === localPlayer.id ? playerInventory : null;
+        var player2Inv = trade.player2.id === localPlayer.id ? playerInventory : null;
 
         var result = Trading.confirmTrade(trade.id, localPlayer.id, player1Inv, player2Inv, economyLedger, localPlayer.position);
         if (result.success && result.executed) {
@@ -3281,7 +3316,7 @@
             electionId: election.id,
             candidates: candidates
           });
-          Network.broadcast(msg);
+          Network.broadcastMessage(msg);
         }
         break;
 
@@ -3303,7 +3338,7 @@
               electionId: electionId,
               candidateId: candidateId
             });
-            Network.broadcast(msg);
+            Network.broadcastMessage(msg);
           }
         } else {
           if (HUD) HUD.showNotification(voteResult.error, 'error');
@@ -3349,7 +3384,7 @@
               chatModerated: data.chatModerated
             }
           });
-          Network.broadcast(msg);
+          Network.broadcastMessage(msg);
         }
         break;
     }
@@ -4016,6 +4051,18 @@
 
       case 'toggleHousing':
         showHousingPanel();
+        break;
+
+      case 'toggleAnchorPanel':
+        if (HUD && HUD.showAnchorPanel) {
+          HUD.showAnchorPanel(localPlayer.position, currentZone);
+        }
+        break;
+
+      case 'toggleFederationProposal':
+        if (HUD && HUD.showFederationProposal) {
+          HUD.showFederationProposal();
+        }
         break;
 
       default:
