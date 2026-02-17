@@ -44,5 +44,9 @@ jobs:
           else:
             print('wandered and observed')
           ")"
-          git pull --rebase || true
-          git push
+          for i in 1 2 3; do
+            git pull --rebase || true
+            git push && break
+            echo "Push attempt $i failed, retrying..."
+            sleep 2
+          done

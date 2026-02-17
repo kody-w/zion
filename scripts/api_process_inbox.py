@@ -172,6 +172,25 @@ def check_rate_limit(agent_name, state_dir):
     return True, None
 
 
+def _record_economy_txn(state_dir, txn_type, sender, payload, to=''):
+    """Append a transaction to economy.json."""
+    econ_path = os.path.join(state_dir, 'economy.json')
+    econ = load_json(econ_path)
+    if 'transactions' not in econ:
+        econ['transactions'] = []
+    txn = {'type': txn_type, 'from': sender, 'ts': payload.get('ts', '')}
+    if to:
+        txn['to'] = to
+    txn['payload'] = {k: v for k, v in payload.items() if k != 'ts'}
+    econ['transactions'].append(txn)
+    econ['transactions'] = econ['transactions'][-500:]
+    if 'balances' not in econ:
+        econ['balances'] = {}
+    if 'listings' not in econ:
+        econ['listings'] = []
+    save_json(econ_path, econ)
+
+
 def apply_to_state(msg, state_dir):
     """Apply a validated message to canonical state files."""
     msg_type = msg['type']
@@ -220,9 +239,12 @@ def apply_to_state(msg, state_dir):
         if 'discoveries' not in discoveries:
             discoveries['discoveries'] = {}
         disc_id = 'disc_%s_%s' % (sender, msg.get('ts', '').replace(':', ''))
+        # Support both name/description and exploration field
+        name = payload.get('name') or payload.get('exploration', 'Unknown')
+        description = payload.get('description') or ('Discovered: %s' % name)
         discoveries['discoveries'][disc_id] = {
-            'name': payload.get('name', 'Unknown'),
-            'description': payload.get('description', ''),
+            'name': name,
+            'description': description,
             'discoverer': sender,
             'zone': msg.get('position', {}).get('zone', 'nexus'),
             'ts': msg.get('ts', ''),
@@ -266,6 +288,98 @@ def apply_to_state(msg, state_dir):
             crm_state = load_state(crm_path)
             crm_state = apply_action(crm_state, payload, sender)
             save_state(crm_path, crm_state)
+
+    elif msg_type == 'build':
+        # Add structure to world
+        world_path = os.path.join(state_dir, 'world.json')
+        world = load_json(world_path)
+        if 'structures' not in world:
+            world['structures'] = []
+        zone = msg.get('position', {}).get('zone', 'nexus')
+        world['structures'].append({
+            'type': payload.get('structure', 'unknown'),
+            'builder': sender,
+            'zone': zone,
+            'position': msg.get('position', {}),
+            'ts': msg.get('ts', ''),
+        })
+        world['structures'] = world['structures'][-200:]
+        # Ensure builder is a citizen
+        citizens = world.get('citizens', {})
+        if sender not in citizens:
+            citizens[sender] = {'id': sender, 'position': msg.get('position', {}), 'lastSeen': '', 'actions': []}
+        citizens[sender]['lastSeen'] = msg.get('ts', '')
+        world['citizens'] = citizens
+        save_json(world_path, world)
+        _record_economy_txn(state_dir, 'build', sender, payload)
+
+    elif msg_type == 'compose':
+        # Track creation in world
+        world_path = os.path.join(state_dir, 'world.json')
+        world = load_json(world_path)
+        if 'creations' not in world:
+            world['creations'] = []
+        world['creations'].append({
+            'title': payload.get('title', 'Untitled'),
+            'type': payload.get('type', 'unknown'),
+            'creator': sender,
+            'zone': msg.get('position', {}).get('zone', 'nexus'),
+            'ts': msg.get('ts', ''),
+        })
+        world['creations'] = world['creations'][-200:]
+        save_json(world_path, world)
+        _record_economy_txn(state_dir, 'compose', sender, payload)
+
+    elif msg_type == 'craft':
+        # Crafting produces an item — update economy + citizen
+        world_path = os.path.join(state_dir, 'world.json')
+        world = load_json(world_path)
+        citizens = world.get('citizens', {})
+        if sender not in citizens:
+            citizens[sender] = {'id': sender, 'position': msg.get('position', {}), 'lastSeen': '', 'actions': []}
+        citizens[sender]['lastSeen'] = msg.get('ts', '')
+        world['citizens'] = citizens
+        save_json(world_path, world)
+        _record_economy_txn(state_dir, 'craft', sender, payload)
+
+    elif msg_type == 'harvest':
+        # Harvesting yields coins
+        _record_economy_txn(state_dir, 'harvest', sender, payload)
+        econ_path = os.path.join(state_dir, 'economy.json')
+        econ = load_json(econ_path)
+        econ['balances'][sender] = econ['balances'].get(sender, 0) + 1
+        save_json(econ_path, econ)
+
+    elif msg_type == 'plant':
+        _record_economy_txn(state_dir, 'plant', sender, payload)
+
+    elif msg_type == 'gift':
+        econ_path = os.path.join(state_dir, 'economy.json')
+        econ = load_json(econ_path)
+        amount = payload.get('amount', 1)
+        recipient = payload.get('to', '')
+        econ['balances'][sender] = econ['balances'].get(sender, 0) - amount
+        if recipient:
+            econ['balances'][recipient] = econ['balances'].get(recipient, 0) + amount
+        save_json(econ_path, econ)
+        _record_economy_txn(state_dir, 'gift', sender, payload, to=recipient)
+
+    elif msg_type == 'trade_offer':
+        econ_path = os.path.join(state_dir, 'economy.json')
+        econ = load_json(econ_path)
+        econ['listings'].append({
+            'item': payload.get('item', 'unknown'),
+            'price': payload.get('price', 0),
+            'seller': sender,
+            'ts': msg.get('ts', ''),
+        })
+        econ['listings'] = econ['listings'][-100:]
+        save_json(econ_path, econ)
+        _record_economy_txn(state_dir, 'trade_offer', sender, payload)
+
+    elif msg_type in ('buy', 'sell'):
+        _record_economy_txn(state_dir, msg_type, sender, payload,
+                            to=payload.get('seller') or payload.get('buyer', ''))
 
     # Always record the action in changes
     changes_path = os.path.join(state_dir, 'changes.json')

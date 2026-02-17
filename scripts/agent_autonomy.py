@@ -8,19 +8,36 @@ import time
 from datetime import datetime
 
 
-def generate_agent_intentions(agent, count=2):
+def generate_agent_intentions(agent, count=2, inject_join=False):
     """
     Generate intention messages for an agent based on their archetype.
 
     Args:
         agent: agent dict with archetype, intentions, position
         count: number of intentions to generate (1-3)
+        inject_join: if True, prepend a join message
 
     Returns:
         List of protocol messages
     """
     messages = []
     intention_types = agent.get('intentions', ['say', 'move', 'inspect'])
+
+    if inject_join:
+        join_msg = {
+            'v': 1,
+            'id': f"{agent['id']}_{int(time.time() * 1000)}_join",
+            'ts': datetime.utcnow().isoformat() + 'Z',
+            'seq': 0,
+            'from': agent['id'],
+            'type': 'join',
+            'platform': 'api',
+            'position': agent.get('position', {
+                'x': 0, 'y': 0, 'z': 0, 'zone': 'nexus'
+            }),
+            'payload': {'archetype': agent.get('archetype', 'citizen')},
+        }
+        messages.append(join_msg)
 
     for i in range(min(count, len(intention_types))):
         intention_type = random.choice(intention_types)
@@ -91,9 +108,11 @@ def generate_agent_intentions(agent, count=2):
             ])
 
         elif intention_type == 'discover':
-            message['payload']['exploration'] = random.choice([
+            discovery = random.choice([
                 'constellation', 'artifact', 'pathway', 'secret'
             ])
+            message['payload']['name'] = discovery.title()
+            message['payload']['description'] = 'Discovered a %s' % discovery
 
         elif intention_type == 'intention_set':
             message['payload']['intention'] = random.choice([
@@ -194,6 +213,15 @@ def activate_agents(agents_data, num_activate=10):
     if not agents:
         return []
 
+    # Load known players to decide who needs a join message
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    players_path = os.path.join(script_dir, '..', 'state', 'players.json')
+    try:
+        with open(players_path, 'r') as f:
+            known = set(json.load(f).get('players', {}).keys())
+    except (FileNotFoundError, json.JSONDecodeError):
+        known = set()
+
     # Select random agents to activate
     num_to_activate = min(num_activate, len(agents))
     activated_agents = random.sample(agents, num_to_activate)
@@ -202,7 +230,8 @@ def activate_agents(agents_data, num_activate=10):
     all_messages = []
     for agent in activated_agents:
         num_intentions = random.randint(1, 3)
-        messages = generate_agent_intentions(agent, num_intentions)
+        needs_join = agent['id'] not in known
+        messages = generate_agent_intentions(agent, num_intentions, inject_join=needs_join)
         all_messages.extend(messages)
 
     return all_messages

@@ -37,5 +37,9 @@ jobs:
           git config user.email "zion-engine@users.noreply.github.com"
           git add state/
           git diff --staged --quiet || git commit -m "Game tick: advance world state"
-          git pull --rebase || true
-          git push
+          for i in 1 2 3; do
+            git pull --rebase || true
+            git push && break
+            echo "Push attempt $i failed, retrying..."
+            sleep 2
+          done
