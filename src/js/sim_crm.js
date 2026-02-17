@@ -1,23 +1,34 @@
-// sim_crm.js — CRM Simulation (Dynamics 365-style)
+// sim_crm.js — Self-evolving CRM Simulation (Dynamics 365-style)
 // Article XI: Simulations run locally, store state as JSON, use pure functions.
+// The state JSON IS the simulation — portable between raw GitHub and local disk.
+// When an unknown action arrives, the simulation molts to handle it.
 (function(exports) {
   'use strict';
 
-  var PIPELINE_STAGES = [
+  // --- Defaults (used only when creating a fresh state) ---
+
+  var DEFAULT_PIPELINE = [
     'prospecting', 'qualification', 'proposal',
     'negotiation', 'closed_won', 'closed_lost'
   ];
 
-  var STAGE_PROBABILITIES = {
-    'prospecting': 10,
-    'qualification': 25,
-    'proposal': 50,
-    'negotiation': 75,
-    'closed_won': 100,
-    'closed_lost': 0
+  var DEFAULT_STAGE_PROB = {
+    'prospecting': 10, 'qualification': 25, 'proposal': 50,
+    'negotiation': 75, 'closed_won': 100, 'closed_lost': 0
   };
 
-  var ACTIVITY_TYPES = ['call', 'email', 'meeting', 'task'];
+  var DEFAULT_ACTIVITY_TYPES = ['call', 'email', 'meeting', 'task'];
+
+  var DEFAULT_SCHEMA = {
+    collections: {
+      accounts:      { prefix: 'acc', fields: ['name','industry','revenue','owner','status','zone'] },
+      contacts:      { prefix: 'con', fields: ['name','email','phone','role','accountId','owner'] },
+      opportunities: { prefix: 'opp', fields: ['name','accountId','stage','value','probability','owner','expected_close'] }
+    },
+    activity_types: DEFAULT_ACTIVITY_TYPES.slice(),
+    pipeline_stages: DEFAULT_PIPELINE.slice(),
+    stage_probabilities: JSON.parse(JSON.stringify(DEFAULT_STAGE_PROB))
+  };
 
   var idCounter = 0;
 
@@ -29,17 +40,22 @@
   // --- State management ---
 
   function initState(snapshot) {
-    if (snapshot && snapshot.accounts) {
+    if (snapshot && (snapshot.accounts || snapshot._schema)) {
       // Restore id counter from existing data
       var maxNum = 0;
-      var collections = ['accounts', 'contacts', 'opportunities'];
-      for (var c = 0; c < collections.length; c++) {
-        var coll = snapshot[collections[c]] || {};
-        for (var k in coll) {
-          if (coll.hasOwnProperty(k)) {
-            var parts = k.split('_');
-            var num = parseInt(parts[parts.length - 1], 10);
-            if (!isNaN(num) && num > maxNum) { maxNum = num; }
+      var schema = snapshot._schema || DEFAULT_SCHEMA;
+      var collNames = objectKeys(schema.collections || {});
+      // Also scan legacy top-level collections
+      var scanKeys = collNames.concat(['accounts', 'contacts', 'opportunities']);
+      for (var c = 0; c < scanKeys.length; c++) {
+        var coll = snapshot[scanKeys[c]];
+        if (coll && typeof coll === 'object' && !Array.isArray(coll)) {
+          for (var k in coll) {
+            if (coll.hasOwnProperty(k)) {
+              var parts = k.split('_');
+              var num = parseInt(parts[parts.length - 1], 10);
+              if (!isNaN(num) && num > maxNum) { maxNum = num; }
+            }
           }
         }
       }
@@ -52,18 +68,100 @@
         }
       }
       idCounter = maxNum;
-      return JSON.parse(JSON.stringify(snapshot));
+
+      var loaded = JSON.parse(JSON.stringify(snapshot));
+      // Ensure schema exists (migrate v1 states)
+      if (!loaded._schema) {
+        loaded._schema = JSON.parse(JSON.stringify(DEFAULT_SCHEMA));
+      }
+      if (!loaded._molt_log) { loaded._molt_log = []; }
+      // Ensure pipeline_stages at top level for backward compat
+      if (!loaded.pipeline_stages) {
+        loaded.pipeline_stages = loaded._schema.pipeline_stages.slice();
+      }
+      return loaded;
     }
     return {
+      _schema: JSON.parse(JSON.stringify(DEFAULT_SCHEMA)),
+      _molt_log: [],
       accounts: {},
       contacts: {},
       opportunities: {},
       activities: [],
-      pipeline_stages: PIPELINE_STAGES.slice()
+      pipeline_stages: DEFAULT_PIPELINE.slice()
     };
   }
 
-  // --- Action dispatch ---
+  // --- Molt: the simulation adapts ---
+
+  function molt(state, reason) {
+    var s = clone(state);
+    if (!s._molt_log) { s._molt_log = []; }
+    s._molt_log.push({
+      v: s._molt_log.length + 1,
+      reason: reason,
+      ts: new Date().toISOString()
+    });
+    return s;
+  }
+
+  function ensureCollection(state, collName, prefix) {
+    if (state[collName] && typeof state[collName] === 'object' && !Array.isArray(state[collName])) {
+      return state;
+    }
+    var s = molt(state, 'New collection: ' + collName);
+    s[collName] = {};
+    if (!s._schema.collections[collName]) {
+      s._schema.collections[collName] = { prefix: prefix || collName.substring(0, 3), fields: [] };
+    }
+    return s;
+  }
+
+  function ensurePipelineStage(state, stageName) {
+    var stages = state._schema.pipeline_stages;
+    if (stages.indexOf(stageName) !== -1) { return state; }
+    var s = molt(state, 'New pipeline stage: ' + stageName);
+    // Insert before closed stages
+    var closedIdx = stages.indexOf('closed_won');
+    if (closedIdx === -1) { closedIdx = stages.length; }
+    s._schema.pipeline_stages.splice(closedIdx, 0, stageName);
+    s.pipeline_stages = s._schema.pipeline_stages.slice();
+    if (!s._schema.stage_probabilities[stageName]) {
+      // Estimate probability based on position
+      var pos = s._schema.pipeline_stages.indexOf(stageName);
+      var total = s._schema.pipeline_stages.length;
+      s._schema.stage_probabilities[stageName] = Math.round((pos / (total - 1)) * 100);
+    }
+    return s;
+  }
+
+  function ensureActivityType(state, typeName) {
+    if (state._schema.activity_types.indexOf(typeName) !== -1) { return state; }
+    var s = molt(state, 'New activity type: ' + typeName);
+    s._schema.activity_types.push(typeName);
+    return s;
+  }
+
+  function learnFields(state, collName, data) {
+    // Absorb any new fields into the schema
+    var schema = state._schema;
+    if (!schema.collections[collName]) { return state; }
+    var known = schema.collections[collName].fields;
+    var newFields = [];
+    for (var k in data) {
+      if (data.hasOwnProperty(k) && k !== 'id' && k !== 'owner' && known.indexOf(k) === -1) {
+        newFields.push(k);
+      }
+    }
+    if (newFields.length === 0) { return state; }
+    var s = molt(state, 'New fields on ' + collName + ': ' + newFields.join(', '));
+    for (var i = 0; i < newFields.length; i++) {
+      s._schema.collections[collName].fields.push(newFields[i]);
+    }
+    return s;
+  }
+
+  // --- Action dispatch (with molting) ---
 
   function applyAction(state, msg) {
     var payload = msg.payload || msg;
@@ -71,6 +169,11 @@
     var data = payload.data || {};
     var from = msg.from || payload.from || 'system';
     var result;
+
+    // Ensure schema exists
+    if (!state._schema) {
+      state = initState(state);
+    }
 
     switch (action) {
       case 'create_account':
@@ -105,8 +208,64 @@
         return addNote(state, data.entityType, data.entityId, data.text, from);
 
       default:
-        return state;
+        // --- MOLT: handle unknown actions ---
+        return moltForAction(state, action, data, from);
     }
+  }
+
+  /**
+   * When the simulation doesn't know an action, it molts.
+   * Patterns: create_X, update_X, delete_X, list_X
+   */
+  function moltForAction(state, action, data, from) {
+    if (!action || typeof action !== 'string') { return state; }
+
+    var parts = action.split('_');
+    if (parts.length < 2) { return state; }
+
+    var verb = parts[0];
+    // e.g. create_lead → verb=create, entitySingular=lead, collName=leads
+    var entitySingular = parts.slice(1).join('_');
+    var collName = entitySingular + 's';
+    var prefix = entitySingular.substring(0, 3);
+
+    if (verb === 'create') {
+      var s = ensureCollection(state, collName, prefix);
+      s = learnFields(s, collName, data);
+      var s2 = clone(s);
+      var id = generateId(prefix);
+      var record = { id: id, owner: data.owner || from, createdAt: new Date().toISOString() };
+      for (var k in data) {
+        if (data.hasOwnProperty(k)) { record[k] = data[k]; }
+      }
+      if (!record.name) { record.name = 'Unnamed ' + entitySingular; }
+      if (!record.notes) { record.notes = []; }
+      s2[collName][id] = record;
+      return s2;
+
+    } else if (verb === 'update') {
+      if (!state[collName] || !data.id || !state[collName][data.id]) { return state; }
+      var su = clone(state);
+      su = learnFields(su, collName, data);
+      var target = su[collName][data.id];
+      for (var uk in data) {
+        if (data.hasOwnProperty(uk) && uk !== 'id') { target[uk] = data[uk]; }
+      }
+      target.updatedAt = new Date().toISOString();
+      return su;
+
+    } else if (verb === 'delete') {
+      if (!state[collName] || !data.id || !state[collName][data.id]) { return state; }
+      var sd = clone(state);
+      delete sd[collName][data.id];
+      return sd;
+
+    } else if (verb === 'list') {
+      // Read-only, no state change
+      return state;
+    }
+
+    return state;
   }
 
   function mergeOwner(data, from) {
@@ -121,7 +280,8 @@
   // --- CRUD: Accounts ---
 
   function createAccount(state, data) {
-    var s = clone(state);
+    var s = learnFields(state, 'accounts', data);
+    s = clone(s);
     var id = generateId('acc');
     var record = {
       id: id,
@@ -134,18 +294,21 @@
       notes: [],
       createdAt: new Date().toISOString()
     };
+    // Absorb extra fields from data
+    for (var k in data) {
+      if (data.hasOwnProperty(k) && record[k] === undefined) { record[k] = data[k]; }
+    }
     s.accounts[id] = record;
     return { state: s, record: record };
   }
 
   function updateAccount(state, id, data) {
     if (!state.accounts[id]) { return state; }
-    var s = clone(state);
+    var s = learnFields(state, 'accounts', data);
+    s = clone(s);
     var acct = s.accounts[id];
-    var fields = ['name', 'industry', 'revenue', 'owner', 'status', 'zone'];
-    for (var i = 0; i < fields.length; i++) {
-      var f = fields[i];
-      if (data[f] !== undefined) { acct[f] = data[f]; }
+    for (var k in data) {
+      if (data.hasOwnProperty(k) && k !== 'id') { acct[k] = data[k]; }
     }
     acct.updatedAt = new Date().toISOString();
     return s;
@@ -154,7 +317,8 @@
   // --- CRUD: Contacts ---
 
   function createContact(state, data) {
-    var s = clone(state);
+    var s = learnFields(state, 'contacts', data);
+    s = clone(s);
     var id = generateId('con');
     var record = {
       id: id,
@@ -167,18 +331,20 @@
       notes: [],
       createdAt: new Date().toISOString()
     };
+    for (var k in data) {
+      if (data.hasOwnProperty(k) && record[k] === undefined) { record[k] = data[k]; }
+    }
     s.contacts[id] = record;
     return { state: s, record: record };
   }
 
   function updateContact(state, id, data) {
     if (!state.contacts[id]) { return state; }
-    var s = clone(state);
+    var s = learnFields(state, 'contacts', data);
+    s = clone(s);
     var con = s.contacts[id];
-    var fields = ['name', 'email', 'phone', 'role', 'accountId', 'owner'];
-    for (var i = 0; i < fields.length; i++) {
-      var f = fields[i];
-      if (data[f] !== undefined) { con[f] = data[f]; }
+    for (var k in data) {
+      if (data.hasOwnProperty(k) && k !== 'id') { con[k] = data[k]; }
     }
     con.updatedAt = new Date().toISOString();
     return s;
@@ -187,34 +353,50 @@
   // --- CRUD: Opportunities ---
 
   function createOpportunity(state, data) {
-    var s = clone(state);
-    var id = generateId('opp');
+    var s = state;
     var stage = data.stage || 'prospecting';
+    // Molt if unknown stage
+    if (s._schema && s._schema.pipeline_stages.indexOf(stage) === -1) {
+      s = ensurePipelineStage(s, stage);
+    }
+    s = learnFields(s, 'opportunities', data);
+    s = clone(s);
+    var id = generateId('opp');
+    var probs = s._schema ? s._schema.stage_probabilities : DEFAULT_STAGE_PROB;
     var record = {
       id: id,
       name: data.name || 'Unnamed Opportunity',
       accountId: data.accountId || '',
       stage: stage,
       value: data.value || 0,
-      probability: data.probability !== undefined ? data.probability : (STAGE_PROBABILITIES[stage] || 0),
+      probability: data.probability !== undefined ? data.probability : (probs[stage] || 0),
       owner: data.owner || 'system',
       expected_close: data.expected_close || '',
       notes: [],
       createdAt: new Date().toISOString()
     };
+    for (var k in data) {
+      if (data.hasOwnProperty(k) && record[k] === undefined) { record[k] = data[k]; }
+    }
     s.opportunities[id] = record;
     return { state: s, record: record };
   }
 
   function updateStage(state, oppId, newStage) {
     if (!state.opportunities[oppId]) { return state; }
-    if (PIPELINE_STAGES.indexOf(newStage) === -1) { return state; }
-    var s = clone(state);
+    var s = state;
+    var stages = s._schema ? s._schema.pipeline_stages : DEFAULT_PIPELINE;
+    // Molt if unknown stage
+    if (stages.indexOf(newStage) === -1) {
+      s = ensurePipelineStage(s, newStage);
+      stages = s._schema.pipeline_stages;
+    }
+    s = clone(s);
     var opp = s.opportunities[oppId];
-    // Cannot move backwards from closed states
     if (opp.stage === 'closed_won' || opp.stage === 'closed_lost') { return state; }
     opp.stage = newStage;
-    opp.probability = STAGE_PROBABILITIES[newStage] || opp.probability;
+    var probs = s._schema ? s._schema.stage_probabilities : DEFAULT_STAGE_PROB;
+    opp.probability = probs[newStage] !== undefined ? probs[newStage] : opp.probability;
     opp.updatedAt = new Date().toISOString();
     return s;
   }
@@ -235,11 +417,17 @@
   // --- Activities ---
 
   function logActivity(state, data) {
-    var s = clone(state);
+    var s = state;
+    var actType = data.type || 'task';
+    // Molt if unknown activity type
+    if (s._schema && s._schema.activity_types.indexOf(actType) === -1) {
+      s = ensureActivityType(s, actType);
+    }
+    s = clone(s);
     var id = generateId('act');
     var record = {
       id: id,
-      type: ACTIVITY_TYPES.indexOf(data.type) !== -1 ? data.type : 'task',
+      type: actType,
       subject: data.subject || '',
       regarding: data.regarding || '',
       regardingType: data.regardingType || '',
@@ -255,9 +443,17 @@
   // --- Notes ---
 
   function addNote(state, entityType, entityId, text, author) {
-    var collections = { account: 'accounts', contact: 'contacts', opportunity: 'opportunities' };
-    var collName = collections[entityType];
-    if (!collName || !state[collName] || !state[collName][entityId]) { return state; }
+    // Look up collection from schema
+    var collName = entityType;
+    if (!state[collName]) {
+      // Try singular→plural
+      collName = entityType + 's';
+    }
+    // Also support legacy singular names
+    var singularMap = { account: 'accounts', contact: 'contacts', opportunity: 'opportunities' };
+    if (singularMap[entityType]) { collName = singularMap[entityType]; }
+
+    if (!state[collName] || !state[collName][entityId]) { return state; }
     var s = clone(state);
     var entity = s[collName][entityId];
     if (!entity.notes) { entity.notes = []; }
@@ -272,19 +468,24 @@
   // --- Query ---
 
   function query(state, entityType, filters) {
-    var collections = {
+    // Resolve collection name — try exact, then plural, then legacy map
+    var collName = entityType;
+    var legacy = {
       account: 'accounts', accounts: 'accounts',
       contact: 'contacts', contacts: 'contacts',
       opportunity: 'opportunities', opportunities: 'opportunities',
       activity: 'activities', activities: 'activities'
     };
-    var collName = collections[entityType];
-    if (!collName) { return []; }
+    if (legacy[entityType]) {
+      collName = legacy[entityType];
+    } else if (!state[collName] && state[collName + 's']) {
+      collName = collName + 's';
+    }
 
     var source = state[collName];
+    if (!source) { return []; }
     var items;
 
-    // Activities is an array, others are objects
     if (Array.isArray(source)) {
       items = source.slice();
     } else {
@@ -315,6 +516,7 @@
     var opportunities = state.opportunities || {};
     var contacts = state.contacts || {};
     var activities = state.activities || [];
+    var stages = (state._schema && state._schema.pipeline_stages) || DEFAULT_PIPELINE;
 
     var accountCount = 0;
     for (var a in accounts) { if (accounts.hasOwnProperty(a)) { accountCount++; } }
@@ -330,8 +532,8 @@
     var closedCount = 0;
     var stageBreakdown = {};
 
-    for (var i = 0; i < PIPELINE_STAGES.length; i++) {
-      stageBreakdown[PIPELINE_STAGES[i]] = { count: 0, value: 0 };
+    for (var i = 0; i < stages.length; i++) {
+      stageBreakdown[stages[i]] = { count: 0, value: 0 };
     }
 
     for (var o in opportunities) {
@@ -358,6 +560,17 @@
 
     var conversionRate = closedCount > 0 ? Math.round((wonCount / closedCount) * 100) : 0;
 
+    // Count molted collections beyond the 3 defaults
+    var extraCollections = [];
+    if (state._schema && state._schema.collections) {
+      var collKeys = objectKeys(state._schema.collections);
+      for (var ci = 0; ci < collKeys.length; ci++) {
+        if (['accounts', 'contacts', 'opportunities'].indexOf(collKeys[ci]) === -1) {
+          extraCollections.push(collKeys[ci]);
+        }
+      }
+    }
+
     return {
       accounts_count: accountCount,
       contacts_count: contactCount,
@@ -368,7 +581,9 @@
       lost_count: lostCount,
       conversion_rate: conversionRate,
       activity_count: activities.length,
-      stage_breakdown: stageBreakdown
+      stage_breakdown: stageBreakdown,
+      molt_count: (state._molt_log || []).length,
+      extra_collections: extraCollections
     };
   }
 
@@ -402,7 +617,6 @@
   var tickCount = 0;
 
   function tickRandom() {
-    // Simple LCG — tickCount ensures unique sequences even for same-ms calls
     tickSeed = (tickSeed * 1664525 + 1013904223) & 0x7fffffff;
     return (tickSeed & 0xffff) / 0x10000;
   }
@@ -417,13 +631,6 @@
     return keys;
   }
 
-  /**
-   * Advance CRM dynamics one tick. Called periodically from game loop.
-   * Each tick picks 1-2 random actions: advance a deal, log an activity,
-   * occasionally create a new opportunity or close a deal.
-   * @param {object} state - Current CRM state
-   * @returns {object} New CRM state
-   */
   function simulateTick(state) {
     if (!state || !state.accounts) { return state; }
 
@@ -434,7 +641,6 @@
     var oppIds = objectKeys(s.opportunities);
     if (accIds.length === 0) { return s; }
 
-    // Gather open opportunities
     var openOpps = [];
     for (var i = 0; i < oppIds.length; i++) {
       var opp = s.opportunities[oppIds[i]];
@@ -443,21 +649,19 @@
       }
     }
 
-    // Action 1: Advance a random open deal one stage (60% chance)
     if (openOpps.length > 0 && tickRandom() < 0.6) {
       var advOpp = pickRandom(openOpps);
       var nextStage = STAGE_ADVANCE[advOpp.stage];
       if (nextStage) {
         s = updateStage(s, advOpp.id, nextStage);
-        // Remove from openOpps if it closed
         if (nextStage === 'closed_won') {
           openOpps = openOpps.filter(function(o) { return o.id !== advOpp.id; });
         }
       }
     }
 
-    // Action 2: Log an activity (70% chance)
     if (tickRandom() < 0.7) {
+      var actTypes = (s._schema && s._schema.activity_types) || DEFAULT_ACTIVITY_TYPES;
       var actOwner = s.accounts[pickRandom(accIds)].owner || 'system';
       var regarding = '';
       var regardingType = '';
@@ -470,7 +674,7 @@
         regardingType = 'account';
       }
       var actResult = logActivity(s, {
-        type: pickRandom(ACTIVITY_TYPES),
+        type: pickRandom(actTypes),
         subject: pickRandom(TICK_ACTIVITY_SUBJECTS),
         regarding: regarding,
         regardingType: regardingType,
@@ -480,7 +684,6 @@
       s = actResult.state;
     }
 
-    // Action 3: Create a new opportunity (15% chance)
     if (tickRandom() < 0.15 && accIds.length > 0) {
       var accId = pickRandom(accIds);
       var acct = s.accounts[accId];
@@ -494,10 +697,9 @@
       s = oppResult.state;
     }
 
-    // Action 4: Close a deal (10% chance — win or lose)
     if (openOpps.length > 0 && tickRandom() < 0.1) {
       var closeOpp = pickRandom(openOpps);
-      var won = tickRandom() < 0.65; // 65% win rate
+      var won = tickRandom() < 0.65;
       s = closeDeal(s, closeOpp.id, won, {
         reason: won ? 'terms agreed' : 'budget constraints'
       });
@@ -513,13 +715,13 @@
   }
 
   function getState() {
-    return null; // Stateless module — caller manages state
+    return null;
   }
 
   // --- Exports ---
 
-  exports.PIPELINE_STAGES = PIPELINE_STAGES;
-  exports.ACTIVITY_TYPES = ACTIVITY_TYPES;
+  exports.PIPELINE_STAGES = DEFAULT_PIPELINE;
+  exports.ACTIVITY_TYPES = DEFAULT_ACTIVITY_TYPES;
   exports.initState = initState;
   exports.applyAction = applyAction;
   exports.createAccount = createAccount;
@@ -535,5 +737,9 @@
   exports.getMetrics = getMetrics;
   exports.getState = getState;
   exports.simulateTick = simulateTick;
+  exports.molt = molt;
+  exports.ensureCollection = ensureCollection;
+  exports.ensurePipelineStage = ensurePipelineStage;
+  exports.ensureActivityType = ensureActivityType;
 
 })(typeof module !== 'undefined' ? module.exports : (window.SimCRM = {}));

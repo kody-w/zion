@@ -450,6 +450,16 @@
       const lobbyPeer = Network.getLobbyPeerId('main');
       Network.connectToPeer(lobbyPeer);
 
+      // Join lobby for automatic peer discovery
+      if (Network.joinLobby) {
+        Network.joinLobby('main', username, currentZone);
+      }
+
+      // Broadcast join message after a short delay to let connections establish
+      setTimeout(function() {
+        joinWorld();
+      }, 2000);
+
       // Initialize federation
       const worldId = Network.deriveWorldId();
       const worldName = 'ZION'; // Could be customized per fork
@@ -1597,9 +1607,20 @@
    */
   function handleIncomingMessage(msg) {
     // Validate message
-    if (!Protocol || !Protocol.validate(msg)) {
-      console.warn('Invalid message received:', msg);
+    if (!Protocol) {
       return;
+    }
+    // Accept messages even without full protocol validation for P2P
+    // (remote peers may send slightly different formats)
+    if (Protocol.validateMessage) {
+      var validation = Protocol.validateMessage(msg);
+      if (!validation.valid) {
+        // Only reject if completely malformed (no type or from)
+        if (!msg || !msg.type || !msg.from) {
+          console.warn('Invalid message received (no type/from):', msg);
+          return;
+        }
+      }
     }
 
     // Add to queue for processing
@@ -1623,6 +1644,9 @@
         handleMoveMessage(msg);
         break;
       case 'chat':
+      case 'say':
+      case 'shout':
+      case 'whisper':
         handleChatMessage(msg);
         break;
       case 'warp':
@@ -1964,12 +1988,23 @@
    * Handle chat message
    */
   function handleChatMessage(msg) {
+    var text = msg.payload.message || msg.payload.text || '';
+    var sender = msg.from;
+
     if (Social) {
       Social.addMessage(gameState, {
-        user: msg.from,
-        text: msg.payload.message,
-        timestamp: msg.timestamp
+        user: sender,
+        text: text,
+        timestamp: msg.timestamp || msg.ts
       });
+    }
+
+    // Update chat HUD with the new message
+    if (HUD && HUD.addChatMessage) {
+      HUD.addChatMessage(sender, text);
+    } else if (HUD) {
+      // Fallback: show as notification if chat panel not available
+      HUD.showNotification(sender + ': ' + text, 'info');
     }
 
     if (Audio) {
@@ -3039,7 +3074,7 @@
           return;
         }
 
-        msg = Protocol.create.chat(localPlayer.id, message);
+        msg = Protocol.create.chat(localPlayer.id, { message: message, zone: currentZone, position: localPlayer.position });
 
         if (Mentoring) {
           var xpResult = Mentoring.addSkillXP(localPlayer.id, 'social', 3);

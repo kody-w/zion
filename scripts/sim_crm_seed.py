@@ -97,6 +97,17 @@ def main():
     base_ts = now - timedelta(days=30)  # Seed data from "30 days ago"
 
     state = {
+        '_schema': {
+            'collections': {
+                'accounts':      {'prefix': 'acc', 'fields': ['name', 'industry', 'revenue', 'owner', 'status', 'zone']},
+                'contacts':      {'prefix': 'con', 'fields': ['name', 'email', 'phone', 'role', 'accountId', 'owner']},
+                'opportunities': {'prefix': 'opp', 'fields': ['name', 'accountId', 'stage', 'value', 'probability', 'owner', 'expected_close']},
+            },
+            'activity_types': ['call', 'email', 'meeting', 'task'],
+            'pipeline_stages': PIPELINE_STAGES[:],
+            'stage_probabilities': dict(STAGE_PROBABILITIES),
+        },
+        '_molt_log': [],
         'accounts': {},
         'contacts': {},
         'opportunities': {},

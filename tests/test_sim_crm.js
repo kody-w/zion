@@ -165,8 +165,9 @@ function assertEqual(actual, expected, message) {
   state = result.state;
   var id = result.record.id;
 
-  var unchanged = SimCRM.updateStage(state, id, 'invalid_stage');
-  assertEqual(unchanged.opportunities[id].stage, 'proposal', 'invalid stage rejected');
+  var molted = SimCRM.updateStage(state, id, 'invalid_stage');
+  assertEqual(molted.opportunities[id].stage, 'invalid_stage', 'unknown stage accepted via molt');
+  assert(molted._schema.pipeline_stages.indexOf('invalid_stage') !== -1, 'unknown stage added to schema via molt');
 })();
 
 (function testCannotMoveFromClosedWon() {
@@ -222,10 +223,11 @@ function assertEqual(actual, expected, message) {
   assertEqual(result.state.activities.length, 1, 'activity added to array');
 })();
 
-(function testLogActivityInvalidType() {
+(function testLogActivityUnknownTypeMolts() {
   var state = SimCRM.initState();
   var result = SimCRM.logActivity(state, { type: 'invalid_type', subject: 'Test' });
-  assertEqual(result.record.type, 'task', 'invalid activity type defaults to task');
+  assertEqual(result.record.type, 'invalid_type', 'unknown activity type accepted via molt');
+  assert(result.state._schema.activity_types.indexOf('invalid_type') !== -1, 'unknown type added to schema');
 })();
 
 // --- Notes ---
@@ -463,6 +465,125 @@ function assertEqual(actual, expected, message) {
   var metrics = SimCRM.getMetrics(state);
   assert(metrics.activity_count > 0, 'multiple ticks produce activities');
   assert(metrics.opportunities_count >= 1, 'opportunities still exist after ticks');
+})();
+
+// --- Molting ---
+
+(function testMoltNewCollection() {
+  var state = SimCRM.initState();
+  // create_lead is unknown — simulation should molt to handle it
+  var msg = { from: 'agent_004', payload: { sim: 'crm', action: 'create_lead', data: { name: 'Hot Lead', source: 'web', score: 85 } } };
+  var newState = SimCRM.applyAction(state, msg);
+  assert(newState.leads !== undefined, 'molt creates leads collection');
+  var leads = SimCRM.query(newState, 'leads', {});
+  assertEqual(leads.length, 1, 'molt creates one lead');
+  assertEqual(leads[0].name, 'Hot Lead', 'molted lead has correct name');
+  assertEqual(leads[0].source, 'web', 'molted lead absorbs extra fields');
+  assertEqual(leads[0].score, 85, 'molted lead absorbs numeric fields');
+  assert(newState._molt_log.length > 0, 'molt is logged');
+  assert(newState._schema.collections.leads !== undefined, 'schema updated with leads collection');
+})();
+
+(function testMoltUpdateNewCollection() {
+  var state = SimCRM.initState();
+  // Create a lead via molt
+  var msg1 = { from: 'agent_004', payload: { action: 'create_lead', data: { name: 'Lead A' } } };
+  state = SimCRM.applyAction(state, msg1);
+  var leads = SimCRM.query(state, 'leads', {});
+  var leadId = leads[0].id;
+
+  // Update via molt
+  var msg2 = { from: 'agent_004', payload: { action: 'update_lead', data: { id: leadId, name: 'Lead A Updated', qualified: true } } };
+  state = SimCRM.applyAction(state, msg2);
+  var updated = state.leads[leadId];
+  assertEqual(updated.name, 'Lead A Updated', 'molted update changes name');
+  assertEqual(updated.qualified, true, 'molted update absorbs new field');
+})();
+
+(function testMoltDeleteFromNewCollection() {
+  var state = SimCRM.initState();
+  var msg1 = { from: 'x', payload: { action: 'create_ticket', data: { name: 'Bug #1', priority: 'high' } } };
+  state = SimCRM.applyAction(state, msg1);
+  var tickets = SimCRM.query(state, 'tickets', {});
+  assertEqual(tickets.length, 1, 'ticket created via molt');
+
+  var msg2 = { from: 'x', payload: { action: 'delete_ticket', data: { id: tickets[0].id } } };
+  state = SimCRM.applyAction(state, msg2);
+  var after = SimCRM.query(state, 'tickets', {});
+  assertEqual(after.length, 0, 'ticket deleted via molt');
+})();
+
+(function testMoltNewPipelineStage() {
+  var state = SimCRM.initState();
+  var result = SimCRM.createOpportunity(state, { name: 'Deal', stage: 'demo_scheduled', value: 1000 });
+  state = result.state;
+  assertEqual(result.record.stage, 'demo_scheduled', 'opportunity created with new stage');
+  assert(state._schema.pipeline_stages.indexOf('demo_scheduled') !== -1, 'schema has new stage');
+  assert(state._molt_log.length > 0, 'molt logged for new stage');
+})();
+
+(function testMoltNewActivityType() {
+  var state = SimCRM.initState();
+  var result = SimCRM.logActivity(state, { type: 'webinar', subject: 'Product demo' });
+  state = result.state;
+  assertEqual(result.record.type, 'webinar', 'activity has new type');
+  assert(state._schema.activity_types.indexOf('webinar') !== -1, 'schema has new activity type');
+})();
+
+(function testMoltNewFieldsOnExisting() {
+  var state = SimCRM.initState();
+  var result = SimCRM.createAccount(state, { name: 'Corp', website: 'https://corp.zion', employees: 50 });
+  state = result.state;
+  assertEqual(result.record.website, 'https://corp.zion', 'new field absorbed on account');
+  assertEqual(result.record.employees, 50, 'new numeric field absorbed');
+  assert(state._schema.collections.accounts.fields.indexOf('website') !== -1, 'schema learned website field');
+  assert(state._schema.collections.accounts.fields.indexOf('employees') !== -1, 'schema learned employees field');
+})();
+
+(function testMoltV1StateUpgrade() {
+  // Simulate a v1 state (no _schema, no _molt_log)
+  var v1 = {
+    accounts: { 'acc_1': { id: 'acc_1', name: 'Old Corp' } },
+    contacts: {},
+    opportunities: {},
+    activities: [],
+    pipeline_stages: ['prospecting', 'qualification', 'proposal', 'negotiation', 'closed_won', 'closed_lost']
+  };
+  var state = SimCRM.initState(v1);
+  assert(state._schema !== undefined, 'v1 state gets schema on load');
+  assert(state._molt_log !== undefined, 'v1 state gets molt_log on load');
+  assertEqual(state.accounts['acc_1'].name, 'Old Corp', 'v1 data preserved');
+})();
+
+(function testMoltMetrics() {
+  var state = SimCRM.initState();
+  // Molt a few times
+  state = SimCRM.applyAction(state, { from: 'x', payload: { action: 'create_lead', data: { name: 'L1' } } });
+  state = SimCRM.applyAction(state, { from: 'x', payload: { action: 'create_campaign', data: { name: 'C1', budget: 5000 } } });
+  var metrics = SimCRM.getMetrics(state);
+  assert(metrics.molt_count > 0, 'metrics includes molt_count');
+  assert(metrics.extra_collections.indexOf('leads') !== -1, 'metrics lists leads as extra collection');
+  assert(metrics.extra_collections.indexOf('campaigns') !== -1, 'metrics lists campaigns as extra collection');
+})();
+
+(function testPortabilityRoundTrip() {
+  // Create state, molt it, serialize to JSON, restore — should work identically
+  var state = SimCRM.initState();
+  state = SimCRM.applyAction(state, { from: 'a', payload: { action: 'create_account', data: { name: 'Corp' } } });
+  state = SimCRM.applyAction(state, { from: 'a', payload: { action: 'create_lead', data: { name: 'Lead', score: 90 } } });
+  state = SimCRM.applyAction(state, { from: 'a', payload: { action: 'create_opportunity', data: { name: 'Opp', stage: 'demo', value: 500 } } });
+
+  // Serialize (simulates writing to JSON file / fetching from raw GitHub)
+  var json = JSON.stringify(state);
+  var restored = SimCRM.initState(JSON.parse(json));
+
+  // Everything survives
+  assertEqual(SimCRM.query(restored, 'accounts', {}).length, 1, 'portable: accounts survive');
+  assertEqual(SimCRM.query(restored, 'leads', {}).length, 1, 'portable: molted leads survive');
+  assertEqual(SimCRM.query(restored, 'leads', {})[0].score, 90, 'portable: molted fields survive');
+  assert(restored._schema.pipeline_stages.indexOf('demo') !== -1, 'portable: molted stages survive');
+  assert(restored._schema.collections.leads !== undefined, 'portable: molted schema survives');
+  assert(restored._molt_log.length > 0, 'portable: molt log survives');
 })();
 
 // --- Results ---

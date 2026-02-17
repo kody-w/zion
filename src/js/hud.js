@@ -202,6 +202,33 @@
   }
 
   /**
+   * Add a single chat message to the chat panel
+   * @param {string} user - Sender name
+   * @param {string} text - Message text
+   */
+  function addChatMessage(user, text) {
+    if (!chatPanel || typeof document === 'undefined') return;
+
+    var msgEl = document.createElement('div');
+    msgEl.style.cssText = 'margin-bottom:5px;padding:3px;border-radius:3px;';
+
+    var time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    msgEl.innerHTML =
+      '<span style="color:#888;font-size:11px;">' + time + '</span> ' +
+      '<span style="color:#4af;font-weight:bold;">' + (user || 'Unknown') + ':</span> ' +
+      '<span>' + (text || '') + '</span>';
+
+    chatPanel.appendChild(msgEl);
+    chatPanel.scrollTop = chatPanel.scrollHeight;
+
+    // Keep last 50 messages max
+    while (chatPanel.children.length > 50) {
+      chatPanel.removeChild(chatPanel.firstChild);
+    }
+  }
+
+  /**
    * Update player info panel
    * @param {object} player - {name, spark, zone, warmth}
    */
@@ -7183,6 +7210,7 @@
   exports.initHUD = initHUD;
   exports.initToolbar = initToolbar;
   exports.updateChat = updateChat;
+  exports.addChatMessage = addChatMessage;
   exports.updatePlayerInfo = updatePlayerInfo;
   exports.updateMinimap = updateMinimap;
   exports.updateZoneLabel = updateZoneLabel;
