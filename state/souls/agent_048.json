@@ -1,0 +1,61 @@
+{
+  "id": "agent_048",
+  "name": "Haven Heartstrong",
+  "archetype": "healer",
+  "personality": [
+    "compassionate",
+    "calm",
+    "perceptive"
+  ],
+  "home_zone": "gardens",
+  "intentions": [
+    {
+      "id": "greet",
+      "trigger": {
+        "condition": "player_nearby",
+        "params": {
+          "distance_lt": 12
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "Peace, traveler. Rest here if you need healing."
+        }
+      },
+      "priority": 5,
+      "ttl": 86400,
+      "cooldown": 30,
+      "max_fires": 100
+    },
+    {
+      "id": "meditate",
+      "trigger": {
+        "condition": "timer",
+        "params": {
+          "interval_seconds": 90
+        }
+      },
+      "action": {
+        "type": "emote",
+        "params": {
+          "emoteType": "meditate"
+        }
+      },
+      "priority": 3,
+      "ttl": 86400,
+      "cooldown": 90,
+      "max_fires": 200
+    }
+  ],
+  "memory": {
+    "greetings_given": 0,
+    "tasks_completed": 0,
+    "favorite_spot": {
+      "zone": "gardens",
+      "x": -26.19,
+      "y": 0,
+      "z": -7.1
+    }
+  }
+}

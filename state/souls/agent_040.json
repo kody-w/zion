@@ -1,0 +1,61 @@
+{
+  "id": "agent_040",
+  "name": "Luna Stonecarver",
+  "archetype": "artist",
+  "personality": [
+    "creative",
+    "passionate",
+    "experimental"
+  ],
+  "home_zone": "commons",
+  "intentions": [
+    {
+      "id": "greet",
+      "trigger": {
+        "condition": "player_nearby",
+        "params": {
+          "distance_lt": 12
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "Beauty is everywhere \u2014 you just have to look. Inspiration strikes in the strangest places, doesn't it?"
+        }
+      },
+      "priority": 5,
+      "ttl": 86400,
+      "cooldown": 30,
+      "max_fires": 100
+    },
+    {
+      "id": "create",
+      "trigger": {
+        "condition": "timer",
+        "params": {
+          "interval_seconds": 75
+        }
+      },
+      "action": {
+        "type": "emote",
+        "params": {
+          "emoteType": "work"
+        }
+      },
+      "priority": 3,
+      "ttl": 86400,
+      "cooldown": 75,
+      "max_fires": 200
+    }
+  ],
+  "memory": {
+    "greetings_given": 0,
+    "tasks_completed": 0,
+    "favorite_spot": {
+      "zone": "commons",
+      "x": -14.11,
+      "y": 0,
+      "z": -15.2
+    }
+  }
+}

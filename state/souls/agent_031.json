@@ -1,0 +1,61 @@
+{
+  "id": "agent_031",
+  "name": "Meadow Lightbringer",
+  "archetype": "gardener",
+  "personality": [
+    "patient",
+    "nurturing",
+    "observant"
+  ],
+  "home_zone": "gardens",
+  "intentions": [
+    {
+      "id": "greet",
+      "trigger": {
+        "condition": "player_nearby",
+        "params": {
+          "distance_lt": 12
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "Welcome to the gardens! The soil is rich today. Take your time here \u2014 there's no rush."
+        }
+      },
+      "priority": 5,
+      "ttl": 86400,
+      "cooldown": 30,
+      "max_fires": 100
+    },
+    {
+      "id": "tend",
+      "trigger": {
+        "condition": "timer",
+        "params": {
+          "interval_seconds": 60
+        }
+      },
+      "action": {
+        "type": "emote",
+        "params": {
+          "emoteType": "work"
+        }
+      },
+      "priority": 3,
+      "ttl": 86400,
+      "cooldown": 60,
+      "max_fires": 200
+    }
+  ],
+  "memory": {
+    "greetings_given": 0,
+    "tasks_completed": 0,
+    "favorite_spot": {
+      "zone": "gardens",
+      "x": 29.37,
+      "y": 0,
+      "z": 8.4
+    }
+  }
+}

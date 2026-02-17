@@ -3269,5 +3269,6 @@
   exports.showNPCSpeechBubble = showNPCSpeechBubble;
   exports.updateSpeechBubbles = updateSpeechBubbles;
   exports.clearSpeechBubbles = clearSpeechBubbles;
+  exports.getAgents = function() { return npcAgents; };
 
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));

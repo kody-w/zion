@@ -1,0 +1,61 @@
+{
+  "id": "agent_085",
+  "name": "Cliff Sunweaver",
+  "archetype": "explorer",
+  "personality": [
+    "curious",
+    "brave",
+    "adaptable"
+  ],
+  "home_zone": "wilds",
+  "intentions": [
+    {
+      "id": "greet",
+      "trigger": {
+        "condition": "player_nearby",
+        "params": {
+          "distance_lt": 12
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "Have you been to the far edges? There's so much to see. There's always something new to discover!"
+        }
+      },
+      "priority": 5,
+      "ttl": 86400,
+      "cooldown": 30,
+      "max_fires": 100
+    },
+    {
+      "id": "wander",
+      "trigger": {
+        "condition": "timer",
+        "params": {
+          "interval_seconds": 45
+        }
+      },
+      "action": {
+        "type": "emote",
+        "params": {
+          "emoteType": "wave"
+        }
+      },
+      "priority": 3,
+      "ttl": 86400,
+      "cooldown": 45,
+      "max_fires": 200
+    }
+  ],
+  "memory": {
+    "greetings_given": 0,
+    "tasks_completed": 0,
+    "favorite_spot": {
+      "zone": "wilds",
+      "x": -17.15,
+      "y": 0,
+      "z": -22.06
+    }
+  }
+}

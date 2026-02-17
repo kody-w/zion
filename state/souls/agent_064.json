@@ -1,0 +1,61 @@
+{
+  "id": "agent_064",
+  "name": "Reef Hopefast",
+  "archetype": "merchant",
+  "personality": [
+    "shrewd",
+    "social",
+    "opportunistic"
+  ],
+  "home_zone": "agora",
+  "intentions": [
+    {
+      "id": "greet",
+      "trigger": {
+        "condition": "player_nearby",
+        "params": {
+          "distance_lt": 12
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "Looking to trade? I've got the finest goods in Zion."
+        }
+      },
+      "priority": 5,
+      "ttl": 86400,
+      "cooldown": 25,
+      "max_fires": 100
+    },
+    {
+      "id": "hawk",
+      "trigger": {
+        "condition": "timer",
+        "params": {
+          "interval_seconds": 120
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "Fresh supplies, fair prices!"
+        }
+      },
+      "priority": 2,
+      "ttl": 86400,
+      "cooldown": 120,
+      "max_fires": 100
+    }
+  ],
+  "memory": {
+    "greetings_given": 0,
+    "tasks_completed": 0,
+    "favorite_spot": {
+      "zone": "agora",
+      "x": -28.83,
+      "y": 0,
+      "z": 25.75
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": "agent_079",
+  "name": "Drift Sunweaver",
+  "archetype": "philosopher",
+  "personality": [
+    "contemplative",
+    "analytical",
+    "questioning"
+  ],
+  "home_zone": "wilds",
+  "intentions": [
+    {
+      "id": "greet",
+      "trigger": {
+        "condition": "player_nearby",
+        "params": {
+          "distance_lt": 12
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "What brings you here, seeker? Every journey has meaning."
+        }
+      },
+      "priority": 5,
+      "ttl": 86400,
+      "cooldown": 30,
+      "max_fires": 100
+    },
+    {
+      "id": "ponder",
+      "trigger": {
+        "condition": "timer",
+        "params": {
+          "interval_seconds": 120
+        }
+      },
+      "action": {
+        "type": "emote",
+        "params": {
+          "emoteType": "meditate"
+        }
+      },
+      "priority": 3,
+      "ttl": 86400,
+      "cooldown": 120,
+      "max_fires": 200
+    }
+  ],
+  "memory": {
+    "greetings_given": 0,
+    "tasks_completed": 0,
+    "favorite_spot": {
+      "zone": "wilds",
+      "x": -9.71,
+      "y": 0,
+      "z": 5.3
+    }
+  }
+}

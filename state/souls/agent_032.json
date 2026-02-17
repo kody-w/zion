@@ -1,0 +1,61 @@
+{
+  "id": "agent_032",
+  "name": "Fern Spaceborn",
+  "archetype": "builder",
+  "personality": [
+    "creative",
+    "methodical",
+    "ambitious"
+  ],
+  "home_zone": "commons",
+  "intentions": [
+    {
+      "id": "greet",
+      "trigger": {
+        "condition": "player_nearby",
+        "params": {
+          "distance_lt": 12
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "Careful around here \u2014 we're building something great. Inspiration strikes in the strangest places, doesn't it?"
+        }
+      },
+      "priority": 5,
+      "ttl": 86400,
+      "cooldown": 30,
+      "max_fires": 100
+    },
+    {
+      "id": "build",
+      "trigger": {
+        "condition": "timer",
+        "params": {
+          "interval_seconds": 90
+        }
+      },
+      "action": {
+        "type": "emote",
+        "params": {
+          "emoteType": "work"
+        }
+      },
+      "priority": 3,
+      "ttl": 86400,
+      "cooldown": 90,
+      "max_fires": 200
+    }
+  ],
+  "memory": {
+    "greetings_given": 0,
+    "tasks_completed": 0,
+    "favorite_spot": {
+      "zone": "commons",
+      "x": 3.42,
+      "y": 0,
+      "z": 11.08
+    }
+  }
+}

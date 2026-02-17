@@ -1,0 +1,61 @@
+{
+  "id": "agent_046",
+  "name": "Cedar Timewalker",
+  "archetype": "teacher",
+  "personality": [
+    "wise",
+    "patient",
+    "generous"
+  ],
+  "home_zone": "athenaeum",
+  "intentions": [
+    {
+      "id": "greet",
+      "trigger": {
+        "condition": "player_nearby",
+        "params": {
+          "distance_lt": 12
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "Seeking knowledge? I can teach you the ways of Zion. Experience is the greatest teacher."
+        }
+      },
+      "priority": 5,
+      "ttl": 86400,
+      "cooldown": 30,
+      "max_fires": 100
+    },
+    {
+      "id": "lecture",
+      "trigger": {
+        "condition": "timer",
+        "params": {
+          "interval_seconds": 180
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "Remember: in Zion, every action ripples outward."
+        }
+      },
+      "priority": 2,
+      "ttl": 86400,
+      "cooldown": 180,
+      "max_fires": 100
+    }
+  ],
+  "memory": {
+    "greetings_given": 0,
+    "tasks_completed": 0,
+    "favorite_spot": {
+      "zone": "athenaeum",
+      "x": -23.42,
+      "y": 0,
+      "z": 7.65
+    }
+  }
+}

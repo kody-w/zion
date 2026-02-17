@@ -333,6 +333,78 @@ suite('Intention System Tests', () => {
     assert(true, 'Consent enforcement is implemented in generateActionMessage');
   });
 
+  test('NPC archetype intentions: gardener gets plant/harvest intentions', () => {
+    Intentions.clearIntentions('npc_gardener_1');
+    var intentions = [
+      { id: 'greet', trigger: { condition: 'player_nearby', params: { distance_lt: 10 } },
+        action: { type: 'say', params: { text: 'Welcome to the gardens!' } },
+        priority: 5, ttl: 86400, cooldown: 30, max_fires: 100 },
+      { id: 'tend', trigger: { condition: 'timer', params: { interval_seconds: 120 } },
+        action: { type: 'emote', params: { emoteType: 'meditate' } },
+        priority: 3, ttl: 86400, cooldown: 120, max_fires: 100 }
+    ];
+    intentions.forEach(function(i) {
+      var r = Intentions.registerIntention('npc_gardener_1', i);
+      assert(r.success, 'Should register intention: ' + i.id);
+    });
+    var stored = Intentions.getIntentions('npc_gardener_1');
+    assert(stored.length === 2, 'Gardener should have 2 intentions');
+  });
+
+  test('evaluateTriggers fires player_nearby when player is close', () => {
+    Intentions.clearIntentions('npc_test_1');
+    Intentions.registerIntention('npc_test_1', {
+      id: 'greet_nearby',
+      trigger: { condition: 'player_nearby', params: { distance_lt: 15 } },
+      action: { type: 'say', params: { text: 'Hello traveler!' } },
+      priority: 5, ttl: 86400, cooldown: 5, max_fires: 100
+    });
+    // World state with NPC and player close together
+    var worldState = {
+      players: new Map([
+        ['npc_test_1', { id: 'npc_test_1', position: { x: 10, y: 0, z: 10 } }],
+        ['human_player', { id: 'human_player', position: { x: 12, y: 0, z: 12 } }]
+      ])
+    };
+    var actions = Intentions.evaluateTriggers('npc_test_1', worldState, 0.016);
+    assert(actions.length > 0, 'Should produce at least one action when player is nearby');
+    assert(actions[0].type === 'say', 'Action type should be say');
+  });
+
+  test('evaluateTriggers does NOT fire when player is far away', () => {
+    Intentions.clearIntentions('npc_test_2');
+    Intentions.registerIntention('npc_test_2', {
+      id: 'greet_far',
+      trigger: { condition: 'player_nearby', params: { distance_lt: 10 } },
+      action: { type: 'say', params: { text: 'Hello!' } },
+      priority: 5, ttl: 86400, cooldown: 5, max_fires: 100
+    });
+    var worldState = {
+      players: new Map([
+        ['npc_test_2', { id: 'npc_test_2', position: { x: 10, y: 0, z: 10 } }],
+        ['human_player', { id: 'human_player', position: { x: 500, y: 0, z: 500 } }]
+      ])
+    };
+    var actions = Intentions.evaluateTriggers('npc_test_2', worldState, 0.016);
+    assert(actions.length === 0, 'Should produce NO actions when player is far away');
+  });
+
+  test('Multiple NPC intentions can be registered in batch', () => {
+    var archetypes = ['gardener', 'builder', 'merchant', 'explorer', 'teacher'];
+    archetypes.forEach(function(arch, i) {
+      var npcId = 'batch_npc_' + i;
+      Intentions.clearIntentions(npcId);
+      Intentions.registerIntention(npcId, {
+        id: 'greet_' + arch,
+        trigger: { condition: 'player_nearby', params: { distance_lt: 10 } },
+        action: { type: 'say', params: { text: 'Hello from ' + arch } },
+        priority: 5, ttl: 86400, cooldown: 30, max_fires: 50
+      });
+      var stored = Intentions.getIntentions(npcId);
+      assert(stored.length === 1, arch + ' should have 1 intention');
+    });
+  });
+
 });
 
 const success = report();

@@ -1,0 +1,61 @@
+{
+  "id": "agent_083",
+  "name": "Phoenix Thoughtdeep",
+  "archetype": "storyteller",
+  "personality": [
+    "expressive",
+    "imaginative",
+    "empathetic"
+  ],
+  "home_zone": "athenaeum",
+  "intentions": [
+    {
+      "id": "greet",
+      "trigger": {
+        "condition": "player_nearby",
+        "params": {
+          "distance_lt": 12
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "Ah, a new face! Come, I have tales to tell."
+        }
+      },
+      "priority": 5,
+      "ttl": 86400,
+      "cooldown": 30,
+      "max_fires": 100
+    },
+    {
+      "id": "narrate",
+      "trigger": {
+        "condition": "timer",
+        "params": {
+          "interval_seconds": 90
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "Long ago, when Zion was young..."
+        }
+      },
+      "priority": 2,
+      "ttl": 86400,
+      "cooldown": 90,
+      "max_fires": 100
+    }
+  ],
+  "memory": {
+    "greetings_given": 0,
+    "tasks_completed": 0,
+    "favorite_spot": {
+      "zone": "athenaeum",
+      "x": 21.58,
+      "y": 0,
+      "z": -25.75
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": "agent_057",
+  "name": "Dawn Mindclear",
+  "archetype": "musician",
+  "personality": [
+    "artistic",
+    "rhythmic",
+    "emotional"
+  ],
+  "home_zone": "nexus",
+  "intentions": [
+    {
+      "id": "greet",
+      "trigger": {
+        "condition": "player_nearby",
+        "params": {
+          "distance_lt": 12
+        }
+      },
+      "action": {
+        "type": "say",
+        "params": {
+          "text": "Listen... can you hear the music of Zion?"
+        }
+      },
+      "priority": 5,
+      "ttl": 86400,
+      "cooldown": 30,
+      "max_fires": 100
+    },
+    {
+      "id": "perform",
+      "trigger": {
+        "condition": "timer",
+        "params": {
+          "interval_seconds": 60
+        }
+      },
+      "action": {
+        "type": "emote",
+        "params": {
+          "emoteType": "dance"
+        }
+      },
+      "priority": 3,
+      "ttl": 86400,
+      "cooldown": 60,
+      "max_fires": 200
+    }
+  ],
+  "memory": {
+    "greetings_given": 0,
+    "tasks_completed": 0,
+    "favorite_spot": {
+      "zone": "nexus",
+      "x": 0.04,
+      "y": 0,
+      "z": -19.28
+    }
+  }
+}

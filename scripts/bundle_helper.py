@@ -86,13 +86,33 @@ def bundle_js(src_dir):
     agents_path = os.path.join(project_root, 'state', 'founding', 'agents.json')
     agents_json = read_file_safe(agents_path)
 
+    # Load souls data for embedding in main.js
+    import json
+    import glob
+    souls_dir = os.path.join(project_root, 'state', 'souls')
+    souls_data = []
+    if os.path.isdir(souls_dir):
+        for soul_file in sorted(glob.glob(os.path.join(souls_dir, '*.json'))):
+            raw = read_file_safe(soul_file)
+            if raw:
+                try:
+                    soul = json.loads(raw)
+                    souls_data.append({
+                        'id': soul['id'],
+                        'name': soul.get('name', ''),
+                        'archetype': soul.get('archetype', ''),
+                        'intentions': soul.get('intentions', [])
+                    })
+                except Exception:
+                    pass
+    souls_compact = json.dumps(souls_data) if souls_data else '[]'
+
     for filename in JS_FILES:
         filepath = os.path.join(js_dir, filename)
         content = read_file_safe(filepath)
         if content:
             # Embed agents data in npcs.js
             if filename == 'npcs.js' and agents_json:
-                import json
                 try:
                     agents_data = json.loads(agents_json)
                     compact = json.dumps([{
@@ -103,6 +123,9 @@ def bundle_js(src_dir):
                 except Exception as e:
                     print(f"Warning: Could not embed agents: {e}", file=sys.stderr)
                     content = content.replace('AGENTS_PLACEHOLDER', '[]')
+            # Embed souls data in main.js
+            if filename == 'main.js':
+                content = content.replace('SOULS_PLACEHOLDER', souls_compact)
             js_content.append(f"// {filename}")
             js_content.append(content)
             js_content.append('')

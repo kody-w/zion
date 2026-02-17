@@ -29,6 +29,9 @@
   const Pets = typeof require !== 'undefined' ? require('./pets') : window.Pets;
   const ApiBridge = typeof require !== 'undefined' ? require('./api_bridge') : window.ApiBridge;
 
+  // Embedded soul data (replaced at bundle time)
+  var EMBEDDED_SOULS = SOULS_PLACEHOLDER;
+
   // Game state
   let gameState = null;
   let sceneContext = null;
@@ -38,6 +41,7 @@
   let worldTime = 0; // Minutes in 24-hour cycle (0-1440)
   let currentZone = 'nexus';
   let currentWeather = 'clear';
+  let npcIntentionIndex = 0; // Throttle: which NPC to evaluate next
   let localPlayer = null;
   let playStartTime = 0;
   let lastBreakReminder = 0;
@@ -710,6 +714,21 @@
     if (NPCs) {
       NPCs.initNPCs(null, gameState, sceneContext);
       NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
+
+      // Register NPC intentions from embedded souls
+      if (Intentions && EMBEDDED_SOULS && EMBEDDED_SOULS.length > 0) {
+        var registered = 0;
+        EMBEDDED_SOULS.forEach(function(soul) {
+          if (soul.intentions && soul.intentions.length > 0) {
+            Intentions.clearIntentions(soul.id);
+            soul.intentions.forEach(function(intent) {
+              Intentions.registerIntention(soul.id, intent);
+            });
+            registered++;
+          }
+        });
+        console.log('Registered intentions for ' + registered + ' NPCs');
+      }
     }
 
     // Initialize economic event display
@@ -1076,10 +1095,43 @@
       }
     }
 
-    // Evaluate intentions for local player
-    if (Intentions && localPlayer && gameState) {
-      const intentions = Intentions.getIntentions(gameState, localPlayer.id);
-      // Intentions are passive - they inform AI/automation, not direct control
+    // Evaluate NPC intentions — throttled: 5 NPCs per frame
+    if (Intentions && NPCs && localPlayer && gameState) {
+      var agents = NPCs.getAgents ? NPCs.getAgents() : [];
+      if (agents.length > 0) {
+        var worldStateForIntentions = {
+          players: new Map()
+        };
+        // Add local player
+        worldStateForIntentions.players.set(localPlayer.id, {
+          id: localPlayer.id,
+          position: localPlayer.position
+        });
+        // Add NPC positions from agents array
+        agents.forEach(function(agent) {
+          if (agent.position) {
+            worldStateForIntentions.players.set(agent.id, {
+              id: agent.id,
+              position: { x: agent.position.x, y: agent.position.y || 0, z: agent.position.z }
+            });
+          }
+        });
+        // Evaluate 5 NPCs per frame round-robin
+        var count = Math.min(5, agents.length);
+        for (var ei = 0; ei < count; ei++) {
+          var idx = (npcIntentionIndex + ei) % agents.length;
+          var agent = agents[idx];
+          var actions = Intentions.evaluateTriggers(agent.id, worldStateForIntentions, deltaTime);
+          if (actions && actions.length > 0) {
+            actions.forEach(function(action) {
+              if (action.type === 'say' && NPCs.showNPCSpeechBubble) {
+                NPCs.showNPCSpeechBubble(agent.id, action.payload ? action.payload.text || action.payload.message : '...');
+              }
+            });
+          }
+        }
+        npcIntentionIndex = (npcIntentionIndex + count) % agents.length;
+      }
     }
 
     // Update world time (24-min day/night cycle = 1440 minutes in 24 real minutes)
