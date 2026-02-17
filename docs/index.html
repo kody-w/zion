@@ -33068,27 +33068,34 @@ html, body {
       return null;
     }
 
-    try {
-      audioContext = new (AudioContext || webkitAudioContext)();
-
-      // Create master gain node
-      masterGain = audioContext.createGain();
-      if (masterGain) {
-        masterGain.connect(audioContext.destination);
-        masterGain.gain.value = 0.5; // Default volume
+    // Defer AudioContext creation until first user gesture to avoid browser warnings
+    var resumeEvents = ['click', 'touchstart', 'keydown'];
+    function createOnGesture() {
+      if (audioContext) return;
+      try {
+        audioContext = new (AudioContext || webkitAudioContext)();
+        masterGain = audioContext.createGain();
+        if (masterGain) {
+          masterGain.connect(audioContext.destination);
+          masterGain.gain.value = 0.5;
+        }
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+        console.log('Audio system initialized (after user gesture)');
+      } catch (err) {
+        console.error('Failed to initialize audio:', err);
       }
-
-      // Resume context if suspended (browser autoplay policy)
-      if (audioContext && audioContext.state === 'suspended') {
-        audioContext.resume();
-      }
-
-      console.log('Audio system initialized');
-      return audioContext;
-    } catch (err) {
-      console.error('Failed to initialize audio:', err);
-      return null;
+      resumeEvents.forEach(function(evt) {
+        document.removeEventListener(evt, createOnGesture);
+      });
     }
+    resumeEvents.forEach(function(evt) {
+      document.addEventListener(evt, createOnGesture, { once: false });
+    });
+
+    console.log('Audio system deferred until user gesture');
+    return true;
   }
 
   /**
