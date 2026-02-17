@@ -4497,6 +4497,7 @@
     // Clear any existing water bodies
     for (var i = 0; i < waterBodies.length; i++) {
       scene.remove(waterBodies[i].mesh);
+      if (waterBodies[i].foamRing) scene.remove(waterBodies[i].foamRing);
       if (waterBodies[i].geometry) waterBodies[i].geometry.dispose();
       if (waterBodies[i].material) waterBodies[i].material.dispose();
     }
@@ -4517,6 +4518,7 @@
       emissive: 0x113355
     });
     scene.add(gardensPond.mesh);
+    if (gardensPond.foamRing) scene.add(gardensPond.foamRing);
     waterBodies.push(gardensPond);
 
     // Wilds: Flowing river (~10 unit wide, winding through zone)
@@ -4558,6 +4560,7 @@
       emissive: 0x225588
     });
     scene.add(nexusFountain.mesh);
+    if (nexusFountain.foamRing) scene.add(nexusFountain.foamRing);
     waterBodies.push(nexusFountain);
   }
 
@@ -4614,13 +4617,33 @@
     mesh.receiveShadow = false;
     mesh.castShadow = false;
 
+    // Add shoreline foam ring for circular water bodies
+    var foamRing = null;
+    if (config.type === 'circle' && config.radius) {
+      var foamInner = config.radius - 1.5;
+      var foamOuter = config.radius + 0.5;
+      var foamGeom = new THREE.RingBufferGeometry(foamInner, foamOuter, 32);
+      foamGeom.rotateX(-Math.PI / 2);
+      var foamMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.15,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      foamRing = new THREE.Mesh(foamGeom, foamMat);
+      foamRing.position.set(config.centerX, config.height + 0.02, config.centerZ);
+      mesh.parent ? mesh.parent.add(foamRing) : null;
+    }
+
     // Store config and initial positions for animation
     return {
       mesh: mesh,
       geometry: geometry,
       material: material,
       initialPositions: initialPositions,
-      config: config
+      config: config,
+      foamRing: foamRing
     };
   }
 
@@ -4766,6 +4789,38 @@
         }
       }
 
+      // Wave crest tinting - add lighter color on wave peaks
+      var maxAmp = baseWaveHeight * waterWeatherMultiplier;
+      var crestThreshold = maxAmp * 0.6;
+      if (!water.crestColors) {
+        var colorCount = positions.length / 3;
+        var colorArray = new Float32Array(colorCount * 3);
+        water.crestColors = colorArray;
+        water.geometry.setAttribute('color', new THREE.Float32BufferAttribute(colorArray, 3));
+        water.material.vertexColors = true;
+        // Set base color from material
+        var baseR = ((water.config.color >> 16) & 0xff) / 255;
+        var baseG = ((water.config.color >> 8) & 0xff) / 255;
+        var baseB = (water.config.color & 0xff) / 255;
+        for (var ci = 0; ci < colorCount; ci++) {
+          colorArray[ci * 3] = baseR;
+          colorArray[ci * 3 + 1] = baseG;
+          colorArray[ci * 3 + 2] = baseB;
+        }
+      }
+      var colors = water.crestColors;
+      var baseR2 = ((water.config.color >> 16) & 0xff) / 255;
+      var baseG2 = ((water.config.color >> 8) & 0xff) / 255;
+      var baseB2 = (water.config.color & 0xff) / 255;
+      for (var ck = 0; ck < positions.length; ck += 3) {
+        var displacement = positions[ck + 1] - initialPos[ck + 1];
+        var crestFactor = displacement > crestThreshold ? Math.min((displacement - crestThreshold) / (maxAmp - crestThreshold), 1.0) * 0.3 : 0;
+        colors[ck] = baseR2 + crestFactor;
+        colors[ck + 1] = baseG2 + crestFactor;
+        colors[ck + 2] = baseB2 + crestFactor;
+      }
+      water.geometry.attributes.color.needsUpdate = true;
+
       water.geometry.attributes.position.needsUpdate = true;
       water.geometry.computeVertexNormals();
 
@@ -4791,6 +4846,16 @@
           water.material.emissiveIntensity += (targetEmissive - water.material.emissiveIntensity) * deltaTime * 0.5;
         }
       }
+    }
+
+    // Animate foam rings
+    for (var fi = 0; fi < waterBodies.length; fi++) {
+      var foamBody = waterBodies[fi];
+      if (!foamBody.foamRing) continue;
+      var foamMat = foamBody.foamRing.material;
+      foamMat.opacity = Math.sin(waterTime * 1.5) * 0.06 + 0.14;
+      var foamScale = 1.0 + Math.sin(waterTime * 0.8) * 0.02;
+      foamBody.foamRing.scale.set(foamScale, 1, foamScale);
     }
   }
 

@@ -1672,6 +1672,45 @@
     min-width: 320px;
     max-width: 90vw;
   }
+
+  /* Mobile touch target sizes (minimum 44x44px) */
+  .hud-btn, .panel-btn, .craft-btn, .trade-btn, .quest-btn,
+  .pet-action-btn, .pet-adopt-btn, .npc-dialog-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Smaller minimap on mobile */
+  .minimap {
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  #minimap-canvas {
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  /* Full-width chat input at bottom */
+  .chat-input {
+    width: calc(100vw - 32px);
+    max-width: none;
+  }
+
+  /* Collapsible quest tracker */
+  .quest-tracker {
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .quest-tracker-title {
+    font-size: var(--font-size-xs);
+  }
+
+  /* Smaller status text */
+  .player-info {
+    font-size: var(--font-size-xs);
+  }
 }
 
 @media (max-width: 480px) {

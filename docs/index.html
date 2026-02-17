@@ -1945,6 +1945,45 @@ html, body {
     min-width: 320px;
     max-width: 90vw;
   }
+
+  /* Mobile touch target sizes (minimum 44x44px) */
+  .hud-btn, .panel-btn, .craft-btn, .trade-btn, .quest-btn,
+  .pet-action-btn, .pet-adopt-btn, .npc-dialog-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Smaller minimap on mobile */
+  .minimap {
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  #minimap-canvas {
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  /* Full-width chat input at bottom */
+  .chat-input {
+    width: calc(100vw - 32px);
+    max-width: none;
+  }
+
+  /* Collapsible quest tracker */
+  .quest-tracker {
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .quest-tracker-title {
+    font-size: var(--font-size-xs);
+  }
+
+  /* Smaller status text */
+  .player-info {
+    font-size: var(--font-size-xs);
+  }
 }
 
 @media (max-width: 480px) {
@@ -22147,6 +22186,7 @@ html, body {
     // Clear any existing water bodies
     for (var i = 0; i < waterBodies.length; i++) {
       scene.remove(waterBodies[i].mesh);
+      if (waterBodies[i].foamRing) scene.remove(waterBodies[i].foamRing);
       if (waterBodies[i].geometry) waterBodies[i].geometry.dispose();
       if (waterBodies[i].material) waterBodies[i].material.dispose();
     }
@@ -22167,6 +22207,7 @@ html, body {
       emissive: 0x113355
     });
     scene.add(gardensPond.mesh);
+    if (gardensPond.foamRing) scene.add(gardensPond.foamRing);
     waterBodies.push(gardensPond);
 
     // Wilds: Flowing river (~10 unit wide, winding through zone)
@@ -22208,6 +22249,7 @@ html, body {
       emissive: 0x225588
     });
     scene.add(nexusFountain.mesh);
+    if (nexusFountain.foamRing) scene.add(nexusFountain.foamRing);
     waterBodies.push(nexusFountain);
   }
 
@@ -22264,13 +22306,33 @@ html, body {
     mesh.receiveShadow = false;
     mesh.castShadow = false;
 
+    // Add shoreline foam ring for circular water bodies
+    var foamRing = null;
+    if (config.type === 'circle' && config.radius) {
+      var foamInner = config.radius - 1.5;
+      var foamOuter = config.radius + 0.5;
+      var foamGeom = new THREE.RingBufferGeometry(foamInner, foamOuter, 32);
+      foamGeom.rotateX(-Math.PI / 2);
+      var foamMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.15,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      foamRing = new THREE.Mesh(foamGeom, foamMat);
+      foamRing.position.set(config.centerX, config.height + 0.02, config.centerZ);
+      mesh.parent ? mesh.parent.add(foamRing) : null;
+    }
+
     // Store config and initial positions for animation
     return {
       mesh: mesh,
       geometry: geometry,
       material: material,
       initialPositions: initialPositions,
-      config: config
+      config: config,
+      foamRing: foamRing
     };
   }
 
@@ -22416,6 +22478,38 @@ html, body {
         }
       }
 
+      // Wave crest tinting - add lighter color on wave peaks
+      var maxAmp = baseWaveHeight * waterWeatherMultiplier;
+      var crestThreshold = maxAmp * 0.6;
+      if (!water.crestColors) {
+        var colorCount = positions.length / 3;
+        var colorArray = new Float32Array(colorCount * 3);
+        water.crestColors = colorArray;
+        water.geometry.setAttribute('color', new THREE.Float32BufferAttribute(colorArray, 3));
+        water.material.vertexColors = true;
+        // Set base color from material
+        var baseR = ((water.config.color >> 16) & 0xff) / 255;
+        var baseG = ((water.config.color >> 8) & 0xff) / 255;
+        var baseB = (water.config.color & 0xff) / 255;
+        for (var ci = 0; ci < colorCount; ci++) {
+          colorArray[ci * 3] = baseR;
+          colorArray[ci * 3 + 1] = baseG;
+          colorArray[ci * 3 + 2] = baseB;
+        }
+      }
+      var colors = water.crestColors;
+      var baseR2 = ((water.config.color >> 16) & 0xff) / 255;
+      var baseG2 = ((water.config.color >> 8) & 0xff) / 255;
+      var baseB2 = (water.config.color & 0xff) / 255;
+      for (var ck = 0; ck < positions.length; ck += 3) {
+        var displacement = positions[ck + 1] - initialPos[ck + 1];
+        var crestFactor = displacement > crestThreshold ? Math.min((displacement - crestThreshold) / (maxAmp - crestThreshold), 1.0) * 0.3 : 0;
+        colors[ck] = baseR2 + crestFactor;
+        colors[ck + 1] = baseG2 + crestFactor;
+        colors[ck + 2] = baseB2 + crestFactor;
+      }
+      water.geometry.attributes.color.needsUpdate = true;
+
       water.geometry.attributes.position.needsUpdate = true;
       water.geometry.computeVertexNormals();
 
@@ -22441,6 +22535,16 @@ html, body {
           water.material.emissiveIntensity += (targetEmissive - water.material.emissiveIntensity) * deltaTime * 0.5;
         }
       }
+    }
+
+    // Animate foam rings
+    for (var fi = 0; fi < waterBodies.length; fi++) {
+      var foamBody = waterBodies[fi];
+      if (!foamBody.foamRing) continue;
+      var foamMat = foamBody.foamRing.material;
+      foamMat.opacity = Math.sin(waterTime * 1.5) * 0.06 + 0.14;
+      var foamScale = 1.0 + Math.sin(waterTime * 0.8) * 0.02;
+      foamBody.foamRing.scale.set(foamScale, 1, foamScale);
     }
   }
 
@@ -26218,6 +26322,9 @@ html, body {
     var touchStartTime = 0;
     var touchStartX = 0;
     var touchStartY = 0;
+    var lastTouchX = 0;
+    var lastTouchY = 0;
+    var isTouchDragging = false;
     var wasPinching = false;
 
     function handleTouchStart(e) {
@@ -26227,11 +26334,15 @@ html, body {
         var dy = e.touches[0].clientY - e.touches[1].clientY;
         lastPinchDistance = Math.sqrt(dx * dx + dy * dy);
         wasPinching = true;
+        isTouchDragging = false;
       } else if (e.touches.length === 1) {
-        // Single touch - track for tap detection
+        // Single touch - track for tap detection and camera orbit
         touchStartTime = Date.now();
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
+        lastTouchX = e.touches[0].clientX;
+        lastTouchY = e.touches[0].clientY;
+        isTouchDragging = false;
         wasPinching = false;
       }
     }
@@ -26252,6 +26363,23 @@ html, body {
 
         lastPinchDistance = distance;
         wasPinching = true;
+      } else if (e.touches.length === 1 && !wasPinching) {
+        // Single-finger drag for camera orbit
+        var touchX = e.touches[0].clientX;
+        var touchY = e.touches[0].clientY;
+        var totalDx = touchX - touchStartX;
+        var totalDy = touchY - touchStartY;
+        var totalMoved = Math.sqrt(totalDx * totalDx + totalDy * totalDy);
+
+        if (totalMoved > 10) {
+          // Past drag threshold — orbit camera
+          isTouchDragging = true;
+          var deltaX = touchX - lastTouchX;
+          cameraOrbitAngle -= deltaX * 0.008;
+        }
+
+        lastTouchX = touchX;
+        lastTouchY = touchY;
       }
     }
 
@@ -26260,8 +26388,8 @@ html, body {
         lastPinchDistance = 0;
       }
 
-      // Tap-to-interact detection (not pinch, not long drag)
-      if (!wasPinching && e.changedTouches.length === 1 && touchStartTime > 0) {
+      // Tap-to-interact detection (not pinch, not drag)
+      if (!wasPinching && !isTouchDragging && e.changedTouches.length === 1 && touchStartTime > 0) {
         var touchEndTime = Date.now();
         var touchEndX = e.changedTouches[0].clientX;
         var touchEndY = e.changedTouches[0].clientY;
@@ -26271,8 +26399,8 @@ html, body {
         var dy = touchEndY - touchStartY;
         var distanceMoved = Math.sqrt(dx * dx + dy * dy);
 
-        // Tap if quick (< 300ms) and minimal movement (< 20px)
-        if (timeDiff < 300 && distanceMoved < 20) {
+        // Tap if quick (< 300ms) and minimal movement (< 10px)
+        if (timeDiff < 300 && distanceMoved < 10) {
           var rect = canvas.getBoundingClientRect();
           var x = ((touchEndX - rect.left) / rect.width) * 2 - 1;
           var y = -((touchEndY - rect.top) / rect.height) * 2 + 1;
@@ -26283,6 +26411,7 @@ html, body {
         }
       }
 
+      isTouchDragging = false;
       wasPinching = false;
     }
   }
@@ -35814,6 +35943,12 @@ html, body {
         case 'footstep':
           playFootstepSound();
           break;
+        case 'zone_enter':
+          playZoneEntrySwoosh();
+          break;
+        case 'shutter':
+          playShutterSound();
+          break;
         default:
           console.warn('Unknown sound type:', type);
       }
@@ -36420,6 +36555,97 @@ html, body {
   }
 
   /**
+   * Zone entry swoosh — white noise burst + descending sine sweep
+   */
+  function playZoneEntrySwoosh() {
+    if (!audioContext || !masterGain) return;
+    try {
+      var now = audioContext.currentTime;
+      // White noise burst (40ms) through bandpass
+      var bufSize = Math.floor(audioContext.sampleRate * 0.04);
+      var buf = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
+      var data = buf.getChannelData(0);
+      for (var i = 0; i < bufSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      var noise = audioContext.createBufferSource();
+      noise.buffer = buf;
+      var bandpass = audioContext.createBiquadFilter();
+      bandpass.type = 'bandpass';
+      bandpass.frequency.value = 400;
+      bandpass.Q.value = 1.0;
+      var noiseGain = audioContext.createGain();
+      noiseGain.gain.setValueAtTime(0.15, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      noise.connect(bandpass);
+      bandpass.connect(noiseGain);
+      noiseGain.connect(masterGain);
+      noise.start(now);
+      noise.stop(now + 0.04);
+
+      // Descending sine sweep 600Hz -> 200Hz over 0.3s
+      var sweep = audioContext.createOscillator();
+      sweep.type = 'sine';
+      sweep.frequency.setValueAtTime(600, now);
+      sweep.frequency.exponentialRampToValueAtTime(200, now + 0.3);
+      var sweepGain = audioContext.createGain();
+      sweepGain.gain.setValueAtTime(0.12, now);
+      sweepGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      sweep.connect(sweepGain);
+      sweepGain.connect(masterGain);
+      sweep.start(now);
+      sweep.stop(now + 0.4);
+    } catch (err) {
+      console.error('Error in zone entry swoosh:', err);
+    }
+  }
+
+  /**
+   * Photo mode shutter click — two rapid noise clicks
+   */
+  function playShutterSound() {
+    if (!audioContext || !masterGain) return;
+    try {
+      var now = audioContext.currentTime;
+      // First click
+      var bufSize = Math.floor(audioContext.sampleRate * 0.005);
+      var buf = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
+      var data = buf.getChannelData(0);
+      for (var i = 0; i < bufSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      var click1 = audioContext.createBufferSource();
+      click1.buffer = buf;
+      var hp1 = audioContext.createBiquadFilter();
+      hp1.type = 'highpass';
+      hp1.frequency.value = 3000;
+      var g1 = audioContext.createGain();
+      g1.gain.value = 0.1;
+      click1.connect(hp1);
+      hp1.connect(g1);
+      g1.connect(masterGain);
+      click1.start(now);
+      click1.stop(now + 0.005);
+
+      // Second click after 30ms gap
+      var click2 = audioContext.createBufferSource();
+      click2.buffer = buf;
+      var hp2 = audioContext.createBiquadFilter();
+      hp2.type = 'highpass';
+      hp2.frequency.value = 3000;
+      var g2 = audioContext.createGain();
+      g2.gain.value = 0.1;
+      click2.connect(hp2);
+      hp2.connect(g2);
+      g2.connect(masterGain);
+      click2.start(now + 0.035);
+      click2.stop(now + 0.04);
+    } catch (err) {
+      console.error('Error in shutter sound:', err);
+    }
+  }
+
+  /**
    * Footstep sound - very subtle soft step (tiny noise burst, vary pitch slightly)
    */
   function playFootstepSound() {
@@ -36747,6 +36973,82 @@ html, body {
 
   let currentTimeAmbient = null;
 
+  // Night cricket ambient layer
+  var cricketLayer = null;
+
+  function playNightCricketLayer() {
+    if (!audioContext || !masterGain) return null;
+    try {
+      var layerGain = audioContext.createGain();
+      layerGain.gain.value = 0.015;
+
+      // Cricket 1: 4200Hz pulsed at ~15Hz
+      var cricket1 = audioContext.createOscillator();
+      cricket1.type = 'sine';
+      cricket1.frequency.value = 4200;
+      var lfo1 = audioContext.createOscillator();
+      lfo1.type = 'square';
+      lfo1.frequency.value = 15;
+      var lfoGain1 = audioContext.createGain();
+      lfoGain1.gain.value = 0.5;
+      lfo1.connect(lfoGain1);
+      var cricket1Gain = audioContext.createGain();
+      cricket1Gain.gain.value = 0.5;
+      lfoGain1.connect(cricket1Gain.gain);
+      cricket1.connect(cricket1Gain);
+      cricket1Gain.connect(layerGain);
+
+      // Cricket 2: 4400Hz slightly offset timing
+      var cricket2 = audioContext.createOscillator();
+      cricket2.type = 'sine';
+      cricket2.frequency.value = 4400;
+      var lfo2 = audioContext.createOscillator();
+      lfo2.type = 'square';
+      lfo2.frequency.value = 13;
+      var lfoGain2 = audioContext.createGain();
+      lfoGain2.gain.value = 0.5;
+      lfo2.connect(lfoGain2);
+      var cricket2Gain = audioContext.createGain();
+      cricket2Gain.gain.value = 0.5;
+      lfoGain2.connect(cricket2Gain.gain);
+      cricket2.connect(cricket2Gain);
+      cricket2Gain.connect(layerGain);
+
+      layerGain.connect(masterGain);
+      cricket1.start();
+      cricket2.start();
+      lfo1.start();
+      lfo2.start();
+
+      return {
+        oscillators: [cricket1, cricket2, lfo1, lfo2],
+        nodes: [cricket1Gain, cricket2Gain, lfoGain1, lfoGain2, layerGain],
+        gainNode: layerGain
+      };
+    } catch (err) {
+      console.error('Error in cricket layer:', err);
+      return null;
+    }
+  }
+
+  function stopCricketLayer() {
+    if (!cricketLayer) return;
+    try {
+      if (cricketLayer.gainNode) {
+        cricketLayer.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 2);
+      }
+      var cl = cricketLayer;
+      setTimeout(function() {
+        if (cl.oscillators) {
+          cl.oscillators.forEach(function(o) { try { o.stop(); } catch(e) {} });
+        }
+      }, 2100);
+      cricketLayer = null;
+    } catch (err) {
+      console.error('Error stopping crickets:', err);
+    }
+  }
+
   /**
    * Update ambient sounds based on time of day
    * @param {string} timePeriod - dawn, morning, midday, afternoon, evening, night
@@ -36784,6 +37086,17 @@ html, body {
           break;
         default:
           currentTimeAmbient = null;
+      }
+
+      // Night cricket layer
+      if (timePeriod === 'night' || timePeriod === 'evening') {
+        if (!cricketLayer) {
+          cricketLayer = playNightCricketLayer();
+        }
+      } else if (timePeriod === 'dawn' || timePeriod === 'morning') {
+        stopCricketLayer();
+      } else {
+        stopCricketLayer();
       }
     } catch (err) {
       console.error('Error updating time ambient:', err);
@@ -41723,6 +42036,69 @@ html, body {
     arena: {x: 0, z: -240}
   };
 
+  // Landmark waypoints for purposeful NPC walking
+  var ZONE_LANDMARKS = {
+    nexus: [
+      {x: 0, z: 0, name: 'obelisk', types: ['all']},
+      {x: 15, z: 15, name: 'bulletin', types: ['all']},
+      {x: -10, z: 8, name: 'bench', types: ['all']}
+    ],
+    gardens: [
+      {x: 200, z: 30, name: 'fountain', types: ['gardener', 'healer']},
+      {x: 210, z: 25, name: 'well', types: ['gardener']},
+      {x: 195, z: 40, name: 'flowerbed', types: ['gardener', 'artist']},
+      {x: 205, z: 20, name: 'greenhouse', types: ['gardener', 'healer', 'teacher']}
+    ],
+    athenaeum: [
+      {x: 100, z: -220, name: 'library', types: ['teacher', 'philosopher', 'storyteller']},
+      {x: 110, z: -215, name: 'scriptorium', types: ['storyteller', 'philosopher']},
+      {x: 95, z: -230, name: 'telescope', types: ['teacher', 'explorer']}
+    ],
+    studio: [
+      {x: -200, z: -100, name: 'easel', types: ['artist', 'builder']},
+      {x: -205, z: -105, name: 'piano', types: ['musician']},
+      {x: -195, z: -95, name: 'workbench', types: ['builder', 'artist']}
+    ],
+    wilds: [
+      {x: -30, z: 260, name: 'campfire', types: ['explorer']},
+      {x: -20, z: 270, name: 'lookout', types: ['explorer', 'storyteller']},
+      {x: -40, z: 255, name: 'trail_marker', types: ['explorer']}
+    ],
+    agora: [
+      {x: -190, z: 120, name: 'market_stall', types: ['merchant']},
+      {x: -185, z: 125, name: 'notice_board', types: ['merchant', 'storyteller']},
+      {x: -195, z: 115, name: 'trade_post', types: ['merchant']}
+    ],
+    commons: [
+      {x: 170, z: 190, name: 'gathering_circle', types: ['all']},
+      {x: 175, z: 195, name: 'message_tree', types: ['storyteller', 'philosopher']}
+    ],
+    arena: [
+      {x: 0, z: -240, name: 'arena_center', types: ['all']},
+      {x: 5, z: -235, name: 'training_dummy', types: ['builder', 'explorer']}
+    ]
+  };
+
+  function pickLandmarkDestination(agent, seed) {
+    var zone = agent.position.zone;
+    var landmarks = ZONE_LANDMARKS[zone];
+    if (!landmarks || landmarks.length === 0) return null;
+
+    var matching = [];
+    for (var i = 0; i < landmarks.length; i++) {
+      var lm = landmarks[i];
+      if (lm.types.indexOf('all') !== -1 || lm.types.indexOf(agent.archetype) !== -1) {
+        matching.push(lm);
+      }
+    }
+
+    if (matching.length === 0) return null;
+
+    // Use seeded random for deterministic selection
+    var idx = Math.floor(seededRandom(seed) * matching.length);
+    return matching[idx];
+  }
+
   // NPC AI reference (loaded from npc_ai.js)
   var NpcAI = typeof window !== 'undefined' ? window.NpcAI : null;
 
@@ -44026,28 +44402,42 @@ html, body {
     // State-specific setup
     switch (newState) {
       case 'walking':
-        // Pick random nearby destination within zone bounds
-        var zoneCenter = ZONE_CENTERS[agent.position.zone] || {x: 0, z: 0};
-        var wAngle = seededRandom(seed + 2) * Math.PI * 2;
-        var wDist = 5 + seededRandom(seed + 3) * 20;
-        var destX = agent.position.x + Math.cos(wAngle) * wDist;
-        var destZ = agent.position.z + Math.sin(wAngle) * wDist;
-        // Keep within zone radius (~60 units from zone center)
-        var zoneRadius = 60;
-        var dxFromCenter = destX - zoneCenter.x;
-        var dzFromCenter = destZ - zoneCenter.z;
-        var distFromCenter = Math.sqrt(dxFromCenter * dxFromCenter + dzFromCenter * dzFromCenter);
-        if (distFromCenter > zoneRadius) {
-          destX = zoneCenter.x + (dxFromCenter / distFromCenter) * zoneRadius;
-          destZ = zoneCenter.z + (dzFromCenter / distFromCenter) * zoneRadius;
+        // 70% chance: walk to a landmark matching archetype, 30%: random wander
+        var landmark = null;
+        if (seededRandom(seed + 5) < 0.7) {
+          landmark = pickLandmarkDestination(agent, seed + 6);
         }
-        // Keep away from zone center structure
-        var centerDist = Math.sqrt((destX - zoneCenter.x) * (destX - zoneCenter.x) + (destZ - zoneCenter.z) * (destZ - zoneCenter.z));
-        if (centerDist < 10) {
-          destX = zoneCenter.x + (destX - zoneCenter.x) / centerDist * 12;
-          destZ = zoneCenter.z + (destZ - zoneCenter.z) / centerDist * 12;
+        if (landmark) {
+          // Walk to landmark with small offset for natural feel
+          var lmOffX = (seededRandom(seed + 7) - 0.5) * 3;
+          var lmOffZ = (seededRandom(seed + 8) - 0.5) * 3;
+          state.destination = { x: landmark.x + lmOffX, z: landmark.z + lmOffZ };
+          state.landmarkTarget = landmark.name;
+        } else {
+          // Fallback: random nearby destination within zone bounds
+          var zoneCenter = ZONE_CENTERS[agent.position.zone] || {x: 0, z: 0};
+          var wAngle = seededRandom(seed + 2) * Math.PI * 2;
+          var wDist = 5 + seededRandom(seed + 3) * 20;
+          var destX = agent.position.x + Math.cos(wAngle) * wDist;
+          var destZ = agent.position.z + Math.sin(wAngle) * wDist;
+          // Keep within zone radius (~60 units from zone center)
+          var zoneRadius = 60;
+          var dxFromCenter = destX - zoneCenter.x;
+          var dzFromCenter = destZ - zoneCenter.z;
+          var distFromCenter = Math.sqrt(dxFromCenter * dxFromCenter + dzFromCenter * dzFromCenter);
+          if (distFromCenter > zoneRadius) {
+            destX = zoneCenter.x + (dxFromCenter / distFromCenter) * zoneRadius;
+            destZ = zoneCenter.z + (dzFromCenter / distFromCenter) * zoneRadius;
+          }
+          // Keep away from zone center structure
+          var centerDist = Math.sqrt((destX - zoneCenter.x) * (destX - zoneCenter.x) + (destZ - zoneCenter.z) * (destZ - zoneCenter.z));
+          if (centerDist < 10) {
+            destX = zoneCenter.x + (destX - zoneCenter.x) / centerDist * 12;
+            destZ = zoneCenter.z + (destZ - zoneCenter.z) / centerDist * 12;
+          }
+          state.destination = { x: destX, z: destZ };
+          state.landmarkTarget = null;
         }
-        state.destination = { x: destX, z: destZ };
         break;
 
       case 'talking':
@@ -44115,6 +44505,16 @@ html, body {
               state.currentState = 'talking';
               state.stateTimer = 4 + seededRandom(seed) * 2;
               showChatBubble(agent, seed);
+            } else if (state.landmarkTarget) {
+              // Arrived at landmark — do purposeful activity
+              if (seededRandom(seed + 10) < 0.5) {
+                state.currentState = 'working';
+                state.stateTimer = 5 + seededRandom(seed + 11) * 10;
+              } else {
+                state.currentState = 'idle';
+                state.stateTimer = 2 + seededRandom(seed + 12) * 3;
+              }
+              state.landmarkTarget = null;
             } else {
               // Switch to idle
               state.currentState = 'idle';
@@ -46224,6 +46624,8 @@ html, body {
     photoMode.active = !photoMode.active;
     var hudContainer = document.getElementById('hud-container');
     if (photoMode.active) {
+      // Play shutter click sound
+      if (Audio && Audio.playSound) Audio.playSound('shutter');
       // Enter photo mode
       if (sceneContext && sceneContext.camera) {
         photoMode.freeLookAt = {
@@ -46312,6 +46714,29 @@ html, body {
   // Interaction target tracking for hover highlights and tooltips
   var currentInteractionTarget = null; // { object, type, name, distance, action, mesh }
   var tooltipEl = null;
+
+  // Hover cursor for resource nodes
+  var lastHoverCheckTime = 0;
+
+  // Floating text particles
+  var floatingTexts = [];
+
+  function showFloatingText(text, screenX, screenY) {
+    var el = document.createElement('div');
+    el.textContent = text;
+    el.style.cssText = 'position:fixed;pointer-events:none;z-index:300;' +
+      'color:#DAA520;font:bold 14px var(--font-ui);text-shadow:0 1px 3px rgba(0,0,0,0.8);' +
+      'left:' + screenX + 'px;top:' + screenY + 'px;transform:translate(-50%,0);' +
+      'transition:transform 1.2s ease-out,opacity 1.2s ease-out;opacity:1;';
+    document.body.appendChild(el);
+    requestAnimationFrame(function() {
+      el.style.transform = 'translate(-50%,-40px)';
+      el.style.opacity = '0';
+    });
+    setTimeout(function() {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 1300);
+  }
 
   // Screen flash overlay element
   var screenFlashOverlay = null;
@@ -46882,6 +47307,40 @@ html, body {
       });
     }
 
+    // Hover cursor change on mousemove (raycast for resource nodes)
+    if (typeof document !== 'undefined' && sceneContext && sceneContext.renderer) {
+      var hoverCanvas = sceneContext.renderer.domElement;
+      hoverCanvas.addEventListener('mousemove', function(e) {
+        var now = Date.now();
+        if (now - lastHoverCheckTime < 100) return; // Throttle to 100ms
+        lastHoverCheckTime = now;
+        if (!raycaster || !sceneContext.camera || !World) return;
+        var rect = hoverCanvas.getBoundingClientRect();
+        var mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        var my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        var node = World.getResourceNodeAtMouse(raycaster, sceneContext.camera, mx, my);
+        document.body.style.cursor = node ? 'pointer' : 'default';
+      });
+    }
+
+    // Mobile photo mode button (touch devices only)
+    if ('ontouchstart' in window && typeof document !== 'undefined') {
+      var photoBtn = document.createElement('div');
+      photoBtn.id = 'mobile-photo-btn';
+      photoBtn.innerHTML = '&#128247;'; // camera emoji
+      photoBtn.style.cssText = 'position:fixed;bottom:80px;right:16px;width:44px;height:44px;' +
+        'background:rgba(10,14,26,0.7);border:1px solid rgba(218,165,32,0.5);border-radius:50%;' +
+        'color:#E8E0D8;font-size:20px;display:flex;align-items:center;justify-content:center;' +
+        'z-index:150;cursor:pointer;backdrop-filter:blur(5px);';
+      photoBtn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        togglePhotoMode();
+        photoBtn.innerHTML = photoMode.active ? '&#10005;' : '&#128247;';
+      });
+      document.body.appendChild(photoBtn);
+    }
+
     // Play ambient audio and start music
     if (Audio) {
       Audio.playAmbient(currentZone);
@@ -47166,6 +47625,9 @@ html, body {
 
             // Start cinematic zone entry swoop
             startZoneCinematic();
+
+            // Play zone entry swoosh sound
+            if (Audio && Audio.playSound) Audio.playSound('zone_enter');
 
             // Track activity
             addRecentActivity('Entered ' + currentZone);
@@ -48820,6 +49282,15 @@ html, body {
       if (World && World.emitParticles && node.position) {
         var harvestPos = { x: node.position.x, y: node.position.y + 1, z: node.position.z };
         World.emitParticles('sparkle', harvestPos, 8);
+      }
+
+      // Show floating pickup text
+      if (sceneContext && sceneContext.camera && sceneContext.renderer && node.position && window.THREE) {
+        var textPos = new window.THREE.Vector3(node.position.x, node.position.y + 2, node.position.z);
+        textPos.project(sceneContext.camera);
+        var sx = (textPos.x * 0.5 + 0.5) * sceneContext.renderer.domElement.clientWidth;
+        var sy = (-textPos.y * 0.5 + 0.5) * sceneContext.renderer.domElement.clientHeight;
+        showFloatingText('+1 ' + itemData.name, sx, sy);
       }
 
       if (Quests) {

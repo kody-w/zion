@@ -632,6 +632,9 @@
     var touchStartTime = 0;
     var touchStartX = 0;
     var touchStartY = 0;
+    var lastTouchX = 0;
+    var lastTouchY = 0;
+    var isTouchDragging = false;
     var wasPinching = false;
 
     function handleTouchStart(e) {
@@ -641,11 +644,15 @@
         var dy = e.touches[0].clientY - e.touches[1].clientY;
         lastPinchDistance = Math.sqrt(dx * dx + dy * dy);
         wasPinching = true;
+        isTouchDragging = false;
       } else if (e.touches.length === 1) {
-        // Single touch - track for tap detection
+        // Single touch - track for tap detection and camera orbit
         touchStartTime = Date.now();
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
+        lastTouchX = e.touches[0].clientX;
+        lastTouchY = e.touches[0].clientY;
+        isTouchDragging = false;
         wasPinching = false;
       }
     }
@@ -666,6 +673,23 @@
 
         lastPinchDistance = distance;
         wasPinching = true;
+      } else if (e.touches.length === 1 && !wasPinching) {
+        // Single-finger drag for camera orbit
+        var touchX = e.touches[0].clientX;
+        var touchY = e.touches[0].clientY;
+        var totalDx = touchX - touchStartX;
+        var totalDy = touchY - touchStartY;
+        var totalMoved = Math.sqrt(totalDx * totalDx + totalDy * totalDy);
+
+        if (totalMoved > 10) {
+          // Past drag threshold — orbit camera
+          isTouchDragging = true;
+          var deltaX = touchX - lastTouchX;
+          cameraOrbitAngle -= deltaX * 0.008;
+        }
+
+        lastTouchX = touchX;
+        lastTouchY = touchY;
       }
     }
 
@@ -674,8 +698,8 @@
         lastPinchDistance = 0;
       }
 
-      // Tap-to-interact detection (not pinch, not long drag)
-      if (!wasPinching && e.changedTouches.length === 1 && touchStartTime > 0) {
+      // Tap-to-interact detection (not pinch, not drag)
+      if (!wasPinching && !isTouchDragging && e.changedTouches.length === 1 && touchStartTime > 0) {
         var touchEndTime = Date.now();
         var touchEndX = e.changedTouches[0].clientX;
         var touchEndY = e.changedTouches[0].clientY;
@@ -685,8 +709,8 @@
         var dy = touchEndY - touchStartY;
         var distanceMoved = Math.sqrt(dx * dx + dy * dy);
 
-        // Tap if quick (< 300ms) and minimal movement (< 20px)
-        if (timeDiff < 300 && distanceMoved < 20) {
+        // Tap if quick (< 300ms) and minimal movement (< 10px)
+        if (timeDiff < 300 && distanceMoved < 10) {
           var rect = canvas.getBoundingClientRect();
           var x = ((touchEndX - rect.left) / rect.width) * 2 - 1;
           var y = -((touchEndY - rect.top) / rect.height) * 2 + 1;
@@ -697,6 +721,7 @@
         }
       }
 
+      isTouchDragging = false;
       wasPinching = false;
     }
   }

@@ -1451,6 +1451,12 @@
         case 'footstep':
           playFootstepSound();
           break;
+        case 'zone_enter':
+          playZoneEntrySwoosh();
+          break;
+        case 'shutter':
+          playShutterSound();
+          break;
         default:
           console.warn('Unknown sound type:', type);
       }
@@ -2057,6 +2063,97 @@
   }
 
   /**
+   * Zone entry swoosh — white noise burst + descending sine sweep
+   */
+  function playZoneEntrySwoosh() {
+    if (!audioContext || !masterGain) return;
+    try {
+      var now = audioContext.currentTime;
+      // White noise burst (40ms) through bandpass
+      var bufSize = Math.floor(audioContext.sampleRate * 0.04);
+      var buf = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
+      var data = buf.getChannelData(0);
+      for (var i = 0; i < bufSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      var noise = audioContext.createBufferSource();
+      noise.buffer = buf;
+      var bandpass = audioContext.createBiquadFilter();
+      bandpass.type = 'bandpass';
+      bandpass.frequency.value = 400;
+      bandpass.Q.value = 1.0;
+      var noiseGain = audioContext.createGain();
+      noiseGain.gain.setValueAtTime(0.15, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      noise.connect(bandpass);
+      bandpass.connect(noiseGain);
+      noiseGain.connect(masterGain);
+      noise.start(now);
+      noise.stop(now + 0.04);
+
+      // Descending sine sweep 600Hz -> 200Hz over 0.3s
+      var sweep = audioContext.createOscillator();
+      sweep.type = 'sine';
+      sweep.frequency.setValueAtTime(600, now);
+      sweep.frequency.exponentialRampToValueAtTime(200, now + 0.3);
+      var sweepGain = audioContext.createGain();
+      sweepGain.gain.setValueAtTime(0.12, now);
+      sweepGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      sweep.connect(sweepGain);
+      sweepGain.connect(masterGain);
+      sweep.start(now);
+      sweep.stop(now + 0.4);
+    } catch (err) {
+      console.error('Error in zone entry swoosh:', err);
+    }
+  }
+
+  /**
+   * Photo mode shutter click — two rapid noise clicks
+   */
+  function playShutterSound() {
+    if (!audioContext || !masterGain) return;
+    try {
+      var now = audioContext.currentTime;
+      // First click
+      var bufSize = Math.floor(audioContext.sampleRate * 0.005);
+      var buf = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
+      var data = buf.getChannelData(0);
+      for (var i = 0; i < bufSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      var click1 = audioContext.createBufferSource();
+      click1.buffer = buf;
+      var hp1 = audioContext.createBiquadFilter();
+      hp1.type = 'highpass';
+      hp1.frequency.value = 3000;
+      var g1 = audioContext.createGain();
+      g1.gain.value = 0.1;
+      click1.connect(hp1);
+      hp1.connect(g1);
+      g1.connect(masterGain);
+      click1.start(now);
+      click1.stop(now + 0.005);
+
+      // Second click after 30ms gap
+      var click2 = audioContext.createBufferSource();
+      click2.buffer = buf;
+      var hp2 = audioContext.createBiquadFilter();
+      hp2.type = 'highpass';
+      hp2.frequency.value = 3000;
+      var g2 = audioContext.createGain();
+      g2.gain.value = 0.1;
+      click2.connect(hp2);
+      hp2.connect(g2);
+      g2.connect(masterGain);
+      click2.start(now + 0.035);
+      click2.stop(now + 0.04);
+    } catch (err) {
+      console.error('Error in shutter sound:', err);
+    }
+  }
+
+  /**
    * Footstep sound - very subtle soft step (tiny noise burst, vary pitch slightly)
    */
   function playFootstepSound() {
@@ -2384,6 +2481,82 @@
 
   let currentTimeAmbient = null;
 
+  // Night cricket ambient layer
+  var cricketLayer = null;
+
+  function playNightCricketLayer() {
+    if (!audioContext || !masterGain) return null;
+    try {
+      var layerGain = audioContext.createGain();
+      layerGain.gain.value = 0.015;
+
+      // Cricket 1: 4200Hz pulsed at ~15Hz
+      var cricket1 = audioContext.createOscillator();
+      cricket1.type = 'sine';
+      cricket1.frequency.value = 4200;
+      var lfo1 = audioContext.createOscillator();
+      lfo1.type = 'square';
+      lfo1.frequency.value = 15;
+      var lfoGain1 = audioContext.createGain();
+      lfoGain1.gain.value = 0.5;
+      lfo1.connect(lfoGain1);
+      var cricket1Gain = audioContext.createGain();
+      cricket1Gain.gain.value = 0.5;
+      lfoGain1.connect(cricket1Gain.gain);
+      cricket1.connect(cricket1Gain);
+      cricket1Gain.connect(layerGain);
+
+      // Cricket 2: 4400Hz slightly offset timing
+      var cricket2 = audioContext.createOscillator();
+      cricket2.type = 'sine';
+      cricket2.frequency.value = 4400;
+      var lfo2 = audioContext.createOscillator();
+      lfo2.type = 'square';
+      lfo2.frequency.value = 13;
+      var lfoGain2 = audioContext.createGain();
+      lfoGain2.gain.value = 0.5;
+      lfo2.connect(lfoGain2);
+      var cricket2Gain = audioContext.createGain();
+      cricket2Gain.gain.value = 0.5;
+      lfoGain2.connect(cricket2Gain.gain);
+      cricket2.connect(cricket2Gain);
+      cricket2Gain.connect(layerGain);
+
+      layerGain.connect(masterGain);
+      cricket1.start();
+      cricket2.start();
+      lfo1.start();
+      lfo2.start();
+
+      return {
+        oscillators: [cricket1, cricket2, lfo1, lfo2],
+        nodes: [cricket1Gain, cricket2Gain, lfoGain1, lfoGain2, layerGain],
+        gainNode: layerGain
+      };
+    } catch (err) {
+      console.error('Error in cricket layer:', err);
+      return null;
+    }
+  }
+
+  function stopCricketLayer() {
+    if (!cricketLayer) return;
+    try {
+      if (cricketLayer.gainNode) {
+        cricketLayer.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 2);
+      }
+      var cl = cricketLayer;
+      setTimeout(function() {
+        if (cl.oscillators) {
+          cl.oscillators.forEach(function(o) { try { o.stop(); } catch(e) {} });
+        }
+      }, 2100);
+      cricketLayer = null;
+    } catch (err) {
+      console.error('Error stopping crickets:', err);
+    }
+  }
+
   /**
    * Update ambient sounds based on time of day
    * @param {string} timePeriod - dawn, morning, midday, afternoon, evening, night
@@ -2421,6 +2594,17 @@
           break;
         default:
           currentTimeAmbient = null;
+      }
+
+      // Night cricket layer
+      if (timePeriod === 'night' || timePeriod === 'evening') {
+        if (!cricketLayer) {
+          cricketLayer = playNightCricketLayer();
+        }
+      } else if (timePeriod === 'dawn' || timePeriod === 'morning') {
+        stopCricketLayer();
+      } else {
+        stopCricketLayer();
       }
     } catch (err) {
       console.error('Error updating time ambient:', err);

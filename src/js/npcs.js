@@ -17,6 +17,69 @@
     arena: {x: 0, z: -240}
   };
 
+  // Landmark waypoints for purposeful NPC walking
+  var ZONE_LANDMARKS = {
+    nexus: [
+      {x: 0, z: 0, name: 'obelisk', types: ['all']},
+      {x: 15, z: 15, name: 'bulletin', types: ['all']},
+      {x: -10, z: 8, name: 'bench', types: ['all']}
+    ],
+    gardens: [
+      {x: 200, z: 30, name: 'fountain', types: ['gardener', 'healer']},
+      {x: 210, z: 25, name: 'well', types: ['gardener']},
+      {x: 195, z: 40, name: 'flowerbed', types: ['gardener', 'artist']},
+      {x: 205, z: 20, name: 'greenhouse', types: ['gardener', 'healer', 'teacher']}
+    ],
+    athenaeum: [
+      {x: 100, z: -220, name: 'library', types: ['teacher', 'philosopher', 'storyteller']},
+      {x: 110, z: -215, name: 'scriptorium', types: ['storyteller', 'philosopher']},
+      {x: 95, z: -230, name: 'telescope', types: ['teacher', 'explorer']}
+    ],
+    studio: [
+      {x: -200, z: -100, name: 'easel', types: ['artist', 'builder']},
+      {x: -205, z: -105, name: 'piano', types: ['musician']},
+      {x: -195, z: -95, name: 'workbench', types: ['builder', 'artist']}
+    ],
+    wilds: [
+      {x: -30, z: 260, name: 'campfire', types: ['explorer']},
+      {x: -20, z: 270, name: 'lookout', types: ['explorer', 'storyteller']},
+      {x: -40, z: 255, name: 'trail_marker', types: ['explorer']}
+    ],
+    agora: [
+      {x: -190, z: 120, name: 'market_stall', types: ['merchant']},
+      {x: -185, z: 125, name: 'notice_board', types: ['merchant', 'storyteller']},
+      {x: -195, z: 115, name: 'trade_post', types: ['merchant']}
+    ],
+    commons: [
+      {x: 170, z: 190, name: 'gathering_circle', types: ['all']},
+      {x: 175, z: 195, name: 'message_tree', types: ['storyteller', 'philosopher']}
+    ],
+    arena: [
+      {x: 0, z: -240, name: 'arena_center', types: ['all']},
+      {x: 5, z: -235, name: 'training_dummy', types: ['builder', 'explorer']}
+    ]
+  };
+
+  function pickLandmarkDestination(agent, seed) {
+    var zone = agent.position.zone;
+    var landmarks = ZONE_LANDMARKS[zone];
+    if (!landmarks || landmarks.length === 0) return null;
+
+    var matching = [];
+    for (var i = 0; i < landmarks.length; i++) {
+      var lm = landmarks[i];
+      if (lm.types.indexOf('all') !== -1 || lm.types.indexOf(agent.archetype) !== -1) {
+        matching.push(lm);
+      }
+    }
+
+    if (matching.length === 0) return null;
+
+    // Use seeded random for deterministic selection
+    var idx = Math.floor(seededRandom(seed) * matching.length);
+    return matching[idx];
+  }
+
   // NPC AI reference (loaded from npc_ai.js)
   var NpcAI = typeof window !== 'undefined' ? window.NpcAI : null;
 
@@ -2320,28 +2383,42 @@
     // State-specific setup
     switch (newState) {
       case 'walking':
-        // Pick random nearby destination within zone bounds
-        var zoneCenter = ZONE_CENTERS[agent.position.zone] || {x: 0, z: 0};
-        var wAngle = seededRandom(seed + 2) * Math.PI * 2;
-        var wDist = 5 + seededRandom(seed + 3) * 20;
-        var destX = agent.position.x + Math.cos(wAngle) * wDist;
-        var destZ = agent.position.z + Math.sin(wAngle) * wDist;
-        // Keep within zone radius (~60 units from zone center)
-        var zoneRadius = 60;
-        var dxFromCenter = destX - zoneCenter.x;
-        var dzFromCenter = destZ - zoneCenter.z;
-        var distFromCenter = Math.sqrt(dxFromCenter * dxFromCenter + dzFromCenter * dzFromCenter);
-        if (distFromCenter > zoneRadius) {
-          destX = zoneCenter.x + (dxFromCenter / distFromCenter) * zoneRadius;
-          destZ = zoneCenter.z + (dzFromCenter / distFromCenter) * zoneRadius;
+        // 70% chance: walk to a landmark matching archetype, 30%: random wander
+        var landmark = null;
+        if (seededRandom(seed + 5) < 0.7) {
+          landmark = pickLandmarkDestination(agent, seed + 6);
         }
-        // Keep away from zone center structure
-        var centerDist = Math.sqrt((destX - zoneCenter.x) * (destX - zoneCenter.x) + (destZ - zoneCenter.z) * (destZ - zoneCenter.z));
-        if (centerDist < 10) {
-          destX = zoneCenter.x + (destX - zoneCenter.x) / centerDist * 12;
-          destZ = zoneCenter.z + (destZ - zoneCenter.z) / centerDist * 12;
+        if (landmark) {
+          // Walk to landmark with small offset for natural feel
+          var lmOffX = (seededRandom(seed + 7) - 0.5) * 3;
+          var lmOffZ = (seededRandom(seed + 8) - 0.5) * 3;
+          state.destination = { x: landmark.x + lmOffX, z: landmark.z + lmOffZ };
+          state.landmarkTarget = landmark.name;
+        } else {
+          // Fallback: random nearby destination within zone bounds
+          var zoneCenter = ZONE_CENTERS[agent.position.zone] || {x: 0, z: 0};
+          var wAngle = seededRandom(seed + 2) * Math.PI * 2;
+          var wDist = 5 + seededRandom(seed + 3) * 20;
+          var destX = agent.position.x + Math.cos(wAngle) * wDist;
+          var destZ = agent.position.z + Math.sin(wAngle) * wDist;
+          // Keep within zone radius (~60 units from zone center)
+          var zoneRadius = 60;
+          var dxFromCenter = destX - zoneCenter.x;
+          var dzFromCenter = destZ - zoneCenter.z;
+          var distFromCenter = Math.sqrt(dxFromCenter * dxFromCenter + dzFromCenter * dzFromCenter);
+          if (distFromCenter > zoneRadius) {
+            destX = zoneCenter.x + (dxFromCenter / distFromCenter) * zoneRadius;
+            destZ = zoneCenter.z + (dzFromCenter / distFromCenter) * zoneRadius;
+          }
+          // Keep away from zone center structure
+          var centerDist = Math.sqrt((destX - zoneCenter.x) * (destX - zoneCenter.x) + (destZ - zoneCenter.z) * (destZ - zoneCenter.z));
+          if (centerDist < 10) {
+            destX = zoneCenter.x + (destX - zoneCenter.x) / centerDist * 12;
+            destZ = zoneCenter.z + (destZ - zoneCenter.z) / centerDist * 12;
+          }
+          state.destination = { x: destX, z: destZ };
+          state.landmarkTarget = null;
         }
-        state.destination = { x: destX, z: destZ };
         break;
 
       case 'talking':
@@ -2409,6 +2486,16 @@
               state.currentState = 'talking';
               state.stateTimer = 4 + seededRandom(seed) * 2;
               showChatBubble(agent, seed);
+            } else if (state.landmarkTarget) {
+              // Arrived at landmark — do purposeful activity
+              if (seededRandom(seed + 10) < 0.5) {
+                state.currentState = 'working';
+                state.stateTimer = 5 + seededRandom(seed + 11) * 10;
+              } else {
+                state.currentState = 'idle';
+                state.stateTimer = 2 + seededRandom(seed + 12) * 3;
+              }
+              state.landmarkTarget = null;
             } else {
               // Switch to idle
               state.currentState = 'idle';

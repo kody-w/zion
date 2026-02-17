@@ -231,6 +231,8 @@
     photoMode.active = !photoMode.active;
     var hudContainer = document.getElementById('hud-container');
     if (photoMode.active) {
+      // Play shutter click sound
+      if (Audio && Audio.playSound) Audio.playSound('shutter');
       // Enter photo mode
       if (sceneContext && sceneContext.camera) {
         photoMode.freeLookAt = {
@@ -319,6 +321,29 @@
   // Interaction target tracking for hover highlights and tooltips
   var currentInteractionTarget = null; // { object, type, name, distance, action, mesh }
   var tooltipEl = null;
+
+  // Hover cursor for resource nodes
+  var lastHoverCheckTime = 0;
+
+  // Floating text particles
+  var floatingTexts = [];
+
+  function showFloatingText(text, screenX, screenY) {
+    var el = document.createElement('div');
+    el.textContent = text;
+    el.style.cssText = 'position:fixed;pointer-events:none;z-index:300;' +
+      'color:#DAA520;font:bold 14px var(--font-ui);text-shadow:0 1px 3px rgba(0,0,0,0.8);' +
+      'left:' + screenX + 'px;top:' + screenY + 'px;transform:translate(-50%,0);' +
+      'transition:transform 1.2s ease-out,opacity 1.2s ease-out;opacity:1;';
+    document.body.appendChild(el);
+    requestAnimationFrame(function() {
+      el.style.transform = 'translate(-50%,-40px)';
+      el.style.opacity = '0';
+    });
+    setTimeout(function() {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 1300);
+  }
 
   // Screen flash overlay element
   var screenFlashOverlay = null;
@@ -889,6 +914,40 @@
       });
     }
 
+    // Hover cursor change on mousemove (raycast for resource nodes)
+    if (typeof document !== 'undefined' && sceneContext && sceneContext.renderer) {
+      var hoverCanvas = sceneContext.renderer.domElement;
+      hoverCanvas.addEventListener('mousemove', function(e) {
+        var now = Date.now();
+        if (now - lastHoverCheckTime < 100) return; // Throttle to 100ms
+        lastHoverCheckTime = now;
+        if (!raycaster || !sceneContext.camera || !World) return;
+        var rect = hoverCanvas.getBoundingClientRect();
+        var mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        var my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        var node = World.getResourceNodeAtMouse(raycaster, sceneContext.camera, mx, my);
+        document.body.style.cursor = node ? 'pointer' : 'default';
+      });
+    }
+
+    // Mobile photo mode button (touch devices only)
+    if ('ontouchstart' in window && typeof document !== 'undefined') {
+      var photoBtn = document.createElement('div');
+      photoBtn.id = 'mobile-photo-btn';
+      photoBtn.innerHTML = '&#128247;'; // camera emoji
+      photoBtn.style.cssText = 'position:fixed;bottom:80px;right:16px;width:44px;height:44px;' +
+        'background:rgba(10,14,26,0.7);border:1px solid rgba(218,165,32,0.5);border-radius:50%;' +
+        'color:#E8E0D8;font-size:20px;display:flex;align-items:center;justify-content:center;' +
+        'z-index:150;cursor:pointer;backdrop-filter:blur(5px);';
+      photoBtn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        togglePhotoMode();
+        photoBtn.innerHTML = photoMode.active ? '&#10005;' : '&#128247;';
+      });
+      document.body.appendChild(photoBtn);
+    }
+
     // Play ambient audio and start music
     if (Audio) {
       Audio.playAmbient(currentZone);
@@ -1173,6 +1232,9 @@
 
             // Start cinematic zone entry swoop
             startZoneCinematic();
+
+            // Play zone entry swoosh sound
+            if (Audio && Audio.playSound) Audio.playSound('zone_enter');
 
             // Track activity
             addRecentActivity('Entered ' + currentZone);
@@ -2827,6 +2889,15 @@
       if (World && World.emitParticles && node.position) {
         var harvestPos = { x: node.position.x, y: node.position.y + 1, z: node.position.z };
         World.emitParticles('sparkle', harvestPos, 8);
+      }
+
+      // Show floating pickup text
+      if (sceneContext && sceneContext.camera && sceneContext.renderer && node.position && window.THREE) {
+        var textPos = new window.THREE.Vector3(node.position.x, node.position.y + 2, node.position.z);
+        textPos.project(sceneContext.camera);
+        var sx = (textPos.x * 0.5 + 0.5) * sceneContext.renderer.domElement.clientWidth;
+        var sy = (-textPos.y * 0.5 + 0.5) * sceneContext.renderer.domElement.clientHeight;
+        showFloatingText('+1 ' + itemData.name, sx, sy);
       }
 
       if (Quests) {
