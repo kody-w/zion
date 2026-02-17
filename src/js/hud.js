@@ -217,7 +217,7 @@
         <span style="color: #4af;">Zone:</span> ${player.zone || 'Unknown'}
       </div>
       <div style="margin-bottom: 3px;">
-        <span style="color: #ff6347;">Warmth:</span> ${player.warmth || 100}%
+        <span style="color: #ff6347;">Warmth:</span> ${Math.round(player.warmth || 0)}%
       </div>
     `;
   }
