@@ -422,19 +422,24 @@ function assertEqual(actual, expected, message) {
   state = o3.state;
 
   var before = SimCRM.getMetrics(state);
-  var ticked = SimCRM.simulateTick(state);
+
+  // Run 5 ticks — with probabilistic actions, one tick may be a no-op,
+  // but 5 ticks should produce at least one change.
+  var ticked = state;
+  for (var t = 0; t < 5; t++) {
+    ticked = SimCRM.simulateTick(ticked);
+  }
 
   assert(ticked !== null, 'simulateTick returns a state');
   assert(ticked.accounts !== undefined, 'ticked state has accounts');
   assert(ticked.opportunities !== undefined, 'ticked state has opportunities');
   assert(Array.isArray(ticked.activities), 'ticked state has activities array');
 
-  // Something should have changed (activities at minimum, since 70% chance)
   var after = SimCRM.getMetrics(ticked);
   var somethingChanged = after.activity_count > before.activity_count
     || after.opportunities_count > before.opportunities_count
     || JSON.stringify(after.stage_breakdown) !== JSON.stringify(before.stage_breakdown);
-  assert(somethingChanged, 'simulateTick changes something in the state');
+  assert(somethingChanged, 'simulateTick changes something in the state after 5 ticks');
 })();
 
 (function testSimulateTickEmptyState() {

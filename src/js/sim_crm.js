@@ -399,9 +399,10 @@
   ];
 
   var tickSeed = 1;
+  var tickCount = 0;
 
   function tickRandom() {
-    // Simple LCG for deterministic-enough variety per tick
+    // Simple LCG — tickCount ensures unique sequences even for same-ms calls
     tickSeed = (tickSeed * 1664525 + 1013904223) & 0x7fffffff;
     return (tickSeed & 0xffff) / 0x10000;
   }
@@ -426,7 +427,8 @@
   function simulateTick(state) {
     if (!state || !state.accounts) { return state; }
 
-    tickSeed = (Date.now() & 0x7fffffff) || 1;
+    tickCount++;
+    tickSeed = ((Date.now() + tickCount * 7919) & 0x7fffffff) || 1;
     var s = state;
     var accIds = objectKeys(s.accounts);
     var oppIds = objectKeys(s.opportunities);

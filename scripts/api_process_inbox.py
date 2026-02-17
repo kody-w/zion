@@ -248,6 +248,16 @@ def apply_to_state(msg, state_dir):
         actions['actions'] = actions['actions'][-100:]
         save_json(actions_path, actions)
 
+    elif msg_type == 'build' and isinstance(payload.get('sim'), str):
+        # Route simulation messages to appropriate handler
+        sim_name = payload['sim']
+        if sim_name == 'crm':
+            from sim_crm_apply import load_state, apply_action, save_state
+            crm_path = os.path.join(state_dir, 'simulations', 'crm', 'state.json')
+            crm_state = load_state(crm_path)
+            crm_state = apply_action(crm_state, payload, sender)
+            save_state(crm_path, crm_state)
+
     # Always record the action in changes
     changes_path = os.path.join(state_dir, 'changes.json')
     changes = load_json(changes_path)
