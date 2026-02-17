@@ -191,6 +191,9 @@ def _record_economy_txn(state_dir, txn_type, sender, payload, to=''):
     save_json(econ_path, econ)
 
 
+VALID_ZONES = {'nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'}
+
+
 def apply_to_state(msg, state_dir):
     """Apply a validated message to canonical state files."""
     msg_type = msg['type']
@@ -220,13 +223,15 @@ def apply_to_state(msg, state_dir):
         save_json(world_path, world)
 
     elif msg_type == 'warp':
-        # Update position with new zone
+        # Update position with new zone (validate zone name)
         world_path = os.path.join(state_dir, 'world.json')
         world = load_json(world_path)
         citizens = world.get('citizens', {})
         if sender not in citizens:
             citizens[sender] = {'id': sender, 'position': {}, 'lastSeen': '', 'actions': []}
         zone = payload.get('zone', 'nexus')
+        if zone not in VALID_ZONES:
+            zone = 'nexus'
         citizens[sender]['position'] = {'x': 0, 'y': 0, 'z': 0, 'zone': zone}
         citizens[sender]['lastSeen'] = msg.get('ts', '')
         world['citizens'] = citizens

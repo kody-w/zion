@@ -48354,6 +48354,59 @@ html, body {
       ApiBridge.init();
     }
 
+    // Load canonical state from GitHub (so solo visitors see agent activity)
+    if (typeof fetch !== 'undefined' && State && State.getLiveState && State.setLiveState) {
+      const RAW = 'https://raw.githubusercontent.com/kody-w/zion/main/state';
+      const loadCanonical = function(file) {
+        return fetch(RAW + '/' + file, { cache: 'no-cache' })
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .catch(function() { return null; });
+      };
+      Promise.all([loadCanonical('world.json'), loadCanonical('chat.json')])
+        .then(function(results) {
+          var world = results[0];
+          var chat = results[1];
+          if (!world && !chat) return;
+          var live = State.getLiveState();
+          if (world) {
+            // Merge citizens from canonical into live state
+            var citizens = world.citizens || {};
+            if (!live.players) live.players = {};
+            for (var cid in citizens) {
+              if (citizens.hasOwnProperty(cid) && !live.players[cid]) {
+                live.players[cid] = citizens[cid];
+              }
+            }
+            // Merge world metadata
+            if (!live.world) live.world = {};
+            live.world.time = world.worldTime || live.world.time || 0;
+            live.world.dayPhase = world.dayPhase || live.world.dayPhase || 'day';
+            live.world.weather = world.weather || live.world.weather || 'clear';
+            live.world.season = world.season || live.world.season || 'spring';
+            live.world.structures = world.structures || [];
+            live.world.creations = world.creations || [];
+          }
+          if (chat && chat.messages) {
+            if (!live.chat) live.chat = [];
+            // Prepend canonical chat (live chat takes priority for duplicates)
+            var liveIds = {};
+            for (var i = 0; i < live.chat.length; i++) {
+              if (live.chat[i].id) liveIds[live.chat[i].id] = true;
+            }
+            for (var j = 0; j < chat.messages.length; j++) {
+              var m = chat.messages[j];
+              if (!m.id || !liveIds[m.id]) {
+                live.chat.push(m);
+              }
+            }
+          }
+          State.setLiveState(live);
+          console.log('[Canonical] Loaded %d citizens, %d chat messages from state/',
+            Object.keys((world && world.citizens) || {}).length,
+            (chat && chat.messages || []).length);
+        });
+    }
+
     // Initialize CRM simulation
     if (typeof SimCRM !== 'undefined' && SimCRM.initState) {
       simCrmState = SimCRM.initState();
