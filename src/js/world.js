@@ -416,12 +416,12 @@
 
   function createTree(parent, x, y, z, seed, zone) {
     var treeGroup = new THREE.Group();
-    var scale = 0.7 + seededRandom(seed, 0, 5) * 0.8;
+    var scale = 0.5 + seededRandom(seed, 0, 5) * 0.5;
     var treeType = seededRandom(seed, 0, 6);
 
     // Trunk
-    var trunkH = 3 * scale + seededRandom(seed, 0, 7) * 2 * scale;
-    var trunkR = 0.2 * scale + seededRandom(seed, 0, 8) * 0.15 * scale;
+    var trunkH = 2.5 * scale + seededRandom(seed, 0, 7) * 1.5 * scale;
+    var trunkR = 0.15 * scale + seededRandom(seed, 0, 8) * 0.1 * scale;
     var trunkGeo = new THREE.CylinderGeometry(trunkR * 0.7, trunkR, trunkH, 6);
     var trunkColor = zone === 'wilds' ? 0x4a3728 : 0x8B4513;
     var trunkMat = new THREE.MeshStandardMaterial({ color: trunkColor, roughness: 0.95 });
@@ -433,7 +433,7 @@
     // Canopy
     if (treeType < 0.4) {
       // Round tree
-      var canopyR = 2 * scale + seededRandom(seed, 0, 9) * 1.5 * scale;
+      var canopyR = 1.2 * scale + seededRandom(seed, 0, 9) * 0.8 * scale;
       var canopyGeo = new THREE.SphereGeometry(canopyR, 8, 8);
       var canopyColor = zone === 'wilds' ? 0x1a5e1a : (zone === 'gardens' ? 0x4CAF50 : 0x2d8a2d);
       var canopyMat = new THREE.MeshStandardMaterial({ color: canopyColor, roughness: 0.85 });
@@ -443,8 +443,8 @@
       treeGroup.add(canopy);
     } else if (treeType < 0.7) {
       // Cone tree (pine)
-      var pineH = 4 * scale;
-      var pineR = 1.8 * scale;
+      var pineH = 3 * scale;
+      var pineR = 1.2 * scale;
       var pineGeo = new THREE.ConeGeometry(pineR, pineH, 8);
       var pineColor = zone === 'wilds' ? 0x0d4d0d : 0x1b7a1b;
       var pineMat = new THREE.MeshStandardMaterial({ color: pineColor, roughness: 0.85 });
@@ -455,7 +455,7 @@
     } else {
       // Multi-sphere canopy
       for (var cs = 0; cs < 3; cs++) {
-        var msr = 1.2 * scale + seededRandom(seed + cs, 0, 10) * 0.8 * scale;
+        var msr = 0.8 * scale + seededRandom(seed + cs, 0, 10) * 0.5 * scale;
         var msGeo = new THREE.SphereGeometry(msr, 6, 6);
         var msColor = 0x2d8a2d + Math.floor(seededRandom(seed + cs, 0, 11) * 0x202020);
         var msMat = new THREE.MeshStandardMaterial({ color: msColor, roughness: 0.85 });

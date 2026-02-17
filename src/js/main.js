@@ -3143,11 +3143,36 @@
 
       case 'toggleSettings':
         if (HUD) {
-          var settingsEl = document.getElementById('settings-menu-overlay');
-          if (settingsEl) {
-            HUD.hideSettingsMenu();
-          } else {
-            HUD.showSettingsMenu();
+          // Close any open panels/dialogs first
+          var closedSomething = false;
+          if (HUD.hideNPCDialog) {
+            var npcDlg = document.getElementById('npc-dialog');
+            if (npcDlg) { HUD.hideNPCDialog(); closedSomething = true; }
+          }
+          if (HUD.hideNPCShop) {
+            var npcShop = document.getElementById('npc-shop-panel');
+            if (npcShop) { HUD.hideNPCShop(); closedSomething = true; }
+          }
+          if (HUD.hideQuestOffer) {
+            var questOffer = document.getElementById('quest-offer-panel');
+            if (questOffer) { HUD.hideQuestOffer(); closedSomething = true; }
+          }
+          if (HUD.hideQuestLog) {
+            var questLog = document.getElementById('quest-log-panel');
+            if (questLog) { HUD.hideQuestLog(); closedSomething = true; }
+          }
+          if (HUD.hideWorldMap) {
+            var worldMap = document.getElementById('world-map-overlay');
+            if (worldMap) { HUD.hideWorldMap(); closedSomething = true; }
+          }
+          // Only toggle settings if nothing else was closed
+          if (!closedSomething) {
+            var settingsEl = document.getElementById('settings-menu-overlay');
+            if (settingsEl) {
+              HUD.hideSettingsMenu();
+            } else {
+              HUD.showSettingsMenu();
+            }
           }
         }
         break;
