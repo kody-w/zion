@@ -52,6 +52,8 @@
   let economyLedger = null;
   let raycaster = null;
   let simCrmState = null;
+  let lastSimCrmTick = 0;
+  var SIM_CRM_TICK_INTERVAL = 45000; // 45 seconds between CRM ticks
   let npcUpdateFrame = 0;
   let visitedZones = { nexus: true }; // Track discovered zones for piano accents
 
@@ -402,7 +404,7 @@
         position: { x: 0, y: 0, z: 0 },
         zone: 'nexus',
         spark: 1000,
-        warmth: 100
+        warmth: 0
       };
       State.addPlayer(gameState, localPlayer);
     }
@@ -1492,6 +1494,12 @@
       updatePetStatus();
     }
 
+    // Tick CRM simulation periodically
+    if (typeof SimCRM !== 'undefined' && SimCRM.simulateTick && simCrmState && nowMs - lastSimCrmTick >= SIM_CRM_TICK_INTERVAL) {
+      lastSimCrmTick = nowMs;
+      simCrmState = SimCRM.simulateTick(simCrmState);
+    }
+
     // Update API bridge (state publishing + inbox polling)
     if (ApiBridge && ApiBridge.update) {
       ApiBridge.update(nowMs, gameState);
@@ -1903,7 +1911,7 @@
       position: msg.payload.position || { x: 0, y: 0, z: 0 },
       zone: msg.payload.zone || 'nexus',
       spark: 1000,
-      warmth: 100
+      warmth: 0
     };
 
     State.addPlayer(gameState, player);

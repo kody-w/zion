@@ -405,6 +405,61 @@ function assertEqual(actual, expected, message) {
   assertEqual(acct.revenue, 5000, 'snapshot preserves account revenue');
 })();
 
+// --- simulateTick ---
+
+(function testSimulateTickRunsWithoutError() {
+  // Build a state with some data to tick against
+  var state = SimCRM.initState();
+  var a1 = SimCRM.createAccount(state, { name: 'Shop A', owner: 'agent_004' });
+  state = a1.state;
+  var a2 = SimCRM.createAccount(state, { name: 'Shop B', owner: 'agent_014' });
+  state = a2.state;
+  var o1 = SimCRM.createOpportunity(state, { name: 'Deal 1', accountId: a1.record.id, stage: 'prospecting', value: 1000, owner: 'agent_004' });
+  state = o1.state;
+  var o2 = SimCRM.createOpportunity(state, { name: 'Deal 2', accountId: a2.record.id, stage: 'qualification', value: 2000, owner: 'agent_014' });
+  state = o2.state;
+  var o3 = SimCRM.createOpportunity(state, { name: 'Deal 3', accountId: a1.record.id, stage: 'negotiation', value: 500, owner: 'agent_004' });
+  state = o3.state;
+
+  var before = SimCRM.getMetrics(state);
+  var ticked = SimCRM.simulateTick(state);
+
+  assert(ticked !== null, 'simulateTick returns a state');
+  assert(ticked.accounts !== undefined, 'ticked state has accounts');
+  assert(ticked.opportunities !== undefined, 'ticked state has opportunities');
+  assert(Array.isArray(ticked.activities), 'ticked state has activities array');
+
+  // Something should have changed (activities at minimum, since 70% chance)
+  var after = SimCRM.getMetrics(ticked);
+  var somethingChanged = after.activity_count > before.activity_count
+    || after.opportunities_count > before.opportunities_count
+    || JSON.stringify(after.stage_breakdown) !== JSON.stringify(before.stage_breakdown);
+  assert(somethingChanged, 'simulateTick changes something in the state');
+})();
+
+(function testSimulateTickEmptyState() {
+  var state = SimCRM.initState();
+  var ticked = SimCRM.simulateTick(state);
+  assert(ticked === state, 'simulateTick on empty state returns same state');
+})();
+
+(function testSimulateTickMultipleRounds() {
+  // Run 10 ticks to make sure nothing blows up
+  var state = SimCRM.initState();
+  var a1 = SimCRM.createAccount(state, { name: 'TestCo', owner: 'agent_004' });
+  state = a1.state;
+  var o1 = SimCRM.createOpportunity(state, { name: 'Big Deal', accountId: a1.record.id, stage: 'prospecting', value: 3000 });
+  state = o1.state;
+
+  for (var i = 0; i < 10; i++) {
+    state = SimCRM.simulateTick(state);
+  }
+
+  var metrics = SimCRM.getMetrics(state);
+  assert(metrics.activity_count > 0, 'multiple ticks produce activities');
+  assert(metrics.opportunities_count >= 1, 'opportunities still exist after ticks');
+})();
+
 // --- Results ---
 
 console.log('\nCRM Simulation Tests: ' + passed + ' passed, ' + failed + ' failed');

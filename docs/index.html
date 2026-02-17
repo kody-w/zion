@@ -17250,6 +17250,138 @@ html, body {
     };
   }
 
+  // --- Simulation tick ---
+
+  var OPEN_STAGES = ['prospecting', 'qualification', 'proposal', 'negotiation'];
+  var STAGE_ADVANCE = {
+    'prospecting': 'qualification',
+    'qualification': 'proposal',
+    'proposal': 'negotiation',
+    'negotiation': 'closed_won'
+  };
+
+  var TICK_DEAL_NAMES = [
+    'Enchanted Gem Lot', 'Potion Ingredient Bundle', 'Scroll Consignment',
+    'Festival Supply Order', 'Armor Repair Contract', 'Seed Catalog Deal',
+    'Map Commission', 'Instrument Materials', 'Forge Fuel Shipment',
+    'Textile Dye Batch', 'Herb Subscription', 'Crystal Lens Order',
+    'Waystone Part Supply', 'Lantern Oil Contract', 'Rune Ink Purchase'
+  ];
+
+  var TICK_ACTIVITY_SUBJECTS = [
+    'Checked in on deal progress', 'Sent pricing update',
+    'Met to discuss terms', 'Followed up after delivery',
+    'Reviewed quarterly numbers', 'Negotiated bulk discount',
+    'Introduced new product line', 'Resolved supply delay',
+    'Scheduled next review', 'Collected feedback on service'
+  ];
+
+  var tickSeed = 1;
+
+  function tickRandom() {
+    // Simple LCG for deterministic-enough variety per tick
+    tickSeed = (tickSeed * 1664525 + 1013904223) & 0x7fffffff;
+    return (tickSeed & 0xffff) / 0x10000;
+  }
+
+  function pickRandom(arr) {
+    return arr[Math.floor(tickRandom() * arr.length)];
+  }
+
+  function objectKeys(obj) {
+    var keys = [];
+    for (var k in obj) { if (obj.hasOwnProperty(k)) { keys.push(k); } }
+    return keys;
+  }
+
+  /**
+   * Advance CRM dynamics one tick. Called periodically from game loop.
+   * Each tick picks 1-2 random actions: advance a deal, log an activity,
+   * occasionally create a new opportunity or close a deal.
+   * @param {object} state - Current CRM state
+   * @returns {object} New CRM state
+   */
+  function simulateTick(state) {
+    if (!state || !state.accounts) { return state; }
+
+    tickSeed = (Date.now() & 0x7fffffff) || 1;
+    var s = state;
+    var accIds = objectKeys(s.accounts);
+    var oppIds = objectKeys(s.opportunities);
+    if (accIds.length === 0) { return s; }
+
+    // Gather open opportunities
+    var openOpps = [];
+    for (var i = 0; i < oppIds.length; i++) {
+      var opp = s.opportunities[oppIds[i]];
+      if (opp && OPEN_STAGES.indexOf(opp.stage) !== -1) {
+        openOpps.push(opp);
+      }
+    }
+
+    // Action 1: Advance a random open deal one stage (60% chance)
+    if (openOpps.length > 0 && tickRandom() < 0.6) {
+      var advOpp = pickRandom(openOpps);
+      var nextStage = STAGE_ADVANCE[advOpp.stage];
+      if (nextStage) {
+        s = updateStage(s, advOpp.id, nextStage);
+        // Remove from openOpps if it closed
+        if (nextStage === 'closed_won') {
+          openOpps = openOpps.filter(function(o) { return o.id !== advOpp.id; });
+        }
+      }
+    }
+
+    // Action 2: Log an activity (70% chance)
+    if (tickRandom() < 0.7) {
+      var actOwner = s.accounts[pickRandom(accIds)].owner || 'system';
+      var regarding = '';
+      var regardingType = '';
+      if (openOpps.length > 0 && tickRandom() > 0.3) {
+        var refOpp = pickRandom(openOpps);
+        regarding = refOpp.id;
+        regardingType = 'opportunity';
+      } else {
+        regarding = pickRandom(accIds);
+        regardingType = 'account';
+      }
+      var actResult = logActivity(s, {
+        type: pickRandom(ACTIVITY_TYPES),
+        subject: pickRandom(TICK_ACTIVITY_SUBJECTS),
+        regarding: regarding,
+        regardingType: regardingType,
+        owner: actOwner,
+        status: 'completed'
+      });
+      s = actResult.state;
+    }
+
+    // Action 3: Create a new opportunity (15% chance)
+    if (tickRandom() < 0.15 && accIds.length > 0) {
+      var accId = pickRandom(accIds);
+      var acct = s.accounts[accId];
+      var oppResult = createOpportunity(s, {
+        name: pickRandom(TICK_DEAL_NAMES),
+        accountId: accId,
+        stage: pickRandom(['prospecting', 'prospecting', 'qualification']),
+        value: Math.floor(tickRandom() * 4000) + 200,
+        owner: acct.owner || 'system'
+      });
+      s = oppResult.state;
+    }
+
+    // Action 4: Close a deal (10% chance — win or lose)
+    if (openOpps.length > 0 && tickRandom() < 0.1) {
+      var closeOpp = pickRandom(openOpps);
+      var won = tickRandom() < 0.65; // 65% win rate
+      s = closeDeal(s, closeOpp.id, won, {
+        reason: won ? 'terms agreed' : 'budget constraints'
+      });
+    }
+
+    return s;
+  }
+
   // --- Helpers ---
 
   function clone(obj) {
@@ -17278,6 +17410,7 @@ html, body {
   exports.query = query;
   exports.getMetrics = getMetrics;
   exports.getState = getState;
+  exports.simulateTick = simulateTick;
 
 })(typeof module !== 'undefined' ? module.exports : (window.SimCRM = {}));
 
@@ -44391,6 +44524,8 @@ html, body {
   let economyLedger = null;
   let raycaster = null;
   let simCrmState = null;
+  let lastSimCrmTick = 0;
+  var SIM_CRM_TICK_INTERVAL = 45000; // 45 seconds between CRM ticks
   let npcUpdateFrame = 0;
   let visitedZones = { nexus: true }; // Track discovered zones for piano accents
 
@@ -45829,6 +45964,12 @@ html, body {
     if (nowMs - lastPetUpdate > PET_UPDATE_INTERVAL) {
       lastPetUpdate = nowMs;
       updatePetStatus();
+    }
+
+    // Tick CRM simulation periodically
+    if (typeof SimCRM !== 'undefined' && SimCRM.simulateTick && simCrmState && nowMs - lastSimCrmTick >= SIM_CRM_TICK_INTERVAL) {
+      lastSimCrmTick = nowMs;
+      simCrmState = SimCRM.simulateTick(simCrmState);
     }
 
     // Update API bridge (state publishing + inbox polling)
