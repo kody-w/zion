@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Agent activation: generate autonomous agent actions."""
 import json
+import os
 import sys
 import random
 import time
