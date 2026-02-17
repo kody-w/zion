@@ -27,7 +27,7 @@
         masterGain = audioContext.createGain();
         if (masterGain) {
           masterGain.connect(audioContext.destination);
-          masterGain.gain.value = 0.5;
+          masterGain.gain.value = 0.15;
         }
         if (audioContext.state === 'suspended') {
           audioContext.resume();
@@ -266,15 +266,15 @@
         const delayGain2 = audioContext.createGain();
 
         chime.type = 'sine';
-        chime.frequency.value = 1000 + Math.random() * 1000;
+        chime.frequency.value = 400 + Math.random() * 400;
 
-        chimeGain.gain.value = 0.08;
-        chimeGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1.5);
+        chimeGain.gain.value = 0.015;
+        chimeGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2.5);
 
-        delay1.delayTime.value = 0.3;
-        delay2.delayTime.value = 0.5;
-        delayGain1.gain.value = 0.3;
-        delayGain2.gain.value = 0.2;
+        delay1.delayTime.value = 0.4;
+        delay2.delayTime.value = 0.7;
+        delayGain1.gain.value = 0.1;
+        delayGain2.gain.value = 0.06;
 
         chime.connect(chimeGain);
         chimeGain.connect(masterGain);
@@ -286,9 +286,9 @@
         delayGain2.connect(masterGain);
 
         chime.start();
-        chime.stop(audioContext.currentTime + 1.5);
+        chime.stop(audioContext.currentTime + 2.5);
 
-        const nextChime = setTimeout(playChime, 4000 + Math.random() * 4000);
+        const nextChime = setTimeout(playChime, 8000 + Math.random() * 12000);
         timeouts.push(nextChime);
       }
 
@@ -832,7 +832,7 @@
           rumbleFilter.type = 'lowpass';
           rumbleFilter.frequency.value = 60;
 
-          rumbleGain.gain.value = 0.12;
+          rumbleGain.gain.value = 0.04;
           rumbleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2);
 
           rumble.connect(rumbleFilter);
@@ -1275,7 +1275,7 @@
         // Periodic swells
         function swell() {
           if (!crowdGain || !audioContext) return;
-          crowdGain.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 2);
+          crowdGain.gain.linearRampToValueAtTime(0.04, audioContext.currentTime + 2);
           crowdGain.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 4);
         }
 
@@ -1480,7 +1480,7 @@
     blip1.type = 'sine';
     blip1.frequency.value = 600;
 
-    blip1Gain.gain.value = 0.15;
+    blip1Gain.gain.value = 0.05;
     blip1Gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
 
     blip1.connect(blip1Gain);
@@ -1496,7 +1496,7 @@
     blip2.frequency.value = 900;
 
     blip2Gain.gain.setValueAtTime(0, audioContext.currentTime + 0.05);
-    blip2Gain.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.06);
+    blip2Gain.gain.linearRampToValueAtTime(0.05, audioContext.currentTime + 0.06);
     blip2Gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
 
     blip2.connect(blip2Gain);
@@ -1523,13 +1523,13 @@
     warp.frequency.value = 800;
     warp.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.5);
 
-    warpGain.gain.value = 0.2;
+    warpGain.gain.value = 0.06;
     warpGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
 
     delay1.delayTime.value = 0.1;
     delay2.delayTime.value = 0.2;
-    delayGain1.gain.value = 0.3;
-    delayGain2.gain.value = 0.2;
+    delayGain1.gain.value = 0.1;
+    delayGain2.gain.value = 0.06;
 
     warp.connect(warpGain);
     warpGain.connect(masterGain);
@@ -1560,7 +1560,7 @@
     harmonic.type = 'triangle';
     harmonic.frequency.value = 660;
 
-    pluckGain.gain.value = 0.25;
+    pluckGain.gain.value = 0.06;
     pluckGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
 
     pluck.connect(pluckGain);
@@ -1585,7 +1585,7 @@
     thump.type = 'square';
     thump.frequency.value = 80;
 
-    thumpGain.gain.value = 0.25;
+    thumpGain.gain.value = 0.06;
     thumpGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
 
     thump.connect(thumpGain);
@@ -1600,7 +1600,7 @@
     click.type = 'sine';
     click.frequency.value = 2000;
 
-    clickGain.gain.value = 0.15;
+    clickGain.gain.value = 0.04;
     clickGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
 
     click.connect(clickGain);
@@ -1632,7 +1632,7 @@
     wobble.frequency.value = 5;
     wobbleGain.gain.value = 3;
 
-    coinGain.gain.value = 0.2;
+    coinGain.gain.value = 0.05;
     coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
 
     wobble.connect(wobbleGain);
@@ -1668,7 +1668,7 @@
 
       const startTime = audioContext.currentTime + i * 0.08;
       noteGain.gain.setValueAtTime(0, startTime);
-      noteGain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+      noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
       noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
 
       note.connect(noteGain);
@@ -1696,8 +1696,8 @@
     horn2.frequency.value = 330;
 
     hornGain.gain.setValueAtTime(0, audioContext.currentTime);
-    hornGain.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.1);
-    hornGain.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.4);
+    hornGain.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 0.1);
+    hornGain.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 0.4);
     hornGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
 
     horn1.connect(hornGain);
@@ -1727,8 +1727,8 @@
 
       const startTime = audioContext.currentTime + i * 0.1;
       noteGain.gain.setValueAtTime(0, startTime);
-      noteGain.gain.linearRampToValueAtTime(0.15, startTime + 0.1);
-      noteGain.gain.linearRampToValueAtTime(0.1, startTime + 0.5);
+      noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.1);
+      noteGain.gain.linearRampToValueAtTime(0.03, startTime + 0.5);
       noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
 
       note.connect(noteGain);
@@ -1751,7 +1751,7 @@
     buzz.type = 'square';
     buzz.frequency.value = 100;
 
-    buzzGain.gain.value = 0.1;
+    buzzGain.gain.value = 0.04;
     buzzGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
 
     buzz.connect(buzzGain);
@@ -1773,7 +1773,7 @@
     bell.type = 'sine';
     bell.frequency.value = 800;
 
-    bellGain.gain.value = 0.15;
+    bellGain.gain.value = 0.05;
     bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
 
     bell.connect(bellGain);
@@ -1795,7 +1795,7 @@
     bell.type = 'sine';
     bell.frequency.value = 700;
 
-    bellGain.gain.value = 0.12;
+    bellGain.gain.value = 0.04;
     bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
 
     bell.connect(bellGain);
@@ -1818,7 +1818,7 @@
     anvil.type = 'square';
     anvil.frequency.value = 120;
 
-    anvilGain.gain.value = 0.3;
+    anvilGain.gain.value = 0.06;
     anvilGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
 
     anvil.connect(anvilGain);
@@ -1842,7 +1842,7 @@
 
     const startTime = audioContext.currentTime + 0.1;
     sparkleGain.gain.setValueAtTime(0, startTime);
-    sparkleGain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+    sparkleGain.gain.linearRampToValueAtTime(0.04, startTime + 0.02);
     sparkleGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
 
     sparkle1.connect(sparkleGain);
@@ -1875,7 +1875,7 @@
 
       const startTime = audioContext.currentTime + i * 0.08;
       noteGain.gain.setValueAtTime(0, startTime);
-      noteGain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+      noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
       noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
 
       note.connect(noteGain);
@@ -1906,8 +1906,8 @@
     chord3.frequency.value = 783.99; // G5
 
     chordGain.gain.setValueAtTime(0, audioContext.currentTime);
-    chordGain.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.1);
-    chordGain.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.5);
+    chordGain.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 0.1);
+    chordGain.gain.linearRampToValueAtTime(0.04, audioContext.currentTime + 0.5);
     chordGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
 
     chord1.connect(chordGain);
@@ -1948,7 +1948,7 @@
       filter.Q.value = 1;
 
       const noiseGain = audioContext.createGain();
-      noiseGain.gain.value = 0.15;
+      noiseGain.gain.value = 0.05;
       noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
 
       noise.connect(filter);
@@ -1975,7 +1975,7 @@
     greet.frequency.value = 440; // A4
 
     greetGain.gain.setValueAtTime(0, audioContext.currentTime);
-    greetGain.gain.linearRampToValueAtTime(0.12, audioContext.currentTime + 0.05);
+    greetGain.gain.linearRampToValueAtTime(0.04, audioContext.currentTime + 0.05);
     greetGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.35);
 
     greet.connect(greetGain);
@@ -2012,7 +2012,7 @@
       filter.Q.value = 5;
 
       const whooshGain = audioContext.createGain();
-      whooshGain.gain.value = 0.2;
+      whooshGain.gain.value = 0.06;
       whooshGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
 
       noise.connect(filter);
@@ -2030,7 +2030,7 @@
       tone.frequency.value = 800;
       tone.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.8);
 
-      toneGain.gain.value = 0.1;
+      toneGain.gain.value = 0.03;
       toneGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
 
       tone.connect(toneGain);
@@ -2055,7 +2055,7 @@
     thunk.type = 'square';
     thunk.frequency.value = 60;
 
-    thunkGain.gain.value = 0.3;
+    thunkGain.gain.value = 0.06;
     thunkGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.12);
 
     thunk.connect(thunkGain);
@@ -2086,7 +2086,7 @@
       bandpass.frequency.value = 400;
       bandpass.Q.value = 1.0;
       var noiseGain = audioContext.createGain();
-      noiseGain.gain.setValueAtTime(0.15, now);
+      noiseGain.gain.setValueAtTime(0.04, now);
       noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
       noise.connect(bandpass);
       bandpass.connect(noiseGain);
@@ -2100,7 +2100,7 @@
       sweep.frequency.setValueAtTime(600, now);
       sweep.frequency.exponentialRampToValueAtTime(200, now + 0.3);
       var sweepGain = audioContext.createGain();
-      sweepGain.gain.setValueAtTime(0.12, now);
+      sweepGain.gain.setValueAtTime(0.03, now);
       sweepGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
       sweep.connect(sweepGain);
       sweepGain.connect(masterGain);
@@ -2131,7 +2131,7 @@
       hp1.type = 'highpass';
       hp1.frequency.value = 3000;
       var g1 = audioContext.createGain();
-      g1.gain.value = 0.1;
+      g1.gain.value = 0.04;
       click1.connect(hp1);
       hp1.connect(g1);
       g1.connect(masterGain);
@@ -2145,7 +2145,7 @@
       hp2.type = 'highpass';
       hp2.frequency.value = 3000;
       var g2 = audioContext.createGain();
-      g2.gain.value = 0.1;
+      g2.gain.value = 0.04;
       click2.connect(hp2);
       hp2.connect(g2);
       g2.connect(masterGain);
@@ -2168,7 +2168,7 @@
       var g1 = audioContext.createGain();
       osc1.type = 'sine';
       osc1.frequency.value = 880;
-      g1.gain.setValueAtTime(0.12, now);
+      g1.gain.setValueAtTime(0.04, now);
       g1.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
       osc1.connect(g1);
       g1.connect(masterGain);
@@ -2179,7 +2179,7 @@
       var g2 = audioContext.createGain();
       osc2.type = 'sine';
       osc2.frequency.value = 1320;
-      g2.gain.setValueAtTime(0.12, now + 0.05);
+      g2.gain.setValueAtTime(0.04, now + 0.05);
       g2.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
       osc2.connect(g2);
       g2.connect(masterGain);
@@ -2309,7 +2309,7 @@
     thud.type = 'sine';
     thud.frequency.value = 200;
 
-    thudGain.gain.value = 0.1;
+    thudGain.gain.value = 0.04;
     thudGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
 
     thud.connect(thudGain);
@@ -2380,7 +2380,7 @@
       splashFilter.frequency.value = 800;
       splashFilter.Q.value = 2;
 
-      splashGain.gain.value = 0.1;
+      splashGain.gain.value = 0.04;
       splashGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.12);
 
       splash.connect(splashFilter);
@@ -2429,7 +2429,7 @@
     knock.type = 'sine';
     knock.frequency.value = 150;
 
-    knockGain.gain.value = 0.12;
+    knockGain.gain.value = 0.04;
     knockGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.06);
 
     knock.connect(knockGain);
@@ -2498,7 +2498,7 @@
     if (!masterGain) return;
 
     isMuted = false;
-    masterGain.gain.value = 0.5;
+    masterGain.gain.value = 0.15;
   }
 
   /**
@@ -2525,36 +2525,36 @@
     if (!audioContext || !masterGain) return null;
     try {
       var layerGain = audioContext.createGain();
-      layerGain.gain.value = 0.015;
+      layerGain.gain.value = 0.006;
 
-      // Cricket 1: 4200Hz pulsed at ~15Hz
+      // Cricket 1: 3200Hz pulsed at ~12Hz (softer, lower pitch)
       var cricket1 = audioContext.createOscillator();
       cricket1.type = 'sine';
-      cricket1.frequency.value = 4200;
+      cricket1.frequency.value = 3200;
       var lfo1 = audioContext.createOscillator();
-      lfo1.type = 'square';
-      lfo1.frequency.value = 15;
+      lfo1.type = 'sine';
+      lfo1.frequency.value = 12;
       var lfoGain1 = audioContext.createGain();
-      lfoGain1.gain.value = 0.5;
+      lfoGain1.gain.value = 0.3;
       lfo1.connect(lfoGain1);
       var cricket1Gain = audioContext.createGain();
-      cricket1Gain.gain.value = 0.5;
+      cricket1Gain.gain.value = 0.3;
       lfoGain1.connect(cricket1Gain.gain);
       cricket1.connect(cricket1Gain);
       cricket1Gain.connect(layerGain);
 
-      // Cricket 2: 4400Hz slightly offset timing
+      // Cricket 2: 3400Hz slightly offset timing
       var cricket2 = audioContext.createOscillator();
       cricket2.type = 'sine';
-      cricket2.frequency.value = 4400;
+      cricket2.frequency.value = 3400;
       var lfo2 = audioContext.createOscillator();
-      lfo2.type = 'square';
-      lfo2.frequency.value = 13;
+      lfo2.type = 'sine';
+      lfo2.frequency.value = 10;
       var lfoGain2 = audioContext.createGain();
-      lfoGain2.gain.value = 0.5;
+      lfoGain2.gain.value = 0.3;
       lfo2.connect(lfoGain2);
       var cricket2Gain = audioContext.createGain();
-      cricket2Gain.gain.value = 0.5;
+      cricket2Gain.gain.value = 0.3;
       lfoGain2.connect(cricket2Gain.gain);
       cricket2.connect(cricket2Gain);
       cricket2Gain.connect(layerGain);
@@ -4608,49 +4608,49 @@
       notes: [261.63, 329.63, 392.00, 523.25, 659.25],
       noteSpacing: 0.12,
       noteDuration: 0.6,
-      volume: 0.18
+      volume: 0.05
     },
     morning: {
       // Warm arpeggiated phrase — G major, gentle awakening
       notes: [392.00, 493.88, 587.33, 783.99, 987.77, 783.99],
       noteSpacing: 0.1,
       noteDuration: 0.5,
-      volume: 0.14
+      volume: 0.04
     },
     dusk: {
       // Descending gentle — Am pentatonic, wistful
       notes: [880.00, 659.25, 523.25, 440.00, 329.63],
       noteSpacing: 0.15,
       noteDuration: 0.7,
-      volume: 0.15
+      volume: 0.04
     },
     night: {
       // Low mysterious — Dm tones, sparse and atmospheric
       notes: [146.83, 174.61, 220.00, 196.00, 146.83],
       noteSpacing: 0.22,
       noteDuration: 0.9,
-      volume: 0.12
+      volume: 0.04
     },
     zone_discovery: {
       // Flourish — ascending with a resolving turn, wonder
       notes: [392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 659.25, 783.99],
       noteSpacing: 0.09,
       noteDuration: 0.45,
-      volume: 0.2
+      volume: 0.06
     },
     quest_complete: {
       // Triumphant fanfare phrase — C major with octave leap
       notes: [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50, 1318.51],
       noteSpacing: 0.1,
       noteDuration: 0.5,
-      volume: 0.22
+      volume: 0.06
     },
     achievement: {
       // Playful ascending — sparkling discovery
       notes: [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50],
       noteSpacing: 0.08,
       noteDuration: 0.4,
-      volume: 0.2
+      volume: 0.06
     }
   };
 
@@ -4700,14 +4700,14 @@
           osc2.start(startTime);
           osc2.stop(startTime + accent.noteDuration * 0.5 + 0.05);
 
-          // Layer 3: very quiet high sine for "sparkle" attack
+          // Layer 3: very quiet high sine for soft attack (reduced from 4x to 3x, minimal volume)
           var osc3 = audioContext.createOscillator();
           var gain3 = audioContext.createGain();
           osc3.type = 'sine';
-          osc3.frequency.value = freq * 4; // two octaves up
+          osc3.frequency.value = freq * 3;
           gain3.gain.setValueAtTime(0, startTime);
-          gain3.gain.linearRampToValueAtTime(baseVol * 0.08, startTime + 0.005);
-          gain3.gain.exponentialRampToValueAtTime(0.001, startTime + 0.08);
+          gain3.gain.linearRampToValueAtTime(baseVol * 0.03, startTime + 0.005);
+          gain3.gain.exponentialRampToValueAtTime(0.001, startTime + 0.06);
           osc3.connect(gain3);
           gain3.connect(masterGain);
           osc3.start(startTime);
