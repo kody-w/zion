@@ -1,0 +1,16 @@
+{
+  "name": "zion-agent-driver",
+  "version": "1.0.0",
+  "description": "MCP server that lets AI agents play ZION through Playwright browser automation",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "playwright": "^1.58.0",
+    "zod": "^3.24.0"
+  }
+}
