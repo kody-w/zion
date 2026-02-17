@@ -37611,33 +37611,41 @@ html, body {
     const nodes = [];
 
     try {
-      const crystal = audioContext.createOscillator();
+      // Soft crystalline shimmer — two detuned sines at gentle frequencies
+      const crystal1 = audioContext.createOscillator();
+      const crystal2 = audioContext.createOscillator();
       const lfo = audioContext.createOscillator();
       const lfoGain = audioContext.createGain();
-      const crystalGain = audioContext.createGain();
+      const layerGain = audioContext.createGain();
 
-      crystal.type = 'sine';
-      crystal.frequency.value = 2000;
+      crystal1.type = 'sine';
+      crystal1.frequency.value = 523; // C5 — much gentler than 2000Hz
+
+      crystal2.type = 'sine';
+      crystal2.frequency.value = 659; // E5 — harmonic interval
 
       lfo.type = 'sine';
-      lfo.frequency.value = 0.15;
-      lfoGain.gain.value = 0.015;
+      lfo.frequency.value = 0.12;
+      lfoGain.gain.value = 8; // subtle vibrato
 
-      crystalGain.gain.value = 0.02;
+      layerGain.gain.value = 0.012; // very quiet
 
       lfo.connect(lfoGain);
-      lfoGain.connect(crystalGain.gain);
+      lfoGain.connect(crystal1.frequency);
+      lfoGain.connect(crystal2.frequency);
 
-      crystal.connect(crystalGain);
-      crystalGain.connect(masterGain);
+      crystal1.connect(layerGain);
+      crystal2.connect(layerGain);
+      layerGain.connect(masterGain);
 
-      crystal.start();
+      crystal1.start();
+      crystal2.start();
       lfo.start();
 
-      oscillators.push(crystal, lfo);
-      nodes.push(lfoGain, crystalGain);
+      oscillators.push(crystal1, crystal2, lfo);
+      nodes.push(lfoGain, layerGain);
 
-      return { oscillators, nodes };
+      return { oscillators, nodes, gainNode: layerGain };
     } catch (err) {
       console.error('Error in nexus zone layer:', err);
       return null;
@@ -37683,7 +37691,7 @@ html, body {
         nodes.push(water, waterFilter, waterLfo, waterLfoGain, waterGain);
       }
 
-      return { nodes, timeouts };
+      return { nodes, timeouts, gainNode: nodes.length > 0 ? nodes[nodes.length - 1] : null };
     } catch (err) {
       console.error('Error in gardens zone layer:', err);
       return null;
@@ -37735,7 +37743,7 @@ html, body {
       const firstRustle = setTimeout(pageRustle, 5000);
       timeouts.push(firstRustle);
 
-      return { nodes, timeouts };
+      return { nodes, timeouts, gainNode: null };
     } catch (err) {
       console.error('Error in athenaeum zone layer:', err);
       return null;
@@ -37779,7 +37787,7 @@ html, body {
       const firstNote = setTimeout(creativeNote, 4000);
       timeouts.push(firstNote);
 
-      return { nodes, timeouts };
+      return { nodes, timeouts, gainNode: null };
     } catch (err) {
       console.error('Error in studio zone layer:', err);
       return null;
@@ -37814,7 +37822,7 @@ html, body {
         nodes.push(water, waterFilter, waterGain);
       }
 
-      return { nodes };
+      return { nodes, gainNode: nodes.length > 0 ? nodes[nodes.length - 1] : null };
     } catch (err) {
       console.error('Error in wilds zone layer:', err);
       return null;
@@ -37850,7 +37858,7 @@ html, body {
         nodes.push(crowd, crowdFilter, crowdGain);
       }
 
-      return { nodes, timeouts };
+      return { nodes, timeouts, gainNode: nodes.length > 0 ? nodes[nodes.length - 1] : null };
     } catch (err) {
       console.error('Error in agora zone layer:', err);
       return null;
@@ -37893,7 +37901,7 @@ html, body {
       const firstChime = setTimeout(chime, 3000);
       timeouts.push(firstChime);
 
-      return { nodes, timeouts };
+      return { nodes, timeouts, gainNode: null };
     } catch (err) {
       console.error('Error in commons zone layer:', err);
       return null;
@@ -37936,7 +37944,7 @@ html, body {
         nodes.push(echo, echoFilter, echoDelay, echoDelayGain, echoGain);
       }
 
-      return { nodes };
+      return { nodes, gainNode: nodes.length > 0 ? nodes[nodes.length - 1] : null };
     } catch (err) {
       console.error('Error in arena zone layer:', err);
       return null;
