@@ -1,10 +1,13 @@
 name: Sync State
 on:
   schedule:
-    - cron: '*/2 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: zion-state-push
+  cancel-in-progress: false
 jobs:
   sync:
     runs-on: ubuntu-latest

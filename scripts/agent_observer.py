@@ -19,6 +19,8 @@ from datetime import datetime, timezone
 AGENT_NAME = 'zion-observer'
 AGENT_DISPLAY = 'The Observer'
 
+VALID_ZONES = {'nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'}
+
 
 def load_json(path):
     """Load JSON file safely."""
@@ -171,8 +173,10 @@ def run_agent(state_dir):
         print('No zones in world state.')
         return []
 
-    # Pick a zone to observe
-    zone_ids = list(zones.keys())
+    # Pick a zone to observe (only valid genesis zones)
+    zone_ids = [z for z in zones.keys() if z in VALID_ZONES]
+    if not zone_ids:
+        zone_ids = list(VALID_ZONES)
     chosen_zone = deterministic_choice(zone_ids, now_str + 'zone')
     zone_data = zones[chosen_zone]
 

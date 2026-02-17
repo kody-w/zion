@@ -201,10 +201,9 @@ def tick(state_json):
 
 def main():
     """Main entry point: read state, run tick, output updated state."""
-    # Read input
+    # Read world state
     input_data = None
     if len(sys.argv) > 1:
-        # Read from file
         try:
             with open(sys.argv[1], 'r') as f:
                 input_data = f.read()
@@ -215,13 +214,32 @@ def main():
             print(f"Error reading file: {e}", file=sys.stderr)
             sys.exit(1)
     else:
-        # Read from stdin
         input_data = sys.stdin.read()
 
-    # Parse and process
+    # Read gardens state if provided
+    gardens_data = None
+    if len(sys.argv) > 2:
+        try:
+            with open(sys.argv[2], 'r') as f:
+                gardens_data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            gardens_data = {}
+
+    # Merge gardens into world state for processing
     try:
-        updated_state = tick(input_data)
-        print(updated_state)
+        state = json.loads(input_data)
+        if gardens_data is not None:
+            state['gardens'] = gardens_data
+        updated_state = tick(json.dumps(state))
+        updated = json.loads(updated_state)
+
+        # Separate gardens back out for envelope output
+        gardens_out = updated.pop('gardens', None)
+        output = {'world': updated}
+        if gardens_out is not None:
+            output['gardens'] = gardens_out
+
+        print(json.dumps(output, indent=2))
         sys.exit(0)
     except json.JSONDecodeError as e:
         print(f"Error: Invalid JSON: {e}", file=sys.stderr)

@@ -365,6 +365,26 @@ def process_inbox(state_dir):
     return results
 
 
+def cleanup_old_processed(state_dir, max_age_seconds=604800):
+    """Remove processed files older than max_age_seconds (default 7 days)."""
+    processed_dir = os.path.join(state_dir, 'inbox', '_processed')
+    if not os.path.isdir(processed_dir):
+        return 0
+    now = time.time()
+    removed = 0
+    for fname in os.listdir(processed_dir):
+        if fname.startswith('.'):
+            continue
+        fpath = os.path.join(processed_dir, fname)
+        try:
+            if now - os.path.getmtime(fpath) > max_age_seconds:
+                os.remove(fpath)
+                removed += 1
+        except OSError:
+            pass
+    return removed
+
+
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
@@ -372,6 +392,11 @@ def main():
 
     print('ZION Inbox Processor')
     print('  state_dir: %s' % state_dir)
+
+    # Cleanup old processed files
+    cleaned = cleanup_old_processed(state_dir)
+    if cleaned:
+        print('  cleaned %d old processed files' % cleaned)
 
     results = process_inbox(state_dir)
 

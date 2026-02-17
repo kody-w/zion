@@ -5,6 +5,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: zion-state-push
+  cancel-in-progress: false
 jobs:
   tick:
     runs-on: ubuntu-latest
