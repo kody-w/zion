@@ -258,6 +258,16 @@ export class ZionHost {
     };
   }
 
+  async saveState(dir) {
+    const { writeFileSync, mkdirSync, existsSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    const state = await this.exportState();
+    const filename = join(dir, `world_${Date.now()}.json`);
+    writeFileSync(filename, JSON.stringify(state, null, 2));
+    return filename;
+  }
+
   async healthCheck() {
     try {
       const state = await this.getState();

@@ -1,0 +1,30 @@
+# Deploy to Fly.io:
+#   fly launch --no-deploy
+#   fly deploy
+#
+# Or run locally with Docker:
+#   docker build -f workers/agent-driver/Dockerfile -t zion-host .
+#   docker run -d --name zion-host zion-host
+
+app = "zion-world-host"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  ZION_URL = "https://kody-w.github.io/zion/"
+  NODE_ENV = "production"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+  auto_stop = false
+  auto_start = true
+
+[checks]
+  [checks.health]
+    type = "tcp"
+    port = 8080
+    interval = "30s"
+    timeout = "5s"

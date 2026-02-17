@@ -2847,7 +2847,8 @@ html, body {
     'steward_set_welcome',
     'steward_set_policy',
     'steward_moderate',
-    'star_register'
+    'star_register',
+    'sim_crm_action'
   ]);
 
   // Message types that require consent
@@ -7159,8 +7160,31 @@ html, body {
             trade.status = 'accepted';
             trade.completed_at = timestamp;
             // Exchange items between players
-            if (newState.players[trade.from] && newState.players[trade.to]) {
-              // This is simplified - real implementation would transfer items
+            var sender = newState.players[trade.from];
+            var recipient = newState.players[trade.to];
+            if (sender && recipient) {
+              if (!sender.inventory) sender.inventory = [];
+              if (!recipient.inventory) recipient.inventory = [];
+              // Move offered items from sender to recipient
+              if (trade.offered && trade.offered.length > 0) {
+                trade.offered.forEach(function(item) {
+                  var idx = sender.inventory.findIndex(function(inv) { return inv.type === item.type; });
+                  if (idx !== -1) {
+                    sender.inventory.splice(idx, 1);
+                    recipient.inventory.push(item);
+                  }
+                });
+              }
+              // Move requested items from recipient to sender
+              if (trade.requested && trade.requested.length > 0) {
+                trade.requested.forEach(function(item) {
+                  var idx = recipient.inventory.findIndex(function(inv) { return inv.type === item.type; });
+                  if (idx !== -1) {
+                    recipient.inventory.splice(idx, 1);
+                    sender.inventory.push(item);
+                  }
+                });
+              }
             }
           }
         }
@@ -7177,22 +7201,69 @@ html, body {
         break;
 
       case 'buy':
-        // Market buy operation - would integrate with economy ledger
+        // Market buy — find listing, transfer Spark, transfer item
+        var buyActionId = 'buy_' + timestamp + '_' + from;
+        var listing = (newState.economy.listings || []).find(function(l) { return l.id === payload.listingId && l.active; });
+        if (listing) {
+          var buyerBal = (newState.economy.balances[from] || 0);
+          if (buyerBal >= listing.price) {
+            // Transfer Spark: buyer pays, seller receives
+            newState.economy.balances[from] = (newState.economy.balances[from] || 0) - listing.price;
+            newState.economy.balances[listing.seller] = (newState.economy.balances[listing.seller] || 0) + listing.price;
+            listing.active = false;
+            listing.sold_to = from;
+            listing.sold_at = timestamp;
+            // Transfer item to buyer's inventory
+            if (newState.players[from]) {
+              if (!newState.players[from].inventory) newState.players[from].inventory = [];
+              newState.players[from].inventory.push({
+                type: listing.itemType || listing.item,
+                purchased_at: timestamp,
+                data: listing.data || {}
+              });
+            }
+            // Record transaction
+            newState.economy.transactions.push({
+              id: buyActionId,
+              type: 'buy',
+              from: from,
+              to: listing.seller,
+              amount: listing.price,
+              item: listing.itemType || listing.item,
+              ts: timestamp
+            });
+          }
+        }
         newState.actions.push({
-          id: `buy_${timestamp}_${from}`,
+          id: buyActionId,
           type: 'buy',
           buyer: from,
           listingId: payload.listingId,
+          success: !!listing,
           ts: timestamp
         });
         break;
 
       case 'sell':
-        // Market sell operation - would integrate with economy ledger
+        // Market sell — create listing from player's item
+        var sellActionId = 'sell_' + timestamp + '_' + from;
+        var listingId = 'listing_' + timestamp + '_' + from;
+        if (!newState.economy.listings) newState.economy.listings = [];
+        newState.economy.listings.push({
+          id: listingId,
+          seller: from,
+          item: payload.item,
+          itemType: payload.item && payload.item.type ? payload.item.type : payload.item,
+          price: payload.price || 0,
+          active: true,
+          data: payload.data || {},
+          ts: timestamp
+        });
         newState.actions.push({
-          id: `sell_${timestamp}_${from}`,
+          id: sellActionId,
           type: 'sell',
           seller: from,
+          listingId: listingId,
           item: payload.item,
           price: payload.price,
           ts: timestamp
@@ -7407,6 +7478,110 @@ html, body {
             ts: timestamp
           };
         }
+        break;
+
+      case 'election_start':
+        if (!newState.elections) newState.elections = {};
+        var electionId = 'election_' + timestamp + '_' + (payload.zone || 'nexus');
+        newState.elections[electionId] = {
+          id: electionId,
+          zone: payload.zone,
+          started_by: from,
+          candidates: [from],
+          votes: {},
+          started_at: timestamp,
+          ends_at: timestamp + (30 * 24 * 60 * 60 * 1000), // 30-day term
+          status: 'active'
+        };
+        break;
+
+      case 'election_vote':
+        if (newState.elections && payload.electionId) {
+          var election = newState.elections[payload.electionId];
+          if (election && election.status === 'active') {
+            election.votes[from] = payload.candidate;
+            if (payload.candidate && election.candidates.indexOf(payload.candidate) === -1) {
+              election.candidates.push(payload.candidate);
+            }
+          }
+        }
+        break;
+
+      case 'election_finalize':
+        if (newState.elections && payload.electionId) {
+          var elecFinal = newState.elections[payload.electionId];
+          if (elecFinal && elecFinal.status === 'active') {
+            // Count votes
+            var voteCounts = {};
+            Object.values(elecFinal.votes).forEach(function(candidate) {
+              voteCounts[candidate] = (voteCounts[candidate] || 0) + 1;
+            });
+            var winner = null;
+            var maxVotes = 0;
+            Object.keys(voteCounts).forEach(function(c) {
+              if (voteCounts[c] > maxVotes) { maxVotes = voteCounts[c]; winner = c; }
+            });
+            elecFinal.status = 'complete';
+            elecFinal.winner = winner;
+            elecFinal.completed_at = timestamp;
+            // Set steward for the zone
+            if (!newState.stewards) newState.stewards = {};
+            if (winner) {
+              newState.stewards[elecFinal.zone] = {
+                playerId: winner,
+                zone: elecFinal.zone,
+                elected_at: timestamp,
+                term_ends: timestamp + (30 * 24 * 60 * 60 * 1000)
+              };
+            }
+          }
+        }
+        break;
+
+      case 'steward_set_welcome':
+        if (!newState.stewards) newState.stewards = {};
+        var steward = newState.stewards[payload.zone];
+        if (steward && steward.playerId === from) {
+          steward.welcomeMessage = payload.message;
+        }
+        break;
+
+      case 'steward_set_policy':
+        if (!newState.stewards) newState.stewards = {};
+        var stewardPolicy = newState.stewards[payload.zone];
+        if (stewardPolicy && stewardPolicy.playerId === from) {
+          stewardPolicy.policy = payload.policy;
+        }
+        break;
+
+      case 'steward_moderate':
+        if (!newState.stewards) newState.stewards = {};
+        var stewardMod = newState.stewards[payload.zone];
+        if (stewardMod && stewardMod.playerId === from) {
+          newState.actions.push({
+            id: 'moderate_' + timestamp + '_' + from,
+            type: 'moderation',
+            steward: from,
+            zone: payload.zone,
+            target: payload.target,
+            action: payload.action,
+            reason: payload.reason,
+            ts: timestamp
+          });
+        }
+        break;
+
+      case 'sim_crm_action':
+        // Route simulation actions to state for peer visibility
+        if (!newState.simulations) newState.simulations = {};
+        if (!newState.simulations.crm) newState.simulations.crm = { actions: [] };
+        newState.simulations.crm.actions.push({
+          id: 'sim_' + timestamp + '_' + from,
+          from: from,
+          action: payload.action,
+          data: payload.data || {},
+          ts: timestamp
+        });
         break;
 
       default:
@@ -7861,6 +8036,175 @@ html, body {
 
         const distance = getDistance(owner.position, resource.position);
         if (distance < distanceLimit) {
+          return true;
+        }
+      }
+
+      return false;
+    },
+
+    /**
+     * Health below threshold trigger
+     * Checks if the player's warmth (health proxy) is below a given percent threshold (0-100).
+     * The liveState player object stores warmth as a 0-100 value.
+     */
+    health_below: function(params, worldState, ownerId) {
+      var owner = worldState.players.get(ownerId);
+      if (!owner) return false;
+
+      var threshold = typeof params.threshold === 'number' ? params.threshold : 50;
+
+      // warmth is the health proxy; default to 100 (full health) if not present
+      var warmth = typeof owner.warmth === 'number' ? owner.warmth : 100;
+      return warmth < threshold;
+    },
+
+    /**
+     * Item nearby trigger
+     * Checks if a specific item type exists near the player in worldState resources or structures.
+     */
+    item_nearby: function(params, worldState, ownerId) {
+      var owner = worldState.players.get(ownerId);
+      if (!owner || !owner.position) return false;
+
+      var distanceLimit = params.distance_lt || 10;
+      var targetItemType = params.item_type || '';
+
+      // Check resource nodes (harvestable items in the world)
+      var resources = worldState.resources || [];
+      for (var i = 0; i < resources.length; i++) {
+        var resource = resources[i];
+        if (!resource.position) continue;
+        // Match by type if specified; accept all types when item_type is empty
+        if (targetItemType && resource.type !== targetItemType) continue;
+        var dist = getDistance(owner.position, resource.position);
+        if (dist < distanceLimit) {
+          return true;
+        }
+      }
+
+      // Also check placed structures (which may be craftable items left in the world)
+      var structures = worldState.structures || {};
+      var structureList = Array.isArray(structures) ? structures : Object.values(structures);
+      for (var j = 0; j < structureList.length; j++) {
+        var structure = structureList[j];
+        if (!structure.position) continue;
+        if (targetItemType && structure.art_type !== targetItemType && structure.type !== targetItemType) continue;
+        var structDist = getDistance(owner.position, structure.position);
+        if (structDist < distanceLimit) {
+          return true;
+        }
+      }
+
+      return false;
+    },
+
+    /**
+     * Trade received trigger
+     * Checks if the player has a pending trade offer directed at them.
+     * Optionally filters by the item type offered in the trade.
+     */
+    trade_received: function(params, worldState, ownerId) {
+      var filterItemType = params.item_type || null;
+      var actions = worldState.actions || [];
+
+      for (var i = 0; i < actions.length; i++) {
+        var action = actions[i];
+        // Must be a pending trade offer directed at this player
+        if (action.type !== 'trade_offer') continue;
+        if (action.status !== 'pending') continue;
+        if (action.to !== ownerId) continue;
+
+        // If no item type filter, any pending trade offer qualifies
+        if (!filterItemType) return true;
+
+        // Check if the offered items include the requested item type
+        var offered = action.offered || [];
+        for (var j = 0; j < offered.length; j++) {
+          if (offered[j].type === filterItemType || offered[j].name === filterItemType) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    },
+
+    /**
+     * Weather change trigger
+     * Checks if the current world weather matches the trigger's weather_type param.
+     * worldState.world.weather values: 'clear', 'rain', 'storm', 'fog', 'snow'
+     */
+    weather_change: function(params, worldState, ownerId) {
+      var world = worldState.world || {};
+      var currentWeather = world.weather || 'clear';
+      var targetWeather = params.weather_type || '';
+      return currentWeather === targetWeather;
+    },
+
+    /**
+     * Time of day trigger
+     * Checks if the current world day phase matches the trigger's phase param.
+     * worldState.world.dayPhase values: 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'night'
+     * The Constitution §4.5 lists: dawn / day / dusk / night.
+     * We match loosely so 'day' matches 'morning', 'midday', or 'afternoon'.
+     * 'dusk' matches 'evening'. Exact phase names also match directly.
+     */
+    time_of_day: function(params, worldState, ownerId) {
+      var world = worldState.world || {};
+      var currentPhase = world.dayPhase || 'day';
+      var targetPhase = params.phase || '';
+
+      // Direct match
+      if (currentPhase === targetPhase) return true;
+
+      // Loose grouping: 'day' matches morning/midday/afternoon
+      if (targetPhase === 'day') {
+        return currentPhase === 'morning' || currentPhase === 'midday' || currentPhase === 'afternoon';
+      }
+
+      // Loose grouping: 'dusk' matches evening
+      if (targetPhase === 'dusk') {
+        return currentPhase === 'evening';
+      }
+
+      return false;
+    },
+
+    /**
+     * Ally nearby trigger
+     * Checks if a guild member or group member is within distance of the player.
+     * Params: group_id (guild/group id to match), distance_lt (max distance).
+     * Players must have a guildId or groupId field matching params.group_id.
+     */
+    ally_nearby: function(params, worldState, ownerId) {
+      var owner = worldState.players.get(ownerId);
+      if (!owner || !owner.position) return false;
+
+      var distanceLimit = params.distance_lt || 20;
+      var groupId = params.group_id || null;
+
+      for (var entry of worldState.players.entries()) {
+        var playerId = entry[0];
+        var player = entry[1];
+        if (playerId === ownerId) continue;
+        if (!player.position) continue;
+
+        // Check if this player is in the same group/guild
+        var playerGroupId = player.guildId || player.guild_id || player.groupId || player.group_id || null;
+
+        // If a specific group is required, filter by it
+        if (groupId && playerGroupId !== groupId) continue;
+
+        // If no group filter but owner has a group, only match members of owner's group
+        if (!groupId) {
+          var ownerGroupId = owner.guildId || owner.guild_id || owner.groupId || owner.group_id || null;
+          if (!ownerGroupId) continue; // no group to match against
+          if (playerGroupId !== ownerGroupId) continue;
+        }
+
+        var dist = getDistance(owner.position, player.position);
+        if (dist < distanceLimit) {
           return true;
         }
       }
@@ -10933,15 +11277,139 @@ html, body {
   }
 
   // Check race progress
-  function checkRaceProgress(competitionId, playerId, position) {
-    // This function would be called in the game loop to check if player reached a checkpoint
-    // Returns updated progress information
+  // state must be passed so the race record (with checkpoints and progress) can be looked up
+  function checkRaceProgress(competitionId, playerId, position, state) {
+    var CHECKPOINT_RADIUS = 5; // units — player must be within this distance to trigger a checkpoint
+
+    // Guard: need state to look up the race
+    if (!state || !state.competitions) {
+      return { checkpointHit: false, finished: false, currentCheckpoint: 0, time: 0 };
+    }
+
+    // Find the race
+    var race = null;
+    for (var i = 0; i < state.competitions.length; i++) {
+      if (state.competitions[i].id === competitionId && state.competitions[i].type === 'race') {
+        race = state.competitions[i];
+        break;
+      }
+    }
+
+    if (!race) {
+      return { checkpointHit: false, finished: false, currentCheckpoint: 0, time: 0 };
+    }
+
+    // Race must be active
+    if (race.status !== 'active') {
+      return { checkpointHit: false, finished: false, currentCheckpoint: 0, time: 0 };
+    }
+
+    // Player must be a participant
+    if (race.participants.indexOf(playerId) === -1) {
+      return { checkpointHit: false, finished: false, currentCheckpoint: 0, time: 0 };
+    }
+
+    // Ensure checkpoints array exists and is non-empty
+    if (!race.checkpoints || race.checkpoints.length === 0) {
+      return { checkpointHit: false, finished: false, currentCheckpoint: 0, time: 0 };
+    }
+
+    // Initialise player progress record if missing
+    if (!race.progress) {
+      race.progress = {};
+    }
+    if (!race.progress[playerId]) {
+      race.progress[playerId] = {
+        checkpointIndex: 0,  // next checkpoint the player needs to reach
+        startTime: Date.now(),
+        time: 0,
+        finished: false
+      };
+    }
+
+    var playerProgress = race.progress[playerId];
+
+    // If this player already finished, nothing more to do
+    if (playerProgress.finished) {
+      return {
+        checkpointHit: false,
+        finished: true,
+        currentCheckpoint: playerProgress.checkpointIndex,
+        time: playerProgress.time
+      };
+    }
+
+    // The next checkpoint the player must reach (sequential enforcement)
+    var nextIndex = playerProgress.checkpointIndex;
+    if (nextIndex >= race.checkpoints.length) {
+      // Should not happen, but guard anyway
+      return { checkpointHit: false, finished: false, currentCheckpoint: nextIndex, time: playerProgress.time };
+    }
+
+    var target = race.checkpoints[nextIndex];
+
+    // Distance check (3-D Euclidean)
+    var dx = position.x - target.x;
+    var dy = position.y - target.y;
+    var dz = position.z - target.z;
+    var distSquared = dx * dx + dy * dy + dz * dz;
+
+    if (distSquared > CHECKPOINT_RADIUS * CHECKPOINT_RADIUS) {
+      // Not close enough to the next checkpoint yet
+      return {
+        checkpointHit: false,
+        finished: false,
+        currentCheckpoint: nextIndex,
+        time: Date.now() - playerProgress.startTime
+      };
+    }
+
+    // --- Checkpoint hit! ---
+    playerProgress.checkpointIndex = nextIndex + 1;
+    var elapsed = Date.now() - playerProgress.startTime;
+    playerProgress.time = elapsed;
+
+    var finished = false;
+    if (playerProgress.checkpointIndex >= race.checkpoints.length) {
+      // Player has cleared all checkpoints — race complete
+      finished = true;
+      playerProgress.finished = true;
+
+      // Check if all participants have finished
+      var allDone = true;
+      for (var p = 0; p < race.participants.length; p++) {
+        var pid = race.participants[p];
+        if (!race.progress[pid] || !race.progress[pid].finished) {
+          allDone = false;
+          break;
+        }
+      }
+
+      if (allDone) {
+        race.status = 'completed';
+
+        // Determine winner: finished participant with lowest time
+        var bestTime = Infinity;
+        var winner = null;
+        for (var w = 0; w < race.participants.length; w++) {
+          var wid = race.participants[w];
+          if (race.progress[wid] && race.progress[wid].finished) {
+            if (race.progress[wid].time < bestTime) {
+              bestTime = race.progress[wid].time;
+              winner = wid;
+            }
+          }
+        }
+        race.winner = winner;
+        race.endedAt = Date.now();
+      }
+    }
 
     return {
-      checkpointHit: false,
-      finished: false,
-      currentCheckpoint: 0,
-      time: 0
+      checkpointHit: true,
+      finished: finished,
+      currentCheckpoint: playerProgress.checkpointIndex,
+      time: elapsed
     };
   }
 
@@ -17695,6 +18163,9 @@ html, body {
   // UNIFIED WORLD — Continuous terrain with 8 geographic zones
   // Chunk-based loading, noise heightmap, zone structures, physics
   // ========================================================================
+
+  // Module references (set at runtime from window globals)
+  var Seasons = (typeof window !== 'undefined' && window.Seasons) ? window.Seasons : null;
 
   var playerMeshes = new Map();
   var skyDome = null, sunMesh = null, moonMesh = null, stars = null;
@@ -24999,6 +25470,274 @@ html, body {
     }
   }
 
+  // ========================================================================
+  // SEASONAL VISUALS — Atmospheric particles and lighting tints per season
+  // ========================================================================
+
+  var seasonalParticleData = {
+    initialized: false,
+    points: null,
+    velocities: [],
+    season: null,
+    elapsed: 0
+  };
+
+  // Seasonal particle configs — subtle counts, gentle motion
+  var SEASONAL_PARTICLE_CONFIGS = {
+    spring: {
+      count: 28,
+      color: 0xffc0db,        // cherry blossom pink
+      size: 0.28,
+      rangeX: 60, rangeY: 22, rangeZ: 60,
+      velocityX: 0.6,         // gentle sideways drift
+      velocityY: -0.4,        // fall downward
+      velocityZ: 0.3,
+      resetAtTop: true        // respawn at top when reaching ground
+    },
+    summer: {
+      count: 20,
+      color: 0xccff66,        // yellow-green fireflies
+      size: 0.22,
+      rangeX: 50, rangeY: 18, rangeZ: 50,
+      velocityX: 0.35,
+      velocityY: 0.2,         // gentle upward float
+      velocityZ: 0.35,
+      nightOnly: true,        // only visible when nightFactor > 0.3
+      resetAtTop: false
+    },
+    autumn: {
+      count: 24,
+      color: 0xd46020,        // orange-red falling leaf
+      size: 0.32,
+      rangeX: 60, rangeY: 24, rangeZ: 60,
+      velocityX: 0.7,
+      velocityY: -0.55,       // fall faster than petals
+      velocityZ: 0.4,
+      resetAtTop: true
+    },
+    winter: {
+      count: 32,
+      color: 0xe8f4ff,        // pale blue-white snowflake
+      size: 0.20,
+      rangeX: 55, rangeY: 26, rangeZ: 55,
+      velocityX: 0.25,
+      velocityY: -0.28,       // slow gentle fall
+      velocityZ: 0.18,
+      resetAtTop: true
+    }
+  };
+
+  /**
+   * Initialize the global seasonal particle system.
+   * Creates a single Points object that follows the player camera.
+   */
+  function initSeasonalParticles(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    // Resolve Seasons lazily (may not exist at module parse time)
+    if (!Seasons && typeof window !== 'undefined' && window.Seasons) {
+      Seasons = window.Seasons;
+    }
+    if (!Seasons) return;
+
+    var season = Seasons.getCurrentSeason();
+    var cfg = SEASONAL_PARTICLE_CONFIGS[season.id];
+    if (!cfg) return;
+
+    var count = cfg.count;
+    var positions = new Float32Array(count * 3);
+    var colors = new Float32Array(count * 3);
+    var velocities = [];
+
+    var baseColor = new THREE.Color(cfg.color);
+
+    for (var i = 0; i < count; i++) {
+      var i3 = i * 3;
+
+      // Scatter relative to origin; will be repositioned around camera each frame
+      positions[i3]     = (Math.random() - 0.5) * cfg.rangeX;
+      positions[i3 + 1] = Math.random() * cfg.rangeY;
+      positions[i3 + 2] = (Math.random() - 0.5) * cfg.rangeZ;
+
+      // Slight color variation per particle
+      var variation = 0.85 + Math.random() * 0.3;
+      colors[i3]     = Math.min(1, baseColor.r * variation);
+      colors[i3 + 1] = Math.min(1, baseColor.g * variation);
+      colors[i3 + 2] = Math.min(1, baseColor.b * variation);
+
+      // Per-particle velocity variation
+      velocities.push({
+        x: (Math.random() - 0.5) * cfg.velocityX,
+        y: cfg.velocityY * (0.7 + Math.random() * 0.6),
+        z: (Math.random() - 0.5) * cfg.velocityZ,
+        phase: Math.random() * Math.PI * 2  // swirl/bob phase
+      });
+    }
+
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
+
+    var material = new THREE.PointsMaterial({
+      size: cfg.size,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.72,
+      sizeAttenuation: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      fog: false
+    });
+
+    // Remove previous seasonal points if reinitializing
+    if (seasonalParticleData.points) {
+      sceneCtx.scene.remove(seasonalParticleData.points);
+      seasonalParticleData.points.geometry.dispose();
+      seasonalParticleData.points.material.dispose();
+    }
+
+    var points = new THREE.Points(geometry, material);
+    points.frustumCulled = false;
+    sceneCtx.scene.add(points);
+
+    seasonalParticleData.points = points;
+    seasonalParticleData.velocities = velocities;
+    seasonalParticleData.season = season.id;
+    seasonalParticleData.elapsed = 0;
+    seasonalParticleData.config = cfg;
+    seasonalParticleData.initialized = true;
+  }
+
+  /**
+   * Update seasonal visuals: particle motion, lighting tints, fog tint.
+   * Call this from the game loop every frame.
+   *
+   * @param {Object}  sceneCtx       - Scene context with scene, ambientLight, etc.
+   * @param {string}  playerZone     - Current player zone name (unused for now, reserved)
+   * @param {number}  deltaTime      - Frame delta in ms
+   * @param {number}  normalizedTime - 0..1 time of day (0=midnight, 0.5=noon)
+   */
+  function updateSeasonalVisuals(sceneCtx, playerZone, deltaTime, normalizedTime) {
+    // Resolve Seasons lazily
+    if (!Seasons && typeof window !== 'undefined' && window.Seasons) {
+      Seasons = window.Seasons;
+    }
+    if (!Seasons || !sceneCtx) return;
+
+    var dt = (deltaTime || 16) / 1000; // seconds
+
+    // ---- 1. Reinitialize if season has changed ----
+    var currentSeasonId = Seasons.getCurrentSeason().id;
+    if (!seasonalParticleData.initialized || seasonalParticleData.season !== currentSeasonId) {
+      initSeasonalParticles(sceneCtx);
+    }
+
+    // ---- 2. Seasonal ambient light tint ----
+    var seasonColors = Seasons.getSeasonalColors();
+    if (sceneCtx.ambientLight && seasonColors) {
+      // Parse hex string like '#ffe8f0' to a THREE.Color
+      var ambientHex = seasonColors.ambient;
+      var seasonAmbient = new THREE.Color(ambientHex);
+
+      // Blend existing ambient ground color with seasonal tint (20% seasonal, 80% base)
+      var TINT_STRENGTH = 0.18;
+      var existingGroundColor = sceneCtx.ambientLight.groundColor;
+      if (existingGroundColor) {
+        var blendedR = existingGroundColor.r * (1 - TINT_STRENGTH) + seasonAmbient.r * TINT_STRENGTH;
+        var blendedG = existingGroundColor.g * (1 - TINT_STRENGTH) + seasonAmbient.g * TINT_STRENGTH;
+        var blendedB = existingGroundColor.b * (1 - TINT_STRENGTH) + seasonAmbient.b * TINT_STRENGTH;
+        sceneCtx.ambientLight.groundColor.setRGB(blendedR, blendedG, blendedB);
+      }
+    }
+
+    // ---- 3. Seasonal fog color tint (very subtle) ----
+    if (sceneCtx.scene && sceneCtx.scene.fog && seasonColors) {
+      var accentHex = seasonColors.accent;
+      var seasonAccent = new THREE.Color(accentHex);
+      var currentFogColor = sceneCtx.scene.fog.color;
+      var FOG_TINT = 0.08; // very gentle
+      currentFogColor.r = currentFogColor.r * (1 - FOG_TINT) + seasonAccent.r * FOG_TINT;
+      currentFogColor.g = currentFogColor.g * (1 - FOG_TINT) + seasonAccent.g * FOG_TINT;
+      currentFogColor.b = currentFogColor.b * (1 - FOG_TINT) + seasonAccent.b * FOG_TINT;
+    }
+
+    // ---- 4. Update seasonal particles ----
+    if (!seasonalParticleData.initialized || !seasonalParticleData.points) return;
+
+    var ntNorm = normalizedTime !== undefined ? normalizedTime : 0.5;
+    // Night factor: 0 = full day, 1 = full night
+    var nightFactor = 0;
+    if (ntNorm < 0.2) {
+      nightFactor = 1.0;
+    } else if (ntNorm < 0.3) {
+      nightFactor = 1.0 - (ntNorm - 0.2) / 0.1;
+    } else if (ntNorm > 0.8) {
+      nightFactor = (ntNorm - 0.8) / 0.2;
+    }
+
+    var cfg = seasonalParticleData.config;
+
+    // Summer fireflies only visible at night (nightFactor > 0.3)
+    if (cfg.nightOnly) {
+      seasonalParticleData.points.visible = nightFactor > 0.3;
+      if (!seasonalParticleData.points.visible) return;
+      seasonalParticleData.points.material.opacity = 0.6 * nightFactor;
+    } else {
+      seasonalParticleData.points.visible = true;
+    }
+
+    seasonalParticleData.elapsed += dt;
+
+    var positions = seasonalParticleData.points.geometry.attributes.position.array;
+    var velocities = seasonalParticleData.velocities;
+    var camX = 0, camY = 10, camZ = 0;
+    if (sceneCtx.camera) {
+      camX = sceneCtx.camera.position.x;
+      camY = sceneCtx.camera.position.y;
+      camZ = sceneCtx.camera.position.z;
+    }
+
+    var halfX = cfg.rangeX * 0.5;
+    var halfZ = cfg.rangeZ * 0.5;
+
+    for (var i = 0; i < velocities.length; i++) {
+      var i3 = i * 3;
+      var vel = velocities[i];
+
+      // Swirl / bob oscillation adds organic motion
+      var swirl = Math.sin(seasonalParticleData.elapsed * 0.8 + vel.phase) * 0.3;
+
+      positions[i3]     += (vel.x + swirl * 0.4) * dt;
+      positions[i3 + 1] += vel.y * dt;
+      positions[i3 + 2] += (vel.z + swirl * 0.3) * dt;
+
+      // Reset logic: wrap around camera so particles always surround player
+      var localX = positions[i3]     - camX;
+      var localY = positions[i3 + 1] - camY;
+      var localZ = positions[i3 + 2] - camZ;
+
+      var needsReset = false;
+      if (Math.abs(localX) > halfX || Math.abs(localZ) > halfZ) needsReset = true;
+      if (cfg.resetAtTop && localY < -2) needsReset = true;  // fell below camera
+      if (!cfg.resetAtTop && localY > cfg.rangeY) needsReset = true; // floated too high (firefly)
+
+      if (needsReset) {
+        // Respawn at random position in the field around camera
+        positions[i3]     = camX + (Math.random() - 0.5) * cfg.rangeX;
+        positions[i3 + 2] = camZ + (Math.random() - 0.5) * cfg.rangeZ;
+        if (cfg.resetAtTop) {
+          // Falling particles start high
+          positions[i3 + 1] = camY + cfg.rangeY * (0.5 + Math.random() * 0.5);
+        } else {
+          // Rising particles start near ground
+          positions[i3 + 1] = camY - cfg.rangeY * 0.4 + Math.random() * 4;
+        }
+      }
+    }
+
+    seasonalParticleData.points.geometry.attributes.position.needsUpdate = true;
+  }
+
   // Helper function for HSL to RGB conversion (for studio particles)
   function hslToRgb(h, s, l) {
     var r, g, b;
@@ -25675,6 +26414,8 @@ html, body {
   exports.clearWildlife = clearWildlife;
   exports.initZoneAmbience = initZoneAmbience;
   exports.updateZoneAmbience = updateZoneAmbience;
+  exports.initSeasonalParticles = initSeasonalParticles;
+  exports.updateSeasonalVisuals = updateSeasonalVisuals;
   exports.registerPlayerStar = registerPlayerStar;
   exports.loadWorldMemory = loadWorldMemory;
   exports.saveWorldMemory = saveWorldMemory;
@@ -47206,6 +47947,11 @@ html, body {
           World.initZoneAmbience(sceneContext);
         }
 
+        // Initialize seasonal particle system (cherry blossoms, fireflies, leaves, snow)
+        if (World.initSeasonalParticles) {
+          World.initSeasonalParticles(sceneContext);
+        }
+
         // Initialize vignette overlay with default intensity
         setVignetteIntensity(0.3);
 
@@ -48052,6 +48798,12 @@ html, body {
       // Update zone ambience particles
       if (World.updateZoneAmbience && localPlayer) {
         World.updateZoneAmbience(sceneContext, localPlayer.zone, deltaTime * 1000);
+      }
+
+      // Update seasonal visuals: particles (blossoms/fireflies/leaves/snow), light tints, fog tint
+      if (World.updateSeasonalVisuals) {
+        var seasonNormalizedTime = worldTime / 1440;
+        World.updateSeasonalVisuals(sceneContext, localPlayer ? localPlayer.zone : 'nexus', deltaTime * 1000, seasonNormalizedTime);
       }
 
       // Update water bodies (animated waves, weather-reactive)

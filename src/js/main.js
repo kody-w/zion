@@ -753,6 +753,11 @@
           World.initZoneAmbience(sceneContext);
         }
 
+        // Initialize seasonal particle system (cherry blossoms, fireflies, leaves, snow)
+        if (World.initSeasonalParticles) {
+          World.initSeasonalParticles(sceneContext);
+        }
+
         // Initialize vignette overlay with default intensity
         setVignetteIntensity(0.3);
 
@@ -1599,6 +1604,12 @@
       // Update zone ambience particles
       if (World.updateZoneAmbience && localPlayer) {
         World.updateZoneAmbience(sceneContext, localPlayer.zone, deltaTime * 1000);
+      }
+
+      // Update seasonal visuals: particles (blossoms/fireflies/leaves/snow), light tints, fog tint
+      if (World.updateSeasonalVisuals) {
+        var seasonNormalizedTime = worldTime / 1440;
+        World.updateSeasonalVisuals(sceneContext, localPlayer ? localPlayer.zone : 'nexus', deltaTime * 1000, seasonNormalizedTime);
       }
 
       // Update water bodies (animated waves, weather-reactive)
