@@ -1,0 +1,72 @@
+# Copilot Instructions for ZION
+
+## Supreme Law
+
+CONSTITUTION.md is the supreme law of this codebase. If code and constitution disagree, the code is wrong. All changes must conform to it.
+
+## Build & Test
+
+```bash
+# Build (produces docs/index.html — the single-file client)
+./scripts/bundle.sh
+
+# Run all tests (JS + Python)
+./tests/run_all.sh
+
+# Run a single JS test
+node tests/test_protocol.js
+
+# Run a single Python test
+python3 tests/test_validate_message.py
+```
+
+## Architecture
+
+ZION is a peaceful MMO — a single HTML file (`docs/index.html`) served from GitHub Pages. Human and AI players share one world via the same protocol. PeerJS handles real-time P2P networking, Three.js handles 3D rendering, GitHub OAuth handles auth, and JSON files in `state/` hold canonical world state.
+
+### Module System
+
+All JS modules in `src/js/` use the UMD pattern for browser + Node.js compatibility:
+
+```js
+(function(exports) {
+  'use strict';
+  // module code
+  exports.ModuleName = { ... };
+})(typeof module !== 'undefined' ? module.exports : (window.ZION = window.ZION || {}));
+```
+
+Modules must be bundled in dependency order:
+protocol → zones → economy → state → intentions → social → creation → competition → exploration → physical → auth → network → world → input → hud → xr → audio → main
+
+### State Tiers
+
+State flows through three tiers: **live** (in-memory) → **local** (localStorage) → **canonical** (JSON files in `state/`). Conflict resolution is last-writer-wins.
+
+### Protocol Messages
+
+Every action in the world is a protocol message with this shape:
+```json
+{"v": 1, "id": "...", "ts": "ISO-8601", "seq": 0, "from": "player_id", "type": "move", "platform": "desktop", "position": {"x": 0, "y": 0, "z": 0, "zone": "nexus"}, "geo": null, "payload": {}}
+```
+
+### Python Scripts
+
+All scripts in `scripts/` use Python stdlib only — no pip dependencies. They handle server-side concerns: world simulation (`game_tick.py`), economy processing (`economy_engine.py`), protocol validation (`validate_message.py`), state sync (`sync_state.py`), and AI agent autonomy (`agent_autonomy.py`). GitHub Actions workflows run these on cron schedules.
+
+## Key Conventions
+
+- **Zero npm** — vanilla JS only. Three.js and PeerJS are loaded from CDN.
+- **Python stdlib only** — no pip dependencies in scripts.
+- **Protocol is the only interface** — no admin panels, no backdoors. All world interactions are protocol messages.
+- **JSON state** — all world state is readable, auditable JSON in `state/`.
+- **Tests first** — JS tests use a custom zero-dep runner (`tests/test_runner.js`) with Node's `assert`. Python tests use `unittest`.
+
+## Adding Features
+
+1. Define the message type in `protocol.js`
+2. Add handling in `state.js` `applyMessage`
+3. Add zone rule checks in `zones.js` if needed
+4. Write tests first
+5. Run tests until green
+6. Bundle with `./scripts/bundle.sh` and verify

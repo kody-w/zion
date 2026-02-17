@@ -168,6 +168,32 @@ def build_world_state(state_dir):
                     'zone': dinfo.get('zone', ''),
                 })
 
+    # Simulation state
+    simulations = {}
+    crm_state_path = os.path.join(state_dir, 'simulations', 'crm', 'state.json')
+    crm_state = load_json(crm_state_path)
+    if crm_state and crm_state.get('accounts'):
+        accts = crm_state.get('accounts', {})
+        opps = crm_state.get('opportunities', {})
+        pipeline_value = 0
+        won_value = 0
+        won_count = 0
+        for opp in opps.values():
+            if opp.get('stage') == 'closed_won':
+                won_count += 1
+                won_value += opp.get('value', 0)
+            elif opp.get('stage') != 'closed_lost':
+                pipeline_value += opp.get('value', 0)
+        simulations['crm'] = {
+            'accounts': len(accts),
+            'contacts': len(crm_state.get('contacts', {})),
+            'opportunities': len(opps),
+            'pipeline_value': pipeline_value,
+            'won_deals': won_count,
+            'won_value': won_value,
+            'activities': len(crm_state.get('activities', [])),
+        }
+
     return {
         'v': 1,
         'ts': now,
@@ -193,6 +219,7 @@ def build_world_state(state_dir):
             'planted': planted_count,
         },
         'discoveries': discovery_list,
+        'simulations': simulations,
         'meta': {
             'repo_url': REPO_URL,
             'site_url': SITE_URL,
@@ -262,6 +289,18 @@ def build_perception(state):
     lines.append('  Total Spark in circulation: %d' % state['economy']['total_spark'])
     lines.append('  Active marketplace listings: %d' % state['economy']['active_listings'])
     lines.append('')
+
+    # Simulations
+    sims = state.get('simulations', {})
+    if sims.get('crm'):
+        crm = sims['crm']
+        lines.append('== SIMULATIONS: CRM ==')
+        lines.append('  Accounts: %d | Contacts: %d | Opportunities: %d' % (
+            crm.get('accounts', 0), crm.get('contacts', 0), crm.get('opportunities', 0)))
+        lines.append('  Pipeline value: %d Spark | Won deals: %d (%d Spark)' % (
+            crm.get('pipeline_value', 0), crm.get('won_deals', 0), crm.get('won_value', 0)))
+        lines.append('  Activities logged: %d' % crm.get('activities', 0))
+        lines.append('')
 
     # How to act
     lines.append('== HOW TO ACT ==')

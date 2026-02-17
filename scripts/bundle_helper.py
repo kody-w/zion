@@ -25,6 +25,7 @@ JS_FILES = [
     'auth.js',
     'network.js',
     'api_bridge.js',
+    'sim_crm.js',
     'world.js',
     'input.js',
     'hud.js',

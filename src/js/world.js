@@ -3481,20 +3481,27 @@
   // Used by main.js and npcs.js
   // Also provides basic collision checking for future use
   function checkCollision(x, z, radius) {
-    // Check if position is inside any structure's bounding box
-    // For now, just check zone center structures
-    for (var zId in ZONES) {
-      var zone = ZONES[zId];
-      var dx = x - zone.cx, dz = z - zone.cz;
-      var dist = Math.sqrt(dx * dx + dz * dz);
-      // Simple circle collision for central structures
-      var structRadius = 5; // approximate central structure radius
-      if (dist < structRadius + radius) {
-        return true;
+    // Check against placed structures only (not zone centers, which are walkable)
+    if (placedStructures) {
+      for (var i = 0; i < placedStructures.length; i++) {
+        var s = placedStructures[i];
+        if (!s || !s.position) continue;
+        var dx = x - s.position.x, dz = z - s.position.z;
+        var dist = Math.sqrt(dx * dx + dz * dz);
+        var structRadius = s.collisionRadius || 1.5;
+        if (dist < structRadius + radius) {
+          return true;
+        }
       }
     }
     return false;
   }
+
+  // ========================================================================
+  // PLACED STRUCTURES (for collision)
+  // ========================================================================
+
+  var placedStructures = [];
 
   // ========================================================================
   // PARTICLE SYSTEM

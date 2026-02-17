@@ -51,6 +51,7 @@
   let playerInventory = null;
   let economyLedger = null;
   let raycaster = null;
+  let simCrmState = null;
   let npcUpdateFrame = 0;
   let visitedZones = { nexus: true }; // Track discovered zones for piano accents
 
@@ -476,6 +477,12 @@
     // Initialize API bridge for AI agent communication
     if (ApiBridge && ApiBridge.init) {
       ApiBridge.init();
+    }
+
+    // Initialize CRM simulation
+    if (typeof SimCRM !== 'undefined' && SimCRM.initState) {
+      simCrmState = SimCRM.initState();
+      console.log('[SimCRM] Initialized');
     }
 
     // Initialize 3D scene
@@ -2037,6 +2044,13 @@
    * Handle build message
    */
   function handleBuildMessage(msg) {
+    // Route simulation messages
+    if (msg.payload && msg.payload.sim === 'crm' && typeof SimCRM !== 'undefined' && simCrmState) {
+      simCrmState = SimCRM.applyAction(simCrmState, msg);
+      console.log('[SimCRM] Applied action:', msg.payload.action);
+      return;
+    }
+
     if (Creation && World && sceneContext) {
       const structure = msg.payload.structure;
       World.addStructure(sceneContext, structure);
@@ -4414,5 +4428,6 @@
   exports.triggerCameraShake = triggerCameraShake;
   exports.triggerScreenFlash = triggerScreenFlash;
   exports.setVignetteIntensity = setVignetteIntensity;
+  exports.getSimCrmState = function() { return simCrmState; };
 
 })(typeof module !== 'undefined' ? module.exports : (window.Main = {}));

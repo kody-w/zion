@@ -123,6 +123,15 @@
       });
     }
 
+    // Simulation summaries
+    var simulations = {};
+    if (typeof SimCRM !== 'undefined' && SimCRM.getMetrics) {
+      var crmState = typeof Main !== 'undefined' && Main.getSimCrmState ? Main.getSimCrmState() : null;
+      if (crmState) {
+        simulations.crm = SimCRM.getMetrics(crmState);
+      }
+    }
+
     return {
       v: 1,
       ts: new Date().toISOString(),
@@ -139,7 +148,8 @@
       economy: {
         total_spark: sumValues(economy.balances || {}),
         active_listings: (economy.listings || []).length
-      }
+      },
+      simulations: simulations
     };
   }
 

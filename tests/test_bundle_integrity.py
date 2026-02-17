@@ -18,7 +18,7 @@ MODULE_ORDER = [
     'protocol', 'zones', 'economy', 'inventory', 'trading',
     'state', 'intentions', 'social', 'creation', 'quests',
     'competition', 'exploration', 'physical', 'guilds', 'mentoring',
-    'models', 'auth', 'network', 'api_bridge', 'world', 'input',
+    'models', 'auth', 'network', 'api_bridge', 'sim_crm', 'world', 'input',
     'hud', 'xr', 'audio', 'npc_ai', 'npcs',
     'seasons', 'pets', 'main'
 ]
@@ -28,7 +28,7 @@ WINDOW_NAMES = [
     'Protocol', 'Zones', 'Economy', 'Inventory', 'Trading',
     'State', 'Intentions', 'Social', 'Creation', 'Quests',
     'Competition', 'Exploration', 'Physical', 'Guilds', 'Mentoring',
-    'Models', 'Auth', 'Network', 'ApiBridge', 'World', 'Input',
+    'Models', 'Auth', 'Network', 'ApiBridge', 'SimCRM', 'World', 'Input',
     'HUD', 'XR', 'Audio', 'NpcAI', 'NPCs',
     'Seasons', 'Pets', 'Main'
 ]
