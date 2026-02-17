@@ -396,7 +396,7 @@ html, body {
 /* Zone Label - Top Center */
 .zone-label {
   position: absolute;
-  top: var(--space-lg);
+  top: 60px;
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-main);
@@ -407,7 +407,7 @@ html, body {
   opacity: 0.9;
   transition: opacity 0.5s ease;
   white-space: nowrap;
-  overflow: hidden;
+  z-index: 1;
 }
 
 /* Nearby List - Right Side */
@@ -45006,6 +45006,10 @@ html, body {
       var y = (-screenPos.y * 0.5 + 0.5) * height;
 
       // Check if behind camera
+      if (!bubble.element) {
+        speechBubbles.delete(npcId);
+        continue;
+      }
       if (screenPos.z > 1) {
         bubble.element.style.display = 'none';
       } else {
@@ -50373,7 +50377,7 @@ html, body {
    * Leave world
    */
   function leaveWorld() {
-    if (!Protocol || !Network) return;
+    if (!Protocol || !Network || !localPlayer) return;
 
     const msg = Protocol.create.leave(localPlayer.id);
 

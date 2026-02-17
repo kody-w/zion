@@ -1287,7 +1287,8 @@
     inventoryPanel.innerHTML = header + slotsGrid + closeBtn;
     hud.appendChild(inventoryPanel);
 
-    document.getElementById('close-inventory').addEventListener('click', function() {
+    var closeInvBtn = document.getElementById('close-inventory');
+    if (closeInvBtn) closeInvBtn.addEventListener('click', function() {
       hideInventoryPanel();
     });
   }
@@ -1383,7 +1384,8 @@
     craftingPanel.innerHTML = header + recipeList + closeBtn;
     hud.appendChild(craftingPanel);
 
-    document.getElementById('close-crafting').addEventListener('click', function() {
+    var closeCraftBtn = document.getElementById('close-crafting');
+    if (closeCraftBtn) closeCraftBtn.addEventListener('click', function() {
       hideCraftingPanel();
     });
   }
@@ -2116,12 +2118,14 @@
     tradeRequestEl.innerHTML = html;
     hud.appendChild(tradeRequestEl);
 
-    document.getElementById('trade-accept-btn').addEventListener('click', function() {
+    var acceptBtn = document.getElementById('trade-accept-btn');
+    if (acceptBtn) acceptBtn.addEventListener('click', function() {
       hideTradeRequest();
       if (onAccept) onAccept(tradeId);
     });
 
-    document.getElementById('trade-decline-btn').addEventListener('click', function() {
+    var declineBtn = document.getElementById('trade-decline-btn');
+    if (declineBtn) declineBtn.addEventListener('click', function() {
       hideTradeRequest();
       if (onDecline) onDecline(tradeId);
     });

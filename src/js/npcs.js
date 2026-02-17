@@ -2976,6 +2976,10 @@
       var y = (-screenPos.y * 0.5 + 0.5) * height;
 
       // Check if behind camera
+      if (!bubble.element) {
+        speechBubbles.delete(npcId);
+        continue;
+      }
       if (screenPos.z > 1) {
         bubble.element.style.display = 'none';
       } else {

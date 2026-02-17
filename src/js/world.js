@@ -3214,21 +3214,26 @@
     // Add exponential fog for atmospheric depth (matches weather system)
     scene.fog = new THREE.FogExp2(0x87ceeb, 0.0012);
 
-    var camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+    var w = container.clientWidth || window.innerWidth;
+    var h = container.clientHeight || window.innerHeight;
+
+    var camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000);
     camera.position.set(0, 15, 25);
     camera.lookAt(0, 0, 0);
 
     var renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setSize(w, h);
     renderer.shadowMap.enabled = false;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     container.appendChild(renderer.domElement);
 
     // Handle resize
     window.addEventListener('resize', function() {
-      camera.aspect = container.clientWidth / container.clientHeight;
+      var rw = container.clientWidth || window.innerWidth;
+      var rh = container.clientHeight || window.innerHeight;
+      camera.aspect = rw / rh;
       camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setSize(rw, rh);
     });
 
     var ambientLight = new THREE.HemisphereLight(0x87ceeb, 0xd2b48c, 0.6);
