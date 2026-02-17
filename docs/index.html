@@ -406,6 +406,8 @@ html, body {
   pointer-events: none;
   opacity: 0.9;
   transition: opacity 0.5s ease;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 /* Nearby List - Right Side */
@@ -20903,21 +20905,26 @@ html, body {
     // Add exponential fog for atmospheric depth (matches weather system)
     scene.fog = new THREE.FogExp2(0x87ceeb, 0.0012);
 
-    var camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+    var w = container.clientWidth || window.innerWidth;
+    var h = container.clientHeight || window.innerHeight;
+
+    var camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000);
     camera.position.set(0, 15, 25);
     camera.lookAt(0, 0, 0);
 
     var renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setSize(w, h);
     renderer.shadowMap.enabled = false;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     container.appendChild(renderer.domElement);
 
     // Handle resize
     window.addEventListener('resize', function() {
-      camera.aspect = container.clientWidth / container.clientHeight;
+      var rw = container.clientWidth || window.innerWidth;
+      var rh = container.clientHeight || window.innerHeight;
+      camera.aspect = rw / rh;
       camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setSize(rw, rh);
     });
 
     var ambientLight = new THREE.HemisphereLight(0x87ceeb, 0xd2b48c, 0.6);
@@ -27795,7 +27802,8 @@ html, body {
     inventoryPanel.innerHTML = header + slotsGrid + closeBtn;
     hud.appendChild(inventoryPanel);
 
-    document.getElementById('close-inventory').addEventListener('click', function() {
+    var closeInvBtn = document.getElementById('close-inventory');
+    if (closeInvBtn) closeInvBtn.addEventListener('click', function() {
       hideInventoryPanel();
     });
   }
@@ -27891,7 +27899,8 @@ html, body {
     craftingPanel.innerHTML = header + recipeList + closeBtn;
     hud.appendChild(craftingPanel);
 
-    document.getElementById('close-crafting').addEventListener('click', function() {
+    var closeCraftBtn = document.getElementById('close-crafting');
+    if (closeCraftBtn) closeCraftBtn.addEventListener('click', function() {
       hideCraftingPanel();
     });
   }
@@ -28624,12 +28633,14 @@ html, body {
     tradeRequestEl.innerHTML = html;
     hud.appendChild(tradeRequestEl);
 
-    document.getElementById('trade-accept-btn').addEventListener('click', function() {
+    var acceptBtn = document.getElementById('trade-accept-btn');
+    if (acceptBtn) acceptBtn.addEventListener('click', function() {
       hideTradeRequest();
       if (onAccept) onAccept(tradeId);
     });
 
-    document.getElementById('trade-decline-btn').addEventListener('click', function() {
+    var declineBtn = document.getElementById('trade-decline-btn');
+    if (declineBtn) declineBtn.addEventListener('click', function() {
       hideTradeRequest();
       if (onDecline) onDecline(tradeId);
     });
@@ -47623,9 +47634,6 @@ html, body {
             currentZone = detectedZone;
             console.log('Entered zone:', currentZone);
 
-            // Start cinematic zone entry swoop
-            startZoneCinematic();
-
             // Play zone entry swoosh sound
             if (Audio && Audio.playSound) Audio.playSound('zone_enter');
 
@@ -47855,10 +47863,6 @@ html, body {
         // Photo mode camera overrides normal follow
         if (photoMode.active) {
           updatePhotoModeCamera(deltaTime);
-        }
-        // Cinematic camera overrides normal follow
-        else if (cinematicCamera.active) {
-          updateCinematicCamera(deltaTime);
         }
         else {
         // Get camera controls from Input module

@@ -1230,9 +1230,6 @@
             currentZone = detectedZone;
             console.log('Entered zone:', currentZone);
 
-            // Start cinematic zone entry swoop
-            startZoneCinematic();
-
             // Play zone entry swoosh sound
             if (Audio && Audio.playSound) Audio.playSound('zone_enter');
 
@@ -1462,10 +1459,6 @@
         // Photo mode camera overrides normal follow
         if (photoMode.active) {
           updatePhotoModeCamera(deltaTime);
-        }
-        // Cinematic camera overrides normal follow
-        else if (cinematicCamera.active) {
-          updateCinematicCamera(deltaTime);
         }
         else {
         // Get camera controls from Input module
@@ -3976,7 +3969,7 @@
    * Leave world
    */
   function leaveWorld() {
-    if (!Protocol || !Network) return;
+    if (!Protocol || !Network || !localPlayer) return;
 
     const msg = Protocol.create.leave(localPlayer.id);
 
