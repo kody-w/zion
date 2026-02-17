@@ -279,6 +279,175 @@
       }
 
       return false;
+    },
+
+    /**
+     * Health below threshold trigger
+     * Checks if the player's warmth (health proxy) is below a given percent threshold (0-100).
+     * The liveState player object stores warmth as a 0-100 value.
+     */
+    health_below: function(params, worldState, ownerId) {
+      var owner = worldState.players.get(ownerId);
+      if (!owner) return false;
+
+      var threshold = typeof params.threshold === 'number' ? params.threshold : 50;
+
+      // warmth is the health proxy; default to 100 (full health) if not present
+      var warmth = typeof owner.warmth === 'number' ? owner.warmth : 100;
+      return warmth < threshold;
+    },
+
+    /**
+     * Item nearby trigger
+     * Checks if a specific item type exists near the player in worldState resources or structures.
+     */
+    item_nearby: function(params, worldState, ownerId) {
+      var owner = worldState.players.get(ownerId);
+      if (!owner || !owner.position) return false;
+
+      var distanceLimit = params.distance_lt || 10;
+      var targetItemType = params.item_type || '';
+
+      // Check resource nodes (harvestable items in the world)
+      var resources = worldState.resources || [];
+      for (var i = 0; i < resources.length; i++) {
+        var resource = resources[i];
+        if (!resource.position) continue;
+        // Match by type if specified; accept all types when item_type is empty
+        if (targetItemType && resource.type !== targetItemType) continue;
+        var dist = getDistance(owner.position, resource.position);
+        if (dist < distanceLimit) {
+          return true;
+        }
+      }
+
+      // Also check placed structures (which may be craftable items left in the world)
+      var structures = worldState.structures || {};
+      var structureList = Array.isArray(structures) ? structures : Object.values(structures);
+      for (var j = 0; j < structureList.length; j++) {
+        var structure = structureList[j];
+        if (!structure.position) continue;
+        if (targetItemType && structure.art_type !== targetItemType && structure.type !== targetItemType) continue;
+        var structDist = getDistance(owner.position, structure.position);
+        if (structDist < distanceLimit) {
+          return true;
+        }
+      }
+
+      return false;
+    },
+
+    /**
+     * Trade received trigger
+     * Checks if the player has a pending trade offer directed at them.
+     * Optionally filters by the item type offered in the trade.
+     */
+    trade_received: function(params, worldState, ownerId) {
+      var filterItemType = params.item_type || null;
+      var actions = worldState.actions || [];
+
+      for (var i = 0; i < actions.length; i++) {
+        var action = actions[i];
+        // Must be a pending trade offer directed at this player
+        if (action.type !== 'trade_offer') continue;
+        if (action.status !== 'pending') continue;
+        if (action.to !== ownerId) continue;
+
+        // If no item type filter, any pending trade offer qualifies
+        if (!filterItemType) return true;
+
+        // Check if the offered items include the requested item type
+        var offered = action.offered || [];
+        for (var j = 0; j < offered.length; j++) {
+          if (offered[j].type === filterItemType || offered[j].name === filterItemType) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    },
+
+    /**
+     * Weather change trigger
+     * Checks if the current world weather matches the trigger's weather_type param.
+     * worldState.world.weather values: 'clear', 'rain', 'storm', 'fog', 'snow'
+     */
+    weather_change: function(params, worldState, ownerId) {
+      var world = worldState.world || {};
+      var currentWeather = world.weather || 'clear';
+      var targetWeather = params.weather_type || '';
+      return currentWeather === targetWeather;
+    },
+
+    /**
+     * Time of day trigger
+     * Checks if the current world day phase matches the trigger's phase param.
+     * worldState.world.dayPhase values: 'dawn', 'morning', 'midday', 'afternoon', 'evening', 'night'
+     * The Constitution §4.5 lists: dawn / day / dusk / night.
+     * We match loosely so 'day' matches 'morning', 'midday', or 'afternoon'.
+     * 'dusk' matches 'evening'. Exact phase names also match directly.
+     */
+    time_of_day: function(params, worldState, ownerId) {
+      var world = worldState.world || {};
+      var currentPhase = world.dayPhase || 'day';
+      var targetPhase = params.phase || '';
+
+      // Direct match
+      if (currentPhase === targetPhase) return true;
+
+      // Loose grouping: 'day' matches morning/midday/afternoon
+      if (targetPhase === 'day') {
+        return currentPhase === 'morning' || currentPhase === 'midday' || currentPhase === 'afternoon';
+      }
+
+      // Loose grouping: 'dusk' matches evening
+      if (targetPhase === 'dusk') {
+        return currentPhase === 'evening';
+      }
+
+      return false;
+    },
+
+    /**
+     * Ally nearby trigger
+     * Checks if a guild member or group member is within distance of the player.
+     * Params: group_id (guild/group id to match), distance_lt (max distance).
+     * Players must have a guildId or groupId field matching params.group_id.
+     */
+    ally_nearby: function(params, worldState, ownerId) {
+      var owner = worldState.players.get(ownerId);
+      if (!owner || !owner.position) return false;
+
+      var distanceLimit = params.distance_lt || 20;
+      var groupId = params.group_id || null;
+
+      for (var entry of worldState.players.entries()) {
+        var playerId = entry[0];
+        var player = entry[1];
+        if (playerId === ownerId) continue;
+        if (!player.position) continue;
+
+        // Check if this player is in the same group/guild
+        var playerGroupId = player.guildId || player.guild_id || player.groupId || player.group_id || null;
+
+        // If a specific group is required, filter by it
+        if (groupId && playerGroupId !== groupId) continue;
+
+        // If no group filter but owner has a group, only match members of owner's group
+        if (!groupId) {
+          var ownerGroupId = owner.guildId || owner.guild_id || owner.groupId || owner.group_id || null;
+          if (!ownerGroupId) continue; // no group to match against
+          if (playerGroupId !== ownerGroupId) continue;
+        }
+
+        var dist = getDistance(owner.position, player.position);
+        if (dist < distanceLimit) {
+          return true;
+        }
+      }
+
+      return false;
     }
   };
 

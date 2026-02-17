@@ -1003,8 +1003,46 @@
     // Initialize seasonal event display
     initSeasonalEvent();
 
+    // Initialize XR (VR/AR) capabilities
+    if (XR && XR.initXR) {
+      XR.initXR().then(function(caps) {
+        if (HUD && HUD.setXRCapabilities) {
+          HUD.setXRCapabilities(caps, sceneContext);
+        }
+      });
+    }
+
     // Initialize pet system - restore saved pet
     initPetSystem(username);
+
+    // Wire HUD callbacks for anchor, steward, and federation panels
+    if (typeof window !== 'undefined') {
+      window.playerInventory = playerInventory;
+      window._onAnchorPlace = function(data) {
+        if (State && gameState) {
+          var msg = { type: 'anchor_place', from: localPlayer.id, ts: Date.now(), payload: { anchor: data } };
+          gameState = State.applyMessage(gameState, msg);
+        }
+      };
+      window._onElectionStart = function(data) {
+        if (State && gameState) {
+          var msg = { type: 'election_start', from: localPlayer.id, ts: Date.now(), payload: data };
+          gameState = State.applyMessage(gameState, msg);
+        }
+      };
+      window._onElectionVote = function(data) {
+        if (State && gameState) {
+          var msg = { type: 'election_vote', from: localPlayer.id, ts: Date.now(), payload: data };
+          gameState = State.applyMessage(gameState, msg);
+        }
+      };
+      window._onFederationPropose = function(data) {
+        if (State && gameState) {
+          var msg = { type: 'federation_announce', from: localPlayer.id, ts: Date.now(), payload: { federation: data } };
+          gameState = State.applyMessage(gameState, msg);
+        }
+      };
+    }
 
     // Send join message
     joinWorld();
@@ -1852,6 +1890,15 @@
     if (nowMs - lastAutoSave > AUTO_SAVE_INTERVAL) {
       lastAutoSave = nowMs;
       autoSavePlayerData();
+      // Flush economy ledger into live state for API bridge visibility
+      if (State && economyLedger) {
+        State.setLiveState('economy', {
+          balances: economyLedger.balances || {},
+          transactions: (economyLedger.transactions || []).slice(-50),
+          listings: economyLedger.listings || []
+        });
+        State.flushToLocal();
+      }
     }
 
     // Check for nearby secrets periodically
@@ -4162,6 +4209,11 @@
       playTime: playTimeSeconds
     };
     Auth.savePlayerData(saveData);
+    // Flush player into live state for canonical visibility
+    if (State) {
+      State.addPlayer(gameState, localPlayer);
+      State.flushToLocal();
+    }
   }
 
   /**

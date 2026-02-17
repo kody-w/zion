@@ -4,6 +4,9 @@
   // Chunk-based loading, noise heightmap, zone structures, physics
   // ========================================================================
 
+  // Module references (set at runtime from window globals)
+  var Seasons = (typeof window !== 'undefined' && window.Seasons) ? window.Seasons : null;
+
   var playerMeshes = new Map();
   var skyDome = null, sunMesh = null, moonMesh = null, stars = null;
   var clouds = [];
@@ -2644,6 +2647,35 @@
         signpost.rotation.y = nsa;
         scene.add(signpost);
       }
+
+      // Nexus: Rift Portal — glowing arch for federation connections
+      var riftPortal = new THREE.Group();
+      var archMat = new THREE.MeshStandardMaterial({ color: 0x8855ff, emissive: 0x4422aa, emissiveIntensity: 0.5 });
+      // Left pillar
+      var pillarGeo = new THREE.BoxBufferGeometry(0.6, 6, 0.6);
+      var lPillar = new THREE.Mesh(pillarGeo, archMat);
+      lPillar.position.set(-2, 3, 0);
+      riftPortal.add(lPillar);
+      // Right pillar
+      var rPillar = new THREE.Mesh(pillarGeo, archMat);
+      rPillar.position.set(2, 3, 0);
+      riftPortal.add(rPillar);
+      // Top beam
+      var beamGeo = new THREE.BoxBufferGeometry(4.6, 0.6, 0.6);
+      var topBeam = new THREE.Mesh(beamGeo, archMat);
+      topBeam.position.set(0, 6.3, 0);
+      riftPortal.add(topBeam);
+      // Portal shimmer plane
+      var shimmerMat = new THREE.MeshBasicMaterial({ color: 0xaa77ff, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+      var shimmerGeo = new THREE.PlaneBufferGeometry(3.4, 5.6);
+      var shimmer = new THREE.Mesh(shimmerGeo, shimmerMat);
+      shimmer.position.set(0, 3.1, 0);
+      riftPortal.add(shimmer);
+      var rpx = nz.cx + 20;
+      var rpz = nz.cz - 20;
+      riftPortal.position.set(rpx, terrainHeight(rpx, rpz), rpz);
+      scene.add(riftPortal);
+      animatedObjects.push({ mesh: riftPortal, type: 'landmark', params: { shimmer: shimmer } });
 
       // Gardens: gazebo (center-ish), 4 campfires along paths, 6 flower beds, 4 herb patches
       var gazebo = Models.createLandmark('gazebo', 1.0);
@@ -7307,6 +7339,274 @@
     }
   }
 
+  // ========================================================================
+  // SEASONAL VISUALS — Atmospheric particles and lighting tints per season
+  // ========================================================================
+
+  var seasonalParticleData = {
+    initialized: false,
+    points: null,
+    velocities: [],
+    season: null,
+    elapsed: 0
+  };
+
+  // Seasonal particle configs — subtle counts, gentle motion
+  var SEASONAL_PARTICLE_CONFIGS = {
+    spring: {
+      count: 28,
+      color: 0xffc0db,        // cherry blossom pink
+      size: 0.28,
+      rangeX: 60, rangeY: 22, rangeZ: 60,
+      velocityX: 0.6,         // gentle sideways drift
+      velocityY: -0.4,        // fall downward
+      velocityZ: 0.3,
+      resetAtTop: true        // respawn at top when reaching ground
+    },
+    summer: {
+      count: 20,
+      color: 0xccff66,        // yellow-green fireflies
+      size: 0.22,
+      rangeX: 50, rangeY: 18, rangeZ: 50,
+      velocityX: 0.35,
+      velocityY: 0.2,         // gentle upward float
+      velocityZ: 0.35,
+      nightOnly: true,        // only visible when nightFactor > 0.3
+      resetAtTop: false
+    },
+    autumn: {
+      count: 24,
+      color: 0xd46020,        // orange-red falling leaf
+      size: 0.32,
+      rangeX: 60, rangeY: 24, rangeZ: 60,
+      velocityX: 0.7,
+      velocityY: -0.55,       // fall faster than petals
+      velocityZ: 0.4,
+      resetAtTop: true
+    },
+    winter: {
+      count: 32,
+      color: 0xe8f4ff,        // pale blue-white snowflake
+      size: 0.20,
+      rangeX: 55, rangeY: 26, rangeZ: 55,
+      velocityX: 0.25,
+      velocityY: -0.28,       // slow gentle fall
+      velocityZ: 0.18,
+      resetAtTop: true
+    }
+  };
+
+  /**
+   * Initialize the global seasonal particle system.
+   * Creates a single Points object that follows the player camera.
+   */
+  function initSeasonalParticles(sceneCtx) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+
+    // Resolve Seasons lazily (may not exist at module parse time)
+    if (!Seasons && typeof window !== 'undefined' && window.Seasons) {
+      Seasons = window.Seasons;
+    }
+    if (!Seasons) return;
+
+    var season = Seasons.getCurrentSeason();
+    var cfg = SEASONAL_PARTICLE_CONFIGS[season.id];
+    if (!cfg) return;
+
+    var count = cfg.count;
+    var positions = new Float32Array(count * 3);
+    var colors = new Float32Array(count * 3);
+    var velocities = [];
+
+    var baseColor = new THREE.Color(cfg.color);
+
+    for (var i = 0; i < count; i++) {
+      var i3 = i * 3;
+
+      // Scatter relative to origin; will be repositioned around camera each frame
+      positions[i3]     = (Math.random() - 0.5) * cfg.rangeX;
+      positions[i3 + 1] = Math.random() * cfg.rangeY;
+      positions[i3 + 2] = (Math.random() - 0.5) * cfg.rangeZ;
+
+      // Slight color variation per particle
+      var variation = 0.85 + Math.random() * 0.3;
+      colors[i3]     = Math.min(1, baseColor.r * variation);
+      colors[i3 + 1] = Math.min(1, baseColor.g * variation);
+      colors[i3 + 2] = Math.min(1, baseColor.b * variation);
+
+      // Per-particle velocity variation
+      velocities.push({
+        x: (Math.random() - 0.5) * cfg.velocityX,
+        y: cfg.velocityY * (0.7 + Math.random() * 0.6),
+        z: (Math.random() - 0.5) * cfg.velocityZ,
+        phase: Math.random() * Math.PI * 2  // swirl/bob phase
+      });
+    }
+
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
+
+    var material = new THREE.PointsMaterial({
+      size: cfg.size,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.72,
+      sizeAttenuation: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      fog: false
+    });
+
+    // Remove previous seasonal points if reinitializing
+    if (seasonalParticleData.points) {
+      sceneCtx.scene.remove(seasonalParticleData.points);
+      seasonalParticleData.points.geometry.dispose();
+      seasonalParticleData.points.material.dispose();
+    }
+
+    var points = new THREE.Points(geometry, material);
+    points.frustumCulled = false;
+    sceneCtx.scene.add(points);
+
+    seasonalParticleData.points = points;
+    seasonalParticleData.velocities = velocities;
+    seasonalParticleData.season = season.id;
+    seasonalParticleData.elapsed = 0;
+    seasonalParticleData.config = cfg;
+    seasonalParticleData.initialized = true;
+  }
+
+  /**
+   * Update seasonal visuals: particle motion, lighting tints, fog tint.
+   * Call this from the game loop every frame.
+   *
+   * @param {Object}  sceneCtx       - Scene context with scene, ambientLight, etc.
+   * @param {string}  playerZone     - Current player zone name (unused for now, reserved)
+   * @param {number}  deltaTime      - Frame delta in ms
+   * @param {number}  normalizedTime - 0..1 time of day (0=midnight, 0.5=noon)
+   */
+  function updateSeasonalVisuals(sceneCtx, playerZone, deltaTime, normalizedTime) {
+    // Resolve Seasons lazily
+    if (!Seasons && typeof window !== 'undefined' && window.Seasons) {
+      Seasons = window.Seasons;
+    }
+    if (!Seasons || !sceneCtx) return;
+
+    var dt = (deltaTime || 16) / 1000; // seconds
+
+    // ---- 1. Reinitialize if season has changed ----
+    var currentSeasonId = Seasons.getCurrentSeason().id;
+    if (!seasonalParticleData.initialized || seasonalParticleData.season !== currentSeasonId) {
+      initSeasonalParticles(sceneCtx);
+    }
+
+    // ---- 2. Seasonal ambient light tint ----
+    var seasonColors = Seasons.getSeasonalColors();
+    if (sceneCtx.ambientLight && seasonColors) {
+      // Parse hex string like '#ffe8f0' to a THREE.Color
+      var ambientHex = seasonColors.ambient;
+      var seasonAmbient = new THREE.Color(ambientHex);
+
+      // Blend existing ambient ground color with seasonal tint (20% seasonal, 80% base)
+      var TINT_STRENGTH = 0.18;
+      var existingGroundColor = sceneCtx.ambientLight.groundColor;
+      if (existingGroundColor) {
+        var blendedR = existingGroundColor.r * (1 - TINT_STRENGTH) + seasonAmbient.r * TINT_STRENGTH;
+        var blendedG = existingGroundColor.g * (1 - TINT_STRENGTH) + seasonAmbient.g * TINT_STRENGTH;
+        var blendedB = existingGroundColor.b * (1 - TINT_STRENGTH) + seasonAmbient.b * TINT_STRENGTH;
+        sceneCtx.ambientLight.groundColor.setRGB(blendedR, blendedG, blendedB);
+      }
+    }
+
+    // ---- 3. Seasonal fog color tint (very subtle) ----
+    if (sceneCtx.scene && sceneCtx.scene.fog && seasonColors) {
+      var accentHex = seasonColors.accent;
+      var seasonAccent = new THREE.Color(accentHex);
+      var currentFogColor = sceneCtx.scene.fog.color;
+      var FOG_TINT = 0.08; // very gentle
+      currentFogColor.r = currentFogColor.r * (1 - FOG_TINT) + seasonAccent.r * FOG_TINT;
+      currentFogColor.g = currentFogColor.g * (1 - FOG_TINT) + seasonAccent.g * FOG_TINT;
+      currentFogColor.b = currentFogColor.b * (1 - FOG_TINT) + seasonAccent.b * FOG_TINT;
+    }
+
+    // ---- 4. Update seasonal particles ----
+    if (!seasonalParticleData.initialized || !seasonalParticleData.points) return;
+
+    var ntNorm = normalizedTime !== undefined ? normalizedTime : 0.5;
+    // Night factor: 0 = full day, 1 = full night
+    var nightFactor = 0;
+    if (ntNorm < 0.2) {
+      nightFactor = 1.0;
+    } else if (ntNorm < 0.3) {
+      nightFactor = 1.0 - (ntNorm - 0.2) / 0.1;
+    } else if (ntNorm > 0.8) {
+      nightFactor = (ntNorm - 0.8) / 0.2;
+    }
+
+    var cfg = seasonalParticleData.config;
+
+    // Summer fireflies only visible at night (nightFactor > 0.3)
+    if (cfg.nightOnly) {
+      seasonalParticleData.points.visible = nightFactor > 0.3;
+      if (!seasonalParticleData.points.visible) return;
+      seasonalParticleData.points.material.opacity = 0.6 * nightFactor;
+    } else {
+      seasonalParticleData.points.visible = true;
+    }
+
+    seasonalParticleData.elapsed += dt;
+
+    var positions = seasonalParticleData.points.geometry.attributes.position.array;
+    var velocities = seasonalParticleData.velocities;
+    var camX = 0, camY = 10, camZ = 0;
+    if (sceneCtx.camera) {
+      camX = sceneCtx.camera.position.x;
+      camY = sceneCtx.camera.position.y;
+      camZ = sceneCtx.camera.position.z;
+    }
+
+    var halfX = cfg.rangeX * 0.5;
+    var halfZ = cfg.rangeZ * 0.5;
+
+    for (var i = 0; i < velocities.length; i++) {
+      var i3 = i * 3;
+      var vel = velocities[i];
+
+      // Swirl / bob oscillation adds organic motion
+      var swirl = Math.sin(seasonalParticleData.elapsed * 0.8 + vel.phase) * 0.3;
+
+      positions[i3]     += (vel.x + swirl * 0.4) * dt;
+      positions[i3 + 1] += vel.y * dt;
+      positions[i3 + 2] += (vel.z + swirl * 0.3) * dt;
+
+      // Reset logic: wrap around camera so particles always surround player
+      var localX = positions[i3]     - camX;
+      var localY = positions[i3 + 1] - camY;
+      var localZ = positions[i3 + 2] - camZ;
+
+      var needsReset = false;
+      if (Math.abs(localX) > halfX || Math.abs(localZ) > halfZ) needsReset = true;
+      if (cfg.resetAtTop && localY < -2) needsReset = true;  // fell below camera
+      if (!cfg.resetAtTop && localY > cfg.rangeY) needsReset = true; // floated too high (firefly)
+
+      if (needsReset) {
+        // Respawn at random position in the field around camera
+        positions[i3]     = camX + (Math.random() - 0.5) * cfg.rangeX;
+        positions[i3 + 2] = camZ + (Math.random() - 0.5) * cfg.rangeZ;
+        if (cfg.resetAtTop) {
+          // Falling particles start high
+          positions[i3 + 1] = camY + cfg.rangeY * (0.5 + Math.random() * 0.5);
+        } else {
+          // Rising particles start near ground
+          positions[i3 + 1] = camY - cfg.rangeY * 0.4 + Math.random() * 4;
+        }
+      }
+    }
+
+    seasonalParticleData.points.geometry.attributes.position.needsUpdate = true;
+  }
+
   // Helper function for HSL to RGB conversion (for studio particles)
   function hslToRgb(h, s, l) {
     var r, g, b;
@@ -7983,6 +8283,8 @@
   exports.clearWildlife = clearWildlife;
   exports.initZoneAmbience = initZoneAmbience;
   exports.updateZoneAmbience = updateZoneAmbience;
+  exports.initSeasonalParticles = initSeasonalParticles;
+  exports.updateSeasonalVisuals = updateSeasonalVisuals;
   exports.registerPlayerStar = registerPlayerStar;
   exports.loadWorldMemory = loadWorldMemory;
   exports.saveWorldMemory = saveWorldMemory;

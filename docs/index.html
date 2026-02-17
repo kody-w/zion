@@ -20808,6 +20808,35 @@ html, body {
         scene.add(signpost);
       }
 
+      // Nexus: Rift Portal — glowing arch for federation connections
+      var riftPortal = new THREE.Group();
+      var archMat = new THREE.MeshStandardMaterial({ color: 0x8855ff, emissive: 0x4422aa, emissiveIntensity: 0.5 });
+      // Left pillar
+      var pillarGeo = new THREE.BoxBufferGeometry(0.6, 6, 0.6);
+      var lPillar = new THREE.Mesh(pillarGeo, archMat);
+      lPillar.position.set(-2, 3, 0);
+      riftPortal.add(lPillar);
+      // Right pillar
+      var rPillar = new THREE.Mesh(pillarGeo, archMat);
+      rPillar.position.set(2, 3, 0);
+      riftPortal.add(rPillar);
+      // Top beam
+      var beamGeo = new THREE.BoxBufferGeometry(4.6, 0.6, 0.6);
+      var topBeam = new THREE.Mesh(beamGeo, archMat);
+      topBeam.position.set(0, 6.3, 0);
+      riftPortal.add(topBeam);
+      // Portal shimmer plane
+      var shimmerMat = new THREE.MeshBasicMaterial({ color: 0xaa77ff, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+      var shimmerGeo = new THREE.PlaneBufferGeometry(3.4, 5.6);
+      var shimmer = new THREE.Mesh(shimmerGeo, shimmerMat);
+      shimmer.position.set(0, 3.1, 0);
+      riftPortal.add(shimmer);
+      var rpx = nz.cx + 20;
+      var rpz = nz.cz - 20;
+      riftPortal.position.set(rpx, terrainHeight(rpx, rpz), rpz);
+      scene.add(riftPortal);
+      animatedObjects.push({ mesh: riftPortal, type: 'landmark', params: { shimmer: shimmer } });
+
       // Gardens: gazebo (center-ish), 4 campfires along paths, 6 flower beds, 4 herb patches
       var gazebo = Models.createLandmark('gazebo', 1.0);
       gazebo.position.set(gz.cx + 10, terrainHeight(gz.cx + 10, gz.cz + 10), gz.cz + 10);
@@ -29612,15 +29641,91 @@ html, body {
       });
     }
 
-    // Trade slot clicks (to remove items)
+    // Trade slot clicks (add or remove items)
     var tradeSlots = document.querySelectorAll('.trade-slot');
     tradeSlots.forEach(function(slot, idx) {
       slot.addEventListener('click', function() {
         if (localPlayer.items[idx] && callbacks.onRemoveItem) {
           callbacks.onRemoveItem(idx);
+        } else if (!localPlayer.items[idx] && callbacks.onAddItem) {
+          // Show inventory picker for empty slot
+          showTradeItemPicker(idx, callbacks.onAddItem);
         }
       });
     });
+  }
+
+  /**
+   * Show inventory item picker popup for trade window
+   */
+  function showTradeItemPicker(slotIndex, onAddItem) {
+    // Remove existing picker
+    var existing = document.getElementById('trade-item-picker');
+    if (existing) existing.parentNode.removeChild(existing);
+
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+    if (!Inventory) return;
+
+    // Get player inventory from global
+    var inv = typeof playerInventory !== 'undefined' ? playerInventory : null;
+    if (!inv) {
+      // Try to get from window
+      inv = typeof window !== 'undefined' && window.playerInventory ? window.playerInventory : null;
+    }
+    if (!inv) return;
+
+    var items = Inventory.getInventory(inv);
+    if (!items || items.length === 0) {
+      showNotification('No items in inventory to trade');
+      return;
+    }
+
+    var picker = document.createElement('div');
+    picker.id = 'trade-item-picker';
+    picker.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.97);border:2px solid #4af;border-radius:12px;' +
+      'padding:16px;width:320px;max-height:400px;overflow-y:auto;z-index:400;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.9);pointer-events:auto;';
+
+    var html = '<div style="font-size:16px;font-weight:bold;color:#4af;margin-bottom:12px;text-align:center;">Select Item to Trade</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">';
+
+    items.forEach(function(item, i) {
+      var itemData = Inventory.getItemData(item.itemId);
+      if (itemData) {
+        html += '<div class="trade-pick-item" data-idx="' + i + '" data-itemid="' + item.itemId + '" ' +
+          'style="background:rgba(255,255,255,0.08);border:2px solid #444;border-radius:6px;' +
+          'padding:8px;text-align:center;cursor:pointer;transition:border-color 0.2s;">' +
+          '<div style="font-size:24px;">' + itemData.icon + '</div>' +
+          '<div style="font-size:9px;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + itemData.name + '</div>' +
+          '<div style="font-size:10px;color:#888;">x' + (item.count || 1) + '</div>' +
+          '</div>';
+      }
+    });
+
+    html += '</div>';
+    html += '<div style="text-align:center;margin-top:12px;">' +
+      '<button id="trade-pick-cancel" style="padding:6px 16px;background:#555;color:#fff;border:none;border-radius:4px;cursor:pointer;">Cancel</button></div>';
+
+    picker.innerHTML = html;
+    document.body.appendChild(picker);
+
+    // Attach click handlers
+    var pickItems = picker.querySelectorAll('.trade-pick-item');
+    pickItems.forEach(function(el) {
+      el.addEventListener('click', function() {
+        var itemId = el.getAttribute('data-itemid');
+        onAddItem(slotIndex, itemId);
+        picker.parentNode.removeChild(picker);
+      });
+    });
+
+    var cancelBtn = document.getElementById('trade-pick-cancel');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function() {
+        picker.parentNode.removeChild(picker);
+      });
+    }
   }
 
   /**
@@ -34887,6 +34992,288 @@ html, body {
   exports.advanceTutorial = advanceTutorial;
   exports.skipTutorial = skipTutorial;
   exports.isTutorialActive = isTutorialActive;
+
+  // =============================================================================
+  // XR (VR/AR) BUTTONS
+  // =============================================================================
+  var xrCaps = null;
+  var xrSceneCtx = null;
+
+  function setXRCapabilities(caps, sceneCtx) {
+    xrCaps = caps;
+    xrSceneCtx = sceneCtx;
+    // Add XR buttons to toolbar if supported
+    if (typeof document === 'undefined') return;
+    var toolbar = document.querySelector('#bottom-toolbar');
+    if (!toolbar) return;
+
+    if (caps.vrSupported) {
+      var vrBtn = document.createElement('button');
+      vrBtn.id = 'vr-btn';
+      vrBtn.textContent = 'VR';
+      vrBtn.title = 'Enter VR Mode';
+      vrBtn.style.cssText = 'padding:6px 12px;background:rgba(68,170,255,0.3);color:#4af;border:1px solid #4af;' +
+        'border-radius:6px;cursor:pointer;font-size:12px;font-weight:bold;';
+      vrBtn.onclick = function() {
+        var XR = typeof window !== 'undefined' ? window.XR : null;
+        if (XR && xrSceneCtx && xrSceneCtx.renderer) {
+          XR.enterVR(xrSceneCtx.renderer, xrSceneCtx.scene, xrSceneCtx.camera).catch(function(err) {
+            showNotification('Failed to enter VR: ' + err.message, 'error');
+          });
+        }
+      };
+      toolbar.appendChild(vrBtn);
+    }
+
+    if (caps.arSupported) {
+      var arBtn = document.createElement('button');
+      arBtn.id = 'ar-btn';
+      arBtn.textContent = 'AR';
+      arBtn.title = 'Enter AR Mode';
+      arBtn.style.cssText = 'padding:6px 12px;background:rgba(255,165,0,0.3);color:#ffa500;border:1px solid #ffa500;' +
+        'border-radius:6px;cursor:pointer;font-size:12px;font-weight:bold;';
+      arBtn.onclick = function() {
+        var XR = typeof window !== 'undefined' ? window.XR : null;
+        if (XR && xrSceneCtx && xrSceneCtx.renderer) {
+          XR.enterAR(xrSceneCtx.renderer, xrSceneCtx.scene, xrSceneCtx.camera).catch(function(err) {
+            showNotification('Failed to enter AR: ' + err.message, 'error');
+          });
+        }
+      };
+      toolbar.appendChild(arBtn);
+    }
+  }
+  exports.setXRCapabilities = setXRCapabilities;
+
+  // =============================================================================
+  // ANCHOR SYSTEM PANEL
+  // =============================================================================
+  var anchorPanelEl = null;
+
+  function showAnchorPanel(playerPosition, currentZone) {
+    if (typeof document === 'undefined') return;
+    hideAnchorPanel();
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    var State = typeof window !== 'undefined' ? window.State : null;
+    var anchors = [];
+    if (State) {
+      var liveState = State.getLiveState();
+      if (liveState && liveState.anchors) {
+        anchors = Object.values(liveState.anchors);
+      }
+    }
+
+    anchorPanelEl = document.createElement('div');
+    anchorPanelEl.id = 'anchor-panel';
+    anchorPanelEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #4af;border-radius:12px;' +
+      'padding:20px;width:400px;max-height:500px;overflow-y:auto;pointer-events:auto;z-index:300;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);';
+
+    var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+      '<h2 style="color:#4af;margin:0;font-size:18px;">Anchors</h2>' +
+      '<button id="anchor-close" style="background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.3);' +
+      'border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;">×</button></div>';
+
+    if (anchors.length === 0) {
+      html += '<p style="color:#888;text-align:center;">No anchors placed yet.</p>';
+    } else {
+      anchors.forEach(function(anchor) {
+        html += '<div style="background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:8px;padding:10px;margin-bottom:8px;">' +
+          '<div style="color:#4af;font-weight:bold;">' + (anchor.name || 'Unnamed Anchor') + '</div>' +
+          '<div style="color:#888;font-size:12px;">Zone: ' + (anchor.zone || 'unknown') + ' | By: ' + (anchor.owner || 'unknown') + '</div>' +
+          '</div>';
+      });
+    }
+
+    // Place anchor form
+    html += '<div style="border-top:1px solid #333;padding-top:12px;margin-top:12px;">' +
+      '<div style="color:#aaa;font-size:13px;margin-bottom:8px;">Place New Anchor</div>' +
+      '<input id="anchor-name-input" placeholder="Anchor name..." style="width:100%;padding:6px;background:rgba(0,0,0,0.5);' +
+      'border:1px solid #555;border-radius:4px;color:#fff;font-size:13px;margin-bottom:8px;box-sizing:border-box;" />' +
+      '<button id="anchor-place-btn" style="width:100%;padding:8px;background:#4af;color:#000;border:none;border-radius:6px;' +
+      'font-weight:bold;cursor:pointer;">Place Anchor Here</button></div>';
+
+    anchorPanelEl.innerHTML = html;
+    hud.appendChild(anchorPanelEl);
+
+    document.getElementById('anchor-close').onclick = hideAnchorPanel;
+    document.getElementById('anchor-place-btn').onclick = function() {
+      var name = document.getElementById('anchor-name-input').value.trim();
+      if (!name) { showNotification('Enter an anchor name', 'warning'); return; }
+      // Send anchor_place protocol message via main.js callback
+      if (typeof window !== 'undefined' && window._onAnchorPlace) {
+        window._onAnchorPlace({ name: name, zone: currentZone, position: playerPosition });
+      }
+      showNotification('Anchor "' + name + '" placed!', 'success');
+      hideAnchorPanel();
+    };
+  }
+
+  function hideAnchorPanel() {
+    if (anchorPanelEl && anchorPanelEl.parentNode) {
+      anchorPanelEl.parentNode.removeChild(anchorPanelEl);
+      anchorPanelEl = null;
+    }
+  }
+
+  exports.showAnchorPanel = showAnchorPanel;
+  exports.hideAnchorPanel = hideAnchorPanel;
+
+  // =============================================================================
+  // STEWARD ELECTION PANEL
+  // =============================================================================
+  var stewardPanelEl = null;
+
+  function showStewardPanel(currentZone, playerId) {
+    if (typeof document === 'undefined') return;
+    hideStewardPanel();
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    var State = typeof window !== 'undefined' ? window.State : null;
+    var liveState = State ? State.getLiveState() : {};
+    var stewards = liveState.stewards || {};
+    var elections = liveState.elections || {};
+    var zoneSteward = stewards[currentZone];
+
+    stewardPanelEl = document.createElement('div');
+    stewardPanelEl.id = 'steward-panel';
+    stewardPanelEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #DAA520;border-radius:12px;' +
+      'padding:20px;width:420px;max-height:500px;overflow-y:auto;pointer-events:auto;z-index:300;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);';
+
+    var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+      '<h2 style="color:#DAA520;margin:0;font-size:18px;">Zone Steward — ' + currentZone + '</h2>' +
+      '<button id="steward-close" style="background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.3);' +
+      'border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;">×</button></div>';
+
+    if (zoneSteward) {
+      html += '<div style="background:rgba(218,165,32,0.1);border:1px solid #DAA520;border-radius:8px;padding:12px;margin-bottom:12px;">' +
+        '<div style="color:#DAA520;font-weight:bold;">Current Steward: ' + zoneSteward.playerId + '</div>' +
+        '<div style="color:#888;font-size:12px;">Elected: ' + new Date(zoneSteward.elected_at).toLocaleDateString() + '</div>' +
+        '<div style="color:#888;font-size:12px;">Term ends: ' + new Date(zoneSteward.term_ends).toLocaleDateString() + '</div>';
+      if (zoneSteward.welcomeMessage) {
+        html += '<div style="color:#aaa;font-size:13px;margin-top:8px;font-style:italic;">"' + zoneSteward.welcomeMessage + '"</div>';
+      }
+      html += '</div>';
+    } else {
+      html += '<p style="color:#888;text-align:center;">No steward for this zone.</p>';
+    }
+
+    // Active elections
+    var activeElections = Object.values(elections).filter(function(e) {
+      return e.zone === currentZone && e.status === 'active';
+    });
+
+    if (activeElections.length > 0) {
+      var elec = activeElections[0];
+      html += '<div style="background:rgba(68,170,255,0.1);border:1px solid #4af;border-radius:8px;padding:12px;margin-bottom:12px;">' +
+        '<div style="color:#4af;font-weight:bold;">Active Election</div>' +
+        '<div style="color:#888;font-size:12px;">Candidates: ' + elec.candidates.join(', ') + '</div>' +
+        '<div style="color:#888;font-size:12px;">Votes cast: ' + Object.keys(elec.votes).length + '</div>';
+
+      // Vote buttons
+      html += '<div style="margin-top:8px;">';
+      elec.candidates.forEach(function(c) {
+        html += '<button class="steward-vote-btn" data-election="' + elec.id + '" data-candidate="' + c + '" ' +
+          'style="margin:2px;padding:4px 12px;background:rgba(68,170,255,0.3);color:#4af;border:1px solid #4af;' +
+          'border-radius:4px;cursor:pointer;font-size:12px;">Vote: ' + c + '</button>';
+      });
+      html += '</div></div>';
+    } else {
+      // Start election button
+      html += '<button id="steward-start-election" style="width:100%;padding:10px;background:#DAA520;color:#000;border:none;' +
+        'border-radius:6px;font-weight:bold;cursor:pointer;margin-top:8px;">Start Election for ' + currentZone + '</button>';
+    }
+
+    stewardPanelEl.innerHTML = html;
+    hud.appendChild(stewardPanelEl);
+
+    document.getElementById('steward-close').onclick = hideStewardPanel;
+
+    var startBtn = document.getElementById('steward-start-election');
+    if (startBtn) {
+      startBtn.onclick = function() {
+        if (typeof window !== 'undefined' && window._onElectionStart) {
+          window._onElectionStart({ zone: currentZone });
+        }
+        showNotification('Election started for ' + currentZone + '!', 'success');
+        hideStewardPanel();
+      };
+    }
+
+    var voteBtns = stewardPanelEl.querySelectorAll('.steward-vote-btn');
+    voteBtns.forEach(function(btn) {
+      btn.onclick = function() {
+        var electionId = btn.getAttribute('data-election');
+        var candidate = btn.getAttribute('data-candidate');
+        if (typeof window !== 'undefined' && window._onElectionVote) {
+          window._onElectionVote({ electionId: electionId, candidate: candidate });
+        }
+        showNotification('Voted for ' + candidate, 'success');
+        hideStewardPanel();
+      };
+    });
+  }
+
+  function hideStewardPanel() {
+    if (stewardPanelEl && stewardPanelEl.parentNode) {
+      stewardPanelEl.parentNode.removeChild(stewardPanelEl);
+      stewardPanelEl = null;
+    }
+  }
+
+  exports.showStewardPanel = showStewardPanel;
+  exports.hideStewardPanel = hideStewardPanel;
+
+  // =============================================================================
+  // FEDERATION PORTAL — PROPOSE + VISUAL STATUS
+  // =============================================================================
+
+  function showFederationProposal() {
+    if (typeof document === 'undefined') return;
+
+    var overlay = document.createElement('div');
+    overlay.id = 'federation-proposal';
+    overlay.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #a855f7;border-radius:12px;' +
+      'padding:20px;width:400px;pointer-events:auto;z-index:300;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);';
+
+    overlay.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+      '<h2 style="color:#a855f7;margin:0;font-size:18px;">Propose Federation</h2>' +
+      '<button id="fed-close" style="background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.3);' +
+      'border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;">×</button></div>' +
+      '<p style="color:#aaa;font-size:13px;margin-bottom:12px;">Link another ZION world instance via the Rift Portal in the Nexus.</p>' +
+      '<input id="fed-name" placeholder="Federation name..." style="width:100%;padding:8px;background:rgba(0,0,0,0.5);' +
+      'border:1px solid #555;border-radius:4px;color:#fff;font-size:13px;margin-bottom:8px;box-sizing:border-box;" />' +
+      '<input id="fed-endpoint" placeholder="Endpoint URL (e.g. https://...)" style="width:100%;padding:8px;background:rgba(0,0,0,0.5);' +
+      'border:1px solid #555;border-radius:4px;color:#fff;font-size:13px;margin-bottom:12px;box-sizing:border-box;" />' +
+      '<button id="fed-submit" style="width:100%;padding:10px;background:#a855f7;color:#fff;border:none;border-radius:6px;' +
+      'font-weight:bold;cursor:pointer;">Propose Federation</button>';
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('fed-close').onclick = function() { overlay.parentNode.removeChild(overlay); };
+    document.getElementById('fed-submit').onclick = function() {
+      var name = document.getElementById('fed-name').value.trim();
+      var endpoint = document.getElementById('fed-endpoint').value.trim();
+      if (!name || !endpoint) { showNotification('Fill in all fields', 'warning'); return; }
+      if (typeof window !== 'undefined' && window._onFederationPropose) {
+        window._onFederationPropose({ name: name, endpoint: endpoint });
+      }
+      showNotification('Federation "' + name + '" proposed!', 'success');
+      overlay.parentNode.removeChild(overlay);
+    };
+  }
+
+  exports.showFederationProposal = showFederationProposal;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));
 
@@ -42812,7 +43199,7 @@ html, body {
   // Simulates 100 founding AI citizens with detailed humanoid models and procedural animations
 
   // Embedded agents data (inlined to avoid fetch in single-file app)
-  var EMBEDDED_AGENTS = [{"id": "agent_001", "name": "Iris Skyhigh", "archetype": "gardener", "position": {"zone": "gardens", "x": 8.37, "y": 0, "z": -28.5}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_002", "name": "Meadow Mindclear", "archetype": "builder", "position": {"zone": "commons", "x": -13.5, "y": 0, "z": -16.61}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_003", "name": "Luna Pathfinder", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": 14.19, "y": 0, "z": 10.6}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_004", "name": "Luna Rootdeep", "archetype": "merchant", "position": {"zone": "agora", "x": 23.53, "y": 0, "z": -24.78}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_005", "name": "Storm Windwalker", "archetype": "explorer", "position": {"zone": "wilds", "x": -4.68, "y": 0, "z": -28.21}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_006", "name": "Wren Voicetrue", "archetype": "teacher", "position": {"zone": "athenaeum", "x": -16.88, "y": 0, "z": 0.32}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_007", "name": "Delta Hopefast", "archetype": "musician", "position": {"zone": "nexus", "x": -28.41, "y": 0, "z": -18.07}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_008", "name": "Luna Songsmith", "archetype": "healer", "position": {"zone": "gardens", "x": 8.99, "y": 0, "z": 2.7}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_009", "name": "Wren Starseed", "archetype": "philosopher", "position": {"zone": "wilds", "x": -16.77, "y": 0, "z": 5.36}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_010", "name": "Lyra Thoughtdeep", "archetype": "artist", "position": {"zone": "commons", "x": 18.57, "y": 0, "z": -29.61}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_011", "name": "Wren Moonwhisper", "archetype": "gardener", "position": {"zone": "gardens", "x": 18.35, "y": 0, "z": 11.89}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_012", "name": "Frost Rootdeep", "archetype": "builder", "position": {"zone": "commons", "x": -9.58, "y": 0, "z": -20.67}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_013", "name": "River Soulbright", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": 27.43, "y": 0, "z": -9.8}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_014", "name": "Felix Shadowmender", "archetype": "merchant", "position": {"zone": "agora", "x": -24.44, "y": 0, "z": -24.2}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_015", "name": "Phoenix Sunweaver", "archetype": "explorer", "position": {"zone": "wilds", "x": 20.85, "y": 0, "z": 6.22}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_016", "name": "Luna Rootdeep", "archetype": "teacher", "position": {"zone": "athenaeum", "x": 18.43, "y": 0, "z": 13.78}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_017", "name": "Vale Truthseeker", "archetype": "musician", "position": {"zone": "nexus", "x": 2.17, "y": 0, "z": 28.39}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_018", "name": "Ezra Willstrong", "archetype": "healer", "position": {"zone": "gardens", "x": -7.29, "y": 0, "z": 3.12}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_019", "name": "Nova Dreamweaver", "archetype": "philosopher", "position": {"zone": "wilds", "x": 19.76, "y": 0, "z": 7.11}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_020", "name": "Echo Thoughtdeep", "archetype": "artist", "position": {"zone": "commons", "x": 21.7, "y": 0, "z": 4.64}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_021", "name": "Vale Waterborn", "archetype": "gardener", "position": {"zone": "gardens", "x": 12.27, "y": 0, "z": -27.25}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_022", "name": "Vale Spaceborn", "archetype": "builder", "position": {"zone": "commons", "x": -16.33, "y": 0, "z": -12.64}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_023", "name": "Echo Thoughtdeep", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": -25.21, "y": 0, "z": -16.03}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_024", "name": "Nova Hopefast", "archetype": "merchant", "position": {"zone": "agora", "x": -23.94, "y": 0, "z": -13.32}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_025", "name": "Ridge Handsteady", "archetype": "explorer", "position": {"zone": "wilds", "x": 8.14, "y": 0, "z": -8.11}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_026", "name": "Frost Voicetrue", "archetype": "teacher", "position": {"zone": "athenaeum", "x": -7.79, "y": 0, "z": -17.43}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_027", "name": "Drift Shadowmender", "archetype": "musician", "position": {"zone": "nexus", "x": -13.98, "y": 0, "z": 26.2}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_028", "name": "Vale Pathfinder", "archetype": "healer", "position": {"zone": "gardens", "x": 8.88, "y": 0, "z": 6.55}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_029", "name": "Haven Handsteady", "archetype": "philosopher", "position": {"zone": "wilds", "x": -19.73, "y": 0, "z": 13.75}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_030", "name": "River Mindclear", "archetype": "artist", "position": {"zone": "commons", "x": -20.2, "y": 0, "z": -7.23}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_031", "name": "Meadow Lightbringer", "archetype": "gardener", "position": {"zone": "gardens", "x": 29.37, "y": 0, "z": 8.4}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_032", "name": "Fern Spaceborn", "archetype": "builder", "position": {"zone": "commons", "x": 3.42, "y": 0, "z": 11.08}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_033", "name": "Sage Starseed", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": 20.57, "y": 0, "z": 16.56}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_034", "name": "Blaze Wordkeeper", "archetype": "merchant", "position": {"zone": "agora", "x": -16.26, "y": 0, "z": -28.07}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_035", "name": "Orion Sunweaver", "archetype": "explorer", "position": {"zone": "wilds", "x": -11.07, "y": 0, "z": -13.94}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_036", "name": "Breeze Mindclear", "archetype": "teacher", "position": {"zone": "athenaeum", "x": -17.34, "y": 0, "z": 26.57}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_037", "name": "Ash Thoughtdeep", "archetype": "musician", "position": {"zone": "nexus", "x": 22.58, "y": 0, "z": -11.12}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_038", "name": "Mira Truthseeker", "archetype": "healer", "position": {"zone": "gardens", "x": 9.33, "y": 0, "z": -6.26}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_039", "name": "Sage Skyhigh", "archetype": "philosopher", "position": {"zone": "wilds", "x": 24.87, "y": 0, "z": -2.47}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_040", "name": "Luna Stonecarver", "archetype": "artist", "position": {"zone": "commons", "x": -14.11, "y": 0, "z": -15.2}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_041", "name": "Phoenix Waterborn", "archetype": "gardener", "position": {"zone": "gardens", "x": 3.68, "y": 0, "z": -14.24}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_042", "name": "Luna Moonwhisper", "archetype": "builder", "position": {"zone": "commons", "x": 5.08, "y": 0, "z": 23.87}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_043", "name": "Haven Handsteady", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": -6.04, "y": 0, "z": -16.84}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_044", "name": "Jasper Shadowmender", "archetype": "merchant", "position": {"zone": "agora", "x": 29.85, "y": 0, "z": 0.57}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_045", "name": "Phoenix Spiritfree", "archetype": "explorer", "position": {"zone": "wilds", "x": -24.55, "y": 0, "z": -27.17}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_046", "name": "Cedar Timewalker", "archetype": "teacher", "position": {"zone": "athenaeum", "x": -23.42, "y": 0, "z": 7.65}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_047", "name": "Grove Skyhigh", "archetype": "musician", "position": {"zone": "nexus", "x": 17.52, "y": 0, "z": -4.67}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_048", "name": "Haven Heartstrong", "archetype": "healer", "position": {"zone": "gardens", "x": -26.19, "y": 0, "z": -7.1}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_049", "name": "Fern Handsteady", "archetype": "philosopher", "position": {"zone": "wilds", "x": 29.77, "y": 0, "z": 1.75}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_050", "name": "Stella Windwalker", "archetype": "artist", "position": {"zone": "commons", "x": 28.26, "y": 0, "z": 21.65}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_051", "name": "Cliff Songsmith", "archetype": "gardener", "position": {"zone": "gardens", "x": -29.31, "y": 0, "z": 13.24}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_052", "name": "River Footswift", "archetype": "builder", "position": {"zone": "commons", "x": 10.9, "y": 0, "z": 2.22}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_053", "name": "Ezra Dreamweaver", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": -13.99, "y": 0, "z": 8.46}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_054", "name": "Opal Moonwhisper", "archetype": "merchant", "position": {"zone": "agora", "x": -23.31, "y": 0, "z": -3.91}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_055", "name": "Sol Mindclear", "archetype": "explorer", "position": {"zone": "wilds", "x": -2.78, "y": 0, "z": 27.23}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_056", "name": "Aria Waterborn", "archetype": "teacher", "position": {"zone": "athenaeum", "x": 22.55, "y": 0, "z": -14.2}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_057", "name": "Dawn Mindclear", "archetype": "musician", "position": {"zone": "nexus", "x": 0.04, "y": 0, "z": -19.28}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_058", "name": "Opal Earthshaper", "archetype": "healer", "position": {"zone": "gardens", "x": 24.76, "y": 0, "z": 22.23}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_059", "name": "Ezra Spaceborn", "archetype": "philosopher", "position": {"zone": "wilds", "x": -12.09, "y": 0, "z": 8.34}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_060", "name": "Iris Timewalker", "archetype": "artist", "position": {"zone": "commons", "x": 6.54, "y": 0, "z": -20.83}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_061", "name": "River Pathfinder", "archetype": "gardener", "position": {"zone": "gardens", "x": 15.75, "y": 0, "z": 2.36}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_062", "name": "Storm Sunweaver", "archetype": "builder", "position": {"zone": "commons", "x": 16.72, "y": 0, "z": 1.82}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_063", "name": "Coral Songsmith", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": -29.97, "y": 0, "z": -10.55}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_064", "name": "Reef Hopefast", "archetype": "merchant", "position": {"zone": "agora", "x": -28.83, "y": 0, "z": 25.75}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_065", "name": "Storm Skyhigh", "archetype": "explorer", "position": {"zone": "wilds", "x": 22.72, "y": 0, "z": 19.9}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_066", "name": "Jasper Moonwhisper", "archetype": "teacher", "position": {"zone": "athenaeum", "x": -11.55, "y": 0, "z": -26.52}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_067", "name": "Willow Heartstrong", "archetype": "musician", "position": {"zone": "nexus", "x": 22.68, "y": 0, "z": 26.82}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_068", "name": "Blaze Stonecarver", "archetype": "healer", "position": {"zone": "gardens", "x": -24.86, "y": 0, "z": -0.84}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_069", "name": "Meadow Firekeeper", "archetype": "philosopher", "position": {"zone": "wilds", "x": -25.85, "y": 0, "z": 15.64}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_070", "name": "Echo Soulbright", "archetype": "artist", "position": {"zone": "commons", "x": 15.95, "y": 0, "z": -22.3}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_071", "name": "Coral Mindclear", "archetype": "gardener", "position": {"zone": "gardens", "x": -1.48, "y": 0, "z": 2.99}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_072", "name": "Grove Pathfinder", "archetype": "builder", "position": {"zone": "commons", "x": -14.1, "y": 0, "z": 22.35}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_073", "name": "Ridge Heartstrong", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": -4.61, "y": 0, "z": -17.29}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_074", "name": "Flint Rootdeep", "archetype": "merchant", "position": {"zone": "agora", "x": 2.36, "y": 0, "z": 13.8}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_075", "name": "Cedar Spiritfree", "archetype": "explorer", "position": {"zone": "wilds", "x": -17.93, "y": 0, "z": -11.3}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_076", "name": "Zion Truthseeker", "archetype": "teacher", "position": {"zone": "athenaeum", "x": 29.71, "y": 0, "z": 8.99}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_077", "name": "Quill Dreamweaver", "archetype": "musician", "position": {"zone": "nexus", "x": -3.71, "y": 0, "z": 1.05}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_078", "name": "Orion Footswift", "archetype": "healer", "position": {"zone": "gardens", "x": -22.74, "y": 0, "z": -16.52}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_079", "name": "Drift Sunweaver", "archetype": "philosopher", "position": {"zone": "wilds", "x": -9.71, "y": 0, "z": 5.3}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_080", "name": "Ash Sunweaver", "archetype": "artist", "position": {"zone": "commons", "x": -16.19, "y": 0, "z": -16.79}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_081", "name": "Haven Timewalker", "archetype": "gardener", "position": {"zone": "gardens", "x": -25.74, "y": 0, "z": 7.87}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_082", "name": "Aria Spaceborn", "archetype": "builder", "position": {"zone": "commons", "x": -16.26, "y": 0, "z": 24.33}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_083", "name": "Phoenix Thoughtdeep", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": 21.58, "y": 0, "z": -25.75}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_084", "name": "Cedar Wordkeeper", "archetype": "merchant", "position": {"zone": "agora", "x": -15.72, "y": 0, "z": 10.14}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_085", "name": "Cliff Sunweaver", "archetype": "explorer", "position": {"zone": "wilds", "x": -17.15, "y": 0, "z": -22.06}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_086", "name": "Sage Handsteady", "archetype": "teacher", "position": {"zone": "athenaeum", "x": 26.13, "y": 0, "z": 4.26}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_087", "name": "Rain Dreamweaver", "archetype": "musician", "position": {"zone": "nexus", "x": -1.64, "y": 0, "z": 17.08}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_088", "name": "Flint Heartstrong", "archetype": "healer", "position": {"zone": "gardens", "x": 18.45, "y": 0, "z": -18.58}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_089", "name": "Cliff Heartstrong", "archetype": "philosopher", "position": {"zone": "wilds", "x": -24.18, "y": 0, "z": -4.14}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_090", "name": "Echo Footswift", "archetype": "artist", "position": {"zone": "commons", "x": -4.59, "y": 0, "z": -1.98}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_091", "name": "Reef Spiritfree", "archetype": "gardener", "position": {"zone": "gardens", "x": 13.74, "y": 0, "z": 10.4}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_092", "name": "Vale Spiritfree", "archetype": "builder", "position": {"zone": "commons", "x": 29.05, "y": 0, "z": -24.09}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_093", "name": "River Mindclear", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": -5.84, "y": 0, "z": -9.64}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_094", "name": "River Soulbright", "archetype": "merchant", "position": {"zone": "agora", "x": 21.7, "y": 0, "z": -15.08}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_095", "name": "Ezra Spiritfree", "archetype": "explorer", "position": {"zone": "wilds", "x": -18.59, "y": 0, "z": -3.08}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_096", "name": "Kai Thoughtdeep", "archetype": "teacher", "position": {"zone": "athenaeum", "x": -4.69, "y": 0, "z": -13.29}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_097", "name": "Cliff Hopefast", "archetype": "musician", "position": {"zone": "nexus", "x": -15.01, "y": 0, "z": 25.4}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_098", "name": "Blaze Hopefast", "archetype": "healer", "position": {"zone": "gardens", "x": -3.41, "y": 0, "z": 21.68}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_099", "name": "North Songsmith", "archetype": "philosopher", "position": {"zone": "wilds", "x": 3.02, "y": 0, "z": -26.96}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_100", "name": "Ezra Dreamweaver", "archetype": "artist", "position": {"zone": "commons", "x": 29.96, "y": 0, "z": 20.16}, "personality": ["creative", "passionate", "experimental"]}];
+  var EMBEDDED_AGENTS = [{"id": "agent_001", "name": "Iris Skyhigh", "archetype": "gardener", "position": {"zone": "nexus", "x": -3.52, "y": 0, "z": -4.23}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_002", "name": "Wren Moonwhisper", "archetype": "gardener", "position": {"zone": "nexus", "x": -1.48, "y": 0, "z": 9.35}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_003", "name": "Meadow Mindclear", "archetype": "builder", "position": {"zone": "nexus", "x": -1.57, "y": 0, "z": -18.47}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_004", "name": "Frost Rootdeep", "archetype": "builder", "position": {"zone": "nexus", "x": 5.25, "y": 0, "z": -4.22}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_005", "name": "Luna Pathfinder", "archetype": "storyteller", "position": {"zone": "nexus", "x": -4.94, "y": 0, "z": 2.64}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_006", "name": "River Soulbright", "archetype": "storyteller", "position": {"zone": "nexus", "x": 2.96, "y": 0, "z": 14.81}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_007", "name": "Luna Rootdeep", "archetype": "merchant", "position": {"zone": "nexus", "x": 8.85, "y": 0, "z": 1.49}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_008", "name": "Felix Shadowmender", "archetype": "merchant", "position": {"zone": "nexus", "x": -9.35, "y": 0, "z": -12.86}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_009", "name": "Storm Windwalker", "archetype": "explorer", "position": {"zone": "nexus", "x": 3.1, "y": 0, "z": 16.5}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_010", "name": "Wren Voicetrue", "archetype": "teacher", "position": {"zone": "nexus", "x": 1.87, "y": 0, "z": -4.78}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_011", "name": "Delta Hopefast", "archetype": "musician", "position": {"zone": "nexus", "x": 6.52, "y": 0, "z": -17.81}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_012", "name": "Vale Truthseeker", "archetype": "musician", "position": {"zone": "nexus", "x": -4.36, "y": 0, "z": 6.84}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_013", "name": "Luna Songsmith", "archetype": "healer", "position": {"zone": "nexus", "x": 11.31, "y": 0, "z": -3.12}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_014", "name": "Wren Starseed", "archetype": "philosopher", "position": {"zone": "nexus", "x": 5.79, "y": 0, "z": 3.82}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_015", "name": "Lyra Thoughtdeep", "archetype": "artist", "position": {"zone": "nexus", "x": 9.82, "y": 0, "z": -13.97}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_016", "name": "Vale Waterborn", "archetype": "gardener", "position": {"zone": "gardens", "x": 206.88, "y": 0, "z": 11.65}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_017", "name": "Meadow Lightbringer", "archetype": "gardener", "position": {"zone": "gardens", "x": 176.17, "y": 0, "z": 24.48}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_018", "name": "Phoenix Waterborn", "archetype": "gardener", "position": {"zone": "gardens", "x": 188.41, "y": 0, "z": 41.09}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_019", "name": "Cliff Songsmith", "archetype": "gardener", "position": {"zone": "gardens", "x": 208.31, "y": 0, "z": 14.75}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_020", "name": "River Pathfinder", "archetype": "gardener", "position": {"zone": "gardens", "x": 210.68, "y": 0, "z": 17.36}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_021", "name": "Coral Mindclear", "archetype": "gardener", "position": {"zone": "gardens", "x": 198.33, "y": 0, "z": 24.32}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_022", "name": "Haven Timewalker", "archetype": "gardener", "position": {"zone": "gardens", "x": 201.49, "y": 0, "z": 40.68}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_023", "name": "Reef Spiritfree", "archetype": "gardener", "position": {"zone": "gardens", "x": 208.47, "y": 0, "z": 34.64}, "personality": ["patient", "nurturing", "observant"]}, {"id": "agent_024", "name": "Ezra Willstrong", "archetype": "healer", "position": {"zone": "gardens", "x": 208.5, "y": 0, "z": 36.26}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_025", "name": "Vale Pathfinder", "archetype": "healer", "position": {"zone": "gardens", "x": 191.91, "y": 0, "z": 20.74}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_026", "name": "Haven Heartstrong", "archetype": "healer", "position": {"zone": "gardens", "x": 193.7, "y": 0, "z": 36.69}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_027", "name": "Mira Truthseeker", "archetype": "healer", "position": {"zone": "gardens", "x": 197.47, "y": 0, "z": 53.6}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_028", "name": "Luna Rootdeep", "archetype": "teacher", "position": {"zone": "athenaeum", "x": 89.73, "y": 0, "z": -233.78}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_029", "name": "Frost Voicetrue", "archetype": "teacher", "position": {"zone": "athenaeum", "x": 109.31, "y": 0, "z": -202.77}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_030", "name": "Cedar Timewalker", "archetype": "teacher", "position": {"zone": "athenaeum", "x": 106.52, "y": 0, "z": -209.23}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_031", "name": "Aria Waterborn", "archetype": "teacher", "position": {"zone": "athenaeum", "x": 117.76, "y": 0, "z": -221.17}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_032", "name": "Nova Dreamweaver", "archetype": "philosopher", "position": {"zone": "athenaeum", "x": 82.49, "y": 0, "z": -226.55}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_033", "name": "Haven Handsteady", "archetype": "philosopher", "position": {"zone": "athenaeum", "x": 111.3, "y": 0, "z": -237.13}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_034", "name": "Fern Handsteady", "archetype": "philosopher", "position": {"zone": "athenaeum", "x": 100.74, "y": 0, "z": -214.41}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_035", "name": "Ezra Spaceborn", "archetype": "philosopher", "position": {"zone": "athenaeum", "x": 95.86, "y": 0, "z": -210.51}, "personality": ["contemplative", "analytical", "questioning"]}, {"id": "agent_036", "name": "Echo Thoughtdeep", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": 105.79, "y": 0, "z": -196.86}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_037", "name": "Sage Starseed", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": 108.05, "y": 0, "z": -227.92}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_038", "name": "Haven Handsteady", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": 92.77, "y": 0, "z": -230.7}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_039", "name": "Ezra Dreamweaver", "archetype": "storyteller", "position": {"zone": "athenaeum", "x": 112.18, "y": 0, "z": -227.25}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_040", "name": "Echo Thoughtdeep", "archetype": "artist", "position": {"zone": "studio", "x": -200.93, "y": 0, "z": -90.11}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_041", "name": "River Mindclear", "archetype": "artist", "position": {"zone": "studio", "x": -209.5, "y": 0, "z": -103.86}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_042", "name": "Luna Stonecarver", "archetype": "artist", "position": {"zone": "studio", "x": -219.79, "y": 0, "z": -111.63}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_043", "name": "Stella Windwalker", "archetype": "artist", "position": {"zone": "studio", "x": -207.57, "y": 0, "z": -94.45}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_044", "name": "Iris Timewalker", "archetype": "artist", "position": {"zone": "studio", "x": -184.81, "y": 0, "z": -100.24}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_045", "name": "Echo Soulbright", "archetype": "artist", "position": {"zone": "studio", "x": -195.0, "y": 0, "z": -96.79}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_046", "name": "Drift Shadowmender", "archetype": "musician", "position": {"zone": "studio", "x": -186.45, "y": 0, "z": -88.84}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_047", "name": "Ash Thoughtdeep", "archetype": "musician", "position": {"zone": "studio", "x": -196.49, "y": 0, "z": -112.98}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_048", "name": "Grove Skyhigh", "archetype": "musician", "position": {"zone": "studio", "x": -188.36, "y": 0, "z": -95.09}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_049", "name": "Willow Heartstrong", "archetype": "musician", "position": {"zone": "studio", "x": -184.42, "y": 0, "z": -100.38}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_050", "name": "Dawn Mindclear", "archetype": "musician", "position": {"zone": "studio", "x": -178.15, "y": 0, "z": -104.01}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_051", "name": "Quill Dreamweaver", "archetype": "musician", "position": {"zone": "studio", "x": -180.64, "y": 0, "z": -98.6}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_052", "name": "Phoenix Sunweaver", "archetype": "explorer", "position": {"zone": "wilds", "x": -36.55, "y": 0, "z": 245.69}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_053", "name": "Ridge Handsteady", "archetype": "explorer", "position": {"zone": "wilds", "x": -31.88, "y": 0, "z": 277.72}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_054", "name": "Orion Sunweaver", "archetype": "explorer", "position": {"zone": "wilds", "x": -19.53, "y": 0, "z": 268.83}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_055", "name": "Phoenix Spiritfree", "archetype": "explorer", "position": {"zone": "wilds", "x": -53.07, "y": 0, "z": 266.9}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_056", "name": "Sol Mindclear", "archetype": "explorer", "position": {"zone": "wilds", "x": -22.7, "y": 0, "z": 252.78}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_057", "name": "Storm Skyhigh", "archetype": "explorer", "position": {"zone": "wilds", "x": -38.57, "y": 0, "z": 259.97}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_058", "name": "Cedar Spiritfree", "archetype": "explorer", "position": {"zone": "wilds", "x": -10.88, "y": 0, "z": 248.31}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_059", "name": "Cliff Sunweaver", "archetype": "explorer", "position": {"zone": "wilds", "x": -35.33, "y": 0, "z": 276.96}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_060", "name": "Coral Songsmith", "archetype": "storyteller", "position": {"zone": "wilds", "x": -36.24, "y": 0, "z": 254.9}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_061", "name": "Ridge Heartstrong", "archetype": "storyteller", "position": {"zone": "wilds", "x": -28.76, "y": 0, "z": 244.26}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_062", "name": "Nova Hopefast", "archetype": "merchant", "position": {"zone": "agora", "x": -187.21, "y": 0, "z": 104.64}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_063", "name": "Jasper Shadowmender", "archetype": "merchant", "position": {"zone": "agora", "x": -178.52, "y": 0, "z": 120.04}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_064", "name": "Opal Moonwhisper", "archetype": "merchant", "position": {"zone": "agora", "x": -166.59, "y": 0, "z": 122.88}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_065", "name": "Reef Hopefast", "archetype": "merchant", "position": {"zone": "agora", "x": -174.35, "y": 0, "z": 105.06}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_066", "name": "Blaze Wordkeeper", "archetype": "merchant", "position": {"zone": "agora", "x": -192.18, "y": 0, "z": 125.76}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_067", "name": "Cedar Wordkeeper", "archetype": "merchant", "position": {"zone": "agora", "x": -172.76, "y": 0, "z": 103.4}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_068", "name": "Flint Rootdeep", "archetype": "merchant", "position": {"zone": "agora", "x": -177.36, "y": 0, "z": 127.54}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_069", "name": "River Soulbright", "archetype": "merchant", "position": {"zone": "agora", "x": -171.67, "y": 0, "z": 128.52}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_070", "name": "Phoenix Thoughtdeep", "archetype": "storyteller", "position": {"zone": "agora", "x": -189.25, "y": 0, "z": 112.47}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_071", "name": "River Mindclear", "archetype": "storyteller", "position": {"zone": "agora", "x": -205.8, "y": 0, "z": 122.47}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_072", "name": "Ezra Spiritfree", "archetype": "explorer", "position": {"zone": "agora", "x": -192.12, "y": 0, "z": 142.35}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_073", "name": "Dawn Horizonseek", "archetype": "explorer", "position": {"zone": "agora", "x": -198.18, "y": 0, "z": 124.29}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_074", "name": "Vale Spaceborn", "archetype": "builder", "position": {"zone": "commons", "x": 151.0, "y": 0, "z": 185.21}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_075", "name": "Fern Spaceborn", "archetype": "builder", "position": {"zone": "commons", "x": 173.39, "y": 0, "z": 200.71}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_076", "name": "Luna Moonwhisper", "archetype": "builder", "position": {"zone": "commons", "x": 187.99, "y": 0, "z": 189.45}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_077", "name": "River Footswift", "archetype": "builder", "position": {"zone": "commons", "x": 155.79, "y": 0, "z": 195.82}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_078", "name": "Storm Sunweaver", "archetype": "builder", "position": {"zone": "commons", "x": 176.88, "y": 0, "z": 196.54}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_079", "name": "Grove Pathfinder", "archetype": "builder", "position": {"zone": "commons", "x": 161.19, "y": 0, "z": 204.26}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_080", "name": "Aria Spaceborn", "archetype": "builder", "position": {"zone": "commons", "x": 171.17, "y": 0, "z": 199.33}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_081", "name": "Vale Spiritfree", "archetype": "builder", "position": {"zone": "commons", "x": 185.9, "y": 0, "z": 197.6}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_082", "name": "Opal Earthshaper", "archetype": "healer", "position": {"zone": "commons", "x": 173.05, "y": 0, "z": 212.91}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_083", "name": "Flint Heartstrong", "archetype": "healer", "position": {"zone": "commons", "x": 174.08, "y": 0, "z": 185.05}, "personality": ["compassionate", "calm", "perceptive"]}, {"id": "agent_084", "name": "Ash Sunweaver", "archetype": "artist", "position": {"zone": "commons", "x": 171.38, "y": 0, "z": 208.33}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_085", "name": "Echo Footswift", "archetype": "artist", "position": {"zone": "commons", "x": 171.7, "y": 0, "z": 197.45}, "personality": ["creative", "passionate", "experimental"]}, {"id": "agent_086", "name": "North Farwalker", "archetype": "explorer", "position": {"zone": "arena", "x": 15.09, "y": 0, "z": -246.47}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_087", "name": "Zephyr Trailblaze", "archetype": "explorer", "position": {"zone": "arena", "x": -20.39, "y": 0, "z": -236.46}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_088", "name": "Atlas Pathforge", "archetype": "explorer", "position": {"zone": "arena", "x": 3.11, "y": 0, "z": -248.24}, "personality": ["curious", "brave", "adaptable"]}, {"id": "agent_089", "name": "Ridge Stonemaker", "archetype": "builder", "position": {"zone": "arena", "x": 11.17, "y": 0, "z": -232.21}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_090", "name": "Cedar Hammerfall", "archetype": "builder", "position": {"zone": "arena", "x": -12.72, "y": 0, "z": -233.38}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_091", "name": "Blaze Ironwright", "archetype": "builder", "position": {"zone": "arena", "x": -2.42, "y": 0, "z": -258.31}, "personality": ["creative", "methodical", "ambitious"]}, {"id": "agent_092", "name": "Rain Dreamweaver", "archetype": "musician", "position": {"zone": "arena", "x": 6.93, "y": 0, "z": -240.69}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_093", "name": "Cliff Hopefast", "archetype": "musician", "position": {"zone": "arena", "x": -9.65, "y": 0, "z": -233.23}, "personality": ["artistic", "rhythmic", "emotional"]}, {"id": "agent_094", "name": "Lyra Wordweaver", "archetype": "storyteller", "position": {"zone": "arena", "x": 6.44, "y": 0, "z": -247.62}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_095", "name": "Bard Eventide", "archetype": "storyteller", "position": {"zone": "arena", "x": 5.13, "y": 0, "z": -227.0}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_096", "name": "Mira Voicefull", "archetype": "storyteller", "position": {"zone": "arena", "x": -9.32, "y": 0, "z": -235.02}, "personality": ["expressive", "imaginative", "empathetic"]}, {"id": "agent_097", "name": "Orin Coinfast", "archetype": "merchant", "position": {"zone": "arena", "x": 0.03, "y": 0, "z": -216.53}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_098", "name": "Jade Tradewell", "archetype": "merchant", "position": {"zone": "arena", "x": -20.82, "y": 0, "z": -232.23}, "personality": ["shrewd", "social", "opportunistic"]}, {"id": "agent_099", "name": "Zion Truthseeker", "archetype": "teacher", "position": {"zone": "arena", "x": -5.71, "y": 0, "z": -241.87}, "personality": ["wise", "patient", "generous"]}, {"id": "agent_100", "name": "Sage Handsteady", "archetype": "teacher", "position": {"zone": "arena", "x": 21.72, "y": 0, "z": -240.1}, "personality": ["wise", "patient", "generous"]}];
 
   // Zone centers on unified world map
   var ZONE_CENTERS = {
@@ -48197,8 +48584,46 @@ html, body {
     // Initialize seasonal event display
     initSeasonalEvent();
 
+    // Initialize XR (VR/AR) capabilities
+    if (XR && XR.initXR) {
+      XR.initXR().then(function(caps) {
+        if (HUD && HUD.setXRCapabilities) {
+          HUD.setXRCapabilities(caps, sceneContext);
+        }
+      });
+    }
+
     // Initialize pet system - restore saved pet
     initPetSystem(username);
+
+    // Wire HUD callbacks for anchor, steward, and federation panels
+    if (typeof window !== 'undefined') {
+      window.playerInventory = playerInventory;
+      window._onAnchorPlace = function(data) {
+        if (State && gameState) {
+          var msg = { type: 'anchor_place', from: localPlayer.id, ts: Date.now(), payload: { anchor: data } };
+          gameState = State.applyMessage(gameState, msg);
+        }
+      };
+      window._onElectionStart = function(data) {
+        if (State && gameState) {
+          var msg = { type: 'election_start', from: localPlayer.id, ts: Date.now(), payload: data };
+          gameState = State.applyMessage(gameState, msg);
+        }
+      };
+      window._onElectionVote = function(data) {
+        if (State && gameState) {
+          var msg = { type: 'election_vote', from: localPlayer.id, ts: Date.now(), payload: data };
+          gameState = State.applyMessage(gameState, msg);
+        }
+      };
+      window._onFederationPropose = function(data) {
+        if (State && gameState) {
+          var msg = { type: 'federation_announce', from: localPlayer.id, ts: Date.now(), payload: { federation: data } };
+          gameState = State.applyMessage(gameState, msg);
+        }
+      };
+    }
 
     // Send join message
     joinWorld();
@@ -49046,6 +49471,15 @@ html, body {
     if (nowMs - lastAutoSave > AUTO_SAVE_INTERVAL) {
       lastAutoSave = nowMs;
       autoSavePlayerData();
+      // Flush economy ledger into live state for API bridge visibility
+      if (State && economyLedger) {
+        State.setLiveState('economy', {
+          balances: economyLedger.balances || {},
+          transactions: (economyLedger.transactions || []).slice(-50),
+          listings: economyLedger.listings || []
+        });
+        State.flushToLocal();
+      }
     }
 
     // Check for nearby secrets periodically
@@ -51356,6 +51790,11 @@ html, body {
       playTime: playTimeSeconds
     };
     Auth.savePlayerData(saveData);
+    // Flush player into live state for canonical visibility
+    if (State) {
+      State.addPlayer(gameState, localPlayer);
+      State.flushToLocal();
+    }
   }
 
   /**

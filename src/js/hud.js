@@ -2355,15 +2355,91 @@
       });
     }
 
-    // Trade slot clicks (to remove items)
+    // Trade slot clicks (add or remove items)
     var tradeSlots = document.querySelectorAll('.trade-slot');
     tradeSlots.forEach(function(slot, idx) {
       slot.addEventListener('click', function() {
         if (localPlayer.items[idx] && callbacks.onRemoveItem) {
           callbacks.onRemoveItem(idx);
+        } else if (!localPlayer.items[idx] && callbacks.onAddItem) {
+          // Show inventory picker for empty slot
+          showTradeItemPicker(idx, callbacks.onAddItem);
         }
       });
     });
+  }
+
+  /**
+   * Show inventory item picker popup for trade window
+   */
+  function showTradeItemPicker(slotIndex, onAddItem) {
+    // Remove existing picker
+    var existing = document.getElementById('trade-item-picker');
+    if (existing) existing.parentNode.removeChild(existing);
+
+    var Inventory = typeof window !== 'undefined' ? window.Inventory : null;
+    if (!Inventory) return;
+
+    // Get player inventory from global
+    var inv = typeof playerInventory !== 'undefined' ? playerInventory : null;
+    if (!inv) {
+      // Try to get from window
+      inv = typeof window !== 'undefined' && window.playerInventory ? window.playerInventory : null;
+    }
+    if (!inv) return;
+
+    var items = Inventory.getInventory(inv);
+    if (!items || items.length === 0) {
+      showNotification('No items in inventory to trade');
+      return;
+    }
+
+    var picker = document.createElement('div');
+    picker.id = 'trade-item-picker';
+    picker.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.97);border:2px solid #4af;border-radius:12px;' +
+      'padding:16px;width:320px;max-height:400px;overflow-y:auto;z-index:400;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.9);pointer-events:auto;';
+
+    var html = '<div style="font-size:16px;font-weight:bold;color:#4af;margin-bottom:12px;text-align:center;">Select Item to Trade</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">';
+
+    items.forEach(function(item, i) {
+      var itemData = Inventory.getItemData(item.itemId);
+      if (itemData) {
+        html += '<div class="trade-pick-item" data-idx="' + i + '" data-itemid="' + item.itemId + '" ' +
+          'style="background:rgba(255,255,255,0.08);border:2px solid #444;border-radius:6px;' +
+          'padding:8px;text-align:center;cursor:pointer;transition:border-color 0.2s;">' +
+          '<div style="font-size:24px;">' + itemData.icon + '</div>' +
+          '<div style="font-size:9px;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + itemData.name + '</div>' +
+          '<div style="font-size:10px;color:#888;">x' + (item.count || 1) + '</div>' +
+          '</div>';
+      }
+    });
+
+    html += '</div>';
+    html += '<div style="text-align:center;margin-top:12px;">' +
+      '<button id="trade-pick-cancel" style="padding:6px 16px;background:#555;color:#fff;border:none;border-radius:4px;cursor:pointer;">Cancel</button></div>';
+
+    picker.innerHTML = html;
+    document.body.appendChild(picker);
+
+    // Attach click handlers
+    var pickItems = picker.querySelectorAll('.trade-pick-item');
+    pickItems.forEach(function(el) {
+      el.addEventListener('click', function() {
+        var itemId = el.getAttribute('data-itemid');
+        onAddItem(slotIndex, itemId);
+        picker.parentNode.removeChild(picker);
+      });
+    });
+
+    var cancelBtn = document.getElementById('trade-pick-cancel');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function() {
+        picker.parentNode.removeChild(picker);
+      });
+    }
   }
 
   /**
@@ -7630,5 +7706,287 @@
   exports.advanceTutorial = advanceTutorial;
   exports.skipTutorial = skipTutorial;
   exports.isTutorialActive = isTutorialActive;
+
+  // =============================================================================
+  // XR (VR/AR) BUTTONS
+  // =============================================================================
+  var xrCaps = null;
+  var xrSceneCtx = null;
+
+  function setXRCapabilities(caps, sceneCtx) {
+    xrCaps = caps;
+    xrSceneCtx = sceneCtx;
+    // Add XR buttons to toolbar if supported
+    if (typeof document === 'undefined') return;
+    var toolbar = document.querySelector('#bottom-toolbar');
+    if (!toolbar) return;
+
+    if (caps.vrSupported) {
+      var vrBtn = document.createElement('button');
+      vrBtn.id = 'vr-btn';
+      vrBtn.textContent = 'VR';
+      vrBtn.title = 'Enter VR Mode';
+      vrBtn.style.cssText = 'padding:6px 12px;background:rgba(68,170,255,0.3);color:#4af;border:1px solid #4af;' +
+        'border-radius:6px;cursor:pointer;font-size:12px;font-weight:bold;';
+      vrBtn.onclick = function() {
+        var XR = typeof window !== 'undefined' ? window.XR : null;
+        if (XR && xrSceneCtx && xrSceneCtx.renderer) {
+          XR.enterVR(xrSceneCtx.renderer, xrSceneCtx.scene, xrSceneCtx.camera).catch(function(err) {
+            showNotification('Failed to enter VR: ' + err.message, 'error');
+          });
+        }
+      };
+      toolbar.appendChild(vrBtn);
+    }
+
+    if (caps.arSupported) {
+      var arBtn = document.createElement('button');
+      arBtn.id = 'ar-btn';
+      arBtn.textContent = 'AR';
+      arBtn.title = 'Enter AR Mode';
+      arBtn.style.cssText = 'padding:6px 12px;background:rgba(255,165,0,0.3);color:#ffa500;border:1px solid #ffa500;' +
+        'border-radius:6px;cursor:pointer;font-size:12px;font-weight:bold;';
+      arBtn.onclick = function() {
+        var XR = typeof window !== 'undefined' ? window.XR : null;
+        if (XR && xrSceneCtx && xrSceneCtx.renderer) {
+          XR.enterAR(xrSceneCtx.renderer, xrSceneCtx.scene, xrSceneCtx.camera).catch(function(err) {
+            showNotification('Failed to enter AR: ' + err.message, 'error');
+          });
+        }
+      };
+      toolbar.appendChild(arBtn);
+    }
+  }
+  exports.setXRCapabilities = setXRCapabilities;
+
+  // =============================================================================
+  // ANCHOR SYSTEM PANEL
+  // =============================================================================
+  var anchorPanelEl = null;
+
+  function showAnchorPanel(playerPosition, currentZone) {
+    if (typeof document === 'undefined') return;
+    hideAnchorPanel();
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    var State = typeof window !== 'undefined' ? window.State : null;
+    var anchors = [];
+    if (State) {
+      var liveState = State.getLiveState();
+      if (liveState && liveState.anchors) {
+        anchors = Object.values(liveState.anchors);
+      }
+    }
+
+    anchorPanelEl = document.createElement('div');
+    anchorPanelEl.id = 'anchor-panel';
+    anchorPanelEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #4af;border-radius:12px;' +
+      'padding:20px;width:400px;max-height:500px;overflow-y:auto;pointer-events:auto;z-index:300;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);';
+
+    var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+      '<h2 style="color:#4af;margin:0;font-size:18px;">Anchors</h2>' +
+      '<button id="anchor-close" style="background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.3);' +
+      'border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;">×</button></div>';
+
+    if (anchors.length === 0) {
+      html += '<p style="color:#888;text-align:center;">No anchors placed yet.</p>';
+    } else {
+      anchors.forEach(function(anchor) {
+        html += '<div style="background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:8px;padding:10px;margin-bottom:8px;">' +
+          '<div style="color:#4af;font-weight:bold;">' + (anchor.name || 'Unnamed Anchor') + '</div>' +
+          '<div style="color:#888;font-size:12px;">Zone: ' + (anchor.zone || 'unknown') + ' | By: ' + (anchor.owner || 'unknown') + '</div>' +
+          '</div>';
+      });
+    }
+
+    // Place anchor form
+    html += '<div style="border-top:1px solid #333;padding-top:12px;margin-top:12px;">' +
+      '<div style="color:#aaa;font-size:13px;margin-bottom:8px;">Place New Anchor</div>' +
+      '<input id="anchor-name-input" placeholder="Anchor name..." style="width:100%;padding:6px;background:rgba(0,0,0,0.5);' +
+      'border:1px solid #555;border-radius:4px;color:#fff;font-size:13px;margin-bottom:8px;box-sizing:border-box;" />' +
+      '<button id="anchor-place-btn" style="width:100%;padding:8px;background:#4af;color:#000;border:none;border-radius:6px;' +
+      'font-weight:bold;cursor:pointer;">Place Anchor Here</button></div>';
+
+    anchorPanelEl.innerHTML = html;
+    hud.appendChild(anchorPanelEl);
+
+    document.getElementById('anchor-close').onclick = hideAnchorPanel;
+    document.getElementById('anchor-place-btn').onclick = function() {
+      var name = document.getElementById('anchor-name-input').value.trim();
+      if (!name) { showNotification('Enter an anchor name', 'warning'); return; }
+      // Send anchor_place protocol message via main.js callback
+      if (typeof window !== 'undefined' && window._onAnchorPlace) {
+        window._onAnchorPlace({ name: name, zone: currentZone, position: playerPosition });
+      }
+      showNotification('Anchor "' + name + '" placed!', 'success');
+      hideAnchorPanel();
+    };
+  }
+
+  function hideAnchorPanel() {
+    if (anchorPanelEl && anchorPanelEl.parentNode) {
+      anchorPanelEl.parentNode.removeChild(anchorPanelEl);
+      anchorPanelEl = null;
+    }
+  }
+
+  exports.showAnchorPanel = showAnchorPanel;
+  exports.hideAnchorPanel = hideAnchorPanel;
+
+  // =============================================================================
+  // STEWARD ELECTION PANEL
+  // =============================================================================
+  var stewardPanelEl = null;
+
+  function showStewardPanel(currentZone, playerId) {
+    if (typeof document === 'undefined') return;
+    hideStewardPanel();
+
+    var hud = document.querySelector('#zion-hud');
+    if (!hud) return;
+
+    var State = typeof window !== 'undefined' ? window.State : null;
+    var liveState = State ? State.getLiveState() : {};
+    var stewards = liveState.stewards || {};
+    var elections = liveState.elections || {};
+    var zoneSteward = stewards[currentZone];
+
+    stewardPanelEl = document.createElement('div');
+    stewardPanelEl.id = 'steward-panel';
+    stewardPanelEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #DAA520;border-radius:12px;' +
+      'padding:20px;width:420px;max-height:500px;overflow-y:auto;pointer-events:auto;z-index:300;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);';
+
+    var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+      '<h2 style="color:#DAA520;margin:0;font-size:18px;">Zone Steward — ' + currentZone + '</h2>' +
+      '<button id="steward-close" style="background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.3);' +
+      'border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;">×</button></div>';
+
+    if (zoneSteward) {
+      html += '<div style="background:rgba(218,165,32,0.1);border:1px solid #DAA520;border-radius:8px;padding:12px;margin-bottom:12px;">' +
+        '<div style="color:#DAA520;font-weight:bold;">Current Steward: ' + zoneSteward.playerId + '</div>' +
+        '<div style="color:#888;font-size:12px;">Elected: ' + new Date(zoneSteward.elected_at).toLocaleDateString() + '</div>' +
+        '<div style="color:#888;font-size:12px;">Term ends: ' + new Date(zoneSteward.term_ends).toLocaleDateString() + '</div>';
+      if (zoneSteward.welcomeMessage) {
+        html += '<div style="color:#aaa;font-size:13px;margin-top:8px;font-style:italic;">"' + zoneSteward.welcomeMessage + '"</div>';
+      }
+      html += '</div>';
+    } else {
+      html += '<p style="color:#888;text-align:center;">No steward for this zone.</p>';
+    }
+
+    // Active elections
+    var activeElections = Object.values(elections).filter(function(e) {
+      return e.zone === currentZone && e.status === 'active';
+    });
+
+    if (activeElections.length > 0) {
+      var elec = activeElections[0];
+      html += '<div style="background:rgba(68,170,255,0.1);border:1px solid #4af;border-radius:8px;padding:12px;margin-bottom:12px;">' +
+        '<div style="color:#4af;font-weight:bold;">Active Election</div>' +
+        '<div style="color:#888;font-size:12px;">Candidates: ' + elec.candidates.join(', ') + '</div>' +
+        '<div style="color:#888;font-size:12px;">Votes cast: ' + Object.keys(elec.votes).length + '</div>';
+
+      // Vote buttons
+      html += '<div style="margin-top:8px;">';
+      elec.candidates.forEach(function(c) {
+        html += '<button class="steward-vote-btn" data-election="' + elec.id + '" data-candidate="' + c + '" ' +
+          'style="margin:2px;padding:4px 12px;background:rgba(68,170,255,0.3);color:#4af;border:1px solid #4af;' +
+          'border-radius:4px;cursor:pointer;font-size:12px;">Vote: ' + c + '</button>';
+      });
+      html += '</div></div>';
+    } else {
+      // Start election button
+      html += '<button id="steward-start-election" style="width:100%;padding:10px;background:#DAA520;color:#000;border:none;' +
+        'border-radius:6px;font-weight:bold;cursor:pointer;margin-top:8px;">Start Election for ' + currentZone + '</button>';
+    }
+
+    stewardPanelEl.innerHTML = html;
+    hud.appendChild(stewardPanelEl);
+
+    document.getElementById('steward-close').onclick = hideStewardPanel;
+
+    var startBtn = document.getElementById('steward-start-election');
+    if (startBtn) {
+      startBtn.onclick = function() {
+        if (typeof window !== 'undefined' && window._onElectionStart) {
+          window._onElectionStart({ zone: currentZone });
+        }
+        showNotification('Election started for ' + currentZone + '!', 'success');
+        hideStewardPanel();
+      };
+    }
+
+    var voteBtns = stewardPanelEl.querySelectorAll('.steward-vote-btn');
+    voteBtns.forEach(function(btn) {
+      btn.onclick = function() {
+        var electionId = btn.getAttribute('data-election');
+        var candidate = btn.getAttribute('data-candidate');
+        if (typeof window !== 'undefined' && window._onElectionVote) {
+          window._onElectionVote({ electionId: electionId, candidate: candidate });
+        }
+        showNotification('Voted for ' + candidate, 'success');
+        hideStewardPanel();
+      };
+    });
+  }
+
+  function hideStewardPanel() {
+    if (stewardPanelEl && stewardPanelEl.parentNode) {
+      stewardPanelEl.parentNode.removeChild(stewardPanelEl);
+      stewardPanelEl = null;
+    }
+  }
+
+  exports.showStewardPanel = showStewardPanel;
+  exports.hideStewardPanel = hideStewardPanel;
+
+  // =============================================================================
+  // FEDERATION PORTAL — PROPOSE + VISUAL STATUS
+  // =============================================================================
+
+  function showFederationProposal() {
+    if (typeof document === 'undefined') return;
+
+    var overlay = document.createElement('div');
+    overlay.id = 'federation-proposal';
+    overlay.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #a855f7;border-radius:12px;' +
+      'padding:20px;width:400px;pointer-events:auto;z-index:300;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);';
+
+    overlay.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+      '<h2 style="color:#a855f7;margin:0;font-size:18px;">Propose Federation</h2>' +
+      '<button id="fed-close" style="background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.3);' +
+      'border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;">×</button></div>' +
+      '<p style="color:#aaa;font-size:13px;margin-bottom:12px;">Link another ZION world instance via the Rift Portal in the Nexus.</p>' +
+      '<input id="fed-name" placeholder="Federation name..." style="width:100%;padding:8px;background:rgba(0,0,0,0.5);' +
+      'border:1px solid #555;border-radius:4px;color:#fff;font-size:13px;margin-bottom:8px;box-sizing:border-box;" />' +
+      '<input id="fed-endpoint" placeholder="Endpoint URL (e.g. https://...)" style="width:100%;padding:8px;background:rgba(0,0,0,0.5);' +
+      'border:1px solid #555;border-radius:4px;color:#fff;font-size:13px;margin-bottom:12px;box-sizing:border-box;" />' +
+      '<button id="fed-submit" style="width:100%;padding:10px;background:#a855f7;color:#fff;border:none;border-radius:6px;' +
+      'font-weight:bold;cursor:pointer;">Propose Federation</button>';
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('fed-close').onclick = function() { overlay.parentNode.removeChild(overlay); };
+    document.getElementById('fed-submit').onclick = function() {
+      var name = document.getElementById('fed-name').value.trim();
+      var endpoint = document.getElementById('fed-endpoint').value.trim();
+      if (!name || !endpoint) { showNotification('Fill in all fields', 'warning'); return; }
+      if (typeof window !== 'undefined' && window._onFederationPropose) {
+        window._onFederationPropose({ name: name, endpoint: endpoint });
+      }
+      showNotification('Federation "' + name + '" proposed!', 'success');
+      overlay.parentNode.removeChild(overlay);
+    };
+  }
+
+  exports.showFederationProposal = showFederationProposal;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));

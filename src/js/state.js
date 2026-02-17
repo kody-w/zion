@@ -309,8 +309,31 @@
             trade.status = 'accepted';
             trade.completed_at = timestamp;
             // Exchange items between players
-            if (newState.players[trade.from] && newState.players[trade.to]) {
-              // This is simplified - real implementation would transfer items
+            var sender = newState.players[trade.from];
+            var recipient = newState.players[trade.to];
+            if (sender && recipient) {
+              if (!sender.inventory) sender.inventory = [];
+              if (!recipient.inventory) recipient.inventory = [];
+              // Move offered items from sender to recipient
+              if (trade.offered && trade.offered.length > 0) {
+                trade.offered.forEach(function(item) {
+                  var idx = sender.inventory.findIndex(function(inv) { return inv.type === item.type; });
+                  if (idx !== -1) {
+                    sender.inventory.splice(idx, 1);
+                    recipient.inventory.push(item);
+                  }
+                });
+              }
+              // Move requested items from recipient to sender
+              if (trade.requested && trade.requested.length > 0) {
+                trade.requested.forEach(function(item) {
+                  var idx = recipient.inventory.findIndex(function(inv) { return inv.type === item.type; });
+                  if (idx !== -1) {
+                    recipient.inventory.splice(idx, 1);
+                    sender.inventory.push(item);
+                  }
+                });
+              }
             }
           }
         }
@@ -327,22 +350,69 @@
         break;
 
       case 'buy':
-        // Market buy operation - would integrate with economy ledger
+        // Market buy — find listing, transfer Spark, transfer item
+        var buyActionId = 'buy_' + timestamp + '_' + from;
+        var listing = (newState.economy.listings || []).find(function(l) { return l.id === payload.listingId && l.active; });
+        if (listing) {
+          var buyerBal = (newState.economy.balances[from] || 0);
+          if (buyerBal >= listing.price) {
+            // Transfer Spark: buyer pays, seller receives
+            newState.economy.balances[from] = (newState.economy.balances[from] || 0) - listing.price;
+            newState.economy.balances[listing.seller] = (newState.economy.balances[listing.seller] || 0) + listing.price;
+            listing.active = false;
+            listing.sold_to = from;
+            listing.sold_at = timestamp;
+            // Transfer item to buyer's inventory
+            if (newState.players[from]) {
+              if (!newState.players[from].inventory) newState.players[from].inventory = [];
+              newState.players[from].inventory.push({
+                type: listing.itemType || listing.item,
+                purchased_at: timestamp,
+                data: listing.data || {}
+              });
+            }
+            // Record transaction
+            newState.economy.transactions.push({
+              id: buyActionId,
+              type: 'buy',
+              from: from,
+              to: listing.seller,
+              amount: listing.price,
+              item: listing.itemType || listing.item,
+              ts: timestamp
+            });
+          }
+        }
         newState.actions.push({
-          id: `buy_${timestamp}_${from}`,
+          id: buyActionId,
           type: 'buy',
           buyer: from,
           listingId: payload.listingId,
+          success: !!listing,
           ts: timestamp
         });
         break;
 
       case 'sell':
-        // Market sell operation - would integrate with economy ledger
+        // Market sell — create listing from player's item
+        var sellActionId = 'sell_' + timestamp + '_' + from;
+        var listingId = 'listing_' + timestamp + '_' + from;
+        if (!newState.economy.listings) newState.economy.listings = [];
+        newState.economy.listings.push({
+          id: listingId,
+          seller: from,
+          item: payload.item,
+          itemType: payload.item && payload.item.type ? payload.item.type : payload.item,
+          price: payload.price || 0,
+          active: true,
+          data: payload.data || {},
+          ts: timestamp
+        });
         newState.actions.push({
-          id: `sell_${timestamp}_${from}`,
+          id: sellActionId,
           type: 'sell',
           seller: from,
+          listingId: listingId,
           item: payload.item,
           price: payload.price,
           ts: timestamp
@@ -557,6 +627,110 @@
             ts: timestamp
           };
         }
+        break;
+
+      case 'election_start':
+        if (!newState.elections) newState.elections = {};
+        var electionId = 'election_' + timestamp + '_' + (payload.zone || 'nexus');
+        newState.elections[electionId] = {
+          id: electionId,
+          zone: payload.zone,
+          started_by: from,
+          candidates: [from],
+          votes: {},
+          started_at: timestamp,
+          ends_at: timestamp + (30 * 24 * 60 * 60 * 1000), // 30-day term
+          status: 'active'
+        };
+        break;
+
+      case 'election_vote':
+        if (newState.elections && payload.electionId) {
+          var election = newState.elections[payload.electionId];
+          if (election && election.status === 'active') {
+            election.votes[from] = payload.candidate;
+            if (payload.candidate && election.candidates.indexOf(payload.candidate) === -1) {
+              election.candidates.push(payload.candidate);
+            }
+          }
+        }
+        break;
+
+      case 'election_finalize':
+        if (newState.elections && payload.electionId) {
+          var elecFinal = newState.elections[payload.electionId];
+          if (elecFinal && elecFinal.status === 'active') {
+            // Count votes
+            var voteCounts = {};
+            Object.values(elecFinal.votes).forEach(function(candidate) {
+              voteCounts[candidate] = (voteCounts[candidate] || 0) + 1;
+            });
+            var winner = null;
+            var maxVotes = 0;
+            Object.keys(voteCounts).forEach(function(c) {
+              if (voteCounts[c] > maxVotes) { maxVotes = voteCounts[c]; winner = c; }
+            });
+            elecFinal.status = 'complete';
+            elecFinal.winner = winner;
+            elecFinal.completed_at = timestamp;
+            // Set steward for the zone
+            if (!newState.stewards) newState.stewards = {};
+            if (winner) {
+              newState.stewards[elecFinal.zone] = {
+                playerId: winner,
+                zone: elecFinal.zone,
+                elected_at: timestamp,
+                term_ends: timestamp + (30 * 24 * 60 * 60 * 1000)
+              };
+            }
+          }
+        }
+        break;
+
+      case 'steward_set_welcome':
+        if (!newState.stewards) newState.stewards = {};
+        var steward = newState.stewards[payload.zone];
+        if (steward && steward.playerId === from) {
+          steward.welcomeMessage = payload.message;
+        }
+        break;
+
+      case 'steward_set_policy':
+        if (!newState.stewards) newState.stewards = {};
+        var stewardPolicy = newState.stewards[payload.zone];
+        if (stewardPolicy && stewardPolicy.playerId === from) {
+          stewardPolicy.policy = payload.policy;
+        }
+        break;
+
+      case 'steward_moderate':
+        if (!newState.stewards) newState.stewards = {};
+        var stewardMod = newState.stewards[payload.zone];
+        if (stewardMod && stewardMod.playerId === from) {
+          newState.actions.push({
+            id: 'moderate_' + timestamp + '_' + from,
+            type: 'moderation',
+            steward: from,
+            zone: payload.zone,
+            target: payload.target,
+            action: payload.action,
+            reason: payload.reason,
+            ts: timestamp
+          });
+        }
+        break;
+
+      case 'sim_crm_action':
+        // Route simulation actions to state for peer visibility
+        if (!newState.simulations) newState.simulations = {};
+        if (!newState.simulations.crm) newState.simulations.crm = { actions: [] };
+        newState.simulations.crm.actions.push({
+          id: 'sim_' + timestamp + '_' + from,
+          from: from,
+          action: payload.action,
+          data: payload.data || {},
+          ts: timestamp
+        });
         break;
 
       default:

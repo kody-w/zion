@@ -368,15 +368,139 @@
   }
 
   // Check race progress
-  function checkRaceProgress(competitionId, playerId, position) {
-    // This function would be called in the game loop to check if player reached a checkpoint
-    // Returns updated progress information
+  // state must be passed so the race record (with checkpoints and progress) can be looked up
+  function checkRaceProgress(competitionId, playerId, position, state) {
+    var CHECKPOINT_RADIUS = 5; // units — player must be within this distance to trigger a checkpoint
+
+    // Guard: need state to look up the race
+    if (!state || !state.competitions) {
+      return { checkpointHit: false, finished: false, currentCheckpoint: 0, time: 0 };
+    }
+
+    // Find the race
+    var race = null;
+    for (var i = 0; i < state.competitions.length; i++) {
+      if (state.competitions[i].id === competitionId && state.competitions[i].type === 'race') {
+        race = state.competitions[i];
+        break;
+      }
+    }
+
+    if (!race) {
+      return { checkpointHit: false, finished: false, currentCheckpoint: 0, time: 0 };
+    }
+
+    // Race must be active
+    if (race.status !== 'active') {
+      return { checkpointHit: false, finished: false, currentCheckpoint: 0, time: 0 };
+    }
+
+    // Player must be a participant
+    if (race.participants.indexOf(playerId) === -1) {
+      return { checkpointHit: false, finished: false, currentCheckpoint: 0, time: 0 };
+    }
+
+    // Ensure checkpoints array exists and is non-empty
+    if (!race.checkpoints || race.checkpoints.length === 0) {
+      return { checkpointHit: false, finished: false, currentCheckpoint: 0, time: 0 };
+    }
+
+    // Initialise player progress record if missing
+    if (!race.progress) {
+      race.progress = {};
+    }
+    if (!race.progress[playerId]) {
+      race.progress[playerId] = {
+        checkpointIndex: 0,  // next checkpoint the player needs to reach
+        startTime: Date.now(),
+        time: 0,
+        finished: false
+      };
+    }
+
+    var playerProgress = race.progress[playerId];
+
+    // If this player already finished, nothing more to do
+    if (playerProgress.finished) {
+      return {
+        checkpointHit: false,
+        finished: true,
+        currentCheckpoint: playerProgress.checkpointIndex,
+        time: playerProgress.time
+      };
+    }
+
+    // The next checkpoint the player must reach (sequential enforcement)
+    var nextIndex = playerProgress.checkpointIndex;
+    if (nextIndex >= race.checkpoints.length) {
+      // Should not happen, but guard anyway
+      return { checkpointHit: false, finished: false, currentCheckpoint: nextIndex, time: playerProgress.time };
+    }
+
+    var target = race.checkpoints[nextIndex];
+
+    // Distance check (3-D Euclidean)
+    var dx = position.x - target.x;
+    var dy = position.y - target.y;
+    var dz = position.z - target.z;
+    var distSquared = dx * dx + dy * dy + dz * dz;
+
+    if (distSquared > CHECKPOINT_RADIUS * CHECKPOINT_RADIUS) {
+      // Not close enough to the next checkpoint yet
+      return {
+        checkpointHit: false,
+        finished: false,
+        currentCheckpoint: nextIndex,
+        time: Date.now() - playerProgress.startTime
+      };
+    }
+
+    // --- Checkpoint hit! ---
+    playerProgress.checkpointIndex = nextIndex + 1;
+    var elapsed = Date.now() - playerProgress.startTime;
+    playerProgress.time = elapsed;
+
+    var finished = false;
+    if (playerProgress.checkpointIndex >= race.checkpoints.length) {
+      // Player has cleared all checkpoints — race complete
+      finished = true;
+      playerProgress.finished = true;
+
+      // Check if all participants have finished
+      var allDone = true;
+      for (var p = 0; p < race.participants.length; p++) {
+        var pid = race.participants[p];
+        if (!race.progress[pid] || !race.progress[pid].finished) {
+          allDone = false;
+          break;
+        }
+      }
+
+      if (allDone) {
+        race.status = 'completed';
+
+        // Determine winner: finished participant with lowest time
+        var bestTime = Infinity;
+        var winner = null;
+        for (var w = 0; w < race.participants.length; w++) {
+          var wid = race.participants[w];
+          if (race.progress[wid] && race.progress[wid].finished) {
+            if (race.progress[wid].time < bestTime) {
+              bestTime = race.progress[wid].time;
+              winner = wid;
+            }
+          }
+        }
+        race.winner = winner;
+        race.endedAt = Date.now();
+      }
+    }
 
     return {
-      checkpointHit: false,
-      finished: false,
-      currentCheckpoint: 0,
-      time: 0
+      checkpointHit: true,
+      finished: finished,
+      currentCheckpoint: playerProgress.checkpointIndex,
+      time: elapsed
     };
   }
 
