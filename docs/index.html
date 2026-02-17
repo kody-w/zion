@@ -47086,7 +47086,11 @@ html, body {
 
     // Initialize network
     if (Network) {
-      const peerId = `zion-${username}-${Date.now()}`;
+      // Host mode: use well-known lobby peer ID so other players auto-connect
+      const urlParams = typeof URLSearchParams !== 'undefined' && typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search) : null;
+      const isHost = urlParams && urlParams.get('host') === 'true';
+      const peerId = isHost ? 'zion-lobby-main' : `zion-${username}-${Date.now()}`;
       Network.initMesh(peerId, {
         onMessage: handleIncomingMessage,
         onPeerConnect: (peerId) => {

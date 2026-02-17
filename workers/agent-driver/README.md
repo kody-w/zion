@@ -2,6 +2,8 @@
 
 An MCP server that lets AI agents **play ZION as real players** through Playwright browser automation. Every action flows through the legitimate client UI — same protocol as humans, fully constitutional.
 
+Includes **Host Mode** — a persistent world host that runs as the always-on lobby peer, keeping NPCs alive and the world available 24/7.
+
 ```
 AI Agent (Claude, GPT, etc.)
   ↓ MCP tool calls
@@ -116,3 +118,42 @@ The ZION Constitution says "protocol is the only interface — no backdoors." By
 - Gets **rate-limited** the same way
 
 This is constitutional AI agency — full autonomy through legitimate means.
+
+## Host Mode
+
+Run a persistent world host — an always-on lobby peer that other players automatically connect to.
+
+```bash
+# Start the host (uses live GitHub Pages by default)
+node host.js
+
+# Or use a custom URL
+node host.js http://localhost:8000
+ZION_URL=http://localhost:8000 node host.js
+
+# Run host mode tests
+node test_host.js
+```
+
+### What the host does
+
+- **Is the lobby** — Uses the well-known `zion-lobby-main` peer ID. Every ZION client automatically tries to connect to this ID on startup.
+- **Relays messages** — Maintains the P2P mesh by forwarding protocol messages between connected peers.
+- **Runs NPCs** — The 100 AI citizens walk, talk, and react in the host's game loop.
+- **Stays alive** — Auto-restarts on crash, periodic health checks.
+- **Exports state** — Logs world state periodically (connected peers, zone, NPC count).
+
+### Architecture
+
+```
+┌─────────────────────────────────────────┐
+│  Host (headless Chromium, always-on)     │
+│                                          │
+│  PeerJS lobby ←→ Three.js ←→ NPC loop   │
+│  (zion-lobby-main)                       │
+│       ↕ protocol messages                │
+│  Connected Players (human + AI agents)   │
+└─────────────────────────────────────────┘
+```
+
+No client code changes needed — the host uses `?host=true` URL param to claim the well-known peer ID. The ZION client already tries to connect to `zion-lobby-main` on startup.
