@@ -149,6 +149,12 @@ def analyze_actions(state_dir):
 def analyze_world(state_dir):
     """Get world vitals."""
     world = load_json(os.path.join(state_dir, 'world.json'))
+    citizens = world.get('citizens', {})
+    # Zone distribution of citizens
+    zone_dist = {}
+    for cid, cdata in citizens.items():
+        z = cdata.get('position', {}).get('zone', 'unknown')
+        zone_dist[z] = zone_dist.get(z, 0) + 1
     return {
         'worldTime': world.get('worldTime', 0),
         'dayPhase': world.get('dayPhase', 'unknown'),
@@ -156,18 +162,74 @@ def analyze_world(state_dir):
         'season': world.get('season', 'unknown'),
         'lastTickAt': world.get('lastTickAt', 0),
         'zones': len(world.get('zones', {})),
-        'citizens': len(world.get('citizens', {})),
+        'citizens': len(citizens),
+        'citizen_zones': zone_dist,
+        'structures': len(world.get('structures', [])),
+        'creations': len(world.get('creations', [])),
     }
 
 
 def analyze_economy(state_dir):
     """Get economy stats."""
     economy = load_json(os.path.join(state_dir, 'economy.json'))
+    txns = economy.get('transactions', [])
+    txn_types = {}
+    for t in txns:
+        tt = t.get('type', 'unknown')
+        txn_types[tt] = txn_types.get(tt, 0) + 1
+    total_spark = sum(economy.get('balances', {}).values())
     return {
         'balances': len(economy.get('balances', {})),
-        'transactions': len(economy.get('transactions', [])),
+        'total_spark': total_spark,
+        'transactions': len(txns),
+        'txn_types': txn_types,
         'listings': len(economy.get('listings', [])),
     }
+
+
+def analyze_players(state_dir):
+    """Get player registry stats."""
+    players = load_json(os.path.join(state_dir, 'players.json'))
+    return {
+        'count': len(players.get('players', {})),
+        'ids': sorted(players.get('players', {}).keys())[:20],
+    }
+
+
+def analyze_discoveries(state_dir):
+    """Get discovery stats."""
+    disc = load_json(os.path.join(state_dir, 'discoveries.json'))
+    entries = disc.get('discoveries', {})
+    zones = set()
+    for d in entries.values():
+        zones.add(d.get('zone', 'unknown'))
+    return {
+        'count': len(entries),
+        'zones': sorted(zones),
+    }
+
+
+def analyze_workflow_failures(state_dir):
+    """Check for recent workflow failures by scanning changes for gaps."""
+    changes = load_json(os.path.join(state_dir, 'changes.json'))
+    entries = changes.get('changes', [])
+    # Look for gaps > 20 min between changes (suggests workflow failures)
+    gaps = []
+    prev_ts = None
+    for entry in entries:
+        ts_str = entry.get('ts', '')
+        try:
+            ts = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+            if prev_ts and (ts - prev_ts).total_seconds() > 1200:
+                gaps.append({
+                    'start': prev_ts.strftime('%H:%M'),
+                    'end': ts.strftime('%H:%M'),
+                    'minutes': int((ts - prev_ts).total_seconds() / 60),
+                })
+            prev_ts = ts
+        except (ValueError, TypeError):
+            pass
+    return gaps[-5:]  # last 5 gaps
 
 
 def get_last_process(state_dir):
@@ -346,10 +408,13 @@ def generate_report(state_dir, yesterday=None):
     actions = analyze_actions(state_dir)
     changes = analyze_changes(state_dir)
     economy = analyze_economy(state_dir)
+    players = analyze_players(state_dir)
+    discoveries = analyze_discoveries(state_dir)
     last_proc = get_last_process(state_dir)
     file_sizes = get_file_sizes(state_dir)
     proc_total, proc_recent = count_processed_messages(state_dir)
     quality = analyze_content_quality(state_dir)
+    gaps = analyze_workflow_failures(state_dir)
 
     # Shortcuts for yesterday comparison
     def ya(key):
@@ -361,7 +426,38 @@ def generate_report(state_dir, yesterday=None):
     lines.append('Generated: %s | Quality Score: **%s/100**' % (time_str, quality['score']))
     lines.append('')
 
-    # Quality Score Breakdown
+    # ═══════════════════════════════════════════
+    # EXECUTIVE SUMMARY — the first thing to read
+    # ═══════════════════════════════════════════
+    lines.append('## Executive Summary')
+    lines.append('')
+    lines.append('| Metric | Today | Trend |')
+    lines.append('|--------|-------|-------|')
+    lines.append('| Quality Score | %s/100 | %s |' % (
+        quality['score'], trend_arrow(quality['score'], ya('qualityScore')).strip() or '—'))
+    lines.append('| Citizens | %d | %s |' % (
+        world['citizens'], trend_arrow(world['citizens'], ya('citizens')).strip() or '—'))
+    lines.append('| Players Registered | %d | %s |' % (
+        players['count'], trend_arrow(players['count'], ya('playerCount')).strip() or '—'))
+    lines.append('| Chat (24h) | %d | %s |' % (
+        chat['recent_count'], trend_arrow(chat['recent_count'], ya('chatRecent')).strip() or '—'))
+    lines.append('| Transactions | %d | %s |' % (
+        economy['transactions'], trend_arrow(economy['transactions'], ya('transactions')).strip() or '—'))
+    lines.append('| Structures | %d | %s |' % (
+        world['structures'], trend_arrow(world['structures'], ya('structures')).strip() or '—'))
+    lines.append('| Creations | %d | %s |' % (
+        world['creations'], trend_arrow(world['creations'], ya('creations')).strip() or '—'))
+    lines.append('| Discoveries | %d | %s |' % (
+        discoveries['count'], trend_arrow(discoveries['count'], ya('discoveryCount')).strip() or '—'))
+    lines.append('| Total Spark | %d | %s |' % (
+        economy['total_spark'], trend_arrow(economy['total_spark'], ya('totalSpark')).strip() or '—'))
+    lines.append('| Inbox Processed (24h) | %d | %s |' % (
+        proc_recent, trend_arrow(proc_recent, ya('processedRecent')).strip() or '—'))
+    lines.append('')
+
+    # ═══════════════════════════════════════════
+    # QUALITY SCORE BREAKDOWN
+    # ═══════════════════════════════════════════
     lines.append('## Quality Score: %s/100' % quality['score'])
     lines.append('')
     lines.append('| Dimension | Score | Detail |')
@@ -383,7 +479,9 @@ def generate_report(state_dir, yesterday=None):
         lines.append('Zones not yet visited: %s' % ', '.join(quality['zones_missing']))
     lines.append('')
 
-    # World Vitals
+    # ═══════════════════════════════════════════
+    # WORLD VITALS
+    # ═══════════════════════════════════════════
     lines.append('## World Vitals')
     lines.append('')
     lines.append('| Metric | Value |')
@@ -394,8 +492,10 @@ def generate_report(state_dir, yesterday=None):
     lines.append('| Weather | %s |' % world['weather'])
     lines.append('| Season | %s |' % world['season'])
     lines.append('| Zones | %d |' % world['zones'])
-    lines.append('| Active Citizens | %d%s |' % (
+    lines.append('| Citizens | %d%s |' % (
         world['citizens'], trend_arrow(world['citizens'], ya('citizens'))))
+    lines.append('| Structures | %d |' % world['structures'])
+    lines.append('| Creations | %d |' % world['creations'])
     tick_age = 'never'
     if world['lastTickAt']:
         age_sec = now.timestamp() - world['lastTickAt']
@@ -408,25 +508,65 @@ def generate_report(state_dir, yesterday=None):
     lines.append('| Last Tick | %s |' % tick_age)
     lines.append('')
 
-    # Agent Activity
-    lines.append('## Agent Activity')
+    # Citizen zone distribution
+    if world['citizen_zones']:
+        lines.append('**Citizen Distribution:**')
+        for z in sorted(world['citizen_zones'].keys()):
+            lines.append('- %s: %d citizens' % (z, world['citizen_zones'][z]))
+        lines.append('')
+
+    # ═══════════════════════════════════════════
+    # ECONOMY
+    # ═══════════════════════════════════════════
+    lines.append('## Economy')
     lines.append('')
-    lines.append('- **%d** actions in queue%s' % (
-        actions['total'], trend_arrow(actions['total'], ya('actionCount'))))
-    lines.append('- **%d** unique agents active%s' % (
-        actions['unique_agents'], trend_arrow(actions['unique_agents'], ya('uniqueAgents'))))
-    if actions['by_type']:
-        lines.append('- Action types: %s' % ', '.join(
-            '%s (%d)' % (t, c) for t, c in sorted(actions['by_type'].items(), key=lambda x: -x[1])[:10]
+    lines.append('| Metric | Value |')
+    lines.append('|--------|-------|')
+    lines.append('| Accounts | %d |' % economy['balances'])
+    lines.append('| Total Spark | %d |' % economy['total_spark'])
+    lines.append('| Transactions | %d |' % economy['transactions'])
+    lines.append('| Market Listings | %d |' % economy['listings'])
+    lines.append('')
+    if economy['txn_types']:
+        lines.append('**Transaction Breakdown:**')
+        for t, c in sorted(economy['txn_types'].items(), key=lambda x: -x[1]):
+            lines.append('- %s: %d' % (t, c))
+        lines.append('')
+
+    # ═══════════════════════════════════════════
+    # PLAYERS & DISCOVERIES
+    # ═══════════════════════════════════════════
+    lines.append('## Players & Discoveries')
+    lines.append('')
+    lines.append('- **%d** registered players' % players['count'])
+    if players['ids']:
+        lines.append('- Recent: %s' % ', '.join(players['ids'][:10]))
+    lines.append('- **%d** discoveries across %d zones' % (
+        discoveries['count'], len(discoveries['zones'])))
+    lines.append('')
+
+    # ═══════════════════════════════════════════
+    # AGENT ACTIVITY
+    # ═══════════════════════════════════════════
+    lines.append('## Agent Activity (Last 24h)')
+    lines.append('')
+    lines.append('- **%d** changes recorded%s' % (
+        changes['recent'], trend_arrow(changes['recent'], ya('changeRecent'))))
+    lines.append('- **%d** unique agents acted' % len(changes['by_agent']))
+    if changes['by_type']:
+        lines.append('- Action breakdown: %s' % ', '.join(
+            '%s (%d)' % (t, c) for t, c in sorted(changes['by_type'].items(), key=lambda x: -x[1])[:10]
         ))
-    if actions['by_agent']:
-        top_agents = sorted(actions['by_agent'].items(), key=lambda x: -x[1])[:5]
-        lines.append('- Top agents: %s' % ', '.join(
+    if changes['by_agent']:
+        top_agents = sorted(changes['by_agent'].items(), key=lambda x: -x[1])[:5]
+        lines.append('- Most active: %s' % ', '.join(
             '%s (%d)' % (a, c) for a, c in top_agents
         ))
     lines.append('')
 
-    # Chat
+    # ═══════════════════════════════════════════
+    # CHAT ACTIVITY
+    # ═══════════════════════════════════════════
     lines.append('## Chat Activity')
     lines.append('')
     lines.append('- **%d** total messages, **%d** in last 24h%s' % (
@@ -442,18 +582,9 @@ def generate_report(state_dir, yesterday=None):
             lines.append('- **%s** in %s: %s' % (sender, zone, text))
     lines.append('')
 
-    # Changes (last 24h)
-    lines.append('## Changes (Last 24h)')
-    lines.append('')
-    lines.append('- **%d** changes recorded%s (%d total all-time)' % (
-        changes['recent'], trend_arrow(changes['recent'], ya('changeRecent')), changes['total']))
-    if changes['by_type']:
-        lines.append('- By type: %s' % ', '.join(
-            '%s (%d)' % (t, c) for t, c in sorted(changes['by_type'].items(), key=lambda x: -x[1])
-        ))
-    lines.append('')
-
-    # Inbox Processing
+    # ═══════════════════════════════════════════
+    # INBOX PROCESSING
+    # ═══════════════════════════════════════════
     lines.append('## Inbox Processing')
     lines.append('')
     lines.append('- **%d** messages processed (last 24h), **%d** total in archive' % (proc_recent, proc_total))
@@ -465,15 +596,21 @@ def generate_report(state_dir, yesterday=None):
             lines.append('- ⚠️ **Errors**: %s' % '; '.join(last_proc['errors']))
     lines.append('')
 
-    # Economy
-    lines.append('## Economy')
-    lines.append('')
-    lines.append('- Balances tracked: %d' % economy['balances'])
-    lines.append('- Transactions: %d' % economy['transactions'])
-    lines.append('- Market listings: %d' % economy['listings'])
-    lines.append('')
+    # ═══════════════════════════════════════════
+    # PIPELINE GAPS (workflow failures / idle periods)
+    # ═══════════════════════════════════════════
+    if gaps:
+        lines.append('## Pipeline Gaps')
+        lines.append('')
+        lines.append('Activity gaps >20 minutes (possible workflow failures):')
+        lines.append('')
+        for gap in gaps:
+            lines.append('- %s → %s (%d min gap)' % (gap['start'], gap['end'], gap['minutes']))
+        lines.append('')
 
-    # State File Sizes
+    # ═══════════════════════════════════════════
+    # STATE FILE SIZES
+    # ═══════════════════════════════════════════
     lines.append('## State File Sizes')
     lines.append('')
     lines.append('| File | Size |')
@@ -487,12 +624,14 @@ def generate_report(state_dir, yesterday=None):
         format_bytes(total_size), trend_arrow(total_size, ya('stateSize'))))
     lines.append('')
 
-    # Health Checklist
+    # ═══════════════════════════════════════════
+    # HEALTH CHECKLIST
+    # ═══════════════════════════════════════════
     lines.append('## Health Checklist')
     lines.append('')
     checks = []
     check_pass = 0
-    check_total = 6
+    check_total = 9
     # World time advancing?
     if world['worldTime'] > 0:
         checks.append('✅ worldTime advancing (%.0f)' % world['worldTime'])
@@ -512,11 +651,29 @@ def generate_report(state_dir, yesterday=None):
     else:
         checks.append('⚠️ No chat messages in 24h')
     # Agents active?
-    if actions['unique_agents'] > 0:
-        checks.append('✅ Agents active (%d unique)' % actions['unique_agents'])
+    if changes['recent'] > 0:
+        checks.append('✅ Agents producing changes (%d today)' % changes['recent'])
         check_pass += 1
     else:
-        checks.append('⚠️ No agent activity')
+        checks.append('⚠️ No agent changes in 24h')
+    # Players registering?
+    if players['count'] > 0:
+        checks.append('✅ Players registered (%d)' % players['count'])
+        check_pass += 1
+    else:
+        checks.append('⚠️ No players in registry')
+    # Economy active?
+    if economy['transactions'] > 0:
+        checks.append('✅ Economy active (%d transactions)' % economy['transactions'])
+        check_pass += 1
+    else:
+        checks.append('⚠️ No economy transactions')
+    # Inbox flowing?
+    if proc_recent > 0:
+        checks.append('✅ Inbox processing (%d in 24h)' % proc_recent)
+        check_pass += 1
+    else:
+        checks.append('⚠️ No inbox messages processed in 24h')
     # No errors?
     if not last_proc.get('errors'):
         checks.append('✅ No processing errors')
@@ -536,22 +693,86 @@ def generate_report(state_dir, yesterday=None):
     lines.append('Health: **%d/%d** checks passing' % (check_pass, check_total))
     lines.append('')
 
+    # ═══════════════════════════════════════════
+    # ACTION ITEMS — the morning to-do list
+    # ═══════════════════════════════════════════
+    lines.append('## Action Items')
+    lines.append('')
+    items = []
+    if quality['score'] < 50:
+        items.append('🔴 **Quality score critically low (%s)** — investigate root cause' % quality['score'])
+    elif quality['score'] < 75:
+        items.append('🟡 **Quality score below target (%s/100)** — review dimension breakdown above' % quality['score'])
+    if quality['zone_coverage'] < 75:
+        items.append('🟡 **Low zone coverage (%s%%)** — agents only visiting %d/8 zones. Missing: %s' % (
+            quality['zone_coverage'], len(quality['zones_seen']),
+            ', '.join(quality['zones_missing'])))
+    if quality['action_diversity'] < 50:
+        items.append('🟡 **Low action diversity (%s%%)** — only %d action types active' % (
+            quality['action_diversity'], len(quality['action_types'])))
+    if quality['agent_diversity'] < 50:
+        items.append('🟡 **Low agent diversity (%s%%)** — only %d unique agents' % (
+            quality['agent_diversity'], quality['unique_agents']))
+    if quality['text_uniqueness'] < 60:
+        items.append('🟡 **Chat getting repetitive (%s%% unique)** — agents recycling same phrases' % (
+            quality['text_uniqueness']))
+    if economy['transactions'] == 0:
+        items.append('🟡 **Economy has zero transactions** — craft/harvest/trade handlers may not be firing')
+    if players['count'] == 0:
+        items.append('🟡 **No registered players** — agent join messages may not be flowing')
+    if world['structures'] == 0 and changes['recent'] > 0:
+        items.append('🟡 **No structures built** — build handler may not be working')
+    if gaps:
+        items.append('🟡 **%d pipeline gaps detected** — check workflow run history for failures' % len(gaps))
+    if last_proc.get('errors'):
+        items.append('🔴 **Inbox processing errors** — %s' % '; '.join(last_proc['errors'][:3]))
+    if world['lastTickAt'] and (now.timestamp() - world['lastTickAt']) > 600:
+        items.append('🔴 **Game tick stale** — last tick %.0f min ago' % (
+            (now.timestamp() - world['lastTickAt']) / 60))
+    if total_size > 3_000_000:
+        items.append('🟡 **State growing large (%s)** — review hygiene caps' % format_bytes(total_size))
+
+    # Positive signals
+    if yesterday:
+        prev_score = ya('qualityScore')
+        if prev_score is not None and quality['score'] > prev_score:
+            items.append('🟢 **Quality improving** — score up from %s to %s' % (
+                prev_score, quality['score']))
+        prev_citizens = ya('citizens') or 0
+        if world['citizens'] > prev_citizens:
+            items.append('🟢 **World growing** — citizens up from %s to %d' % (
+                prev_citizens, world['citizens']))
+
+    if not items:
+        items.append('🟢 **All systems healthy** — no action needed')
+
+    for item in items:
+        lines.append('- %s' % item)
+    lines.append('')
+
     # Build today's metrics for persistence
     metrics = {
         'date': date_str,
         'ts': now.isoformat(),
+        'qualityScore': quality['score'],
         'worldTime': world['worldTime'],
         'citizens': world['citizens'],
+        'structures': world['structures'],
+        'creations': world['creations'],
+        'playerCount': players['count'],
+        'discoveryCount': discoveries['count'],
         'chatTotal': chat['total'],
         'chatRecent': chat['recent_count'],
         'actionCount': actions['total'],
         'uniqueAgents': actions['unique_agents'],
         'changeTotal': changes['total'],
         'changeRecent': changes['recent'],
+        'transactions': economy['transactions'],
+        'totalSpark': economy['total_spark'],
+        'listings': economy['listings'],
         'processedRecent': proc_recent,
         'errorCount': len(last_proc.get('errors', [])),
         'stateSize': total_size,
-        'qualityScore': quality['score'],
         'zone_coverage': quality['zone_coverage'],
         'action_diversity': quality['action_diversity'],
         'agent_diversity': quality['agent_diversity'],
