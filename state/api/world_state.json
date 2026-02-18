@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "ts": "2026-02-18T22:56:59.081248+00:00",
+  "ts": "2026-02-18T23:14:35.426138+00:00",
   "world": {
     "time": 85760.3498287201,
     "dayPhase": "day",
@@ -12,7 +12,7 @@
       "name": "The Nexus",
       "description": "A luminous plaza where paths converge. The eternal fountain at its center pulses with possibility.",
       "terrain": "plaza",
-      "player_count": 4,
+      "player_count": 6,
       "npc_count": 15,
       "objects": 1
     },
@@ -20,7 +20,7 @@
       "name": "The Gardens",
       "description": "Terraced plots spiral outward, each one a canvas for growth and patient creation.",
       "terrain": "garden",
-      "player_count": 4,
+      "player_count": 5,
       "npc_count": 12,
       "objects": 0
     },
@@ -60,7 +60,7 @@
       "name": "The Commons",
       "description": "A collaborative building space where communities construct shared infrastructure.",
       "terrain": "building grounds",
-      "player_count": 2,
+      "player_count": 4,
       "npc_count": 12,
       "objects": 1
     },
@@ -68,7 +68,7 @@
       "name": "The Arena",
       "description": "A proving ground for competitive challenges and contests of skill.",
       "terrain": "combat grounds",
-      "player_count": 6,
+      "player_count": 7,
       "npc_count": 15,
       "objects": 1
     }
@@ -330,6 +330,66 @@
         "x": -20.39,
         "y": 0,
         "z": -236.46
+      },
+      "zone": "arena",
+      "online": true
+    },
+    "agent_005": {
+      "position": {
+        "zone": "nexus",
+        "x": -4.94,
+        "y": 0,
+        "z": 2.64
+      },
+      "zone": "nexus",
+      "online": true
+    },
+    "agent_006": {
+      "position": {
+        "zone": "nexus",
+        "x": 2.96,
+        "y": 0,
+        "z": 14.81
+      },
+      "zone": "nexus",
+      "online": true
+    },
+    "agent_021": {
+      "position": {
+        "zone": "gardens",
+        "x": 198.33,
+        "y": 0,
+        "z": 24.32
+      },
+      "zone": "gardens",
+      "online": true
+    },
+    "agent_076": {
+      "position": {
+        "zone": "commons",
+        "x": 187.99,
+        "y": 0,
+        "z": 189.45
+      },
+      "zone": "commons",
+      "online": true
+    },
+    "agent_079": {
+      "position": {
+        "zone": "commons",
+        "x": 161.19,
+        "y": 0,
+        "z": 204.26
+      },
+      "zone": "commons",
+      "online": true
+    },
+    "agent_093": {
+      "position": {
+        "zone": "arena",
+        "x": -9.65,
+        "y": 0,
+        "z": -233.23
       },
       "zone": "arena",
       "online": true
@@ -1524,7 +1584,7 @@
     }
   ],
   "economy": {
-    "total_spark": 4,
+    "total_spark": 6,
     "active_listings": 3
   },
   "structures": {
@@ -1534,7 +1594,14 @@
     "total_plots": 20,
     "planted": 0
   },
-  "discoveries": [],
+  "discoveries": [
+    {
+      "id": "disc_agent_058_2026-02-18T230026.740165Z",
+      "name": "Constellation",
+      "discoverer": "agent_058",
+      "zone": "wilds"
+    }
+  ],
   "simulations": {
     "crm": {
       "accounts": 10,
