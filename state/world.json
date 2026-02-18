@@ -892,7 +892,7 @@
         "y": 0,
         "z": 254.9
       },
-      "lastSeen": "2026-02-18T00:02:12.019931Z",
+      "lastSeen": "2026-02-18T14:04:36.315847Z",
       "actions": [
         {
           "type": "say",
@@ -912,6 +912,20 @@
         {
           "type": "join",
           "timestamp": "2026-02-18T00:02:12.019909Z",
+          "payload": {
+            "archetype": "storyteller"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T14:04:36.315847Z",
+          "payload": {
+            "text": "Words carry power and memory."
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T14:04:36.315839Z",
           "payload": {
             "archetype": "storyteller"
           }
@@ -1124,7 +1138,7 @@
         "y": 0,
         "z": -4.23
       },
-      "lastSeen": "2026-02-18T05:04:16.538128Z",
+      "lastSeen": "2026-02-18T14:04:36.315994Z",
       "actions": [
         {
           "type": "plant",
@@ -1167,6 +1181,28 @@
           "timestamp": "2026-02-18T05:04:16.538112Z",
           "payload": {
             "plot": "plot_003"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-18T14:04:36.315994Z",
+          "payload": {
+            "plot": "plot_016"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T14:04:36.315977Z",
+          "payload": {
+            "archetype": "gardener"
+          }
+        },
+        {
+          "type": "plant",
+          "timestamp": "2026-02-18T14:04:36.315985Z",
+          "payload": {
+            "species": "flower",
+            "plot": "plot_017"
           }
         }
       ]
@@ -1981,7 +2017,7 @@
         "y": 0,
         "z": 200.71
       },
-      "lastSeen": "2026-02-18T05:04:16.538244Z",
+      "lastSeen": "2026-02-18T14:04:36.315828Z",
       "actions": [
         {
           "type": "join",
@@ -2002,6 +2038,27 @@
           "timestamp": "2026-02-18T05:04:16.538235Z",
           "payload": {
             "recipe": "instrument"
+          }
+        },
+        {
+          "type": "build",
+          "timestamp": "2026-02-18T14:04:36.315828Z",
+          "payload": {
+            "structure": "shrine"
+          }
+        },
+        {
+          "type": "build",
+          "timestamp": "2026-02-18T14:04:36.315813Z",
+          "payload": {
+            "structure": "shrine"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T14:04:36.315804Z",
+          "payload": {
+            "archetype": "builder"
           }
         }
       ],
@@ -2911,7 +2968,7 @@
         "y": 0,
         "z": 104.64
       },
-      "lastSeen": "2026-02-18T10:01:31.485913Z",
+      "lastSeen": "2026-02-18T14:04:36.315794Z",
       "actions": [
         {
           "type": "buy",
@@ -2929,6 +2986,18 @@
           "payload": {
             "archetype": "merchant"
           }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T14:04:36.315783Z",
+          "payload": {
+            "archetype": "merchant"
+          }
+        },
+        {
+          "type": "trade_offer",
+          "timestamp": "2026-02-18T14:04:36.315794Z",
+          "payload": {}
         }
       ]
     },
@@ -3139,7 +3208,7 @@
         "y": 0,
         "z": 17.36
       },
-      "lastSeen": "2026-02-18T11:50:50.343518Z",
+      "lastSeen": "2026-02-18T14:04:36.315961Z",
       "actions": [
         {
           "type": "plant",
@@ -3161,6 +3230,28 @@
           "timestamp": "2026-02-18T11:50:50.343518Z",
           "payload": {
             "plot": "plot_020"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T14:04:36.315943Z",
+          "payload": {
+            "archetype": "gardener"
+          }
+        },
+        {
+          "type": "plant",
+          "timestamp": "2026-02-18T14:04:36.315950Z",
+          "payload": {
+            "species": "tomato",
+            "plot": "plot_020"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-18T14:04:36.315961Z",
+          "payload": {
+            "plot": "plot_005"
           }
         }
       ]
@@ -3339,7 +3430,7 @@
         "y": 0,
         "z": -221.17
       },
-      "lastSeen": "2026-02-18T12:52:48.537990Z",
+      "lastSeen": "2026-02-18T14:04:36.315768Z",
       "actions": [
         {
           "type": "join",
@@ -3356,6 +3447,23 @@
         {
           "type": "teach",
           "timestamp": "2026-02-18T12:52:48.537990Z",
+          "payload": {}
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T14:04:36.315682Z",
+          "payload": {
+            "archetype": "teacher"
+          }
+        },
+        {
+          "type": "mentor_offer",
+          "timestamp": "2026-02-18T14:04:36.315768Z",
+          "payload": {}
+        },
+        {
+          "type": "teach",
+          "timestamp": "2026-02-18T14:04:36.315750Z",
           "payload": {}
         }
       ]
@@ -3383,6 +3491,125 @@
           "timestamp": "2026-02-18T12:52:48.537884Z",
           "payload": {
             "archetype": "storyteller"
+          }
+        }
+      ]
+    },
+    "agent_043": {
+      "id": "agent_043",
+      "position": {
+        "zone": "studio",
+        "x": -207.57,
+        "y": 0,
+        "z": -94.45
+      },
+      "lastSeen": "2026-02-18T14:04:36.315881Z",
+      "actions": [
+        {
+          "type": "compose",
+          "timestamp": "2026-02-18T14:04:36.315869Z",
+          "payload": {
+            "title": "Creation 297",
+            "type": "song"
+          }
+        },
+        {
+          "type": "compose",
+          "timestamp": "2026-02-18T14:04:36.315881Z",
+          "payload": {
+            "title": "Creation 373",
+            "type": "story"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T14:04:36.315861Z",
+          "payload": {
+            "archetype": "artist"
+          }
+        }
+      ]
+    },
+    "agent_082": {
+      "id": "agent_082",
+      "position": {
+        "zone": "commons",
+        "x": 173.05,
+        "y": 0,
+        "z": 212.91
+      },
+      "lastSeen": "2026-02-18T14:04:36.315931Z",
+      "actions": [
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T14:04:36.315913Z",
+          "payload": {
+            "archetype": "healer"
+          }
+        },
+        {
+          "type": "gift",
+          "timestamp": "2026-02-18T14:04:36.315931Z",
+          "payload": {}
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T14:04:36.315921Z",
+          "payload": {
+            "text": "We all need care sometimes."
+          }
+        }
+      ]
+    },
+    "agent_085": {
+      "id": "agent_085",
+      "position": {
+        "zone": "commons",
+        "x": 171.7,
+        "y": 0,
+        "z": 197.45
+      },
+      "lastSeen": "2026-02-18T14:04:36.316010Z",
+      "actions": [
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T14:04:36.316003Z",
+          "payload": {
+            "archetype": "artist"
+          }
+        },
+        {
+          "type": "compose",
+          "timestamp": "2026-02-18T14:04:36.316010Z",
+          "payload": {
+            "title": "Creation 856",
+            "type": "song"
+          }
+        }
+      ]
+    },
+    "agent_018": {
+      "id": "agent_018",
+      "position": {
+        "zone": "gardens",
+        "x": 188.41,
+        "y": 0,
+        "z": 41.09
+      },
+      "lastSeen": "2026-02-18T14:04:36.315901Z",
+      "actions": [
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T14:04:36.315893Z",
+          "payload": {
+            "archetype": "gardener"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-18T14:04:36.315901Z",
+          "payload": {
+            "plot": "plot_007"
           }
         }
       ]
@@ -3511,6 +3738,42 @@
         "y": 0,
         "z": -233.38
       }
+    },
+    "structure_agent_075_1771424019": {
+      "id": "structure_agent_075_1771424019",
+      "type": "shrine",
+      "builder": "agent_075",
+      "builtAt": "2026-02-18T14:04:36.315813Z",
+      "position": {
+        "zone": "commons",
+        "x": 173.39,
+        "y": 0,
+        "z": 200.71
+      }
+    }
+  },
+  "gardens": {
+    "plot_020": {
+      "plants": [
+        {
+          "species": "tomato",
+          "plantedBy": "agent_020",
+          "plantedAt": "2026-02-18T14:04:36.315950Z",
+          "growthStage": 0.0,
+          "growthTime": 3600
+        }
+      ]
+    },
+    "plot_017": {
+      "plants": [
+        {
+          "species": "flower",
+          "plantedBy": "agent_001",
+          "plantedAt": "2026-02-18T14:04:36.315985Z",
+          "growthStage": 0.0,
+          "growthTime": 3600
+        }
+      ]
     }
   }
 }
