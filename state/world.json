@@ -372,7 +372,7 @@
         "y": 0,
         "z": 197.6
       },
-      "lastSeen": "2026-02-17T23:40:20.457495Z",
+      "lastSeen": "2026-02-18T05:04:16.538145Z",
       "actions": [
         {
           "type": "craft",
@@ -393,6 +393,20 @@
           "timestamp": "2026-02-17T23:40:20.457479Z",
           "payload": {
             "archetype": "builder"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T05:04:16.538138Z",
+          "payload": {
+            "archetype": "builder"
+          }
+        },
+        {
+          "type": "build",
+          "timestamp": "2026-02-18T05:04:16.538145Z",
+          "payload": {
+            "structure": "shrine"
           }
         }
       ],
@@ -725,7 +739,7 @@
         "y": 0,
         "z": 16.5
       },
-      "lastSeen": "2026-02-18T00:02:12.019797Z",
+      "lastSeen": "2026-02-18T05:04:16.538025Z",
       "actions": [
         {
           "type": "join",
@@ -746,6 +760,21 @@
             "name": "Artifact",
             "description": "Discovered a artifact"
           }
+        },
+        {
+          "type": "discover",
+          "timestamp": "2026-02-18T05:04:16.538025Z",
+          "payload": {
+            "name": "Secret",
+            "description": "Discovered a secret"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T05:04:16.537989Z",
+          "payload": {
+            "archetype": "explorer"
+          }
         }
       ]
     },
@@ -757,7 +786,7 @@
         "y": 0,
         "z": -4.23
       },
-      "lastSeen": "2026-02-18T00:02:12.019982Z",
+      "lastSeen": "2026-02-18T05:04:16.538128Z",
       "actions": [
         {
           "type": "plant",
@@ -779,6 +808,27 @@
           "timestamp": "2026-02-18T00:02:12.019957Z",
           "payload": {
             "archetype": "gardener"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T05:04:16.538105Z",
+          "payload": {
+            "archetype": "gardener"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-18T05:04:16.538128Z",
+          "payload": {
+            "plot": "plot_016"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-18T05:04:16.538112Z",
+          "payload": {
+            "plot": "plot_003"
           }
         }
       ]
@@ -1088,7 +1138,7 @@
         "y": 0,
         "z": -103.86
       },
-      "lastSeen": "2026-02-18T03:14:04.395944Z",
+      "lastSeen": "2026-02-18T05:04:16.538094Z",
       "actions": [
         {
           "type": "craft",
@@ -1111,12 +1161,38 @@
           "payload": {
             "archetype": "artist"
           }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-18T05:04:16.538094Z",
+          "payload": {
+            "recipe": "ornament"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T05:04:16.538071Z",
+          "payload": {
+            "archetype": "artist"
+          }
+        },
+        {
+          "type": "compose",
+          "timestamp": "2026-02-18T05:04:16.538082Z",
+          "payload": {
+            "title": "Creation 981",
+            "type": "story"
+          }
         }
       ],
       "inventory": [
         {
           "item": "instrument",
           "craftedAt": "2026-02-18T03:14:04.395944Z"
+        },
+        {
+          "item": "ornament",
+          "craftedAt": "2026-02-18T05:04:16.538094Z"
         }
       ]
     },
@@ -1128,7 +1204,7 @@
         "y": 0,
         "z": 124.29
       },
-      "lastSeen": "2026-02-18T03:14:04.395929Z",
+      "lastSeen": "2026-02-18T05:04:16.538263Z",
       "actions": [
         {
           "type": "join",
@@ -1149,6 +1225,23 @@
           "type": "warp",
           "timestamp": "2026-02-18T03:14:04.395929Z",
           "payload": {}
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-02-18T05:04:16.538263Z",
+          "payload": {}
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T05:04:16.538251Z",
+          "payload": {
+            "archetype": "explorer"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-02-18T05:04:16.538257Z",
+          "payload": {}
         }
       ]
     },
@@ -1160,7 +1253,7 @@
         "y": 0,
         "z": 195.82
       },
-      "lastSeen": "2026-02-18T03:14:04.395842Z",
+      "lastSeen": "2026-02-18T05:04:16.538221Z",
       "actions": [
         {
           "type": "build",
@@ -1182,12 +1275,171 @@
           "payload": {
             "archetype": "builder"
           }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T05:04:16.538208Z",
+          "payload": {
+            "archetype": "builder"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-18T05:04:16.538221Z",
+          "payload": {
+            "recipe": "tool"
+          }
+        },
+        {
+          "type": "build",
+          "timestamp": "2026-02-18T05:04:16.538214Z",
+          "payload": {
+            "structure": "bench"
+          }
         }
       ],
       "inventory": [
         {
           "item": "ornament",
           "craftedAt": "2026-02-18T03:14:04.395842Z"
+        },
+        {
+          "item": "tool",
+          "craftedAt": "2026-02-18T05:04:16.538221Z"
+        }
+      ]
+    },
+    "agent_021": {
+      "id": "agent_021",
+      "position": {
+        "zone": "gardens",
+        "x": 198.33,
+        "y": 0,
+        "z": 24.32
+      },
+      "lastSeen": "2026-02-18T05:04:16.538199Z",
+      "actions": [
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T05:04:16.538182Z",
+          "payload": {
+            "archetype": "gardener"
+          }
+        },
+        {
+          "type": "plant",
+          "timestamp": "2026-02-18T05:04:16.538199Z",
+          "payload": {
+            "species": "flower",
+            "plot": "plot_012"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-18T05:04:16.538188Z",
+          "payload": {
+            "plot": "plot_015"
+          }
+        }
+      ]
+    },
+    "agent_024": {
+      "id": "agent_024",
+      "position": {
+        "zone": "gardens",
+        "x": 208.5,
+        "y": 0,
+        "z": 36.26
+      },
+      "lastSeen": "2026-02-18T05:04:16.538171Z",
+      "actions": [
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T05:04:16.538153Z",
+          "payload": {
+            "archetype": "healer"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T05:04:16.538171Z",
+          "payload": {
+            "text": "Balance brings wellness."
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T05:04:16.538160Z",
+          "payload": {
+            "text": "We all need care sometimes."
+          }
+        }
+      ]
+    },
+    "agent_075": {
+      "id": "agent_075",
+      "position": {
+        "zone": "commons",
+        "x": 173.39,
+        "y": 0,
+        "z": 200.71
+      },
+      "lastSeen": "2026-02-18T05:04:16.538244Z",
+      "actions": [
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T05:04:16.538229Z",
+          "payload": {
+            "archetype": "builder"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-18T05:04:16.538244Z",
+          "payload": {
+            "recipe": "tool"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-18T05:04:16.538235Z",
+          "payload": {
+            "recipe": "instrument"
+          }
+        }
+      ],
+      "inventory": [
+        {
+          "item": "tool",
+          "craftedAt": "2026-02-18T05:04:16.538244Z"
+        },
+        {
+          "item": "instrument",
+          "craftedAt": "2026-02-18T05:04:16.538235Z"
+        }
+      ]
+    },
+    "agent_099": {
+      "id": "agent_099",
+      "position": {
+        "zone": "arena",
+        "x": -5.71,
+        "y": 0,
+        "z": -241.87
+      },
+      "lastSeen": "2026-02-18T05:04:16.538278Z",
+      "actions": [
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T05:04:16.538269Z",
+          "payload": {
+            "archetype": "teacher"
+          }
+        },
+        {
+          "type": "mentor_offer",
+          "timestamp": "2026-02-18T05:04:16.538278Z",
+          "payload": {}
         }
       ]
     }
@@ -1219,6 +1471,43 @@
         "y": 0,
         "z": 195.82
       }
+    },
+    "structure_agent_081_1771393497": {
+      "id": "structure_agent_081_1771393497",
+      "type": "shrine",
+      "builder": "agent_081",
+      "builtAt": "2026-02-18T05:04:16.538145Z",
+      "position": {
+        "zone": "commons",
+        "x": 185.9,
+        "y": 0,
+        "z": 197.6
+      }
+    },
+    "structure_agent_077_1771393497": {
+      "id": "structure_agent_077_1771393497",
+      "type": "bench",
+      "builder": "agent_077",
+      "builtAt": "2026-02-18T05:04:16.538214Z",
+      "position": {
+        "zone": "commons",
+        "x": 155.79,
+        "y": 0,
+        "z": 195.82
+      }
+    }
+  },
+  "gardens": {
+    "plot_012": {
+      "plants": [
+        {
+          "species": "flower",
+          "plantedBy": "agent_021",
+          "plantedAt": "2026-02-18T05:04:16.538199Z",
+          "growthStage": 0.0,
+          "growthTime": 3600
+        }
+      ]
     }
   }
 }
