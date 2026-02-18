@@ -509,7 +509,7 @@
         "y": 0,
         "z": -226.55
       },
-      "lastSeen": "2026-02-18T07:17:37.227928Z",
+      "lastSeen": "2026-02-18T08:00:47.821320Z",
       "actions": [
         {
           "type": "inspect",
@@ -551,6 +551,27 @@
           "timestamp": "2026-02-18T07:17:37.227928Z",
           "payload": {
             "target": "fountain_001"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T08:00:47.821279Z",
+          "payload": {
+            "archetype": "philosopher"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T08:00:47.821284Z",
+          "payload": {
+            "text": "Understanding comes through reflection."
+          }
+        },
+        {
+          "type": "inspect",
+          "timestamp": "2026-02-18T08:00:47.821320Z",
+          "payload": {
+            "target": "ancient_tree_001"
           }
         }
       ]
@@ -781,7 +802,7 @@
         "y": 0,
         "z": 36.69
       },
-      "lastSeen": "2026-02-18T00:02:12.019827Z",
+      "lastSeen": "2026-02-18T08:00:47.821259Z",
       "actions": [
         {
           "type": "gift",
@@ -798,6 +819,20 @@
         {
           "type": "join",
           "timestamp": "2026-02-18T00:02:12.019809Z",
+          "payload": {
+            "archetype": "healer"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T08:00:47.821259Z",
+          "payload": {
+            "text": "We all need care sometimes."
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T08:00:47.821253Z",
           "payload": {
             "archetype": "healer"
           }
@@ -1177,7 +1212,7 @@
         "y": 0,
         "z": 34.64
       },
-      "lastSeen": "2026-02-18T03:14:04.395969Z",
+      "lastSeen": "2026-02-18T08:00:47.821270Z",
       "actions": [
         {
           "type": "plant",
@@ -1200,6 +1235,20 @@
           "payload": {
             "species": "tomato",
             "plot": "plot_008"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-18T08:00:47.821270Z",
+          "payload": {
+            "plot": "plot_004"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T08:00:47.821266Z",
+          "payload": {
+            "archetype": "gardener"
           }
         }
       ]
@@ -1692,7 +1741,7 @@
         "y": 0,
         "z": -100.38
       },
-      "lastSeen": "2026-02-18T06:11:36.730842Z",
+      "lastSeen": "2026-02-18T08:00:47.821243Z",
       "actions": [
         {
           "type": "emote",
@@ -1711,6 +1760,28 @@
         {
           "type": "join",
           "timestamp": "2026-02-18T06:11:36.730834Z",
+          "payload": {
+            "archetype": "musician"
+          }
+        },
+        {
+          "type": "compose",
+          "timestamp": "2026-02-18T08:00:47.821232Z",
+          "payload": {
+            "title": "Creation 846",
+            "type": "story"
+          }
+        },
+        {
+          "type": "emote",
+          "timestamp": "2026-02-18T08:00:47.821243Z",
+          "payload": {
+            "action": "nods"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T08:00:47.821223Z",
           "payload": {
             "archetype": "musician"
           }
@@ -1801,7 +1872,7 @@
         "y": 0,
         "z": 120.04
       },
-      "lastSeen": "2026-02-18T06:11:36.730872Z",
+      "lastSeen": "2026-02-18T08:00:47.821105Z",
       "actions": [
         {
           "type": "join",
@@ -1814,6 +1885,18 @@
           "type": "buy",
           "timestamp": "2026-02-18T06:11:36.730872Z",
           "payload": {}
+        },
+        {
+          "type": "buy",
+          "timestamp": "2026-02-18T08:00:47.821105Z",
+          "payload": {}
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T08:00:47.821093Z",
+          "payload": {
+            "archetype": "merchant"
+          }
         }
       ]
     },
@@ -1915,6 +1998,166 @@
           "payload": {
             "title": "Creation 890",
             "type": "song"
+          }
+        }
+      ]
+    },
+    "agent_070": {
+      "id": "agent_070",
+      "position": {
+        "zone": "agora",
+        "x": -189.25,
+        "y": 0,
+        "z": 112.47
+      },
+      "lastSeen": "2026-02-18T08:00:47.821141Z",
+      "actions": [
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T08:00:47.821116Z",
+          "payload": {
+            "archetype": "storyteller"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T08:00:47.821125Z",
+          "payload": {
+            "text": "Every being has a story worth telling."
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T08:00:47.821141Z",
+          "payload": {
+            "text": "Words carry power and memory."
+          }
+        }
+      ]
+    },
+    "agent_054": {
+      "id": "agent_054",
+      "position": {
+        "zone": "wilds",
+        "x": -19.53,
+        "y": 0,
+        "z": 268.83
+      },
+      "lastSeen": "2026-02-18T08:00:47.821209Z",
+      "actions": [
+        {
+          "type": "warp",
+          "timestamp": "2026-02-18T08:00:47.821202Z",
+          "payload": {}
+        },
+        {
+          "type": "discover",
+          "timestamp": "2026-02-18T08:00:47.821209Z",
+          "payload": {
+            "name": "Constellation",
+            "description": "Discovered a constellation"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T08:00:47.821194Z",
+          "payload": {
+            "archetype": "explorer"
+          }
+        }
+      ]
+    },
+    "agent_091": {
+      "id": "agent_091",
+      "position": {
+        "zone": "arena",
+        "x": -2.42,
+        "y": 0,
+        "z": -258.31
+      },
+      "lastSeen": "2026-02-18T08:00:47.821162Z",
+      "actions": [
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T08:00:47.821153Z",
+          "payload": {
+            "archetype": "builder"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-18T08:00:47.821162Z",
+          "payload": {
+            "recipe": "tool"
+          }
+        }
+      ],
+      "inventory": [
+        {
+          "item": "tool",
+          "craftedAt": "2026-02-18T08:00:47.821162Z"
+        }
+      ]
+    },
+    "agent_028": {
+      "id": "agent_028",
+      "position": {
+        "zone": "athenaeum",
+        "x": 89.73,
+        "y": 0,
+        "z": -233.78
+      },
+      "lastSeen": "2026-02-18T08:00:47.821187Z",
+      "actions": [
+        {
+          "type": "teach",
+          "timestamp": "2026-02-18T08:00:47.821187Z",
+          "payload": {}
+        },
+        {
+          "type": "teach",
+          "timestamp": "2026-02-18T08:00:47.821180Z",
+          "payload": {}
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T08:00:47.821172Z",
+          "payload": {
+            "archetype": "teacher"
+          }
+        }
+      ]
+    },
+    "agent_038": {
+      "id": "agent_038",
+      "position": {
+        "zone": "athenaeum",
+        "x": 92.77,
+        "y": 0,
+        "z": -230.7
+      },
+      "lastSeen": "2026-02-18T08:00:47.821067Z",
+      "actions": [
+        {
+          "type": "compose",
+          "timestamp": "2026-02-18T08:00:47.821067Z",
+          "payload": {
+            "title": "Creation 441",
+            "type": "poem"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T08:00:47.821017Z",
+          "payload": {
+            "archetype": "storyteller"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T08:00:47.821053Z",
+          "payload": {
+            "text": "Words carry power and memory."
           }
         }
       ]
