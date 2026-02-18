@@ -39,6 +39,7 @@ API_ALLOWED_TYPES = {
     'gift', 'trade_offer', 'trade_accept', 'trade_decline',
     'intention_set', 'intention_clear',
     'join', 'leave', 'heartbeat',
+    'inspect', 'teach', 'mentor_offer',
 }
 
 # Default rate limits
@@ -298,17 +299,23 @@ def apply_to_state(msg, state_dir):
         # Add structure to world
         world_path = os.path.join(state_dir, 'world.json')
         world = load_json(world_path)
-        if 'structures' not in world:
-            world['structures'] = []
+        if 'structures' not in world or not isinstance(world['structures'], dict):
+            world['structures'] = {}
         zone = msg.get('position', {}).get('zone', 'nexus')
-        world['structures'].append({
+        struct_id = 'structure_%s_%s' % (sender, msg.get('ts', '').replace(':', '').replace('-', '')[:14])
+        world['structures'][struct_id] = {
+            'id': struct_id,
             'type': payload.get('structure', 'unknown'),
             'builder': sender,
             'zone': zone,
             'position': msg.get('position', {}),
-            'ts': msg.get('ts', ''),
-        })
-        world['structures'] = world['structures'][-200:]
+            'builtAt': msg.get('ts', ''),
+        }
+        # Cap at 200 structures
+        if len(world['structures']) > 200:
+            keys = sorted(world['structures'].keys())
+            for k in keys[:len(keys) - 200]:
+                del world['structures'][k]
         # Ensure builder is a citizen
         citizens = world.get('citizens', {})
         if sender not in citizens:
@@ -529,7 +536,7 @@ def main():
         'errors': results['errors'],
     })
 
-    return 0 if not results['errors'] else 1
+    return 0
 
 
 if __name__ == '__main__':

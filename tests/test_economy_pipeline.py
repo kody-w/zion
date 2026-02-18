@@ -172,10 +172,11 @@ class TestBuildHandler(unittest.TestCase):
         msg = make_msg('build', payload={'structure': 'bench'}, zone='meadow')
         apply_to_state(msg, self.state_dir)
         world = load_json(os.path.join(self.state_dir, 'world.json'))
-        structures = world.get('structures', [])
+        structures = world.get('structures', {})
         self.assertTrue(len(structures) > 0)
-        self.assertEqual(structures[-1]['type'], 'bench')
-        self.assertEqual(structures[-1]['zone'], 'meadow')
+        struct = list(structures.values())[0]
+        self.assertEqual(struct['type'], 'bench')
+        self.assertEqual(struct['zone'], 'meadow')
 
     def test_build_creates_citizen(self):
         msg = make_msg('build', payload={'structure': 'statue'})
@@ -188,7 +189,7 @@ class TestBuildHandler(unittest.TestCase):
         msg = make_msg('build', payload={'sim': 'crm', 'action': 'test'})
         apply_to_state(msg, self.state_dir)
         world = load_json(os.path.join(self.state_dir, 'world.json'))
-        self.assertEqual(len(world.get('structures', [])), 0)
+        self.assertEqual(len(world.get('structures', {})), 0)
 
 
 class TestComposeHandler(unittest.TestCase):
