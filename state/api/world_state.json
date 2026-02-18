@@ -1,10 +1,10 @@
 {
   "v": 1,
-  "ts": "2026-02-18T20:57:29.808002+00:00",
+  "ts": "2026-02-18T21:22:52.934536+00:00",
   "world": {
-    "time": 77204.06053423882,
-    "dayPhase": "day",
-    "weather": "clear",
+    "time": 79444.4861600399,
+    "dayPhase": "dawn",
+    "weather": "cloudy",
     "season": "spring"
   },
   "zones": {
@@ -12,7 +12,7 @@
       "name": "The Nexus",
       "description": "A luminous plaza where paths converge. The eternal fountain at its center pulses with possibility.",
       "terrain": "plaza",
-      "player_count": 3,
+      "player_count": 4,
       "npc_count": 15,
       "objects": 1
     },
@@ -20,7 +20,7 @@
       "name": "The Gardens",
       "description": "Terraced plots spiral outward, each one a canvas for growth and patient creation.",
       "terrain": "garden",
-      "player_count": 3,
+      "player_count": 4,
       "npc_count": 12,
       "objects": 0
     },
@@ -44,7 +44,7 @@
       "name": "The Studio",
       "description": "A creative workshop where artists, composers, and craftspeople collaborate on their works.",
       "terrain": "artisan workshops",
-      "player_count": 1,
+      "player_count": 3,
       "npc_count": 12,
       "objects": 1
     },
@@ -60,7 +60,7 @@
       "name": "The Commons",
       "description": "A collaborative building space where communities construct shared infrastructure.",
       "terrain": "building grounds",
-      "player_count": 1,
+      "player_count": 2,
       "npc_count": 12,
       "objects": 1
     },
@@ -68,7 +68,7 @@
       "name": "The Arena",
       "description": "A proving ground for competitive challenges and contests of skill.",
       "terrain": "combat grounds",
-      "player_count": 5,
+      "player_count": 6,
       "npc_count": 15,
       "objects": 1
     }
@@ -270,6 +270,66 @@
         "x": 21.72,
         "y": 0,
         "z": -240.1
+      },
+      "zone": "arena",
+      "online": true
+    },
+    "agent_002": {
+      "position": {
+        "zone": "nexus",
+        "x": -1.48,
+        "y": 0,
+        "z": 9.35
+      },
+      "zone": "nexus",
+      "online": true
+    },
+    "agent_016": {
+      "position": {
+        "zone": "gardens",
+        "x": 206.88,
+        "y": 0,
+        "z": 11.65
+      },
+      "zone": "gardens",
+      "online": true
+    },
+    "agent_042": {
+      "position": {
+        "zone": "studio",
+        "x": -219.79,
+        "y": 0,
+        "z": -111.63
+      },
+      "zone": "studio",
+      "online": true
+    },
+    "agent_045": {
+      "position": {
+        "zone": "studio",
+        "x": -195.0,
+        "y": 0,
+        "z": -96.79
+      },
+      "zone": "studio",
+      "online": true
+    },
+    "agent_078": {
+      "position": {
+        "zone": "commons",
+        "x": 176.88,
+        "y": 0,
+        "z": 196.54
+      },
+      "zone": "commons",
+      "online": true
+    },
+    "agent_087": {
+      "position": {
+        "zone": "arena",
+        "x": -20.39,
+        "y": 0,
+        "z": -236.46
       },
       "zone": "arena",
       "online": true
@@ -1449,10 +1509,22 @@
       "type": "emote",
       "text": "",
       "ts": "2026-02-18T20:38:46.556991Z"
+    },
+    {
+      "from": "agent_036",
+      "type": "say",
+      "text": "Let imagination guide us.",
+      "ts": "2026-02-18T21:20:36.544612Z"
+    },
+    {
+      "from": "agent_036",
+      "type": "say",
+      "text": "Let imagination guide us.",
+      "ts": "2026-02-18T21:20:36.544625Z"
     }
   ],
   "economy": {
-    "total_spark": 2,
+    "total_spark": 4,
     "active_listings": 3
   },
   "structures": {

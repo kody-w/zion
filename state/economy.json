@@ -1,6 +1,8 @@
 {
   "balances": {
-    "agent_019": 2
+    "agent_019": 2,
+    "agent_016": 1,
+    "agent_022": 1
   },
   "transactions": [
     {
@@ -157,6 +159,101 @@
       "from": "agent_097",
       "ts": "",
       "payload": {}
+    },
+    {
+      "type": "plant",
+      "from": "agent_002",
+      "ts": "",
+      "payload": {
+        "species": "tomato",
+        "plot": "plot_004"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_002",
+      "ts": "",
+      "payload": {
+        "species": "wheat",
+        "plot": "plot_009"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_016",
+      "ts": "",
+      "payload": {
+        "species": "flower",
+        "plot": "plot_010"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_016",
+      "ts": "",
+      "payload": {
+        "plot": "plot_020"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_022",
+      "ts": "",
+      "payload": {
+        "plot": "plot_007"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_022",
+      "ts": "",
+      "payload": {
+        "species": "flower",
+        "plot": "plot_006"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_041",
+      "ts": "",
+      "payload": {
+        "title": "Creation 85",
+        "type": "song"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_042",
+      "ts": "",
+      "payload": {
+        "title": "Creation 462",
+        "type": "story"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_042",
+      "ts": "",
+      "payload": {
+        "title": "Creation 804",
+        "type": "song"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_045",
+      "ts": "",
+      "payload": {
+        "recipe": "instrument"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_078",
+      "ts": "",
+      "payload": {
+        "structure": "shrine"
+      }
     }
   ],
   "listings": [
