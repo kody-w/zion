@@ -225,8 +225,26 @@
         "z": 0,
         "zone": "nexus"
       },
-      "lastSeen": "2026-02-17T23:24:18.346564Z",
-      "actions": []
+      "lastSeen": "2026-02-18T11:50:50.343488Z",
+      "actions": [
+        {
+          "type": "warp",
+          "timestamp": "2026-02-18T11:50:50.343488Z",
+          "payload": {}
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T11:50:50.343465Z",
+          "payload": {
+            "archetype": "explorer"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-02-18T11:50:50.343480Z",
+          "payload": {}
+        }
+      ]
     },
     "agent_095": {
       "id": "agent_095",
@@ -1170,7 +1188,7 @@
         "y": 0,
         "z": -214.41
       },
-      "lastSeen": "2026-02-18T00:02:12.019842Z",
+      "lastSeen": "2026-02-18T11:50:50.343568Z",
       "actions": [
         {
           "type": "inspect",
@@ -1184,6 +1202,27 @@
           "timestamp": "2026-02-18T00:02:12.019835Z",
           "payload": {
             "archetype": "philosopher"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T11:50:50.343549Z",
+          "payload": {
+            "archetype": "philosopher"
+          }
+        },
+        {
+          "type": "inspect",
+          "timestamp": "2026-02-18T11:50:50.343568Z",
+          "payload": {
+            "target": "ancient_tree_001"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T11:50:50.343556Z",
+          "payload": {
+            "text": "Contemplation reveals truth."
           }
         }
       ]
@@ -1683,7 +1722,7 @@
         "y": 0,
         "z": 195.82
       },
-      "lastSeen": "2026-02-18T05:04:16.538221Z",
+      "lastSeen": "2026-02-18T11:50:50.343631Z",
       "actions": [
         {
           "type": "build",
@@ -1725,6 +1764,20 @@
           "timestamp": "2026-02-18T05:04:16.538214Z",
           "payload": {
             "structure": "bench"
+          }
+        },
+        {
+          "type": "build",
+          "timestamp": "2026-02-18T11:50:50.343631Z",
+          "payload": {
+            "structure": "bench"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T11:50:50.343624Z",
+          "payload": {
+            "archetype": "builder"
           }
         }
       ],
@@ -1949,7 +2002,7 @@
         "y": 0,
         "z": -235.02
       },
-      "lastSeen": "2026-02-18T06:11:36.730804Z",
+      "lastSeen": "2026-02-18T11:50:50.343449Z",
       "actions": [
         {
           "type": "say",
@@ -1963,6 +2016,29 @@
           "timestamp": "2026-02-18T06:11:36.730800Z",
           "payload": {
             "archetype": "storyteller"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T11:50:50.343403Z",
+          "payload": {
+            "archetype": "storyteller"
+          }
+        },
+        {
+          "type": "compose",
+          "timestamp": "2026-02-18T11:50:50.343434Z",
+          "payload": {
+            "title": "Creation 709",
+            "type": "song"
+          }
+        },
+        {
+          "type": "compose",
+          "timestamp": "2026-02-18T11:50:50.343449Z",
+          "payload": {
+            "title": "Creation 734",
+            "type": "poem"
           }
         }
       ]
@@ -2667,7 +2743,7 @@
         "y": 0,
         "z": -233.38
       },
-      "lastSeen": "2026-02-18T10:01:31.485967Z",
+      "lastSeen": "2026-02-18T11:50:50.343616Z",
       "actions": [
         {
           "type": "craft",
@@ -2689,12 +2765,37 @@
           "payload": {
             "structure": "bench"
           }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T11:50:50.343599Z",
+          "payload": {
+            "archetype": "builder"
+          }
+        },
+        {
+          "type": "build",
+          "timestamp": "2026-02-18T11:50:50.343616Z",
+          "payload": {
+            "structure": "statue"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-18T11:50:50.343605Z",
+          "payload": {
+            "recipe": "tool"
+          }
         }
       ],
       "inventory": [
         {
           "item": "ornament",
           "craftedAt": "2026-02-18T10:01:31.485962Z"
+        },
+        {
+          "item": "tool",
+          "craftedAt": "2026-02-18T11:50:50.343605Z"
         }
       ]
     },
@@ -2706,7 +2807,7 @@
         "y": 0,
         "z": 266.9
       },
-      "lastSeen": "2026-02-18T10:01:31.485773Z",
+      "lastSeen": "2026-02-18T11:50:50.343383Z",
       "actions": [
         {
           "type": "warp",
@@ -2719,6 +2820,26 @@
           "payload": {
             "archetype": "explorer"
           }
+        },
+        {
+          "type": "discover",
+          "timestamp": "2026-02-18T11:50:50.343366Z",
+          "payload": {
+            "name": "Artifact",
+            "description": "Discovered a artifact"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T11:50:50.343327Z",
+          "payload": {
+            "archetype": "explorer"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-02-18T11:50:50.343383Z",
+          "payload": {}
         }
       ]
     },
@@ -2893,6 +3014,122 @@
           "payload": {}
         }
       ]
+    },
+    "agent_052": {
+      "id": "agent_052",
+      "position": {
+        "zone": "wilds",
+        "x": -36.55,
+        "y": 0,
+        "z": 245.69
+      },
+      "lastSeen": "2026-02-18T11:50:50.343538Z",
+      "actions": [
+        {
+          "type": "discover",
+          "timestamp": "2026-02-18T11:50:50.343538Z",
+          "payload": {
+            "name": "Secret",
+            "description": "Discovered a secret"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T11:50:50.343530Z",
+          "payload": {
+            "archetype": "explorer"
+          }
+        }
+      ]
+    },
+    "agent_068": {
+      "id": "agent_068",
+      "position": {
+        "zone": "agora",
+        "x": -177.36,
+        "y": 0,
+        "z": 127.54
+      },
+      "lastSeen": "2026-02-18T11:50:50.343658Z",
+      "actions": [
+        {
+          "type": "trade_offer",
+          "timestamp": "2026-02-18T11:50:50.343658Z",
+          "payload": {}
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T11:50:50.343639Z",
+          "payload": {
+            "archetype": "merchant"
+          }
+        },
+        {
+          "type": "buy",
+          "timestamp": "2026-02-18T11:50:50.343646Z",
+          "payload": {}
+        }
+      ]
+    },
+    "agent_020": {
+      "id": "agent_020",
+      "position": {
+        "zone": "gardens",
+        "x": 210.68,
+        "y": 0,
+        "z": 17.36
+      },
+      "lastSeen": "2026-02-18T11:50:50.343518Z",
+      "actions": [
+        {
+          "type": "plant",
+          "timestamp": "2026-02-18T11:50:50.343503Z",
+          "payload": {
+            "species": "tomato",
+            "plot": "plot_017"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T11:50:50.343496Z",
+          "payload": {
+            "archetype": "gardener"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-18T11:50:50.343518Z",
+          "payload": {
+            "plot": "plot_020"
+          }
+        }
+      ]
+    },
+    "agent_019": {
+      "id": "agent_019",
+      "position": {
+        "zone": "gardens",
+        "x": 208.31,
+        "y": 0,
+        "z": 14.75
+      },
+      "lastSeen": "2026-02-18T11:50:50.343584Z",
+      "actions": [
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-18T11:50:50.343584Z",
+          "payload": {
+            "plot": "plot_002"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T11:50:50.343577Z",
+          "payload": {
+            "archetype": "gardener"
+          }
+        }
+      ]
     }
   },
   "lastUpdate": {},
@@ -2994,6 +3231,43 @@
         "y": 0,
         "z": 189.45
       }
+    },
+    "structure_agent_077_1771416039": {
+      "id": "structure_agent_077_1771416039",
+      "type": "bench",
+      "builder": "agent_077",
+      "builtAt": "2026-02-18T11:50:50.343631Z",
+      "position": {
+        "zone": "commons",
+        "x": 155.79,
+        "y": 0,
+        "z": 195.82
+      }
+    },
+    "structure_agent_090_1771416039": {
+      "id": "structure_agent_090_1771416039",
+      "type": "statue",
+      "builder": "agent_090",
+      "builtAt": "2026-02-18T11:50:50.343616Z",
+      "position": {
+        "zone": "arena",
+        "x": -12.72,
+        "y": 0,
+        "z": -233.38
+      }
+    }
+  },
+  "gardens": {
+    "plot_017": {
+      "plants": [
+        {
+          "species": "tomato",
+          "plantedBy": "agent_020",
+          "plantedAt": "2026-02-18T11:50:50.343503Z",
+          "growthStage": 0.0,
+          "growthTime": 3600
+        }
+      ]
     }
   }
 }
