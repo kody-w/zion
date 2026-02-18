@@ -910,7 +910,7 @@
         "y": 0,
         "z": 3.82
       },
-      "lastSeen": "2026-02-18T00:02:12.019736Z",
+      "lastSeen": "2026-02-18T17:16:34.426246Z",
       "actions": [
         {
           "type": "join",
@@ -931,6 +931,20 @@
           "timestamp": "2026-02-18T00:02:12.019736Z",
           "payload": {
             "text": "Understanding comes through reflection."
+          }
+        },
+        {
+          "type": "inspect",
+          "timestamp": "2026-02-18T17:16:34.426246Z",
+          "payload": {
+            "target": "ancient_tree_001"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T17:16:34.426241Z",
+          "payload": {
+            "archetype": "philosopher"
           }
         }
       ]
@@ -1591,7 +1605,7 @@
         "y": 0,
         "z": -112.98
       },
-      "lastSeen": "2026-02-18T12:52:48.538075Z",
+      "lastSeen": "2026-02-18T17:16:34.426150Z",
       "actions": [
         {
           "type": "join",
@@ -1629,6 +1643,27 @@
           "timestamp": "2026-02-18T12:52:48.538058Z",
           "payload": {
             "archetype": "musician"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T17:16:34.426127Z",
+          "payload": {
+            "archetype": "musician"
+          }
+        },
+        {
+          "type": "emote",
+          "timestamp": "2026-02-18T17:16:34.426150Z",
+          "payload": {
+            "action": "dances"
+          }
+        },
+        {
+          "type": "emote",
+          "timestamp": "2026-02-18T17:16:34.426141Z",
+          "payload": {
+            "action": "bows"
           }
         }
       ]
@@ -2239,7 +2274,7 @@
         "y": 0,
         "z": -235.02
       },
-      "lastSeen": "2026-02-18T11:50:50.343449Z",
+      "lastSeen": "2026-02-18T17:16:34.426273Z",
       "actions": [
         {
           "type": "say",
@@ -2276,6 +2311,20 @@
           "payload": {
             "title": "Creation 734",
             "type": "poem"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T17:16:34.426269Z",
+          "payload": {
+            "archetype": "storyteller"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T17:16:34.426273Z",
+          "payload": {
+            "text": "Let imagination guide us."
           }
         }
       ]
@@ -2506,7 +2555,7 @@
         "y": 0,
         "z": 120.04
       },
-      "lastSeen": "2026-02-18T08:00:47.821105Z",
+      "lastSeen": "2026-02-18T17:16:34.426175Z",
       "actions": [
         {
           "type": "join",
@@ -2531,6 +2580,23 @@
           "payload": {
             "archetype": "merchant"
           }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T17:16:34.426160Z",
+          "payload": {
+            "archetype": "merchant"
+          }
+        },
+        {
+          "type": "buy",
+          "timestamp": "2026-02-18T17:16:34.426175Z",
+          "payload": {}
+        },
+        {
+          "type": "trade_offer",
+          "timestamp": "2026-02-18T17:16:34.426168Z",
+          "payload": {}
         }
       ]
     },
@@ -2815,7 +2881,7 @@
         "y": 0,
         "z": -233.78
       },
-      "lastSeen": "2026-02-18T08:00:47.821187Z",
+      "lastSeen": "2026-02-18T17:16:34.426117Z",
       "actions": [
         {
           "type": "teach",
@@ -2830,6 +2896,23 @@
         {
           "type": "join",
           "timestamp": "2026-02-18T08:00:47.821172Z",
+          "payload": {
+            "archetype": "teacher"
+          }
+        },
+        {
+          "type": "mentor_offer",
+          "timestamp": "2026-02-18T17:16:34.426117Z",
+          "payload": {}
+        },
+        {
+          "type": "mentor_offer",
+          "timestamp": "2026-02-18T17:16:34.426109Z",
+          "payload": {}
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T17:16:34.426098Z",
           "payload": {
             "archetype": "teacher"
           }
@@ -2907,7 +2990,7 @@
         "y": 0,
         "z": 196.54
       },
-      "lastSeen": "2026-02-18T09:00:13.530807Z",
+      "lastSeen": "2026-02-18T17:16:34.426081Z",
       "actions": [
         {
           "type": "build",
@@ -2929,12 +3012,41 @@
           "payload": {
             "recipe": "instrument"
           }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-18T17:16:34.426062Z",
+          "payload": {
+            "recipe": "tool"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T17:16:34.426011Z",
+          "payload": {
+            "archetype": "builder"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-18T17:16:34.426081Z",
+          "payload": {
+            "recipe": "tool"
+          }
         }
       ],
       "inventory": [
         {
           "item": "instrument",
           "craftedAt": "2026-02-18T09:00:13.530807Z"
+        },
+        {
+          "item": "tool",
+          "craftedAt": "2026-02-18T17:16:34.426062Z"
+        },
+        {
+          "item": "tool",
+          "craftedAt": "2026-02-18T17:16:34.426081Z"
         }
       ]
     },
@@ -3305,7 +3417,7 @@
         "y": 0,
         "z": 244.26
       },
-      "lastSeen": "2026-02-18T11:01:21.423703Z",
+      "lastSeen": "2026-02-18T17:16:34.426295Z",
       "actions": [
         {
           "type": "join",
@@ -3319,6 +3431,27 @@
           "timestamp": "2026-02-18T11:01:21.423703Z",
           "payload": {
             "text": "Gather round, I have a tale to share."
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T17:16:34.426281Z",
+          "payload": {
+            "archetype": "storyteller"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T17:16:34.426295Z",
+          "payload": {
+            "text": "Words carry power and memory."
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-18T17:16:34.426286Z",
+          "payload": {
+            "text": "Words carry power and memory."
           }
         }
       ]
@@ -4052,6 +4185,101 @@
           }
         }
       ]
+    },
+    "agent_002": {
+      "id": "agent_002",
+      "position": {
+        "zone": "nexus",
+        "x": -1.48,
+        "y": 0,
+        "z": 9.35
+      },
+      "lastSeen": "2026-02-18T17:16:34.426234Z",
+      "actions": [
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T17:16:34.426216Z",
+          "payload": {
+            "archetype": "gardener"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-18T17:16:34.426225Z",
+          "payload": {
+            "plot": "plot_004"
+          }
+        },
+        {
+          "type": "plant",
+          "timestamp": "2026-02-18T17:16:34.426234Z",
+          "payload": {
+            "species": "tomato",
+            "plot": "plot_020"
+          }
+        }
+      ]
+    },
+    "agent_053": {
+      "id": "agent_053",
+      "position": {
+        "zone": "wilds",
+        "x": -31.88,
+        "y": 0,
+        "z": 277.72
+      },
+      "lastSeen": "2026-02-18T17:16:34.426204Z",
+      "actions": [
+        {
+          "type": "discover",
+          "timestamp": "2026-02-18T17:16:34.426204Z",
+          "payload": {
+            "name": "Artifact",
+            "description": "Discovered a artifact"
+          }
+        },
+        {
+          "type": "discover",
+          "timestamp": "2026-02-18T17:16:34.426192Z",
+          "payload": {
+            "name": "Secret",
+            "description": "Discovered a secret"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T17:16:34.426183Z",
+          "payload": {
+            "archetype": "explorer"
+          }
+        }
+      ]
+    },
+    "agent_080": {
+      "id": "agent_080",
+      "position": {
+        "zone": "commons",
+        "x": 171.17,
+        "y": 0,
+        "z": 199.33
+      },
+      "lastSeen": "2026-02-18T17:16:34.426263Z",
+      "actions": [
+        {
+          "type": "build",
+          "timestamp": "2026-02-18T17:16:34.426263Z",
+          "payload": {
+            "structure": "shrine"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-18T17:16:34.426256Z",
+          "payload": {
+            "archetype": "builder"
+          }
+        }
+      ]
     }
   },
   "lastUpdate": {},
@@ -4225,6 +4453,31 @@
         "y": 0,
         "z": -18.47
       }
+    },
+    "structure_agent_080_1771437727": {
+      "id": "structure_agent_080_1771437727",
+      "type": "shrine",
+      "builder": "agent_080",
+      "builtAt": "2026-02-18T17:16:34.426263Z",
+      "position": {
+        "zone": "commons",
+        "x": 171.17,
+        "y": 0,
+        "z": 199.33
+      }
+    }
+  },
+  "gardens": {
+    "plot_020": {
+      "plants": [
+        {
+          "species": "tomato",
+          "plantedBy": "agent_002",
+          "plantedAt": "2026-02-18T17:16:34.426234Z",
+          "growthStage": 0.0,
+          "growthTime": 3600
+        }
+      ]
     }
   }
 }
