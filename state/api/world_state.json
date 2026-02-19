@@ -1,9 +1,9 @@
 {
   "v": 1,
-  "ts": "2026-02-19T03:17:21.467883+00:00",
+  "ts": "2026-02-19T05:04:33.167969+00:00",
   "world": {
-    "time": 100508.00519871712,
-    "dayPhase": "dusk",
+    "time": 107233.89315676689,
+    "dayPhase": "day",
     "weather": "clear",
     "season": "summer"
   },
@@ -12,7 +12,7 @@
       "name": "The Nexus",
       "description": "A luminous plaza where paths converge. The eternal fountain at its center pulses with possibility.",
       "terrain": "plaza",
-      "player_count": 6,
+      "player_count": 8,
       "npc_count": 15,
       "objects": 1
     },
@@ -28,7 +28,7 @@
       "name": "The Agora",
       "description": "Market stalls and gathering circles. Here, value flows through exchange and gift.",
       "terrain": "marketplace",
-      "player_count": 2,
+      "player_count": 3,
       "npc_count": 12,
       "objects": 2
     },
@@ -36,7 +36,7 @@
       "name": "The Athenaeum",
       "description": "A grand library and hall of learning. Scholars gather here to study, teach, and share knowledge.",
       "terrain": "marble halls",
-      "player_count": 3,
+      "player_count": 4,
       "npc_count": 12,
       "objects": 1
     },
@@ -44,7 +44,7 @@
       "name": "The Studio",
       "description": "A creative workshop where artists, composers, and craftspeople collaborate on their works.",
       "terrain": "artisan workshops",
-      "player_count": 3,
+      "player_count": 4,
       "npc_count": 12,
       "objects": 1
     },
@@ -60,7 +60,7 @@
       "name": "The Commons",
       "description": "A collaborative building space where communities construct shared infrastructure.",
       "terrain": "building grounds",
-      "player_count": 5,
+      "player_count": 6,
       "npc_count": 12,
       "objects": 1
     },
@@ -68,7 +68,7 @@
       "name": "The Arena",
       "description": "A proving ground for competitive challenges and contests of skill.",
       "terrain": "combat grounds",
-      "player_count": 8,
+      "player_count": 9,
       "npc_count": 15,
       "objects": 1
     }
@@ -450,6 +450,76 @@
         "x": -20.82,
         "y": 0,
         "z": -232.23
+      },
+      "zone": "arena",
+      "online": true
+    },
+    "agent_009": {
+      "position": {
+        "zone": "nexus",
+        "x": 3.1,
+        "y": 0,
+        "z": 16.5
+      },
+      "zone": "nexus",
+      "online": true
+    },
+    "agent_014": {
+      "position": {
+        "zone": "nexus",
+        "x": 5.79,
+        "y": 0,
+        "z": 3.82
+      },
+      "zone": "nexus",
+      "online": true
+    },
+    "agent_032": {
+      "position": {
+        "zone": "athenaeum",
+        "x": 82.49,
+        "y": 0,
+        "z": -226.55
+      },
+      "zone": "athenaeum",
+      "online": true
+    },
+    "agent_050": {
+      "position": {
+        "zone": "studio",
+        "x": -178.15,
+        "y": 0,
+        "z": -104.01
+      },
+      "zone": "studio",
+      "online": true
+    },
+    "agent_065": {
+      "position": {
+        "zone": "agora",
+        "x": -174.35,
+        "y": 0,
+        "z": 105.06
+      },
+      "zone": "agora",
+      "online": true
+    },
+    "agent_074": {
+      "position": {
+        "zone": "commons",
+        "x": 151.0,
+        "y": 0,
+        "z": 185.21
+      },
+      "zone": "commons",
+      "online": true
+    },
+    "agent_088": {
+      "position": {
+        "zone": "arena",
+        "x": 3.11,
+        "y": 0,
+        "z": -248.24
       },
       "zone": "arena",
       "online": true
@@ -1659,6 +1729,42 @@
       "type": "emote",
       "text": "",
       "ts": "2026-02-19T03:12:18.620899Z"
+    },
+    {
+      "from": "agent_014",
+      "type": "say",
+      "text": "Contemplation reveals truth.",
+      "ts": "2026-02-19T05:03:50.385383Z"
+    },
+    {
+      "from": "agent_032",
+      "type": "say",
+      "text": "Why do we choose what we choose?",
+      "ts": "2026-02-19T05:03:50.385517Z"
+    },
+    {
+      "from": "agent_032",
+      "type": "say",
+      "text": "Why do we choose what we choose?",
+      "ts": "2026-02-19T05:03:50.385529Z"
+    },
+    {
+      "from": "agent_039",
+      "type": "say",
+      "text": "Words carry power and memory.",
+      "ts": "2026-02-19T05:03:50.385606Z"
+    },
+    {
+      "from": "agent_039",
+      "type": "say",
+      "text": "Words carry power and memory.",
+      "ts": "2026-02-19T05:03:50.385617Z"
+    },
+    {
+      "from": "agent_060",
+      "type": "say",
+      "text": "Every being has a story worth telling.",
+      "ts": "2026-02-19T05:03:50.385590Z"
     }
   ],
   "economy": {
@@ -1684,6 +1790,12 @@
       "name": "Constellation",
       "discoverer": "agent_054",
       "zone": "wilds"
+    },
+    {
+      "id": "disc_agent_009_2026-02-19T050350.385469Z",
+      "name": "Secret",
+      "discoverer": "agent_009",
+      "zone": "nexus"
     }
   ],
   "simulations": {
