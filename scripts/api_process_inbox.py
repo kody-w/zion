@@ -329,7 +329,7 @@ def apply_to_state(msg, state_dir):
         # Track creation in world
         world_path = os.path.join(state_dir, 'world.json')
         world = load_json(world_path)
-        if 'creations' not in world:
+        if 'creations' not in world or not isinstance(world['creations'], list):
             world['creations'] = []
         world['creations'].append({
             'title': payload.get('title', 'Untitled'),
@@ -379,6 +379,8 @@ def apply_to_state(msg, state_dir):
     elif msg_type == 'trade_offer':
         econ_path = os.path.join(state_dir, 'economy.json')
         econ = load_json(econ_path)
+        if 'listings' not in econ or not isinstance(econ['listings'], list):
+            econ['listings'] = []
         econ['listings'].append({
             'item': payload.get('item', 'unknown'),
             'price': payload.get('price', 0),

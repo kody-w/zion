@@ -184,6 +184,77 @@ class TestApplyToState(unittest.TestCase):
         self.assertEqual(changes['changes'][0]['platform'], 'api')
 
 
+class TestApplyCorruptedState(unittest.TestCase):
+    """Test that apply_to_state handles corrupted state (dict instead of list)."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.state_dir = self.tmpdir
+        self._write('chat.json', {'messages': []})
+        self._write('world.json', {'zones': {}, 'citizens': {}})
+        self._write('players.json', {'players': {}})
+        self._write('discoveries.json', {'discoveries': {}})
+        self._write('actions.json', {'actions': []})
+        self._write('changes.json', {'changes': []})
+
+    def _write(self, name, data):
+        path = os.path.join(self.state_dir, name)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w') as f:
+            json.dump(data, f)
+
+    def _read(self, name):
+        path = os.path.join(self.state_dir, name)
+        with open(path) as f:
+            return json.load(f)
+
+    def test_trade_offer_listings_missing(self):
+        """trade_offer should work when economy.json has no listings key."""
+        self._write('economy.json', {'balances': {}, 'transactions': []})
+        msg = make_valid_message(type='trade_offer', payload={'item': 'sword', 'price': 10})
+        api_process_inbox.apply_to_state(msg, self.state_dir)
+        econ = self._read('economy.json')
+        self.assertIsInstance(econ['listings'], list)
+        self.assertEqual(len(econ['listings']), 1)
+        self.assertEqual(econ['listings'][0]['item'], 'sword')
+
+    def test_trade_offer_listings_is_dict(self):
+        """trade_offer should recover when listings is a dict instead of list."""
+        self._write('economy.json', {'balances': {}, 'transactions': [], 'listings': {}})
+        msg = make_valid_message(type='trade_offer', payload={'item': 'shield', 'price': 5})
+        api_process_inbox.apply_to_state(msg, self.state_dir)
+        econ = self._read('economy.json')
+        self.assertIsInstance(econ['listings'], list)
+        self.assertEqual(len(econ['listings']), 1)
+        self.assertEqual(econ['listings'][0]['item'], 'shield')
+
+    def test_compose_creations_is_dict(self):
+        """compose should recover when creations is a dict instead of list."""
+        self._write('world.json', {'zones': {}, 'citizens': {}, 'creations': {}})
+        msg = make_valid_message(type='compose', payload={'title': 'My Song', 'type': 'music'})
+        api_process_inbox.apply_to_state(msg, self.state_dir)
+        world = self._read('world.json')
+        self.assertIsInstance(world['creations'], list)
+        self.assertEqual(len(world['creations']), 1)
+        self.assertEqual(world['creations'][0]['title'], 'My Song')
+
+    def test_compose_creations_missing(self):
+        """compose should work when world.json has no creations key."""
+        msg = make_valid_message(type='compose', payload={'title': 'Poem', 'type': 'text'})
+        api_process_inbox.apply_to_state(msg, self.state_dir)
+        world = self._read('world.json')
+        self.assertIsInstance(world['creations'], list)
+        self.assertEqual(len(world['creations']), 1)
+
+    def test_trade_offer_normal_list(self):
+        """trade_offer should append normally when listings is already a list."""
+        self._write('economy.json', {'balances': {}, 'transactions': [], 'listings': [{'item': 'old', 'price': 1, 'seller': 'x', 'ts': ''}]})
+        msg = make_valid_message(type='trade_offer', payload={'item': 'new', 'price': 2})
+        api_process_inbox.apply_to_state(msg, self.state_dir)
+        econ = self._read('economy.json')
+        self.assertEqual(len(econ['listings']), 2)
+
+
 class TestProcessInbox(unittest.TestCase):
     """Test full inbox processing pipeline."""
 
