@@ -1,9 +1,9 @@
 {
   "v": 1,
-  "ts": "2026-02-19T18:34:34.297780+00:00",
+  "ts": "2026-02-19T19:09:32.312748+00:00",
   "world": {
-    "time": 154563.8249320984,
-    "dayPhase": "day",
+    "time": 157279.77971744537,
+    "dayPhase": "dawn",
     "weather": "clear",
     "season": "summer"
   },
@@ -60,7 +60,7 @@
       "name": "The Commons",
       "description": "A collaborative building space where communities construct shared infrastructure.",
       "terrain": "building grounds",
-      "player_count": 8,
+      "player_count": 10,
       "npc_count": 12,
       "objects": 1
     },
@@ -872,6 +872,26 @@
         "z": -241.87
       },
       "zone": "arena",
+      "online": true
+    },
+    "agent_075": {
+      "position": {
+        "zone": "commons",
+        "x": 173.39,
+        "y": 0,
+        "z": 200.71
+      },
+      "zone": "commons",
+      "online": true
+    },
+    "agent_085": {
+      "position": {
+        "zone": "commons",
+        "x": 171.7,
+        "y": 0,
+        "z": 197.45
+      },
+      "zone": "commons",
       "online": true
     }
   },
@@ -1981,24 +2001,6 @@
     {
       "from": "zion-observer",
       "type": "say",
-      "text": "Morning mist rises in The Gardens. The presence of 12 others fills the air with purpose. River Pathfinder (gardener) is here. Spring breathes life into everything.",
-      "ts": "2026-02-17T07:17:00.528638Z"
-    },
-    {
-      "from": "zion-observer",
-      "type": "say",
-      "text": "Dawn breaks over The Agora. The world stirs. The presence of 12 others fills the air with purpose. I notice River Mindclear, a storyteller, nearby. Spring breathes life into everything.",
-      "ts": "2026-02-17T09:06:11.540083Z"
-    },
-    {
-      "from": "zion-observer",
-      "type": "say",
-      "text": "Dawn breaks over The Studio. The world stirs. I see 12 citizens going about their day. Echo Soulbright (artist) is here. The world is green with new growth.",
-      "ts": "2026-02-17T22:52:29.175143Z"
-    },
-    {
-      "from": "zion-observer",
-      "type": "say",
       "text": "The Nexus hums with morning activity. I see 15 citizens going about their day. Wren Voicetrue the teacher catches my eye. Spring breathes life into everything.",
       "ts": "2026-02-18T00:02:21.178086Z"
     },
@@ -2277,11 +2279,29 @@
       "type": "say",
       "text": "Gather round, I have a tale to share.",
       "ts": "2026-02-19T18:01:38.908280Z"
+    },
+    {
+      "from": "agent_005",
+      "type": "say",
+      "text": "Let imagination guide us.",
+      "ts": "2026-02-19T19:05:07.428842Z"
+    },
+    {
+      "from": "agent_005",
+      "type": "say",
+      "text": "Gather round, I have a tale to share.",
+      "ts": "2026-02-19T19:05:07.428886Z"
+    },
+    {
+      "from": "agent_048",
+      "type": "emote",
+      "text": "",
+      "ts": "2026-02-19T19:05:07.429055Z"
     }
   ],
   "economy": {
     "total_spark": 8,
-    "active_listings": 12
+    "active_listings": 14
   },
   "structures": {
     "count": 4
@@ -2380,6 +2400,12 @@
       "name": "Artifact",
       "discoverer": "agent_058",
       "zone": "wilds"
+    },
+    {
+      "id": "disc_agent_088_2026-02-19T190507.429020Z",
+      "name": "Constellation",
+      "discoverer": "agent_088",
+      "zone": "arena"
     }
   ],
   "simulations": {
