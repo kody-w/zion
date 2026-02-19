@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "ts": "2026-02-19T15:08:12.484385+00:00",
+  "ts": "2026-02-19T15:08:33.514650+00:00",
   "world": {
     "time": 144539.57540154457,
     "dayPhase": "day",
@@ -36,7 +36,7 @@
       "name": "The Athenaeum",
       "description": "A grand library and hall of learning. Scholars gather here to study, teach, and share knowledge.",
       "terrain": "marble halls",
-      "player_count": 7,
+      "player_count": 8,
       "npc_count": 12,
       "objects": 1
     },
@@ -752,6 +752,16 @@
         "z": -246.47
       },
       "zone": "arena",
+      "online": true
+    },
+    "agent_029": {
+      "position": {
+        "zone": "athenaeum",
+        "x": 109.31,
+        "y": 0,
+        "z": -202.77
+      },
+      "zone": "athenaeum",
       "online": true
     }
   },
@@ -2106,8 +2116,8 @@
     }
   ],
   "economy": {
-    "total_spark": 11,
-    "active_listings": 9
+    "total_spark": 12,
+    "active_listings": 11
   },
   "structures": {
     "count": 4
@@ -2170,6 +2180,12 @@
       "name": "Artifact",
       "discoverer": "agent_086",
       "zone": "arena"
+    },
+    {
+      "id": "disc_agent_009_2026-02-19T150822.882066Z",
+      "name": "Secret",
+      "discoverer": "agent_009",
+      "zone": "nexus"
     }
   ],
   "simulations": {
