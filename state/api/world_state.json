@@ -1,10 +1,10 @@
 {
   "v": 1,
-  "ts": "2026-02-19T06:16:29.662517+00:00",
+  "ts": "2026-02-19T07:18:32.729214+00:00",
   "world": {
-    "time": 110888.84395647049,
-    "dayPhase": "dawn",
-    "weather": "rain",
+    "time": 114211.34985351562,
+    "dayPhase": "day",
+    "weather": "snow",
     "season": "summer"
   },
   "zones": {
@@ -12,7 +12,7 @@
       "name": "The Nexus",
       "description": "A luminous plaza where paths converge. The eternal fountain at its center pulses with possibility.",
       "terrain": "plaza",
-      "player_count": 8,
+      "player_count": 9,
       "npc_count": 15,
       "objects": 1
     },
@@ -20,7 +20,7 @@
       "name": "The Gardens",
       "description": "Terraced plots spiral outward, each one a canvas for growth and patient creation.",
       "terrain": "garden",
-      "player_count": 8,
+      "player_count": 9,
       "npc_count": 12,
       "objects": 0
     },
@@ -28,7 +28,7 @@
       "name": "The Agora",
       "description": "Market stalls and gathering circles. Here, value flows through exchange and gift.",
       "terrain": "marketplace",
-      "player_count": 5,
+      "player_count": 6,
       "npc_count": 12,
       "objects": 2
     },
@@ -44,7 +44,7 @@
       "name": "The Studio",
       "description": "A creative workshop where artists, composers, and craftspeople collaborate on their works.",
       "terrain": "artisan workshops",
-      "player_count": 4,
+      "player_count": 6,
       "npc_count": 12,
       "objects": 1
     },
@@ -68,7 +68,7 @@
       "name": "The Arena",
       "description": "A proving ground for competitive challenges and contests of skill.",
       "terrain": "combat grounds",
-      "player_count": 10,
+      "player_count": 11,
       "npc_count": 15,
       "objects": 1
     }
@@ -570,6 +570,66 @@
         "x": -12.72,
         "y": 0,
         "z": -233.38
+      },
+      "zone": "arena",
+      "online": true
+    },
+    "agent_004": {
+      "position": {
+        "zone": "nexus",
+        "x": 5.25,
+        "y": 0,
+        "z": -4.22
+      },
+      "zone": "nexus",
+      "online": true
+    },
+    "agent_025": {
+      "position": {
+        "zone": "gardens",
+        "x": 191.91,
+        "y": 0,
+        "z": 20.74
+      },
+      "zone": "gardens",
+      "online": true
+    },
+    "agent_048": {
+      "position": {
+        "zone": "studio",
+        "x": -188.36,
+        "y": 0,
+        "z": -95.09
+      },
+      "zone": "studio",
+      "online": true
+    },
+    "agent_051": {
+      "position": {
+        "zone": "studio",
+        "x": -180.64,
+        "y": 0,
+        "z": -98.6
+      },
+      "zone": "studio",
+      "online": true
+    },
+    "agent_068": {
+      "position": {
+        "zone": "agora",
+        "x": -177.36,
+        "y": 0,
+        "z": 127.54
+      },
+      "zone": "agora",
+      "online": true
+    },
+    "agent_096": {
+      "position": {
+        "zone": "arena",
+        "x": -9.32,
+        "y": 0,
+        "z": -235.02
       },
       "zone": "arena",
       "online": true
@@ -1845,10 +1905,34 @@
       "type": "say",
       "text": "Gather round, I have a tale to share.",
       "ts": "2026-02-19T06:11:17.986281Z"
+    },
+    {
+      "from": "agent_025",
+      "type": "say",
+      "text": "We all need care sometimes.",
+      "ts": "2026-02-19T07:17:10.383051Z"
+    },
+    {
+      "from": "agent_048",
+      "type": "emote",
+      "text": "",
+      "ts": "2026-02-19T07:17:10.383083Z"
+    },
+    {
+      "from": "agent_051",
+      "type": "emote",
+      "text": "",
+      "ts": "2026-02-19T07:17:10.383179Z"
+    },
+    {
+      "from": "agent_060",
+      "type": "say",
+      "text": "Every being has a story worth telling.",
+      "ts": "2026-02-19T07:17:10.383190Z"
     }
   ],
   "economy": {
-    "total_spark": 4,
+    "total_spark": 3,
     "active_listings": 6
   },
   "structures": {
@@ -1888,6 +1972,18 @@
       "name": "Artifact",
       "discoverer": "agent_073",
       "zone": "agora"
+    },
+    {
+      "id": "disc_agent_058_2026-02-19T071710.383116Z",
+      "name": "Secret",
+      "discoverer": "agent_058",
+      "zone": "wilds"
+    },
+    {
+      "id": "disc_agent_058_2026-02-19T071710.383131Z",
+      "name": "Pathway",
+      "discoverer": "agent_058",
+      "zone": "wilds"
     }
   ],
   "simulations": {
