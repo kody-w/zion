@@ -7,11 +7,12 @@
     "agent_023": 2,
     "agent_082": -2,
     "agent_027": -1,
-    "agent_025": -4,
+    "agent_025": -5,
     "agent_017": 3,
     "agent_018": 2,
     "agent_001": 1,
-    "agent_013": -2
+    "agent_013": -2,
+    "agent_020": 1
   },
   "transactions": [
     {
@@ -1190,6 +1191,122 @@
       "payload": {
         "recipe": "ornament"
       }
+    },
+    {
+      "type": "craft",
+      "from": "agent_003",
+      "ts": "",
+      "payload": {
+        "recipe": "tool"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_003",
+      "ts": "",
+      "payload": {
+        "recipe": "tool"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_015",
+      "ts": "",
+      "payload": {
+        "title": "Creation 608",
+        "type": "poem"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_015",
+      "ts": "",
+      "payload": {
+        "title": "Creation 345",
+        "type": "story"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_018",
+      "ts": "",
+      "payload": {
+        "species": "tomato",
+        "plot": "plot_012"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_018",
+      "ts": "",
+      "payload": {
+        "species": "flower",
+        "plot": "plot_007"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_020",
+      "ts": "",
+      "payload": {
+        "species": "tree",
+        "plot": "plot_009"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_020",
+      "ts": "",
+      "payload": {
+        "plot": "plot_017"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_025",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "compose",
+      "from": "agent_039",
+      "ts": "",
+      "payload": {
+        "title": "Creation 825",
+        "type": "song"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_039",
+      "ts": "",
+      "payload": {
+        "title": "Creation 465",
+        "type": "song"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_067",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "craft",
+      "from": "agent_084",
+      "ts": "",
+      "payload": {
+        "recipe": "tool"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_084",
+      "ts": "",
+      "payload": {
+        "title": "Creation 870",
+        "type": "poem"
+      }
     }
   ],
   "listings": [
@@ -1282,6 +1399,12 @@
       "price": 0,
       "seller": "agent_007",
       "ts": "2026-02-19T19:46:03.819544Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_067",
+      "ts": "2026-02-19T20:16:53.219453Z"
     }
   ]
 }

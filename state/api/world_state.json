@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "ts": "2026-02-19T20:04:16.401891+00:00",
+  "ts": "2026-02-19T20:25:30.293568+00:00",
   "world": {
     "time": 161936.6174273491,
     "dayPhase": "day",
@@ -12,7 +12,7 @@
       "name": "The Nexus",
       "description": "A luminous plaza where paths converge. The eternal fountain at its center pulses with possibility.",
       "terrain": "plaza",
-      "player_count": 13,
+      "player_count": 14,
       "npc_count": 15,
       "objects": 1
     },
@@ -36,7 +36,7 @@
       "name": "The Athenaeum",
       "description": "A grand library and hall of learning. Scholars gather here to study, teach, and share knowledge.",
       "terrain": "marble halls",
-      "player_count": 10,
+      "player_count": 11,
       "npc_count": 12,
       "objects": 1
     },
@@ -60,7 +60,7 @@
       "name": "The Commons",
       "description": "A collaborative building space where communities construct shared infrastructure.",
       "terrain": "building grounds",
-      "player_count": 10,
+      "player_count": 11,
       "npc_count": 12,
       "objects": 1
     },
@@ -912,6 +912,36 @@
         "z": -240.69
       },
       "zone": "arena",
+      "online": true
+    },
+    "agent_003": {
+      "position": {
+        "zone": "nexus",
+        "x": -1.57,
+        "y": 0,
+        "z": -18.47
+      },
+      "zone": "nexus",
+      "online": true
+    },
+    "agent_037": {
+      "position": {
+        "zone": "athenaeum",
+        "x": 108.05,
+        "y": 0,
+        "z": -227.92
+      },
+      "zone": "athenaeum",
+      "online": true
+    },
+    "agent_084": {
+      "position": {
+        "zone": "commons",
+        "x": 171.38,
+        "y": 0,
+        "z": 208.33
+      },
+      "zone": "commons",
       "online": true
     }
   },
@@ -2019,18 +2049,6 @@
   ],
   "recent_chat": [
     {
-      "from": "agent_039",
-      "type": "say",
-      "text": "Words carry power and memory.",
-      "ts": "2026-02-18T19:57:01.474566Z"
-    },
-    {
-      "from": "agent_012",
-      "type": "emote",
-      "text": "",
-      "ts": "2026-02-18T20:38:46.556991Z"
-    },
-    {
       "from": "agent_036",
       "type": "say",
       "text": "Let imagination guide us.",
@@ -2317,11 +2335,23 @@
       "type": "emote",
       "text": "",
       "ts": "2026-02-19T19:46:03.819568Z"
+    },
+    {
+      "from": "agent_037",
+      "type": "say",
+      "text": "Words carry power and memory.",
+      "ts": "2026-02-19T20:16:53.219334Z"
+    },
+    {
+      "from": "agent_037",
+      "type": "say",
+      "text": "Words carry power and memory.",
+      "ts": "2026-02-19T20:16:53.219354Z"
     }
   ],
   "economy": {
     "total_spark": 8,
-    "active_listings": 15
+    "active_listings": 16
   },
   "structures": {
     "count": 4
@@ -2426,6 +2456,12 @@
       "name": "Constellation",
       "discoverer": "agent_088",
       "zone": "arena"
+    },
+    {
+      "id": "disc_agent_054_2026-02-19T201653.219411Z",
+      "name": "Artifact",
+      "discoverer": "agent_054",
+      "zone": "wilds"
     }
   ],
   "simulations": {
