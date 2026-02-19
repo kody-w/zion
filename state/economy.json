@@ -5,7 +5,8 @@
     "agent_022": 1,
     "agent_021": 2,
     "agent_023": 1,
-    "agent_082": -2
+    "agent_082": -2,
+    "agent_027": -1
   },
   "transactions": [
     {
@@ -453,6 +454,74 @@
       "payload": {
         "recipe": "ornament"
       }
+    },
+    {
+      "type": "plant",
+      "from": "agent_002",
+      "ts": "",
+      "payload": {
+        "species": "tree",
+        "plot": "plot_020"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_002",
+      "ts": "",
+      "payload": {
+        "species": "flower",
+        "plot": "plot_010"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_027",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_066",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_066",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "craft",
+      "from": "agent_076",
+      "ts": "",
+      "payload": {
+        "recipe": "ornament"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_076",
+      "ts": "",
+      "payload": {
+        "recipe": "tool"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_090",
+      "ts": "",
+      "payload": {
+        "structure": "bench"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_090",
+      "ts": "",
+      "payload": {
+        "structure": "bench"
+      }
     }
   ],
   "listings": [
@@ -479,6 +548,18 @@
       "price": 0,
       "seller": "agent_098",
       "ts": "2026-02-19T03:12:18.620838Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_066",
+      "ts": "2026-02-19T06:11:17.986319Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_066",
+      "ts": "2026-02-19T06:11:17.986323Z"
     }
   ]
 }

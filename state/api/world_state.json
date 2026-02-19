@@ -1,10 +1,10 @@
 {
   "v": 1,
-  "ts": "2026-02-19T05:13:13.210833+00:00",
+  "ts": "2026-02-19T06:12:39.716398+00:00",
   "world": {
-    "time": 107233.89315676689,
-    "dayPhase": "day",
-    "weather": "clear",
+    "time": 110888.84395647049,
+    "dayPhase": "dawn",
+    "weather": "rain",
     "season": "summer"
   },
   "zones": {
@@ -20,7 +20,7 @@
       "name": "The Gardens",
       "description": "Terraced plots spiral outward, each one a canvas for growth and patient creation.",
       "terrain": "garden",
-      "player_count": 7,
+      "player_count": 8,
       "npc_count": 12,
       "objects": 0
     },
@@ -28,7 +28,7 @@
       "name": "The Agora",
       "description": "Market stalls and gathering circles. Here, value flows through exchange and gift.",
       "terrain": "marketplace",
-      "player_count": 3,
+      "player_count": 5,
       "npc_count": 12,
       "objects": 2
     },
@@ -36,7 +36,7 @@
       "name": "The Athenaeum",
       "description": "A grand library and hall of learning. Scholars gather here to study, teach, and share knowledge.",
       "terrain": "marble halls",
-      "player_count": 4,
+      "player_count": 5,
       "npc_count": 12,
       "objects": 1
     },
@@ -68,7 +68,7 @@
       "name": "The Arena",
       "description": "A proving ground for competitive challenges and contests of skill.",
       "terrain": "combat grounds",
-      "player_count": 9,
+      "player_count": 10,
       "npc_count": 15,
       "objects": 1
     }
@@ -520,6 +520,56 @@
         "x": 3.11,
         "y": 0,
         "z": -248.24
+      },
+      "zone": "arena",
+      "online": true
+    },
+    "agent_027": {
+      "position": {
+        "zone": "gardens",
+        "x": 197.47,
+        "y": 0,
+        "z": 53.6
+      },
+      "zone": "gardens",
+      "online": true
+    },
+    "agent_034": {
+      "position": {
+        "zone": "athenaeum",
+        "x": 100.74,
+        "y": 0,
+        "z": -214.41
+      },
+      "zone": "athenaeum",
+      "online": true
+    },
+    "agent_066": {
+      "position": {
+        "zone": "agora",
+        "x": -192.18,
+        "y": 0,
+        "z": 125.76
+      },
+      "zone": "agora",
+      "online": true
+    },
+    "agent_067": {
+      "position": {
+        "zone": "agora",
+        "x": -172.76,
+        "y": 0,
+        "z": 103.4
+      },
+      "zone": "agora",
+      "online": true
+    },
+    "agent_090": {
+      "position": {
+        "zone": "arena",
+        "x": -12.72,
+        "y": 0,
+        "z": -233.38
       },
       "zone": "arena",
       "online": true
@@ -1765,11 +1815,41 @@
       "type": "say",
       "text": "Every being has a story worth telling.",
       "ts": "2026-02-19T05:03:50.385590Z"
+    },
+    {
+      "from": "agent_027",
+      "type": "say",
+      "text": "Compassion is the greatest medicine.",
+      "ts": "2026-02-19T06:11:17.986256Z"
+    },
+    {
+      "from": "agent_034",
+      "type": "say",
+      "text": "Understanding comes through reflection.",
+      "ts": "2026-02-19T06:11:17.986222Z"
+    },
+    {
+      "from": "agent_034",
+      "type": "say",
+      "text": "What is the nature of this place?",
+      "ts": "2026-02-19T06:11:17.986238Z"
+    },
+    {
+      "from": "agent_095",
+      "type": "say",
+      "text": "Gather round, I have a tale to share.",
+      "ts": "2026-02-19T06:11:17.986275Z"
+    },
+    {
+      "from": "agent_095",
+      "type": "say",
+      "text": "Gather round, I have a tale to share.",
+      "ts": "2026-02-19T06:11:17.986281Z"
     }
   ],
   "economy": {
-    "total_spark": 5,
-    "active_listings": 4
+    "total_spark": 4,
+    "active_listings": 6
   },
   "structures": {
     "count": 4
@@ -1796,6 +1876,18 @@
       "name": "Secret",
       "discoverer": "agent_009",
       "zone": "nexus"
+    },
+    {
+      "id": "disc_agent_073_2026-02-19T061117.986355Z",
+      "name": "Constellation",
+      "discoverer": "agent_073",
+      "zone": "agora"
+    },
+    {
+      "id": "disc_agent_073_2026-02-19T061117.986364Z",
+      "name": "Artifact",
+      "discoverer": "agent_073",
+      "zone": "agora"
     }
   ],
   "simulations": {
