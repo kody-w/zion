@@ -225,7 +225,7 @@
         "z": 0,
         "zone": "nexus"
       },
-      "lastSeen": "2026-02-19T05:03:50.385502Z",
+      "lastSeen": "2026-02-19T09:39:26.552146Z",
       "actions": [
         {
           "type": "warp",
@@ -242,6 +242,19 @@
         {
           "type": "warp",
           "timestamp": "2026-02-18T11:50:50.343480Z",
+          "payload": {}
+        },
+        {
+          "type": "discover",
+          "timestamp": "2026-02-19T09:39:26.552131Z",
+          "payload": {
+            "name": "Pathway",
+            "description": "Discovered a pathway"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-02-19T09:39:26.552146Z",
           "payload": {}
         }
       ]
@@ -2118,7 +2131,7 @@
         "y": 0,
         "z": -103.86
       },
-      "lastSeen": "2026-02-18T15:00:06.995245Z",
+      "lastSeen": "2026-02-19T09:39:26.552257Z",
       "actions": [
         {
           "type": "craft",
@@ -2177,6 +2190,20 @@
           "payload": {
             "archetype": "artist"
           }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-19T09:39:26.552257Z",
+          "payload": {
+            "recipe": "instrument"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-19T09:39:26.552249Z",
+          "payload": {
+            "recipe": "instrument"
+          }
         }
       ],
       "inventory": [
@@ -2191,6 +2218,14 @@
         {
           "item": "ornament",
           "craftedAt": "2026-02-18T15:00:06.995245Z"
+        },
+        {
+          "item": "instrument",
+          "craftedAt": "2026-02-19T09:39:26.552257Z"
+        },
+        {
+          "item": "instrument",
+          "craftedAt": "2026-02-19T09:39:26.552249Z"
         }
       ]
     },
@@ -2464,7 +2499,7 @@
         "y": 0,
         "z": 200.71
       },
-      "lastSeen": "2026-02-18T14:04:36.315828Z",
+      "lastSeen": "2026-02-19T09:39:26.552237Z",
       "actions": [
         {
           "type": "join",
@@ -2507,6 +2542,27 @@
           "payload": {
             "archetype": "builder"
           }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-19T09:39:26.552237Z",
+          "payload": {
+            "recipe": "ornament"
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-19T09:39:26.552220Z",
+          "payload": {
+            "archetype": "builder"
+          }
+        },
+        {
+          "type": "build",
+          "timestamp": "2026-02-19T09:39:26.552229Z",
+          "payload": {
+            "structure": "bench"
+          }
         }
       ],
       "inventory": [
@@ -2517,6 +2573,10 @@
         {
           "item": "instrument",
           "craftedAt": "2026-02-18T05:04:16.538235Z"
+        },
+        {
+          "item": "ornament",
+          "craftedAt": "2026-02-19T09:39:26.552237Z"
         }
       ]
     },
@@ -2908,7 +2968,7 @@
         "y": 0,
         "z": -216.53
       },
-      "lastSeen": "2026-02-19T00:01:51.192250Z",
+      "lastSeen": "2026-02-19T09:39:26.552186Z",
       "actions": [
         {
           "type": "join",
@@ -2942,6 +3002,11 @@
         {
           "type": "trade_offer",
           "timestamp": "2026-02-19T00:01:51.192250Z",
+          "payload": {}
+        },
+        {
+          "type": "buy",
+          "timestamp": "2026-02-19T09:39:26.552186Z",
           "payload": {}
         }
       ]
@@ -3360,7 +3425,7 @@
         "y": 0,
         "z": -233.78
       },
-      "lastSeen": "2026-02-19T00:01:51.192310Z",
+      "lastSeen": "2026-02-19T09:39:26.552111Z",
       "actions": [
         {
           "type": "teach",
@@ -3424,6 +3489,23 @@
           "payload": {
             "archetype": "teacher"
           }
+        },
+        {
+          "type": "teach",
+          "timestamp": "2026-02-19T09:39:26.552098Z",
+          "payload": {}
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-19T09:39:26.552042Z",
+          "payload": {
+            "archetype": "teacher"
+          }
+        },
+        {
+          "type": "teach",
+          "timestamp": "2026-02-19T09:39:26.552111Z",
+          "payload": {}
         }
       ]
     },
@@ -3435,7 +3517,7 @@
         "y": 0,
         "z": -230.7
       },
-      "lastSeen": "2026-02-18T08:00:47.821067Z",
+      "lastSeen": "2026-02-19T09:39:26.552320Z",
       "actions": [
         {
           "type": "compose",
@@ -3457,6 +3539,27 @@
           "timestamp": "2026-02-18T08:00:47.821053Z",
           "payload": {
             "text": "Words carry power and memory."
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-19T09:39:26.552306Z",
+          "payload": {
+            "text": "Every being has a story worth telling."
+          }
+        },
+        {
+          "type": "join",
+          "timestamp": "2026-02-19T09:39:26.552302Z",
+          "payload": {
+            "archetype": "storyteller"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-19T09:39:26.552320Z",
+          "payload": {
+            "text": "Every being has a story worth telling."
           }
         }
       ]
@@ -4216,7 +4319,7 @@
         "y": 0,
         "z": 17.36
       },
-      "lastSeen": "2026-02-18T14:04:36.315961Z",
+      "lastSeen": "2026-02-19T09:39:26.552208Z",
       "actions": [
         {
           "type": "plant",
@@ -4260,6 +4363,21 @@
           "timestamp": "2026-02-18T14:04:36.315961Z",
           "payload": {
             "plot": "plot_005"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-19T09:39:26.552196Z",
+          "payload": {
+            "plot": "plot_006"
+          }
+        },
+        {
+          "type": "plant",
+          "timestamp": "2026-02-19T09:39:26.552208Z",
+          "payload": {
+            "species": "wheat",
+            "plot": "plot_015"
           }
         }
       ]
@@ -4457,7 +4575,7 @@
         "z": 0,
         "zone": "nexus"
       },
-      "lastSeen": "2026-02-19T08:54:56.308903Z",
+      "lastSeen": "2026-02-19T09:39:26.552267Z",
       "actions": [
         {
           "type": "warp",
@@ -4488,6 +4606,14 @@
           "type": "warp",
           "timestamp": "2026-02-18T23:40:40.738160Z",
           "payload": {}
+        },
+        {
+          "type": "discover",
+          "timestamp": "2026-02-19T09:39:26.552267Z",
+          "payload": {
+            "name": "Secret",
+            "description": "Discovered a secret"
+          }
         }
       ]
     },
@@ -4798,7 +4924,7 @@
         "y": 0,
         "z": 41.09
       },
-      "lastSeen": "2026-02-18T16:00:36.245941Z",
+      "lastSeen": "2026-02-19T09:39:26.552294Z",
       "actions": [
         {
           "type": "join",
@@ -4826,6 +4952,22 @@
           "timestamp": "2026-02-18T16:00:36.245899Z",
           "payload": {
             "archetype": "gardener"
+          }
+        },
+        {
+          "type": "plant",
+          "timestamp": "2026-02-19T09:39:26.552280Z",
+          "payload": {
+            "species": "tree",
+            "plot": "plot_007"
+          }
+        },
+        {
+          "type": "plant",
+          "timestamp": "2026-02-19T09:39:26.552294Z",
+          "payload": {
+            "species": "tree",
+            "plot": "plot_001"
           }
         }
       ]
@@ -4929,7 +5071,7 @@
         "y": 0,
         "z": 204.26
       },
-      "lastSeen": "2026-02-18T23:00:26.740066Z",
+      "lastSeen": "2026-02-19T09:39:26.552169Z",
       "actions": [
         {
           "type": "craft",
@@ -4951,12 +5093,30 @@
           "payload": {
             "structure": "path"
           }
+        },
+        {
+          "type": "build",
+          "timestamp": "2026-02-19T09:39:26.552169Z",
+          "payload": {
+            "structure": "path"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-19T09:39:26.552160Z",
+          "payload": {
+            "recipe": "tool"
+          }
         }
       ],
       "inventory": [
         {
           "item": "ornament",
           "craftedAt": "2026-02-18T16:00:36.246065Z"
+        },
+        {
+          "item": "tool",
+          "craftedAt": "2026-02-19T09:39:26.552160Z"
         }
       ]
     },
@@ -5791,6 +5951,30 @@
         "z": 185.21
       },
       "builtAt": "2026-02-19T08:54:56.308926Z"
+    },
+    "structure_agent_079_1771495037": {
+      "id": "structure_agent_079_1771495037",
+      "type": "path",
+      "builder": "agent_079",
+      "builtAt": "2026-02-19T09:39:26.552169Z",
+      "position": {
+        "zone": "commons",
+        "x": 161.19,
+        "y": 0,
+        "z": 204.26
+      }
+    },
+    "structure_agent_075_1771495037": {
+      "id": "structure_agent_075_1771495037",
+      "type": "bench",
+      "builder": "agent_075",
+      "builtAt": "2026-02-19T09:39:26.552229Z",
+      "position": {
+        "zone": "commons",
+        "x": 173.39,
+        "y": 0,
+        "z": 200.71
+      }
     }
   },
   "creations": [
@@ -5969,5 +6153,40 @@
       "zone": "athenaeum",
       "ts": "2026-02-19T08:54:56.308932Z"
     }
-  ]
+  ],
+  "gardens": {
+    "plot_007": {
+      "plants": [
+        {
+          "species": "tree",
+          "plantedBy": "agent_018",
+          "plantedAt": "2026-02-19T09:39:26.552280Z",
+          "growthStage": 0.0,
+          "growthTime": 3600
+        }
+      ]
+    },
+    "plot_015": {
+      "plants": [
+        {
+          "species": "wheat",
+          "plantedBy": "agent_020",
+          "plantedAt": "2026-02-19T09:39:26.552208Z",
+          "growthStage": 0.0,
+          "growthTime": 3600
+        }
+      ]
+    },
+    "plot_001": {
+      "plants": [
+        {
+          "species": "tree",
+          "plantedBy": "agent_018",
+          "plantedAt": "2026-02-19T09:39:26.552294Z",
+          "growthStage": 0.0,
+          "growthTime": 3600
+        }
+      ]
+    }
+  }
 }
