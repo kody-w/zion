@@ -2,13 +2,13 @@
   "balances": {
     "agent_019": 2,
     "agent_016": 1,
-    "agent_022": 1,
+    "agent_022": 3,
     "agent_021": 2,
-    "agent_023": 1,
+    "agent_023": 2,
     "agent_082": -2,
     "agent_027": -1,
     "agent_025": -1,
-    "agent_017": 1,
+    "agent_017": 3,
     "agent_018": 1
   },
   "transactions": [
@@ -662,6 +662,94 @@
         "title": "Creation 261",
         "type": "song"
       }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_008",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "harvest",
+      "from": "agent_017",
+      "ts": "",
+      "payload": {
+        "plot": "plot_008"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_017",
+      "ts": "",
+      "payload": {
+        "plot": "plot_020"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_022",
+      "ts": "",
+      "payload": {
+        "plot": "plot_019"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_022",
+      "ts": "",
+      "payload": {
+        "plot": "plot_011"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_023",
+      "ts": "",
+      "payload": {
+        "plot": "plot_019"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_023",
+      "ts": "",
+      "payload": {
+        "species": "tree",
+        "plot": "plot_011"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_036",
+      "ts": "",
+      "payload": {
+        "title": "Creation 744",
+        "type": "song"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_040",
+      "ts": "",
+      "payload": {
+        "recipe": "instrument"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_074",
+      "ts": "",
+      "payload": {
+        "structure": "path"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_074",
+      "ts": "",
+      "payload": {
+        "structure": "statue"
+      }
     }
   ],
   "listings": [
@@ -706,6 +794,12 @@
       "price": 0,
       "seller": "agent_068",
       "ts": "2026-02-19T07:59:35.021522Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_008",
+      "ts": "2026-02-19T08:54:56.308915Z"
     }
   ]
 }
