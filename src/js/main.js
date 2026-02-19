@@ -1353,13 +1353,8 @@
             // Track activity
             addRecentActivity('Entered ' + currentZone);
 
-            // Screen fade transition effect
-            if (World && World.fadeTransition) {
-              World.fadeTransition(function() {
-                // This callback fires at peak fade - load new zone assets here
-                if (World.loadZone) World.loadZone(sceneContext, currentZone);
-              });
-            }
+            // Seamless transition — no camera teleport, just update zone context
+            // Terrain chunks load dynamically as the player walks
 
             if (Mentoring) {
               var xpResult = Mentoring.addSkillXP(localPlayer.id, 'exploration', 8);
@@ -3663,8 +3658,79 @@
           } else {
             var npcPositions = NPCs && NPCs.getNPCPositions ? NPCs.getNPCPositions() : [];
             var landmarks = [];
-            HUD.showWorldMap(localPlayer.position, npcPositions, landmarks);
+            HUD.showWorldMap(localPlayer.position, npcPositions, landmarks, function(zoneId) {
+              handleLocalAction('fastTravel', { zone: zoneId });
+            });
           }
+        }
+        break;
+
+      case 'fastTravel':
+        if (localPlayer && World && data && data.zone) {
+          var targetZone = data.zone;
+          var Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
+          var zoneInfo = Zones && Zones.ZONES ? Zones.ZONES[targetZone] : null;
+          if (!zoneInfo) break;
+
+          var oldZone = currentZone;
+          currentZone = targetZone;
+
+          // Fade transition with teleport at peak
+          if (World.fadeTransition) {
+            World.fadeTransition(function() {
+              // Teleport player to zone center
+              var tx = zoneInfo.cx;
+              var tz = zoneInfo.cz;
+              var ty = World.getTerrainHeight ? World.getTerrainHeight(tx, tz) : 0;
+              localPlayer.position.x = tx;
+              localPlayer.position.y = ty;
+              localPlayer.position.z = tz;
+
+              // Move camera to follow
+              if (sceneContext && sceneContext.camera) {
+                sceneContext.camera.position.set(tx, ty + 5, tz + 12);
+                sceneContext.camera.lookAt(tx, ty + 1.5, tz);
+              }
+            });
+          }
+
+          // Play zone entry sound
+          if (Audio && Audio.playSound) Audio.playSound('zone_enter');
+
+          // Update all zone context
+          if (HUD) {
+            HUD.updateZoneLabel(currentZone);
+            HUD.showNotification('Traveled to ' + currentZone.charAt(0).toUpperCase() + currentZone.slice(1), 'info');
+          }
+          if (Audio) {
+            Audio.playAmbient(currentZone);
+            if (Audio.setZoneAmbient) Audio.setZoneAmbient(currentZone);
+            if (Audio.updateMusic) Audio.updateMusic(currentZone, currentTimePeriod);
+            if (Audio.playPianoAccent && !visitedZones[currentZone]) {
+              Audio.playPianoAccent('zone_discovery');
+            }
+          }
+          visitedZones[currentZone] = true;
+          if (NPCs) NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
+          if (World && World.clearInteractiveObjects && World.spawnZoneInteractives) {
+            World.clearInteractiveObjects(sceneContext);
+            World.spawnZoneInteractives(sceneContext, currentZone);
+          }
+          addRecentActivity('Fast traveled to ' + currentZone);
+
+          // Send warp protocol message
+          if (Network && Network.broadcastMessage) {
+            Network.broadcastMessage({
+              type: 'warp',
+              payload: {
+                zone: currentZone,
+                position: { x: localPlayer.position.x, y: localPlayer.position.y, z: localPlayer.position.z, zone: currentZone }
+              }
+            });
+          }
+
+          // Start cinematic camera swoop
+          startZoneCinematic();
         }
         break;
 

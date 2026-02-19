@@ -1589,7 +1589,7 @@
     ['athenaeum', 'arena']
   ];
 
-  function showWorldMap(playerPos, npcs, landmarks) {
+  function showWorldMap(playerPos, npcs, landmarks, onFastTravel) {
     if (typeof document === 'undefined') return;
     if (worldMapVisible) return;
 
@@ -1627,7 +1627,7 @@
 
     var instructions = document.createElement('div');
     instructions.style.cssText = 'margin-top:20px;font-size:14px;color:#aaa;text-align:center;';
-    instructions.textContent = 'Press M or ESC to close';
+    instructions.textContent = onFastTravel ? 'Click a zone to fast travel · Press M or ESC to close' : 'Press M or ESC to close';
     worldMapOverlay.appendChild(instructions);
 
     hud.appendChild(worldMapOverlay);
@@ -1653,6 +1653,17 @@
     worldMapCanvas.addEventListener('mousemove', function(e) {
       handleMapHover(e);
     });
+
+    // Fast travel click handler
+    if (onFastTravel) {
+      worldMapCanvas.addEventListener('click', function(e) {
+        var zone = getZoneAtMapClick(e);
+        if (zone) {
+          hideWorldMap();
+          onFastTravel(zone);
+        }
+      });
+    }
   }
 
   function hideWorldMap() {
@@ -1871,11 +1882,39 @@
 
     if (hoveredZone) {
       worldMapCanvas.style.cursor = 'pointer';
-      worldMapCanvas.title = hoveredZone.name + ': ' + hoveredZone.desc;
+      worldMapCanvas.title = hoveredZone.name + ' — Click to fast travel';
     } else {
       worldMapCanvas.style.cursor = 'default';
       worldMapCanvas.title = '';
     }
+  }
+
+  function getZoneAtMapClick(e) {
+    if (!worldMapCanvas) return null;
+
+    var rect = worldMapCanvas.getBoundingClientRect();
+    var mx = ((e.clientX - rect.left) / rect.width) * worldMapCanvas.width;
+    var my = ((e.clientY - rect.top) / rect.height) * worldMapCanvas.height;
+
+    var worldMin = -320, worldMax = 320;
+    var worldRange = worldMax - worldMin;
+    var padding = 40;
+    var w = worldMapCanvas.width;
+    var h = worldMapCanvas.height;
+
+    for (var zoneId in WORLD_MAP_ZONES) {
+      var zone = WORLD_MAP_ZONES[zoneId];
+      var zx = padding + ((zone.cx - worldMin) / worldRange) * (w - padding * 2);
+      var zy = padding + ((zone.cz - worldMin) / worldRange) * (h - padding * 2);
+      var zr = (zone.radius / worldRange) * (w - padding * 2);
+
+      var dx = mx - zx;
+      var dy = my - zy;
+      if (Math.sqrt(dx * dx + dy * dy) <= zr) {
+        return zoneId;
+      }
+    }
+    return null;
   }
 
   // ========================================================================
