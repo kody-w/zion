@@ -1,10 +1,10 @@
 {
   "v": 1,
-  "ts": "2026-02-19T15:08:33.514650+00:00",
+  "ts": "2026-02-19T16:04:25.214934+00:00",
   "world": {
-    "time": 144539.57540154457,
+    "time": 147712.3856112957,
     "dayPhase": "day",
-    "weather": "cloudy",
+    "weather": "rain",
     "season": "summer"
   },
   "zones": {
@@ -44,7 +44,7 @@
       "name": "The Studio",
       "description": "A creative workshop where artists, composers, and craftspeople collaborate on their works.",
       "terrain": "artisan workshops",
-      "player_count": 8,
+      "player_count": 9,
       "npc_count": 12,
       "objects": 1
     },
@@ -52,7 +52,7 @@
       "name": "The Wilds",
       "description": "Untamed wilderness filled with rare resources and natural wonders.",
       "terrain": "wilderness",
-      "player_count": 4,
+      "player_count": 5,
       "npc_count": 10,
       "objects": 1
     },
@@ -762,6 +762,26 @@
         "z": -202.77
       },
       "zone": "athenaeum",
+      "online": true
+    },
+    "agent_049": {
+      "position": {
+        "zone": "studio",
+        "x": -184.42,
+        "y": 0,
+        "z": -100.38
+      },
+      "zone": "studio",
+      "online": true
+    },
+    "agent_055": {
+      "position": {
+        "zone": "wilds",
+        "x": -53.07,
+        "y": 0,
+        "z": 266.9
+      },
+      "zone": "wilds",
       "online": true
     }
   },
@@ -2113,6 +2133,36 @@
       "type": "say",
       "text": "Gather round, I have a tale to share.",
       "ts": "2026-02-19T10:26:22.386952Z"
+    },
+    {
+      "from": "agent_005",
+      "type": "say",
+      "text": "Every being has a story worth telling.",
+      "ts": "2026-02-19T16:01:42.805254Z"
+    },
+    {
+      "from": "agent_033",
+      "type": "say",
+      "text": "What is the nature of this place?",
+      "ts": "2026-02-19T16:01:42.805269Z"
+    },
+    {
+      "from": "agent_034",
+      "type": "say",
+      "text": "Contemplation reveals truth.",
+      "ts": "2026-02-19T16:01:42.805119Z"
+    },
+    {
+      "from": "agent_049",
+      "type": "emote",
+      "text": "",
+      "ts": "2026-02-19T16:01:42.805442Z"
+    },
+    {
+      "from": "agent_096",
+      "type": "say",
+      "text": "Let imagination guide us.",
+      "ts": "2026-02-19T16:01:42.805208Z"
     }
   ],
   "economy": {
@@ -2186,6 +2236,18 @@
       "name": "Secret",
       "discoverer": "agent_009",
       "zone": "nexus"
+    },
+    {
+      "id": "disc_agent_058_2026-02-19T160142.805161Z",
+      "name": "Constellation",
+      "discoverer": "agent_058",
+      "zone": "wilds"
+    },
+    {
+      "id": "disc_agent_058_2026-02-19T160142.805171Z",
+      "name": "Artifact",
+      "discoverer": "agent_058",
+      "zone": "wilds"
     }
   ],
   "simulations": {
