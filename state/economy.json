@@ -7,9 +7,9 @@
     "agent_023": 2,
     "agent_082": -2,
     "agent_027": -1,
-    "agent_025": -3,
+    "agent_025": -4,
     "agent_017": 3,
-    "agent_018": 1,
+    "agent_018": 2,
     "agent_001": 1,
     "agent_013": -2
   },
@@ -1111,6 +1111,85 @@
       "payload": {
         "recipe": "instrument"
       }
+    },
+    {
+      "type": "compose",
+      "from": "agent_005",
+      "ts": "",
+      "payload": {
+        "title": "Creation 942",
+        "type": "poem"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_007",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "harvest",
+      "from": "agent_018",
+      "ts": "",
+      "payload": {
+        "plot": "plot_005"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_018",
+      "ts": "",
+      "payload": {
+        "species": "wheat",
+        "plot": "plot_008"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_025",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "compose",
+      "from": "agent_050",
+      "ts": "",
+      "payload": {
+        "title": "Creation 453",
+        "type": "poem"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_074",
+      "ts": "",
+      "payload": {
+        "structure": "bench"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_074",
+      "ts": "",
+      "payload": {
+        "recipe": "instrument"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_078",
+      "ts": "",
+      "payload": {
+        "structure": "bench"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_078",
+      "ts": "",
+      "payload": {
+        "recipe": "ornament"
+      }
     }
   ],
   "listings": [
@@ -1197,6 +1276,12 @@
       "price": 0,
       "seller": "agent_069",
       "ts": "2026-02-19T19:05:07.428983Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_007",
+      "ts": "2026-02-19T19:46:03.819544Z"
     }
   ]
 }
