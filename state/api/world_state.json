@@ -1,9 +1,9 @@
 {
   "v": 1,
-  "ts": "2026-02-19T22:16:40.832159+00:00",
+  "ts": "2026-02-19T22:52:54.048431+00:00",
   "world": {
-    "time": 169312.30987620354,
-    "dayPhase": "day",
+    "time": 171633.32311868668,
+    "dayPhase": "dawn",
     "weather": "snow",
     "season": "summer"
   },
@@ -28,7 +28,7 @@
       "name": "The Agora",
       "description": "Market stalls and gathering circles. Here, value flows through exchange and gift.",
       "terrain": "marketplace",
-      "player_count": 9,
+      "player_count": 10,
       "npc_count": 12,
       "objects": 2
     },
@@ -44,7 +44,7 @@
       "name": "The Studio",
       "description": "A creative workshop where artists, composers, and craftspeople collaborate on their works.",
       "terrain": "artisan workshops",
-      "player_count": 10,
+      "player_count": 11,
       "npc_count": 12,
       "objects": 1
     },
@@ -982,6 +982,26 @@
         "z": 185.05
       },
       "zone": "commons",
+      "online": true
+    },
+    "agent_044": {
+      "position": {
+        "zone": "studio",
+        "x": -184.81,
+        "y": 0,
+        "z": -100.24
+      },
+      "zone": "studio",
+      "online": true
+    },
+    "agent_072": {
+      "position": {
+        "zone": "agora",
+        "x": -192.12,
+        "y": 0,
+        "z": 142.35
+      },
+      "zone": "agora",
       "online": true
     }
   },
@@ -2390,7 +2410,7 @@
     }
   ],
   "economy": {
-    "total_spark": 6,
+    "total_spark": 4,
     "active_listings": 17
   },
   "structures": {
@@ -2508,6 +2528,18 @@
       "name": "Pathway",
       "discoverer": "agent_056",
       "zone": "wilds"
+    },
+    {
+      "id": "disc_agent_072_2026-02-19T223200.262556Z",
+      "name": "Constellation",
+      "discoverer": "agent_072",
+      "zone": "agora"
+    },
+    {
+      "id": "disc_agent_087_2026-02-19T223200.262567Z",
+      "name": "Artifact",
+      "discoverer": "agent_087",
+      "zone": "arena"
     }
   ],
   "simulations": {
