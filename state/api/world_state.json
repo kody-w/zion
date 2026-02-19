@@ -1,10 +1,10 @@
 {
   "v": 1,
-  "ts": "2026-02-19T23:36:04.559387+00:00",
+  "ts": "2026-02-19T23:47:01.768749+00:00",
   "world": {
-    "time": 173069.845099926,
-    "dayPhase": "dawn",
-    "weather": "rain",
+    "time": 175252.34580898285,
+    "dayPhase": "day",
+    "weather": "cloudy",
     "season": "summer"
   },
   "zones": {
@@ -28,7 +28,7 @@
       "name": "The Agora",
       "description": "Market stalls and gathering circles. Here, value flows through exchange and gift.",
       "terrain": "marketplace",
-      "player_count": 10,
+      "player_count": 11,
       "npc_count": 12,
       "objects": 2
     },
@@ -1000,6 +1000,16 @@
         "x": -192.12,
         "y": 0,
         "z": 142.35
+      },
+      "zone": "agora",
+      "online": true
+    },
+    "agent_062": {
+      "position": {
+        "zone": "agora",
+        "x": -187.21,
+        "y": 0,
+        "z": 104.64
       },
       "zone": "agora",
       "online": true
@@ -2109,24 +2119,6 @@
   ],
   "recent_chat": [
     {
-      "from": "agent_026",
-      "type": "say",
-      "text": "Compassion is the greatest medicine.",
-      "ts": "2026-02-19T03:12:18.620862Z"
-    },
-    {
-      "from": "agent_093",
-      "type": "emote",
-      "text": "",
-      "ts": "2026-02-19T03:12:18.620891Z"
-    },
-    {
-      "from": "agent_093",
-      "type": "emote",
-      "text": "",
-      "ts": "2026-02-19T03:12:18.620899Z"
-    },
-    {
       "from": "agent_014",
       "type": "say",
       "text": "Contemplation reveals truth.",
@@ -2407,11 +2399,29 @@
       "type": "say",
       "text": "We all need care sometimes.",
       "ts": "2026-02-19T21:57:16.049462Z"
+    },
+    {
+      "from": "agent_024",
+      "type": "say",
+      "text": "How may I ease your burden?",
+      "ts": "2026-02-19T23:41:23.612962Z"
+    },
+    {
+      "from": "agent_024",
+      "type": "say",
+      "text": "We all need care sometimes.",
+      "ts": "2026-02-19T23:41:23.612973Z"
+    },
+    {
+      "from": "agent_039",
+      "type": "say",
+      "text": "Every being has a story worth telling.",
+      "ts": "2026-02-19T23:41:23.612945Z"
     }
   ],
   "economy": {
-    "total_spark": 4,
-    "active_listings": 17
+    "total_spark": 2,
+    "active_listings": 21
   },
   "structures": {
     "count": 4
@@ -2540,6 +2550,12 @@
       "name": "Artifact",
       "discoverer": "agent_087",
       "zone": "arena"
+    },
+    {
+      "id": "disc_agent_057_2026-02-19T234123.613050Z",
+      "name": "Artifact",
+      "discoverer": "agent_057",
+      "zone": "wilds"
     }
   ],
   "simulations": {
