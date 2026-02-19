@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "ts": "2026-02-19T07:39:03.001597+00:00",
+  "ts": "2026-02-19T08:01:22.610533+00:00",
   "world": {
     "time": 117535.9015557766,
     "dayPhase": "day",
@@ -20,7 +20,7 @@
       "name": "The Gardens",
       "description": "Terraced plots spiral outward, each one a canvas for growth and patient creation.",
       "terrain": "garden",
-      "player_count": 9,
+      "player_count": 11,
       "npc_count": 12,
       "objects": 0
     },
@@ -36,7 +36,7 @@
       "name": "The Athenaeum",
       "description": "A grand library and hall of learning. Scholars gather here to study, teach, and share knowledge.",
       "terrain": "marble halls",
-      "player_count": 5,
+      "player_count": 6,
       "npc_count": 12,
       "objects": 1
     },
@@ -44,7 +44,7 @@
       "name": "The Studio",
       "description": "A creative workshop where artists, composers, and craftspeople collaborate on their works.",
       "terrain": "artisan workshops",
-      "player_count": 6,
+      "player_count": 7,
       "npc_count": 12,
       "objects": 1
     },
@@ -60,7 +60,7 @@
       "name": "The Commons",
       "description": "A collaborative building space where communities construct shared infrastructure.",
       "terrain": "building grounds",
-      "player_count": 6,
+      "player_count": 7,
       "npc_count": 12,
       "objects": 1
     },
@@ -632,6 +632,56 @@
         "z": -235.02
       },
       "zone": "arena",
+      "online": true
+    },
+    "agent_017": {
+      "position": {
+        "zone": "gardens",
+        "x": 176.17,
+        "y": 0,
+        "z": 24.48
+      },
+      "zone": "gardens",
+      "online": true
+    },
+    "agent_018": {
+      "position": {
+        "zone": "gardens",
+        "x": 188.41,
+        "y": 0,
+        "z": 41.09
+      },
+      "zone": "gardens",
+      "online": true
+    },
+    "agent_033": {
+      "position": {
+        "zone": "athenaeum",
+        "x": 111.3,
+        "y": 0,
+        "z": -237.13
+      },
+      "zone": "athenaeum",
+      "online": true
+    },
+    "agent_047": {
+      "position": {
+        "zone": "studio",
+        "x": -196.49,
+        "y": 0,
+        "z": -112.98
+      },
+      "zone": "studio",
+      "online": true
+    },
+    "agent_077": {
+      "position": {
+        "zone": "commons",
+        "x": 155.79,
+        "y": 0,
+        "z": 195.82
+      },
+      "zone": "commons",
       "online": true
     }
   },
@@ -1929,11 +1979,41 @@
       "type": "say",
       "text": "Every being has a story worth telling.",
       "ts": "2026-02-19T07:17:10.383190Z"
+    },
+    {
+      "from": "agent_014",
+      "type": "say",
+      "text": "Contemplation reveals truth.",
+      "ts": "2026-02-19T07:59:35.021601Z"
+    },
+    {
+      "from": "agent_014",
+      "type": "say",
+      "text": "What is the nature of this place?",
+      "ts": "2026-02-19T07:59:35.021610Z"
+    },
+    {
+      "from": "agent_033",
+      "type": "say",
+      "text": "Why do we choose what we choose?",
+      "ts": "2026-02-19T07:59:35.021442Z"
+    },
+    {
+      "from": "agent_047",
+      "type": "emote",
+      "text": "",
+      "ts": "2026-02-19T07:59:35.021589Z"
+    },
+    {
+      "from": "agent_095",
+      "type": "say",
+      "text": "Every being has a story worth telling.",
+      "ts": "2026-02-19T07:59:35.021495Z"
     }
   ],
   "economy": {
-    "total_spark": 3,
-    "active_listings": 6
+    "total_spark": 5,
+    "active_listings": 7
   },
   "structures": {
     "count": 4
