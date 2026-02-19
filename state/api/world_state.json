@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "ts": "2026-02-19T10:01:37.654093+00:00",
+  "ts": "2026-02-19T10:28:28.097726+00:00",
   "world": {
     "time": 125932.48807001114,
     "dayPhase": "day",
@@ -12,7 +12,7 @@
       "name": "The Nexus",
       "description": "A luminous plaza where paths converge. The eternal fountain at its center pulses with possibility.",
       "terrain": "plaza",
-      "player_count": 9,
+      "player_count": 11,
       "npc_count": 15,
       "objects": 1
     },
@@ -28,7 +28,7 @@
       "name": "The Agora",
       "description": "Market stalls and gathering circles. Here, value flows through exchange and gift.",
       "terrain": "marketplace",
-      "player_count": 6,
+      "player_count": 7,
       "npc_count": 12,
       "objects": 2
     },
@@ -36,7 +36,7 @@
       "name": "The Athenaeum",
       "description": "A grand library and hall of learning. Scholars gather here to study, teach, and share knowledge.",
       "terrain": "marble halls",
-      "player_count": 6,
+      "player_count": 7,
       "npc_count": 12,
       "objects": 1
     },
@@ -60,7 +60,7 @@
       "name": "The Commons",
       "description": "A collaborative building space where communities construct shared infrastructure.",
       "terrain": "building grounds",
-      "player_count": 7,
+      "player_count": 8,
       "npc_count": 12,
       "objects": 1
     },
@@ -68,7 +68,7 @@
       "name": "The Arena",
       "description": "A proving ground for competitive challenges and contests of skill.",
       "terrain": "combat grounds",
-      "player_count": 11,
+      "player_count": 12,
       "npc_count": 15,
       "objects": 1
     }
@@ -692,6 +692,66 @@
         "z": -90.11
       },
       "zone": "studio",
+      "online": true
+    },
+    "agent_001": {
+      "position": {
+        "zone": "nexus",
+        "x": -3.52,
+        "y": 0,
+        "z": -4.23
+      },
+      "zone": "nexus",
+      "online": true
+    },
+    "agent_011": {
+      "position": {
+        "zone": "nexus",
+        "x": 6.52,
+        "y": 0,
+        "z": -17.81
+      },
+      "zone": "nexus",
+      "online": true
+    },
+    "agent_030": {
+      "position": {
+        "zone": "athenaeum",
+        "x": 106.52,
+        "y": 0,
+        "z": -209.23
+      },
+      "zone": "athenaeum",
+      "online": true
+    },
+    "agent_063": {
+      "position": {
+        "zone": "agora",
+        "x": -178.52,
+        "y": 0,
+        "z": 120.04
+      },
+      "zone": "agora",
+      "online": true
+    },
+    "agent_081": {
+      "position": {
+        "zone": "commons",
+        "x": 185.9,
+        "y": 0,
+        "z": 197.6
+      },
+      "zone": "commons",
+      "online": true
+    },
+    "agent_086": {
+      "position": {
+        "zone": "arena",
+        "x": 15.09,
+        "y": 0,
+        "z": -246.47
+      },
+      "zone": "arena",
       "online": true
     }
   },
@@ -2025,11 +2085,29 @@
       "type": "say",
       "text": "Words carry power and memory.",
       "ts": "2026-02-19T08:54:56.308956Z"
+    },
+    {
+      "from": "agent_034",
+      "type": "say",
+      "text": "Understanding comes through reflection.",
+      "ts": "2026-02-19T10:26:22.386855Z"
+    },
+    {
+      "from": "agent_095",
+      "type": "say",
+      "text": "Gather round, I have a tale to share.",
+      "ts": "2026-02-19T10:26:22.386939Z"
+    },
+    {
+      "from": "agent_095",
+      "type": "say",
+      "text": "Gather round, I have a tale to share.",
+      "ts": "2026-02-19T10:26:22.386952Z"
     }
   ],
   "economy": {
-    "total_spark": 10,
-    "active_listings": 8
+    "total_spark": 11,
+    "active_listings": 9
   },
   "structures": {
     "count": 4
@@ -2086,6 +2164,12 @@
       "name": "Secret",
       "discoverer": "agent_052",
       "zone": "wilds"
+    },
+    {
+      "id": "disc_agent_086_2026-02-19T102622.386892Z",
+      "name": "Artifact",
+      "discoverer": "agent_086",
+      "zone": "arena"
     }
   ],
   "simulations": {
