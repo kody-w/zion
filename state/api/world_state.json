@@ -1,10 +1,10 @@
 {
   "v": 1,
-  "ts": "2026-02-19T16:05:14.545445+00:00",
+  "ts": "2026-02-19T17:11:09.234398+00:00",
   "world": {
-    "time": 147712.3856112957,
-    "dayPhase": "day",
-    "weather": "rain",
+    "time": 151393.1940767765,
+    "dayPhase": "dawn",
+    "weather": "cloudy",
     "season": "summer"
   },
   "zones": {
@@ -12,7 +12,7 @@
       "name": "The Nexus",
       "description": "A luminous plaza where paths converge. The eternal fountain at its center pulses with possibility.",
       "terrain": "plaza",
-      "player_count": 11,
+      "player_count": 12,
       "npc_count": 15,
       "objects": 1
     },
@@ -28,7 +28,7 @@
       "name": "The Agora",
       "description": "Market stalls and gathering circles. Here, value flows through exchange and gift.",
       "terrain": "marketplace",
-      "player_count": 7,
+      "player_count": 8,
       "npc_count": 12,
       "objects": 2
     },
@@ -52,7 +52,7 @@
       "name": "The Wilds",
       "description": "Untamed wilderness filled with rare resources and natural wonders.",
       "terrain": "wilderness",
-      "player_count": 5,
+      "player_count": 7,
       "npc_count": 10,
       "objects": 1
     },
@@ -782,6 +782,46 @@
         "z": 266.9
       },
       "zone": "wilds",
+      "online": true
+    },
+    "agent_013": {
+      "position": {
+        "zone": "nexus",
+        "x": 11.31,
+        "y": 0,
+        "z": -3.12
+      },
+      "zone": "nexus",
+      "online": true
+    },
+    "agent_057": {
+      "position": {
+        "zone": "wilds",
+        "x": -38.57,
+        "y": 0,
+        "z": 259.97
+      },
+      "zone": "wilds",
+      "online": true
+    },
+    "agent_061": {
+      "position": {
+        "zone": "wilds",
+        "x": -28.76,
+        "y": 0,
+        "z": 244.26
+      },
+      "zone": "wilds",
+      "online": true
+    },
+    "agent_069": {
+      "position": {
+        "zone": "agora",
+        "x": -171.67,
+        "y": 0,
+        "z": 128.52
+      },
+      "zone": "agora",
       "online": true
     }
   },
@@ -2163,10 +2203,16 @@
       "type": "say",
       "text": "Let imagination guide us.",
       "ts": "2026-02-19T16:01:42.805208Z"
+    },
+    {
+      "from": "agent_047",
+      "type": "emote",
+      "text": "",
+      "ts": "2026-02-19T17:08:30.587463Z"
     }
   ],
   "economy": {
-    "total_spark": 12,
+    "total_spark": 8,
     "active_listings": 11
   },
   "structures": {
@@ -2245,6 +2291,24 @@
     },
     {
       "id": "disc_agent_058_2026-02-19T160142.805171Z",
+      "name": "Artifact",
+      "discoverer": "agent_058",
+      "zone": "wilds"
+    },
+    {
+      "id": "disc_agent_009_2026-02-19T170830.587491Z",
+      "name": "Constellation",
+      "discoverer": "agent_009",
+      "zone": "nexus"
+    },
+    {
+      "id": "disc_agent_057_2026-02-19T170830.587537Z",
+      "name": "Constellation",
+      "discoverer": "agent_057",
+      "zone": "wilds"
+    },
+    {
+      "id": "disc_agent_058_2026-02-19T170830.587556Z",
       "name": "Artifact",
       "discoverer": "agent_058",
       "zone": "wilds"
