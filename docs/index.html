@@ -35724,7 +35724,7 @@ html, body {
   }
 
   /**
-   * Create white noise buffer
+   * Create brown noise buffer (warm, natural 1/f² spectrum)
    * @returns {AudioBufferSourceNode|null}
    */
   function createWhiteNoise(maxDurationSec) {
@@ -35735,8 +35735,12 @@ html, body {
       const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
       const output = noiseBuffer.getChannelData(0);
 
+      // Brown noise: integrate white noise for warm 1/f² rolloff
+      var lastOut = 0;
       for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
+        var white = Math.random() * 2 - 1;
+        lastOut = (lastOut + (0.02 * white)) / 1.02;
+        output[i] = lastOut * 3.5; // normalize amplitude
       }
 
       const whiteNoise = audioContext.createBufferSource();
@@ -36030,7 +36034,7 @@ html, body {
         streamLfo.frequency.value = 0.5;
         streamLfoGain.gain.value = 100; // Modulate filter frequency
 
-        streamGain.gain.value = 0.04;
+        streamGain.gain.value = 0.025;
 
         streamLfo.connect(streamLfoGain);
         streamLfoGain.connect(streamFilter.frequency);
@@ -36052,7 +36056,7 @@ html, body {
 
         breezeFilter.type = 'lowpass';
         breezeFilter.frequency.value = 200;
-        breezeGain.gain.value = 0.02;
+        breezeGain.gain.value = 0.012;
 
         breeze.connect(breezeFilter);
         breezeFilter.connect(breezeGain);
@@ -36461,7 +36465,7 @@ html, body {
 
         windFilter.type = 'lowpass';
         windFilter.frequency.value = 150;
-        windGain.gain.value = 0.08;
+        windGain.gain.value = 0.05;
 
         wind.connect(windFilter);
         windFilter.connect(windGain);
@@ -36671,7 +36675,7 @@ html, body {
         crowdLfo.frequency.value = 0.4;
         crowdLfoGain.gain.value = 0.02;
 
-        crowdGain.gain.value = 0.05;
+        crowdGain.gain.value = 0.03;
 
         crowdLfo.connect(crowdLfoGain);
         crowdLfoGain.connect(crowdGain.gain);
@@ -36808,7 +36812,7 @@ html, body {
         chatterFilter.frequency.value = 450;
         chatterFilter.Q.value = 1.5;
 
-        chatterGain.gain.value = 0.03;
+        chatterGain.gain.value = 0.018;
 
         chatter.connect(chatterFilter);
         chatterFilter.connect(chatterGain);
@@ -36965,7 +36969,7 @@ html, body {
         crowdFilter.frequency.value = 600;
         crowdFilter.Q.value = 0.8;
 
-        crowdGain.gain.value = 0.06;
+        crowdGain.gain.value = 0.035;
 
         crowd.connect(crowdFilter);
         crowdFilter.connect(crowdGain);
@@ -39141,7 +39145,7 @@ html, body {
           rumbleFilter.type = 'lowpass';
           rumbleFilter.frequency.value = 80;
 
-          rumbleGain.gain.value = 0.08;
+          rumbleGain.gain.value = 0.05;
           rumbleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2.5);
 
           rumble.connect(rumbleFilter);
@@ -39975,15 +39979,15 @@ html, body {
 
   // Musical scales (frequencies in Hz)
   var SCALES = {
-    // Pentatonic scales — always pleasant, no dissonance
-    nexus:     [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25],  // C major pentatonic
-    gardens:   [293.66, 329.63, 369.99, 440.00, 493.88, 587.33, 659.25, 739.99],  // D major pentatonic
-    athenaeum: [246.94, 277.18, 329.63, 369.99, 415.30, 493.88, 554.37, 659.25],  // B minor pentatonic
-    studio:    [329.63, 369.99, 415.30, 493.88, 554.37, 659.25, 739.99, 830.61],  // E major pentatonic
-    wilds:     [220.00, 261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33],  // A minor pentatonic
-    agora:     [349.23, 392.00, 440.00, 523.25, 587.33, 698.46, 783.99, 880.00],  // F major pentatonic
-    commons:   [293.66, 349.23, 392.00, 440.00, 523.25, 587.33, 698.46, 783.99],  // D mixolydian penta
-    arena:     [196.00, 233.08, 261.63, 293.66, 349.23, 392.00, 466.16, 523.25]   // G minor pentatonic
+    // Pentatonic scales in 432Hz tuning — warm, focus-friendly
+    nexus:     [256.87, 288.33, 323.63, 384.91, 432.00, 513.74, 576.65, 647.25],  // C major pentatonic
+    gardens:   [288.33, 323.63, 363.27, 432.00, 484.90, 576.65, 647.25, 726.53],  // D major pentatonic
+    athenaeum: [242.45, 272.18, 323.63, 363.27, 407.75, 484.90, 544.36, 647.25],  // B minor pentatonic
+    studio:    [323.63, 363.27, 407.75, 484.90, 544.36, 647.25, 726.53, 815.51],  // E major pentatonic
+    wilds:     [216.00, 256.87, 288.33, 323.63, 384.91, 432.00, 513.74, 576.65],  // A minor pentatonic
+    agora:     [342.88, 384.91, 432.00, 513.74, 576.65, 685.76, 769.82, 864.00],  // F major pentatonic
+    commons:   [288.33, 342.88, 384.91, 432.00, 513.74, 576.65, 685.76, 769.82],  // D mixolydian penta
+    arena:     [192.43, 228.84, 256.87, 288.33, 342.88, 384.91, 457.69, 513.74]   // G minor pentatonic
   };
 
   // Chord progressions per zone (indices into the scale)
@@ -40000,14 +40004,14 @@ html, body {
 
   // Tempo and feel per zone (beat duration in seconds)
   var ZONE_MUSIC_STYLE = {
-    nexus:     { beatDuration: 2.0, padVolume: 0.08, melodyChance: 0.3, melodyVolume: 0.04, type: 'ethereal' },
-    gardens:   { beatDuration: 1.8, padVolume: 0.07, melodyChance: 0.4, melodyVolume: 0.05, type: 'pastoral' },
-    athenaeum: { beatDuration: 2.5, padVolume: 0.06, melodyChance: 0.2, melodyVolume: 0.03, type: 'mysterious' },
-    studio:    { beatDuration: 1.5, padVolume: 0.07, melodyChance: 0.5, melodyVolume: 0.06, type: 'creative' },
-    wilds:     { beatDuration: 2.2, padVolume: 0.05, melodyChance: 0.25, melodyVolume: 0.04, type: 'nature' },
-    agora:     { beatDuration: 1.4, padVolume: 0.06, melodyChance: 0.4, melodyVolume: 0.05, type: 'lively' },
-    commons:   { beatDuration: 1.8, padVolume: 0.07, melodyChance: 0.35, melodyVolume: 0.04, type: 'warm' },
-    arena:     { beatDuration: 1.6, padVolume: 0.08, melodyChance: 0.3, melodyVolume: 0.05, type: 'dramatic' }
+    nexus:     { beatDuration: 2.8, padVolume: 0.07, melodyChance: 0.15, melodyVolume: 0.03, type: 'ethereal' },
+    gardens:   { beatDuration: 2.4, padVolume: 0.06, melodyChance: 0.2,  melodyVolume: 0.035, type: 'pastoral' },
+    athenaeum: { beatDuration: 3.2, padVolume: 0.05, melodyChance: 0.1,  melodyVolume: 0.025, type: 'mysterious' },
+    studio:    { beatDuration: 2.0, padVolume: 0.06, melodyChance: 0.25, melodyVolume: 0.04, type: 'creative' },
+    wilds:     { beatDuration: 3.0, padVolume: 0.04, melodyChance: 0.12, melodyVolume: 0.03, type: 'nature' },
+    agora:     { beatDuration: 1.8, padVolume: 0.05, melodyChance: 0.2,  melodyVolume: 0.035, type: 'lively' },
+    commons:   { beatDuration: 2.4, padVolume: 0.06, melodyChance: 0.18, melodyVolume: 0.03, type: 'warm' },
+    arena:     { beatDuration: 2.0, padVolume: 0.07, melodyChance: 0.15, melodyVolume: 0.035, type: 'dramatic' }
   };
 
   // Time-of-day modifiers
@@ -40076,11 +40080,11 @@ html, body {
         var filter = audioContext.createBiquadFilter();
 
         osc.type = (style.type === 'ethereal' || style.type === 'mysterious') ? 'sine' : 'triangle';
-        osc.frequency.value = freq + (d === 0 ? -0.5 : 0.5); // slight detune
+        osc.frequency.value = freq + (d === 0 ? -1.5 : 1.5); // lo-fi warm detune
 
         filter.type = 'lowpass';
-        filter.frequency.value = 800;
-        filter.Q.value = 0.5;
+        filter.frequency.value = 500;
+        filter.Q.value = 0.7;
 
         var padVol = style.padVolume * timeMod.volumeMult * musicState.volume;
         var now = audioContext.currentTime;
@@ -40185,7 +40189,7 @@ html, body {
         melOsc.frequency.value = freq;
 
         melFilter.type = 'lowpass';
-        melFilter.frequency.value = 1200;
+        melFilter.frequency.value = 700;
 
         var melVol = style.melodyVolume * timeMod.volumeMult * musicState.volume;
         var noteDur = beatDur * (0.5 + Math.random() * 1.5);

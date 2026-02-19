@@ -211,6 +211,117 @@ test('piano accent volumes are all 0.06 or lower', function() {
   }
 });
 
+// ── Lo-fi ambient music tests ──
+
+console.log('\nLo-fi Ambient Music Tests');
+
+test('noise generator uses brown noise algorithm (integrated random walk)', function() {
+  var fnStart = src.indexOf('function createWhiteNoise');
+  var fnEnd = src.indexOf('\n  }', fnStart + 50);
+  var fnBody = src.substring(fnStart, fnEnd);
+  // Brown noise uses a running sum (lastOut) with integration
+  assert(fnBody.includes('lastOut'), 'Should use lastOut variable for brown noise integration');
+  assert(fnBody.includes('0.02'), 'Should use small step size for smooth brown noise');
+  assert(fnBody.includes('1.02'), 'Should use leak factor to prevent DC drift');
+});
+
+test('scales use 432Hz tuning (A4 = 432)', function() {
+  var scaleStart = src.indexOf('var SCALES');
+  var scaleEnd = src.indexOf('};', scaleStart) + 2;
+  var scaleBlock = src.substring(scaleStart, scaleEnd);
+  // A4 should be 432 not 440
+  assert(scaleBlock.includes('432.00'), 'A4 should be 432Hz, not 440Hz');
+  assert(!scaleBlock.includes('440.00'), 'Should not contain 440Hz (standard tuning)');
+});
+
+test('all scale frequencies are below 900Hz for warmth', function() {
+  var scaleStart = src.indexOf('var SCALES');
+  var scaleEnd = src.indexOf('};', scaleStart) + 2;
+  var scaleBlock = src.substring(scaleStart, scaleEnd);
+  var freqPattern = /[\d]+\.[\d]+/g;
+  var match;
+  while ((match = freqPattern.exec(scaleBlock)) !== null) {
+    var freq = parseFloat(match[0]);
+    if (freq > 1) { // skip 0.xx values
+      assert(freq < 900, 'Scale frequency ' + freq + 'Hz should be < 900Hz for warmth');
+    }
+  }
+});
+
+test('pad filter cutoff is 500Hz or lower for lo-fi warmth', function() {
+  // Find the playPadChord function
+  var fnStart = src.indexOf('function playPadChord');
+  var fnEnd = src.indexOf('\n  function ', fnStart + 20);
+  var fnBody = src.substring(fnStart, fnEnd);
+  var filterMatch = fnBody.match(/filter\.frequency\.value\s*=\s*([\d]+)/);
+  assert(filterMatch, 'Pad should have a filter');
+  var cutoff = parseInt(filterMatch[1]);
+  assert(cutoff <= 500, 'Pad filter cutoff ' + cutoff + 'Hz should be <= 500Hz, got ' + cutoff);
+});
+
+test('melody filter cutoff is 700Hz or lower for lo-fi warmth', function() {
+  var fnStart = src.indexOf('function scheduleMelody');
+  var fnEnd = src.indexOf('\n  function ', fnStart + 20);
+  var fnBody = src.substring(fnStart, fnEnd);
+  var filterMatch = fnBody.match(/melFilter\.frequency\.value\s*=\s*([\d]+)/);
+  assert(filterMatch, 'Melody should have a filter');
+  var cutoff = parseInt(filterMatch[1]);
+  assert(cutoff <= 700, 'Melody filter cutoff should be <= 700Hz, got ' + cutoff);
+});
+
+test('all zone beat durations are >= 1.8s for relaxed tempo', function() {
+  var styleStart = src.indexOf('var ZONE_MUSIC_STYLE');
+  var styleEnd = src.indexOf('};', styleStart) + 2;
+  var styleBlock = src.substring(styleStart, styleEnd);
+  var beatPattern = /beatDuration:\s*([\d.]+)/g;
+  var match;
+  while ((match = beatPattern.exec(styleBlock)) !== null) {
+    var dur = parseFloat(match[1]);
+    assert(dur >= 1.8, 'Beat duration ' + dur + 's should be >= 1.8s for focus-friendly tempo');
+  }
+});
+
+test('melody chance is <= 0.25 for all zones (sparse, non-distracting)', function() {
+  var styleStart = src.indexOf('var ZONE_MUSIC_STYLE');
+  var styleEnd = src.indexOf('};', styleStart) + 2;
+  var styleBlock = src.substring(styleStart, styleEnd);
+  var chancePattern = /melodyChance:\s*([\d.]+)/g;
+  var match;
+  while ((match = chancePattern.exec(styleBlock)) !== null) {
+    var chance = parseFloat(match[1]);
+    assert(chance <= 0.25, 'Melody chance ' + chance + ' should be <= 0.25 for focus music');
+  }
+});
+
+test('pad volume is <= 0.07 for all zones (subtle background)', function() {
+  var styleStart = src.indexOf('var ZONE_MUSIC_STYLE');
+  var styleEnd = src.indexOf('};', styleStart) + 2;
+  var styleBlock = src.substring(styleStart, styleEnd);
+  var volPattern = /padVolume:\s*([\d.]+)/g;
+  var match;
+  while ((match = volPattern.exec(styleBlock)) !== null) {
+    var vol = parseFloat(match[1]);
+    assert(vol <= 0.07, 'Pad volume ' + vol + ' should be <= 0.07');
+  }
+});
+
+test('continuous noise gains are <= 0.05 for warm ambient', function() {
+  // Check that the sustained noise sources (stream, breeze, wind, crowd, chatter)
+  // all have gain values at or below 0.05
+  var noiseGains = ['streamGain', 'breezeGain', 'windGain', 'crowdGain', 'chatterGain'];
+  var gainPattern = /(\w+Gain)\.gain\.value\s*=\s*([\d.]+)/g;
+  var match;
+  var violations = [];
+  while ((match = gainPattern.exec(src)) !== null) {
+    var name = match[1];
+    var val = parseFloat(match[2]);
+    if (noiseGains.indexOf(name) !== -1 && val > 0.05) {
+      violations.push(name + ' = ' + val);
+    }
+  }
+  assert(violations.length === 0, 'Continuous noise gains too high: ' + violations.join(', '));
+});
+
 // Report
 console.log('\n' + passed + ' passed, ' + failed + ' failed');
 if (failed > 0) process.exit(1);
