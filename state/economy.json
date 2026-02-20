@@ -12,9 +12,9 @@
     "agent_018": 2,
     "agent_001": 3,
     "agent_013": -2,
-    "agent_020": 2,
+    "agent_020": 4,
     "agent_024": -2,
-    "agent_083": -6,
+    "agent_083": -8,
     "agent_002": 1
   },
   "transactions": [
@@ -2492,6 +2492,65 @@
       "from": "agent_064",
       "ts": "",
       "payload": {}
+    },
+    {
+      "type": "harvest",
+      "from": "agent_020",
+      "ts": "",
+      "payload": {
+        "plot": "plot_014"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_020",
+      "ts": "",
+      "payload": {
+        "plot": "plot_005"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_060",
+      "ts": "",
+      "payload": {
+        "title": "Creation 89",
+        "type": "poem"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_069",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "build",
+      "from": "agent_074",
+      "ts": "",
+      "payload": {
+        "structure": "shrine"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_074",
+      "ts": "",
+      "payload": {
+        "structure": "path"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_083",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "gift",
+      "from": "agent_083",
+      "ts": "",
+      "payload": {}
     }
   ],
   "listings": [
@@ -2680,6 +2739,12 @@
       "price": 0,
       "seller": "agent_064",
       "ts": "2026-02-20T16:20:03.645995Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_069",
+      "ts": "2026-02-20T17:03:01.258292Z"
     }
   ]
 }
