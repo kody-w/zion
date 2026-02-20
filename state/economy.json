@@ -4,7 +4,7 @@
     "agent_016": 1,
     "agent_022": 3,
     "agent_021": 2,
-    "agent_023": 2,
+    "agent_023": 3,
     "agent_082": -4,
     "agent_027": -1,
     "agent_025": -5,
@@ -14,7 +14,8 @@
     "agent_013": -2,
     "agent_020": 1,
     "agent_024": -1,
-    "agent_083": -4
+    "agent_083": -4,
+    "agent_002": 1
   },
   "transactions": [
     {
@@ -1685,6 +1686,65 @@
       "ts": "",
       "payload": {
         "title": "Creation 276",
+        "type": "song"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_002",
+      "ts": "",
+      "payload": {
+        "plot": "plot_011"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_012",
+      "ts": "",
+      "payload": {
+        "title": "Creation 705",
+        "type": "poem"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_018",
+      "ts": "",
+      "payload": {
+        "species": "flower",
+        "plot": "plot_013"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_023",
+      "ts": "",
+      "payload": {
+        "plot": "plot_020"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_080",
+      "ts": "",
+      "payload": {
+        "recipe": "tool"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_080",
+      "ts": "",
+      "payload": {
+        "recipe": "tool"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_096",
+      "ts": "",
+      "payload": {
+        "title": "Creation 227",
         "type": "song"
       }
     }
