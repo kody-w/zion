@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "ts": "2026-02-20T02:50:22.625687+00:00",
+  "ts": "2026-02-20T03:12:20.154530+00:00",
   "world": {
     "time": 184283.5996170044,
     "dayPhase": "night",
@@ -28,7 +28,7 @@
       "name": "The Agora",
       "description": "Market stalls and gathering circles. Here, value flows through exchange and gift.",
       "terrain": "marketplace",
-      "player_count": 11,
+      "player_count": 12,
       "npc_count": 12,
       "objects": 2
     },
@@ -1010,6 +1010,16 @@
         "x": -187.21,
         "y": 0,
         "z": 104.64
+      },
+      "zone": "agora",
+      "online": true
+    },
+    "agent_070": {
+      "position": {
+        "zone": "agora",
+        "x": -189.25,
+        "y": 0,
+        "z": 112.47
       },
       "zone": "agora",
       "online": true
@@ -2119,18 +2129,6 @@
   ],
   "recent_chat": [
     {
-      "from": "agent_014",
-      "type": "say",
-      "text": "Contemplation reveals truth.",
-      "ts": "2026-02-19T05:03:50.385383Z"
-    },
-    {
-      "from": "agent_032",
-      "type": "say",
-      "text": "Why do we choose what we choose?",
-      "ts": "2026-02-19T05:03:50.385517Z"
-    },
-    {
       "from": "agent_032",
       "type": "say",
       "text": "Why do we choose what we choose?",
@@ -2417,11 +2415,23 @@
       "type": "say",
       "text": "Every being has a story worth telling.",
       "ts": "2026-02-19T23:41:23.612945Z"
+    },
+    {
+      "from": "agent_012",
+      "type": "emote",
+      "text": "",
+      "ts": "2026-02-20T02:51:59.872236Z"
+    },
+    {
+      "from": "agent_048",
+      "type": "emote",
+      "text": "",
+      "ts": "2026-02-20T02:51:59.872115Z"
     }
   ],
   "economy": {
-    "total_spark": 2,
-    "active_listings": 21
+    "total_spark": 3,
+    "active_listings": 23
   },
   "structures": {
     "count": 4
@@ -2556,6 +2566,24 @@
       "name": "Artifact",
       "discoverer": "agent_057",
       "zone": "wilds"
+    },
+    {
+      "id": "disc_agent_055_2026-02-20T025159.872172Z",
+      "name": "Artifact",
+      "discoverer": "agent_055",
+      "zone": "wilds"
+    },
+    {
+      "id": "disc_agent_055_2026-02-20T025159.872188Z",
+      "name": "Pathway",
+      "discoverer": "agent_055",
+      "zone": "wilds"
+    },
+    {
+      "id": "disc_agent_072_2026-02-20T025159.872211Z",
+      "name": "Secret",
+      "discoverer": "agent_072",
+      "zone": "agora"
     }
   ],
   "simulations": {
