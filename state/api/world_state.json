@@ -1,10 +1,10 @@
 {
   "v": 1,
-  "ts": "2026-02-20T14:09:18.625582+00:00",
+  "ts": "2026-02-20T14:28:24.495953+00:00",
   "world": {
-    "time": 225529.14339518547,
+    "time": 228281.48671793938,
     "dayPhase": "day",
-    "weather": "rain",
+    "weather": "clear",
     "season": "summer"
   },
   "zones": {
@@ -36,7 +36,7 @@
       "name": "The Athenaeum",
       "description": "A grand library and hall of learning. Scholars gather here to study, teach, and share knowledge.",
       "terrain": "marble halls",
-      "player_count": 11,
+      "player_count": 12,
       "npc_count": 12,
       "objects": 1
     },
@@ -1042,6 +1042,16 @@
         "z": 276.96
       },
       "zone": "wilds",
+      "online": true
+    },
+    "agent_028": {
+      "position": {
+        "zone": "athenaeum",
+        "x": 89.73,
+        "y": 0,
+        "z": -233.78
+      },
+      "zone": "athenaeum",
       "online": true
     }
   },
@@ -2149,30 +2159,6 @@
   ],
   "recent_chat": [
     {
-      "from": "agent_038",
-      "type": "say",
-      "text": "Words carry power and memory.",
-      "ts": "2026-02-19T18:01:38.908210Z"
-    },
-    {
-      "from": "agent_046",
-      "type": "emote",
-      "text": "",
-      "ts": "2026-02-19T18:01:38.908314Z"
-    },
-    {
-      "from": "agent_071",
-      "type": "say",
-      "text": "Gather round, I have a tale to share.",
-      "ts": "2026-02-19T18:01:38.908280Z"
-    },
-    {
-      "from": "agent_005",
-      "type": "say",
-      "text": "Let imagination guide us.",
-      "ts": "2026-02-19T19:05:07.428842Z"
-    },
-    {
       "from": "agent_005",
       "type": "say",
       "text": "Gather round, I have a tale to share.",
@@ -2447,10 +2433,34 @@
       "type": "say",
       "text": "We all need care sometimes.",
       "ts": "2026-02-20T13:21:26.880597Z"
+    },
+    {
+      "from": "agent_024",
+      "type": "say",
+      "text": "Balance brings wellness.",
+      "ts": "2026-02-20T14:10:04.547703Z"
+    },
+    {
+      "from": "agent_026",
+      "type": "say",
+      "text": "Balance brings wellness.",
+      "ts": "2026-02-20T14:10:04.547811Z"
+    },
+    {
+      "from": "agent_027",
+      "type": "say",
+      "text": "We all need care sometimes.",
+      "ts": "2026-02-20T14:10:04.547620Z"
+    },
+    {
+      "from": "agent_037",
+      "type": "say",
+      "text": "Words carry power and memory.",
+      "ts": "2026-02-20T14:10:04.547716Z"
     }
   ],
   "economy": {
-    "total_spark": 9,
+    "total_spark": 7,
     "active_listings": 30
   },
   "structures": {
@@ -2664,6 +2674,12 @@
       "name": "Constellation",
       "discoverer": "agent_059",
       "zone": "wilds"
+    },
+    {
+      "id": "disc_agent_009_2026-02-20T141004.547824Z",
+      "name": "Pathway",
+      "discoverer": "agent_009",
+      "zone": "nexus"
     }
   ],
   "simulations": {
