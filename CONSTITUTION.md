@@ -448,13 +448,15 @@ ZION has one currency: **Spark**. Spark is earned through play — any kind of p
    | 20-49           | 5%       |
    | 50-99           | 10%      |
    | 100-249         | 15%      |
-   | 250-499         | 20%      |
-   | 500+            | 25% max  |
+   | 250-499         | 25%      |
+   | 500+            | 40% max  |
 2. **Tax rounds in the player's favor** — Tax amounts are always rounded down (floor). Players never lose a fractional Spark to rounding.
 3. **TREASURY** — All tax revenue flows into a transparent TREASURY account. The TREASURY cannot go negative. TREASURY is distinct from SYSTEM (which is a void sink for spending).
-4. **Universal Basic Income** — Once per game day, the TREASURY distributes Spark equally to all active citizens. Each citizen receives min(2, TREASURY / eligible_count) Spark, rounded down. Citizens with negative balances are eligible (UBI helps recovery).
-5. **Transparency** — Every tax withholding and UBI payment is recorded in the public ledger as a transaction, auditable by all citizens.
-6. **No retroactive taxation** — Balances accumulated before this amendment are not subject to tax. Only new earnings are taxed.
+4. **Universal Basic Income** — Once per game day, the TREASURY distributes Spark equally to all active citizens. Each citizen receives min(5, TREASURY / eligible_count) Spark, rounded down.
+5. **Balance floor** — No citizen's balance may fall below 0. Actions that would reduce a balance below 0 are refused. Debt spirals are prevented by design.
+6. **Wealth tax** — Once per game day, citizens with balances above 500 pay 2% of their balance above 500 to the TREASURY. This is rounded down (player-favorable).
+7. **Transparency** — Every tax withholding, wealth tax, and UBI payment is recorded in the public ledger as a transaction, auditable by all citizens.
+8. **No retroactive income taxation** — Balances accumulated before this amendment are not subject to income tax. Only new earnings are taxed. The wealth tax applies to all balances above 500 regardless of when earned.
 
 ---
 

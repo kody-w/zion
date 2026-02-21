@@ -27,16 +27,16 @@ suite('Tax Bracket Tests', () => {
     assert.strictEqual(Economy.getTaxRate(249), 0.15);
   });
 
-  test('Balance 250-499 has 20% tax rate', () => {
-    assert.strictEqual(Economy.getTaxRate(250), 0.20);
-    assert.strictEqual(Economy.getTaxRate(400), 0.20);
-    assert.strictEqual(Economy.getTaxRate(499), 0.20);
+  test('Balance 250-499 has 25% tax rate', () => {
+    assert.strictEqual(Economy.getTaxRate(250), 0.25);
+    assert.strictEqual(Economy.getTaxRate(400), 0.25);
+    assert.strictEqual(Economy.getTaxRate(499), 0.25);
   });
 
-  test('Balance 500+ has 25% tax rate', () => {
-    assert.strictEqual(Economy.getTaxRate(500), 0.25);
-    assert.strictEqual(Economy.getTaxRate(1000), 0.25);
-    assert.strictEqual(Economy.getTaxRate(99999), 0.25);
+  test('Balance 500+ has 40% tax rate', () => {
+    assert.strictEqual(Economy.getTaxRate(500), 0.40);
+    assert.strictEqual(Economy.getTaxRate(1000), 0.40);
+    assert.strictEqual(Economy.getTaxRate(99999), 0.40);
   });
 
   test('Negative balance has 0% tax rate', () => {
@@ -71,10 +71,10 @@ suite('calculateTax Tests', () => {
   });
 
   test('calculateTax at 500+ balance', () => {
-    // 100 * 0.25 = 25
+    // 100 * 0.40 = 40
     const result = Economy.calculateTax(100, 500);
-    assert.strictEqual(result.taxAmount, 25);
-    assert.strictEqual(result.netAmount, 75);
+    assert.strictEqual(result.taxAmount, 40);
+    assert.strictEqual(result.netAmount, 60);
   });
 
 });
@@ -115,9 +115,9 @@ suite('earnSpark with Tax Tests', () => {
 
   test('Spark conservation: player + TREASURY = gross amount', () => {
     const ledger = Economy.createLedger();
-    ledger.balances['player1'] = 500; // 25% bracket
+    ledger.balances['player1'] = 500; // 40% bracket
 
-    const earned = Economy.earnSpark(ledger, 'player1', 'mentor'); // 50 spark
+    const earned = Economy.earnSpark(ledger, 'player1', 'mentor'); // 50 spark, 40% tax = 20
     const tax = 50 - earned;
     assert.strictEqual(earned + tax, 50, 'Net + tax should equal gross');
     assert.strictEqual(Economy.getBalance(ledger, 'player1'), 500 + earned);
@@ -168,17 +168,17 @@ suite('UBI Distribution Tests', () => {
 
   test('distributeUBI pays eligible players', () => {
     const ledger = Economy.createLedger();
-    ledger.balances[Economy.TREASURY_ID] = 10;
+    ledger.balances[Economy.TREASURY_ID] = 20;
     ledger.balances['player1'] = 5;
     ledger.balances['player2'] = 3;
 
     const result = Economy.distributeUBI(ledger, ['player1', 'player2']);
-    assert.strictEqual(result.perPlayer, 2); // min(2, 10/2) = 2
+    assert.strictEqual(result.perPlayer, 5); // min(5, 20/2) = 5
     assert.strictEqual(result.recipients, 2);
-    assert.strictEqual(result.distributed, 4);
-    assert.strictEqual(Economy.getBalance(ledger, 'player1'), 7);
-    assert.strictEqual(Economy.getBalance(ledger, 'player2'), 5);
-    assert.strictEqual(Economy.getBalance(ledger, Economy.TREASURY_ID), 6);
+    assert.strictEqual(result.distributed, 10);
+    assert.strictEqual(Economy.getBalance(ledger, 'player1'), 10);
+    assert.strictEqual(Economy.getBalance(ledger, 'player2'), 8);
+    assert.strictEqual(Economy.getBalance(ledger, Economy.TREASURY_ID), 10);
   });
 
   test('UBI with insufficient treasury distributes less', () => {
@@ -215,7 +215,7 @@ suite('UBI Distribution Tests', () => {
 
     const result = Economy.distributeUBI(ledger, ['player1']);
     assert.strictEqual(result.recipients, 1);
-    assert.strictEqual(Economy.getBalance(ledger, 'player1'), -3); // -5 + 2
+    assert.strictEqual(Economy.getBalance(ledger, 'player1'), 0); // -5 + 5
   });
 
   test('UBI with empty eligible list does nothing', () => {
@@ -236,7 +236,7 @@ suite('UBI Distribution Tests', () => {
     assert.strictEqual(ubiTxns.length, 1);
     assert.strictEqual(ubiTxns[0].from, Economy.TREASURY_ID);
     assert.strictEqual(ubiTxns[0].to, 'p1');
-    assert.strictEqual(ubiTxns[0].amount, 2);
+    assert.strictEqual(ubiTxns[0].amount, 5);
   });
 
 });
@@ -262,6 +262,52 @@ suite('getTreasuryInfo Tests', () => {
     assert.strictEqual(info.balance, 0);
     assert.strictEqual(info.totalTaxCollected, 0);
     assert.strictEqual(info.totalUbiDistributed, 0);
+  });
+
+});
+
+suite('Wealth Tax Tests', () => {
+
+  test('applyWealthTax taxes balances above 500', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances['rich'] = 600;   // 100 above threshold, 2% = 2
+    ledger.balances['poor'] = 50;    // below threshold, no tax
+
+    const result = Economy.applyWealthTax(ledger);
+    assert.strictEqual(result.totalCollected, 2);
+    assert.strictEqual(result.playersAffected, 1);
+    assert.strictEqual(Economy.getBalance(ledger, 'rich'), 598);
+    assert.strictEqual(Economy.getBalance(ledger, 'poor'), 50);
+    assert.strictEqual(Economy.getBalance(ledger, Economy.TREASURY_ID), 2);
+  });
+
+  test('applyWealthTax floors tax amount', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances['player1'] = 520; // 20 above, 2% = 0.4 -> floor to 0
+
+    const result = Economy.applyWealthTax(ledger);
+    assert.strictEqual(result.totalCollected, 0);
+    assert.strictEqual(Economy.getBalance(ledger, 'player1'), 520);
+  });
+
+  test('applyWealthTax skips TREASURY and SYSTEM', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances[Economy.TREASURY_ID] = 9999;
+    ledger.balances['SYSTEM'] = 9999;
+
+    const result = Economy.applyWealthTax(ledger);
+    assert.strictEqual(result.playersAffected, 0);
+  });
+
+  test('applyWealthTax records wealth_tax transactions', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances['whale'] = 1000; // 500 above, 2% = 10
+
+    Economy.applyWealthTax(ledger);
+    const wtTxns = ledger.transactions.filter(tx => tx.type === 'wealth_tax');
+    assert.strictEqual(wtTxns.length, 1);
+    assert.strictEqual(wtTxns[0].amount, 10);
+    assert.strictEqual(wtTxns[0].to, Economy.TREASURY_ID);
   });
 
 });

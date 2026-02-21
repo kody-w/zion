@@ -34,12 +34,12 @@ class TestTaxBrackets(unittest.TestCase):
         self.assertEqual(_get_tax_rate(249), 0.15)
 
     def test_bracket_250_to_499(self):
-        self.assertEqual(_get_tax_rate(250), 0.20)
-        self.assertEqual(_get_tax_rate(499), 0.20)
+        self.assertEqual(_get_tax_rate(250), 0.25)
+        self.assertEqual(_get_tax_rate(499), 0.25)
 
     def test_bracket_500_plus(self):
-        self.assertEqual(_get_tax_rate(500), 0.25)
-        self.assertEqual(_get_tax_rate(10000), 0.25)
+        self.assertEqual(_get_tax_rate(500), 0.40)
+        self.assertEqual(_get_tax_rate(10000), 0.40)
 
     def test_negative_balance(self):
         self.assertEqual(_get_tax_rate(-5), 0.0)
@@ -80,7 +80,7 @@ class TestProcessEarningsWithTax(unittest.TestCase):
         economy = {'balances': {'user1': 500}, 'ledger': []}
         actions = [{'type': 'discover', 'from': 'user1', 'ts': 1000}]
         result = process_earnings(economy, actions)
-        # discover earns 20, 25% tax = 5, net = 15
+        # discover earns 20, 40% tax = 8, net = 12
         gross = 20
         net = result['balances']['user1'] - 500
         tax = result['balances'].get(TREASURY_ID, 0)
@@ -113,15 +113,15 @@ class TestUBIDistribution(unittest.TestCase):
             'worldTime': 1440,  # Day 1
             '_lastUbiDay': -1,
             'economy': {
-                'balances': {TREASURY_ID: 10, 'user1': 5, 'user2': 3},
+                'balances': {TREASURY_ID: 20, 'user1': 5, 'user2': 3},
                 'transactions': [],
             },
         }
         _distribute_ubi(state)
-        # Each gets min(2, 10//2) = 2
-        self.assertEqual(state['economy']['balances']['user1'], 7)
-        self.assertEqual(state['economy']['balances']['user2'], 5)
-        self.assertEqual(state['economy']['balances'][TREASURY_ID], 6)
+        # Each gets min(5, 20//2) = 5
+        self.assertEqual(state['economy']['balances']['user1'], 10)
+        self.assertEqual(state['economy']['balances']['user2'], 8)
+        self.assertEqual(state['economy']['balances'][TREASURY_ID], 10)
 
     def test_ubi_does_not_repeat_same_day(self):
         state = {
@@ -162,7 +162,7 @@ class TestUBIDistribution(unittest.TestCase):
         ubi_txns = [t for t in state['economy']['transactions'] if t['type'] == 'ubi_payout']
         self.assertEqual(len(ubi_txns), 1)
         self.assertEqual(ubi_txns[0]['to'], 'user1')
-        self.assertEqual(ubi_txns[0]['amount'], 2)
+        self.assertEqual(ubi_txns[0]['amount'], 5)
 
     def test_ubi_with_empty_treasury_does_nothing(self):
         state = {

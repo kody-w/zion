@@ -28,12 +28,15 @@
     { min: 20,  max: 49,  rate: 0.05 },
     { min: 50,  max: 99,  rate: 0.10 },
     { min: 100, max: 249, rate: 0.15 },
-    { min: 250, max: 499, rate: 0.20 },
-    { min: 500, max: Infinity, rate: 0.25 },
+    { min: 250, max: 499, rate: 0.25 },
+    { min: 500, max: Infinity, rate: 0.40 },
   ];
 
   const TREASURY_ID = 'TREASURY';
-  const BASE_UBI_AMOUNT = 2;
+  const BASE_UBI_AMOUNT = 5;
+  const WEALTH_TAX_THRESHOLD = 500;
+  const WEALTH_TAX_RATE = 0.02;
+  const BALANCE_FLOOR = 0;
 
   let transactionCounter = 0;
   let listingCounter = 0;
@@ -492,6 +495,43 @@
     };
   }
 
+  /**
+   * Applies wealth tax to all balances above WEALTH_TAX_THRESHOLD (§6.4)
+   * @param {Object} ledger - Ledger instance
+   * @returns {Object} {totalCollected, playersAffected}
+   */
+  function applyWealthTax(ledger) {
+    var totalCollected = 0;
+    var playersAffected = 0;
+
+    if (!ledger.balances[TREASURY_ID]) {
+      ledger.balances[TREASURY_ID] = 0;
+    }
+
+    for (var pid in ledger.balances) {
+      if (pid === TREASURY_ID || pid === 'SYSTEM') continue;
+      var balance = ledger.balances[pid];
+      if (balance > WEALTH_TAX_THRESHOLD) {
+        var taxableAmount = balance - WEALTH_TAX_THRESHOLD;
+        var tax = Math.floor(taxableAmount * WEALTH_TAX_RATE);
+        if (tax > 0) {
+          ledger.balances[pid] -= tax;
+          ledger.balances[TREASURY_ID] += tax;
+          totalCollected += tax;
+          playersAffected++;
+
+          recordTransaction(ledger, pid, TREASURY_ID, tax, 'wealth_tax', {
+            balance: balance,
+            threshold: WEALTH_TAX_THRESHOLD,
+            rate: WEALTH_TAX_RATE
+          });
+        }
+      }
+    }
+
+    return { totalCollected: totalCollected, playersAffected: playersAffected };
+  }
+
   // ========================================================================
   // AUCTION HOUSE - Timed bid system
   // ========================================================================
@@ -678,6 +718,10 @@
   exports.calculateTax = calculateTax;
   exports.distributeUBI = distributeUBI;
   exports.getTreasuryInfo = getTreasuryInfo;
+  exports.applyWealthTax = applyWealthTax;
+  exports.WEALTH_TAX_THRESHOLD = WEALTH_TAX_THRESHOLD;
+  exports.WEALTH_TAX_RATE = WEALTH_TAX_RATE;
+  exports.BALANCE_FLOOR = BALANCE_FLOOR;
   exports.createAuction = createAuction;
   exports.placeBid = placeBid;
   exports.finalizeAuctions = finalizeAuctions;

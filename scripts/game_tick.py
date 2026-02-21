@@ -151,7 +151,9 @@ def respawn_resources(state, delta_seconds):
 
 
 TREASURY_ID = 'TREASURY'
-BASE_UBI_AMOUNT = 2
+BASE_UBI_AMOUNT = 5
+WEALTH_TAX_THRESHOLD = 500
+WEALTH_TAX_RATE = 0.02
 
 
 def _get_ubi_eligible(economy, current_time):
@@ -184,6 +186,23 @@ def _distribute_ubi(state):
         return  # Already distributed this game day
 
     state['_lastUbiDay'] = current_day
+
+    # Apply wealth tax first (§6.4): 2% on balances above 500
+    import time as _time2
+    ts_wt = _time2.time()
+    for pid in list(economy['balances'].keys()):
+        if pid in (TREASURY_ID, 'SYSTEM'):
+            continue
+        bal = economy['balances'].get(pid, 0)
+        if bal > WEALTH_TAX_THRESHOLD:
+            taxable = bal - WEALTH_TAX_THRESHOLD
+            tax = int(taxable * WEALTH_TAX_RATE)
+            if tax > 0:
+                economy['balances'][pid] -= tax
+                economy['balances'][TREASURY_ID] += tax
+                economy['transactions'].append({
+                    'type': 'wealth_tax', 'from': pid, 'amount': tax, 'timestamp': ts_wt,
+                })
 
     treasury_balance = economy['balances'].get(TREASURY_ID, 0)
     if treasury_balance <= 0:

@@ -132,12 +132,25 @@ def sim_tick(state, tick_num, rng):
                 growth_rate = 1.0 / plant.get('growthTime', 3600)
                 plant['growthStage'] = min(1.0, plant['growthStage'] + growth_rate * TICK_SECONDS)
 
-    # UBI distribution once per game day (every 1440 worldTime units)
+    # Wealth tax + UBI distribution once per game day (every 1440 worldTime units)
     current_day = int(state['worldTime'] / 1440)
     last_ubi_day = state.get('_lastUbiDay', -1)
     if current_day > last_ubi_day:
         state['_lastUbiDay'] = current_day
         econ = state['economy']
+
+        # Wealth tax (§6.4): 2% on balances above 500
+        for pid in list(econ['balances'].keys()):
+            if pid in (SIM_TREASURY_ID, 'SYSTEM'):
+                continue
+            bal = econ['balances'].get(pid, 0)
+            if bal > SIM_WEALTH_TAX_THRESHOLD:
+                taxable = bal - SIM_WEALTH_TAX_THRESHOLD
+                tax = int(taxable * SIM_WEALTH_TAX_RATE)
+                if tax > 0:
+                    econ['balances'][pid] -= tax
+                    econ['balances'][SIM_TREASURY_ID] = econ['balances'].get(SIM_TREASURY_ID, 0) + tax
+
         treasury_bal = econ['balances'].get(SIM_TREASURY_ID, 0)
         if treasury_bal > 0:
             eligible = [pid for pid in econ['balances'] if pid not in (SIM_TREASURY_ID, 'SYSTEM')]
@@ -341,12 +354,15 @@ _SIM_TAX_BRACKETS = [
     (20,  49,  0.05),
     (50,  99,  0.10),
     (100, 249, 0.15),
-    (250, 499, 0.20),
-    (500, float('inf'), 0.25),
+    (250, 499, 0.25),
+    (500, float('inf'), 0.40),
 ]
 
 SIM_TREASURY_ID = 'TREASURY'
-SIM_BASE_UBI = 2
+SIM_BASE_UBI = 5
+SIM_WEALTH_TAX_THRESHOLD = 500
+SIM_WEALTH_TAX_RATE = 0.02
+SIM_BALANCE_FLOOR = 0
 
 
 def _sim_tax_rate(balance):
@@ -378,7 +394,12 @@ def _econ_txn(state, txn_type, agent_id, amount, tick_num):
                 'type': 'tax', 'agent': agent_id, 'amount': tax_amount, 'tick': tick_num,
             })
     else:
-        econ['balances'][agent_id] = current_balance + amount
+        # Balance floor (§6.4): never go below 0
+        new_balance = current_balance + amount
+        if new_balance < SIM_BALANCE_FLOOR:
+            amount = SIM_BALANCE_FLOOR - current_balance  # reduce cost to floor
+            new_balance = SIM_BALANCE_FLOOR
+        econ['balances'][agent_id] = new_balance
 
     econ['transactions'].append({
         'type': txn_type, 'agent': agent_id, 'amount': amount, 'tick': tick_num,
