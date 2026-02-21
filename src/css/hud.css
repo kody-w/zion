@@ -2233,3 +2233,79 @@
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
 }
+
+/* ========================================================================
+   AMENDMENT VOTING PANEL — Constitutional Amendment Proposals & Voting
+   ======================================================================== */
+
+.amendment-panel {
+  border-color: #daa520;
+  width: 600px;
+  max-height: 82vh;
+}
+
+/* Amendment card: open vote item */
+.amend-card {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.amend-card:hover {
+  box-shadow: 0 2px 12px rgba(218, 165, 32, 0.18);
+  border-color: rgba(218, 165, 32, 0.5) !important;
+}
+
+/* Vote button hover states */
+.amend-vote-btn {
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.amend-vote-btn:hover {
+  filter: brightness(1.25);
+  transform: translateY(-1px);
+}
+
+/* Tab buttons */
+.amend-tab-btn {
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.amend-tab-btn:hover {
+  color: #daa520 !important;
+  background: rgba(218, 165, 32, 0.1) !important;
+}
+
+/* History closed amendment card */
+.amend-history-card {
+  transition: background 0.15s ease;
+}
+
+.amend-history-card:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Proposal form inputs */
+#amend-propose-form input,
+#amend-propose-form textarea {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+
+#amend-propose-form input:focus,
+#amend-propose-form textarea:focus {
+  border-color: #daa520 !important;
+  box-shadow: 0 0 0 2px rgba(218, 165, 32, 0.2);
+}
+
+/* Submit button hover */
+#amend-submit-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+/* Spark-weight vote progress bar */
+.amend-vote-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+  transition: width 0.4s ease;
+}

@@ -733,6 +733,76 @@
         });
         break;
 
+      case 'propose_amendment':
+        // Record a constitutional amendment proposal
+        if (!newState.amendments) newState.amendments = [];
+        if (payload.title && payload.description && payload.diff_text) {
+          var amendId = 'amend_' + timestamp + '_' + from;
+          var discussionDays = Math.max(7, parseInt(payload.discussion_period_days || 7, 10));
+          var proposedAt = new Date(typeof timestamp === 'number' ? timestamp : timestamp);
+          var closesAt = new Date(proposedAt.getTime() + discussionDays * 86400000);
+          newState.amendments.push({
+            id: amendId,
+            title: payload.title,
+            description: payload.description,
+            diff_text: payload.diff_text,
+            proposed_by: from,
+            proposed_at: typeof timestamp === 'string' ? timestamp : new Date(timestamp).toISOString(),
+            discussion_period_days: discussionDays,
+            voting_closes_at: closesAt.toISOString(),
+            status: 'open',
+            votes: [],
+            result: null
+          });
+        }
+        break;
+
+      case 'vote_amendment':
+        // Record a vote on an open amendment
+        if (newState.amendments && payload.amendment_id && payload.vote) {
+          var voteAmend = null;
+          for (var ai = 0; ai < newState.amendments.length; ai++) {
+            if (newState.amendments[ai].id === payload.amendment_id) {
+              voteAmend = newState.amendments[ai];
+              break;
+            }
+          }
+          if (voteAmend && voteAmend.status === 'open') {
+            // Deduplicate: one vote per citizen
+            var alreadyVoted = false;
+            for (var vi = 0; vi < voteAmend.votes.length; vi++) {
+              if (voteAmend.votes[vi].from === from) { alreadyVoted = true; break; }
+            }
+            if (!alreadyVoted && (payload.vote === 'for' || payload.vote === 'against')) {
+              var sparkWeight = Math.max(1, (newState.economy && newState.economy.balances && newState.economy.balances[from]) || 1);
+              voteAmend.votes.push({
+                from: from,
+                vote: payload.vote,
+                spark_weight: sparkWeight,
+                ts: typeof timestamp === 'string' ? timestamp : new Date(timestamp).toISOString()
+              });
+            }
+          }
+        }
+        break;
+
+      case 'close_amendment':
+        // Record the result of a closed amendment (typically sent by ZION-GOVERNANCE system)
+        if (newState.amendments && payload.amendment_id) {
+          for (var ci = 0; ci < newState.amendments.length; ci++) {
+            if (newState.amendments[ci].id === payload.amendment_id) {
+              newState.amendments[ci].status = 'closed';
+              newState.amendments[ci].result = payload.result || null;
+              if (payload.tally) {
+                newState.amendments[ci].tally = payload.tally;
+              }
+              newState.amendments[ci].closed_at = typeof timestamp === 'string' ? timestamp : new Date(timestamp).toISOString();
+              break;
+            }
+          }
+        }
+        break;
+
       default:
         // Unknown message type - no state change
         break;

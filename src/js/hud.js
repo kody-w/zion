@@ -9053,4 +9053,456 @@
   exports.hideNearbyAnchorsPanel = hideNearbyAnchorsPanel;
   exports.toggleNearbyAnchorsPanel = toggleNearbyAnchorsPanel;
 
+  // =============================================================================
+  // AMENDMENT VOTING PANEL — Constitutional Amendment Proposals & Voting
+  // =============================================================================
+
+  var amendmentPanelEl = null;
+  var amendmentPanelVisible = false;
+  var amendmentCallback = null;
+  var _amendmentActiveTab = 'active'; // 'active' | 'propose' | 'history'
+
+  /**
+   * Initialize the amendment panel with a callback for submitting protocol messages.
+   * @param {Function} callback - fn(action, data) where action is
+   *   'propose_amendment', 'vote_amendment', or 'refresh'
+   */
+  function initAmendmentPanel(callback) {
+    amendmentCallback = callback || null;
+  }
+
+  /**
+   * Format a countdown string from now until a closing date string.
+   * @param {string} closingDateStr - ISO-8601 date string
+   * @returns {string} Human-readable countdown
+   */
+  function _amendmentCountdown(closingDateStr) {
+    var now = Date.now();
+    var closes = new Date(closingDateStr).getTime();
+    var diff = closes - now;
+    if (!isFinite(diff) || diff <= 0) return 'Voting closed';
+    var days = Math.floor(diff / 86400000);
+    var hours = Math.floor((diff % 86400000) / 3600000);
+    if (days > 0) return days + 'd ' + hours + 'h remaining';
+    var mins = Math.floor((diff % 3600000) / 60000);
+    if (hours > 0) return hours + 'h ' + mins + 'm remaining';
+    return mins + 'm remaining';
+  }
+
+  /**
+   * Compute a simple tally from a votes array.
+   * @param {Array} votes - [{vote, spark_weight}, ...]
+   * @returns {{forWeight: number, againstWeight: number, total: number, pct: number}}
+   */
+  function _amendmentTally(votes) {
+    var forWeight = 0;
+    var againstWeight = 0;
+    var i;
+    for (i = 0; i < votes.length; i++) {
+      var v = votes[i];
+      var w = v.spark_weight || 1;
+      if (v.vote === 'for') forWeight += w;
+      else if (v.vote === 'against') againstWeight += w;
+    }
+    var total = forWeight + againstWeight;
+    var pct = total > 0 ? Math.round((forWeight / total) * 100) : 0;
+    return { forWeight: forWeight, againstWeight: againstWeight, total: total, pct: pct };
+  }
+
+  /**
+   * Render the tab bar HTML for the amendment panel.
+   * @param {string} activeTab
+   * @returns {string} HTML string
+   */
+  function _amendmentTabBar(activeTab) {
+    var tabs = [
+      { id: 'active', label: 'Active Votes' },
+      { id: 'propose', label: 'Propose' },
+      { id: 'history', label: 'History' }
+    ];
+    var html = '<div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid rgba(218,165,32,0.25);padding-bottom:8px;">';
+    tabs.forEach(function(tab) {
+      var isActive = tab.id === activeTab;
+      html += '<button class="amend-tab-btn" data-tab="' + tab.id + '" style="padding:6px 16px;border:none;border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;font-weight:bold;' +
+        (isActive
+          ? 'background:rgba(218,165,32,0.25);color:#daa520;border-bottom:2px solid #daa520;'
+          : 'background:transparent;color:#888;border-bottom:2px solid transparent;') +
+        '">' + tab.label + '</button>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  /**
+   * Render the list of active (open) amendments.
+   * @param {Array} amendments - amendment records
+   * @param {string} currentUser - current player ID (for vote tracking)
+   * @returns {string} HTML string
+   */
+  function _renderActiveAmendments(amendments, currentUser) {
+    var open = amendments.filter(function(a) { return a.status === 'open'; });
+    if (open.length === 0) {
+      return '<div style="text-align:center;color:#888;padding:30px;font-style:italic;">' +
+        'No active amendments. Be the first to propose one!</div>';
+    }
+    var html = '';
+    open.forEach(function(a) {
+      var tally = _amendmentTally(a.votes || []);
+      var countdown = _amendmentCountdown(a.voting_closes_at);
+      var userVote = null;
+      (a.votes || []).forEach(function(v) {
+        if (v.from === currentUser) userVote = v.vote;
+      });
+      var barWidth = Math.min(100, tally.pct);
+      html += '<div class="amend-card" style="background:rgba(218,165,32,0.07);border:1px solid rgba(218,165,32,0.25);' +
+        'border-radius:8px;padding:14px;margin-bottom:14px;">';
+      // Title & proposer
+      html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">';
+      html += '<div style="font-size:15px;font-weight:bold;color:#daa520;flex:1;margin-right:10px;">' + _htmlEsc(a.title) + '</div>';
+      html += '<div style="font-size:10px;color:#888;white-space:nowrap;">' + countdown + '</div>';
+      html += '</div>';
+      // Proposer
+      html += '<div style="font-size:11px;color:#aaa;margin-bottom:8px;">Proposed by <span style="color:#b0e0e6;">' + _htmlEsc(a.proposed_by) + '</span></div>';
+      // Description (truncated)
+      if (a.description) {
+        var desc = a.description.length > 180 ? a.description.slice(0, 180) + '...' : a.description;
+        html += '<div style="font-size:12px;color:#ccc;margin-bottom:10px;line-height:1.5;">' + _htmlEsc(desc) + '</div>';
+      }
+      // Vote bar
+      html += '<div style="margin-bottom:10px;">';
+      html += '<div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:3px;">';
+      html += '<span style="color:#4ade80;">For: ' + tally.forWeight + ' Spark</span>';
+      html += '<span style="color:#f87171;">Against: ' + tally.againstWeight + ' Spark</span>';
+      html += '</div>';
+      html += '<div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">';
+      html += '<div style="height:100%;width:' + barWidth + '%;background:linear-gradient(90deg,#4ade80,#22c55e);border-radius:3px;transition:width 0.4s ease;"></div>';
+      html += '</div>';
+      html += '<div style="font-size:10px;color:#888;margin-top:3px;">' + tally.total + ' total Spark weight from ' + (a.votes || []).length + ' voter(s) · ' + tally.pct + '% for</div>';
+      html += '</div>';
+      // Vote buttons
+      if (userVote) {
+        var voteColor = userVote === 'for' ? '#4ade80' : '#f87171';
+        html += '<div style="font-size:12px;color:' + voteColor + ';font-weight:bold;">You voted: ' + userVote.toUpperCase() + '</div>';
+      } else {
+        html += '<div style="display:flex;gap:8px;">';
+        html += '<button class="amend-vote-btn" data-amendment-id="' + _htmlEsc(a.id) + '" data-vote="for" style="flex:1;padding:7px;background:rgba(74,222,128,0.15);' +
+          'border:1px solid #4ade80;border-radius:6px;color:#4ade80;font-weight:bold;cursor:pointer;font-size:12px;">For</button>';
+        html += '<button class="amend-vote-btn" data-amendment-id="' + _htmlEsc(a.id) + '" data-vote="against" style="flex:1;padding:7px;background:rgba(248,113,113,0.15);' +
+          'border:1px solid #f87171;border-radius:6px;color:#f87171;font-weight:bold;cursor:pointer;font-size:12px;">Against</button>';
+        html += '</div>';
+      }
+      html += '</div>';
+    });
+    return html;
+  }
+
+  /**
+   * Render the propose amendment form.
+   * @returns {string} HTML string
+   */
+  function _renderProposeForm() {
+    return '<div id="amend-propose-form" style="display:flex;flex-direction:column;gap:12px;">' +
+      '<div style="font-size:11px;color:#aaa;line-height:1.6;background:rgba(218,165,32,0.07);padding:10px;border-radius:6px;border-left:3px solid #daa520;">' +
+        'Proposals require a 7-day discussion period. Amendments cannot remove player rights, close the source code, ' +
+        'require physical movement, retroactively punish players, or distinguish between player types (§7.5).' +
+      '</div>' +
+      '<div>' +
+        '<label style="display:block;font-size:12px;color:#daa520;margin-bottom:4px;">Title *</label>' +
+        '<input id="amend-title" type="text" maxlength="120" placeholder="Short, descriptive title..." ' +
+          'style="width:100%;box-sizing:border-box;padding:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(218,165,32,0.4);' +
+          'border-radius:6px;color:#fff;font-size:13px;">' +
+      '</div>' +
+      '<div>' +
+        '<label style="display:block;font-size:12px;color:#daa520;margin-bottom:4px;">Description &amp; Rationale *</label>' +
+        '<textarea id="amend-description" rows="4" maxlength="2000" placeholder="Explain the amendment and why it improves ZION..." ' +
+          'style="width:100%;box-sizing:border-box;padding:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(218,165,32,0.4);' +
+          'border-radius:6px;color:#fff;font-size:13px;resize:vertical;"></textarea>' +
+      '</div>' +
+      '<div>' +
+        '<label style="display:block;font-size:12px;color:#daa520;margin-bottom:4px;">Proposed Changes (diff format) *</label>' +
+        '<textarea id="amend-diff" rows="4" maxlength="4000" placeholder="+ Add this line&#10;- Remove this line&#10;  Context line..." ' +
+          'style="width:100%;box-sizing:border-box;padding:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(218,165,32,0.4);' +
+          'border-radius:6px;color:#fff;font-size:12px;font-family:monospace;resize:vertical;"></textarea>' +
+      '</div>' +
+      '<div>' +
+        '<label style="display:block;font-size:12px;color:#daa520;margin-bottom:4px;">Discussion Period (days, min 7)</label>' +
+        '<input id="amend-days" type="number" min="7" max="90" value="7" ' +
+          'style="width:100%;box-sizing:border-box;padding:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(218,165,32,0.4);' +
+          'border-radius:6px;color:#fff;font-size:13px;">' +
+      '</div>' +
+      '<div id="amend-error" style="display:none;color:#f87171;font-size:12px;background:rgba(248,113,113,0.1);padding:8px;border-radius:6px;"></div>' +
+      '<button id="amend-submit-btn" style="padding:10px;background:linear-gradient(135deg,#b8860b,#daa520);border:none;' +
+        'border-radius:8px;color:#000;font-weight:bold;cursor:pointer;font-size:14px;">Submit Proposal</button>' +
+    '</div>';
+  }
+
+  /**
+   * Render amendment history (closed amendments).
+   * @param {Array} amendments - amendment records
+   * @returns {string} HTML string
+   */
+  function _renderAmendmentHistory(amendments) {
+    var closed = amendments.filter(function(a) { return a.status === 'closed'; });
+    if (closed.length === 0) {
+      return '<div style="text-align:center;color:#888;padding:30px;font-style:italic;">No closed amendments yet.</div>';
+    }
+    // Most recent first
+    var sorted = closed.slice().sort(function(a, b) {
+      return new Date(b.closed_at || b.proposed_at) - new Date(a.closed_at || a.proposed_at);
+    });
+    var html = '';
+    sorted.forEach(function(a) {
+      var tally = a.tally || _amendmentTally(a.votes || []);
+      var forW = tally.for_weight !== undefined ? tally.for_weight : (tally.forWeight || 0);
+      var againstW = tally.against_weight !== undefined ? tally.against_weight : (tally.againstWeight || 0);
+      var totalVoters = tally.total_voters !== undefined ? tally.total_voters : ((a.votes || []).length);
+      var resultColor = a.result === 'approved' ? '#4ade80' : '#f87171';
+      var resultIcon = a.result === 'approved' ? '&#10003;' : '&#10007;';
+      html += '<div class="amend-history-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);' +
+        'border-left:3px solid ' + resultColor + ';border-radius:8px;padding:12px;margin-bottom:10px;">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">';
+      html += '<div style="font-size:14px;font-weight:bold;color:#ddd;">' + _htmlEsc(a.title) + '</div>';
+      html += '<div style="font-size:13px;color:' + resultColor + ';font-weight:bold;white-space:nowrap;margin-left:10px;">' + resultIcon + ' ' + (a.result || 'unknown').toUpperCase() + '</div>';
+      html += '</div>';
+      html += '<div style="font-size:11px;color:#888;margin-bottom:6px;">by ' + _htmlEsc(a.proposed_by) + ' &nbsp;|&nbsp; ' +
+        (a.closed_at ? new Date(a.closed_at).toLocaleDateString() : '?') + '</div>';
+      html += '<div style="font-size:11px;color:#aaa;">For: ' + forW + ' Spark &nbsp;|&nbsp; Against: ' + againstW + ' Spark &nbsp;|&nbsp; ' + totalVoters + ' voter(s)</div>';
+      html += '</div>';
+    });
+    return html;
+  }
+
+  /**
+   * Simple HTML escape helper.
+   * @param {string} str
+   * @returns {string}
+   */
+  function _htmlEsc(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  /**
+   * Create the amendment panel DOM element.
+   * @returns {HTMLElement|null}
+   */
+  function createAmendmentPanel() {
+    if (typeof document === 'undefined') return null;
+
+    var panel = document.createElement('div');
+    panel.id = 'amendment-panel';
+    panel.className = 'zion-tool-panel amendment-panel';
+    panel.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.97);border:2px solid #daa520;border-radius:12px;' +
+      'padding:0;width:600px;max-height:82vh;pointer-events:auto;z-index:300;' +
+      'box-shadow:0 8px 32px rgba(218,165,32,0.2);display:none;flex-direction:column;overflow:hidden;';
+
+    // Header
+    var header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(218,165,32,0.3);flex-shrink:0;background:rgba(218,165,32,0.06);';
+    header.innerHTML = '<span style="font-size:20px;margin-right:10px;">&#9878;</span>' +
+      '<span style="font-size:17px;font-weight:bold;color:#daa520;flex:1;">Constitutional Amendments</span>' +
+      '<button id="amendment-panel-close" style="background:rgba(255,255,255,0.08);color:#aaa;border:1px solid rgba(255,255,255,0.15);' +
+      'border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;">&#215;</button>';
+    panel.appendChild(header);
+
+    // Body (scrollable)
+    var body = document.createElement('div');
+    body.id = 'amendment-panel-body';
+    body.style.cssText = 'flex:1;overflow-y:auto;padding:18px 20px;';
+    body.innerHTML = _amendmentTabBar(_amendmentActiveTab) +
+      '<div id="amendment-panel-content"><div style="text-align:center;color:#888;padding:30px;">Loading...</div></div>';
+    panel.appendChild(body);
+
+    return panel;
+  }
+
+  /**
+   * Refresh the content area of the amendment panel based on current tab.
+   * @param {Array} amendments - list of amendment records
+   * @param {string} currentUser - current player ID
+   */
+  function refreshAmendmentPanel(amendments, currentUser) {
+    if (typeof document === 'undefined') return;
+    var content = document.getElementById('amendment-panel-content');
+    if (!content) return;
+
+    var arr = amendments || [];
+
+    if (_amendmentActiveTab === 'active') {
+      content.innerHTML = _renderActiveAmendments(arr, currentUser || '');
+      _wireAmendmentVoteButtons(currentUser);
+    } else if (_amendmentActiveTab === 'propose') {
+      content.innerHTML = _renderProposeForm();
+      _wireProposalForm(currentUser);
+    } else if (_amendmentActiveTab === 'history') {
+      content.innerHTML = _renderAmendmentHistory(arr);
+    }
+  }
+
+  /**
+   * Wire click handlers for vote buttons in the active amendments view.
+   * @param {string} currentUser
+   */
+  function _wireAmendmentVoteButtons(currentUser) {
+    if (typeof document === 'undefined') return;
+    var btns = document.querySelectorAll('.amend-vote-btn');
+    btns.forEach(function(btn) {
+      btn.onclick = function() {
+        var amendId = btn.getAttribute('data-amendment-id');
+        var voteVal = btn.getAttribute('data-vote');
+        if (amendmentCallback && amendId && voteVal) {
+          amendmentCallback('vote_amendment', {
+            amendment_id: amendId,
+            vote: voteVal
+          });
+        }
+      };
+    });
+  }
+
+  /**
+   * Wire the proposal form submission.
+   * @param {string} currentUser
+   */
+  function _wireProposalForm(currentUser) {
+    if (typeof document === 'undefined') return;
+    var submitBtn = document.getElementById('amend-submit-btn');
+    var errDiv = document.getElementById('amend-error');
+    if (!submitBtn) return;
+    submitBtn.onclick = function() {
+      var title = (document.getElementById('amend-title') || {}).value || '';
+      var desc = (document.getElementById('amend-description') || {}).value || '';
+      var diff = (document.getElementById('amend-diff') || {}).value || '';
+      var daysVal = parseInt((document.getElementById('amend-days') || {}).value || '7', 10);
+
+      // Client-side validation
+      var err = '';
+      if (!title.trim()) err = 'Title is required.';
+      else if (title.trim().length < 5) err = 'Title must be at least 5 characters.';
+      else if (!desc.trim()) err = 'Description is required.';
+      else if (desc.trim().length < 20) err = 'Description must be at least 20 characters.';
+      else if (!diff.trim()) err = 'Diff text is required.';
+      else if (isNaN(daysVal) || daysVal < 7) err = 'Discussion period must be at least 7 days.';
+
+      if (err) {
+        if (errDiv) { errDiv.textContent = err; errDiv.style.display = 'block'; }
+        return;
+      }
+      if (errDiv) errDiv.style.display = 'none';
+
+      if (amendmentCallback) {
+        amendmentCallback('propose_amendment', {
+          title: title.trim(),
+          description: desc.trim(),
+          diff_text: diff.trim(),
+          discussion_period_days: Math.max(7, daysVal)
+        });
+      }
+    };
+  }
+
+  /**
+   * Wire the tab buttons in the amendment panel.
+   * @param {Array} amendments
+   * @param {string} currentUser
+   */
+  function _wireAmendmentTabs(amendments, currentUser) {
+    if (typeof document === 'undefined') return;
+    var tabs = document.querySelectorAll('.amend-tab-btn');
+    tabs.forEach(function(btn) {
+      btn.onclick = function() {
+        _amendmentActiveTab = btn.getAttribute('data-tab') || 'active';
+        // Re-render tab bar
+        var body = document.getElementById('amendment-panel-body');
+        if (body) {
+          body.innerHTML = _amendmentTabBar(_amendmentActiveTab) +
+            '<div id="amendment-panel-content"></div>';
+        }
+        refreshAmendmentPanel(amendments, currentUser);
+        _wireAmendmentTabs(amendments, currentUser);
+      };
+    });
+  }
+
+  /**
+   * Show the amendment panel.
+   * @param {Array} amendments - current amendment records from state
+   * @param {string} currentUser - current player ID
+   */
+  function showAmendmentPanel(amendments, currentUser) {
+    if (typeof document === 'undefined') return;
+
+    if (!amendmentPanelEl) {
+      amendmentPanelEl = createAmendmentPanel();
+      var hud = document.querySelector('#zion-hud');
+      if (hud && amendmentPanelEl) {
+        hud.appendChild(amendmentPanelEl);
+      } else if (amendmentPanelEl) {
+        document.body.appendChild(amendmentPanelEl);
+      }
+    }
+    if (!amendmentPanelEl) return;
+
+    _amendmentActiveTab = 'active';
+    amendmentPanelEl.style.display = 'flex';
+    amendmentPanelVisible = true;
+
+    // Render initial content
+    var body = document.getElementById('amendment-panel-body');
+    if (body) {
+      body.innerHTML = _amendmentTabBar(_amendmentActiveTab) +
+        '<div id="amendment-panel-content"></div>';
+    }
+    refreshAmendmentPanel(amendments || [], currentUser || '');
+    _wireAmendmentTabs(amendments || [], currentUser || '');
+
+    // Close button
+    var closeBtn = document.getElementById('amendment-panel-close');
+    if (closeBtn) closeBtn.onclick = hideAmendmentPanel;
+  }
+
+  /**
+   * Hide the amendment panel.
+   */
+  function hideAmendmentPanel() {
+    if (amendmentPanelEl) {
+      amendmentPanelEl.style.display = 'none';
+    }
+    amendmentPanelVisible = false;
+  }
+
+  /**
+   * Toggle the amendment panel.
+   * @param {Array} amendments
+   * @param {string} currentUser
+   */
+  function toggleAmendmentPanel(amendments, currentUser) {
+    if (amendmentPanelVisible) {
+      hideAmendmentPanel();
+    } else {
+      showAmendmentPanel(amendments, currentUser);
+    }
+  }
+
+  exports.initAmendmentPanel = initAmendmentPanel;
+  exports.showAmendmentPanel = showAmendmentPanel;
+  exports.hideAmendmentPanel = hideAmendmentPanel;
+  exports.toggleAmendmentPanel = toggleAmendmentPanel;
+  exports.refreshAmendmentPanel = refreshAmendmentPanel;
+  exports.createAmendmentPanel = createAmendmentPanel;
+  // Exported helpers (used by tests)
+  exports._amendmentCountdown = _amendmentCountdown;
+  exports._amendmentTally = _amendmentTally;
+  exports._renderActiveAmendments = _renderActiveAmendments;
+  exports._renderAmendmentHistory = _renderAmendmentHistory;
+  exports._renderProposeForm = _renderProposeForm;
+  exports._htmlEsc = _htmlEsc;
+  exports._amendmentTabBar = _amendmentTabBar;
+
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));

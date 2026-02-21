@@ -54,7 +54,10 @@
     'steward_set_policy',
     'steward_moderate',
     'star_register',
-    'sim_crm_action'
+    'sim_crm_action',
+    'propose_amendment',
+    'vote_amendment',
+    'close_amendment'
   ]);
 
   // Message types that require consent

@@ -380,6 +380,39 @@
     return PET_TYPES.find(p => p.id === petTypeId) || null;
   }
 
+  /**
+   * Initialize pets system with saved data
+   * @param {object} existingData - Previously saved pets data
+   */
+  function initPets(existingData) {
+    if (!existingData) return;
+
+    // Clear current state
+    var pids = Object.keys(playerPets);
+    for (var i = 0; i < pids.length; i++) {
+      delete playerPets[pids[i]];
+    }
+
+    // Restore saved pets
+    var saved = existingData.playerPets || {};
+    var keys = Object.keys(saved);
+    for (var j = 0; j < keys.length; j++) {
+      playerPets[keys[j]] = saved[keys[j]];
+    }
+
+    console.log('Pets initialized:', keys.length, 'players with pets');
+  }
+
+  /**
+   * Get pets state for saving
+   * @returns {object} Serializable pets state
+   */
+  function getPetsState() {
+    return {
+      playerPets: playerPets
+    };
+  }
+
   // Export public API
   exports.PET_TYPES = PET_TYPES;
   exports.getAvailablePets = getAvailablePets;
@@ -394,5 +427,7 @@
   exports.getMoodEmoji = getMoodEmoji;
   exports.getAllPetTypes = getAllPetTypes;
   exports.getPetTypeData = getPetTypeData;
+  exports.initPets = initPets;
+  exports.getPetsState = getPetsState;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Pets = {}));

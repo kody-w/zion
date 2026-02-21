@@ -5,6 +5,14 @@ import sys
 import time
 import random
 import math
+import os as _os
+sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from economy_engine import (
+    apply_wealth_tax as _apply_wealth_tax,
+    process_structure_maintenance as _process_structure_maintenance,
+    distribute_ubi as _distribute_ubi_ledger,
+    get_ubi_eligible_citizens as _get_ubi_eligible_citizens,
+)
 
 
 def calculate_day_phase(world_time):
@@ -167,94 +175,150 @@ def _get_ubi_eligible(economy, current_time):
 
 
 def _distribute_ubi(state):
-    """Distribute UBI from TREASURY once per game day (every 1440 worldTime units)."""
+    """
+    Distribute UBI from TREASURY once per game day (every 1440 worldTime units).
+
+    Delegates to economy_engine.distribute_ubi for the authoritative ledger
+    entries (type 'ubi_distribution'), then mirrors results into the
+    'transactions' list for backward compatibility with existing API consumers.
+
+    Also applies wealth tax (§6.4.6) and structure maintenance (§6.5.1) at the
+    game-day boundary, in that order, before UBI distribution.
+    """
     economy = state.get('economy', {})
     if 'balances' not in economy:
         economy['balances'] = {}
     if 'transactions' not in economy:
         economy['transactions'] = []
+    if 'ledger' not in economy:
+        economy['ledger'] = []
 
     # Initialize TREASURY if missing
     if TREASURY_ID not in economy['balances']:
         economy['balances'][TREASURY_ID] = 0
 
-    # Check game-day boundary: distribute UBI once per game day (1440 seconds of worldTime)
+    # Check game-day boundary: distribute UBI once per game day (1440 worldTime units)
     current_day = int(state.get('worldTime', 0) / 1440)
     last_ubi_day = state.get('_lastUbiDay', -1)
 
     if current_day <= last_ubi_day:
         return  # Already distributed this game day
 
+    # Mark day on state (economy_engine also tracks _lastUbiDay on the economy dict)
     state['_lastUbiDay'] = current_day
 
-    # Apply wealth tax first (§6.4): 2% on balances above 500
-    import time as _time2
-    ts_wt = _time2.time()
-    for pid in list(economy['balances'].keys()):
-        if pid in (TREASURY_ID, 'SYSTEM'):
-            continue
-        bal = economy['balances'].get(pid, 0)
-        if bal > WEALTH_TAX_THRESHOLD:
-            taxable = bal - WEALTH_TAX_THRESHOLD
-            tax = int(taxable * WEALTH_TAX_RATE)
-            if tax > 0:
-                economy['balances'][pid] -= tax
-                economy['balances'][TREASURY_ID] += tax
-                economy['transactions'].append({
-                    'type': 'wealth_tax', 'from': pid, 'amount': tax, 'timestamp': ts_wt,
-                })
+    ts_wt = time.time()
 
-    # Structure maintenance (§6.5): charge each structure's builder 1 spark
+    # 1. Apply wealth tax (§6.4.6): 2% on balances above 500
+    economy = _apply_wealth_tax(economy, timestamp=ts_wt)
+    # Mirror wealth tax ledger entries into transactions for backward compat
+    for entry in economy.get('ledger', []):
+        if entry.get('type') == 'wealth_tax' and entry.get('timestamp') == ts_wt:
+            economy['transactions'].append({
+                'type': 'wealth_tax',
+                'from': entry['user'],
+                'amount': entry['amount'],
+                'timestamp': ts_wt,
+            })
+
+    # 2. Structure maintenance (§6.5.1): 1 Spark/day per structure (SYSTEM sink)
     structures = state.get('structures', {})
     if structures:
-        for sid, struct in list(structures.items()):
-            builder = struct.get('builder', '')
-            if not builder or builder not in economy['balances']:
-                continue
-            bal = economy['balances'].get(builder, 0)
-            if bal >= 1:
-                economy['balances'][builder] -= 1
-                # Spark is destroyed — not sent to TREASURY
+        economy, to_remove = _process_structure_maintenance(
+            economy, structures, timestamp=ts_wt
+        )
+        for sid in to_remove:
+            structures.pop(sid, None)
+        # Mirror maintenance ledger entries into transactions for backward compat
+        for entry in economy.get('ledger', []):
+            if entry.get('type') == 'structure_maintenance' and entry.get('timestamp') == ts_wt:
                 economy['transactions'].append({
-                    'type': 'maintenance', 'from': builder,
-                    'amount': 1, 'structureId': sid,
+                    'type': 'maintenance',
+                    'from': entry['user'],
+                    'amount': entry['amount'],
+                    'structureId': entry['structureId'],
                     'timestamp': ts_wt,
                 })
-            else:
-                missed = struct.get('_missedPayments', 0) + 1
-                struct['_missedPayments'] = missed
-                if missed >= 2:
-                    del structures[sid]
 
-    treasury_balance = economy['balances'].get(TREASURY_ID, 0)
-    if treasury_balance <= 0:
-        return
-
-    eligible = _get_ubi_eligible(economy, None)
-    if not eligible:
-        return
-
-    per_player = min(BASE_UBI_AMOUNT, treasury_balance // len(eligible))
-    if per_player < 1:
-        return
-
-    import time as _time
-    ts = _time.time()
-    for pid in eligible:
-        if economy['balances'].get(TREASURY_ID, 0) < per_player:
-            break
-        if pid not in economy['balances']:
-            economy['balances'][pid] = 0
-        economy['balances'][pid] += per_player
-        economy['balances'][TREASURY_ID] -= per_player
-        economy['transactions'].append({
-            'type': 'ubi_payout',
-            'to': pid,
-            'amount': per_player,
-            'timestamp': ts,
-        })
+    # 3. UBI distribution (§6.4.4): delegate to economy_engine.distribute_ubi
+    #    This creates authoritative 'ubi_distribution' ledger entries and
+    #    enforces the idempotency guard via economy['_lastUbiDay'].
+    ts_ubi = time.time()
+    pre_ledger_len = len(economy.get('ledger', []))
+    economy = _distribute_ubi_ledger(economy, current_day, timestamp=ts_ubi)
+    # Mirror new ubi_distribution ledger entries into transactions for backward compat
+    for entry in economy.get('ledger', [])[pre_ledger_len:]:
+        if entry.get('type') == 'ubi_distribution':
+            economy['transactions'].append({
+                'type': 'ubi_payout',
+                'to': entry['user'],
+                'amount': entry['amount'],
+                'timestamp': ts_ubi,
+            })
 
     state['economy'] = economy
+
+
+def decay_pet_states(pets_data, delta_seconds):
+    """
+    Advance pet hunger/mood decay over time.
+
+    Args:
+        pets_data: dict with 'playerPets' mapping playerId -> pet object
+        delta_seconds: time elapsed since last tick
+
+    Returns:
+        Updated pets_data dict
+    """
+    updated = json.loads(json.dumps(pets_data))  # Deep copy
+    player_pets = updated.get('playerPets', {})
+
+    minutes_elapsed = delta_seconds / 60.0
+    hunger_decay = 1.0  # per minute
+    mood_decay = 0.5    # per minute
+    hunger_threshold_content = 60
+
+    for pid, pet in player_pets.items():
+        if not isinstance(pet, dict):
+            continue
+
+        # Hunger increases over time
+        pet['hunger'] = min(100, pet.get('hunger', 0) + hunger_decay * minutes_elapsed)
+
+        # Mood decays faster when hungry
+        effective_mood_decay = mood_decay * minutes_elapsed
+        if pet.get('hunger', 0) > hunger_threshold_content:
+            effective_mood_decay *= 2
+        pet['mood'] = max(0, pet.get('mood', 100) - effective_mood_decay)
+
+        # Passive bonding when pet is happy and fed
+        if pet.get('hunger', 0) < 30 and pet.get('mood', 0) > 50:
+            pet['bond'] = min(100, pet.get('bond', 0) + 0.1 * minutes_elapsed)
+
+        pet['last_updated'] = time.time()
+
+    updated['playerPets'] = player_pets
+    return updated
+
+
+def load_state_file(filepath, default):
+    """
+    Load a JSON state file, returning default if missing or invalid.
+
+    Args:
+        filepath: path to JSON file
+        default: default value to return on failure
+
+    Returns:
+        Parsed JSON or default
+    """
+    if filepath is None:
+        return None
+    try:
+        with open(filepath, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return default
 
 
 def tick(state_json):
@@ -304,6 +368,10 @@ def tick(state_json):
     if 'economy' in state:
         _distribute_ubi(state)
 
+    # Decay pet states
+    if 'pets' in state:
+        state['pets'] = decay_pet_states(state['pets'], delta_seconds)
+
     # Update last tick time
     state['lastTickAt'] = current_time
 
@@ -336,7 +404,7 @@ def main():
         except (FileNotFoundError, json.JSONDecodeError):
             gardens_data = {}
 
-    # Read economy state if provided
+    # Read economy state if provided (argv[3])
     economy_data = None
     if len(sys.argv) > 3:
         try:
@@ -345,26 +413,64 @@ def main():
         except (FileNotFoundError, json.JSONDecodeError):
             economy_data = {}
 
-    # Merge gardens and economy into world state for processing
+    # Read guilds state if provided (argv[4])
+    guilds_data = load_state_file(
+        sys.argv[4] if len(sys.argv) > 4 else None,
+        {'guilds': [], 'invites': [], 'guildMessages': [],
+         'nextGuildId': 1, 'nextInviteId': 1, 'nextMessageId': 1}
+    )
+
+    # Read mentoring state if provided (argv[5])
+    mentoring_data = load_state_file(
+        sys.argv[5] if len(sys.argv) > 5 else None,
+        {'playerSkills': {}, 'mentorships': {},
+         'mentorshipOffers': {}, 'npcLessons': {}}
+    )
+
+    # Read pets state if provided (argv[6])
+    pets_data = load_state_file(
+        sys.argv[6] if len(sys.argv) > 6 else None,
+        {'playerPets': {}}
+    )
+
+    # Merge all state sections into world state for processing
     try:
         state = json.loads(input_data)
         if gardens_data is not None:
             state['gardens'] = gardens_data
         if economy_data is not None:
             state['economy'] = economy_data
+        if guilds_data is not None:
+            state['guilds'] = guilds_data
+        if mentoring_data is not None:
+            state['mentoring'] = mentoring_data
+        if pets_data is not None:
+            state['pets'] = pets_data
+
         updated_state = tick(json.dumps(state))
         updated = json.loads(updated_state)
 
-        # Separate gardens and economy back out for envelope output
+        # Separate sub-states back out for envelope output
         gardens_out = updated.pop('gardens', None)
         economy_out = updated.pop('economy', None)
+        guilds_out = updated.pop('guilds', None)
+        mentoring_out = updated.pop('mentoring', None)
+        pets_out = updated.pop('pets', None)
+
         # Remove internal tracking fields from world output
         updated.pop('_lastUbiDay', None)
+
         output = {'world': updated}
         if gardens_out is not None:
             output['gardens'] = gardens_out
         if economy_out is not None:
             output['economy'] = economy_out
+        if guilds_out is not None:
+            output['guilds'] = guilds_out
+        if mentoring_out is not None:
+            output['mentoring'] = mentoring_out
+        if pets_out is not None:
+            output['pets'] = pets_out
 
         print(json.dumps(output, indent=2))
         sys.exit(0)
