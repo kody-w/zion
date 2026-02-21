@@ -1,0 +1,221 @@
+name: Circuit Breaker
+on:
+  workflow_run:
+    workflows:
+      - "API Process & Publish"
+      - "Game Tick"
+      - "Agent Autonomy"
+      - "Observer Agent"
+      - "Sync State"
+      - "Daily Health Report"
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      workflow_name:
+        description: 'Workflow to diagnose'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: read
+
+# Separate concurrency group — must not block state-push workflows
+concurrency:
+  group: zion-circuit-breaker
+  cancel-in-progress: true
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # ── Determine which workflow triggered us ──
+      - name: Identify trigger
+        id: trigger
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "name=${{ github.event.workflow_run.name }}" >> $GITHUB_OUTPUT
+            echo "conclusion=${{ github.event.workflow_run.conclusion }}" >> $GITHUB_OUTPUT
+            echo "run_id=${{ github.event.workflow_run.id }}" >> $GITHUB_OUTPUT
+          elif [ -n "${{ inputs.workflow_name }}" ]; then
+            echo "name=${{ inputs.workflow_name }}" >> $GITHUB_OUTPUT
+            echo "conclusion=failure" >> $GITHUB_OUTPUT
+            echo "run_id=manual" >> $GITHUB_OUTPUT
+          else
+            echo "name=manual-check" >> $GITHUB_OUTPUT
+            echo "conclusion=status" >> $GITHUB_OUTPUT
+            echo "run_id=none" >> $GITHUB_OUTPUT
+          fi
+
+      # ── Fetch logs if this was a failure ──
+      - name: Fetch failed run logs
+        id: logs
+        if: steps.trigger.outputs.conclusion == 'failure' && steps.trigger.outputs.run_id != 'manual'
+        run: |
+          mkdir -p /tmp/cb
+          # Download logs via gh CLI
+          gh run view ${{ steps.trigger.outputs.run_id }} --log > /tmp/cb/run_logs.txt 2>&1 || true
+          # Also grab job details
+          gh run view ${{ steps.trigger.outputs.run_id }} --json jobs --jq '.jobs[] | "\(.name): \(.conclusion) — \(.steps[] | select(.conclusion != "success") | "\(.name): \(.conclusion)")"' > /tmp/cb/job_summary.txt 2>&1 || true
+          echo "file=/tmp/cb/run_logs.txt" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Record result in circuit breaker state ──
+      - name: Record result
+        id: record
+        run: |
+          LOGS_ARG=""
+          if [ -f "/tmp/cb/run_logs.txt" ]; then
+            LOGS_ARG="--logs /tmp/cb/run_logs.txt"
+          fi
+          python scripts/circuit_breaker.py record \
+            "${{ steps.trigger.outputs.name }}" \
+            "${{ steps.trigger.outputs.conclusion }}" \
+            --run-id "${{ steps.trigger.outputs.run_id }}" \
+            $LOGS_ARG > /tmp/cb/record_output.json
+
+          # Parse output
+          cat /tmp/cb/record_output.json
+
+          TRIPPED=$(python3 -c "import json; d=json.load(open('/tmp/cb/record_output.json')); print('true' if d.get('just_tripped') else 'false')")
+          SEVERITY=$(python3 -c "import json; d=json.load(open('/tmp/cb/record_output.json')); print(d.get('severity', 'medium'))")
+          FAILURES=$(python3 -c "import json; d=json.load(open('/tmp/cb/record_output.json')); print(d.get('consecutive_failures', 0))")
+          HAS_FIXES=$(python3 -c "import json; d=json.load(open('/tmp/cb/record_output.json')); print('true' if d.get('fixable') else 'false')")
+
+          echo "tripped=$TRIPPED" >> $GITHUB_OUTPUT
+          echo "severity=$SEVERITY" >> $GITHUB_OUTPUT
+          echo "failures=$FAILURES" >> $GITHUB_OUTPUT
+          echo "has_fixes=$HAS_FIXES" >> $GITHUB_OUTPUT
+
+      # ── Create issue if circuit tripped ──
+      - name: Check for existing issue
+        id: existing
+        if: steps.record.outputs.tripped == 'true'
+        run: |
+          WORKFLOW="${{ steps.trigger.outputs.name }}"
+          EXISTING=$(gh issue list --state open --label circuit-breaker --search "\"$WORKFLOW\"" --json number --jq '.[0].number // empty' 2>/dev/null || echo "")
+          if [ -n "$EXISTING" ]; then
+            echo "issue_number=$EXISTING" >> $GITHUB_OUTPUT
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create issue
+        id: issue
+        if: steps.record.outputs.tripped == 'true' && steps.existing.outputs.exists != 'true'
+        run: |
+          TITLE=$(python3 -c "import json; d=json.load(open('/tmp/cb/record_output.json')); print(d.get('issue_title', 'Circuit breaker tripped'))")
+          BODY=$(python3 -c "import json; d=json.load(open('/tmp/cb/record_output.json')); print(d.get('issue_body', 'See logs for details.'))")
+          LABELS=$(python3 -c "import json; d=json.load(open('/tmp/cb/record_output.json')); labels=d.get('issue_labels',['circuit-breaker']); print(','.join(labels))")
+
+          # Create labels if they don't exist
+          for label in circuit-breaker "severity: critical" "severity: high" "severity: medium" "severity: low"; do
+            gh label create "$label" --color EDEDED --force 2>/dev/null || true
+          done
+
+          ISSUE_URL=$(gh issue create --title "$TITLE" --body "$BODY" --label "$LABELS" 2>&1)
+          ISSUE_NUM=$(echo "$ISSUE_URL" | grep -o '[0-9]*$' || echo "")
+          echo "number=$ISSUE_NUM" >> $GITHUB_OUTPUT
+          echo "Created issue: $ISSUE_URL"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on existing issue
+        if: steps.record.outputs.tripped == 'true' && steps.existing.outputs.exists == 'true'
+        run: |
+          ISSUE="${{ steps.existing.outputs.issue_number }}"
+          FAILURES="${{ steps.record.outputs.failures }}"
+          gh issue comment "$ISSUE" --body "Circuit breaker still tripped. Consecutive failures: $FAILURES. Run ID: ${{ steps.trigger.outputs.run_id }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Attempt auto-fix if available ──
+      - name: Attempt auto-fix
+        id: autofix
+        if: steps.record.outputs.tripped == 'true' && steps.record.outputs.has_fixes == 'true'
+        run: |
+          WORKFLOW="${{ steps.trigger.outputs.name }}"
+          BRANCH="circuit-breaker/fix-$(echo "$WORKFLOW" | tr ' ' '-' | tr '[:upper:]' '[:lower:]')-$(date +%Y%m%d%H%M%S)"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+          git checkout -b "$BRANCH"
+
+          # Run auto-fix
+          python scripts/circuit_breaker.py fix "$WORKFLOW" > /tmp/cb/fix_output.json
+          cat /tmp/cb/fix_output.json
+
+          # Check if anything changed
+          git add state/
+          if git diff --staged --quiet; then
+            echo "fixed=false" >> $GITHUB_OUTPUT
+            echo "No state changes from auto-fix."
+          else
+            echo "fixed=true" >> $GITHUB_OUTPUT
+            git config user.name "ZION Circuit Breaker"
+            git config user.email "zion-engine@users.noreply.github.com"
+            FIX_DESC=$(python3 -c "import json; d=json.load(open('/tmp/cb/fix_output.json')); descs=[f['description'] for f in d.get('fixes',[]) if f.get('success')]; print('; '.join(descs) if descs else 'auto-fix attempt')")
+            git commit -m "fix(circuit-breaker): $FIX_DESC"
+            git push -u origin "$BRANCH"
+          fi
+
+      # ── Open PR with fix ──
+      - name: Create fix PR
+        if: steps.autofix.outputs.fixed == 'true'
+        run: |
+          WORKFLOW="${{ steps.trigger.outputs.name }}"
+          ISSUE_NUM="${{ steps.issue.outputs.number }}${{ steps.existing.outputs.issue_number }}"
+          SEVERITY="${{ steps.record.outputs.severity }}"
+
+          FIX_DESC=$(python3 -c "import json; d=json.load(open('/tmp/cb/fix_output.json')); descs=[f['description'] for f in d.get('fixes',[]) if f.get('success')]; print('; '.join(descs) if descs else 'auto-fix attempt')")
+
+          PR_BODY="## Summary
+          - Auto-fix for **$WORKFLOW** circuit breaker trip
+          - Severity: **$SEVERITY**
+          - Consecutive failures: **${{ steps.record.outputs.failures }}**
+
+          ## Fixes Applied
+          $FIX_DESC
+
+          ## Related
+          $([ -n \"$ISSUE_NUM\" ] && echo \"Fixes #$ISSUE_NUM\" || echo 'No linked issue')
+
+          ---
+          *Generated by ZION Circuit Breaker*"
+
+          gh pr create \
+            --title "fix(circuit-breaker): auto-heal $WORKFLOW" \
+            --body "$PR_BODY" \
+            --label "circuit-breaker" \
+            --head "${{ steps.autofix.outputs.branch }}" \
+            --base main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Commit updated circuit breaker state ──
+      - name: Commit state
+        if: always()
+        run: |
+          git checkout main 2>/dev/null || true
+          git pull --rebase || true
+          git config user.name "ZION Circuit Breaker"
+          git config user.email "zion-engine@users.noreply.github.com"
+          git add state/logs/circuit_breaker.json
+          git diff --staged --quiet || git commit -m "circuit-breaker: track ${{ steps.trigger.outputs.name }} (${{ steps.trigger.outputs.conclusion }})"
+          for i in 1 2 3; do
+            git pull --rebase || true
+            git push && break
+            echo "Push attempt $i failed, retrying..."
+            sleep 2
+          done
