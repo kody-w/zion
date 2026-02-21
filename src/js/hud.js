@@ -8028,4 +8028,1029 @@
 
   exports.showFederationProposal = showFederationProposal;
 
+  // =============================================================================
+  // PANEL A: ECONOMY VISUALIZER
+  // =============================================================================
+
+  var economyVizPanelEl = null;
+  var economyVizVisible = false;
+  var _economyVizState = null;
+
+  function createEconomyVizPanel() {
+    if (typeof document === 'undefined') return null;
+
+    var panel = document.createElement('div');
+    panel.id = 'economy-viz-panel';
+    panel.className = 'zion-tool-panel economy-viz-panel';
+    panel.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.97);border:2px solid #22c55e;border-radius:12px;' +
+      'padding:0;width:520px;max-height:80vh;overflow:hidden;pointer-events:auto;z-index:300;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);display:none;flex-direction:column;';
+
+    // Header
+    var header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid rgba(34,197,94,0.3);flex-shrink:0;';
+    header.innerHTML = '<span style="font-size:18px;margin-right:8px;">&#128200;</span>' +
+      '<span style="font-size:16px;font-weight:bold;color:#22c55e;flex:1;">Economy Visualizer</span>' +
+      '<button id="economy-viz-close" style="background:rgba(255,255,255,0.1);color:#aaa;border:1px solid rgba(255,255,255,0.2);' +
+      'border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;line-height:1;">&#215;</button>';
+    panel.appendChild(header);
+
+    // Body
+    var body = document.createElement('div');
+    body.style.cssText = 'padding:16px;overflow-y:auto;flex:1;';
+
+    // Module guard
+    if (typeof EconomyViz === 'undefined') {
+      body.innerHTML = '<div style="text-align:center;color:#888;padding:40px;">Module not loaded: EconomyViz</div>';
+      panel.appendChild(body);
+      return panel;
+    }
+
+    // Summary row
+    var summaryEl = document.createElement('div');
+    summaryEl.id = 'economy-viz-summary';
+    summaryEl.style.cssText = 'background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);' +
+      'border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#ccc;line-height:1.6;';
+    summaryEl.textContent = 'Loading economy data...';
+    body.appendChild(summaryEl);
+
+    // Gini row
+    var giniRow = document.createElement('div');
+    giniRow.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:14px;';
+    giniRow.innerHTML = '<span style="font-size:12px;color:#888;">Gini Coefficient</span>' +
+      '<div id="economy-gini-bar" style="flex:1;height:8px;background:#333;border-radius:4px;overflow:hidden;">' +
+      '<div id="economy-gini-fill" style="height:100%;width:0%;background:#22c55e;border-radius:4px;transition:width 0.5s,background 0.5s;"></div></div>' +
+      '<span id="economy-gini-val" style="font-size:13px;font-weight:bold;color:#22c55e;min-width:36px;text-align:right;">0.00</span>';
+    body.appendChild(giniRow);
+
+    // Canvas for flow/Sankey
+    var canvasWrap = document.createElement('div');
+    canvasWrap.style.cssText = 'background:#0a0e1a;border-radius:8px;margin-bottom:14px;overflow:hidden;';
+    var flowCanvas = document.createElement('canvas');
+    flowCanvas.id = 'economy-flow-canvas';
+    flowCanvas.width = 480;
+    flowCanvas.height = 200;
+    flowCanvas.style.cssText = 'display:block;width:100%;height:auto;';
+    canvasWrap.appendChild(flowCanvas);
+    body.appendChild(canvasWrap);
+
+    // Distribution bar chart area
+    var distEl = document.createElement('div');
+    distEl.id = 'economy-dist-chart';
+    distEl.style.cssText = 'background:#0a0e1a;border-radius:8px;padding:12px;min-height:80px;';
+    distEl.innerHTML = '<div style="font-size:11px;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Wealth Distribution</div>' +
+      '<div id="economy-dist-bars" style="display:flex;align-items:flex-end;gap:3px;height:60px;"></div>';
+    body.appendChild(distEl);
+
+    // Refresh button
+    var refreshBtn = document.createElement('button');
+    refreshBtn.textContent = 'Refresh';
+    refreshBtn.style.cssText = 'margin-top:12px;width:100%;padding:8px;background:rgba(34,197,94,0.15);' +
+      'border:1px solid rgba(34,197,94,0.4);border-radius:6px;color:#22c55e;font-size:12px;cursor:pointer;';
+    refreshBtn.onclick = function() { refreshEconomyVizPanel(); };
+    body.appendChild(refreshBtn);
+
+    panel.appendChild(body);
+    return panel;
+  }
+
+  function _economyVizRenderGini(gini) {
+    var fillEl = document.getElementById('economy-gini-fill');
+    var valEl = document.getElementById('economy-gini-val');
+    if (!fillEl || !valEl) return;
+    var pct = Math.round(gini * 100);
+    var color = gini < 0.3 ? '#22c55e' : gini < 0.55 ? '#facc15' : '#ef4444';
+    fillEl.style.width = pct + '%';
+    fillEl.style.background = color;
+    valEl.textContent = gini.toFixed(2);
+    valEl.style.color = color;
+  }
+
+  function _economyVizRenderDistBars(distribution) {
+    var barsEl = document.getElementById('economy-dist-bars');
+    if (!barsEl || !distribution || !distribution.length) return;
+    var max = 1;
+    for (var i = 0; i < distribution.length; i++) {
+      if (distribution[i] > max) max = distribution[i];
+    }
+    barsEl.innerHTML = '';
+    var colors = ['#22c55e', '#4ade80', '#86efac', '#bbf7d0', '#dcfce7'];
+    for (var j = 0; j < distribution.length; j++) {
+      var bar = document.createElement('div');
+      var hPct = Math.max(4, Math.round((distribution[j] / max) * 100));
+      bar.style.cssText = 'flex:1;border-radius:3px 3px 0 0;background:' +
+        (colors[j % colors.length]) + ';height:' + hPct + '%;title="' + distribution[j] + '"';
+      bar.title = 'Quintile ' + (j + 1) + ': ' + distribution[j];
+      barsEl.appendChild(bar);
+    }
+  }
+
+  function refreshEconomyVizPanel() {
+    if (!economyVizPanelEl) return;
+
+    var EV = typeof EconomyViz !== 'undefined' ? EconomyViz : null;
+    if (!EV) {
+      var summaryEl = document.getElementById('economy-viz-summary');
+      if (summaryEl) summaryEl.textContent = 'Module not loaded: EconomyViz';
+      return;
+    }
+
+    var State = typeof window !== 'undefined' ? window.State : null;
+    var state = (State && State.getLiveState) ? State.getLiveState() : (_economyVizState || {});
+
+    // Summary
+    var summaryEl = document.getElementById('economy-viz-summary');
+    if (summaryEl) {
+      try {
+        summaryEl.textContent = EV.formatSummary(state);
+      } catch (e) {
+        summaryEl.textContent = 'Economy data unavailable';
+      }
+    }
+
+    // Canvas
+    var canvas = document.getElementById('economy-flow-canvas');
+    if (canvas) {
+      try {
+        EV.init(canvas);
+        EV.loadState(state);
+        EV.render();
+      } catch (e) {
+        var ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#555';
+          ctx.font = '13px monospace';
+          ctx.fillText('Flow data unavailable', 12, 30);
+        }
+      }
+    }
+
+    // Gini
+    try {
+      var balances = (state.economy && state.economy.balances) ? state.economy.balances :
+                     (state.balances ? state.balances : {});
+      var gini = EV.computeGini(balances);
+      _economyVizRenderGini(gini);
+      var distribution = EV.computeDistribution(balances);
+      _economyVizRenderDistBars(distribution);
+    } catch (e) {
+      _economyVizRenderGini(0);
+    }
+  }
+
+  function showEconomyVizPanel(state) {
+    if (typeof document === 'undefined') return;
+    if (!economyVizPanelEl) {
+      economyVizPanelEl = createEconomyVizPanel();
+      var hud = document.querySelector('#zion-hud');
+      if (hud && economyVizPanelEl) hud.appendChild(economyVizPanelEl);
+    }
+    if (!economyVizPanelEl) return;
+    _economyVizState = state || null;
+    economyVizPanelEl.style.display = 'flex';
+    economyVizVisible = true;
+
+    var closeBtn = document.getElementById('economy-viz-close');
+    if (closeBtn) closeBtn.onclick = hideEconomyVizPanel;
+
+    refreshEconomyVizPanel();
+  }
+
+  function hideEconomyVizPanel() {
+    if (economyVizPanelEl) {
+      economyVizPanelEl.style.display = 'none';
+    }
+    economyVizVisible = false;
+  }
+
+  function toggleEconomyVizPanel(state) {
+    if (economyVizVisible) {
+      hideEconomyVizPanel();
+    } else {
+      showEconomyVizPanel(state);
+    }
+  }
+
+  exports.createEconomyVizPanel = createEconomyVizPanel;
+  exports.showEconomyVizPanel = showEconomyVizPanel;
+  exports.hideEconomyVizPanel = hideEconomyVizPanel;
+  exports.toggleEconomyVizPanel = toggleEconomyVizPanel;
+  exports.refreshEconomyVizPanel = refreshEconomyVizPanel;
+
+  // =============================================================================
+  // PANEL B: YAML STATE INSPECTOR
+  // =============================================================================
+
+  var yamlInspectorPanelEl = null;
+  var yamlInspectorVisible = false;
+  var _yamlInspectorTree = null;
+  var _yamlInspectorSource = 'world';
+
+  var YAML_SOURCES = ['world', 'economy', 'gardens', 'structures', 'chat'];
+
+  function _getYamlSourceData(source) {
+    var State = typeof window !== 'undefined' ? window.State : null;
+    var liveState = (State && State.getLiveState) ? State.getLiveState() : {};
+    switch (source) {
+      case 'world':     return liveState;
+      case 'economy':   return liveState.economy || {};
+      case 'gardens':   return liveState.gardens || {};
+      case 'structures':return liveState.structures || {};
+      case 'chat':      return liveState.chat || [];
+      default:          return liveState;
+    }
+  }
+
+  function createYamlInspectorPanel() {
+    if (typeof document === 'undefined') return null;
+
+    var panel = document.createElement('div');
+    panel.id = 'yaml-inspector-panel';
+    panel.className = 'zion-tool-panel yaml-inspector-panel';
+    panel.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.97);border:2px solid #818cf8;border-radius:12px;' +
+      'padding:0;width:560px;height:600px;pointer-events:auto;z-index:300;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);display:none;flex-direction:column;';
+
+    // Header
+    var header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid rgba(129,140,248,0.3);flex-shrink:0;';
+    header.innerHTML = '<span style="font-size:18px;margin-right:8px;">&#128269;</span>' +
+      '<span style="font-size:16px;font-weight:bold;color:#818cf8;flex:1;">State Inspector</span>' +
+      '<button id="yaml-inspector-close" style="background:rgba(255,255,255,0.1);color:#aaa;border:1px solid rgba(255,255,255,0.2);' +
+      'border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;line-height:1;">&#215;</button>';
+    panel.appendChild(header);
+
+    // Toolbar: search + dropdown
+    var toolbar = document.createElement('div');
+    toolbar.style.cssText = 'display:flex;gap:8px;padding:10px 16px;border-bottom:1px solid rgba(129,140,248,0.15);flex-shrink:0;';
+
+    var searchInput = document.createElement('input');
+    searchInput.id = 'yaml-inspector-search';
+    searchInput.type = 'text';
+    searchInput.placeholder = 'Filter keys/values...';
+    searchInput.style.cssText = 'flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(129,140,248,0.4);' +
+      'border-radius:6px;padding:6px 10px;color:#e0e0e0;font-size:12px;font-family:monospace;outline:none;';
+
+    var sourceSelect = document.createElement('select');
+    sourceSelect.id = 'yaml-inspector-source';
+    sourceSelect.style.cssText = 'background:rgba(0,0,0,0.5);border:1px solid rgba(129,140,248,0.4);' +
+      'border-radius:6px;padding:6px 10px;color:#818cf8;font-size:12px;cursor:pointer;outline:none;';
+    YAML_SOURCES.forEach(function(src) {
+      var opt = document.createElement('option');
+      opt.value = src;
+      opt.textContent = src;
+      if (src === _yamlInspectorSource) opt.selected = true;
+      sourceSelect.appendChild(opt);
+    });
+
+    toolbar.appendChild(searchInput);
+    toolbar.appendChild(sourceSelect);
+    panel.appendChild(toolbar);
+
+    // Module guard message (shown if YamlDash missing)
+    if (typeof YamlDash === 'undefined') {
+      var guardMsg = document.createElement('div');
+      guardMsg.style.cssText = 'text-align:center;color:#888;padding:40px;';
+      guardMsg.textContent = 'Module not loaded: YamlDash';
+      panel.appendChild(guardMsg);
+      return panel;
+    }
+
+    // Tree view area
+    var treeWrap = document.createElement('div');
+    treeWrap.id = 'yaml-inspector-tree';
+    treeWrap.style.cssText = 'flex:1;overflow-y:auto;padding:12px 16px;font-family:monospace;font-size:12px;' +
+      'color:#e0e0e0;line-height:1.7;white-space:pre;';
+    treeWrap.textContent = 'Loading...';
+    panel.appendChild(treeWrap);
+
+    // Wire events after panel is in DOM (done in showYamlInspectorPanel)
+    panel._searchInput = searchInput;
+    panel._sourceSelect = sourceSelect;
+
+    return panel;
+  }
+
+  function _yamlInspectorRender() {
+    if (!yamlInspectorPanelEl) return;
+    var YD = typeof YamlDash !== 'undefined' ? YamlDash : null;
+    if (!YD) return;
+
+    var treeEl = document.getElementById('yaml-inspector-tree');
+    if (!treeEl) return;
+
+    var query = document.getElementById('yaml-inspector-search');
+    var queryVal = query ? query.value.trim() : '';
+
+    var displayTree = _yamlInspectorTree;
+    if (queryVal && displayTree) {
+      try {
+        displayTree = YD.filterTree(displayTree, queryVal);
+      } catch (e) { /* noop */ }
+    }
+
+    if (!displayTree) {
+      treeEl.textContent = queryVal ? 'No matches found.' : 'No data.';
+      return;
+    }
+
+    try {
+      treeEl.textContent = YD.renderToText(displayTree);
+    } catch (e) {
+      treeEl.textContent = 'Render error: ' + e.message;
+    }
+
+    // Wire click-to-toggle on tree
+    treeEl.onclick = function(e) {
+      if (!_yamlInspectorTree) return;
+      var target = e.target;
+      var path = target.getAttribute && target.getAttribute('data-path');
+      if (!path) {
+        // Try to parse a path from the text content line
+        var line = target.textContent || '';
+        var match = line.match(/^\s*([\w\.\[\]]+)/);
+        if (match) path = match[1];
+      }
+      if (path) {
+        try { YD.toggleNode(_yamlInspectorTree, path); } catch (ex) { /* noop */ }
+        _yamlInspectorRender();
+      }
+    };
+  }
+
+  function _yamlInspectorLoad(source) {
+    var YD = typeof YamlDash !== 'undefined' ? YamlDash : null;
+    if (!YD) return;
+    _yamlInspectorSource = source || _yamlInspectorSource;
+    var data = _getYamlSourceData(_yamlInspectorSource);
+    try {
+      _yamlInspectorTree = YD.buildTree(data, _yamlInspectorSource);
+    } catch (e) {
+      _yamlInspectorTree = null;
+    }
+    _yamlInspectorRender();
+  }
+
+  function showYamlInspectorPanel() {
+    if (typeof document === 'undefined') return;
+    if (!yamlInspectorPanelEl) {
+      yamlInspectorPanelEl = createYamlInspectorPanel();
+      var hud = document.querySelector('#zion-hud');
+      if (hud && yamlInspectorPanelEl) hud.appendChild(yamlInspectorPanelEl);
+    }
+    if (!yamlInspectorPanelEl) return;
+    yamlInspectorPanelEl.style.display = 'flex';
+    yamlInspectorVisible = true;
+
+    var closeBtn = document.getElementById('yaml-inspector-close');
+    if (closeBtn) closeBtn.onclick = hideYamlInspectorPanel;
+
+    var searchInput = document.getElementById('yaml-inspector-search');
+    if (searchInput) {
+      searchInput.oninput = function() { _yamlInspectorRender(); };
+    }
+
+    var sourceSelect = document.getElementById('yaml-inspector-source');
+    if (sourceSelect) {
+      sourceSelect.onchange = function() {
+        _yamlInspectorLoad(sourceSelect.value);
+      };
+    }
+
+    _yamlInspectorLoad(_yamlInspectorSource);
+  }
+
+  function hideYamlInspectorPanel() {
+    if (yamlInspectorPanelEl) {
+      yamlInspectorPanelEl.style.display = 'none';
+    }
+    yamlInspectorVisible = false;
+  }
+
+  function toggleYamlInspectorPanel() {
+    if (yamlInspectorVisible) {
+      hideYamlInspectorPanel();
+    } else {
+      showYamlInspectorPanel();
+    }
+  }
+
+  exports.createYamlInspectorPanel = createYamlInspectorPanel;
+  exports.showYamlInspectorPanel = showYamlInspectorPanel;
+  exports.hideYamlInspectorPanel = hideYamlInspectorPanel;
+  exports.toggleYamlInspectorPanel = toggleYamlInspectorPanel;
+
+  // =============================================================================
+  // PANEL C: PROTOCOL REPLAY CONTROLS
+  // =============================================================================
+
+  var replayPanelEl = null;
+  var replayPanelVisible = false;
+  var _replayState = 'idle'; // idle | recording | stopped | playing | paused
+  var _replayRecorder = null;
+  var _replayPlayer = null;
+  var _replayRecording = null;
+  var _replayUpdateInterval = null;
+
+  function createReplayPanel() {
+    if (typeof document === 'undefined') return null;
+
+    var panel = document.createElement('div');
+    panel.id = 'replay-panel';
+    panel.className = 'zion-tool-panel replay-panel';
+    panel.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.97);border:2px solid #f472b6;border-radius:12px;' +
+      'padding:0;width:460px;pointer-events:auto;z-index:300;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);display:none;flex-direction:column;';
+
+    // Header
+    var header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid rgba(244,114,182,0.3);flex-shrink:0;';
+    header.innerHTML = '<span style="font-size:18px;margin-right:8px;">&#9654;</span>' +
+      '<span style="font-size:16px;font-weight:bold;color:#f472b6;flex:1;">Protocol Replay</span>' +
+      '<button id="replay-panel-close" style="background:rgba(255,255,255,0.1);color:#aaa;border:1px solid rgba(255,255,255,0.2);' +
+      'border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;line-height:1;">&#215;</button>';
+    panel.appendChild(header);
+
+    var body = document.createElement('div');
+    body.style.cssText = 'padding:16px;';
+
+    // Module guard
+    if (typeof Replay === 'undefined') {
+      body.innerHTML = '<div style="text-align:center;color:#888;padding:40px;">Module not loaded: Replay</div>';
+      panel.appendChild(body);
+      return panel;
+    }
+
+    // Status display
+    var statusEl = document.createElement('div');
+    statusEl.id = 'replay-status';
+    statusEl.style.cssText = 'text-align:center;padding:8px;margin-bottom:12px;border-radius:6px;font-size:12px;' +
+      'background:rgba(244,114,182,0.08);border:1px solid rgba(244,114,182,0.2);color:#f472b6;font-weight:bold;';
+    statusEl.textContent = 'IDLE';
+    body.appendChild(statusEl);
+
+    // Control buttons
+    var btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:8px;margin-bottom:14px;justify-content:center;';
+
+    var recordBtn = document.createElement('button');
+    recordBtn.id = 'replay-record-btn';
+    recordBtn.style.cssText = 'padding:8px 16px;background:rgba(239,68,68,0.15);border:1px solid #ef4444;' +
+      'border-radius:6px;color:#ef4444;font-size:13px;cursor:pointer;font-weight:bold;';
+    recordBtn.innerHTML = '&#9679; Record';
+    recordBtn.onclick = function() { _replayStartRecording(); };
+
+    var stopBtn = document.createElement('button');
+    stopBtn.id = 'replay-stop-btn';
+    stopBtn.style.cssText = 'padding:8px 16px;background:rgba(100,100,100,0.15);border:1px solid #666;' +
+      'border-radius:6px;color:#666;font-size:13px;cursor:pointer;';
+    stopBtn.innerHTML = '&#9632; Stop';
+    stopBtn.onclick = function() { _replayStop(); };
+
+    var playBtn = document.createElement('button');
+    playBtn.id = 'replay-play-btn';
+    playBtn.style.cssText = 'padding:8px 16px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);' +
+      'border-radius:6px;color:#22c55e;font-size:13px;cursor:pointer;';
+    playBtn.innerHTML = '&#9654; Play';
+    playBtn.onclick = function() { _replayPlayPause(); };
+
+    btnRow.appendChild(recordBtn);
+    btnRow.appendChild(stopBtn);
+    btnRow.appendChild(playBtn);
+    body.appendChild(btnRow);
+
+    // Progress display
+    var progressEl = document.createElement('div');
+    progressEl.id = 'replay-progress-text';
+    progressEl.style.cssText = 'text-align:center;font-size:12px;color:#888;margin-bottom:10px;font-family:monospace;';
+    progressEl.textContent = 'Message 0/0 — 00:00/00:00';
+    body.appendChild(progressEl);
+
+    // Seek slider
+    var seekSlider = document.createElement('input');
+    seekSlider.id = 'replay-seek';
+    seekSlider.type = 'range';
+    seekSlider.min = '0';
+    seekSlider.max = '100';
+    seekSlider.value = '0';
+    seekSlider.style.cssText = 'width:100%;margin-bottom:14px;accent-color:#f472b6;cursor:pointer;';
+    seekSlider.oninput = function() {
+      if (_replayPlayer && (_replayState === 'playing' || _replayState === 'paused')) {
+        try {
+          var pos = parseInt(seekSlider.value, 10) / 100;
+          var rec = _replayRecording;
+          if (rec && rec.messages && rec.messages.length) {
+            var idx = Math.floor(pos * (rec.messages.length - 1));
+            _replayPlayer.seek(idx);
+            _updateReplayProgress();
+          }
+        } catch (e) { /* noop */ }
+      }
+    };
+    body.appendChild(seekSlider);
+
+    // Speed selector
+    var speedRow = document.createElement('div');
+    speedRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:14px;';
+    speedRow.innerHTML = '<span style="font-size:12px;color:#888;">Speed:</span>';
+    [0.5, 1, 2, 5, 10].forEach(function(spd) {
+      var btn = document.createElement('button');
+      btn.textContent = spd + 'x';
+      btn.setAttribute('data-speed', spd);
+      btn.style.cssText = 'padding:4px 10px;background:rgba(244,114,182,' + (spd === 1 ? '0.25' : '0.08') + ');' +
+        'border:1px solid rgba(244,114,182,' + (spd === 1 ? '0.6' : '0.2') + ');' +
+        'border-radius:4px;color:#f472b6;font-size:11px;cursor:pointer;';
+      btn.onclick = function() {
+        speedRow.querySelectorAll('[data-speed]').forEach(function(b) {
+          b.style.background = 'rgba(244,114,182,0.08)';
+          b.style.borderColor = 'rgba(244,114,182,0.2)';
+        });
+        btn.style.background = 'rgba(244,114,182,0.25)';
+        btn.style.borderColor = 'rgba(244,114,182,0.6)';
+        if (_replayPlayer) {
+          try { _replayPlayer.setSpeed(spd); } catch (e) { /* noop */ }
+        }
+      };
+      speedRow.appendChild(btn);
+    });
+    body.appendChild(speedRow);
+
+    // Export button
+    var exportBtn = document.createElement('button');
+    exportBtn.id = 'replay-export-btn';
+    exportBtn.textContent = 'Export Recording';
+    exportBtn.style.cssText = 'width:100%;padding:8px;background:rgba(129,140,248,0.12);' +
+      'border:1px solid rgba(129,140,248,0.3);border-radius:6px;color:#818cf8;font-size:12px;cursor:pointer;';
+    exportBtn.onclick = function() { _replayExport(); };
+    body.appendChild(exportBtn);
+
+    panel.appendChild(body);
+    return panel;
+  }
+
+  function _updateReplayProgress() {
+    var progressEl = document.getElementById('replay-progress-text');
+    var seekEl = document.getElementById('replay-seek');
+    if (!progressEl) return;
+
+    var rec = _replayRecording;
+    if (!rec || !rec.messages || !rec.messages.length) {
+      progressEl.textContent = 'Message 0/0 — 00:00/00:00';
+      return;
+    }
+
+    var total = rec.messages.length;
+    var current = 0;
+    if (_replayPlayer) {
+      try { current = _replayPlayer.currentIndex() || 0; } catch (e) { current = 0; }
+    }
+
+    var elapsed = 0;
+    var duration = 0;
+    if (rec.messages.length > 1) {
+      var t0 = rec.messages[0].ts || 0;
+      var tEnd = rec.messages[rec.messages.length - 1].ts || 0;
+      var tCur = rec.messages[current] ? (rec.messages[current].ts || t0) : t0;
+      duration = (tEnd - t0) / 1000;
+      elapsed = (tCur - t0) / 1000;
+    }
+
+    function fmtTime(s) {
+      s = Math.max(0, Math.round(s));
+      return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }
+
+    progressEl.textContent = 'Message ' + (current + 1) + '/' + total + ' — ' + fmtTime(elapsed) + '/' + fmtTime(duration);
+
+    if (seekEl) {
+      seekEl.value = total > 1 ? Math.round((current / (total - 1)) * 100) : 0;
+    }
+  }
+
+  function _replaySetStatus(status, color) {
+    var statusEl = document.getElementById('replay-status');
+    if (statusEl) {
+      statusEl.textContent = status;
+      statusEl.style.color = color || '#f472b6';
+    }
+  }
+
+  function _replayStartRecording() {
+    var R = typeof Replay !== 'undefined' ? Replay : null;
+    if (!R) { showNotification('Replay module not loaded', 'error'); return; }
+    if (_replayState === 'recording') { showNotification('Already recording', 'warning'); return; }
+
+    try {
+      _replayRecorder = R.createRecorder();
+      _replayState = 'recording';
+      _replayRecording = null;
+      _replaySetStatus('RECORDING', '#ef4444');
+      showNotification('Protocol recording started', 'info');
+    } catch (e) {
+      showNotification('Failed to start recording: ' + e.message, 'error');
+    }
+  }
+
+  function _replayStop() {
+    if (_replayState === 'recording' && _replayRecorder) {
+      try {
+        _replayRecording = _replayRecorder.stop ? _replayRecorder.stop() : _replayRecorder;
+        _replayState = 'stopped';
+        _replaySetStatus('STOPPED', '#facc15');
+        showNotification('Recording stopped', 'success');
+      } catch (e) {
+        showNotification('Failed to stop recording: ' + e.message, 'error');
+      }
+    } else if (_replayState === 'playing' || _replayState === 'paused') {
+      if (_replayPlayer) {
+        try { _replayPlayer.stop(); } catch (e) { /* noop */ }
+      }
+      if (_replayUpdateInterval) { clearInterval(_replayUpdateInterval); _replayUpdateInterval = null; }
+      _replayState = 'stopped';
+      _replaySetStatus('STOPPED', '#facc15');
+    }
+  }
+
+  function _replayPlayPause() {
+    var R = typeof Replay !== 'undefined' ? Replay : null;
+    if (!R) { showNotification('Replay module not loaded', 'error'); return; }
+
+    if (_replayState === 'idle' || (!_replayRecording && _replayState !== 'playing' && _replayState !== 'paused')) {
+      showNotification('No recording available. Record first.', 'warning');
+      return;
+    }
+
+    if (_replayState === 'stopped' || _replayState === 'recording') {
+      // If still recording, stop first
+      if (_replayState === 'recording') _replayStop();
+      if (!_replayRecording) { showNotification('No recording to play', 'warning'); return; }
+
+      try {
+        _replayPlayer = R.createPlayer(_replayRecording);
+        _replayPlayer.play();
+        _replayState = 'playing';
+        _replaySetStatus('PLAYING', '#22c55e');
+
+        var playBtn = document.getElementById('replay-play-btn');
+        if (playBtn) playBtn.innerHTML = '&#9646;&#9646; Pause';
+
+        // Periodic progress update
+        _replayUpdateInterval = setInterval(function() {
+          _updateReplayProgress();
+          if (_replayPlayer && _replayPlayer.ended && _replayPlayer.ended()) {
+            clearInterval(_replayUpdateInterval);
+            _replayUpdateInterval = null;
+            _replayState = 'stopped';
+            _replaySetStatus('STOPPED', '#facc15');
+            var pb = document.getElementById('replay-play-btn');
+            if (pb) pb.innerHTML = '&#9654; Play';
+          }
+        }, 250);
+      } catch (e) {
+        showNotification('Failed to play recording: ' + e.message, 'error');
+      }
+    } else if (_replayState === 'playing') {
+      if (_replayPlayer) {
+        try { _replayPlayer.pause(); } catch (e) { /* noop */ }
+      }
+      _replayState = 'paused';
+      _replaySetStatus('PAUSED', '#facc15');
+      var playBtn = document.getElementById('replay-play-btn');
+      if (playBtn) playBtn.innerHTML = '&#9654; Play';
+    } else if (_replayState === 'paused') {
+      if (_replayPlayer) {
+        try { _replayPlayer.play(); } catch (e) { /* noop */ }
+      }
+      _replayState = 'playing';
+      _replaySetStatus('PLAYING', '#22c55e');
+      var playBtnResume = document.getElementById('replay-play-btn');
+      if (playBtnResume) playBtnResume.innerHTML = '&#9646;&#9646; Pause';
+    }
+  }
+
+  function _replayExport() {
+    if (!_replayRecording) {
+      showNotification('No recording to export. Record something first.', 'warning');
+      return;
+    }
+    try {
+      var jsonStr = JSON.stringify(_replayRecording, null, 2);
+      var blob = new Blob([jsonStr], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'zion-replay-' + Date.now() + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showNotification('Recording exported!', 'success');
+    } catch (e) {
+      showNotification('Export failed: ' + e.message, 'error');
+    }
+  }
+
+  function showReplayPanel() {
+    if (typeof document === 'undefined') return;
+    if (!replayPanelEl) {
+      replayPanelEl = createReplayPanel();
+      var hud = document.querySelector('#zion-hud');
+      if (hud && replayPanelEl) hud.appendChild(replayPanelEl);
+    }
+    if (!replayPanelEl) return;
+    replayPanelEl.style.display = 'flex';
+    replayPanelVisible = true;
+
+    var closeBtn = document.getElementById('replay-panel-close');
+    if (closeBtn) closeBtn.onclick = hideReplayPanel;
+
+    _updateReplayProgress();
+  }
+
+  function hideReplayPanel() {
+    if (replayPanelEl) {
+      replayPanelEl.style.display = 'none';
+    }
+    replayPanelVisible = false;
+  }
+
+  function toggleReplayPanel() {
+    if (replayPanelVisible) {
+      hideReplayPanel();
+    } else {
+      showReplayPanel();
+    }
+  }
+
+  function getReplayState() {
+    return _replayState;
+  }
+
+  exports.createReplayPanel = createReplayPanel;
+  exports.showReplayPanel = showReplayPanel;
+  exports.hideReplayPanel = hideReplayPanel;
+  exports.toggleReplayPanel = toggleReplayPanel;
+  exports.getReplayState = getReplayState;
+
+  // =============================================================================
+  // PANEL D: NEARBY ANCHORS / AR DISCOVERY
+  // =============================================================================
+
+  var nearbyAnchorsPanelEl = null;
+  var nearbyAnchorsPanelVisible = false;
+  var _nearbyAnchorsGeo = null;
+  var _nearbyAnchorsEnabled = false;
+
+  function createNearbyAnchorsPanel() {
+    if (typeof document === 'undefined') return null;
+
+    var panel = document.createElement('div');
+    panel.id = 'nearby-anchors-panel';
+    panel.className = 'zion-tool-panel nearby-anchors-panel';
+    panel.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.97);border:2px solid #38bdf8;border-radius:12px;' +
+      'padding:0;width:440px;max-height:600px;pointer-events:auto;z-index:300;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);display:none;flex-direction:column;';
+
+    // Header
+    var header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid rgba(56,189,248,0.3);flex-shrink:0;';
+    header.innerHTML = '<span style="font-size:18px;margin-right:8px;">&#127981;</span>' +
+      '<span style="font-size:16px;font-weight:bold;color:#38bdf8;flex:1;">Nearby Anchors</span>' +
+      '<button id="nearby-anchors-close" style="background:rgba(255,255,255,0.1);color:#aaa;border:1px solid rgba(255,255,255,0.2);' +
+      'border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;line-height:1;">&#215;</button>';
+    panel.appendChild(header);
+
+    var body = document.createElement('div');
+    body.style.cssText = 'padding:16px;overflow-y:auto;flex:1;';
+
+    // Module guard
+    if (typeof Anchors === 'undefined') {
+      body.innerHTML = '<div style="text-align:center;color:#888;padding:40px;">Module not loaded: Anchors</div>';
+      panel.appendChild(body);
+      return panel;
+    }
+
+    // Location enable section
+    var locationSection = document.createElement('div');
+    locationSection.id = 'nearby-location-section';
+    locationSection.style.cssText = 'margin-bottom:14px;';
+
+    var enableBtn = document.createElement('button');
+    enableBtn.id = 'nearby-enable-location';
+    enableBtn.textContent = 'Enable Location';
+    enableBtn.style.cssText = 'width:100%;padding:10px;background:rgba(56,189,248,0.15);' +
+      'border:1px solid rgba(56,189,248,0.4);border-radius:8px;color:#38bdf8;font-size:13px;cursor:pointer;font-weight:bold;';
+    enableBtn.onclick = function() { _nearbyAnchorsRequestLocation(); };
+    locationSection.appendChild(enableBtn);
+
+    var locationStatus = document.createElement('div');
+    locationStatus.id = 'nearby-location-status';
+    locationStatus.style.cssText = 'font-size:11px;color:#888;text-align:center;margin-top:6px;';
+    locationStatus.textContent = 'Location not enabled';
+    locationSection.appendChild(locationStatus);
+
+    body.appendChild(locationSection);
+
+    // Safety warning area
+    var safetyEl = document.createElement('div');
+    safetyEl.id = 'nearby-safety-warning';
+    safetyEl.style.cssText = 'background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);' +
+      'border-radius:8px;padding:10px;margin-bottom:14px;font-size:11px;color:#fbbf24;display:none;';
+    body.appendChild(safetyEl);
+
+    // Walking Warmth display
+    var warmthEl = document.createElement('div');
+    warmthEl.id = 'nearby-warmth';
+    warmthEl.style.cssText = 'display:none;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);' +
+      'border-radius:8px;padding:10px;margin-bottom:14px;';
+    warmthEl.innerHTML = '<div style="font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">Walking Warmth</div>' +
+      '<div id="nearby-warmth-value" style="font-size:22px;font-weight:bold;color:#38bdf8;">0</div>' +
+      '<div style="font-size:11px;color:#666;margin-top:2px;">anchors discovered on foot</div>';
+    body.appendChild(warmthEl);
+
+    // Anchor list
+    var listSection = document.createElement('div');
+    listSection.id = 'nearby-anchor-list';
+    listSection.innerHTML = '<div style="text-align:center;color:#666;font-size:12px;padding:20px;">Enable location to discover nearby anchors</div>';
+    body.appendChild(listSection);
+
+    panel.appendChild(body);
+    return panel;
+  }
+
+  function _nearbyAnchorsRequestLocation() {
+    var A = typeof Anchors !== 'undefined' ? Anchors : null;
+    if (!A) { showNotification('Anchors module not loaded', 'error'); return; }
+
+    var statusEl = document.getElementById('nearby-location-status');
+    var enableBtn = document.getElementById('nearby-enable-location');
+    if (statusEl) statusEl.textContent = 'Requesting location...';
+
+    try {
+      A.requestLocation(function(result) {
+        if (result && result.geo) {
+          _nearbyAnchorsGeo = result.geo;
+          _nearbyAnchorsEnabled = true;
+          if (statusEl) statusEl.textContent = 'Location enabled: ' +
+            result.geo.lat.toFixed(4) + ', ' + result.geo.lon.toFixed(4);
+          if (enableBtn) {
+            enableBtn.textContent = 'Location Active';
+            enableBtn.style.background = 'rgba(34,197,94,0.15)';
+            enableBtn.style.borderColor = 'rgba(34,197,94,0.4)';
+            enableBtn.style.color = '#22c55e';
+          }
+          // Show warmth + safety
+          var warmthEl = document.getElementById('nearby-warmth');
+          if (warmthEl) warmthEl.style.display = 'block';
+
+          var safetyEl = document.getElementById('nearby-safety-warning');
+          if (safetyEl && A.SAFETY && A.SAFETY.getWarningMessage) {
+            var warning = A.SAFETY.getWarningMessage(result.geo);
+            if (warning) {
+              safetyEl.textContent = '&#9888; ' + warning;
+              safetyEl.style.display = 'block';
+            }
+          }
+
+          _nearbyAnchorsRefresh();
+        } else {
+          // Location denied or failed
+          _nearbyAnchorsEnabled = false;
+          if (statusEl) statusEl.textContent = 'Location denied or unavailable';
+          if (enableBtn) {
+            enableBtn.textContent = 'Enable Location';
+          }
+          showNotification('Location access denied', 'warning');
+        }
+      });
+    } catch (e) {
+      if (statusEl) statusEl.textContent = 'Location error: ' + e.message;
+      _nearbyAnchorsEnabled = false;
+      showNotification('Location request failed: ' + e.message, 'error');
+    }
+  }
+
+  function _nearbyAnchorsRefresh() {
+    var A = typeof Anchors !== 'undefined' ? Anchors : null;
+    if (!A || !_nearbyAnchorsGeo) return;
+
+    var listEl = document.getElementById('nearby-anchor-list');
+    if (!listEl) return;
+
+    // Get anchors from world state
+    var State = typeof window !== 'undefined' ? window.State : null;
+    var allAnchors = [];
+    if (State && State.getLiveState) {
+      var liveState = State.getLiveState();
+      if (liveState && liveState.anchors) {
+        allAnchors = Object.values(liveState.anchors);
+      }
+    }
+
+    var nearby = [];
+    try {
+      nearby = A.getNearby(_nearbyAnchorsGeo, allAnchors, 500) || [];
+    } catch (e) { nearby = []; }
+
+    // Sort by distance
+    nearby.sort(function(a, b) {
+      var dA = 9999, dB = 9999;
+      try { dA = A.getDistance(_nearbyAnchorsGeo.lat, _nearbyAnchorsGeo.lon, a.geo.lat, a.geo.lon); } catch (ex) {}
+      try { dB = A.getDistance(_nearbyAnchorsGeo.lat, _nearbyAnchorsGeo.lon, b.geo.lat, b.geo.lon); } catch (ex) {}
+      return dA - dB;
+    });
+
+    // Update walking warmth
+    var warmthVal = document.getElementById('nearby-warmth-value');
+    if (warmthVal) warmthVal.textContent = nearby.length;
+
+    // Render anchor cards
+    var typeIcons = {};
+    try {
+      if (A.TYPES) {
+        typeIcons = A.TYPES;
+      }
+    } catch (e) {}
+
+    if (nearby.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center;color:#666;font-size:12px;padding:20px;">No anchors within 500m</div>';
+      return;
+    }
+
+    var html = '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">' +
+      nearby.length + ' anchor' + (nearby.length !== 1 ? 's' : '') + ' nearby</div>';
+
+    nearby.forEach(function(anchor) {
+      var dist = 0;
+      try {
+        dist = Math.round(A.getDistance(_nearbyAnchorsGeo.lat, _nearbyAnchorsGeo.lon,
+          anchor.geo.lat, anchor.geo.lon));
+      } catch (e) {}
+      var typeIcon = (anchor.type && typeIcons[anchor.type]) ? typeIcons[anchor.type] : '&#127981;';
+      var inRange = false;
+      try { inRange = A.isInRange(_nearbyAnchorsGeo, anchor); } catch (ex) {}
+
+      html += '<div class="nearby-anchor-card" style="display:flex;align-items:center;gap:10px;' +
+        'padding:10px;margin-bottom:8px;background:rgba(' + (inRange ? '56,189,248' : '255,255,255') +
+        ',0.04);border:1px solid rgba(' + (inRange ? '56,189,248' : '255,255,255') + ',0.12);' +
+        'border-radius:8px;transition:background 0.2s;">' +
+        '<div style="font-size:22px;width:32px;text-align:center;">' + typeIcon + '</div>' +
+        '<div style="flex:1;">' +
+        '<div style="font-size:13px;color:#e0e0e0;font-weight:bold;">' + (anchor.name || 'Unnamed Anchor') + '</div>' +
+        '<div style="font-size:11px;color:#666;">' + (anchor.zone || 'unknown zone') + '</div>' +
+        '</div>' +
+        '<div style="text-align:right;font-size:12px;">' +
+        '<div style="color:' + (dist < 100 ? '#22c55e' : dist < 300 ? '#38bdf8' : '#888') + ';font-weight:bold;">' +
+        dist + 'm</div>' +
+        (inRange ? '<div style="font-size:10px;color:#22c55e;">IN RANGE</div>' : '') +
+        '</div></div>';
+    });
+
+    listEl.innerHTML = html;
+  }
+
+  function showNearbyAnchorsPanel() {
+    if (typeof document === 'undefined') return;
+    if (!nearbyAnchorsPanelEl) {
+      nearbyAnchorsPanelEl = createNearbyAnchorsPanel();
+      var hud = document.querySelector('#zion-hud');
+      if (hud && nearbyAnchorsPanelEl) hud.appendChild(nearbyAnchorsPanelEl);
+    }
+    if (!nearbyAnchorsPanelEl) return;
+    nearbyAnchorsPanelEl.style.display = 'flex';
+    nearbyAnchorsPanelVisible = true;
+
+    var closeBtn = document.getElementById('nearby-anchors-close');
+    if (closeBtn) closeBtn.onclick = hideNearbyAnchorsPanel;
+
+    if (_nearbyAnchorsEnabled && _nearbyAnchorsGeo) {
+      _nearbyAnchorsRefresh();
+    }
+  }
+
+  function hideNearbyAnchorsPanel() {
+    if (nearbyAnchorsPanelEl) {
+      nearbyAnchorsPanelEl.style.display = 'none';
+    }
+    nearbyAnchorsPanelVisible = false;
+  }
+
+  function toggleNearbyAnchorsPanel() {
+    if (nearbyAnchorsPanelVisible) {
+      hideNearbyAnchorsPanel();
+    } else {
+      showNearbyAnchorsPanel();
+    }
+  }
+
+  exports.createNearbyAnchorsPanel = createNearbyAnchorsPanel;
+  exports.showNearbyAnchorsPanel = showNearbyAnchorsPanel;
+  exports.hideNearbyAnchorsPanel = hideNearbyAnchorsPanel;
+  exports.toggleNearbyAnchorsPanel = toggleNearbyAnchorsPanel;
+
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));

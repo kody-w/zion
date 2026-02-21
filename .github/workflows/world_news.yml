@@ -1,0 +1,91 @@
+name: World News
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Game Tick"]
+    types:
+      - completed
+permissions:
+  contents: write
+concurrency:
+  group: zion-world-news
+  cancel-in-progress: false
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Rotate snapshots
+        run: |
+          mkdir -p state/snapshots
+          # If a latest snapshot exists, move it to previous
+          if [ -f state/snapshots/latest.json ]; then
+            cp state/snapshots/latest.json state/snapshots/previous.json
+            echo "Rotated latest -> previous"
+          else
+            echo "No previous snapshot found; will create initial baseline"
+          fi
+
+      - name: Take new snapshot
+        run: |
+          python3 scripts/snapshot_state.py --output state/snapshots/latest.json
+          echo "Snapshot created:"
+          python3 -c "
+          import json
+          with open('state/snapshots/latest.json') as f:
+            s = json.load(f)
+          print('  Timestamp:', s.get('_snapshot_ts'))
+          print('  Files captured:', ', '.join(s.get('_snapshot_files', [])))
+          "
+
+      - name: Generate world news feed
+        run: |
+          mkdir -p docs/feeds
+          if [ -f state/snapshots/previous.json ]; then
+            python3 scripts/world_news.py \
+              state/snapshots/previous.json \
+              state/snapshots/latest.json \
+              docs/feeds/news.xml
+          else
+            echo "No previous snapshot — skipping diff (first run)"
+            # Ensure the feed file exists with empty channel
+            if [ ! -f docs/feeds/news.xml ]; then
+              python3 -c "
+          content = '''<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<rss version=\"2.0\"
+  xmlns:atom=\"http://www.w3.org/2005/Atom\"
+  xmlns:content=\"http://purl.org/rss/1.0/modules/content/\">
+  <channel>
+    <title>ZION World News</title>
+    <link>https://kody-w.github.io/zion/</link>
+    <description>The world writes its own newspaper.</description>
+    <language>en-us</language>
+    <atom:link href=\"https://kody-w.github.io/zion/feeds/news.xml\" rel=\"self\" type=\"application/rss+xml\" />
+  </channel>
+</rss>
+'''
+              with open('docs/feeds/news.xml', 'w') as f:
+                  f.write(content)
+              print('Created empty news feed')
+              "
+            fi
+          fi
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "ZION World News"
+          git config user.email "zion-news@users.noreply.github.com"
+          git add state/snapshots/ docs/feeds/news.xml
+          git diff --staged --quiet || git commit -m "World News: update narrative feed"
+          for i in 1 2 3; do
+            git pull --rebase || true
+            git push && break
+            echo "Push attempt $i failed, retrying..."
+            sleep 2
+          done

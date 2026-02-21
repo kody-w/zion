@@ -1245,16 +1245,101 @@
   // DIALOGUE SYSTEM
   // ============================================================================
 
+  // Safe reference to NpcDialogue module (loaded after npc_ai.js in bundle order)
+  var dialogue = (typeof NpcDialogue !== 'undefined') ? NpcDialogue : null;
+
+  /**
+   * Map npc_ai category keys to NpcDialogue context types.
+   */
+  var CATEGORY_TO_DIALOGUE_TYPE = {
+    greeting_first:     'greeting',
+    greeting_familiar:  'greeting',
+    greeting_close:     'greeting',
+    weather_rain:       'weather',
+    weather_snow:       'weather',
+    weather_clear:      'weather',
+    time_morning:       'idle_chat',
+    time_evening:       'idle_chat',
+    time_night:         'idle_chat',
+    player_building:    'craft',
+    player_harvesting:  'craft',
+    working:            'craft',
+    idle_observation:   'idle_chat',
+    near_water:         'zone_comment',
+    group_forming:      'idle_chat',
+    zone_observation:   'zone_comment',
+    quest_hook:         'idle_chat',
+    archetype_reaction: 'idle_chat'
+  };
+
+  /**
+   * Build a NpcDialogue-compatible context object from npc_ai state.
+   * @param {object} memory - NPC memory object
+   * @param {object} context - npc_ai context {category, zone, targetArchetype}
+   * @param {object} [perception] - Optional perception snapshot
+   * @returns {object} NpcDialogue context
+   */
+  function buildDialogueContext(memory, context, perception) {
+    var categoryKey = (context && context.category) || 'idle_observation';
+    var contextType = CATEGORY_TO_DIALOGUE_TYPE[categoryKey] || 'idle_chat';
+
+    // Map weather categories to 'weather' type
+    if (categoryKey === 'weather_rain' || categoryKey === 'weather_snow' || categoryKey === 'weather_clear') {
+      contextType = 'weather';
+    }
+    // Map greeting categories to 'greeting' type
+    if (categoryKey.indexOf('greeting') === 0) {
+      contextType = 'greeting';
+    }
+
+    var dlgContext = {
+      type: contextType,
+      zone: (context && context.zone) || (perception && perception.currentZone) || 'nexus',
+      timeOfDay: (perception && perception.timeOfDay) || 'daytime',
+      weather: (perception && perception.weather) || 'clear',
+      currentActivity: (memory && memory.currentGoal && memory.currentGoal.type) || 'wandering',
+      nearbyPlayers: [],
+      recentChat: []
+    };
+
+    return dlgContext;
+  }
+
   function getDialogue(memory, context, npcName) {
     var archetype = memory.archetype;
     var categoryKey = context.category || 'idle_observation';
+
+    // Re-check NpcDialogue on each call (may have loaded after npc_ai.js)
+    if (!dialogue && typeof NpcDialogue !== 'undefined') {
+      dialogue = NpcDialogue;
+    }
+
+    // Use NpcDialogue.getFallback when available for richer, personality-driven responses
+    if (dialogue && dialogue.getFallback) {
+      var npcObj = { archetype: archetype, name: npcName };
+      var dlgCtx = buildDialogueContext(memory, context, null);
+      var dlgResult = dialogue.getFallback(npcObj, dlgCtx);
+      if (dlgResult) {
+        // Track used dialogue to avoid consecutive repetition
+        if (!memory.usedDialogues) memory.usedDialogues = [];
+        // Prevent consecutive repeat: if last line matches, fall through to npc_ai pool
+        var lastUsed = memory.usedDialogues[memory.usedDialogues.length - 1];
+        if (lastUsed !== dlgResult) {
+          memory.usedDialogues.push(dlgResult);
+          if (memory.usedDialogues.length > 20) {
+            memory.usedDialogues = memory.usedDialogues.slice(-20);
+          }
+          return dlgResult;
+        }
+      }
+    }
 
     // Handle special dynamic categories
     if (categoryKey === 'archetype_reaction') {
       var reactions = ARCHETYPE_REACTIONS[archetype];
       if (reactions && context.targetArchetype && reactions[context.targetArchetype]) {
-        var dialogue = reactions[context.targetArchetype];
-        return dialogue.replace('{name}', npcName);
+        var reactionText = reactions[context.targetArchetype];
+        return reactionText.replace('{name}', npcName);
       }
       categoryKey = 'idle_observation'; // Fallback
     }
@@ -1296,15 +1381,15 @@
     }
 
     // Pick random from available
-    var dialogue = availableDialogues[Math.floor(Math.random() * availableDialogues.length)];
-    var index = category.indexOf(dialogue);
+    var pickedDialogue = availableDialogues[Math.floor(Math.random() * availableDialogues.length)];
+    var index = category.indexOf(pickedDialogue);
     memory.usedDialogues.push(categoryKey + '_' + index);
 
     // Replace placeholders
-    dialogue = dialogue.replace('{name}', npcName);
-    dialogue = dialogue.replace('{plant}', ['roses', 'lilies', 'moonflowers', 'sage'][Math.floor(Math.random() * 4)]);
+    pickedDialogue = pickedDialogue.replace('{name}', npcName);
+    pickedDialogue = pickedDialogue.replace('{plant}', ['roses', 'lilies', 'moonflowers', 'sage'][Math.floor(Math.random() * 4)]);
 
-    return dialogue;
+    return pickedDialogue;
   }
 
   function getDialogueContext(memory, perception, npc) {
@@ -1442,15 +1527,15 @@
         if (!lastGreetTime || now - lastGreetTime > INTERACTION_COOLDOWN) {
           memory.lastGreeted[closestPlayer.id] = now;
           var context = getDialogueContext(memory, perception, npc);
-          var dialogue = getDialogue(memory, context, npc.name);
-          recordInteraction(memory, closestPlayer.id, 'greeting', dialogue);
+          var greetDialogue = getDialogue(memory, context, npc.name);
+          recordInteraction(memory, closestPlayer.id, 'greeting', greetDialogue);
 
           return {
             type: 'greet',
             targetPlayer: closestPlayer.id,
             priority: 7,
             animation: 'wave',
-            dialogue: dialogue,
+            dialogue: greetDialogue,
             facing: { x: npc.x + closestPlayer.direction.x, z: npc.z + closestPlayer.direction.z },
             speed: 0
           };
@@ -2773,6 +2858,7 @@
   exports.getDecision = getDecision;
   exports.handleEvent = handleEvent;
   exports.getDialogue = getDialogue;
+  exports.buildDialogueContext = buildDialogueContext;
   exports.getMemory = getMemory;
   exports.getMood = getMood;
   exports.getGoal = getGoal;

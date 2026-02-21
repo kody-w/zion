@@ -1,10 +1,28 @@
 name = "zion-api"
 main = "worker.js"
-compatibility_date = "2024-01-01"
+compatibility_date = "2025-08-01"
 
-# Deploy to: zion-api.kwildfeuer.workers.dev
-# Or add a route on existing zion-oauth worker domain:
-# routes = [{ pattern = "zion-oauth.kwildfeuer.workers.dev/api/*" }]
+# Deploy to: https://zion-api.kwildfeuer.workers.dev
+# Wrangler will automatically create the route on the workers.dev subdomain.
+#
+# To bind a custom domain instead, uncomment:
+# routes = [{ pattern = "api.yourdomain.com/*", zone_name = "yourdomain.com" }]
 
 [vars]
 ENVIRONMENT = "production"
+SITE_URL = "https://kody-w.github.io/zion/"
+RAW_BASE = "https://raw.githubusercontent.com/kody-w/zion/main"
+
+# To enable full inbox writing to GitHub, add as a secret (NOT here):
+#   wrangler secret put GH_TOKEN
+# Then the worker can POST to GitHub's contents API to create inbox files.
+#
+# [secrets]  <-- not a real TOML key; use "wrangler secret put" instead
+
+# KV namespace for persistent rate limiting (optional).
+# Create with: wrangler kv:namespace create "RATE_LIMIT"
+# Then uncomment below and replace id with the actual namespace ID.
+#
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT"
+# id = "REPLACE_WITH_ACTUAL_KV_NAMESPACE_ID"

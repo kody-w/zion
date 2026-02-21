@@ -83,6 +83,17 @@
   // NPC AI reference (loaded from npc_ai.js)
   var NpcAI = typeof window !== 'undefined' ? window.NpcAI : null;
 
+  // NpcDialogue reference — optional, provides richer personality-driven dialogue
+  // Backward compatible: game works without it
+  var dialogue = (typeof NpcDialogue !== 'undefined') ? NpcDialogue : null;
+
+  // Dialogue manager instance (created in initNPCStates if NpcDialogue is available)
+  var dialogueManager = null;
+
+  // Recent dialogue history for trend detection [{npcId, message, timestamp}]
+  var recentDialogueHistory = [];
+  var MAX_DIALOGUE_HISTORY = 100;
+
   // Scene context storage for particle system
   var storedSceneContext = null;
 
@@ -1834,6 +1845,18 @@
     // Re-check for NpcAI module (may have loaded after npcs.js)
     if (!NpcAI && typeof window !== 'undefined') NpcAI = window.NpcAI;
 
+    // Re-check for NpcDialogue module (may have loaded after npcs.js)
+    if (!dialogue && typeof NpcDialogue !== 'undefined') dialogue = NpcDialogue;
+
+    // Wire in the dialogue manager for queue-based speech management
+    if (dialogue && dialogue.createManager && !dialogueManager) {
+      dialogueManager = dialogue.createManager({
+        cooldownMs: 20000,  // 20s between utterances per NPC
+        maxQueueSize: 50
+      });
+      console.log('NpcDialogue manager initialized');
+    }
+
     npcAgents.forEach(agent => {
       npcStates.set(agent.id, {
         currentState: 'idle',
@@ -2774,10 +2797,22 @@
     var message;
     var state = npcStates.get(agent.id);
 
+    // Re-check NpcDialogue module
+    if (!dialogue && typeof NpcDialogue !== 'undefined') dialogue = NpcDialogue;
+
     // Use activity-based dialogue if available
     if (state && state.currentActivity && state.currentActivity !== 'idle') {
       message = getActivityDialogue(state.currentActivity);
-    } else {
+    }
+
+    // Enhance with NpcDialogue if available and no activity message
+    if (!message && dialogue && dialogue.getFallback) {
+      var npcObj = { archetype: agent.archetype, name: agent.name };
+      var dlgCtx = buildNpcDialogueContext(agent, 'idle_chat');
+      message = dialogue.getFallback(npcObj, dlgCtx);
+    }
+
+    if (!message) {
       // Fallback to archetype messages
       const messages = ARCHETYPE_MESSAGES[agent.archetype] || ['...'];
       message = randomChoice(messages, seed);
@@ -3027,10 +3062,60 @@
   }
 
   /**
+   * Build a NpcDialogue-compatible context object from an NPC agent's current state.
+   * Falls back gracefully if state data is incomplete.
+   * @param {object} agent - NPC agent {id, archetype, name, position}
+   * @param {string} contextType - 'greeting'|'idle_chat'|'zone_comment'|'weather'|'craft'
+   * @returns {object} NpcDialogue context
+   */
+  function buildNpcDialogueContext(agent, contextType) {
+    var state = npcStates.get(agent.id);
+    var activity = (state && state.currentActivity) || 'idle';
+
+    // Infer context type from activity if not specified
+    if (!contextType) {
+      if (activity === 'idle' || activity === 'wandering') {
+        contextType = 'idle_chat';
+      } else if (activity === 'building' || activity === 'planting' || activity === 'crafting') {
+        contextType = 'craft';
+      } else {
+        contextType = 'idle_chat';
+      }
+    }
+
+    return {
+      type: contextType,
+      zone: (agent.position && agent.position.zone) || 'nexus',
+      timeOfDay: 'daytime',   // simplified; world state not directly accessible here
+      weather: 'clear',       // simplified; updated if world state available
+      currentActivity: activity,
+      nearbyPlayers: [],
+      recentChat: []
+    };
+  }
+
+  /**
+   * Track a dialogue line in the recent history for trend detection.
+   * @param {string} npcId
+   * @param {string} message
+   */
+  function trackDialogue(npcId, message) {
+    recentDialogueHistory.push({ npcId: npcId, message: message, timestamp: Date.now() });
+    if (recentDialogueHistory.length > MAX_DIALOGUE_HISTORY) {
+      recentDialogueHistory = recentDialogueHistory.slice(-MAX_DIALOGUE_HISTORY);
+    }
+  }
+
+  /**
    * Trigger random ambient speech for NPCs
    * Called periodically from updateNPCs
    */
   function triggerRandomSpeech(agent, deltaTime) {
+    // Re-check NpcDialogue on first call (may have loaded after npcs.js)
+    if (!dialogue && typeof NpcDialogue !== 'undefined') {
+      dialogue = NpcDialogue;
+    }
+
     // Initialize next speech time if not set
     var bubbleData = speechBubbles.get(agent.id);
     if (!bubbleData) {
@@ -3051,14 +3136,50 @@
     bubbleData.nextSpeechTime -= deltaTime;
 
     if (bubbleData.nextSpeechTime <= 0) {
-      // Time to speak! Get archetype-specific message
-      var messages = ARCHETYPE_SPEECH[agent.archetype];
-      if (!messages || messages.length === 0) {
-        messages = ["Hello!", "Beautiful day!", "Greetings!"];
+      var message;
+
+      // Use NpcDialogue for richer, personality-driven ambient speech
+      if (dialogue && dialogue.getFallback) {
+        var npcObj = { archetype: agent.archetype, name: agent.name };
+        var dlgCtx = buildNpcDialogueContext(agent, 'idle_chat');
+
+        // Vary context type for more variety
+        var rand = Math.random();
+        if (rand < 0.2) {
+          dlgCtx.type = 'zone_comment';
+        } else if (rand < 0.35) {
+          dlgCtx.type = 'weather';
+        } else {
+          dlgCtx.type = 'idle_chat';
+        }
+
+        // Prevent consecutive repeat: check last bubble for this NPC
+        var lastMsg = bubbleData.lastMessage || '';
+        var candidate = dialogue.getFallback(npcObj, dlgCtx);
+        if (candidate && candidate !== lastMsg) {
+          message = candidate;
+        } else {
+          // Try a different context type on repeat
+          dlgCtx.type = 'zone_comment';
+          message = dialogue.getFallback(npcObj, dlgCtx) || candidate;
+        }
+
+        if (message) {
+          bubbleData.lastMessage = message;
+        }
       }
 
-      var message = messages[Math.floor(Math.random() * messages.length)];
+      // Fallback: use the existing ARCHETYPE_SPEECH pool
+      if (!message) {
+        var messages = ARCHETYPE_SPEECH[agent.archetype];
+        if (!messages || messages.length === 0) {
+          messages = ["Hello!", "Beautiful day!", "Greetings!"];
+        }
+        message = messages[Math.floor(Math.random() * messages.length)];
+      }
+
       showNPCSpeechBubble(agent.id, message);
+      trackDialogue(agent.id, message);
 
       // Schedule next speech in 15-30 seconds
       bubbleData.nextSpeechTime = 15 + Math.random() * 15;
@@ -3210,11 +3331,21 @@
       }
     }
 
+    // Use NpcDialogue for personality-driven greeting when no other message yet
+    if (!message && dialogue && dialogue.getFallback) {
+      var npcObj = { archetype: agent.archetype, name: agent.name };
+      var greetCtx = buildNpcDialogueContext(agent, 'greeting');
+      message = dialogue.getFallback(npcObj, greetCtx);
+    }
+
     // Fallback to random archetype message if no activity dialogue
     if (!message) {
       var messages = ARCHETYPE_MESSAGES[agent.archetype] || ['Hello there.'];
       message = randomChoice(messages, seed);
     }
+
+    // Track dialogue for culture emergence detection
+    if (message) trackDialogue(agent.id, message);
 
     // Show chat bubble
     if (brain && NpcAI) {
@@ -3491,6 +3622,12 @@
   exports.updateSpeechBubbles = updateSpeechBubbles;
   exports.clearSpeechBubbles = clearSpeechBubbles;
   exports.getAgents = function() { return npcAgents; };
+  exports.buildNpcDialogueContext = buildNpcDialogueContext;
+  exports.getDialogueHistory = function() { return recentDialogueHistory.slice(); };
+  exports.getDialogueTrend = function() {
+    if (!dialogue || !dialogue.detectTrend) return null;
+    return dialogue.detectTrend(recentDialogueHistory);
+  };
   exports.getNearbyNPCCount = function(playerPos, radius) {
     if (!playerPos || !npcAgents) return 0;
     var count = 0;
