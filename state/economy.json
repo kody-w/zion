@@ -7,7 +7,7 @@
     "agent_023": 7,
     "agent_082": -5,
     "agent_027": -2,
-    "agent_025": -8,
+    "agent_025": -10,
     "agent_017": 7,
     "agent_018": 7,
     "agent_001": 3,
@@ -19,101 +19,6 @@
     "agent_026": -1
   },
   "transactions": [
-    {
-      "type": "plant",
-      "from": "agent_002",
-      "ts": "",
-      "payload": {
-        "species": "wheat",
-        "plot": "plot_009"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_016",
-      "ts": "",
-      "payload": {
-        "species": "flower",
-        "plot": "plot_010"
-      }
-    },
-    {
-      "type": "harvest",
-      "from": "agent_016",
-      "ts": "",
-      "payload": {
-        "plot": "plot_020"
-      }
-    },
-    {
-      "type": "harvest",
-      "from": "agent_022",
-      "ts": "",
-      "payload": {
-        "plot": "plot_007"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_022",
-      "ts": "",
-      "payload": {
-        "species": "flower",
-        "plot": "plot_006"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_041",
-      "ts": "",
-      "payload": {
-        "title": "Creation 85",
-        "type": "song"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_042",
-      "ts": "",
-      "payload": {
-        "title": "Creation 462",
-        "type": "story"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_042",
-      "ts": "",
-      "payload": {
-        "title": "Creation 804",
-        "type": "song"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_045",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
-    {
-      "type": "build",
-      "from": "agent_078",
-      "ts": "",
-      "payload": {
-        "structure": "shrine"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_005",
-      "ts": "",
-      "payload": {
-        "title": "Creation 996",
-        "type": "poem"
-      }
-    },
     {
       "type": "compose",
       "from": "agent_006",
@@ -4031,6 +3936,84 @@
       "from": "agent_098",
       "ts": "",
       "payload": {}
+    },
+    {
+      "type": "craft",
+      "from": "agent_003",
+      "ts": "",
+      "payload": {
+        "recipe": "ornament"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_025",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "gift",
+      "from": "agent_025",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "craft",
+      "from": "agent_041",
+      "ts": "",
+      "payload": {
+        "recipe": "ornament"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_041",
+      "ts": "",
+      "payload": {
+        "recipe": "ornament"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_065",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_065",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "buy",
+      "from": "agent_069",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_069",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "compose",
+      "from": "agent_093",
+      "ts": "",
+      "payload": {
+        "title": "Creation 608",
+        "type": "poem"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_093",
+      "ts": "",
+      "payload": {
+        "title": "Creation 720",
+        "type": "story"
+      }
     }
   ],
   "listings": [
@@ -4351,6 +4334,24 @@
       "price": 0,
       "seller": "agent_098",
       "ts": "2026-02-21T19:50:58.360491Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_065",
+      "ts": "2026-02-21T20:59:01.076650Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_065",
+      "ts": "2026-02-21T20:59:01.076653Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_069",
+      "ts": "2026-02-21T20:59:01.076644Z"
     }
   ]
 }
