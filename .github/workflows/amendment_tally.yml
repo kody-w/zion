@@ -1,0 +1,41 @@
+name: Amendment Tally
+
+on:
+  schedule:
+    # Run daily at 00:00 UTC to close amendments whose discussion period has ended
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zion-state-push
+  cancel-in-progress: false
+
+jobs:
+  tally:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run amendment tally
+        run: |
+          python scripts/amendment_vote.py state/amendments.json state/economy.json
+
+      - name: Commit results
+        run: |
+          git config user.name "ZION Governance Engine"
+          git config user.email "zion-governance@users.noreply.github.com"
+          git add state/amendments.json
+          git diff --staged --quiet || git commit -m "Governance: tally amendment votes and close expired periods"
+          for i in 1 2 3; do
+            git pull --rebase || true
+            git push && break
+            echo "Push attempt $i failed, retrying..."
+            sleep 2
+          done
