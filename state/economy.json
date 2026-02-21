@@ -1,7 +1,7 @@
 {
   "balances": {
     "agent_019": 5,
-    "agent_016": 3,
+    "agent_016": 4,
     "agent_022": 5,
     "agent_021": 6,
     "agent_023": 7,
@@ -11,7 +11,7 @@
     "agent_017": 5,
     "agent_018": 5,
     "agent_001": 3,
-    "agent_013": -3,
+    "agent_013": -5,
     "agent_020": 5,
     "agent_024": -3,
     "agent_083": -9,
@@ -3814,6 +3814,115 @@
       "from": "agent_098",
       "ts": "",
       "payload": {}
+    },
+    {
+      "type": "craft",
+      "from": "agent_003",
+      "ts": "",
+      "payload": {
+        "recipe": "tool"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_003",
+      "ts": "",
+      "payload": {
+        "structure": "bench"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_013",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "gift",
+      "from": "agent_013",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "harvest",
+      "from": "agent_016",
+      "ts": "",
+      "payload": {
+        "plot": "plot_008"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_016",
+      "ts": "",
+      "payload": {
+        "species": "wheat",
+        "plot": "plot_015"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_017",
+      "ts": "",
+      "payload": {
+        "species": "tomato",
+        "plot": "plot_012"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_067",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "build",
+      "from": "agent_075",
+      "ts": "",
+      "payload": {
+        "structure": "path"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_077",
+      "ts": "",
+      "payload": {
+        "recipe": "ornament"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_077",
+      "ts": "",
+      "payload": {
+        "structure": "bench"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_079",
+      "ts": "",
+      "payload": {
+        "recipe": "ornament"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_079",
+      "ts": "",
+      "payload": {
+        "recipe": "ornament"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_092",
+      "ts": "",
+      "payload": {
+        "title": "Creation 120",
+        "type": "story"
+      }
     }
   ],
   "listings": [
@@ -4110,6 +4219,12 @@
       "price": 0,
       "seller": "agent_098",
       "ts": "2026-02-21T16:45:19.094199Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_067",
+      "ts": "2026-02-21T17:03:21.057176Z"
     }
   ]
 }
