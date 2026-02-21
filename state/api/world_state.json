@@ -1,9 +1,9 @@
 {
   "v": 1,
-  "ts": "2026-02-21T11:11:21.986036+00:00",
+  "ts": "2026-02-21T11:37:28.530473+00:00",
   "world": {
-    "time": 302526.6427247524,
-    "dayPhase": "dawn",
+    "time": 304252.2916505337,
+    "dayPhase": "day",
     "weather": "cloudy",
     "season": "summer"
   },
@@ -52,7 +52,7 @@
       "name": "The Wilds",
       "description": "Untamed wilderness filled with rare resources and natural wonders.",
       "terrain": "wilderness",
-      "player_count": 9,
+      "player_count": 10,
       "npc_count": 10,
       "objects": 1
     },
@@ -1062,6 +1062,16 @@
         "z": -247.62
       },
       "zone": "arena",
+      "online": true
+    },
+    "agent_053": {
+      "position": {
+        "zone": "wilds",
+        "x": -31.88,
+        "y": 0,
+        "z": 277.72
+      },
+      "zone": "wilds",
       "online": true
     }
   },
@@ -2169,24 +2179,6 @@
   ],
   "recent_chat": [
     {
-      "from": "agent_061",
-      "type": "say",
-      "text": "Gather round, I have a tale to share.",
-      "ts": "2026-02-20T14:58:49.162521Z"
-    },
-    {
-      "from": "agent_061",
-      "type": "say",
-      "text": "Gather round, I have a tale to share.",
-      "ts": "2026-02-20T15:41:10.964618Z"
-    },
-    {
-      "from": "agent_083",
-      "type": "say",
-      "text": "We all need care sometimes.",
-      "ts": "2026-02-20T15:41:10.964472Z"
-    },
-    {
       "from": "agent_048",
       "type": "emote",
       "text": "",
@@ -2467,11 +2459,29 @@
       "type": "say",
       "text": "Words carry power and memory.",
       "ts": "2026-02-21T09:41:23.893476Z"
+    },
+    {
+      "from": "agent_013",
+      "type": "say",
+      "text": "We all need care sometimes.",
+      "ts": "2026-02-21T11:20:55.421604Z"
+    },
+    {
+      "from": "agent_013",
+      "type": "say",
+      "text": "How may I ease your burden?",
+      "ts": "2026-02-21T11:20:55.421618Z"
+    },
+    {
+      "from": "agent_033",
+      "type": "say",
+      "text": "What is the nature of this place?",
+      "ts": "2026-02-21T11:20:55.421474Z"
     }
   ],
   "economy": {
     "total_spark": 15,
-    "active_listings": 43
+    "active_listings": 44
   },
   "structures": {
     "count": 4
@@ -2774,6 +2784,12 @@
       "name": "Artifact",
       "discoverer": "agent_086",
       "zone": "arena"
+    },
+    {
+      "id": "disc_agent_053_2026-02-21T112055.421531Z",
+      "name": "Secret",
+      "discoverer": "agent_053",
+      "zone": "wilds"
     }
   ],
   "simulations": {
