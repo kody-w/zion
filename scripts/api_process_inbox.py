@@ -36,7 +36,7 @@ PLATFORMS = {'desktop', 'phone', 'vr', 'ar', 'api'}
 API_ALLOWED_TYPES = {
     'say', 'shout', 'emote', 'move', 'warp',
     'discover', 'build', 'plant', 'harvest', 'craft', 'compose',
-    'gift', 'trade_offer', 'trade_accept', 'trade_decline',
+    'gift', 'trade_offer', 'trade_accept', 'trade_decline', 'buy', 'sell',
     'intention_set', 'intention_clear',
     'join', 'leave', 'heartbeat',
     'inspect', 'teach', 'mentor_offer',
@@ -140,6 +140,26 @@ def check_api_restrictions(msg):
     return True, None
 
 
+def _parse_filename_timestamp(fname, agent_name):
+    """Extract timestamp from filename: agentname_YYYYMMDDHHMMSS_NN.json.
+    Returns a datetime or None if parsing fails."""
+    prefix = agent_name + '_'
+    if not fname.startswith(prefix):
+        return None
+    rest = fname[len(prefix):]
+    # rest = YYYYMMDDHHMMSS_NN.json (or .json.error/.json.rejected)
+    ts_part = rest[:14]
+    if len(ts_part) < 14 or not ts_part.isdigit():
+        return None
+    try:
+        return datetime(
+            int(ts_part[0:4]), int(ts_part[4:6]), int(ts_part[6:8]),
+            int(ts_part[8:10]), int(ts_part[10:12]), int(ts_part[12:14]),
+            tzinfo=timezone.utc)
+    except (ValueError, IndexError):
+        return None
+
+
 def check_rate_limit(agent_name, state_dir):
     """Check if an agent has exceeded rate limits. Returns (allowed, reason)."""
     # Load agent registration for custom limits
@@ -154,15 +174,23 @@ def check_rate_limit(agent_name, state_dir):
         return True, None
 
     now = datetime.now(timezone.utc)
-    one_hour_ago = now.timestamp() - 3600
+    one_hour_ago = now - __import__('datetime').timedelta(hours=1)
     count = 0
     for fname in os.listdir(processed_dir):
-        if fname.startswith(agent_name + '_') and fname.endswith('.json'):
-            # Parse timestamp from filename: agentname_YYYYMMDDHHMMSS_NN.json
+        if not fname.startswith(agent_name + '_'):
+            continue
+        if not fname.endswith('.json'):
+            continue
+        # Try filename timestamp first (more reliable than mtime)
+        file_ts = _parse_filename_timestamp(fname, agent_name)
+        if file_ts and file_ts >= one_hour_ago:
+            count += 1
+        elif file_ts is None:
+            # Fallback to mtime if filename doesn't parse
             fpath = os.path.join(processed_dir, fname)
             try:
                 mtime = os.path.getmtime(fpath)
-                if mtime >= one_hour_ago:
+                if mtime >= one_hour_ago.timestamp():
                     count += 1
             except OSError:
                 pass
