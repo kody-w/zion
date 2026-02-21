@@ -440,6 +440,22 @@ ZION has one currency: **Spark**. Spark is earned through play — any kind of p
 4. **Player-set prices** — the market is free; supply and demand rule
 5. **Generosity rewarded** — gifting items generates Spark for the giver (small amount). Kindness has value.
 
+### §6.4 Progressive Taxation and Universal Basic Income
+1. **Progressive tax on new earnings only** — Spark already earned is never confiscated. Tax applies only at the moment of earning, based on the earner's current balance:
+   | Current Balance | Tax Rate |
+   |-----------------|----------|
+   | 0-19            | 0%       |
+   | 20-49           | 5%       |
+   | 50-99           | 10%      |
+   | 100-249         | 15%      |
+   | 250-499         | 20%      |
+   | 500+            | 25% max  |
+2. **Tax rounds in the player's favor** — Tax amounts are always rounded down (floor). Players never lose a fractional Spark to rounding.
+3. **TREASURY** — All tax revenue flows into a transparent TREASURY account. The TREASURY cannot go negative. TREASURY is distinct from SYSTEM (which is a void sink for spending).
+4. **Universal Basic Income** — Once per game day, the TREASURY distributes Spark equally to all active citizens. Each citizen receives min(2, TREASURY / eligible_count) Spark, rounded down. Citizens with negative balances are eligible (UBI helps recovery).
+5. **Transparency** — Every tax withholding and UBI payment is recorded in the public ledger as a transaction, auditable by all citizens.
+6. **No retroactive taxation** — Balances accumulated before this amendment are not subject to tax. Only new earnings are taxed.
+
 ---
 
 ## Article VII — Governance

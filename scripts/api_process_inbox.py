@@ -222,6 +222,28 @@ def _record_economy_txn(state_dir, txn_type, sender, payload, to=''):
 
 VALID_ZONES = {'nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'}
 
+# Progressive tax brackets (§6.4)
+_TAX_BRACKETS = [
+    (0,   19,  0.00),
+    (20,  49,  0.05),
+    (50,  99,  0.10),
+    (100, 249, 0.15),
+    (250, 499, 0.20),
+    (500, float('inf'), 0.25),
+]
+
+TREASURY_ID = 'TREASURY'
+
+
+def _get_tax_rate(balance):
+    """Get progressive tax rate based on current balance."""
+    if balance < 0:
+        return 0.0
+    for low, high, rate in _TAX_BRACKETS:
+        if low <= balance <= high:
+            return rate
+    return 0.0
+
 
 def apply_to_state(msg, state_dir):
     """Apply a validated message to canonical state files."""
@@ -383,11 +405,18 @@ def apply_to_state(msg, state_dir):
         _record_economy_txn(state_dir, 'craft', sender, payload)
 
     elif msg_type == 'harvest':
-        # Harvesting yields coins
+        # Harvesting yields coins — apply progressive tax (§6.4)
         _record_economy_txn(state_dir, 'harvest', sender, payload)
         econ_path = os.path.join(state_dir, 'economy.json')
         econ = load_json(econ_path)
-        econ['balances'][sender] = econ['balances'].get(sender, 0) + 1
+        gross_amount = 1
+        current_balance = econ['balances'].get(sender, 0)
+        tax_rate = _get_tax_rate(current_balance)
+        tax_amount = int(gross_amount * tax_rate)
+        net_amount = gross_amount - tax_amount
+        econ['balances'][sender] = current_balance + net_amount
+        if tax_amount > 0:
+            econ['balances'][TREASURY_ID] = econ['balances'].get(TREASURY_ID, 0) + tax_amount
         save_json(econ_path, econ)
 
     elif msg_type == 'plant':

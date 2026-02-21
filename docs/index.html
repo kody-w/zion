@@ -3744,6 +3744,19 @@ html, body {
     gift: [1, 3]
   };
 
+  // Progressive tax brackets (§6.4): tax on NEW earnings only
+  const TAX_BRACKETS = [
+    { min: 0,   max: 19,  rate: 0.00 },
+    { min: 20,  max: 49,  rate: 0.05 },
+    { min: 50,  max: 99,  rate: 0.10 },
+    { min: 100, max: 249, rate: 0.15 },
+    { min: 250, max: 499, rate: 0.20 },
+    { min: 500, max: Infinity, rate: 0.25 },
+  ];
+
+  const TREASURY_ID = 'TREASURY';
+  const BASE_UBI_AMOUNT = 2;
+
   let transactionCounter = 0;
   let listingCounter = 0;
 
@@ -3792,6 +3805,37 @@ html, body {
   }
 
   /**
+   * Gets the tax rate for a given balance
+   * @param {number} currentBalance - Player's current balance
+   * @returns {number} Tax rate (0.0 to 0.25)
+   */
+  function getTaxRate(currentBalance) {
+    if (currentBalance < 0) return 0;
+    for (let i = 0; i < TAX_BRACKETS.length; i++) {
+      if (currentBalance >= TAX_BRACKETS[i].min && currentBalance <= TAX_BRACKETS[i].max) {
+        return TAX_BRACKETS[i].rate;
+      }
+    }
+    return 0;
+  }
+
+  /**
+   * Calculates tax on an earning amount based on current balance
+   * @param {number} grossAmount - Amount earned before tax
+   * @param {number} currentBalance - Player's current balance
+   * @returns {Object} {netAmount, taxAmount, taxRate}
+   */
+  function calculateTax(grossAmount, currentBalance) {
+    const taxRate = getTaxRate(currentBalance);
+    const taxAmount = Math.floor(grossAmount * taxRate);
+    return {
+      netAmount: grossAmount - taxAmount,
+      taxAmount: taxAmount,
+      taxRate: taxRate
+    };
+  }
+
+  /**
    * Records a transaction in the ledger
    * @param {Object} ledger - Ledger instance
    * @param {string} from - Sender ID (or 'SYSTEM' for earnings)
@@ -3834,16 +3878,36 @@ html, body {
       ledger.balances[playerId] = 0;
     }
 
-    // Credit the player
-    ledger.balances[playerId] += amount;
+    // Calculate tax based on current balance (§6.4)
+    const tax = calculateTax(amount, ledger.balances[playerId]);
 
-    // Record transaction
-    recordTransaction(ledger, 'SYSTEM', playerId, amount, 'earn', {
+    // Credit the player with net amount
+    ledger.balances[playerId] += tax.netAmount;
+
+    // Record earn transaction
+    recordTransaction(ledger, 'SYSTEM', playerId, tax.netAmount, 'earn', {
       activity,
+      grossAmount: amount,
+      taxWithheld: tax.taxAmount,
+      taxRate: tax.taxRate,
       ...details
     });
 
-    return amount;
+    // Credit TREASURY with tax amount
+    if (tax.taxAmount > 0) {
+      if (!ledger.balances[TREASURY_ID]) {
+        ledger.balances[TREASURY_ID] = 0;
+      }
+      ledger.balances[TREASURY_ID] += tax.taxAmount;
+
+      recordTransaction(ledger, playerId, TREASURY_ID, tax.taxAmount, 'tax', {
+        activity,
+        grossAmount: amount,
+        taxRate: tax.taxRate
+      });
+    }
+
+    return tax.netAmount;
   }
 
   /**
@@ -4036,6 +4100,7 @@ html, body {
     var totalSpark = 0;
     var playerCount = 0;
     for (var pid in ledger.balances) {
+      if (pid === TREASURY_ID || pid === 'SYSTEM') continue;
       totalSpark += ledger.balances[pid] || 0;
       playerCount++;
     }
@@ -4052,7 +4117,8 @@ html, body {
       averageSpark: playerCount > 0 ? Math.floor(totalSpark / playerCount) : 0,
       activeListings: activeListings.length,
       totalTransactions: totalTransactions,
-      velocity: Math.round(velocity * 100) / 100
+      velocity: Math.round(velocity * 100) / 100,
+      treasury: ledger.balances[TREASURY_ID] || 0
     };
   }
 
@@ -4062,11 +4128,90 @@ html, body {
 
     var players = [];
     for (var pid in ledger.balances) {
+      if (pid === TREASURY_ID || pid === 'SYSTEM') continue;
       players.push({ playerId: pid, spark: ledger.balances[pid] || 0 });
     }
 
     players.sort(function(a, b) { return b.spark - a.spark; });
     return players.slice(0, limit);
+  }
+
+  // ========================================================================
+  // UNIVERSAL BASIC INCOME (§6.4)
+  // ========================================================================
+
+  /**
+   * Distributes UBI from TREASURY to eligible players
+   * @param {Object} ledger - Ledger instance
+   * @param {Array} eligiblePlayerIds - Array of player IDs to receive UBI
+   * @returns {Object} {distributed, perPlayer, recipients}
+   */
+  function distributeUBI(ledger, eligiblePlayerIds) {
+    if (!eligiblePlayerIds || eligiblePlayerIds.length === 0) {
+      return { distributed: 0, perPlayer: 0, recipients: 0 };
+    }
+
+    var treasuryBalance = ledger.balances[TREASURY_ID] || 0;
+    if (treasuryBalance <= 0) {
+      return { distributed: 0, perPlayer: 0, recipients: 0 };
+    }
+
+    var perPlayer = Math.min(BASE_UBI_AMOUNT, Math.floor(treasuryBalance / eligiblePlayerIds.length));
+    if (perPlayer < 1) {
+      return { distributed: 0, perPlayer: 0, recipients: 0 };
+    }
+
+    var totalDistributed = 0;
+    var recipientCount = 0;
+
+    for (var i = 0; i < eligiblePlayerIds.length; i++) {
+      var pid = eligiblePlayerIds[i];
+      if (pid === TREASURY_ID || pid === 'SYSTEM') continue;
+
+      // Check treasury still has enough
+      if ((ledger.balances[TREASURY_ID] || 0) < perPlayer) break;
+
+      if (!ledger.balances[pid]) {
+        ledger.balances[pid] = 0;
+      }
+
+      ledger.balances[pid] += perPlayer;
+      ledger.balances[TREASURY_ID] -= perPlayer;
+      totalDistributed += perPlayer;
+      recipientCount++;
+
+      recordTransaction(ledger, TREASURY_ID, pid, perPlayer, 'ubi', {});
+    }
+
+    return { distributed: totalDistributed, perPlayer: perPlayer, recipients: recipientCount };
+  }
+
+  /**
+   * Gets treasury information
+   * @param {Object} ledger - Ledger instance
+   * @returns {Object} {balance, totalTaxCollected, totalUbiDistributed}
+   */
+  function getTreasuryInfo(ledger) {
+    var balance = (ledger.balances && ledger.balances[TREASURY_ID]) || 0;
+    var totalTaxCollected = 0;
+    var totalUbiDistributed = 0;
+
+    if (ledger.transactions) {
+      for (var i = 0; i < ledger.transactions.length; i++) {
+        var tx = ledger.transactions[i];
+        if (tx.type === 'tax') {
+          totalTaxCollected += tx.amount;
+        } else if (tx.type === 'ubi') {
+          totalUbiDistributed += tx.amount;
+        }
+      }
+    }
+
+    return {
+      balance: balance,
+      totalTaxCollected: totalTaxCollected,
+      totalUbiDistributed: totalUbiDistributed
+    };
   }
 
   // ========================================================================
@@ -4248,6 +4393,13 @@ html, body {
   exports.getEconomyStats = getEconomyStats;
   exports.getLeaderboard = getLeaderboard;
   exports.EARN_TABLE = EARN_TABLE;
+  exports.TAX_BRACKETS = TAX_BRACKETS;
+  exports.TREASURY_ID = TREASURY_ID;
+  exports.BASE_UBI_AMOUNT = BASE_UBI_AMOUNT;
+  exports.getTaxRate = getTaxRate;
+  exports.calculateTax = calculateTax;
+  exports.distributeUBI = distributeUBI;
+  exports.getTreasuryInfo = getTreasuryInfo;
   exports.createAuction = createAuction;
   exports.placeBid = placeBid;
   exports.finalizeAuctions = finalizeAuctions;

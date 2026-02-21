@@ -54,7 +54,7 @@ def create_initial_state(agents):
         'creations': [],
         'gardens': {},
         'economy': {
-            'balances': {},
+            'balances': {SIM_TREASURY_ID: 0},
             'transactions': [],
             'listings': [],
         },
@@ -131,6 +131,28 @@ def sim_tick(state, tick_num, rng):
             if plant.get('growthStage', 0) < 1.0:
                 growth_rate = 1.0 / plant.get('growthTime', 3600)
                 plant['growthStage'] = min(1.0, plant['growthStage'] + growth_rate * TICK_SECONDS)
+
+    # UBI distribution once per game day (every 1440 worldTime units)
+    current_day = int(state['worldTime'] / 1440)
+    last_ubi_day = state.get('_lastUbiDay', -1)
+    if current_day > last_ubi_day:
+        state['_lastUbiDay'] = current_day
+        econ = state['economy']
+        treasury_bal = econ['balances'].get(SIM_TREASURY_ID, 0)
+        if treasury_bal > 0:
+            eligible = [pid for pid in econ['balances'] if pid not in (SIM_TREASURY_ID, 'SYSTEM')]
+            if eligible:
+                per_player = min(SIM_BASE_UBI, treasury_bal // len(eligible))
+                if per_player >= 1:
+                    distributed = 0
+                    for pid in eligible:
+                        if econ['balances'].get(SIM_TREASURY_ID, 0) < per_player:
+                            break
+                        econ['balances'][pid] = econ['balances'].get(pid, 0) + per_player
+                        econ['balances'][SIM_TREASURY_ID] -= per_player
+                        distributed += per_player
+                    if distributed > 0:
+                        events.append(('ubi', 'UBI distributed: %d spark to %d citizens' % (distributed, len(eligible))))
 
     # Update zone populations
     zone_pop = Counter(c.get('zone', 'nexus') for c in state['citizens'].values())
@@ -314,10 +336,50 @@ def _apply_action(action, state, tick_num, rng):
     return None
 
 
+_SIM_TAX_BRACKETS = [
+    (0,   19,  0.00),
+    (20,  49,  0.05),
+    (50,  99,  0.10),
+    (100, 249, 0.15),
+    (250, 499, 0.20),
+    (500, float('inf'), 0.25),
+]
+
+SIM_TREASURY_ID = 'TREASURY'
+SIM_BASE_UBI = 2
+
+
+def _sim_tax_rate(balance):
+    """Get tax rate for a balance level."""
+    if balance < 0:
+        return 0.0
+    for low, high, rate in _SIM_TAX_BRACKETS:
+        if low <= balance <= high:
+            return rate
+    return 0.0
+
+
 def _econ_txn(state, txn_type, agent_id, amount, tick_num):
-    """Record an economy transaction and adjust balance."""
+    """Record an economy transaction and adjust balance, with tax on positive earnings."""
     econ = state['economy']
-    econ['balances'][agent_id] = econ['balances'].get(agent_id, 100) + amount
+    current_balance = econ['balances'].get(agent_id, 100)
+
+    if amount > 0:
+        # Apply progressive tax on earnings
+        tax_rate = _sim_tax_rate(current_balance)
+        tax_amount = int(amount * tax_rate)
+        net_amount = amount - tax_amount
+
+        econ['balances'][agent_id] = current_balance + net_amount
+
+        if tax_amount > 0:
+            econ['balances'][SIM_TREASURY_ID] = econ['balances'].get(SIM_TREASURY_ID, 0) + tax_amount
+            econ['transactions'].append({
+                'type': 'tax', 'agent': agent_id, 'amount': tax_amount, 'tick': tick_num,
+            })
+    else:
+        econ['balances'][agent_id] = current_balance + amount
+
     econ['transactions'].append({
         'type': txn_type, 'agent': agent_id, 'amount': amount, 'tick': tick_num,
     })
@@ -329,15 +391,15 @@ def _econ_txn(state, txn_type, agent_id, amount, tick_num):
 def collect_snapshot(state, tick_num, events):
     """Collect metrics at a point in time."""
     econ = state['economy']
-    total_spark = sum(econ['balances'].values())
+    total_spark = sum(v for k, v in econ['balances'].items() if k not in (SIM_TREASURY_ID, 'SYSTEM'))
     txn_volume = len([t for t in econ['transactions'] if t.get('tick', 0) > tick_num - SNAPSHOT_INTERVAL])
 
     # Zone diversity
     zone_pop = state['zone_populations']
     active_zones = sum(1 for v in zone_pop.values() if v > 0)
 
-    # Gini coefficient for economic inequality
-    balances = sorted(econ['balances'].values())
+    # Gini coefficient for economic inequality (exclude TREASURY/SYSTEM)
+    balances = sorted(v for k, v in econ['balances'].items() if k not in (SIM_TREASURY_ID, 'SYSTEM'))
     gini = _gini_coefficient(balances) if balances else 0
 
     return {
@@ -357,6 +419,7 @@ def collect_snapshot(state, tick_num, events):
         'season': state['season'],
         'dayPhase': state['dayPhase'],
         'chat_messages': len(state['chat']),
+        'treasury': econ['balances'].get(SIM_TREASURY_ID, 0),
     }
 
 
@@ -446,11 +509,14 @@ def analyze_economy(snapshots, final_state):
     analysis['avg_txn_volume'] = sum(txn_series) / len(txn_series) if txn_series else 0
     analysis['peak_txn_volume'] = max(txn_series) if txn_series else 0
 
-    # Wealth distribution
-    balances = sorted(final_state['economy']['balances'].values(), reverse=True)
+    # Wealth distribution (exclude TREASURY/SYSTEM)
+    balances = sorted(
+        [v for k, v in final_state['economy']['balances'].items() if k not in (SIM_TREASURY_ID, 'SYSTEM')],
+        reverse=True)
     top10_wealth = sum(balances[:10]) if len(balances) >= 10 else sum(balances)
     total_wealth = sum(balances) if balances else 1
     analysis['top10_share'] = top10_wealth / total_wealth * 100
+    analysis['treasury'] = final_state['economy']['balances'].get(SIM_TREASURY_ID, 0)
 
     # Stability assessment
     if analysis['growth_rate'] > 50:
@@ -464,6 +530,12 @@ def analyze_economy(snapshots, final_state):
         analysis['emoji'] = '📉'
         analysis['detail'] = ('Economy is contracting at %.0f%%. Agents are spending faster than earning. '
                               'Risk of economic stagnation. Recommend: increase harvest yields or reduce costs.' % abs(analysis['growth_rate']))
+    elif analysis['final_gini'] > 0.5 and analysis.get('treasury', 0) > 0:
+        analysis['verdict'] = 'REDISTRIBUTING'
+        analysis['emoji'] = '🔄'
+        analysis['detail'] = ('Wealth inequality is high (Gini=%.2f) but taxation and UBI are active. '
+                              'Treasury holds %d spark. Top 10 agents hold %.0f%% of all spark. '
+                              'System is working to reduce inequality.' % (analysis['final_gini'], analysis['treasury'], analysis['top10_share']))
     elif analysis['final_gini'] > 0.5:
         analysis['verdict'] = 'OLIGARCHIC'
         analysis['emoji'] = '👑'
@@ -919,6 +991,7 @@ section { margin-bottom: 40px; }
 .verdict.deflationary { background: linear-gradient(135deg, #2a1a1a, #0f1320); border: 1px solid #4a2a2a; }
 .verdict.oligarchic { background: linear-gradient(135deg, #2a1a2a, #0f1320); border: 1px solid #4a2a4a; }
 .verdict.stagnant { background: linear-gradient(135deg, #1a1a1a, #0f1320); border: 1px solid #333; }
+.verdict.redistributing { background: linear-gradient(135deg, #1a2a2a, #0f1320); border: 1px solid #2a4a4a; }
 .verdict h2 { border: none; padding: 0; margin-bottom: 12px; }
 .verdict p { color: #bbb; font-size: 1.05em; }
 .stats-row { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }

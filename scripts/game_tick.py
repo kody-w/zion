@@ -150,6 +150,72 @@ def respawn_resources(state, delta_seconds):
     return updated_state
 
 
+TREASURY_ID = 'TREASURY'
+BASE_UBI_AMOUNT = 2
+
+
+def _get_ubi_eligible(economy, current_time):
+    """Find players eligible for UBI: anyone with a balance entry, excluding system accounts."""
+    eligible = []
+    for pid in economy.get('balances', {}):
+        if pid in (TREASURY_ID, 'SYSTEM'):
+            continue
+        eligible.append(pid)
+    return eligible
+
+
+def _distribute_ubi(state):
+    """Distribute UBI from TREASURY once per game day (every 1440 worldTime units)."""
+    economy = state.get('economy', {})
+    if 'balances' not in economy:
+        economy['balances'] = {}
+    if 'transactions' not in economy:
+        economy['transactions'] = []
+
+    # Initialize TREASURY if missing
+    if TREASURY_ID not in economy['balances']:
+        economy['balances'][TREASURY_ID] = 0
+
+    # Check game-day boundary: distribute UBI once per game day (1440 seconds of worldTime)
+    current_day = int(state.get('worldTime', 0) / 1440)
+    last_ubi_day = state.get('_lastUbiDay', -1)
+
+    if current_day <= last_ubi_day:
+        return  # Already distributed this game day
+
+    state['_lastUbiDay'] = current_day
+
+    treasury_balance = economy['balances'].get(TREASURY_ID, 0)
+    if treasury_balance <= 0:
+        return
+
+    eligible = _get_ubi_eligible(economy, None)
+    if not eligible:
+        return
+
+    per_player = min(BASE_UBI_AMOUNT, treasury_balance // len(eligible))
+    if per_player < 1:
+        return
+
+    import time as _time
+    ts = _time.time()
+    for pid in eligible:
+        if economy['balances'].get(TREASURY_ID, 0) < per_player:
+            break
+        if pid not in economy['balances']:
+            economy['balances'][pid] = 0
+        economy['balances'][pid] += per_player
+        economy['balances'][TREASURY_ID] -= per_player
+        economy['transactions'].append({
+            'type': 'ubi_payout',
+            'to': pid,
+            'amount': per_player,
+            'timestamp': ts,
+        })
+
+    state['economy'] = economy
+
+
 def tick(state_json):
     """
     Run one game tick: advance time, weather, seasons, growth.
@@ -193,6 +259,10 @@ def tick(state_json):
     # Respawn resources
     state = respawn_resources(state, delta_seconds)
 
+    # Distribute UBI from TREASURY (once per game day)
+    if 'economy' in state:
+        _distribute_ubi(state)
+
     # Update last tick time
     state['lastTickAt'] = current_time
 
@@ -225,19 +295,35 @@ def main():
         except (FileNotFoundError, json.JSONDecodeError):
             gardens_data = {}
 
-    # Merge gardens into world state for processing
+    # Read economy state if provided
+    economy_data = None
+    if len(sys.argv) > 3:
+        try:
+            with open(sys.argv[3], 'r') as f:
+                economy_data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            economy_data = {}
+
+    # Merge gardens and economy into world state for processing
     try:
         state = json.loads(input_data)
         if gardens_data is not None:
             state['gardens'] = gardens_data
+        if economy_data is not None:
+            state['economy'] = economy_data
         updated_state = tick(json.dumps(state))
         updated = json.loads(updated_state)
 
-        # Separate gardens back out for envelope output
+        # Separate gardens and economy back out for envelope output
         gardens_out = updated.pop('gardens', None)
+        economy_out = updated.pop('economy', None)
+        # Remove internal tracking fields from world output
+        updated.pop('_lastUbiDay', None)
         output = {'world': updated}
         if gardens_out is not None:
             output['gardens'] = gardens_out
+        if economy_out is not None:
+            output['economy'] = economy_out
 
         print(json.dumps(output, indent=2))
         sys.exit(0)

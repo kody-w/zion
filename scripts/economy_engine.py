@@ -45,6 +45,28 @@ EARN_TABLE = {
     'federation_handshake': 50
 }
 
+# Progressive tax brackets (§6.4)
+_TAX_BRACKETS = [
+    (0,   19,  0.00),
+    (20,  49,  0.05),
+    (50,  99,  0.10),
+    (100, 249, 0.15),
+    (250, 499, 0.20),
+    (500, float('inf'), 0.25),
+]
+
+TREASURY_ID = 'TREASURY'
+
+
+def _get_tax_rate(balance):
+    """Get progressive tax rate based on current balance."""
+    if balance < 0:
+        return 0.0
+    for low, high, rate in _TAX_BRACKETS:
+        if low <= balance <= high:
+            return rate
+    return 0.0
+
 
 def process_earnings(economy, actions):
     """
@@ -81,16 +103,39 @@ def process_earnings(economy, actions):
             if user_id not in economy['balances']:
                 economy['balances'][user_id] = 0
 
-            economy['balances'][user_id] += spark_earned
+            # Calculate progressive tax (§6.4)
+            current_balance = economy['balances'][user_id]
+            tax_rate = _get_tax_rate(current_balance)
+            tax_amount = int(spark_earned * tax_rate)  # floor (player-favorable)
+            net_amount = spark_earned - tax_amount
+
+            economy['balances'][user_id] += net_amount
 
             # Add ledger entry
             economy['ledger'].append({
                 'type': 'earn',
                 'user': user_id,
-                'amount': spark_earned,
+                'amount': net_amount,
+                'grossAmount': spark_earned,
+                'taxWithheld': tax_amount,
+                'taxRate': tax_rate,
                 'action': action_type,
                 'timestamp': action.get('ts', time.time())
             })
+
+            # Credit TREASURY with tax
+            if tax_amount > 0:
+                if TREASURY_ID not in economy['balances']:
+                    economy['balances'][TREASURY_ID] = 0
+                economy['balances'][TREASURY_ID] += tax_amount
+                economy['ledger'].append({
+                    'type': 'tax',
+                    'user': user_id,
+                    'amount': tax_amount,
+                    'taxRate': tax_rate,
+                    'action': action_type,
+                    'timestamp': action.get('ts', time.time())
+                })
 
     return economy
 
