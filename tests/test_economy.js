@@ -87,6 +87,7 @@ suite('Economy Tests', () => {
 
   test('createMarketListing creates listing', () => {
     const ledger = Economy.createLedger();
+    ledger.balances['player1'] = 100; // Need balance for listing fee
     const item = { type: 'sword', name: 'Iron Sword' };
     const listing = Economy.createMarketListing(ledger, 'player1', item, 50);
 
@@ -100,9 +101,11 @@ suite('Economy Tests', () => {
   test('buyListing transfers item and Spark', () => {
     const ledger = Economy.createLedger();
 
-    // Give seller an item and create listing
+    // Give seller balance for listing fee (fee = max(1, floor(50*0.05)) = 2)
+    ledger.balances['seller1'] = 10;
     const item = { type: 'sword', name: 'Iron Sword' };
     const listing = Economy.createMarketListing(ledger, 'seller1', item, 50);
+    const sellerAfterFee = Economy.getBalance(ledger, 'seller1'); // 10 - 2 = 8
 
     // Give buyer enough Spark
     Economy.earnSpark(ledger, 'buyer1', 'daily_login'); // 10
@@ -116,9 +119,9 @@ suite('Economy Tests', () => {
     assert.strictEqual(result.success, true);
     assert.deepStrictEqual(result.item, item);
 
-    // Check balances
+    // Check balances (seller gets 50 from sale + had 8 after fee)
     assert.strictEqual(Economy.getBalance(ledger, 'buyer1'), 0);
-    assert.strictEqual(Economy.getBalance(ledger, 'seller1'), 50);
+    assert.strictEqual(Economy.getBalance(ledger, 'seller1'), sellerAfterFee + 50);
 
     // Listing should be inactive
     const updatedListing = ledger.listings.find(l => l.id === listing.id);
@@ -128,9 +131,11 @@ suite('Economy Tests', () => {
   test('buyListing fails if buyer has insufficient Spark', () => {
     const ledger = Economy.createLedger();
 
-    // Create listing
+    // Give seller balance for listing fee
+    ledger.balances['seller1'] = 10;
     const item = { type: 'sword', name: 'Iron Sword' };
     const listing = Economy.createMarketListing(ledger, 'seller1', item, 50);
+    const sellerAfterFee = Economy.getBalance(ledger, 'seller1');
 
     // Give buyer only 10 Spark
     Economy.earnSpark(ledger, 'buyer1', 'daily_login');
@@ -139,9 +144,9 @@ suite('Economy Tests', () => {
     const result = Economy.buyListing(ledger, 'buyer1', listing.id);
     assert.strictEqual(result.success, false);
 
-    // Balances unchanged
+    // Balances unchanged after failed purchase
     assert.strictEqual(Economy.getBalance(ledger, 'buyer1'), 10);
-    assert.strictEqual(Economy.getBalance(ledger, 'seller1'), 0);
+    assert.strictEqual(Economy.getBalance(ledger, 'seller1'), sellerAfterFee);
   });
 
   test('Transaction log records all transactions', () => {

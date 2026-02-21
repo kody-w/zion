@@ -204,6 +204,28 @@ def _distribute_ubi(state):
                     'type': 'wealth_tax', 'from': pid, 'amount': tax, 'timestamp': ts_wt,
                 })
 
+    # Structure maintenance (§6.5): charge each structure's builder 1 spark
+    structures = state.get('structures', {})
+    if structures:
+        for sid, struct in list(structures.items()):
+            builder = struct.get('builder', '')
+            if not builder or builder not in economy['balances']:
+                continue
+            bal = economy['balances'].get(builder, 0)
+            if bal >= 1:
+                economy['balances'][builder] -= 1
+                # Spark is destroyed — not sent to TREASURY
+                economy['transactions'].append({
+                    'type': 'maintenance', 'from': builder,
+                    'amount': 1, 'structureId': sid,
+                    'timestamp': ts_wt,
+                })
+            else:
+                missed = struct.get('_missedPayments', 0) + 1
+                struct['_missedPayments'] = missed
+                if missed >= 2:
+                    del structures[sid]
+
     treasury_balance = economy['balances'].get(TREASURY_ID, 0)
     if treasury_balance <= 0:
         return

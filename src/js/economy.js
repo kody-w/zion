@@ -37,6 +37,9 @@
   const WEALTH_TAX_THRESHOLD = 500;
   const WEALTH_TAX_RATE = 0.02;
   const BALANCE_FLOOR = 0;
+  const MAINTENANCE_COST = 1;
+  const LISTING_FEE_RATE = 0.05;
+  const SYSTEM_SINK_ID = 'SYSTEM';
 
   let transactionCounter = 0;
   let listingCounter = 0;
@@ -270,13 +273,31 @@
    * @returns {Object} Listing object
    */
   function createMarketListing(ledger, playerId, item, price) {
+    // Calculate listing fee: 5% of asking price, minimum 1 spark (§6.5)
+    var listingFee = Math.max(1, Math.floor(price * LISTING_FEE_RATE));
+
+    // Check if seller can afford the fee
+    var sellerBalance = getBalance(ledger, playerId);
+    if (sellerBalance < listingFee) {
+      return { success: false, message: 'Insufficient spark for listing fee' };
+    }
+
+    // Deduct listing fee — spark is destroyed (sent to SYSTEM)
+    ledger.balances[playerId] -= listingFee;
+
+    recordTransaction(ledger, playerId, SYSTEM_SINK_ID, listingFee, 'listing_fee', {
+      askingPrice: price,
+      feeRate: LISTING_FEE_RATE
+    });
+
     const listing = {
       id: `listing_${listingCounter++}_${Date.now()}`,
       seller: playerId,
       item,
       price,
       ts: Date.now(),
-      active: true
+      active: true,
+      feePaid: listingFee
     };
 
     ledger.listings.push(listing);
@@ -533,6 +554,49 @@
   }
 
   // ========================================================================
+  // STRUCTURE MAINTENANCE (§6.5 Spark Sinks)
+  // ========================================================================
+
+  /**
+   * Applies maintenance costs for structures. Each structure costs its owner
+   * MAINTENANCE_COST spark per game day. Spark is destroyed (sent to SYSTEM void).
+   * Structures whose owners can't pay are marked for decay.
+   * @param {Object} ledger - Ledger instance
+   * @param {Object} structureOwnerMap - {structureId: ownerPlayerId}
+   * @returns {Object} {totalDestroyed, structuresDecayed: [structureId...]}
+   */
+  function applyMaintenance(ledger, structureOwnerMap) {
+    var totalDestroyed = 0;
+    var structuresDecayed = [];
+
+    if (!structureOwnerMap || typeof structureOwnerMap !== 'object') {
+      return { totalDestroyed: 0, structuresDecayed: [] };
+    }
+
+    for (var structId in structureOwnerMap) {
+      var ownerId = structureOwnerMap[structId];
+      if (!ownerId) continue;
+
+      var balance = getBalance(ledger, ownerId);
+
+      if (balance >= MAINTENANCE_COST) {
+        // Charge maintenance — spark is destroyed (sent to SYSTEM)
+        ledger.balances[ownerId] -= MAINTENANCE_COST;
+        totalDestroyed += MAINTENANCE_COST;
+
+        recordTransaction(ledger, ownerId, SYSTEM_SINK_ID, MAINTENANCE_COST, 'maintenance', {
+          structureId: structId
+        });
+      } else {
+        // Owner can't pay — structure decays
+        structuresDecayed.push(structId);
+      }
+    }
+
+    return { totalDestroyed: totalDestroyed, structuresDecayed: structuresDecayed };
+  }
+
+  // ========================================================================
   // AUCTION HOUSE - Timed bid system
   // ========================================================================
 
@@ -722,6 +786,10 @@
   exports.WEALTH_TAX_THRESHOLD = WEALTH_TAX_THRESHOLD;
   exports.WEALTH_TAX_RATE = WEALTH_TAX_RATE;
   exports.BALANCE_FLOOR = BALANCE_FLOOR;
+  exports.MAINTENANCE_COST = MAINTENANCE_COST;
+  exports.LISTING_FEE_RATE = LISTING_FEE_RATE;
+  exports.SYSTEM_SINK_ID = SYSTEM_SINK_ID;
+  exports.applyMaintenance = applyMaintenance;
   exports.createAuction = createAuction;
   exports.placeBid = placeBid;
   exports.finalizeAuctions = finalizeAuctions;

@@ -177,5 +177,98 @@ class TestUBIDistribution(unittest.TestCase):
         self.assertEqual(state['economy']['balances']['user1'], 5)
 
 
+class TestSimMaintenance(unittest.TestCase):
+    """Test structure maintenance in civilization sim."""
+
+    def test_maintenance_charges_structure_owners(self):
+        """Structures cost their builders spark via maintenance."""
+        from civilization_sim import (
+            sim_tick, create_initial_state, SIM_MAINTENANCE_COST,
+            SIM_TREASURY_ID, TICK_SECONDS,
+        )
+        agents = [
+            {'id': 'agent1', 'name': 'Builder1', 'archetype': 'builder',
+             'spark': 100, 'intentions': ['build']},
+        ]
+        state = create_initial_state(agents)
+        # Pre-populate a structure and citizen
+        state['citizens']['agent1'] = {
+            'id': 'agent1', 'name': 'Builder1', 'archetype': 'builder',
+            'zone': 'nexus', 'actions': 0, 'spark': 100,
+        }
+        state['economy']['balances']['agent1'] = 50
+        state['structures']['test_struct'] = {
+            'type': 'bench', 'builder': 'Builder1', 'zone': 'nexus', 'tick': 0,
+        }
+
+        # Force a game day boundary to trigger maintenance
+        state['worldTime'] = 1440  # Day 1
+        state['_lastUbiDay'] = -1
+
+        import random
+        rng = random.Random(42)
+        state, events = sim_tick(state, 1, rng)
+
+        # Check maintenance transaction exists
+        maint_txns = [t for t in state['economy']['transactions']
+                      if t.get('type') == 'maintenance']
+        self.assertGreater(len(maint_txns), 0,
+                           'Maintenance transaction should be recorded')
+
+    def test_maintenance_decays_unpaid_structures(self):
+        """Structures with 2 missed payments are removed."""
+        from civilization_sim import (
+            sim_tick, create_initial_state, SIM_MAINTENANCE_COST,
+            SIM_TREASURY_ID, TICK_SECONDS,
+        )
+        agents = [
+            {'id': 'agent1', 'name': 'BrokeBuilder', 'archetype': 'builder',
+             'spark': 0, 'intentions': ['say']},
+        ]
+        state = create_initial_state(agents)
+        state['citizens']['agent1'] = {
+            'id': 'agent1', 'name': 'BrokeBuilder', 'archetype': 'builder',
+            'zone': 'nexus', 'actions': 0, 'spark': 0,
+        }
+        state['economy']['balances']['agent1'] = 0
+        state['structures']['decay_struct'] = {
+            'type': 'bench', 'builder': 'BrokeBuilder', 'zone': 'nexus',
+            'tick': 0, '_missedPayments': 1,  # Already missed once
+        }
+
+        # Trigger day boundary
+        state['worldTime'] = 1440
+        state['_lastUbiDay'] = -1
+
+        import random
+        rng = random.Random(42)
+        state, events = sim_tick(state, 1, rng)
+
+        # Structure should be removed after 2nd missed payment
+        self.assertNotIn('decay_struct', state['structures'],
+                         'Structure should decay after 2 missed payments')
+
+    def test_sim_costs_increased(self):
+        """Build/plant/craft costs should be higher than before."""
+        from civilization_sim import _apply_action
+        import random
+        rng = random.Random(42)
+
+        # Create minimal state
+        state = {
+            'economy': {'balances': {'agent1': 100}, 'transactions': [], 'listings': []},
+            'structures': {}, 'gardens': {}, 'chat': [], 'discoveries': {},
+            'citizens': {'agent1': {'id': 'agent1', 'name': 'Test', 'archetype': 'builder',
+                                    'zone': 'nexus', 'actions': 0, 'spark': 100}},
+        }
+
+        # Test build cost
+        action = {'type': 'build', 'agent': {'id': 'agent1', 'name': 'Test', 'archetype': 'builder',
+                  'position': {'zone': 'nexus'}}, 'zone': 'nexus'}
+        _apply_action(action, state, 0, rng)
+        self.assertEqual(state['economy']['balances']['agent1'], 95,
+                         'Build should cost 5 spark')
+
+
 if __name__ == '__main__':
     unittest.main()

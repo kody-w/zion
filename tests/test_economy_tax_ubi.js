@@ -339,5 +339,140 @@ suite('Leaderboard and Stats Exclude TREASURY', () => {
 
 });
 
+suite('Structure Maintenance Tests (§6.5)', () => {
+
+  test('applyMaintenance charges owners and destroys spark', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances['builder1'] = 10;
+    ledger.balances['builder2'] = 5;
+
+    const structMap = {
+      'struct_a': 'builder1',
+      'struct_b': 'builder1',
+      'struct_c': 'builder2',
+    };
+
+    const result = Economy.applyMaintenance(ledger, structMap);
+    assert.strictEqual(result.totalDestroyed, 3); // 1 per structure
+    assert.strictEqual(result.structuresDecayed.length, 0);
+    assert.strictEqual(Economy.getBalance(ledger, 'builder1'), 8); // 10 - 2
+    assert.strictEqual(Economy.getBalance(ledger, 'builder2'), 4); // 5 - 1
+  });
+
+  test('applyMaintenance decays structures when owner at floor', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances['broke'] = 0;
+    ledger.balances['rich'] = 10;
+
+    const structMap = {
+      'struct_x': 'broke',
+      'struct_y': 'rich',
+    };
+
+    const result = Economy.applyMaintenance(ledger, structMap);
+    assert.strictEqual(result.totalDestroyed, 1); // only rich paid
+    assert.strictEqual(result.structuresDecayed.length, 1);
+    assert.strictEqual(result.structuresDecayed[0], 'struct_x');
+    assert.strictEqual(Economy.getBalance(ledger, 'broke'), 0);
+    assert.strictEqual(Economy.getBalance(ledger, 'rich'), 9);
+  });
+
+  test('applyMaintenance records transactions to SYSTEM', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances['owner'] = 5;
+
+    Economy.applyMaintenance(ledger, { 'struct_1': 'owner' });
+
+    const maintenanceTxns = ledger.transactions.filter(tx => tx.type === 'maintenance');
+    assert.strictEqual(maintenanceTxns.length, 1);
+    assert.strictEqual(maintenanceTxns[0].from, 'owner');
+    assert.strictEqual(maintenanceTxns[0].to, Economy.SYSTEM_SINK_ID);
+    assert.strictEqual(maintenanceTxns[0].amount, Economy.MAINTENANCE_COST);
+  });
+
+  test('applyMaintenance spark goes to SYSTEM not TREASURY', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances['owner'] = 10;
+
+    Economy.applyMaintenance(ledger, { 's1': 'owner', 's2': 'owner' });
+
+    // TREASURY should not receive maintenance spark
+    assert.strictEqual(Economy.getBalance(ledger, Economy.TREASURY_ID), 0);
+    // SYSTEM is a void — balance is not tracked
+    assert.strictEqual(Economy.getBalance(ledger, 'owner'), 8);
+  });
+
+  test('applyMaintenance with null/empty map returns zeros', () => {
+    const ledger = Economy.createLedger();
+    const r1 = Economy.applyMaintenance(ledger, null);
+    assert.strictEqual(r1.totalDestroyed, 0);
+    assert.strictEqual(r1.structuresDecayed.length, 0);
+
+    const r2 = Economy.applyMaintenance(ledger, {});
+    assert.strictEqual(r2.totalDestroyed, 0);
+  });
+
+});
+
+suite('Market Listing Fee Tests (§6.5)', () => {
+
+  test('createMarketListing deducts listing fee', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances['seller'] = 100;
+
+    const listing = Economy.createMarketListing(ledger, 'seller', { id: 'gem' }, 100);
+    // Fee = max(1, floor(100 * 0.05)) = 5
+    assert.strictEqual(listing.feePaid, 5);
+    assert.strictEqual(Economy.getBalance(ledger, 'seller'), 95);
+    assert.strictEqual(listing.active, true);
+  });
+
+  test('Listing fee minimum is 1 spark', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances['seller'] = 50;
+
+    const listing = Economy.createMarketListing(ledger, 'seller', { id: 'herb' }, 10);
+    // Fee = max(1, floor(10 * 0.05)) = max(1, 0) = 1
+    assert.strictEqual(listing.feePaid, 1);
+    assert.strictEqual(Economy.getBalance(ledger, 'seller'), 49);
+  });
+
+  test('Listing fee is destroyed (sent to SYSTEM)', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances['seller'] = 50;
+
+    Economy.createMarketListing(ledger, 'seller', { id: 'item' }, 40);
+    // Fee = max(1, floor(40 * 0.05)) = 2
+
+    const feeTxns = ledger.transactions.filter(tx => tx.type === 'listing_fee');
+    assert.strictEqual(feeTxns.length, 1);
+    assert.strictEqual(feeTxns[0].to, Economy.SYSTEM_SINK_ID);
+    assert.strictEqual(feeTxns[0].amount, 2);
+
+    // TREASURY should not receive listing fees
+    assert.strictEqual(Economy.getBalance(ledger, Economy.TREASURY_ID), 0);
+  });
+
+  test('Listing fails if seller cannot afford fee', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances['broke_seller'] = 0;
+
+    const result = Economy.createMarketListing(ledger, 'broke_seller', { id: 'item' }, 100);
+    assert.strictEqual(result.success, false);
+    assert.strictEqual(Economy.getBalance(ledger, 'broke_seller'), 0);
+  });
+
+  test('Listing fee for expensive item', () => {
+    const ledger = Economy.createLedger();
+    ledger.balances['seller'] = 500;
+
+    const listing = Economy.createMarketListing(ledger, 'seller', { id: 'rare' }, 200);
+    // Fee = max(1, floor(200 * 0.05)) = 10
+    assert.strictEqual(listing.feePaid, 10);
+    assert.strictEqual(Economy.getBalance(ledger, 'seller'), 490);
+  });
+
+});
+
 const success = report();
 process.exit(success ? 0 : 1);

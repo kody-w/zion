@@ -458,6 +458,13 @@ ZION has one currency: **Spark**. Spark is earned through play — any kind of p
 7. **Transparency** — Every tax withholding, wealth tax, and UBI payment is recorded in the public ledger as a transaction, auditable by all citizens.
 8. **No retroactive income taxation** — Balances accumulated before this amendment are not subject to income tax. Only new earnings are taxed. The wealth tax applies to all balances above 500 regardless of when earned.
 
+### §6.5 Spark Sinks
+Spark can be permanently destroyed to maintain economic stability. Destroyed spark is sent to SYSTEM (a void, not TREASURY) and is irrecoverable.
+
+1. **Structure Maintenance** — Once per game day, each structure costs its builder 1 Spark in upkeep. This Spark is destroyed. If the owner's balance is at the floor (0) and cannot pay, the structure decays. A structure that misses 2 consecutive payments is removed from the world.
+2. **Market Listing Fee** — Creating a market listing costs 5% of the asking price (minimum 1 Spark). This fee is destroyed at the time of listing. The fee discourages spam and permanently removes Spark from circulation.
+3. **Principle** — The economy must have mechanisms that permanently remove Spark, not merely redistribute it. Without destruction, any economy with continuous creation trends toward infinite inflation. Sinks are not punishment — they are gravity.
+
 ---
 
 ## Article VII — Governance

@@ -151,6 +151,46 @@ def sim_tick(state, tick_num, rng):
                     econ['balances'][pid] -= tax
                     econ['balances'][SIM_TREASURY_ID] = econ['balances'].get(SIM_TREASURY_ID, 0) + tax
 
+        # Structure maintenance (§6.5): charge 1 spark per structure to builder
+        maintenance_destroyed = 0
+        structures_to_remove = []
+        for sid, struct in list(state['structures'].items()):
+            builder_id = struct.get('builder', '')
+            # Find the agent ID matching this builder name
+            builder_agent_id = None
+            for cid, cit in state['citizens'].items():
+                if cit.get('name') == builder_id or cid == builder_id:
+                    builder_agent_id = cid
+                    break
+            if builder_agent_id:
+                bal = econ['balances'].get(builder_agent_id, 0)
+                if bal >= SIM_MAINTENANCE_COST:
+                    econ['balances'][builder_agent_id] -= SIM_MAINTENANCE_COST
+                    maintenance_destroyed += SIM_MAINTENANCE_COST
+                    econ['transactions'].append({
+                        'type': 'maintenance', 'agent': builder_agent_id,
+                        'amount': -SIM_MAINTENANCE_COST, 'tick': tick_num,
+                    })
+                else:
+                    # Track missed payments for decay
+                    missed = struct.get('_missedPayments', 0) + 1
+                    struct['_missedPayments'] = missed
+                    if missed >= 2:
+                        structures_to_remove.append(sid)
+            else:
+                # No known builder — structure decays
+                missed = struct.get('_missedPayments', 0) + 1
+                struct['_missedPayments'] = missed
+                if missed >= 2:
+                    structures_to_remove.append(sid)
+
+        for sid in structures_to_remove:
+            del state['structures'][sid]
+            events.append(('decay', 'Structure %s decayed from neglect' % sid))
+
+        if maintenance_destroyed > 0:
+            events.append(('maintenance', '%d spark destroyed in maintenance' % maintenance_destroyed))
+
         treasury_bal = econ['balances'].get(SIM_TREASURY_ID, 0)
         if treasury_bal > 0:
             eligible = [pid for pid in econ['balances'] if pid not in (SIM_TREASURY_ID, 'SYSTEM')]
@@ -251,7 +291,7 @@ def _apply_action(action, state, tick_num, rng):
             oldest = sorted(state['structures'].keys())[:50]
             for k in oldest:
                 del state['structures'][k]
-        _econ_txn(state, 'build', agent_id, -2, tick_num)
+        _econ_txn(state, 'build', agent_id, -5, tick_num)
         return ('build', '%s built a %s in %s' % (agent_name, struct_type, zone))
 
     elif action_type == 'compose':
@@ -289,7 +329,7 @@ def _apply_action(action, state, tick_num, rng):
             'growthTime': rng.randint(1800, 7200),
             'tick': tick_num,
         })
-        _econ_txn(state, 'plant', agent_id, -1, tick_num)
+        _econ_txn(state, 'plant', agent_id, -3, tick_num)
         return ('plant', '%s planted %s in %s' % (agent_name, species, zone))
 
     elif action_type == 'harvest':
@@ -307,7 +347,7 @@ def _apply_action(action, state, tick_num, rng):
     elif action_type == 'craft':
         items = ['tool', 'ornament', 'instrument', 'potion', 'amulet', 'scroll']
         item = rng.choice(items)
-        _econ_txn(state, 'craft', agent_id, -1, tick_num)
+        _econ_txn(state, 'craft', agent_id, -3, tick_num)
         return ('craft', '%s crafted a %s' % (agent_name, item))
 
     elif action_type == 'trade_offer':
@@ -363,6 +403,7 @@ SIM_BASE_UBI = 5
 SIM_WEALTH_TAX_THRESHOLD = 500
 SIM_WEALTH_TAX_RATE = 0.02
 SIM_BALANCE_FLOOR = 0
+SIM_MAINTENANCE_COST = 1
 
 
 def _sim_tax_rate(balance):
@@ -423,6 +464,10 @@ def collect_snapshot(state, tick_num, events):
     balances = sorted(v for k, v in econ['balances'].items() if k not in (SIM_TREASURY_ID, 'SYSTEM'))
     gini = _gini_coefficient(balances) if balances else 0
 
+    # Count total spark destroyed via maintenance
+    maintenance_txns = [t for t in econ['transactions'] if t.get('type') == 'maintenance']
+    total_spark_destroyed = sum(abs(t.get('amount', 0)) for t in maintenance_txns)
+
     return {
         'tick': tick_num,
         'population': len(state['citizens']),
@@ -441,6 +486,7 @@ def collect_snapshot(state, tick_num, events):
         'dayPhase': state['dayPhase'],
         'chat_messages': len(state['chat']),
         'treasury': econ['balances'].get(SIM_TREASURY_ID, 0),
+        'totalSparkDestroyed': total_spark_destroyed,
     }
 
 
