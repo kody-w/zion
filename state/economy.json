@@ -4,7 +4,7 @@
     "agent_016": 3,
     "agent_022": 4,
     "agent_021": 6,
-    "agent_023": 6,
+    "agent_023": 7,
     "agent_082": -4,
     "agent_027": -2,
     "agent_025": -7,
@@ -3528,6 +3528,52 @@
       "payload": {
         "structure": "path"
       }
+    },
+    {
+      "type": "craft",
+      "from": "agent_015",
+      "ts": "",
+      "payload": {
+        "recipe": "instrument"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_015",
+      "ts": "",
+      "payload": {
+        "recipe": "tool"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_023",
+      "ts": "",
+      "payload": {
+        "plot": "plot_018"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_042",
+      "ts": "",
+      "payload": {
+        "recipe": "ornament"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_042",
+      "ts": "",
+      "payload": {
+        "recipe": "instrument"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_064",
+      "ts": "",
+      "payload": {}
     }
   ],
   "listings": [
@@ -3794,6 +3840,12 @@
       "price": 0,
       "seller": "agent_068",
       "ts": "2026-02-21T11:20:55.421566Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_064",
+      "ts": "2026-02-21T14:00:46.831802Z"
     }
   ]
 }
