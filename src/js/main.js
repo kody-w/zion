@@ -119,6 +119,7 @@
   var isRunning = false;
   var lastTimestamp = 0;
   var _tooltipVec = null; // Reusable Vector3 for tooltip projection
+  var _screenPosVec = null; // Reusable Vector3 for screen position projection
   var worldTime = 0; // Minutes in 24-hour cycle (0-1440)
   var currentZone = 'nexus';
   var currentWeather = 'clear';
@@ -672,8 +673,8 @@
     tooltipEl.style.display = 'block';
 
     // Update content
-    tooltipEl.innerHTML = '<span style="color:#DAA520">' + currentInteractionTarget.name + '</span>' +
-      '<br><span style="color:#A0978E; font-size:11px">[E] ' + currentInteractionTarget.action + '</span>';
+    tooltipEl.innerHTML = '<span style="color:#DAA520">' + _escHtml(currentInteractionTarget.name) + '</span>' +
+      '<br><span style="color:#A0978E; font-size:11px">[E] ' + _escHtml(currentInteractionTarget.action) + '</span>';
   }
 
   /**
@@ -1925,15 +1926,16 @@
   function getScreenPosition(position, camera, renderer) {
     if (!window.THREE || !camera || !renderer) return null;
 
-    var vector = new window.THREE.Vector3(position.x, position.y + 2, position.z);
-    vector.project(camera);
+    if (!_screenPosVec) _screenPosVec = new window.THREE.Vector3();
+    _screenPosVec.set(position.x, position.y + 2, position.z);
+    _screenPosVec.project(camera);
 
     var widthHalf = renderer.domElement.width / 2;
     var heightHalf = renderer.domElement.height / 2;
 
     return {
-      x: (vector.x * widthHalf) + widthHalf,
-      y: -(vector.y * heightHalf) + heightHalf
+      x: (_screenPosVec.x * widthHalf) + widthHalf,
+      y: -(_screenPosVec.y * heightHalf) + heightHalf
     };
   }
 
@@ -2088,9 +2090,10 @@
     if (Input && localPlayer && gameState && !photoMode.active) {
       var delta = Input.getMovementDelta();
       if (delta.x !== 0 || delta.z !== 0) {
-        // Rotate movement delta by camera yaw so WASD is camera-relative
-        var sinYaw = Math.sin(cameraYaw);
-        var cosYaw = Math.cos(cameraYaw);
+        // Rotate movement delta by camera orbit so WASD is camera-relative
+        var actualYaw = Input && Input.getCameraOrbit ? Input.getCameraOrbit() : cameraYaw;
+        var sinYaw = Math.sin(actualYaw);
+        var cosYaw = Math.cos(actualYaw);
         var rotatedDelta = {
           x: delta.x * cosYaw - delta.z * sinYaw,
           y: delta.y,
@@ -2961,9 +2964,10 @@
     if (nowMs - lastRaceCheck > RACE_CHECK_INTERVAL && localPlayer && gameState && Competition && Competition.checkRaceProgress) {
       lastRaceCheck = nowMs;
       var comps = gameState.competitions;
-      if (comps && comps.length > 0) {
-        for (var ri = 0; ri < comps.length; ri++) {
-          var rc = comps[ri];
+      var compKeys = comps ? Object.keys(comps) : [];
+      if (compKeys.length > 0) {
+        for (var ri = 0; ri < compKeys.length; ri++) {
+          var rc = comps[compKeys[ri]];
           if (rc.type === 'race' && rc.status === 'active' && rc.participants && rc.participants.indexOf(localPlayer.id) !== -1) {
             var raceResult = Competition.checkRaceProgress(rc.id, localPlayer.id, localPlayer.position, gameState);
             if (raceResult.checkpointHit) {
@@ -3655,7 +3659,7 @@
     }
 
     if (HUD) {
-      HUD.showNotification(`${player.name} joined the world`, 'success');
+      HUD.showNotification((player.name || 'Unknown') + ' joined the world', 'success');
     }
 
     if (Audio) {
@@ -3674,7 +3678,7 @@
     }
 
     if (HUD) {
-      HUD.showNotification(`${msg.from} left the world`, 'info');
+      HUD.showNotification((msg.from || 'Unknown') + ' left the world', 'info');
     }
   }
 
@@ -5275,6 +5279,8 @@
           if (Network && Network.broadcastMessage) {
             Network.broadcastMessage({
               type: 'warp',
+              from: localPlayer.id,
+              ts: Date.now(),
               payload: {
                 zone: currentZone,
                 position: { x: localPlayer.position.x, y: localPlayer.position.y, z: localPlayer.position.z, zone: currentZone }

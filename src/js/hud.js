@@ -425,11 +425,10 @@
         font-size: 13px;
       `;
 
-      var distanceStr = player.distance ? `(${player.distance.toFixed(1)}m)` : '';
-      playerEl.innerHTML = `
-        <span style="color: #4f4;">${player.name || player.id}</span>
-        <span style="color: #888; font-size: 11px; margin-left: 5px;">${distanceStr}</span>
-      `;
+      var distanceStr = player.distance ? '(' + player.distance.toFixed(1) + 'm)' : '';
+      playerEl.innerHTML =
+        '<span style="color: #4f4;">' + escapeHtml(player.name || player.id) + '</span>' +
+        '<span style="color: #888; font-size: 11px; margin-left: 5px;">' + escapeHtml(distanceStr) + '</span>';
 
       nearbyPlayersList.appendChild(playerEl);
     });
@@ -441,7 +440,7 @@
    */
   function showBreakReminder(minutes) {
     showNotification(
-      `You've been playing for ${minutes} minutes. Consider taking a break!`,
+      'You\'ve been playing for ' + minutes + ' minutes. Consider taking a break!',
       'info'
     );
   }
@@ -6875,7 +6874,7 @@
       text-shadow: 0 0 10px rgba(0, 200, 255, 0.8);
       margin-bottom: 5px;
     `;
-    fishText.textContent = `Caught ${fishName}!`;
+    fishText.textContent = 'Caught ' + fishName + '!';
     notification.appendChild(fishText);
 
     var valueText = document.createElement('div');
@@ -6884,7 +6883,7 @@
       color: #ffff00;
       text-shadow: 0 0 8px rgba(255, 255, 0, 0.6);
     `;
-    valueText.textContent = `+${value} Spark`;
+    valueText.textContent = '+' + value + ' Spark';
     notification.appendChild(valueText);
 
     notificationContainer.appendChild(notification);

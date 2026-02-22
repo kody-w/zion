@@ -459,7 +459,7 @@
     if (buildMode && callbacks.onBuild) {
       callbacks.onBuild({ action: 'place', x: x, y: y });
     } else if (callbacks.onAction) {
-      callbacks.onAction('click', { x, y, screenX: e.clientX, screenY: e.clientY });
+      callbacks.onAction('click', { x: x, y: y, screenX: e.clientX, screenY: e.clientY });
     }
   }
 

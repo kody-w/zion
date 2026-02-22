@@ -164,11 +164,10 @@
         info = {
           type: 'garden',
           id: targetId,
-          data: {
-            ...garden,
+          data: Object.assign({}, garden, {
             currentGrowthStage: currentGrowthStage,
             isReady: now >= garden.readyAt
-          }
+          })
         };
         entityType = 'garden';
       }

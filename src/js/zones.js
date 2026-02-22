@@ -447,7 +447,7 @@
       election.status = 'finalized';
 
       // Sort candidates by votes
-      var sorted = [...election.candidates].sort(function(a, b) { return b.votes - a.votes; });
+      var sorted = (election.candidates || []).slice().sort(function(a, b) { return b.votes - a.votes; });
 
       // Top candidates become stewards (up to MAX_STEWARDS_PER_ZONE)
       var winners = sorted.slice(0, MAX_STEWARDS_PER_ZONE);

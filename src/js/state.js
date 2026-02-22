@@ -460,11 +460,9 @@
             if (!newState.players[payload.to].inventory) {
               newState.players[payload.to].inventory = [];
             }
-            newState.players[payload.to].inventory.push({
-              ...payload.item,
-              gifted_from: from,
-              gifted_at: timestamp
-            });
+            newState.players[payload.to].inventory.push(
+              Object.assign({}, payload.item, { gifted_from: from, gifted_at: timestamp })
+            );
           }
         }
         break;
