@@ -10,6 +10,7 @@
   let chatInput = null;
   let notificationContainer = null;
   let federationPanel = null;
+  let lastChatMessageCount = -1; // Dirty tracking for chat rebuild
 
   /**
    * Initialize HUD
@@ -172,6 +173,11 @@
    */
   function updateChat(messages) {
     if (!chatPanel) return;
+
+    // Dirty tracking: skip DOM rebuild if message count unchanged
+    var msgLen = messages ? messages.length : 0;
+    if (msgLen === lastChatMessageCount) return;
+    lastChatMessageCount = msgLen;
 
     chatPanel.innerHTML = '';
 

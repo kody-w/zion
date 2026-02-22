@@ -2511,8 +2511,8 @@
         localPlayer.specBonuses = Specializations.getBonuses(specState);
       }
 
-      // Cull distant lights for performance (max 12 nearest within 40 units)
-      if (World.cullLights) {
+      // Cull distant lights for performance (max 12 nearest within 40 units, every 15 frames)
+      if (npcUpdateFrame % 15 === 0 && World.cullLights) {
         World.cullLights(sceneContext, localPlayer.position, 40, 12);
       }
 
@@ -2566,7 +2566,7 @@
       // Update water bodies (animated waves, weather-reactive)
       if (World.updateWater) {
         var currentWeather = World.getCurrentWeather ? World.getCurrentWeather() : 'clear';
-        World.updateWater(deltaTime, currentWeather);
+        World.updateWater(deltaTime, currentWeather, localPlayer ? localPlayer.position : null);
       }
 
       // Update skybox (sun/moon orbit, star visibility)
@@ -2578,7 +2578,7 @@
       if (World.updateInteractiveAnimations) {
         World.updateInteractiveAnimations(deltaTime);
       }
-      if (World.updateInteractiveHighlights && localPlayer) {
+      if (npcUpdateFrame % 5 === 0 && World.updateInteractiveHighlights && localPlayer) {
         World.updateInteractiveHighlights(localPlayer.position.x, localPlayer.position.z, 4);
       }
 
@@ -2673,14 +2673,16 @@
 
     // Update HUD
     if (HUD && gameState && State) {
-      // Update player info
-      HUD.updatePlayerInfo(localPlayer);
+      // Update player info (every 30 frames — stats don't change faster)
+      if (npcUpdateFrame % 30 === 0) {
+        HUD.updatePlayerInfo(localPlayer);
+      }
 
       // Update minimap and emote bubbles
       const players = State.getPlayers(gameState);
 
-      // Update emote bubble positions
-      if (HUD.updateEmoteBubbles && sceneContext && sceneContext.camera) {
+      // Update emote bubble positions (every 3 frames)
+      if (npcUpdateFrame % 3 === 0 && HUD.updateEmoteBubbles && sceneContext && sceneContext.camera) {
         var playerPositions = {};
         players.forEach(function(player) {
           if (World && World.getPlayerMesh) {
@@ -2695,16 +2697,20 @@
         });
         HUD.updateEmoteBubbles(playerPositions);
       }
-      const mapPlayers = players.map(p => ({
-        id: p.id,
-        position: p.position,
-        isLocal: p.id === localPlayer.id
-      }));
-      HUD.updateMinimap(mapPlayers, currentZone);
 
-      // Update NPC dots on minimap
-      if (HUD.updateMinimapNPCs && NPCs && NPCs.getNPCPositions) {
-        HUD.updateMinimapNPCs(NPCs.getNPCPositions(), localPlayer.position);
+      // Update minimap (every 5 frames)
+      if (npcUpdateFrame % 5 === 0) {
+        const mapPlayers = players.map(p => ({
+          id: p.id,
+          position: p.position,
+          isLocal: p.id === localPlayer.id
+        }));
+        HUD.updateMinimap(mapPlayers, currentZone);
+
+        // Update NPC dots on minimap
+        if (HUD.updateMinimapNPCs && NPCs && NPCs.getNPCPositions) {
+          HUD.updateMinimapNPCs(NPCs.getNPCPositions(), localPlayer.position);
+        }
       }
 
       // Update nearby players (throttled to every 10 frames)
@@ -2731,9 +2737,11 @@
         HUD.updateTimeWeather(worldTime, currentWeather);
       }
 
-      // Update chat
-      const messages = Social ? Social.getRecentMessages(gameState) : [];
-      HUD.updateChat(messages);
+      // Update chat (every 60 frames — with dirty tracking in hud.js)
+      if (npcUpdateFrame % 60 === 0) {
+        const messages = Social ? Social.getRecentMessages(gameState) : [];
+        HUD.updateChat(messages);
+      }
 
       // Update quest tracker (every few frames)
       if (Quests && HUD.updateQuestTracker && npcUpdateFrame % 30 === 0) {

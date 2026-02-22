@@ -15,6 +15,7 @@
   var loadedChunks = new Map(); // "cx_cz" -> { group, objects[] }
   var activeZone = 'nexus';
   var zoneLights = []; // Night-time point lights at zone landmarks
+  var trackedLights = []; // All PointLights for fast cullLights() without scene.traverse
 
   // Texture loader and cache
   var textureLoader = null;
@@ -94,6 +95,16 @@
   // TERRAIN HEIGHT — Multi-octave noise with zone flattening
   // ========================================================================
 
+  // Terrain height cache — 0.5-unit grid resolution, LRU eviction
+  var terrainCache = {};
+  var terrainCacheSize = 0;
+  var TERRAIN_CACHE_MAX = 4096;
+
+  function clearTerrainCache() {
+    terrainCache = {};
+    terrainCacheSize = 0;
+  }
+
   function rawTerrainHeight(wx, wz) {
     var h = 0;
     // 4 octaves of noise
@@ -104,7 +115,7 @@
     return h - 10; // shift baseline down
   }
 
-  function terrainHeight(wx, wz) {
+  function terrainHeightUncached(wx, wz) {
     var raw = rawTerrainHeight(wx, wz);
 
     // Flatten terrain near zone centers with smooth blend
@@ -144,6 +155,27 @@
     }
 
     return raw;
+  }
+
+  function terrainHeight(wx, wz) {
+    // Round to 0.5-unit grid for cache key
+    var kx = Math.round(wx * 2);
+    var kz = Math.round(wz * 2);
+    var key = kx + '_' + kz;
+
+    if (terrainCache[key] !== undefined) return terrainCache[key];
+
+    var h = terrainHeightUncached(wx, wz);
+
+    // Evict entire cache when full (simple and fast)
+    if (terrainCacheSize >= TERRAIN_CACHE_MAX) {
+      terrainCache = {};
+      terrainCacheSize = 0;
+    }
+
+    terrainCache[key] = h;
+    terrainCacheSize++;
+    return h;
   }
 
   function pointToSegDist(px, pz, ax, az, bx, bz) {
@@ -399,6 +431,7 @@
           var glowLight = new THREE.PointLight(0xff6622, 0.5, 5);
           glowLight.position.set(cellX - wx, cellY + 0.3, cellZ - wz);
           group.add(glowLight);
+          trackedLights.push(glowLight);
         }
       }
     }
@@ -697,6 +730,7 @@
       var light = new THREE.PointLight(0xffaa55, 0, 15, 2);
       light.position.set(def.x, ty, def.z);
       scene.add(light);
+      trackedLights.push(light);
 
       // Visible glow sphere
       var glowMat = new THREE.MeshBasicMaterial({
@@ -2070,6 +2104,7 @@
     var light = new THREE.PointLight(0xffa500, 0.8, 12);
     light.position.set(x, baseY + 2.7, z);
     scene.add(light);
+    trackedLights.push(light);
 
     animatedObjects.push({
       mesh: flame, type: 'torch',
@@ -2120,6 +2155,7 @@
     var portalLight = new THREE.PointLight(0x00ffff, 0.6, 15);
     portalLight.position.set(x, y + 3, z);
     scene.add(portalLight);
+    trackedLights.push(portalLight);
 
     // Spinning particle rings around portal
     var particleRings = [];
@@ -3663,16 +3699,22 @@
     if (!sceneCtx || !sceneCtx.scene) return;
     var px = playerPos.x || 0, pz = playerPos.z || 0;
     var lights = [];
-    sceneCtx.scene.traverse(function(obj) {
-      if (obj instanceof THREE.PointLight) {
-        var dx = obj.position.x - px, dz = obj.position.z - pz;
-        var dist = Math.sqrt(dx * dx + dz * dz);
-        lights.push({ light: obj, dist: dist });
-      }
-    });
+
+    // Clean up removed lights and build distance list from tracked array
+    var alive = [];
+    for (var i = 0; i < trackedLights.length; i++) {
+      var tl = trackedLights[i];
+      if (!tl.parent) continue; // removed from scene
+      alive.push(tl);
+      var dx = tl.position.x - px, dz = tl.position.z - pz;
+      var dist = Math.sqrt(dx * dx + dz * dz);
+      lights.push({ light: tl, dist: dist });
+    }
+    trackedLights = alive;
+
     lights.sort(function(a, b) { return a.dist - b.dist; });
-    for (var i = 0; i < lights.length; i++) {
-      lights[i].light.visible = (i < (maxCount || 8)) && (lights[i].dist < (maxDistance || 50));
+    for (var j = 0; j < lights.length; j++) {
+      lights[j].light.visible = (j < (maxCount || 8)) && (lights[j].dist < (maxDistance || 50));
     }
   }
 
@@ -4226,6 +4268,7 @@
   var lightningActive = false;
   var lightningLight = null;
   var weatherCallbacks = {}; // { onLightningStrike: function(x,z) }
+  var weatherFrameCounter = 0; // For staggered terrain checks
 
   function setWeather(sceneCtx, type) {
     if (!sceneCtx || !sceneCtx.scene) return;
@@ -4371,6 +4414,7 @@
         lightningLight = new THREE.PointLight(0xeeeeff, 0, 200);
         lightningLight.position.set(0, 50, 0);
         sceneCtx.scene.add(lightningLight);
+        trackedLights.push(lightningLight);
       }
       lightningTimer = 0;
       lightningActive = false;
@@ -4400,6 +4444,7 @@
   function updateWeatherEffects(sceneCtx, deltaTime, cameraPos) {
     if (!weatherParticles || !weatherParticles.geometry) return;
 
+    weatherFrameCounter++;
     var positions = weatherParticles.geometry.attributes.position.array;
     var velocities = weatherParticles.geometry.userData.velocities;
     var type = weatherParticles.userData.type;
@@ -4418,19 +4463,23 @@
         positions[idx + 1] += velocities[idx + 1] * deltaTime;
         positions[idx + 2] += velocities[idx + 2] * deltaTime;
 
-        // Get ground height at particle position
-        var groundHeight = terrainHeight(positions[idx], positions[idx + 2]);
+        // Stagger ground collision checks: only check every 3rd frame per particle
+        // Skip high particles entirely (well above camera)
+        if ((i + weatherFrameCounter) % 3 === 0 && positions[idx + 1] < camY + 10) {
+          // Get ground height at particle position (cached via terrain cache)
+          var groundHeight = terrainHeight(positions[idx], positions[idx + 2]);
 
-        // Recycle particle if it hits the ground
-        if (positions[idx + 1] < groundHeight) {
-          // Respawn near camera
-          positions[idx] = camX + (Math.random() - 0.5) * 100;
-          positions[idx + 1] = camY + Math.random() * 40 + 20;
-          positions[idx + 2] = camZ + (Math.random() - 0.5) * 100;
+          // Recycle particle if it hits the ground
+          if (positions[idx + 1] < groundHeight) {
+            // Respawn near camera
+            positions[idx] = camX + (Math.random() - 0.5) * 100;
+            positions[idx + 1] = camY + Math.random() * 40 + 20;
+            positions[idx + 2] = camZ + (Math.random() - 0.5) * 100;
 
-          // Randomize drift slightly
-          velocities[idx] = (Math.random() - 0.5) * 0.5;
-          velocities[idx + 2] = (Math.random() - 0.5) * 0.5;
+            // Randomize drift slightly
+            velocities[idx] = (Math.random() - 0.5) * 0.5;
+            velocities[idx + 2] = (Math.random() - 0.5) * 0.5;
+          }
         }
 
         // Keep particles centered around camera
@@ -4459,15 +4508,16 @@
         positions[jdx + 1] += velocities[jdx + 1] * deltaTime;
         positions[jdx + 2] += (velocities[jdx + 2] + sineZ) * deltaTime;
 
-        // Get ground height at particle position
-        var snowGroundHeight = terrainHeight(positions[jdx], positions[jdx + 2]);
+        // Stagger ground collision: every 3rd frame per particle, skip high ones
+        if ((j + weatherFrameCounter) % 3 === 0 && positions[jdx + 1] < camY + 10) {
+          var snowGroundHeight = terrainHeight(positions[jdx], positions[jdx + 2]);
 
-        // Recycle particle if it hits the ground
-        if (positions[jdx + 1] < snowGroundHeight) {
-          positions[jdx] = camX + (Math.random() - 0.5) * 120;
-          positions[jdx + 1] = camY + Math.random() * 50 + 30;
-          positions[jdx + 2] = camZ + (Math.random() - 0.5) * 120;
-          phases[j] = Math.random() * Math.PI * 2;
+          if (positions[jdx + 1] < snowGroundHeight) {
+            positions[jdx] = camX + (Math.random() - 0.5) * 120;
+            positions[jdx + 1] = camY + Math.random() * 50 + 30;
+            positions[jdx + 2] = camZ + (Math.random() - 0.5) * 120;
+            phases[j] = Math.random() * Math.PI * 2;
+          }
         }
 
         // Keep particles centered around camera
@@ -4557,6 +4607,7 @@
   var waterBodies = [];
   var waterTime = 0;
   var waterWeatherMultiplier = 1.0; // Modified by weather conditions
+  var waterFrameCounter = 0;
 
   function initWater(sceneCtx) {
     if (!sceneCtx || !sceneCtx.scene) return;
@@ -4756,10 +4807,11 @@
     return segments;
   }
 
-  function updateWater(deltaTime, weatherType) {
+  function updateWater(deltaTime, weatherType, playerPos) {
     if (!waterBodies || waterBodies.length === 0) return;
 
     waterTime += deltaTime;
+    waterFrameCounter++;
 
     // Adjust water animation based on weather conditions
     var targetMultiplier = 1.0;
@@ -4774,9 +4826,21 @@
     // Smoothly interpolate to target multiplier
     waterWeatherMultiplier += (targetMultiplier - waterWeatherMultiplier) * deltaTime * 0.5;
 
+    var ppx = playerPos ? (playerPos.x || 0) : 0;
+    var ppz = playerPos ? (playerPos.z || 0) : 0;
+
     for (var i = 0; i < waterBodies.length; i++) {
       var water = waterBodies[i];
       if (!water || !water.geometry || !water.initialPositions) continue;
+
+      // Distance-based throttle: skip far water bodies
+      var wcx = water.config.centerX || 0;
+      var wcz = water.config.centerZ || 0;
+      var wdx = ppx - wcx, wdz = ppz - wcz;
+      var waterDist = Math.sqrt(wdx * wdx + wdz * wdz);
+
+      if (waterDist > 150) continue; // Too far — skip entirely
+      if (waterDist > 80 && waterFrameCounter % 3 !== 0) continue; // Far — animate every 3rd frame
 
       var positions = water.geometry.attributes.position.array;
       var initialPos = water.initialPositions;
@@ -5851,6 +5915,11 @@
 
   // Track LOD state for objects
   var lodStates = new Map(); // objectId -> { level: 0/1/2, hiddenChildren: [] }
+  var lodObjects = []; // Groups with model_type for fast LOD without scene.traverse
+
+  // Reusable frustum culling objects (avoid per-frame allocation)
+  var _frustum = (typeof THREE !== 'undefined') ? new THREE.Frustum() : null;
+  var _projMatrix = (typeof THREE !== 'undefined') ? new THREE.Matrix4() : null;
 
   // Object pools for particles
   var objectPools = {
@@ -5865,15 +5934,21 @@
    * - distance > 100: simplify (hide small decorative pieces)
    * - distance < 100: full detail
    */
+  function registerLodObject(obj) {
+    if (obj && obj.userData && obj.userData.model_type) {
+      lodObjects.push(obj);
+    }
+  }
+
   function updateLOD(sceneCtx, playerPos) {
     if (!sceneCtx || !sceneCtx.scene || !playerPos) return;
 
-    var scene = sceneCtx.scene;
-
-    // Process all groups in scene with model_type userData
-    scene.traverse(function(obj) {
-      if (!obj.userData || !obj.userData.model_type) return;
-      if (!(obj instanceof THREE.Group)) return;
+    // Clean up removed objects and iterate tracked lodObjects array
+    var alive = [];
+    for (var li = 0; li < lodObjects.length; li++) {
+      var obj = lodObjects[li];
+      if (!obj.parent) continue; // removed from scene
+      alive.push(obj);
 
       var objId = obj.uuid;
       var dx = obj.position.x - playerPos.x;
@@ -5925,7 +6000,8 @@
           lodStates.set(objId, { level: 0, hiddenChildren: [] });
         }
       }
-    });
+    }
+    lodObjects = alive;
   }
 
   /**
@@ -5935,20 +6011,25 @@
   function updateFrustumCulling(sceneCtx) {
     if (!sceneCtx || !sceneCtx.camera) return;
 
+    // Lazy-init reusable objects (in case THREE loaded after module init)
+    if (!_frustum && typeof THREE !== 'undefined') {
+      _frustum = new THREE.Frustum();
+      _projMatrix = new THREE.Matrix4();
+    }
+    if (!_frustum) return;
+
     var camera = sceneCtx.camera;
     camera.updateMatrixWorld();
 
-    var frustum = new THREE.Frustum();
-    var projScreenMatrix = new THREE.Matrix4();
-    projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-    frustum.setFromProjectionMatrix(projScreenMatrix);
+    _projMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    _frustum.setFromProjectionMatrix(_projMatrix);
 
     // Cull animated objects
     for (var i = 0; i < animatedObjects.length; i++) {
       var obj = animatedObjects[i];
       if (!obj.mesh) continue;
       try {
-        var inFrustum = frustum.intersectsObject(obj.mesh);
+        var inFrustum = _frustum.intersectsObject(obj.mesh);
         obj.mesh.userData.inFrustum = inFrustum;
       } catch (e) {
         obj.mesh.userData.inFrustum = true; // default visible if check fails
@@ -5959,7 +6040,7 @@
     loadedChunks.forEach(function(chunkData, key) {
       if (!chunkData.group) return;
       try {
-        var inFrustum = frustum.intersectsObject(chunkData.group);
+        var inFrustum = _frustum.intersectsObject(chunkData.group);
         chunkData.group.userData.inFrustum = inFrustum;
       } catch (e) {
         chunkData.group.userData.inFrustum = true;
@@ -6152,6 +6233,7 @@
       fireLight.position.set(0, 1, 0);
       fireLight.castShadow = false;
       group.add(fireLight);
+      trackedLights.push(fireLight);
 
       // Store light reference for animation
       group.userData.fireLight = fireLight;
@@ -6407,6 +6489,7 @@
       lampLight.position.set(0, 3, 0);
       lampLight.castShadow = false;
       group.add(lampLight);
+      trackedLights.push(lampLight);
 
       group.userData.lampLight = lampLight;
 
@@ -8372,5 +8455,8 @@
   exports.weatherCallbacks = weatherCallbacks;
   exports.addStructure = addStructure;
   exports.createPortal = createPortal;
+  exports.clearTerrainCache = clearTerrainCache;
+  exports.terrainHeightUncached = terrainHeightUncached;
+  exports.registerLodObject = registerLodObject;
 
 })(typeof module !== 'undefined' ? module.exports : (window.World = {}));
