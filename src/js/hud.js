@@ -858,10 +858,10 @@
         var canAfford = playerSpark >= item.price;
         itemList += '<div style="display:flex;align-items:center;padding:10px;margin-bottom:6px;' +
           'background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.08);">' +
-          '<div style="font-size:24px;margin-right:12px;">' + (item.icon || '&#128230;') + '</div>' +
+          '<div style="font-size:24px;margin-right:12px;">' + escapeHtml(item.icon || '') + '</div>' +
           '<div style="flex:1;">' +
-          '<div style="font-size:13px;color:#fff;">' + item.name + '</div>' +
-          '<div style="font-size:11px;color:#888;">' + (item.description || '') + '</div>' +
+          '<div style="font-size:13px;color:#fff;">' + escapeHtml(item.name) + '</div>' +
+          '<div style="font-size:11px;color:#888;">' + escapeHtml(item.description || '') + '</div>' +
           '</div>' +
           '<div style="text-align:right;margin-left:12px;">' +
           '<div style="font-size:12px;color:#daa520;margin-bottom:4px;">' + item.price + ' Spark</div>' +
@@ -1007,7 +1007,7 @@
       var statusColor = quest.status === 'complete' ? '#4f4' : '#fff';
 
       html += '<div style="margin-bottom:10px;padding:6px;background:rgba(0,0,0,0.3);border-radius:4px;">' +
-        '<div style="font-weight:bold;color:' + statusColor + ';font-size:11px;margin-bottom:3px;">' + quest.title + '</div>' +
+        '<div style="font-weight:bold;color:' + statusColor + ';font-size:11px;margin-bottom:3px;">' + escapeHtml(quest.title) + '</div>' +
         '<div style="color:#aaa;font-size:10px;margin-bottom:4px;">' + progress + '</div>' +
         '<div style="width:100%;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;overflow:hidden;">' +
         '<div style="width:' + progressPercent + '%;height:100%;background:#d4af37;"></div></div>' +
@@ -1053,9 +1053,9 @@
 
         html += '<div style="margin-bottom:12px;padding:12px;background:rgba(0,0,0,0.3);border-radius:6px;border-left:3px solid #d4af37;">' +
           '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;">' +
-          '<div style="font-weight:bold;color:#fff;font-size:14px;">' + quest.title + '</div>' +
+          '<div style="font-weight:bold;color:#fff;font-size:14px;">' + escapeHtml(quest.title) + '</div>' +
           '<div style="font-size:11px;">' + statusText + '</div></div>' +
-          '<div style="color:#aaa;font-size:12px;margin-bottom:6px;">' + quest.description + '</div>' +
+          '<div style="color:#aaa;font-size:12px;margin-bottom:6px;">' + escapeHtml(quest.description) + '</div>' +
           '<div style="color:#888;font-size:11px;">Progress: ' + progress + '</div>' +
           '<div style="margin-top:6px;font-size:11px;color:#d4af37;">Reward: ' + quest.rewards.spark + ' Spark' +
           (quest.rewards.items.length > 0 ? ' + items' : '') + '</div>' +
@@ -1075,8 +1075,8 @@
     } else {
       questLog.available.slice(0, 10).forEach(function(quest) {
         html += '<div style="margin-bottom:12px;padding:12px;background:rgba(0,0,0,0.2);border-radius:6px;border-left:3px solid #888;">' +
-          '<div style="font-weight:bold;color:#fff;font-size:14px;margin-bottom:6px;">' + quest.title + '</div>' +
-          '<div style="color:#aaa;font-size:12px;margin-bottom:6px;">' + quest.description + '</div>' +
+          '<div style="font-weight:bold;color:#fff;font-size:14px;margin-bottom:6px;">' + escapeHtml(quest.title) + '</div>' +
+          '<div style="color:#aaa;font-size:12px;margin-bottom:6px;">' + escapeHtml(quest.description) + '</div>' +
           '<div style="font-size:11px;color:#d4af37;">Reward: ' + quest.rewards.spark + ' Spark' +
           (quest.rewards.items.length > 0 ? ' + items' : '') + '</div>' +
           '<div style="margin-top:8px;color:#888;font-size:10px;">Find quest giver to accept</div></div>';
@@ -1140,9 +1140,9 @@
     var questDialogue = quest.dialogue && quest.dialogue.offer ? quest.dialogue.offer : quest.description;
 
     var html = '<div style="font-size:20px;font-weight:bold;color:#d4af37;margin-bottom:12px;">New Quest</div>' +
-      '<div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:8px;">' + quest.title + '</div>' +
+      '<div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:8px;">' + escapeHtml(quest.title) + '</div>' +
       '<div style="color:#aaa;font-size:13px;margin-bottom:12px;font-style:italic;">"' + questDialogue + '"</div>' +
-      '<div style="color:#ccc;font-size:12px;margin-bottom:8px;">' + quest.description + '</div>' +
+      '<div style="color:#ccc;font-size:12px;margin-bottom:8px;">' + escapeHtml(quest.description) + '</div>' +
       '<div style="padding:10px;background:rgba(0,0,0,0.3);border-radius:6px;margin-bottom:16px;">' +
       '<div style="font-size:12px;color:#d4af37;margin-bottom:4px;">Rewards:</div>' +
       '<div style="font-size:13px;color:#fff;">• ' + quest.rewards.spark + ' Spark</div>';
@@ -1191,7 +1191,7 @@
       'animation:slideIn 0.3s ease-out;pointer-events:auto;box-shadow:0 4px 12px rgba(212,175,55,0.4);';
 
     var html = '<div style="font-size:18px;font-weight:bold;color:#000;margin-bottom:6px;">Quest Complete!</div>' +
-      '<div style="font-size:14px;color:#111;margin-bottom:8px;">' + quest.title + '</div>' +
+      '<div style="font-size:14px;color:#111;margin-bottom:8px;">' + escapeHtml(quest.title) + '</div>' +
       '<div style="font-size:12px;color:#222;">+ ' + rewards.spark + ' Spark';
 
     if (rewards.items && rewards.items.length > 0) {
@@ -1244,7 +1244,7 @@
     if (window.Quests) {
       var result = window.Quests.acceptQuest(playerId, questId);
       if (result.success) {
-        showNotification('Quest accepted: ' + result.quest.title, 'success');
+        showNotification('Quest accepted: ' + escapeHtml(result.quest.title), 'success');
         hideQuestOffer();
       } else {
         showNotification('Cannot accept quest: ' + result.message, 'error');
@@ -1346,8 +1346,8 @@
         var borderColor = rarityColors[item.rarity] || '#555';
         slot.style.borderColor = borderColor;
 
-        slot.innerHTML = '<div style="font-size:32px;margin-bottom:4px;">' + item.icon + '</div>' +
-          '<div style="font-size:11px;color:#ccc;">' + item.name + '</div>' +
+        slot.innerHTML = '<div style="font-size:32px;margin-bottom:4px;">' + escapeHtml(item.icon) + '</div>' +
+          '<div style="font-size:11px;color:#ccc;">' + escapeHtml(item.name) + '</div>' +
           '<div style="position:absolute;top:4px;right:6px;background:#000;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:bold;">' + item.count + '</div>';
 
         slot.title = item.description + '\\n' + item.rarity.toUpperCase();
@@ -1525,7 +1525,7 @@
       var contentDiv = quickSlots[qbIdx].querySelector('.quick-content');
 
       if (item) {
-        contentDiv.innerHTML = item.icon;
+        contentDiv.textContent = item.icon;
         quickSlots[qbIdx].title = item.name + ' (' + item.count + ')';
       } else {
         contentDiv.innerHTML = '-';
@@ -1547,8 +1547,8 @@
       'padding:10px 15px;margin-bottom:10px;animation:slideIn 0.3s ease-out;' +
       'pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,0.3);font-size:14px;';
 
-    pickup.innerHTML = '<span style="font-size:20px;margin-right:8px;">' + (icon || '+') + '</span>' +
-      '<span style="font-weight:bold;">+' + count + ' ' + itemName + '</span>';
+    pickup.innerHTML = '<span style="font-size:20px;margin-right:8px;">' + escapeHtml(icon || '+') + '</span>' +
+      '<span style="font-weight:bold;">+' + escapeHtml(String(count)) + ' ' + escapeHtml(itemName) + '</span>';
 
     notificationContainer.appendChild(pickup);
 

@@ -2933,20 +2933,28 @@
    * Update chat bubbles (fade out)
    */
   function updateChatBubbles(deltaTime) {
-    for (var [agentId, bubble] of chatBubbles.entries()) {
+    var toRemove = [];
+    chatBubbles.forEach(function(bubble, agentId) {
       bubble.timer -= deltaTime;
 
       if (bubble.timer <= 0) {
-        // Remove bubble
+        // Dispose GPU resources before removing
+        if (bubble.mesh) {
+          if (bubble.mesh.material && bubble.mesh.material.map) bubble.mesh.material.map.dispose();
+          if (bubble.mesh.material) bubble.mesh.material.dispose();
+        }
         var npcMesh = npcMeshes.get(agentId);
         if (npcMesh) {
           npcMesh.remove(bubble.mesh);
         }
-        chatBubbles.delete(agentId);
+        toRemove.push(agentId);
       } else if (bubble.timer < 1) {
         // Fade out
         bubble.mesh.material.opacity = bubble.timer;
       }
+    });
+    for (var i = 0; i < toRemove.length; i++) {
+      chatBubbles.delete(toRemove[i]);
     }
   }
 
@@ -3010,46 +3018,54 @@
    * Update speech bubble positions based on camera projection
    * @param {THREE.Camera} camera - The camera to project from
    */
+  var _speechWorldPos = null;
+  var _speechScreenPos = null;
+
   function updateSpeechBubbles(camera) {
     if (!camera || !speechBubbleContainer) return;
 
     var THREE = window.THREE;
     if (!THREE) return;
 
+    // Lazy-init reusable vectors
+    if (!_speechWorldPos) {
+      _speechWorldPos = new THREE.Vector3();
+      _speechScreenPos = new THREE.Vector3();
+    }
+
     // Get renderer size for projection
     var width = window.innerWidth;
     var height = window.innerHeight;
 
-    for (var [npcId, bubble] of speechBubbles.entries()) {
+    var toRemove = [];
+    speechBubbles.forEach(function(bubble, npcId) {
       var npcMesh = npcMeshes.get(npcId);
       if (!npcMesh) {
         // NPC no longer exists, remove bubble
-        if (bubble.element) {
-          speechBubbleContainer.removeChild(bubble.element);
+        if (bubble.element && bubble.element.parentNode) {
+          bubble.element.parentNode.removeChild(bubble.element);
         }
-        speechBubbles.delete(npcId);
-        continue;
+        toRemove.push(npcId);
+        return;
       }
 
-      // Calculate position above NPC's head (y = 2.2 is above head at 1.6)
-      var worldPos = new THREE.Vector3();
-      npcMesh.getWorldPosition(worldPos);
-      worldPos.y += 2.2;
+      // Calculate position above NPC's head
+      npcMesh.getWorldPosition(_speechWorldPos);
+      _speechWorldPos.y += 2.2;
 
       // Project to screen coordinates
-      var screenPos = worldPos.clone();
-      screenPos.project(camera);
+      _speechScreenPos.copy(_speechWorldPos);
+      _speechScreenPos.project(camera);
 
       // Convert to pixel coordinates
-      var x = (screenPos.x * 0.5 + 0.5) * width;
-      var y = (-screenPos.y * 0.5 + 0.5) * height;
+      var x = (_speechScreenPos.x * 0.5 + 0.5) * width;
+      var y = (-_speechScreenPos.y * 0.5 + 0.5) * height;
 
-      // Check if behind camera
       if (!bubble.element) {
-        speechBubbles.delete(npcId);
-        continue;
+        toRemove.push(npcId);
+        return;
       }
-      if (screenPos.z > 1) {
+      if (_speechScreenPos.z > 1) {
         bubble.element.style.display = 'none';
       } else {
         bubble.element.style.display = 'block';
@@ -3057,6 +3073,9 @@
         bubble.element.style.top = y + 'px';
         bubble.element.style.transform = 'translate(-50%, -100%)';
       }
+    });
+    for (var i = 0; i < toRemove.length; i++) {
+      speechBubbles.delete(toRemove[i]);
     }
   }
 
@@ -3065,21 +3084,25 @@
    * @param {number} deltaTime - Time since last frame
    */
   function updateSpeechBubbleTimers(deltaTime) {
-    for (var [npcId, bubble] of speechBubbles.entries()) {
+    var toRemove = [];
+    speechBubbles.forEach(function(bubble, npcId) {
       bubble.timer -= deltaTime;
 
       if (bubble.timer <= 0) {
         // Remove expired bubble
-        if (bubble.element) {
-          speechBubbleContainer.removeChild(bubble.element);
+        if (bubble.element && bubble.element.parentNode) {
+          bubble.element.parentNode.removeChild(bubble.element);
         }
-        speechBubbles.delete(npcId);
+        toRemove.push(npcId);
       } else if (bubble.timer < 0.5) {
         // Fade out in last 0.5 seconds
         if (bubble.element) {
           bubble.element.style.opacity = (bubble.timer / 0.5).toString();
         }
       }
+    });
+    for (var i = 0; i < toRemove.length; i++) {
+      speechBubbles.delete(toRemove[i]);
     }
   }
 
