@@ -30,6 +30,8 @@ var EXPECTED_MODULES = [
   'social_spaces.js', 'wiring.js', 'cooking.js', 'crafting.js',
   'journal.js', 'story_engine.js', 'world_persistence.js',
   'cosmetics.js', 'raid_system.js', 'specializations.js',
+  'archival.js', 'battle_pass.js', 'contracts.js', 'guild_wars.js',
+  'market_speculation.js', 'mentor_guilds.js', 'meta_events.js',
   'dashboard.js', 'dashboard_css.js', 'dashboard_zones.js',
   'dashboard_npcs.js', 'dashboard_inventory.js', 'dashboard_economy.js',
   'dashboard_quests.js', 'dashboard_social.js', 'dashboard_games.js',

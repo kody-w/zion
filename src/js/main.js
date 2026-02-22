@@ -53,6 +53,13 @@
   const Cosmetics = typeof require !== 'undefined' ? require('./cosmetics') : window.Cosmetics;
   const RaidSystem = typeof require !== 'undefined' ? require('./raid_system') : window.RaidSystem;
   const Specializations = typeof require !== 'undefined' ? require('./specializations') : window.Specializations;
+  const Archival = typeof require !== 'undefined' ? require('./archival') : window.Archival;
+  const BattlePass = typeof require !== 'undefined' ? require('./battle_pass') : window.BattlePass;
+  const Contracts = typeof require !== 'undefined' ? require('./contracts') : window.Contracts;
+  const GuildWars = typeof require !== 'undefined' ? require('./guild_wars') : window.GuildWars;
+  const MarketSpeculation = typeof require !== 'undefined' ? require('./market_speculation') : window.MarketSpeculation;
+  const MentorGuilds = typeof require !== 'undefined' ? require('./mentor_guilds') : window.MentorGuilds;
+  const MetaEvents = typeof require !== 'undefined' ? require('./meta_events') : window.MetaEvents;
 
   // Embedded soul data (replaced at bundle time)
   var EMBEDDED_SOULS = SOULS_PLACEHOLDER;
