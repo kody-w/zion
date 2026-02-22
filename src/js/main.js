@@ -1104,7 +1104,8 @@
 
     // Initialize cosmetics (player appearance)
     if (Cosmetics && Cosmetics.initAppearance) {
-      cosmeticsState = Cosmetics.initAppearance(username);
+      cosmeticsState = { appearances: {} };
+      Cosmetics.initAppearance(cosmeticsState, username);
     }
 
     // Initialize specialization state
@@ -1164,7 +1165,10 @@
     // Initialize arena schedule
     if (ArenaScheduler && ArenaScheduler.generateWeeklySchedule) {
       var weekNumber = Math.floor(Date.now() / (7 * 86400000));
-      arenaSchedule = ArenaScheduler.generateWeeklySchedule(weekNumber);
+      arenaSchedule = ArenaScheduler.createSchedulerState
+        ? ArenaScheduler.createSchedulerState()
+        : { events: {}, brackets: {}, playerHistory: {}, leaderboards: {}, nextEventCounter: 1 };
+      ArenaScheduler.generateWeeklySchedule(arenaSchedule, 0, weekNumber);
     }
 
     // Initialize social spaces
