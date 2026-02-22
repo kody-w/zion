@@ -2090,7 +2090,15 @@
     // Build spatial grid for O(1) NPC proximity lookups (replaces O(n^2) nested loop)
     var npcGrid = null;
     var npcAgentMap = {};
-    if (SpatialGridRef && SpatialGridRef.createGrid) {
+    var useAdaptiveGrid = SpatialGridRef && SpatialGridRef.createAdaptiveGrid;
+    if (useAdaptiveGrid) {
+      npcGrid = SpatialGridRef.createAdaptiveGrid(25);
+      for (var gi = 0; gi < npcAgents.length; gi++) {
+        var a = npcAgents[gi];
+        SpatialGridRef.adaptiveInsert(npcGrid, a.id, a.position.x, a.position.z);
+        npcAgentMap[a.id] = a;
+      }
+    } else if (SpatialGridRef && SpatialGridRef.createGrid) {
       npcGrid = SpatialGridRef.createGrid(25);
       for (var gi = 0; gi < npcAgents.length; gi++) {
         var a = npcAgents[gi];
@@ -2130,6 +2138,7 @@
           timeOfDay: worldState ? worldState.timePeriod : 'midday',
           currentHour: worldTime ? worldTime / 60 : 12,
           currentZone: agent.position.zone,
+          season: worldState ? worldState.season : 'summer',
           nearbyPlayers: [],
           nearbyNPCs: [],
           allNPCs: npcAgents
@@ -2153,7 +2162,9 @@
 
         // Add nearby NPCs for perception (spatial grid: O(k) instead of O(n))
         if (npcGrid) {
-          var nearbyHits = SpatialGridRef.queryRadius(npcGrid, agent.position.x, agent.position.z, 25);
+          var nearbyHits = useAdaptiveGrid
+            ? SpatialGridRef.adaptiveQueryRadius(npcGrid, agent.position.x, agent.position.z, 25)
+            : SpatialGridRef.queryRadius(npcGrid, agent.position.x, agent.position.z, 25);
           for (var ni = 0; ni < nearbyHits.length; ni++) {
             var hit = nearbyHits[ni];
             if (hit.id === agent.id) continue;
@@ -2192,6 +2203,26 @@
         // Get AI decision
         var npcObj = { x: agent.position.x, z: agent.position.z, name: agent.name, zone: agent.position.zone };
         var decision = NpcAI.updateBrain(brain, npcObj, aiWorldState);
+
+        // Apply seasonal modifiers to NPC drives
+        if (NpcAI.applySeasonalModifiers && brain.drives && aiWorldState.season) {
+          brain.drives = NpcAI.applySeasonalModifiers(brain.drives, aiWorldState.season);
+        }
+
+        // Check social events (throttled: staggered by NPC index, ~every 60 frames)
+        if (NpcAI.checkSocialEvents && (index + Math.floor(worldTime * 60)) % 60 === 0) {
+          var lastSocial = (brain.memory && brain.memory.lastSocialEvent) || 0;
+          var socialCooldown = worldTime - lastSocial;
+          if (socialCooldown > 120) { // 2 real minutes between social events
+            var socialResult = NpcAI.checkSocialEvents(npcObj, brain.memory || {}, aiWorldState, aiWorldState);
+            if (socialResult) {
+              if (!brain.memory) brain.memory = {};
+              brain.memory.lastSocialEvent = worldTime;
+              var socialText = socialResult.message || socialResult.type || 'socializing';
+              showChatBubbleWithText(agent, socialText);
+            }
+          }
+        }
 
         // Execute decision
         if (decision) {

@@ -52376,7 +52376,15 @@
 
     var npcGrid = null;
     var npcAgentMap = {};
-    if (SpatialGridRef && SpatialGridRef.createGrid) {
+    var useAdaptiveGrid = SpatialGridRef && SpatialGridRef.createAdaptiveGrid;
+    if (useAdaptiveGrid) {
+      npcGrid = SpatialGridRef.createAdaptiveGrid(25);
+      for (var gi = 0; gi < npcAgents.length; gi++) {
+        var a = npcAgents[gi];
+        SpatialGridRef.adaptiveInsert(npcGrid, a.id, a.position.x, a.position.z);
+        npcAgentMap[a.id] = a;
+      }
+    } else if (SpatialGridRef && SpatialGridRef.createGrid) {
       npcGrid = SpatialGridRef.createGrid(25);
       for (var gi = 0; gi < npcAgents.length; gi++) {
         var a = npcAgents[gi];
@@ -52411,6 +52419,7 @@
           timeOfDay: worldState ? worldState.timePeriod : 'midday',
           currentHour: worldTime ? worldTime / 60 : 12,
           currentZone: agent.position.zone,
+          season: worldState ? worldState.season : 'summer',
           nearbyPlayers: [],
           nearbyNPCs: [],
           allNPCs: npcAgents
@@ -52432,7 +52441,9 @@
         }
 
         if (npcGrid) {
-          var nearbyHits = SpatialGridRef.queryRadius(npcGrid, agent.position.x, agent.position.z, 25);
+          var nearbyHits = useAdaptiveGrid
+            ? SpatialGridRef.adaptiveQueryRadius(npcGrid, agent.position.x, agent.position.z, 25)
+            : SpatialGridRef.queryRadius(npcGrid, agent.position.x, agent.position.z, 25);
           for (var ni = 0; ni < nearbyHits.length; ni++) {
             var hit = nearbyHits[ni];
             if (hit.id === agent.id) continue;
@@ -52470,6 +52481,24 @@
 
         var npcObj = { x: agent.position.x, z: agent.position.z, name: agent.name, zone: agent.position.zone };
         var decision = NpcAI.updateBrain(brain, npcObj, aiWorldState);
+
+        if (NpcAI.applySeasonalModifiers && brain.drives && aiWorldState.season) {
+          brain.drives = NpcAI.applySeasonalModifiers(brain.drives, aiWorldState.season);
+        }
+
+        if (NpcAI.checkSocialEvents && (index + Math.floor(worldTime * 60)) % 60 === 0) {
+          var lastSocial = (brain.memory && brain.memory.lastSocialEvent) || 0;
+          var socialCooldown = worldTime - lastSocial;
+          if (socialCooldown > 120) { // 2 real minutes between social events
+            var socialResult = NpcAI.checkSocialEvents(npcObj, brain.memory || {}, aiWorldState, aiWorldState);
+            if (socialResult) {
+              if (!brain.memory) brain.memory = {};
+              brain.memory.lastSocialEvent = worldTime;
+              var socialText = socialResult.message || socialResult.type || 'socializing';
+              showChatBubbleWithText(agent, socialText);
+            }
+          }
+        }
 
         if (decision) {
           brain.lastDecision = decision;
@@ -140140,6 +140169,20 @@
                 localPlayer.zoneEffects = zoneEffects;
               }
             }
+
+            if (MarketDynamics && MarketDynamics.ZONE_PRICE_MODIFIERS) {
+              var zoneMods = MarketDynamics.ZONE_PRICE_MODIFIERS[currentZone];
+              if (zoneMods) {
+                var advantages = [];
+                for (var cat in zoneMods) {
+                  if (zoneMods[cat] <= 0.8) advantages.push(cat + ' -' + Math.round((1 - zoneMods[cat]) * 100) + '%');
+                  else if (zoneMods[cat] >= 1.2) advantages.push(cat + ' +' + Math.round((zoneMods[cat] - 1) * 100) + '%');
+                }
+                if (advantages.length > 0 && HUD) {
+                  HUD.showNotification('Market prices: ' + advantages.join(', '), 'info');
+                }
+              }
+            }
           }
         }
 
@@ -140235,11 +140278,14 @@
       }
     }
 
+    var currentSeasonObj = (Seasons && Seasons.getCurrentSeason) ? Seasons.getCurrentSeason() : null;
+    var currentSeasonId = currentSeasonObj ? currentSeasonObj.id : 'summer';
     if (NPCs) {
       var npcWorldState = {
         weather: currentWeather,
         worldTime: worldTime,
         timePeriod: currentTimePeriod,
+        season: currentSeasonId,
         playerPosition: localPlayer ? localPlayer.position : null,
         playerId: localPlayer ? localPlayer.id : null
       };
@@ -140774,6 +140820,10 @@
 
     if (EventConsequences && EventConsequences.expireEffects && eventConsequencesState && Math.random() < 0.0003) {
       EventConsequences.expireEffects(eventConsequencesState, worldTime);
+    }
+
+    if (Economy && Economy.checkEconomyAchievement && economyLedger && localPlayer && Math.random() < 0.0003) {
+      checkEconAchievement('balance_check', { balance: Economy.getBalance(economyLedger, localPlayer.id) });
     }
 
     if (WorldShaper && WorldShaper.regenerateResources && worldShaperState && Math.random() < 0.0003) {
@@ -141502,6 +141552,12 @@
           }
         }
 
+        var tradesSoFar = (achievementState && achievementState.players && achievementState.players[localPlayer.id])
+          ? (achievementState.players[localPlayer.id].stats.trades_completed || 0) : 1;
+        checkEconAchievement('trade', { tradeCount: tradesSoFar });
+        economyTxCount++;
+        checkEconAchievement('transaction', { transactionCount: economyTxCount });
+
         if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
           (dailyChallengeState.active || []).forEach(function(ch) {
             if (ch.type === 'trade') {
@@ -141995,6 +142051,8 @@
           if (HUD) HUD.updatePlayerInfo(localPlayer);
           showSparkPopup(craftSpark);
         }
+        economyTxCount++;
+        checkEconAchievement('transaction', { transactionCount: economyTxCount });
       }
 
       if (Mentoring) {
@@ -143426,6 +143484,18 @@
     return recentActivities.length > 0 ? recentActivities : ['Started playing ZION'];
   }
 
+  var economyTxCount = 0;
+
+  function checkEconAchievement(eventType, details) {
+    if (!Economy || !Economy.checkEconomyAchievement || !economyLedger || !localPlayer) return;
+    var ach = Economy.checkEconomyAchievement(economyLedger, localPlayer.id, eventType, details);
+    if (ach) {
+      if (HUD) HUD.showNotification('Economy: ' + ach.name + ' (+' + ach.reward + ' Spark)', 'success');
+      Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: ach.reward / 50 });
+      localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+    }
+  }
+
   function trackAchievement(eventType, eventData) {
     if (!localPlayer) return;
 
@@ -143730,6 +143800,8 @@
           Economy.earnSpark(economyLedger, localPlayer.id, 'fishing', { complexity: sparkAmount / 50 });
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           showSparkPopup(sparkAmount);
+          economyTxCount++;
+          checkEconAchievement('transaction', { transactionCount: economyTxCount });
         }
         if (HUD && HUD.showFishCaughtNotification) {
           HUD.showFishCaughtNotification(result.fish.name, sparkAmount);

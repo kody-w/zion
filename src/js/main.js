@@ -2349,6 +2349,21 @@
                 localPlayer.zoneEffects = zoneEffects;
               }
             }
+
+            // Zone pricing: show market price advantages on zone entry
+            if (MarketDynamics && MarketDynamics.ZONE_PRICE_MODIFIERS) {
+              var zoneMods = MarketDynamics.ZONE_PRICE_MODIFIERS[currentZone];
+              if (zoneMods) {
+                var advantages = [];
+                for (var cat in zoneMods) {
+                  if (zoneMods[cat] <= 0.8) advantages.push(cat + ' -' + Math.round((1 - zoneMods[cat]) * 100) + '%');
+                  else if (zoneMods[cat] >= 1.2) advantages.push(cat + ' +' + Math.round((zoneMods[cat] - 1) * 100) + '%');
+                }
+                if (advantages.length > 0 && HUD) {
+                  HUD.showNotification('Market prices: ' + advantages.join(', '), 'info');
+                }
+              }
+            }
           }
         }
 
@@ -2458,11 +2473,14 @@
     }
 
     // Update AI citizens — pass player position and weather for perception
+    var currentSeasonObj = (Seasons && Seasons.getCurrentSeason) ? Seasons.getCurrentSeason() : null;
+    var currentSeasonId = currentSeasonObj ? currentSeasonObj.id : 'summer';
     if (NPCs) {
       var npcWorldState = {
         weather: currentWeather,
         worldTime: worldTime,
         timePeriod: currentTimePeriod,
+        season: currentSeasonId,
         playerPosition: localPlayer ? localPlayer.position : null,
         playerId: localPlayer ? localPlayer.id : null
       };
@@ -3095,6 +3113,11 @@
     // EventConsequences: expire active effects (~every 60 seconds)
     if (EventConsequences && EventConsequences.expireEffects && eventConsequencesState && Math.random() < 0.0003) {
       EventConsequences.expireEffects(eventConsequencesState, worldTime);
+    }
+
+    // Economy achievements: periodic balance check (~every 60 seconds)
+    if (Economy && Economy.checkEconomyAchievement && economyLedger && localPlayer && Math.random() < 0.0003) {
+      checkEconAchievement('balance_check', { balance: Economy.getBalance(economyLedger, localPlayer.id) });
     }
 
     // WorldShaper: regenerate zone resources (~every 60 seconds)
@@ -3965,6 +3988,13 @@
           }
         }
 
+        // Economy achievement: trade count
+        var tradesSoFar = (achievementState && achievementState.players && achievementState.players[localPlayer.id])
+          ? (achievementState.players[localPlayer.id].stats.trades_completed || 0) : 1;
+        checkEconAchievement('trade', { tradeCount: tradesSoFar });
+        economyTxCount++;
+        checkEconAchievement('transaction', { transactionCount: economyTxCount });
+
         // Update daily challenge progress for trade-type challenges
         if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
           (dailyChallengeState.active || []).forEach(function(ch) {
@@ -4512,6 +4542,8 @@
           if (HUD) HUD.updatePlayerInfo(localPlayer);
           showSparkPopup(craftSpark);
         }
+        economyTxCount++;
+        checkEconAchievement('transaction', { transactionCount: economyTxCount });
       }
 
       if (Mentoring) {
@@ -6117,6 +6149,22 @@
     return recentActivities.length > 0 ? recentActivities : ['Started playing ZION'];
   }
 
+  // Counter for economy transaction achievements
+  var economyTxCount = 0;
+
+  /**
+   * Check economy-specific achievements and award spark on unlock
+   */
+  function checkEconAchievement(eventType, details) {
+    if (!Economy || !Economy.checkEconomyAchievement || !economyLedger || !localPlayer) return;
+    var ach = Economy.checkEconomyAchievement(economyLedger, localPlayer.id, eventType, details);
+    if (ach) {
+      if (HUD) HUD.showNotification('Economy: ' + ach.name + ' (+' + ach.reward + ' Spark)', 'success');
+      Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: ach.reward / 50 });
+      localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+    }
+  }
+
   /**
    * Track an achievement event and show toast if earned
    */
@@ -6485,6 +6533,8 @@
           Economy.earnSpark(economyLedger, localPlayer.id, 'fishing', { complexity: sparkAmount / 50 });
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           showSparkPopup(sparkAmount);
+          economyTxCount++;
+          checkEconAchievement('transaction', { transactionCount: economyTxCount });
         }
         if (HUD && HUD.showFishCaughtNotification) {
           HUD.showFishCaughtNotification(result.fish.name, sparkAmount);
