@@ -13,6 +13,7 @@ from economy_engine import (
     distribute_ubi as _distribute_ubi_ledger,
     get_ubi_eligible_citizens as _get_ubi_eligible_citizens,
 )
+from reputation_engine import tick_reputation as _tick_reputation
 
 
 def calculate_day_phase(world_time):
@@ -372,6 +373,10 @@ def tick(state_json):
     if 'pets' in state:
         state['pets'] = decay_pet_states(state['pets'], delta_seconds)
 
+    # Decay reputation scores toward neutral
+    if 'reputation' in state:
+        state['reputation'] = _tick_reputation(state['reputation'], current_time)
+
     # Update last tick time
     state['lastTickAt'] = current_time
 
@@ -433,6 +438,12 @@ def main():
         {'playerPets': {}}
     )
 
+    # Read reputation state if provided (argv[7])
+    reputation_data = load_state_file(
+        sys.argv[7] if len(sys.argv) > 7 else None,
+        {'scores': {}, 'history': [], 'lastDecayAt': 0}
+    )
+
     # Merge all state sections into world state for processing
     try:
         state = json.loads(input_data)
@@ -446,6 +457,8 @@ def main():
             state['mentoring'] = mentoring_data
         if pets_data is not None:
             state['pets'] = pets_data
+        if reputation_data is not None:
+            state['reputation'] = reputation_data
 
         updated_state = tick(json.dumps(state))
         updated = json.loads(updated_state)
@@ -456,6 +469,7 @@ def main():
         guilds_out = updated.pop('guilds', None)
         mentoring_out = updated.pop('mentoring', None)
         pets_out = updated.pop('pets', None)
+        reputation_out = updated.pop('reputation', None)
 
         # Remove internal tracking fields from world output
         updated.pop('_lastUbiDay', None)
@@ -471,6 +485,8 @@ def main():
             output['mentoring'] = mentoring_out
         if pets_out is not None:
             output['pets'] = pets_out
+        if reputation_out is not None:
+            output['reputation'] = reputation_out
 
         print(json.dumps(output, indent=2))
         sys.exit(0)

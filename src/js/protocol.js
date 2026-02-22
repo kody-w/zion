@@ -57,7 +57,12 @@
     'sim_crm_action',
     'propose_amendment',
     'vote_amendment',
-    'close_amendment'
+    'close_amendment',
+    'garden_create',
+    'garden_invite',
+    'garden_uninvite',
+    'garden_tend',
+    'garden_set_public'
   ]);
 
   // Message types that require consent

@@ -2309,3 +2309,251 @@
   background: linear-gradient(90deg, #4ade80, #22c55e);
   transition: width 0.4s ease;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOAST / NOTIFICATION SYSTEM
+   Container sits in the top-right corner, below the minimap.
+   Individual toasts slide in from the right and fade out.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Container — stacks toasts vertically */
+.toast-container {
+  position: fixed;
+  top: 140px;          /* clears minimap (top:20px + ~120px height) */
+  right: var(--space-md, 16px);
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 9000;
+}
+
+/* Single toast card */
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(10, 10, 20, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-left-width: 4px;           /* coloured accent set per-type */
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  animation: toastSlideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  position: relative;
+  overflow: hidden;
+}
+
+.toast.toast-exiting {
+  animation: toastFadeOut 0.25s ease-in forwards;
+}
+
+/* Progress bar that shrinks over the toast's duration */
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.4;
+  transform-origin: left;
+  animation: toastProgress linear forwards;
+}
+
+/* Icon */
+.toast-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Body */
+.toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  margin-bottom: 2px;
+  color: inherit;
+}
+
+.toast-message {
+  font-size: 13px;
+  line-height: 1.35;
+  color: #e8e8e8;
+  word-break: break-word;
+}
+
+/* Group count badge */
+.toast-badge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.4;
+}
+
+/* Dismiss (×) button — appears on hover */
+.toast-close {
+  position: absolute;
+  bottom: 5px;
+  right: 8px;
+  font-size: 11px;
+  opacity: 0;
+  color: rgba(255, 255, 255, 0.5);
+  transition: opacity 0.15s ease;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.toast:hover .toast-close {
+  opacity: 1;
+}
+
+/* ── Type-specific border colours ─────────────────────────────────────────── */
+
+.toast-economy {
+  border-left-color: #f1c40f;
+  color: #f1c40f;
+}
+
+.toast-achievement {
+  border-left-color: #e67e22;
+  color: #e67e22;
+}
+
+.toast-social {
+  border-left-color: #3498db;
+  color: #3498db;
+}
+
+.toast-system {
+  border-left-color: #95a5a6;
+  color: #95a5a6;
+}
+
+.toast-quest {
+  border-left-color: #9b59b6;
+  color: #9b59b6;
+}
+
+.toast-combat {
+  border-left-color: #e74c3c;
+  color: #e74c3c;
+}
+
+/* ── Priority modifiers ────────────────────────────────────────────────────── */
+
+.toast-priority-critical {
+  border-width: 2px;
+  border-left-width: 5px;
+  box-shadow: 0 0 0 1px rgba(231, 76, 60, 0.4), 0 4px 20px rgba(0, 0, 0, 0.6);
+  animation: toastSlideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both,
+             toastPulseBorder 1.5s ease-in-out 0.3s infinite;
+}
+
+.toast-priority-high {
+  border-left-width: 5px;
+}
+
+.toast-priority-low {
+  opacity: 0.85;
+}
+
+/* ── Keyframe animations ───────────────────────────────────────────────────── */
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(110%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastFadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 100px;
+    margin-bottom: 0;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(40px);
+    max-height: 0;
+    margin-bottom: -8px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+@keyframes toastProgress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+@keyframes toastPulseBorder {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(231, 76, 60, 0.4), 0 4px 20px rgba(0, 0, 0, 0.6); }
+  50%       { box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.6), 0 4px 24px rgba(0, 0, 0, 0.7); }
+}
+
+/* Overflow badge — shows how many toasts are queued */
+.toast-overflow-badge {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 4px 0;
+  pointer-events: none;
+}
+
+
+.amend-history-card:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Proposal form inputs */
+#amend-propose-form input,
+#amend-propose-form textarea {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+
+#amend-propose-form input:focus,
+#amend-propose-form textarea:focus {
+  border-color: #daa520 !important;
+  box-shadow: 0 0 0 2px rgba(218, 165, 32, 0.2);
+}
+
+/* Submit button hover */
+#amend-submit-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+/* Spark-weight vote progress bar */
+.amend-vote-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+  transition: width 0.4s ease;
+}

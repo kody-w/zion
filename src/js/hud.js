@@ -9505,4 +9505,444 @@
   exports._htmlEsc = _htmlEsc;
   exports._amendmentTabBar = _amendmentTabBar;
 
+  // =============================================================================
+  // LEADERBOARD PANEL
+  // =============================================================================
+
+  var leaderboardPanelEl = null;
+  var leaderboardVisible = false;
+  var _lbActiveCategory = 'wealth';
+  var _lbActivePeriod = 'all_time';
+  var _lbDisplayCount = 10;
+  var _lbGameData = null;
+
+  var LB_CATEGORIES = [
+    { id: 'wealth',      label: 'Wealth',      icon: '\u2728' },
+    { id: 'quests',      label: 'Quests',       icon: '\u2694' },
+    { id: 'exploration', label: 'Exploration',  icon: '\ud83d\uddfa' },
+    { id: 'guilds',      label: 'Guilds',       icon: '\ud83d\udee1' },
+    { id: 'reputation',  label: 'Reputation',   icon: '\u2b50' },
+    { id: 'combined',    label: 'Combined',     icon: '\ud83c\udfc6' }
+  ];
+
+  var LB_PERIODS = [
+    { id: 'all_time', label: 'All Time' },
+    { id: 'daily',    label: 'Today'    },
+    { id: 'weekly',   label: 'Week'     }
+  ];
+
+  var LB_COUNTS = [10, 25, 50];
+
+  function _lbGetLeaderboards() {
+    if (typeof Leaderboards === 'undefined') return null;
+    return Leaderboards;
+  }
+
+  function _lbMakeTabBar(tabs, activeId, onSelect) {
+    var bar = document.createElement('div');
+    bar.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;';
+    tabs.forEach(function(tab) {
+      var btn = document.createElement('button');
+      btn.textContent = (tab.icon ? tab.icon + ' ' : '') + tab.label;
+      btn.dataset.tabId = tab.id;
+      var isActive = tab.id === activeId;
+      btn.style.cssText = 'padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:bold;transition:all 0.2s;' +
+        (isActive
+          ? 'background:rgba(218,165,32,0.25);border:1px solid #DAA520;color:#DAA520;'
+          : 'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:#A0978E;');
+      btn.onclick = function() { onSelect(tab.id); };
+      btn.onmouseover = function() {
+        if (tab.id !== activeId) {
+          btn.style.background = 'rgba(218,165,32,0.1)';
+          btn.style.borderColor = 'rgba(218,165,32,0.4)';
+          btn.style.color = '#D4C5B3';
+        }
+      };
+      btn.onmouseout = function() {
+        if (tab.id !== activeId) {
+          btn.style.background = 'rgba(255,255,255,0.05)';
+          btn.style.borderColor = 'rgba(255,255,255,0.15)';
+          btn.style.color = '#A0978E';
+        }
+      };
+      bar.appendChild(btn);
+    });
+    return bar;
+  }
+
+  function _lbRenderRows(rows, playerId) {
+    var table = document.createElement('div');
+    table.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+
+    if (!rows || rows.length === 0) {
+      var empty = document.createElement('div');
+      empty.textContent = 'No data available.';
+      empty.style.cssText = 'color:#A0978E;text-align:center;padding:20px;font-size:14px;';
+      table.appendChild(empty);
+      return table;
+    }
+
+    // Header row
+    var header = document.createElement('div');
+    header.style.cssText = 'display:grid;grid-template-columns:50px 1fr 120px;gap:8px;padding:6px 10px;' +
+      'color:#A0978E;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;' +
+      'border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:4px;';
+    header.innerHTML = '<span>Rank</span><span>Player</span><span style="text-align:right">Score</span>';
+    table.appendChild(header);
+
+    rows.forEach(function(row) {
+      var isMe = row.isHighlighted || (playerId && row.id === playerId);
+      var rowEl = document.createElement('div');
+      rowEl.style.cssText = 'display:grid;grid-template-columns:50px 1fr 120px;gap:8px;padding:8px 10px;' +
+        'border-radius:6px;font-size:13px;align-items:center;transition:background 0.15s;' +
+        (isMe
+          ? 'background:rgba(218,165,32,0.15);border:1px solid rgba(218,165,32,0.35);'
+          : 'background:rgba(255,255,255,0.03);border:1px solid transparent;');
+
+      rowEl.onmouseover = function() {
+        if (!isMe) rowEl.style.background = 'rgba(255,255,255,0.06)';
+      };
+      rowEl.onmouseout = function() {
+        if (!isMe) rowEl.style.background = 'rgba(255,255,255,0.03)';
+      };
+
+      // Rank badge
+      var rankEl = document.createElement('span');
+      var rankNum = row.rank;
+      var rankStyle = 'font-weight:bold;';
+      if (rankNum === 1) rankStyle += 'color:#FFD700;font-size:16px;';
+      else if (rankNum === 2) rankStyle += 'color:#C0C0C0;font-size:15px;';
+      else if (rankNum === 3) rankStyle += 'color:#CD7F32;font-size:14px;';
+      else rankStyle += 'color:#6B6560;';
+      rankEl.style.cssText = rankStyle;
+      rankEl.textContent = rankNum === 1 ? '\ud83e\udd47' : (rankNum === 2 ? '\ud83e\udd48' : (rankNum === 3 ? '\ud83e\udd49' : '#' + rankNum));
+
+      // Name
+      var nameEl = document.createElement('span');
+      nameEl.textContent = (row.tag ? '[' + row.tag + '] ' : '') + (row.name || row.id);
+      nameEl.style.cssText = 'color:' + (isMe ? '#DAA520' : '#E8E0D8') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+
+      // Score
+      var scoreEl = document.createElement('span');
+      scoreEl.textContent = row.label || row.score;
+      scoreEl.style.cssText = 'text-align:right;color:' + (isMe ? '#DAA520' : '#A0978E') + ';font-family:monospace;font-size:12px;';
+
+      // Tier badge (reputation)
+      if (row.tier) {
+        var tierEl = document.createElement('span');
+        tierEl.textContent = ' ' + row.tier;
+        tierEl.style.cssText = 'font-size:10px;color:#818cf8;';
+        nameEl.appendChild(tierEl);
+      }
+
+      // Guild extra info
+      if (row.level !== undefined) {
+        var lvlEl = document.createElement('span');
+        lvlEl.textContent = ' Lv.' + row.level;
+        lvlEl.style.cssText = 'font-size:10px;color:#6B6560;';
+        nameEl.appendChild(lvlEl);
+      }
+
+      rowEl.appendChild(rankEl);
+      rowEl.appendChild(nameEl);
+      rowEl.appendChild(scoreEl);
+      table.appendChild(rowEl);
+    });
+
+    return table;
+  }
+
+  function _lbRefreshContent(container) {
+    var LB = _lbGetLeaderboards();
+    if (!LB) {
+      container.innerHTML = '<div style="text-align:center;color:#A0978E;padding:40px;">Leaderboards module not loaded.</div>';
+      return;
+    }
+
+    var data = _lbGameData || {};
+    var periodOpts = { period: _lbActivePeriod };
+    var rankings = [];
+
+    switch (_lbActiveCategory) {
+      case 'wealth':
+        rankings = LB.getWealthRankings(data.economy || {}, periodOpts);
+        break;
+      case 'quests':
+        rankings = LB.getQuestRankings(data.quests || {}, periodOpts);
+        break;
+      case 'exploration':
+        rankings = LB.getExplorationRankings(data.discoveries || [], periodOpts);
+        break;
+      case 'guilds':
+        rankings = LB.getGuildRankings(data.guilds || [], periodOpts);
+        break;
+      case 'reputation':
+        rankings = LB.getReputationRankings(data.reputation || {}, periodOpts);
+        break;
+      case 'combined':
+        rankings = LB.getCombinedRankings(data, periodOpts);
+        break;
+      default:
+        rankings = [];
+    }
+
+    var currentPlayerId = (typeof window !== 'undefined' && window._currentPlayerId) ? window._currentPlayerId : null;
+    var fmtOpts = {
+      count: _lbDisplayCount,
+      allowedCounts: [_lbDisplayCount],
+      highlightId: currentPlayerId,
+      showBreakdown: _lbActiveCategory === 'combined'
+    };
+
+    var rows = LB.formatLeaderboard(rankings, fmtOpts);
+
+    // Player's own rank block
+    var playerRankInfo = null;
+    if (currentPlayerId && LB.getPlayerRank) {
+      var categoryData;
+      switch (_lbActiveCategory) {
+        case 'wealth': categoryData = data.economy || {}; break;
+        case 'quests': categoryData = data.quests || {}; break;
+        case 'exploration': categoryData = data.discoveries || []; break;
+        case 'guilds': categoryData = data.guilds || []; break;
+        case 'reputation': categoryData = data.reputation || {}; break;
+        case 'combined': categoryData = data; break;
+        default: categoryData = {};
+      }
+      playerRankInfo = LB.getPlayerRank(currentPlayerId, _lbActiveCategory, categoryData, periodOpts);
+    }
+
+    // Render
+    container.innerHTML = '';
+
+    // Player rank banner
+    if (playerRankInfo) {
+      var rankBanner = document.createElement('div');
+      rankBanner.style.cssText = 'background:rgba(218,165,32,0.08);border:1px solid rgba(218,165,32,0.2);' +
+        'border-radius:6px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;';
+      var yourRankText = playerRankInfo.rank
+        ? 'Your rank: #' + playerRankInfo.rank + ' of ' + playerRankInfo.total
+        : 'You are not ranked yet';
+      var yourScoreText = playerRankInfo.score ? '  (' + (playerRankInfo.label || playerRankInfo.score) + ')' : '';
+      rankBanner.innerHTML =
+        '<span style="color:#A0978E;font-size:12px;">You</span>' +
+        '<span style="color:#DAA520;font-weight:bold;font-size:14px;">' + yourRankText + '</span>' +
+        '<span style="color:#6B6560;font-size:12px;">' + yourScoreText + '</span>';
+      container.appendChild(rankBanner);
+    }
+
+    // Rows
+    container.appendChild(_lbRenderRows(rows, currentPlayerId));
+  }
+
+  function _lbBuildPanel() {
+    if (typeof document === 'undefined') return null;
+
+    var panel = document.createElement('div');
+    panel.id = 'leaderboard-panel';
+    panel.style.cssText =
+      'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'width:680px;max-height:85vh;' +
+      'background:rgba(15,12,10,0.97);border:2px solid rgba(218,165,32,0.4);border-radius:10px;' +
+      'z-index:300;pointer-events:auto;display:none;flex-direction:column;' +
+      'box-shadow:0 12px 48px rgba(0,0,0,0.85);';
+
+    // ---- Header ----
+    var headerDiv = document.createElement('div');
+    headerDiv.style.cssText =
+      'display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(218,165,32,0.2);flex-shrink:0;';
+    headerDiv.innerHTML =
+      '<span style="font-size:20px;margin-right:10px;">\ud83c\udfc6</span>' +
+      '<span style="font-size:18px;font-weight:bold;color:#DAA520;flex:1;">Leaderboards</span>';
+
+    // Close button
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '\xd7';
+    closeBtn.style.cssText =
+      'background:rgba(255,255,255,0.08);color:#aaa;border:1px solid rgba(255,255,255,0.2);' +
+      'border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;line-height:1;';
+    closeBtn.onclick = hideLeaderboardPanel;
+    closeBtn.onmouseover = function() {
+      closeBtn.style.background = 'rgba(218,165,32,0.2)';
+      closeBtn.style.borderColor = '#DAA520';
+      closeBtn.style.color = '#DAA520';
+    };
+    closeBtn.onmouseout = function() {
+      closeBtn.style.background = 'rgba(255,255,255,0.08)';
+      closeBtn.style.borderColor = 'rgba(255,255,255,0.2)';
+      closeBtn.style.color = '#aaa';
+    };
+    headerDiv.appendChild(closeBtn);
+    panel.appendChild(headerDiv);
+
+    // ---- Controls bar ----
+    var controlsDiv = document.createElement('div');
+    controlsDiv.style.cssText =
+      'padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;';
+
+    // Category tabs
+    var categoryBar = _lbMakeTabBar(LB_CATEGORIES, _lbActiveCategory, function(id) {
+      _lbActiveCategory = id;
+      _lbRebuildPanel();
+    });
+    controlsDiv.appendChild(categoryBar);
+
+    // Period + count row
+    var subRow = document.createElement('div');
+    subRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:8px;';
+
+    var periodLabel = document.createElement('span');
+    periodLabel.textContent = 'Period:';
+    periodLabel.style.cssText = 'color:#6B6560;font-size:11px;';
+    subRow.appendChild(periodLabel);
+
+    LB_PERIODS.forEach(function(p) {
+      var btn = document.createElement('button');
+      btn.textContent = p.label;
+      var isActive = p.id === _lbActivePeriod;
+      btn.style.cssText =
+        'padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;' +
+        (isActive
+          ? 'background:rgba(218,165,32,0.2);border:1px solid rgba(218,165,32,0.5);color:#DAA520;'
+          : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#6B6560;');
+      btn.onclick = function() {
+        _lbActivePeriod = p.id;
+        _lbRebuildPanel();
+      };
+      subRow.appendChild(btn);
+    });
+
+    // Spacer
+    var spacer = document.createElement('span');
+    spacer.style.cssText = 'flex:1;';
+    subRow.appendChild(spacer);
+
+    var countLabel = document.createElement('span');
+    countLabel.textContent = 'Show:';
+    countLabel.style.cssText = 'color:#6B6560;font-size:11px;';
+    subRow.appendChild(countLabel);
+
+    LB_COUNTS.forEach(function(c) {
+      var btn = document.createElement('button');
+      btn.textContent = String(c);
+      var isActive = c === _lbDisplayCount;
+      btn.style.cssText =
+        'padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;' +
+        (isActive
+          ? 'background:rgba(218,165,32,0.2);border:1px solid rgba(218,165,32,0.5);color:#DAA520;'
+          : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#6B6560;');
+      btn.onclick = function() {
+        _lbDisplayCount = c;
+        _lbRebuildPanel();
+      };
+      subRow.appendChild(btn);
+    });
+
+    controlsDiv.appendChild(subRow);
+    panel.appendChild(controlsDiv);
+
+    // ---- Content area ----
+    var contentDiv = document.createElement('div');
+    contentDiv.id = 'leaderboard-content';
+    contentDiv.style.cssText = 'flex:1;overflow-y:auto;padding:16px 20px;';
+    panel.appendChild(contentDiv);
+
+    // ---- Footer ----
+    var footerDiv = document.createElement('div');
+    footerDiv.style.cssText =
+      'padding:10px 20px;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;' +
+      'display:flex;justify-content:space-between;align-items:center;';
+    footerDiv.innerHTML =
+      '<span style="color:#6B6560;font-size:11px;">Rankings update in real time</span>' +
+      '<span id="lb-player-count" style="color:#6B6560;font-size:11px;"></span>';
+    panel.appendChild(footerDiv);
+
+    return panel;
+  }
+
+  function _lbRebuildPanel() {
+    if (!leaderboardPanelEl) return;
+    leaderboardPanelEl.parentNode && leaderboardPanelEl.parentNode.removeChild(leaderboardPanelEl);
+    leaderboardPanelEl = _lbBuildPanel();
+    if (!leaderboardPanelEl) return;
+    document.body.appendChild(leaderboardPanelEl);
+    leaderboardPanelEl.style.display = 'flex';
+    var content = document.getElementById('leaderboard-content');
+    if (content) _lbRefreshContent(content);
+  }
+
+  /**
+   * Show the leaderboard panel.
+   * @param {Object} [gameData] - { economy, quests, discoveries, guilds, reputation }
+   * @param {Object} [opts] - { category, period, count }
+   */
+  function showLeaderboardPanel(gameData, opts) {
+    if (typeof document === 'undefined') return;
+    opts = opts || {};
+
+    if (gameData) _lbGameData = gameData;
+    if (opts.category) _lbActiveCategory = opts.category;
+    if (opts.period) _lbActivePeriod = opts.period;
+    if (opts.count) _lbDisplayCount = opts.count;
+
+    if (leaderboardPanelEl && leaderboardPanelEl.parentNode) {
+      // Already open — just refresh content
+      var content = document.getElementById('leaderboard-content');
+      if (content) _lbRefreshContent(content);
+      leaderboardPanelEl.style.display = 'flex';
+      leaderboardVisible = true;
+      return;
+    }
+
+    leaderboardPanelEl = _lbBuildPanel();
+    if (!leaderboardPanelEl) return;
+
+    document.body.appendChild(leaderboardPanelEl);
+    leaderboardPanelEl.style.display = 'flex';
+    leaderboardVisible = true;
+
+    var content = document.getElementById('leaderboard-content');
+    if (content) _lbRefreshContent(content);
+  }
+
+  /**
+   * Hide the leaderboard panel.
+   */
+  function hideLeaderboardPanel() {
+    if (leaderboardPanelEl) {
+      leaderboardPanelEl.style.display = 'none';
+    }
+    leaderboardVisible = false;
+  }
+
+  /**
+   * Toggle leaderboard panel.
+   * @param {Object} [gameData]
+   * @param {Object} [opts]
+   */
+  function toggleLeaderboardPanel(gameData, opts) {
+    if (leaderboardVisible) {
+      hideLeaderboardPanel();
+    } else {
+      showLeaderboardPanel(gameData, opts);
+    }
+  }
+
+  /**
+   * Refresh leaderboard with new data without closing.
+   * @param {Object} gameData
+   */
+  function refreshLeaderboardPanel(gameData) {
+    if (gameData) _lbGameData = gameData;
+    if (!leaderboardVisible || !leaderboardPanelEl) return;
+    var content = document.getElementById('leaderboard-content');
+    if (content) _lbRefreshContent(content);
+  }
+
+  exports.showLeaderboardPanel = showLeaderboardPanel;
+  exports.hideLeaderboardPanel = hideLeaderboardPanel;
+  exports.toggleLeaderboardPanel = toggleLeaderboardPanel;
+  exports.refreshLeaderboardPanel = refreshLeaderboardPanel;
+
+
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));

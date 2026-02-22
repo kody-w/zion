@@ -18,7 +18,7 @@ jobs:
           python-version: '3.12'
       - name: Run game tick
         run: |
-          python scripts/game_tick.py state/world.json state/gardens.json state/economy.json state/guilds.json state/mentoring.json state/pets.json > /tmp/tick_output.json
+          python scripts/game_tick.py state/world.json state/gardens.json state/economy.json state/guilds.json state/mentoring.json state/pets.json state/reputation.json > /tmp/tick_output.json
           # Update state files if changed
           python -c "
           import json
@@ -42,6 +42,9 @@ jobs:
           if 'pets' in data:
             with open('state/pets.json', 'w') as f:
               json.dump(data['pets'], f, indent=2)
+          if 'reputation' in data:
+            with open('state/reputation.json', 'w') as f:
+              json.dump(data['reputation'], f, indent=2)
           "
       - name: Commit changes
         run: |
