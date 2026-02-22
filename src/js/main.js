@@ -90,6 +90,26 @@
   let achievementState = null;
   let dailyChallengeState = null;
   let journalState = null;
+  let npcReputationState = null;
+  let lootHistory = null;
+  let battlePassState = null;
+  let cosmeticsState = null;
+  let specState = null;
+  let worldPersistState = null;
+  let storyState = null;
+  let marketDynamicsState = null;
+  let cookingBuffs = null;
+  let metaEventsState = null;
+  let guildProgressionState = null;
+  let apprenticeshipState = null;
+  let eventVotingState = null;
+  let housingSocialState = null;
+  let prestigeState = null;
+  let mentorshipMarketState = null;
+  let arenaSchedule = null;
+  let socialSpacesState = null;
+  let raidStateStore = null;
+  let guildWarsState = null;
   let raycaster = null;
   let simCrmState = null;
   let lastSimCrmTick = 0;
@@ -942,6 +962,129 @@
     // Initialize player journal (Journal uses plain object state)
     journalState = {};
 
+    // Initialize NPC reputation tracking
+    if (NpcReputation && NpcReputation.createReputationState) {
+      npcReputationState = NpcReputation.createReputationState();
+    }
+
+    // Initialize loot history
+    if (Loot && Loot.createLootHistory) {
+      lootHistory = Loot.createLootHistory(username);
+    }
+
+    // Initialize battle pass
+    if (BattlePass && BattlePass.initPlayerPass) {
+      battlePassState = BattlePass.initPlayerPass(username);
+    }
+
+    // Initialize cosmetics (player appearance)
+    if (Cosmetics && Cosmetics.initAppearance) {
+      cosmeticsState = Cosmetics.initAppearance(username);
+    }
+
+    // Initialize specialization state
+    if (Specializations && Specializations.createSpecState) {
+      specState = Specializations.createSpecState(username);
+    }
+
+    // Initialize world persistence (structures, gardens)
+    if (WorldPersistence && WorldPersistence.createState) {
+      worldPersistState = WorldPersistence.createState();
+    }
+
+    // Initialize story/lore discovery state
+    storyState = {};
+
+    // Initialize market dynamics price tracking
+    marketDynamicsState = { prices: {}, transactions: [] };
+
+    // Initialize cooking buff tracker
+    cookingBuffs = [];
+
+    // Initialize meta events state
+    if (MetaEvents && MetaEvents.createMetaEventsState) {
+      metaEventsState = MetaEvents.createMetaEventsState();
+    }
+
+    // Initialize guild progression
+    if (GuildProgression && GuildProgression.createGuildState) {
+      guildProgressionState = GuildProgression.createGuildState('default_guild');
+    }
+
+    // Initialize apprenticeship
+    if (Apprenticeship && Apprenticeship.createApprenticeshipState) {
+      apprenticeshipState = Apprenticeship.createApprenticeshipState();
+    }
+
+    // Initialize event voting
+    if (EventVoting && EventVoting.createEventVotingState) {
+      eventVotingState = EventVoting.createEventVotingState();
+    }
+
+    // Initialize housing social
+    if (HousingSocial && HousingSocial.createHousingState) {
+      housingSocialState = HousingSocial.createHousingState(username);
+    }
+
+    // Initialize prestige
+    if (Prestige && Prestige.createPrestigeState) {
+      prestigeState = Prestige.createPrestigeState(username);
+    }
+
+    // Initialize mentorship market
+    if (MentorshipMarket && MentorshipMarket.createListingState) {
+      mentorshipMarketState = MentorshipMarket.createListingState();
+    }
+
+    // Initialize arena schedule
+    if (ArenaScheduler && ArenaScheduler.generateWeeklySchedule) {
+      var weekNumber = Math.floor(Date.now() / (7 * 86400000));
+      arenaSchedule = ArenaScheduler.generateWeeklySchedule(weekNumber);
+    }
+
+    // Initialize social spaces
+    socialSpacesState = { gatherings: [], bulletins: [] };
+
+    // Initialize raid state store
+    if (RaidSystem && RaidSystem.createRaidStateStore) {
+      raidStateStore = RaidSystem.createRaidStateStore();
+    }
+
+    // Initialize guild wars
+    if (GuildWars && GuildWars.createGuildWarsState) {
+      guildWarsState = GuildWars.createGuildWarsState();
+    }
+
+    // Attach subsystem states to gameState for cross-system access
+    if (gameState) {
+      gameState.subsystems = {
+        progression: playerProgression,
+        achievements: achievementState,
+        dailyChallenges: dailyChallengeState,
+        journal: journalState,
+        npcReputation: npcReputationState,
+        lootHistory: lootHistory,
+        battlePass: battlePassState,
+        cosmetics: cosmeticsState,
+        specialization: specState,
+        worldPersistence: worldPersistState,
+        storyEngine: storyState,
+        marketDynamics: marketDynamicsState,
+        cookingBuffs: cookingBuffs,
+        metaEvents: metaEventsState,
+        guildProgression: guildProgressionState,
+        apprenticeship: apprenticeshipState,
+        eventVoting: eventVotingState,
+        housingSocial: housingSocialState,
+        prestige: prestigeState,
+        mentorshipMarket: mentorshipMarketState,
+        arenaSchedule: arenaSchedule,
+        socialSpaces: socialSpacesState,
+        raidSystem: raidStateStore,
+        guildWars: guildWarsState
+      };
+    }
+
     // Initialize raycaster for clicking
     if (typeof THREE !== 'undefined') {
       raycaster = new THREE.Raycaster();
@@ -1785,6 +1928,19 @@
             if (Journal && Journal.addEntry && journalState) {
               Journal.addEntry(journalState, localPlayer.id, 'zone_visit', { zone: currentZone }, worldTime);
             }
+
+            // StoryEngine: discover lore when entering a new zone
+            if (StoryEngine && StoryEngine.discoverLore && storyState) {
+              var loreResult = StoryEngine.discoverLore(storyState, localPlayer.id, currentZone);
+              if (loreResult && loreResult.entry) {
+                if (HUD) HUD.showNotification('Lore discovered: ' + (loreResult.entry.title || currentZone + ' history'), 'info');
+              }
+            }
+
+            // BattlePass XP for exploration
+            if (BattlePass && BattlePass.addXP && battlePassState) {
+              BattlePass.addXP(battlePassState, 6, 'exploring');
+            }
           }
         }
 
@@ -2026,6 +2182,31 @@
           var mods = WeatherFX.getAmbientModifiers(currentWeather);
           if (localPlayer) localPlayer.weatherModifiers = mods;
         }
+      }
+
+      // Apply active cooking buffs to player
+      if (Cooking && Cooking.getActiveBuffs && cookingBuffs && cookingBuffs.length > 0) {
+        localPlayer.cookingBuffs = Cooking.getActiveBuffs(cookingBuffs);
+      }
+
+      // Apply prestige bonus to player stats
+      if (Prestige && Prestige.getSparkBonus && prestigeState) {
+        localPlayer.prestigeSparkBonus = Prestige.getSparkBonus(prestigeState);
+      }
+
+      // HousingSocial: calculate comfort bonus from housing
+      if (HousingSocial && HousingSocial.calculateComfort && housingSocialState) {
+        localPlayer.comfortBonus = HousingSocial.calculateComfort(housingSocialState);
+      }
+
+      // Cosmetics: sync current appearance
+      if (Cosmetics && Cosmetics.getAppearance && cosmeticsState) {
+        localPlayer.appearance = Cosmetics.getAppearance(cosmeticsState);
+      }
+
+      // Specializations: apply specialization bonuses
+      if (Specializations && Specializations.getBonuses && specState) {
+        localPlayer.specBonuses = Specializations.getBonuses(specState);
       }
 
       // Cull distant lights for performance (max 12 nearest within 40 units)
@@ -2389,6 +2570,38 @@
       ApiBridge.update(nowMs, gameState);
     }
 
+    // Cooking: decay active food buffs over time
+    if (Cooking && Cooking.updateBuffs && cookingBuffs && cookingBuffs.length > 0) {
+      cookingBuffs = Cooking.updateBuffs(cookingBuffs, deltaTime);
+    }
+
+    // MarketDynamics: periodic price updates (~every 60 seconds)
+    if (MarketDynamics && MarketDynamics.updatePrices && marketDynamicsState && Math.random() < 0.0003) {
+      MarketDynamics.updatePrices(marketDynamicsState);
+    }
+
+    // MetaEvents: check for phase advancement (~every 30 seconds)
+    if (MetaEvents && MetaEvents.getActiveEvents && metaEventsState && Math.random() < 0.0005) {
+      var activeEvents = MetaEvents.getActiveEvents(metaEventsState);
+      if (activeEvents && activeEvents.length > 0) {
+        activeEvents.forEach(function(evt) {
+          if (MetaEvents.checkPhaseTimeout) {
+            MetaEvents.checkPhaseTimeout(metaEventsState, evt.id, worldTime);
+          }
+        });
+      }
+    }
+
+    // WorldPersistence: check garden growth (~every 60 seconds)
+    if (WorldPersistence && WorldPersistence.advanceGrowth && worldPersistState && Math.random() < 0.0003) {
+      WorldPersistence.advanceGrowth(worldPersistState, worldTime);
+    }
+
+    // ArenaScheduler: expose current schedule for UI queries
+    if (localPlayer && arenaSchedule) {
+      localPlayer.arenaSchedule = arenaSchedule;
+    }
+
     // Request next frame
     if (typeof window !== 'undefined' && window.requestAnimationFrame) {
       window.requestAnimationFrame(gameLoop);
@@ -2622,6 +2835,14 @@
 
         // Track discovery achievement
         trackAchievement('discover', { type: result.discovery.type, rarity: result.discovery.rarity });
+
+        // Archival: chance to discover a relic during exploration
+        if (Archival && Archival.excavate) {
+          var excavateResult = Archival.excavate(localPlayer.id, currentZone, { rarity: result.discovery.rarity || 1 });
+          if (excavateResult && excavateResult.relic) {
+            if (HUD) HUD.showNotification('Relic discovered: ' + (excavateResult.relic.name || 'ancient artifact'), 'success');
+          }
+        }
 
         if (Audio) Audio.playSound('warp');
       }
@@ -3135,6 +3356,16 @@
           Journal.addEntry(journalState, localPlayer.id, 'trade_completed', { partner: msg.from, zone: currentZone }, worldTime);
         }
 
+        // BattlePass XP for trading
+        if (BattlePass && BattlePass.addXP && battlePassState) {
+          BattlePass.addXP(battlePassState, 10, 'trading');
+        }
+
+        // MarketDynamics: record trade transaction
+        if (MarketDynamics && MarketDynamics.recordTransaction && marketDynamicsState) {
+          MarketDynamics.recordTransaction(marketDynamicsState, { buyer: localPlayer.id, seller: msg.from, zone: currentZone, tick: worldTime });
+        }
+
         if (Mentoring) {
           var xpResult = Mentoring.addSkillXP(localPlayer.id, 'trading', 15);
           if (xpResult.leveledUp && HUD) {
@@ -3570,6 +3801,23 @@
         Journal.addEntry(journalState, localPlayer.id, 'item_crafted', { item: itemData.name, zone: currentZone, description: 'Gathered ' + itemData.name }, worldTime);
       }
 
+      // Loot: chance of bonus drop from gathering
+      if (Loot && Loot.rollLoot && lootHistory) {
+        var bonusLoot = Loot.rollLoot('gathering', { zone: currentZone, rarity: 1 });
+        if (bonusLoot && bonusLoot.items && bonusLoot.items.length > 0) {
+          bonusLoot.items.forEach(function(lootItem) {
+            if (Inventory) Inventory.addItem(playerInventory, lootItem.id, lootItem.count || 1);
+          });
+          Loot.recordDrop(lootHistory, bonusLoot);
+          if (HUD) HUD.showNotification('Bonus loot: ' + bonusLoot.items[0].id, 'success');
+        }
+      }
+
+      // BattlePass XP for gathering
+      if (BattlePass && BattlePass.addXP && battlePassState) {
+        BattlePass.addXP(battlePassState, 3, 'gathering');
+      }
+
       if (Audio) Audio.playSound('harvest');
 
       // Track activity
@@ -3660,6 +3908,24 @@
       // Journal entry for crafting
       if (Journal && Journal.addEntry && journalState) {
         Journal.addEntry(journalState, localPlayer.id, 'item_crafted', { item: result.output.itemId, zone: currentZone }, worldTime);
+      }
+
+      // BattlePass XP for crafting
+      if (BattlePass && BattlePass.addXP && battlePassState) {
+        BattlePass.addXP(battlePassState, 8, 'crafting');
+      }
+
+      // Specialization mastery XP for crafting
+      if (Specializations && Specializations.awardMasteryXP && specState) {
+        Specializations.awardMasteryXP(specState, 'crafting', 5);
+      }
+
+      // Advanced Crafting: track crafting history and apply skill bonus
+      if (Crafting && Crafting.getSkillBonus) {
+        var craftBonus = Crafting.getSkillBonus(localPlayer.id, recipeId);
+        if (craftBonus && craftBonus > 0 && HUD) {
+          HUD.showNotification('Crafting mastery bonus: +' + Math.round(craftBonus * 100) + '%', 'info');
+        }
       }
 
       // Emit craft success particles (orange/white sparkle at player position)
@@ -3890,6 +4156,21 @@
             HUD.showGovernancePanel(currentZone, localPlayer);
           }
 
+          // EventVoting: track vote in event voting system
+          if (EventVoting && EventVoting.castVote && eventVotingState) {
+            EventVoting.castVote(eventVotingState, localPlayer.id, electionId, candidateId);
+          }
+
+          // Cross-system dispatch: vote cast
+          if (Wiring && Wiring.onVoteCast) {
+            Wiring.onVoteCast(gameState, localPlayer.id, electionId, candidateId);
+          }
+
+          // AchievementEngine: track votes
+          if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
+            AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'votes_cast', 1);
+          }
+
           // Broadcast vote to network
           if (Network && Protocol) {
             var msg = Protocol.create.election_vote(localPlayer.id, {
@@ -4061,6 +4342,20 @@
                 if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
               });
             }
+          }
+
+          // WorldPersistence: track placed structure
+          if (WorldPersistence && WorldPersistence.placeStructure && worldPersistState) {
+            WorldPersistence.placeStructure(worldPersistState, {
+              type: result.type, owner: localPlayer.id, zone: currentZone,
+              x: result.position ? result.position.x : 0,
+              z: result.position ? result.position.z : 0
+            });
+          }
+
+          // BattlePass XP for building
+          if (BattlePass && BattlePass.addXP && battlePassState) {
+            BattlePass.addXP(battlePassState, 12, 'building');
           }
 
           // Save structure to state
@@ -4479,6 +4774,28 @@
                   if (Journal && Journal.addEntry && journalState) {
                     Journal.addEntry(journalState, localPlayer.id, 'quest_completed', { questName: questInfo.quest.title, zone: currentZone }, worldTime);
                   }
+
+                  // BattlePass XP for quest completion
+                  if (BattlePass && BattlePass.addXP && battlePassState) {
+                    BattlePass.addXP(battlePassState, 20, 'quest');
+                  }
+
+                  // Specialization mastery XP for quest completion
+                  if (Specializations && Specializations.awardMasteryXP && specState) {
+                    Specializations.awardMasteryXP(specState, 'questing', 10);
+                  }
+
+                  // Loot: roll quest completion bonus loot
+                  if (Loot && Loot.rollLoot && lootHistory) {
+                    var questLoot = Loot.rollLoot('quest', { zone: currentZone, rarity: 2 });
+                    if (questLoot && questLoot.items && questLoot.items.length > 0) {
+                      questLoot.items.forEach(function(lootItem) {
+                        if (Inventory) Inventory.addItem(playerInventory, lootItem.id, lootItem.count || 1);
+                      });
+                      Loot.recordDrop(lootHistory, questLoot);
+                      if (HUD) HUD.showNotification('Quest loot: ' + questLoot.items[0].id, 'success');
+                    }
+                  }
                 }
               }
 
@@ -4531,6 +4848,16 @@
             // Journal entry for NPC interaction
             if (Journal && Journal.addEntry && journalState) {
               Journal.addEntry(journalState, localPlayer.id, 'npc_befriended', { npcName: npcResponse.name, zone: currentZone }, worldTime);
+            }
+
+            // NPC Reputation: increase affinity from conversation
+            if (NpcReputation && NpcReputation.modifyReputation && npcReputationState) {
+              NpcReputation.modifyReputation(npcReputationState, localPlayer.id, npcResponse.id, 5, 'conversation');
+            }
+
+            // BattlePass XP for social interaction
+            if (BattlePass && BattlePass.addXP && battlePassState) {
+              BattlePass.addXP(battlePassState, 5, 'social');
             }
 
             // Track activity
@@ -5017,7 +5344,16 @@
       guild: Guilds ? Guilds.getPlayerGuild(localPlayer.id) : null,
       discoveredSecrets: [],
       warmth: localPlayer.warmth || 0,
-      playTime: playTimeSeconds
+      playTime: playTimeSeconds,
+      progression: playerProgression,
+      achievementEngine: achievementState,
+      dailyChallenges: dailyChallengeState,
+      journal: journalState,
+      npcReputation: npcReputationState,
+      battlePass: battlePassState,
+      specialization: specState,
+      prestige: prestigeState,
+      cosmetics: cosmeticsState
     };
     Auth.savePlayerData(saveData);
     // Flush player into live state for canonical visibility
@@ -5345,6 +5681,16 @@
             fishName: result.fish.name, zone: currentZone,
             qualityText: (result.fish.rarity >= 3) ? 'epic' : (result.fish.rarity >= 2) ? 'rare' : 'common'
           }, worldTime);
+        }
+
+        // BattlePass XP for fishing
+        if (BattlePass && BattlePass.addXP && battlePassState) {
+          BattlePass.addXP(battlePassState, 6, 'fishing');
+        }
+
+        // Specialization mastery XP for fishing
+        if (Specializations && Specializations.awardMasteryXP && specState) {
+          Specializations.awardMasteryXP(specState, 'fishing', 3);
         }
 
         // Award gardening XP for fishing (falls under nature skills)
