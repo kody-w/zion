@@ -26,7 +26,11 @@ MODULE_ORDER = [
     'api_bridge', 'sim_crm', 'sim_forge_browser', 'world',
     'worldmap', 'timelapse', 'input', 'hud',
     'xr', 'audio', 'npc_dialogue', 'npc_ai',
-    'npcs', 'seasons', 'pets', 'main'
+    'npcs', 'seasons', 'pets',
+    'fast_travel', 'music_composer', 'world_events',
+    'housing', 'fishing', 'weather_fx', 'npc_memory',
+    'constellations', 'dungeons', 'card_game', 'time_capsules',
+    'main'
 ]
 
 # Window name for each module (UMD closure targets)
@@ -42,7 +46,11 @@ WINDOW_NAMES = [
     'ApiBridge', 'SimCRM', 'SimForge', 'World',
     'WorldMap', 'Timelapse', 'Input', 'HUD',
     'XR', 'Audio', 'NpcDialogue', 'NpcAI',
-    'NPCs', 'Seasons', 'Pets', 'Main'
+    'NPCs', 'Seasons', 'Pets',
+    'FastTravel', 'MusicComposer', 'WorldEvents',
+    'Housing', 'Fishing', 'WeatherFX', 'NpcMemory',
+    'Constellations', 'Dungeons', 'CardGame', 'TimeCapsules',
+    'Main'
 ]
 
 
@@ -95,27 +103,32 @@ class TestBundleIntegrity(unittest.TestCase):
                 f'Bundle should have element with id="{elem_id}"')
 
     def test_all_modules_present(self):
-        """Every module marker comment should be in the bundle."""
-        for mod in MODULE_ORDER:
-            marker = f'// {mod}.js'
-            self.assertIn(marker, self.content,
-                f'Module marker "{marker}" not found in bundle')
+        """Every module UMD closure should be in the bundle."""
+        for name in WINDOW_NAMES:
+            pattern = f'window.{name}'
+            self.assertIn(pattern, self.content,
+                f'UMD closure for {pattern} not found in bundle')
 
     def test_modules_in_dependency_order(self):
-        """Module markers should appear in ascending order."""
+        """UMD closure definitions should appear in ascending order."""
         positions = []
-        for mod in MODULE_ORDER:
-            marker = f'// {mod}.js'
-            pos = self.content.find(marker)
-            self.assertGreater(pos, -1, f'Module marker "{marker}" not found')
-            positions.append((mod, pos))
+        for name in WINDOW_NAMES:
+            # Use UMD definition pattern to avoid matching browser API refs
+            pattern = f'window.{name} = {{}}'
+            pos = self.content.find(pattern)
+            if pos == -1:
+                # Try alternate UMD pattern
+                pattern = f'window.{name}='
+                pos = self.content.find(pattern)
+            self.assertGreater(pos, -1, f'UMD definition for {name} not found')
+            positions.append((name, pos))
 
         for i in range(len(positions) - 1):
             mod_a, pos_a = positions[i]
             mod_b, pos_b = positions[i + 1]
             self.assertLess(pos_a, pos_b,
-                f'{mod_a}.js (pos {pos_a}) should appear before '
-                f'{mod_b}.js (pos {pos_b})')
+                f'{mod_a} (pos {pos_a}) should appear before '
+                f'{mod_b} (pos {pos_b})')
 
     def test_all_umd_closures_present(self):
         """Every window.ModuleName assignment should exist."""

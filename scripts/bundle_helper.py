@@ -62,6 +62,17 @@ JS_FILES = [
     'npcs.js',
     'seasons.js',
     'pets.js',
+    'fast_travel.js',
+    'music_composer.js',
+    'world_events.js',
+    'housing.js',
+    'fishing.js',
+    'weather_fx.js',
+    'npc_memory.js',
+    'constellations.js',
+    'dungeons.js',
+    'card_game.js',
+    'time_capsules.js',
     'main.js'
 ]
 
