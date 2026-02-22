@@ -1183,7 +1183,7 @@
     if (!raid) {
       return { success: false, reason: 'Raid not found' };
     }
-    if (raid.status === 'completed' || raid.status === 'abandoned') {
+    if (raid.status === 'completed' || raid.status === 'abandoned' || raid.status === 'failed') {
       return { success: false, reason: 'Raid already ended' };
     }
 
