@@ -1,3 +1,4 @@
+// event_consequences.js
 /**
  * ZION Event Consequences System
  * Extended voting consequences — player votes determine world state changes

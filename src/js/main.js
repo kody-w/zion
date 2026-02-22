@@ -61,6 +61,33 @@
   const MarketSpeculation = typeof require !== 'undefined' ? require('./market_speculation') : window.MarketSpeculation;
   const MentorGuilds = typeof require !== 'undefined' ? require('./mentor_guilds') : window.MentorGuilds;
   const MetaEvents = typeof require !== 'undefined' ? require('./meta_events') : window.MetaEvents;
+  const AsyncCollab = typeof require !== 'undefined' ? require('./async_collab') : window.AsyncCollab;
+  const EconomySimulator = typeof require !== 'undefined' ? require('./economy_simulator') : window.EconomySimulator;
+  const NarrativeThreads = typeof require !== 'undefined' ? require('./narrative_threads') : window.NarrativeThreads;
+  const MinigameForge = typeof require !== 'undefined' ? require('./minigame_forge') : window.MinigameForge;
+  const MultiverseReputation = typeof require !== 'undefined' ? require('./multiverse_reputation') : window.MultiverseReputation;
+  const NpcDelegation = typeof require !== 'undefined' ? require('./npc_delegation') : window.NpcDelegation;
+  const RadioStation = typeof require !== 'undefined' ? require('./radio_station') : window.RadioStation;
+  const SeasonalEventsAuto = typeof require !== 'undefined' ? require('./seasonal_events_auto') : window.SeasonalEventsAuto;
+  const EventConsequences = typeof require !== 'undefined' ? require('./event_consequences') : window.EventConsequences;
+  const PlayerOnboarding = typeof require !== 'undefined' ? require('./player_onboarding') : window.PlayerOnboarding;
+  const SkillMastery = typeof require !== 'undefined' ? require('./skill_mastery') : window.SkillMastery;
+  const WorldShaper = typeof require !== 'undefined' ? require('./world_shaper') : window.WorldShaper;
+  const TrustBonds = typeof require !== 'undefined' ? require('./trust_bonds') : window.TrustBonds;
+  const RecoverySystem = typeof require !== 'undefined' ? require('./recovery_system') : window.RecoverySystem;
+  const BountyBoard = typeof require !== 'undefined' ? require('./bounty_board') : window.BountyBoard;
+  const MarketSignals = typeof require !== 'undefined' ? require('./market_signals') : window.MarketSignals;
+  const ConsequenceBranching = typeof require !== 'undefined' ? require('./consequence_branching') : window.ConsequenceBranching;
+  const DiplomaticSystem = typeof require !== 'undefined' ? require('./diplomatic_system') : window.DiplomaticSystem;
+  const MerchantGuilds = typeof require !== 'undefined' ? require('./merchant_guilds') : window.MerchantGuilds;
+  const GriefRecovery = typeof require !== 'undefined' ? require('./grief_recovery') : window.GriefRecovery;
+  const AnchorManagement = typeof require !== 'undefined' ? require('./anchor_management') : window.AnchorManagement;
+  const CommunityBoard = typeof require !== 'undefined' ? require('./community_board') : window.CommunityBoard;
+  const ConstitutionAmendments = typeof require !== 'undefined' ? require('./constitution_amendments') : window.ConstitutionAmendments;
+  const LoreDiscovery = typeof require !== 'undefined' ? require('./lore_discovery') : window.LoreDiscovery;
+  const SpectatorSystem = typeof require !== 'undefined' ? require('./spectator_system') : window.SpectatorSystem;
+  const WarmthSystem = typeof require !== 'undefined' ? require('./warmth_system') : window.WarmthSystem;
+  const ZoneStewards = typeof require !== 'undefined' ? require('./zone_stewards') : window.ZoneStewards;
 
   // Embedded soul data (replaced at bundle time)
   var EMBEDDED_SOULS = SOULS_PLACEHOLDER;
@@ -111,6 +138,33 @@
   let socialSpacesState = null;
   let raidStateStore = null;
   let guildWarsState = null;
+  let asyncCollabState = null;
+  let economySimState = null;
+  let narrativeThreadsState = null;
+  let minigameForgeState = null;
+  let multiverseRepState = null;
+  let npcDelegationState = null;
+  let radioStationState = null;
+  let seasonalEventsAutoState = null;
+  let eventConsequencesState = null;
+  let playerOnboardingState = null;
+  let skillMasteryState = null;
+  let worldShaperState = null;
+  let trustBondsState = null;
+  let recoveryState = null;
+  let bountyBoardState = null;
+  let marketSignalsState = null;
+  let consequenceBranchingState = null;
+  let diplomaticState = null;
+  let merchantGuildsState = null;
+  let griefRecoveryState = null;
+  let anchorManagementState = null;
+  let communityBoardState = null;
+  let constitutionState = null;
+  let loreDiscoveryState = null;
+  let spectatorState = null;
+  let warmthState = null;
+  let zoneStewardsState = null;
   let raycaster = null;
   let simCrmState = null;
   let lastSimCrmTick = 0;
@@ -1056,6 +1110,141 @@
       guildWarsState = GuildWars.createGuildWarsState();
     }
 
+    // Initialize async collab
+    if (AsyncCollab && AsyncCollab.createState) {
+      asyncCollabState = AsyncCollab.createState();
+    }
+
+    // Initialize economy simulator
+    if (EconomySimulator && EconomySimulator.createState) {
+      economySimState = EconomySimulator.createState();
+    }
+
+    // Initialize narrative threads
+    if (NarrativeThreads && NarrativeThreads.createState) {
+      narrativeThreadsState = NarrativeThreads.createState();
+    }
+
+    // Initialize minigame forge
+    if (MinigameForge && MinigameForge.createState) {
+      minigameForgeState = MinigameForge.createState();
+    }
+
+    // Initialize multiverse reputation
+    if (MultiverseReputation && MultiverseReputation.createState) {
+      multiverseRepState = MultiverseReputation.createState();
+    }
+
+    // Initialize NPC delegation
+    if (NpcDelegation && NpcDelegation.createState) {
+      npcDelegationState = NpcDelegation.createState();
+    }
+
+    // Initialize radio station
+    if (RadioStation && RadioStation.createState) {
+      radioStationState = RadioStation.createState();
+    }
+
+    // Initialize seasonal events auto
+    if (SeasonalEventsAuto && SeasonalEventsAuto.createState) {
+      seasonalEventsAutoState = SeasonalEventsAuto.createState();
+    }
+
+    // Initialize event consequences
+    if (EventConsequences && EventConsequences.createState) {
+      eventConsequencesState = EventConsequences.createState();
+    }
+
+    // Initialize player onboarding
+    if (PlayerOnboarding && PlayerOnboarding.createState) {
+      playerOnboardingState = PlayerOnboarding.createState(username);
+    }
+
+    // Initialize skill mastery
+    if (SkillMastery && SkillMastery.createState) {
+      skillMasteryState = SkillMastery.createState(username);
+    }
+
+    // Initialize world shaper
+    if (WorldShaper && WorldShaper.createState) {
+      worldShaperState = WorldShaper.createState();
+    }
+
+    // Initialize trust bonds
+    if (TrustBonds && TrustBonds.createState) {
+      trustBondsState = TrustBonds.createState(username);
+    }
+
+    // Initialize recovery system
+    if (RecoverySystem && RecoverySystem.createState) {
+      recoveryState = RecoverySystem.createState(username);
+    }
+
+    // Initialize bounty board
+    if (BountyBoard && BountyBoard.createState) {
+      bountyBoardState = BountyBoard.createState();
+    }
+
+    // Initialize market signals
+    if (MarketSignals && MarketSignals.createState) {
+      marketSignalsState = MarketSignals.createState();
+    }
+
+    // Initialize consequence branching
+    if (ConsequenceBranching && ConsequenceBranching.createState) {
+      consequenceBranchingState = ConsequenceBranching.createState(username);
+    }
+
+    // Initialize diplomatic system
+    if (DiplomaticSystem && DiplomaticSystem.createState) {
+      diplomaticState = DiplomaticSystem.createState();
+    }
+
+    // Initialize merchant guilds
+    if (MerchantGuilds && MerchantGuilds.createState) {
+      merchantGuildsState = MerchantGuilds.createState();
+    }
+
+    // Initialize grief recovery
+    if (GriefRecovery && GriefRecovery.createState) {
+      griefRecoveryState = GriefRecovery.createState(username);
+    }
+
+    // Initialize anchor management
+    if (AnchorManagement && AnchorManagement.createState) {
+      anchorManagementState = AnchorManagement.createState();
+    }
+
+    // Initialize community board
+    if (CommunityBoard && CommunityBoard.createState) {
+      communityBoardState = CommunityBoard.createState();
+    }
+
+    // Initialize constitution amendments
+    if (ConstitutionAmendments && ConstitutionAmendments.createState) {
+      constitutionState = ConstitutionAmendments.createState();
+    }
+
+    // Initialize lore discovery
+    if (LoreDiscovery && LoreDiscovery.createState) {
+      loreDiscoveryState = LoreDiscovery.createState();
+    }
+
+    // Initialize spectator system
+    if (SpectatorSystem && SpectatorSystem.createState) {
+      spectatorState = SpectatorSystem.createState();
+    }
+
+    // Initialize warmth system
+    if (WarmthSystem && WarmthSystem.createState) {
+      warmthState = WarmthSystem.createState();
+    }
+
+    // Initialize zone stewards
+    if (ZoneStewards && ZoneStewards.createState) {
+      zoneStewardsState = ZoneStewards.createState();
+    }
+
     // Attach subsystem states to gameState for cross-system access
     if (gameState) {
       gameState.subsystems = {
@@ -1082,7 +1271,34 @@
         arenaSchedule: arenaSchedule,
         socialSpaces: socialSpacesState,
         raidSystem: raidStateStore,
-        guildWars: guildWarsState
+        guildWars: guildWarsState,
+        asyncCollab: asyncCollabState,
+        economySimulator: economySimState,
+        narrativeThreads: narrativeThreadsState,
+        minigameForge: minigameForgeState,
+        multiverseReputation: multiverseRepState,
+        npcDelegation: npcDelegationState,
+        radioStation: radioStationState,
+        seasonalEventsAuto: seasonalEventsAutoState,
+        eventConsequences: eventConsequencesState,
+        playerOnboarding: playerOnboardingState,
+        skillMastery: skillMasteryState,
+        worldShaper: worldShaperState,
+        trustBonds: trustBondsState,
+        recovery: recoveryState,
+        bountyBoard: bountyBoardState,
+        marketSignals: marketSignalsState,
+        consequenceBranching: consequenceBranchingState,
+        diplomatic: diplomaticState,
+        merchantGuilds: merchantGuildsState,
+        griefRecovery: griefRecoveryState,
+        anchorManagement: anchorManagementState,
+        communityBoard: communityBoardState,
+        constitution: constitutionState,
+        loreDiscovery: loreDiscoveryState,
+        spectator: spectatorState,
+        warmth: warmthState,
+        zoneStewards: zoneStewardsState
       };
     }
 
@@ -1938,6 +2154,27 @@
               }
             }
 
+            // LoreDiscovery: zone-based lore triggers
+            if (LoreDiscovery && LoreDiscovery.discoverLore && loreDiscoveryState) {
+              var zoneLore = LoreDiscovery.discoverLore(loreDiscoveryState, localPlayer.id, currentZone, 'zone_visit');
+              if (zoneLore && zoneLore.entry) {
+                if (HUD) HUD.showNotification('Lore: ' + (zoneLore.entry.title || 'Ancient knowledge'), 'info');
+              }
+            }
+
+            // WarmthSystem: record zone visit as movement
+            if (WarmthSystem && WarmthSystem.recordMovement && warmthState) {
+              WarmthSystem.recordMovement(warmthState, localPlayer.id, { zone: currentZone }, worldTime);
+            }
+
+            // AnchorManagement: check for nearby anchors in new zone
+            if (AnchorManagement && AnchorManagement.getAnchorsInZone && anchorManagementState) {
+              var zoneAnchors = AnchorManagement.getAnchorsInZone(anchorManagementState, currentZone);
+              if (zoneAnchors && zoneAnchors.length > 0 && HUD) {
+                HUD.showNotification(zoneAnchors.length + ' anchor(s) nearby in ' + currentZone, 'info');
+              }
+            }
+
             // BattlePass XP for exploration
             if (BattlePass && BattlePass.addXP && battlePassState) {
               BattlePass.addXP(battlePassState, 6, 'exploring');
@@ -2601,6 +2838,44 @@
     // ArenaScheduler: expose current schedule for UI queries
     if (localPlayer && arenaSchedule) {
       localPlayer.arenaSchedule = arenaSchedule;
+    }
+
+    // CommunityBoard: expire old posts (~every 60 seconds)
+    if (CommunityBoard && CommunityBoard.expirePosts && communityBoardState && Math.random() < 0.0003) {
+      CommunityBoard.expirePosts(communityBoardState, worldTime);
+    }
+
+    // ZoneStewards: expire terms and close elections (~every 60 seconds)
+    if (ZoneStewards && zoneStewardsState && Math.random() < 0.0003) {
+      if (ZoneStewards.expireTerms) ZoneStewards.expireTerms(zoneStewardsState, worldTime);
+    }
+
+    // WarmthSystem: decay warmth for inactive players (~every 30 seconds)
+    if (WarmthSystem && WarmthSystem.applyDecay && warmthState && Math.random() < 0.0005) {
+      WarmthSystem.applyDecay(warmthState, worldTime);
+    }
+
+    // SpectatorSystem: award spectator sparks (~every 30 seconds)
+    if (SpectatorSystem && SpectatorSystem.getActiveEvents && spectatorState && Math.random() < 0.0005) {
+      var activeSpectatorEvents = SpectatorSystem.getActiveEvents(spectatorState);
+      if (activeSpectatorEvents && activeSpectatorEvents.length > 0 && localPlayer) {
+        localPlayer.spectatorEvents = activeSpectatorEvents;
+      }
+    }
+
+    // SeasonalEventsAuto: check for seasonal event transitions (~every 60 seconds)
+    if (SeasonalEventsAuto && SeasonalEventsAuto.tick && seasonalEventsAutoState && Math.random() < 0.0003) {
+      SeasonalEventsAuto.tick(seasonalEventsAutoState, worldTime);
+    }
+
+    // MarketSignals: update price signals (~every 60 seconds)
+    if (MarketSignals && MarketSignals.tick && marketSignalsState && Math.random() < 0.0003) {
+      MarketSignals.tick(marketSignalsState, worldTime);
+    }
+
+    // BountyBoard: expire old bounties (~every 60 seconds)
+    if (BountyBoard && BountyBoard.tick && bountyBoardState && Math.random() < 0.0003) {
+      BountyBoard.tick(bountyBoardState, worldTime);
     }
 
     // Request next frame
@@ -3819,6 +4094,11 @@
         BattlePass.addXP(battlePassState, 3, 'gathering');
       }
 
+      // SkillMastery: gathering XP
+      if (SkillMastery && SkillMastery.addXP && skillMasteryState) {
+        SkillMastery.addXP(skillMasteryState, 'gathering', 5);
+      }
+
       if (Audio) Audio.playSound('harvest');
 
       // Track activity
@@ -3919,6 +4199,11 @@
       // Specialization mastery XP for crafting
       if (Specializations && Specializations.awardMasteryXP && specState) {
         Specializations.awardMasteryXP(specState, 'crafting', 5);
+      }
+
+      // SkillMastery: crafting XP
+      if (SkillMastery && SkillMastery.addXP && skillMasteryState) {
+        SkillMastery.addXP(skillMasteryState, 'crafting', 8);
       }
 
       // Advanced Crafting: track crafting history and apply skill bonus
@@ -4856,6 +5141,16 @@
               NpcReputation.modifyReputation(npcReputationState, localPlayer.id, npcResponse.id, 5, 'conversation');
             }
 
+            // TrustBonds: strengthen bond from interaction
+            if (TrustBonds && TrustBonds.recordInteraction && trustBondsState) {
+              TrustBonds.recordInteraction(trustBondsState, localPlayer.id, npcResponse.id, 'conversation', worldTime);
+            }
+
+            // SkillMastery: social interaction XP
+            if (SkillMastery && SkillMastery.addXP && skillMasteryState) {
+              SkillMastery.addXP(skillMasteryState, 'social', 3);
+            }
+
             // BattlePass XP for social interaction
             if (BattlePass && BattlePass.addXP && battlePassState) {
               BattlePass.addXP(battlePassState, 5, 'social');
@@ -5692,6 +5987,11 @@
         // Specialization mastery XP for fishing
         if (Specializations && Specializations.awardMasteryXP && specState) {
           Specializations.awardMasteryXP(specState, 'fishing', 3);
+        }
+
+        // SkillMastery: fishing XP
+        if (SkillMastery && SkillMastery.addXP && skillMasteryState) {
+          SkillMastery.addXP(skillMasteryState, 'fishing', 6);
         }
 
         // Award gardening XP for fishing (falls under nature skills)

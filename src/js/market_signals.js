@@ -1,3 +1,4 @@
+// market_signals.js
 /**
  * market_signals.js — Real-time Market Data, Price Trends & Alerts for ZION
  * Rolling price history, volatility indices, sentiment, arbitrage detection.

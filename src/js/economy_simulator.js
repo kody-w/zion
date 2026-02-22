@@ -1,3 +1,4 @@
+// economy_simulator.js
 /**
  * economy_simulator.js — Local Economic Forecasting Tool for ZION
  *

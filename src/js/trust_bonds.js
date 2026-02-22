@@ -1,3 +1,4 @@
+// trust_bonds.js
 /**
  * ZION Trust Bonds System
  * Deep NPC relationship progression: bond levels, gifts, memories,

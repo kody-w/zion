@@ -1,3 +1,4 @@
+// narrative_threads.js
 /**
  * ZION MMO — Narrative Threads System
  * Cross-player storytelling: actions in one zone trigger narrative in another.

@@ -1,3 +1,4 @@
+// player_onboarding.js
 /**
  * ZION Player Onboarding System
  * Tutorial checkpoint tracking, progress, hints, and returning player welcome.

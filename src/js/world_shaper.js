@@ -1,3 +1,4 @@
+// world_shaper.js
 /**
  * ZION World Shaper System
  * Players permanently modify terrain and zones through actions.

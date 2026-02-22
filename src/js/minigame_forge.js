@@ -1,3 +1,4 @@
+// minigame_forge.js
 /**
  * ZION Minigame Forge — Player-created minigames with a simple rule engine
  * Players design games with conditions/objectives, publish them, others play and rate them.

@@ -1,3 +1,4 @@
+// consequence_branching.js
 /**
  * ZION Consequence Branching — Story paths tied to player choices.
  * Tracks XP across 4 branches, gates zones, awards exclusive cosmetics,

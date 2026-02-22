@@ -1,3 +1,4 @@
+// multiverse_reputation.js
 /**
  * ZION Multiverse Reputation System
  * Cross-world reputation ledger for federated ZION instances.
