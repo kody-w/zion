@@ -11,6 +11,10 @@
   var notificationContainer = null;
   var federationPanel = null;
   var lastChatMessageCount = -1; // Dirty tracking for chat rebuild
+  var lastPlayerName = '';
+  var lastPlayerSpark = -1;
+  var lastPlayerZone = '';
+  var lastPlayerWarmth = -1;
 
   // Escape HTML to prevent XSS from network-sourced data
   function escapeHtml(str) {
@@ -246,11 +250,22 @@
   function updatePlayerInfo(player) {
     if (!playerInfoPanel) return;
 
+    var pName = player.name || 'Unknown';
+    var pSpark = player.spark || 0;
+    var pZone = player.zone || 'Unknown';
+    var pWarmth = Math.round(player.warmth || 0);
+    if (pName === lastPlayerName && pSpark === lastPlayerSpark &&
+        pZone === lastPlayerZone && pWarmth === lastPlayerWarmth) return;
+    lastPlayerName = pName;
+    lastPlayerSpark = pSpark;
+    lastPlayerZone = pZone;
+    lastPlayerWarmth = pWarmth;
+
     playerInfoPanel.innerHTML =
-      '<div style="font-weight: bold; font-size: 16px; margin-bottom: 8px;">' + escapeHtml(player.name || 'Unknown') + '</div>' +
-      '<div style="margin-bottom: 3px;"><span style="color: #ffa500;">Spark:</span> ' + escapeHtml(player.spark || 0) + '</div>' +
-      '<div style="margin-bottom: 3px;"><span style="color: #4af;">Zone:</span> ' + escapeHtml(player.zone || 'Unknown') + '</div>' +
-      '<div style="margin-bottom: 3px;"><span style="color: #ff6347;">Warmth:</span> ' + Math.round(player.warmth || 0) + '%</div>';
+      '<div style="font-weight: bold; font-size: 16px; margin-bottom: 8px;">' + escapeHtml(pName) + '</div>' +
+      '<div style="margin-bottom: 3px;"><span style="color: #ffa500;">Spark:</span> ' + escapeHtml(pSpark) + '</div>' +
+      '<div style="margin-bottom: 3px;"><span style="color: #4af;">Zone:</span> ' + escapeHtml(pZone) + '</div>' +
+      '<div style="margin-bottom: 3px;"><span style="color: #ff6347;">Warmth:</span> ' + pWarmth + '%</div>';
   }
 
   /**

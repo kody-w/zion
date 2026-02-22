@@ -39,8 +39,8 @@ var playerInfoSection = hudSource.substring(
   hudSource.indexOf('function updatePlayerInfo'),
   hudSource.indexOf('function updatePlayerInfo') + 1000
 );
-assert(playerInfoSection.indexOf('escapeHtml(player.name') !== -1, 'updatePlayerInfo should escape player.name');
-assert(playerInfoSection.indexOf('escapeHtml(player.zone') !== -1, 'updatePlayerInfo should escape player.zone');
+assert(playerInfoSection.indexOf('escapeHtml(pName)') !== -1 || playerInfoSection.indexOf('escapeHtml(player.name') !== -1, 'updatePlayerInfo should escape player name');
+assert(playerInfoSection.indexOf('escapeHtml(pZone)') !== -1 || playerInfoSection.indexOf('escapeHtml(player.zone') !== -1, 'updatePlayerInfo should escape player zone');
 
 // Test the escapeHtml function directly
 var HUD = require('../src/js/hud');

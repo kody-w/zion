@@ -589,6 +589,8 @@
 
     treeGroup.position.set(x, y, z);
     treeGroup.rotation.y = seededRandom(seed, 0, 12) * Math.PI * 2;
+    treeGroup.userData.model_type = 'tree';
+    lodObjects.push(treeGroup);
     parent.add(treeGroup);
 
     // Register for animation (sway)
@@ -618,6 +620,8 @@
       0.7 + seededRandom(seed, 1, 8) * 0.6
     );
     rock.castShadow = false;
+    rock.userData.model_type = 'rock';
+    lodObjects.push(rock);
     parent.add(rock);
   }
 

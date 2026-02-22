@@ -542,6 +542,84 @@ var bt4 = bench(function() { hudRebuildEveryFrame(240); });
 var ot4 = bench(function() { hudDirtyTracking(240); });
 report('HUD Chat (240 frames, 10 messages)', bt4, ot4);
 
+// --- LOD Registration: scene.traverse vs tracked array ---
+// Simulate iterating a tracked array vs traversing full scene graph
+function lodTraverseScene(objectCount, lodCount) {
+  var objects = [];
+  for (var i = 0; i < objectCount; i++) {
+    var obj = { userData: {}, position: { x: Math.random() * 400, z: Math.random() * 400 }, visible: true };
+    if (i < lodCount) obj.userData.model_type = (i % 2 === 0) ? 'tree' : 'rock';
+    objects.push(obj);
+  }
+  var processed = 0;
+  for (var j = 0; j < objects.length; j++) {
+    if (objects[j].userData.model_type) {
+      var dx = objects[j].position.x - 200;
+      var dz = objects[j].position.z - 200;
+      var dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist > 200) objects[j].visible = false;
+      processed++;
+    }
+  }
+  return processed;
+}
+
+function lodTrackedArray(objectCount, lodCount) {
+  var tracked = [];
+  for (var i = 0; i < lodCount; i++) {
+    tracked.push({ userData: { model_type: (i % 2 === 0) ? 'tree' : 'rock' }, position: { x: Math.random() * 400, z: Math.random() * 400 }, visible: true });
+  }
+  var processed = 0;
+  for (var j = 0; j < tracked.length; j++) {
+    var dx = tracked[j].position.x - 200;
+    var dz = tracked[j].position.z - 200;
+    var dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist > 200) tracked[j].visible = false;
+    processed++;
+  }
+  return processed;
+}
+
+var bt5 = bench(function() { lodTraverseScene(5000, 400); });
+var ot5 = bench(function() { lodTrackedArray(5000, 400); });
+report('LOD Update (5000 objects, 400 LOD)', bt5, ot5);
+
+// --- PlayerInfo Dirty Tracking: rebuild vs skip ---
+function playerInfoRebuildEvery(frames) {
+  var rebuilds = 0;
+  var player = { name: 'TestPlayer', spark: 100, zone: 'nexus', warmth: 50 };
+  for (var f = 0; f < frames; f++) {
+    // Simulate innerHTML rebuild
+    var html = '<div>' + player.name + '</div><div>Spark: ' + player.spark + '</div><div>Zone: ' + player.zone + '</div><div>Warmth: ' + player.warmth + '</div>';
+    rebuilds++;
+  }
+  return rebuilds;
+}
+
+function playerInfoDirtyTracked(frames) {
+  var rebuilds = 0;
+  var player = { name: 'TestPlayer', spark: 100, zone: 'nexus', warmth: 50 };
+  var lastName = '', lastSpark = -1, lastZone = '', lastWarmth = -1;
+  for (var f = 0; f < frames; f++) {
+    var pName = player.name;
+    var pSpark = player.spark;
+    var pZone = player.zone;
+    var pWarmth = Math.round(player.warmth);
+    if (pName === lastName && pSpark === lastSpark && pZone === lastZone && pWarmth === lastWarmth) continue;
+    lastName = pName; lastSpark = pSpark; lastZone = pZone; lastWarmth = pWarmth;
+    var html = '<div>' + pName + '</div><div>Spark: ' + pSpark + '</div><div>Zone: ' + pZone + '</div><div>Warmth: ' + pWarmth + '</div>';
+    rebuilds++;
+    // Simulate occasional stat change (every 120 frames)
+    if (f === 120) player.spark = 101;
+    if (f === 200) player.zone = 'gardens';
+  }
+  return rebuilds;
+}
+
+var bt6 = bench(function() { playerInfoRebuildEvery(240); });
+var ot6 = bench(function() { playerInfoDirtyTracked(240); });
+report('PlayerInfo (240 frames, 2 changes)', bt6, ot6);
+
 console.log('');
 
 // Summary
