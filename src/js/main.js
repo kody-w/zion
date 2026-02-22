@@ -86,6 +86,10 @@
   let lastMouseX = 0, lastMouseY = 0;
   let playerInventory = null;
   let economyLedger = null;
+  let playerProgression = null;
+  let achievementState = null;
+  let dailyChallengeState = null;
+  let journalState = null;
   let raycaster = null;
   let simCrmState = null;
   let lastSimCrmTick = 0;
@@ -917,6 +921,27 @@
       Inventory.addItem(playerInventory, 'seed_wildflower', 3);
     }
 
+    // Initialize player progression (XP, skill trees, perks)
+    if (Progression && Progression.createPlayerProgression) {
+      playerProgression = Progression.createPlayerProgression(username);
+    }
+
+    // Initialize achievement tracking state
+    if (AchievementEngine && AchievementEngine.trackStat) {
+      achievementState = { players: {} };
+      achievementState.players[username] = { stats: {}, unlocked: [] };
+    }
+
+    // Initialize daily challenges
+    if (DailyChallenges && DailyChallenges.generateDailyChallenges) {
+      var gameDayNumber = Math.floor(Date.now() / 86400000);
+      var dailies = DailyChallenges.generateDailyChallenges(gameDayNumber, 3);
+      dailyChallengeState = { active: dailies, completed: [], streak: 0 };
+    }
+
+    // Initialize player journal (Journal uses plain object state)
+    journalState = {};
+
     // Initialize raycaster for clicking
     if (typeof THREE !== 'undefined') {
       raycaster = new THREE.Raycaster();
@@ -1718,6 +1743,47 @@
             // Cross-system dispatch: zone change
             if (Wiring && Wiring.onZoneChange) {
               Wiring.onZoneChange(gameState, localPlayer.id, oldZone, currentZone);
+            }
+
+            // Award XP for exploring new zones
+            if (Progression && Progression.awardXP && playerProgression) {
+              var xpResult = Progression.awardXP(playerProgression, 'exploring');
+              if (xpResult.leveled && HUD) {
+                HUD.showNotification('Level up! You are now level ' + xpResult.newLevel + ' — ' + Progression.getTitle(playerProgression), 'success');
+                if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('level_up');
+                emitLevelUpParticles();
+              }
+            }
+
+            // Track achievement stat: zone visits
+            if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
+              var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'zones_visited', 1);
+              achievementState = achResult.state;
+              // Also track zone-specific stat
+              AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'zone_' + currentZone + '_visits', 1);
+              if (achResult.newAchievements.length > 0) {
+                achResult.newAchievements.forEach(function(a) {
+                  if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+                });
+              }
+            }
+
+            // Update daily challenge progress for visit_zone challenges
+            if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
+              (dailyChallengeState.active || []).forEach(function(ch) {
+                if (ch.type === 'visit_zone' && (!ch.zone || ch.zone === currentZone)) {
+                  var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
+                  dailyChallengeState = dcResult.state;
+                  if (dcResult.completed && HUD) {
+                    HUD.showNotification('Challenge complete: ' + ch.title + '!', 'success');
+                  }
+                }
+              });
+            }
+
+            // Journal entry for zone visit
+            if (Journal && Journal.addEntry && journalState) {
+              Journal.addEntry(journalState, localPlayer.id, 'zone_visit', { zone: currentZone }, worldTime);
             }
           }
         }
@@ -3030,6 +3096,45 @@
           Wiring.onTrade(gameState, localPlayer.id, msg.from, null, 0);
         }
 
+        // Award XP for trading
+        if (Progression && Progression.awardXP && playerProgression) {
+          var xpResult = Progression.awardXP(playerProgression, 'trading');
+          if (xpResult.leveled && HUD) {
+            HUD.showNotification('Level up! You are now level ' + xpResult.newLevel + ' — ' + Progression.getTitle(playerProgression), 'success');
+            if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('level_up');
+            emitLevelUpParticles();
+          }
+        }
+
+        // Track achievement stat: trades_completed
+        if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
+          var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'trades_completed', 1);
+          achievementState = achResult.state;
+          if (achResult.newAchievements.length > 0) {
+            achResult.newAchievements.forEach(function(a) {
+              if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+            });
+          }
+        }
+
+        // Update daily challenge progress for trade-type challenges
+        if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
+          (dailyChallengeState.active || []).forEach(function(ch) {
+            if (ch.type === 'trade') {
+              var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
+              dailyChallengeState = dcResult.state;
+              if (dcResult.completed && HUD) {
+                HUD.showNotification('Challenge complete: ' + ch.title + '!', 'success');
+              }
+            }
+          });
+        }
+
+        // Journal entry for trade
+        if (Journal && Journal.addEntry && journalState) {
+          Journal.addEntry(journalState, localPlayer.id, 'trade_completed', { partner: msg.from, zone: currentZone }, worldTime);
+        }
+
         if (Mentoring) {
           var xpResult = Mentoring.addSkillXP(localPlayer.id, 'trading', 15);
           if (xpResult.leveledUp && HUD) {
@@ -3426,6 +3531,45 @@
         Wiring.onHarvest(gameState, localPlayer.id, itemId, currentZone, 1);
       }
 
+      // Award XP for gathering
+      if (Progression && Progression.awardXP && playerProgression) {
+        var xpResult = Progression.awardXP(playerProgression, 'gathering');
+        if (xpResult.leveled && HUD) {
+          HUD.showNotification('Level up! You are now level ' + xpResult.newLevel + ' — ' + Progression.getTitle(playerProgression), 'success');
+          if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('level_up');
+          emitLevelUpParticles();
+        }
+      }
+
+      // Track achievement stat: harvests
+      if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
+        var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'harvests', 1);
+        achievementState = achResult.state;
+        if (achResult.newAchievements.length > 0) {
+          achResult.newAchievements.forEach(function(a) {
+            if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+          });
+        }
+      }
+
+      // Update daily challenge progress for gather-type challenges
+      if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
+        (dailyChallengeState.active || []).forEach(function(ch) {
+          if (ch.type === 'gather' && (!ch.resource || ch.resource === itemId)) {
+            var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
+            dailyChallengeState = dcResult.state;
+            if (dcResult.completed && HUD) {
+              HUD.showNotification('Challenge complete: ' + ch.title + '!', 'success');
+            }
+          }
+        });
+      }
+
+      // Journal entry for harvest
+      if (Journal && Journal.addEntry && journalState) {
+        Journal.addEntry(journalState, localPlayer.id, 'item_crafted', { item: itemData.name, zone: currentZone, description: 'Gathered ' + itemData.name }, worldTime);
+      }
+
       if (Audio) Audio.playSound('harvest');
 
       // Track activity
@@ -3477,6 +3621,45 @@
       // Cross-system dispatch: craft
       if (Wiring && Wiring.onCraft) {
         Wiring.onCraft(gameState, localPlayer.id, recipeId, result);
+      }
+
+      // Award XP for crafting
+      if (Progression && Progression.awardXP && playerProgression) {
+        var xpResult = Progression.awardXP(playerProgression, 'crafting');
+        if (xpResult.leveled && HUD) {
+          HUD.showNotification('Level up! You are now level ' + xpResult.newLevel + ' — ' + Progression.getTitle(playerProgression), 'success');
+          if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('level_up');
+          emitLevelUpParticles();
+        }
+      }
+
+      // Track achievement stat: items_crafted
+      if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
+        var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'items_crafted', 1);
+        achievementState = achResult.state;
+        if (achResult.newAchievements.length > 0) {
+          achResult.newAchievements.forEach(function(a) {
+            if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+          });
+        }
+      }
+
+      // Update daily challenge progress for craft-type challenges
+      if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
+        (dailyChallengeState.active || []).forEach(function(ch) {
+          if (ch.type === 'craft' || (ch.type === 'craft_category' && result.output)) {
+            var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
+            dailyChallengeState = dcResult.state;
+            if (dcResult.completed && HUD) {
+              HUD.showNotification('Challenge complete: ' + ch.title + '!', 'success');
+            }
+          }
+        });
+      }
+
+      // Journal entry for crafting
+      if (Journal && Journal.addEntry && journalState) {
+        Journal.addEntry(journalState, localPlayer.id, 'item_crafted', { item: result.output.itemId, zone: currentZone }, worldTime);
       }
 
       // Emit craft success particles (orange/white sparkle at player position)
@@ -3869,6 +4052,17 @@
             Wiring.onBuild(gameState, localPlayer.id, result.type, currentZone);
           }
 
+          // Track achievement stat: buildings_placed
+          if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
+            var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'buildings_placed', 1);
+            achievementState = achResult.state;
+            if (achResult.newAchievements.length > 0) {
+              achResult.newAchievements.forEach(function(a) {
+                if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+              });
+            }
+          }
+
           // Save structure to state
           if (gameState) {
             if (!gameState.structures) gameState.structures = [];
@@ -4259,6 +4453,32 @@
                   if (Wiring && Wiring.onQuestComplete) {
                     Wiring.onQuestComplete(gameState, localPlayer.id, questInfo.quest.id, result.rewards);
                   }
+
+                  // Award XP for quest completion
+                  if (Progression && Progression.awardXP && playerProgression) {
+                    var xpResult = Progression.awardXP(playerProgression, 'quest_complete');
+                    if (xpResult.leveled && HUD) {
+                      HUD.showNotification('Level up! You are now level ' + xpResult.newLevel + ' — ' + Progression.getTitle(playerProgression), 'success');
+                      if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('level_up');
+                      emitLevelUpParticles();
+                    }
+                  }
+
+                  // Track achievement stat: quests_completed
+                  if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
+                    var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'quests_completed', 1);
+                    achievementState = achResult.state;
+                    if (achResult.newAchievements.length > 0) {
+                      achResult.newAchievements.forEach(function(a) {
+                        if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+                      });
+                    }
+                  }
+
+                  // Journal entry for quest completion
+                  if (Journal && Journal.addEntry && journalState) {
+                    Journal.addEntry(journalState, localPlayer.id, 'quest_completed', { questName: questInfo.quest.title, zone: currentZone }, worldTime);
+                  }
                 }
               }
 
@@ -4273,6 +4493,46 @@
             if (Wiring && Wiring.onNpcInteraction) {
               Wiring.onNpcInteraction(gameState, localPlayer.id, npcResponse.id, 'talk', { name: npcResponse.name });
             }
+
+            // Award XP for social interaction
+            if (Progression && Progression.awardXP && playerProgression) {
+              var xpResult = Progression.awardXP(playerProgression, 'social');
+              if (xpResult.leveled && HUD) {
+                HUD.showNotification('Level up! You are now level ' + xpResult.newLevel + ' — ' + Progression.getTitle(playerProgression), 'success');
+                if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('level_up');
+                emitLevelUpParticles();
+              }
+            }
+
+            // Track achievement stat: npcs_befriended
+            if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
+              var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'npcs_befriended', 1);
+              achievementState = achResult.state;
+              if (achResult.newAchievements.length > 0) {
+                achResult.newAchievements.forEach(function(a) {
+                  if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+                });
+              }
+            }
+
+            // Update daily challenge progress for greet_npc challenges
+            if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
+              (dailyChallengeState.active || []).forEach(function(ch) {
+                if (ch.type === 'greet_npc') {
+                  var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
+                  dailyChallengeState = dcResult.state;
+                  if (dcResult.completed && HUD) {
+                    HUD.showNotification('Challenge complete: ' + ch.title + '!', 'success');
+                  }
+                }
+              });
+            }
+
+            // Journal entry for NPC interaction
+            if (Journal && Journal.addEntry && journalState) {
+              Journal.addEntry(journalState, localPlayer.id, 'npc_befriended', { npcName: npcResponse.name, zone: currentZone }, worldTime);
+            }
+
             // Track activity
             addRecentActivity('Talked to ' + npcResponse.name);
             // Broadcast player interaction to other NPCs
@@ -4691,28 +4951,53 @@
    * Track an achievement event and show toast if earned
    */
   function trackAchievement(eventType, eventData) {
-    if (!Quests || !Quests.trackAchievementEvent || !localPlayer) return;
-    var earned = Quests.trackAchievementEvent(localPlayer.id, eventType, eventData);
-    if (earned && earned.length > 0) {
-      earned.forEach(function(achievement) {
-        // Piano accent for achievement unlock
-        if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('achievement');
-        // Show toast notification
-        if (HUD && HUD.showAchievementToast) {
-          HUD.showAchievementToast(achievement);
-        } else if (HUD) {
-          HUD.showNotification('Achievement unlocked: ' + achievement.name, 'success');
+    if (!localPlayer) return;
+
+    // Legacy Quests-based achievement tracking
+    if (Quests && Quests.trackAchievementEvent) {
+      var earned = Quests.trackAchievementEvent(localPlayer.id, eventType, eventData);
+      if (earned && earned.length > 0) {
+        earned.forEach(function(achievement) {
+          // Piano accent for achievement unlock
+          if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('achievement');
+          // Show toast notification
+          if (HUD && HUD.showAchievementToast) {
+            HUD.showAchievementToast(achievement);
+          } else if (HUD) {
+            HUD.showNotification('Achievement unlocked: ' + achievement.name, 'success');
+          }
+          // Award bonus spark for achievements
+          if (economyLedger && Economy) {
+            var bonus = achievement.tier === 'gold' ? 50 : achievement.tier === 'silver' ? 25 : 10;
+            var achSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: bonus / 25 });
+            localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+            if (HUD) HUD.updatePlayerInfo(localPlayer);
+            showSparkPopup(achSpark);
+          }
+          if (Audio) Audio.playSound('warp');
+        });
+      }
+    }
+
+    // AchievementEngine stat-based tracking (maps event types to stat names)
+    if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
+      var statMap = {
+        'harvest': 'harvests', 'craft': 'items_crafted', 'trade': 'trades_completed',
+        'build': 'buildings_placed', 'zone_visit': 'zones_visited',
+        'npc_talk': 'npcs_befriended', 'discover': 'constellations_found',
+        'use_object': null
+      };
+      var statName = statMap[eventType];
+      if (statName) {
+        var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, statName, 1);
+        achievementState = achResult.state;
+        if (achResult.newAchievements.length > 0) {
+          achResult.newAchievements.forEach(function(a) {
+            if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+            if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('achievement');
+          });
         }
-        // Award bonus spark for achievements
-        if (economyLedger && Economy) {
-          var bonus = achievement.tier === 'gold' ? 50 : achievement.tier === 'silver' ? 25 : 10;
-          var achSpark = Economy.earnSpark(economyLedger, localPlayer.id, 'discovery', { complexity: bonus / 25 });
-          localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
-          if (HUD) HUD.updatePlayerInfo(localPlayer);
-          showSparkPopup(achSpark);
-        }
-        if (Audio) Audio.playSound('warp');
-      });
+      }
     }
   }
 
@@ -5015,6 +5300,53 @@
         if (Wiring && Wiring.onFishCaught) {
           Wiring.onFishCaught(gameState, localPlayer.id, result.fish.id, currentZone, result.fish.rarity || 1);
         }
+
+        // Award XP for fishing
+        if (Progression && Progression.awardXP && playerProgression) {
+          var xpResult = Progression.awardXP(playerProgression, 'fishing');
+          if (xpResult.leveled && HUD) {
+            HUD.showNotification('Level up! You are now level ' + xpResult.newLevel + ' — ' + Progression.getTitle(playerProgression), 'success');
+            if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('level_up');
+            emitLevelUpParticles();
+          }
+        }
+
+        // Track achievement stat: fish_caught
+        if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
+          var fishRarity = result.fish.rarity || 1;
+          var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'fish_caught', 1);
+          achievementState = achResult.state;
+          if (fishRarity >= 3) {
+            AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'epic_fish_caught', 1);
+          }
+          if (achResult.newAchievements.length > 0) {
+            achResult.newAchievements.forEach(function(a) {
+              if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+            });
+          }
+        }
+
+        // Update daily challenge progress for catch_fish challenges
+        if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
+          (dailyChallengeState.active || []).forEach(function(ch) {
+            if (ch.type === 'catch_fish') {
+              var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
+              dailyChallengeState = dcResult.state;
+              if (dcResult.completed && HUD) {
+                HUD.showNotification('Challenge complete: ' + ch.title + '!', 'success');
+              }
+            }
+          });
+        }
+
+        // Journal entry for fishing
+        if (Journal && Journal.addEntry && journalState) {
+          Journal.addEntry(journalState, localPlayer.id, 'fish_caught', {
+            fishName: result.fish.name, zone: currentZone,
+            qualityText: (result.fish.rarity >= 3) ? 'epic' : (result.fish.rarity >= 2) ? 'rare' : 'common'
+          }, worldTime);
+        }
+
         // Award gardening XP for fishing (falls under nature skills)
         if (Mentoring) {
           var fishXP = Mentoring.addSkillXP(localPlayer.id, 'gardening', 8);
