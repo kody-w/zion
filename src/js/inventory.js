@@ -10,7 +10,7 @@
   // ITEM CATALOG - All available items in the game
   // ========================================================================
 
-  const ITEM_CATALOG = {
+  var ITEM_CATALOG = {
     // Seeds
     seed_wildflower: {
       id: 'seed_wildflower',
@@ -974,7 +974,7 @@
   // CRAFTING RECIPES
   // ========================================================================
 
-  const RECIPES = [
+  var RECIPES = [
     // Basic Tools
     {
       id: 'craft_pickaxe',
@@ -1478,7 +1478,7 @@
   // ZONE LOOT TABLES - What resources can be harvested in each zone
   // ========================================================================
 
-  const ZONE_LOOT_TABLES = {
+  var ZONE_LOOT_TABLES = {
     nexus: {
       common: ['stone_common', 'herb_mint', 'cloth_wool'],
       uncommon: ['crystal_clear', 'metal_copper'],
@@ -1576,20 +1576,21 @@
    * @param {number} count - How many to add
    * @returns {Object} {success: boolean, added: number, message: string}
    */
-  function addItem(inventory, itemId, count = 1) {
-    const itemData = ITEM_CATALOG[itemId];
+  function addItem(inventory, itemId, count) {
+    count = (count !== undefined) ? count : 1;
+    var itemData = ITEM_CATALOG[itemId];
     if (!itemData) {
       return { success: false, added: 0, message: 'Unknown item' };
     }
 
-    let remaining = count;
+    var remaining = count;
 
     // If stackable, try to add to existing stacks first
     if (itemData.stackable) {
-      for (let i = 0; i < inventory.slots.length; i++) {
-        const slot = inventory.slots[i];
+      for (var i = 0; i < inventory.slots.length; i++) {
+        var slot = inventory.slots[i];
         if (slot && slot.itemId === itemId) {
-          const canAdd = Math.min(remaining, itemData.maxStack - slot.count);
+          var canAdd = Math.min(remaining, itemData.maxStack - slot.count);
           slot.count += canAdd;
           remaining -= canAdd;
           if (remaining <= 0) {
@@ -1600,9 +1601,9 @@
     }
 
     // Add to empty slots
-    for (let i = 0; i < inventory.slots.length; i++) {
+    for (var i = 0; i < inventory.slots.length; i++) {
       if (inventory.slots[i] === null) {
-        const stackSize = itemData.stackable ? Math.min(remaining, itemData.maxStack) : 1;
+        var stackSize = itemData.stackable ? Math.min(remaining, itemData.maxStack) : 1;
         inventory.slots[i] = {
           itemId: itemId,
           count: stackSize
@@ -1615,7 +1616,7 @@
     }
 
     // Inventory full
-    const added = count - remaining;
+    var added = count - remaining;
     if (added > 0) {
       return { success: true, added: added, message: `Added ${added} ${itemData.name} (inventory full)` };
     }
@@ -1629,13 +1630,14 @@
    * @param {number} count - How many to remove
    * @returns {Object} {success: boolean, removed: number}
    */
-  function removeItem(inventory, itemId, count = 1) {
-    let remaining = count;
+  function removeItem(inventory, itemId, count) {
+    count = (count !== undefined) ? count : 1;
+    var remaining = count;
 
-    for (let i = 0; i < inventory.slots.length; i++) {
-      const slot = inventory.slots[i];
+    for (var i = 0; i < inventory.slots.length; i++) {
+      var slot = inventory.slots[i];
       if (slot && slot.itemId === itemId) {
-        const removeCount = Math.min(remaining, slot.count);
+        var removeCount = Math.min(remaining, slot.count);
         slot.count -= removeCount;
         remaining -= removeCount;
 
@@ -1649,7 +1651,7 @@
       }
     }
 
-    const removed = count - remaining;
+    var removed = count - remaining;
     return { success: removed > 0, removed: removed };
   }
 
@@ -1660,7 +1662,8 @@
    * @param {number} count - Required count
    * @returns {boolean}
    */
-  function hasItem(inventory, itemId, count = 1) {
+  function hasItem(inventory, itemId, count) {
+    count = (count !== undefined) ? count : 1;
     return getItemCount(inventory, itemId) >= count;
   }
 
@@ -1671,8 +1674,8 @@
    * @returns {number} Total count
    */
   function getItemCount(inventory, itemId) {
-    let total = 0;
-    for (const slot of inventory.slots) {
+    var total = 0;
+    for (var slot of inventory.slots) {
       if (slot && slot.itemId === itemId) {
         total += slot.count;
       }
@@ -1686,9 +1689,9 @@
    * @returns {Array} Array of {itemId, name, icon, count, rarity}
    */
   function getInventory(inventory) {
-    return inventory.slots.map(slot => {
+    return inventory.slots.map(function(slot) {
       if (!slot) return null;
-      const itemData = ITEM_CATALOG[slot.itemId];
+      var itemData = ITEM_CATALOG[slot.itemId];
       return {
         itemId: slot.itemId,
         name: itemData.name,
@@ -1708,7 +1711,7 @@
    * @returns {boolean}
    */
   function canCraft(inventory, recipe) {
-    for (const req of recipe.requirements) {
+    for (var req of recipe.requirements) {
       if (!hasItem(inventory, req.itemId, req.count)) {
         return false;
       }
@@ -1723,7 +1726,7 @@
    * @returns {Object} {success: boolean, output?: Object, sparkEarned?: number, message: string}
    */
   function craftItem(inventory, recipeId) {
-    const recipe = RECIPES.find(r => r.id === recipeId);
+    var recipe = RECIPES.find(function(r) { return r.id === recipeId; });
     if (!recipe) {
       return { success: false, message: 'Unknown recipe' };
     }
@@ -1733,12 +1736,12 @@
     }
 
     // Remove requirements
-    for (const req of recipe.requirements) {
+    for (var req of recipe.requirements) {
       removeItem(inventory, req.itemId, req.count);
     }
 
     // Add output
-    const result = addItem(inventory, recipe.output.itemId, recipe.output.count);
+    var result = addItem(inventory, recipe.output.itemId, recipe.output.count);
 
     if (result.success) {
       return {
@@ -1762,7 +1765,7 @@
    * @returns {Array} Array of craftable recipes
    */
   function getAvailableRecipes(inventory) {
-    return RECIPES.filter(recipe => canCraft(inventory, recipe));
+    return RECIPES.filter(function(recipe) { return canCraft(inventory, recipe); });
   }
 
   /**

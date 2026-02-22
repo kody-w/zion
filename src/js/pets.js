@@ -2,7 +2,7 @@
   // Pet companion system for ZION MMO
 
   // Pet type definitions with zones and rarities
-  const PET_TYPES = [
+  var PET_TYPES = [
     {
       id: 'cat',
       name: 'Mystic Cat',
@@ -96,10 +96,10 @@
   ];
 
   // Pet state storage (in real game, this would be in database)
-  const playerPets = {};
+  var playerPets = {};
 
   // Pet care constants
-  const PET_CONSTANTS = {
+  var PET_CONSTANTS = {
     HUNGER_DECAY_RATE: 1, // hunger increases by 1 per minute
     MOOD_DECAY_RATE: 0.5, // mood decreases by 0.5 per minute
     BOND_GAIN_RATE: 0.2, // bond increases by 0.2 when feeding/caring
@@ -117,7 +117,7 @@
    * @returns {Array} Array of pet types available in this zone
    */
   function getAvailablePets(zone) {
-    return PET_TYPES.filter(pet => pet.zone === zone);
+    return PET_TYPES.filter(function(pet) { return pet.zone === zone; });
   }
 
   /**
@@ -140,14 +140,14 @@
     }
 
     // Find pet type
-    const petTypeData = PET_TYPES.find(p => p.id === petType);
+    var petTypeData = PET_TYPES.find(function(p) { return p.id === petType; });
     if (!petTypeData) {
       console.error('Invalid pet type:', petType);
       return null;
     }
 
     // Create pet state
-    const pet = {
+    var pet = {
       id: generatePetId(),
       type: petType,
       name: petName,
@@ -178,13 +178,13 @@
    * @returns {Object} Result object with success, message, and updated pet
    */
   function feedPet(playerId, foodItem) {
-    const pet = playerPets[playerId];
+    var pet = playerPets[playerId];
     if (!pet) {
       return { success: false, message: 'No pet to feed' };
     }
 
     // Food effectiveness
-    const foodEffects = {
+    var foodEffects = {
       'berry': { hunger: -20, mood: 5 },
       'fish': { hunger: -30, mood: 10 },
       'mushroom': { hunger: -15, mood: 3 },
@@ -193,7 +193,7 @@
       'default': { hunger: -10, mood: 5 }
     };
 
-    const effect = foodEffects[foodItem] || foodEffects['default'];
+    var effect = foodEffects[foodItem] || foodEffects['default'];
 
     // Update pet state
     pet.hunger = Math.max(0, pet.hunger + effect.hunger);
@@ -215,16 +215,16 @@
    * @returns {Object|null} Updated pet or null
    */
   function updatePet(playerId, deltaTime) {
-    const pet = playerPets[playerId];
+    var pet = playerPets[playerId];
     if (!pet) return null;
 
-    const minutesElapsed = deltaTime / 60000; // Convert ms to minutes
+    var minutesElapsed = deltaTime / 60000; // Convert ms to minutes
 
     // Update hunger (increases over time)
     pet.hunger = Math.min(100, pet.hunger + (PET_CONSTANTS.HUNGER_DECAY_RATE * minutesElapsed));
 
     // Update mood (decreases over time, faster if hungry)
-    let moodDecay = PET_CONSTANTS.MOOD_DECAY_RATE * minutesElapsed;
+    var moodDecay = PET_CONSTANTS.MOOD_DECAY_RATE * minutesElapsed;
     if (pet.hunger > PET_CONSTANTS.HUNGER_THRESHOLD_CONTENT) {
       moodDecay *= 2; // Mood decays faster when hungry
     }
@@ -245,15 +245,15 @@
    * @returns {Object|null} Bonus object with type and value, or null
    */
   function getPetBonus(playerId) {
-    const pet = playerPets[playerId];
+    var pet = playerPets[playerId];
     if (!pet) return null;
 
-    const petType = PET_TYPES.find(p => p.id === pet.type);
+    var petType = PET_TYPES.find(function(p) { return p.id === pet.type; });
     if (!petType) return null;
 
     // Bonus scales with bond level
-    const bondMultiplier = pet.bond / 100;
-    const bonusValue = petType.bonus.value * bondMultiplier;
+    var bondMultiplier = pet.bond / 100;
+    var bonusValue = petType.bonus.value * bondMultiplier;
 
     return {
       type: petType.bonus.type,
@@ -269,7 +269,7 @@
    * @returns {boolean} Success status
    */
   function renamePet(playerId, newName) {
-    const pet = playerPets[playerId];
+    var pet = playerPets[playerId];
     if (!pet || !newName) return false;
 
     pet.name = newName;
@@ -320,7 +320,7 @@
    * @returns {string} Emoji representing mood
    */
   function getMoodEmoji(mood) {
-    const moodEmojis = {
+    var moodEmojis = {
       'ecstatic': '😄',
       'happy': '😊',
       'content': '🙂',
@@ -340,7 +340,7 @@
    * @returns {string} Description
    */
   function getBonusDescription(bonusType, value) {
-    const descriptions = {
+    var descriptions = {
       'trade_luck': `+${value.toFixed(1)}% trade success`,
       'discovery_range': `+${value.toFixed(1)}% discovery radius`,
       'lore_unlock': `+${value.toFixed(1)}% lore unlock chance`,
@@ -377,7 +377,7 @@
    * @returns {Object|null} Pet type data or null
    */
   function getPetTypeData(petTypeId) {
-    return PET_TYPES.find(p => p.id === petTypeId) || null;
+    return PET_TYPES.find(function(p) { return p.id === petTypeId; }) || null;
   }
 
   /**

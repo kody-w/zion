@@ -1,6 +1,6 @@
 (function(exports) {
   // GitHub App OAuth Configuration — Standard Web Flow (CORS-enabled for GitHub Apps)
-  const OAUTH_CONFIG = {
+  var OAUTH_CONFIG = {
     clientId: 'Iv23lixLqM3xo88npTs4',
     scope: 'read:user',
     authorizeUrl: 'https://github.com/login/oauth/authorize',
@@ -8,9 +8,9 @@
   };
 
   // Storage keys
-  const TOKEN_KEY = 'zion_auth_token';
-  const USERNAME_KEY = 'zion_username';
-  const AVATAR_KEY = 'zion_avatar';
+  var TOKEN_KEY = 'zion_auth_token';
+  var USERNAME_KEY = 'zion_username';
+  var AVATAR_KEY = 'zion_avatar';
 
   // Helper: safe localStorage access
   function getStorage(key) {

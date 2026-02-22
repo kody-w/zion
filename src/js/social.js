@@ -8,19 +8,19 @@
   'use strict';
 
   // Internal stores
-  const consentStore = new Map(); // "${fromId}:${toId}:${type}" -> boolean
-  const rateLimitStore = new Map(); // playerId -> {count, windowStart}
-  const reputationStore = new Map(); // playerId -> {score, tier, history}
-  const harassmentStore = new Map(); // "${fromId}:${toId}" -> {declineCount, lastDecline}
+  var consentStore = new Map(); // "${fromId}:${toId}:${type}" -> boolean
+  var rateLimitStore = new Map(); // playerId -> {count, windowStart}
+  var reputationStore = new Map(); // playerId -> {score, tier, history}
+  var harassmentStore = new Map(); // "${fromId}:${toId}" -> {declineCount, lastDecline}
 
   // Constants
-  const RATE_LIMIT_MAX = 30; // messages per window
-  const RATE_LIMIT_WINDOW = 60000; // 60 seconds in milliseconds
-  const SAY_DISTANCE = 20;
-  const EMOTE_DISTANCE = 30;
+  var RATE_LIMIT_MAX = 30; // messages per window
+  var RATE_LIMIT_WINDOW = 60000; // 60 seconds in milliseconds
+  var SAY_DISTANCE = 20;
+  var EMOTE_DISTANCE = 30;
 
   // Reputation constants
-  const REPUTATION_TIERS = [
+  var REPUTATION_TIERS = [
     { name: 'Newcomer', minScore: 0, maxScore: 99 },
     { name: 'Trusted', minScore: 100, maxScore: 499 },
     { name: 'Respected', minScore: 500, maxScore: 1499 },
@@ -28,7 +28,7 @@
     { name: 'Elder', minScore: 5000, maxScore: Infinity }
   ];
 
-  const REPUTATION_GAINS = {
+  var REPUTATION_GAINS = {
     helping: 10,
     teaching: 15,
     trading: 5,
@@ -38,14 +38,14 @@
     zone_steward_action: 5
   };
 
-  const REPUTATION_LOSSES = {
+  var REPUTATION_LOSSES = {
     harassment: -25,
     griefing_report: -50,
     steward_violation: -30
   };
 
-  const HARASSMENT_THRESHOLD = 3; // Declined interactions before harassment flag
-  const HARASSMENT_WINDOW = 600000; // 10 minutes
+  var HARASSMENT_THRESHOLD = 3; // Declined interactions before harassment flag
+  var HARASSMENT_WINDOW = 600000; // 10 minutes
 
   /**
    * Calculate Euclidean distance between two 3D positions
@@ -53,9 +53,9 @@
   function getDistance(posA, posB) {
     if (!posA || !posB) return Infinity;
 
-    const dx = posB.x - posA.x;
-    const dy = posB.y - posA.y;
-    const dz = posB.z - posA.z;
+    var dx = posB.x - posA.x;
+    var dy = posB.y - posA.y;
+    var dz = posB.z - posA.z;
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
 
@@ -67,17 +67,17 @@
    * @returns {Array} Array of player IDs
    */
   function getNearbyPlayers(position, state, maxDistance) {
-    const nearby = [];
+    var nearby = [];
 
     if (!position || !state.players) return nearby;
 
-    for (const [playerId, player] of state.players.entries()) {
+    for (var [playerId, player] of state.players.entries()) {
       if (!player.position) continue;
 
       // Must be in same zone
       if (player.position.zone !== position.zone) continue;
 
-      const distance = getDistance(position, player.position);
+      var distance = getDistance(position, player.position);
       if (distance <= maxDistance) {
         nearby.push(playerId);
       }
@@ -93,7 +93,7 @@
    * @returns {Object} {allowed: boolean, retryAfter?: number}
    */
   function checkRateLimit(playerId, now) {
-    const limit = rateLimitStore.get(playerId);
+    var limit = rateLimitStore.get(playerId);
 
     if (!limit) {
       // First message, create new window
@@ -104,7 +104,7 @@
       return { allowed: true };
     }
 
-    const windowAge = now - limit.windowStart;
+    var windowAge = now - limit.windowStart;
 
     if (windowAge >= RATE_LIMIT_WINDOW) {
       // Window expired, start new window
@@ -117,7 +117,7 @@
 
     // Within current window
     if (limit.count >= RATE_LIMIT_MAX) {
-      const retryAfter = RATE_LIMIT_WINDOW - windowAge;
+      var retryAfter = RATE_LIMIT_WINDOW - windowAge;
       return { allowed: false, retryAfter };
     }
 
@@ -137,15 +137,15 @@
       return { recipients: [] };
     }
 
-    const sender = state.players.get(msg.from);
+    var sender = state.players.get(msg.from);
     if (!sender || !sender.position) {
       return { recipients: [] };
     }
 
-    const recipients = getNearbyPlayers(sender.position, state, SAY_DISTANCE);
+    var recipients = getNearbyPlayers(sender.position, state, SAY_DISTANCE);
 
     // Remove sender from recipients
-    const filteredRecipients = recipients.filter(id => id !== msg.from);
+    var filteredRecipients = recipients.filter(function(id) { return id !== msg.from; });
 
     return { recipients: filteredRecipients };
   }
@@ -161,15 +161,15 @@
       return { recipients: [] };
     }
 
-    const sender = state.players.get(msg.from);
+    var sender = state.players.get(msg.from);
     if (!sender || !sender.position) {
       return { recipients: [] };
     }
 
-    const recipients = [];
-    const senderZone = sender.position.zone;
+    var recipients = [];
+    var senderZone = sender.position.zone;
 
-    for (const [playerId, player] of state.players.entries()) {
+    for (var [playerId, player] of state.players.entries()) {
       if (playerId === msg.from) continue;
       if (!player.position) continue;
 
@@ -211,15 +211,15 @@
       return { recipients: [] };
     }
 
-    const sender = state.players.get(msg.from);
+    var sender = state.players.get(msg.from);
     if (!sender || !sender.position) {
       return { recipients: [] };
     }
 
-    const recipients = getNearbyPlayers(sender.position, state, EMOTE_DISTANCE);
+    var recipients = getNearbyPlayers(sender.position, state, EMOTE_DISTANCE);
 
     // Remove sender from recipients
-    const filteredRecipients = recipients.filter(id => id !== msg.from);
+    var filteredRecipients = recipients.filter(function(id) { return id !== msg.from; });
 
     return { recipients: filteredRecipients };
   }
@@ -231,7 +231,7 @@
    * @param {string} type - The action type (e.g., 'whisper', 'trade_offer')
    */
   function grantConsent(fromId, toId, type) {
-    const key = `${fromId}:${toId}:${type}`;
+    var key = `${fromId}:${toId}:${type}`;
     consentStore.set(key, true);
   }
 
@@ -242,7 +242,7 @@
    * @param {string} type - The action type
    */
   function revokeConsent(fromId, toId, type) {
-    const key = `${fromId}:${toId}:${type}`;
+    var key = `${fromId}:${toId}:${type}`;
     consentStore.delete(key);
   }
 
@@ -254,7 +254,7 @@
    * @returns {boolean}
    */
   function hasConsent(fromId, toId, type) {
-    const key = `${fromId}:${toId}:${type}`;
+    var key = `${fromId}:${toId}:${type}`;
     return consentStore.get(key) === true;
   }
 
@@ -320,7 +320,7 @@
    * @returns {string} Tier name
    */
   function calculateTier(score) {
-    for (const tier of REPUTATION_TIERS) {
+    for (var tier of REPUTATION_TIERS) {
       if (score >= tier.minScore && score <= tier.maxScore) {
         return tier.name;
       }
@@ -336,11 +336,11 @@
    */
   function adjustReputation(playerId, action, details) {
     initReputation(playerId);
-    const rep = reputationStore.get(playerId);
+    var rep = reputationStore.get(playerId);
 
-    const change = REPUTATION_GAINS[action] || REPUTATION_LOSSES[action] || 0;
-    const oldScore = rep.score;
-    const oldTier = rep.tier;
+    var change = REPUTATION_GAINS[action] || REPUTATION_LOSSES[action] || 0;
+    var oldScore = rep.score;
+    var oldTier = rep.tier;
 
     rep.score = Math.max(0, rep.score + change);
     rep.tier = calculateTier(rep.score);
@@ -360,7 +360,7 @@
     }
 
     // Check for tier change
-    const tierChanged = oldTier !== rep.tier;
+    var tierChanged = oldTier !== rep.tier;
 
     return {
       score: rep.score,
@@ -378,8 +378,8 @@
    * @param {string} type - The interaction type
    */
   function recordDecline(fromId, toId, type) {
-    const key = `${fromId}:${toId}`;
-    const now = Date.now();
+    var key = `${fromId}:${toId}`;
+    var now = Date.now();
 
     if (!harassmentStore.has(key)) {
       harassmentStore.set(key, {
@@ -389,7 +389,7 @@
       });
     }
 
-    const record = harassmentStore.get(key);
+    var record = harassmentStore.get(key);
 
     // Reset if outside harassment window
     if (now - record.lastDecline > HARASSMENT_WINDOW) {
@@ -422,7 +422,7 @@
    * @param {string} playerId - The player ID
    */
   function applyReputationRestrictions(playerId) {
-    const rep = getReputation(playerId);
+    var rep = getReputation(playerId);
 
     // Low reputation consequences
     if (rep.score < 0) {
@@ -441,7 +441,7 @@
    * @returns {Object} {allowed: boolean, reason?: string}
    */
   function checkReputationPermission(playerId, action, zone) {
-    const rep = getReputation(playerId);
+    var rep = getReputation(playerId);
 
     if (action === 'trade' && rep.restrictions.tradeBanned) {
       return { allowed: false, reason: 'Trade restricted due to low reputation' };
@@ -470,11 +470,11 @@
    * @param {number} duration - Duration in milliseconds (0 for permanent)
    */
   function muteInZone(playerId, zone, duration) {
-    const rep = getReputation(playerId);
+    var rep = getReputation(playerId);
     rep.restrictions.zoneMuted.add(zone);
 
     if (duration > 0) {
-      setTimeout(() => {
+      setTimeout(function() {
         rep.restrictions.zoneMuted.delete(zone);
       }, duration);
     }
@@ -487,10 +487,10 @@
    * @param {number} duration - Duration in milliseconds
    */
   function banFromZone(playerId, zone, duration) {
-    const rep = getReputation(playerId);
+    var rep = getReputation(playerId);
     rep.restrictions.zoneBanned.add(zone);
 
-    setTimeout(() => {
+    setTimeout(function() {
       rep.restrictions.zoneBanned.delete(zone);
     }, duration);
   }

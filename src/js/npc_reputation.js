@@ -251,7 +251,7 @@
       ],
       quest: [
         "I have a rare quest I only share with trusted companions.",
-        "This mission requires someone I know won't let me down."
+        "This mission requires someone I know won't var me down."
       ],
       gossip: [
         "I'll share a rare recipe with you.",

@@ -3,7 +3,7 @@
   'use strict';
 
   // Zone definitions with complete metadata
-  const ZONES = {
+  var ZONES = {
     nexus: {
       name: 'The Nexus',
       description: 'The central hub connecting all realms. A safe gathering place where travelers from all zones converge to trade, socialize, and plan their journeys.',
@@ -134,7 +134,7 @@
   };
 
   // Action to rule mapping
-  const ACTION_RULE_MAP = {
+  var ACTION_RULE_MAP = {
     build: 'building',
     plant: 'harvesting',
     harvest: 'harvesting',
@@ -153,7 +153,7 @@
    * @returns {object|null} Zone rules object or null if zone not found
    */
   function getZoneRules(zoneId) {
-    const zone = ZONES[zoneId];
+    var zone = ZONES[zoneId];
     if (!zone) {
       return null;
     }
@@ -167,12 +167,12 @@
    * @returns {boolean} True if action is allowed, false otherwise
    */
   function isActionAllowed(action, zoneId) {
-    const zone = ZONES[zoneId];
+    var zone = ZONES[zoneId];
     if (!zone) {
       return false;
     }
 
-    const ruleKey = ACTION_RULE_MAP[action];
+    var ruleKey = ACTION_RULE_MAP[action];
 
     // If no rule mapping exists, action is allowed by default
     if (!ruleKey) {
@@ -194,7 +194,7 @@
    * @returns {string[]} Array of connected zone IDs
    */
   function getConnectedZones(zoneId) {
-    const zone = ZONES[zoneId];
+    var zone = ZONES[zoneId];
     if (!zone) {
       return [];
     }
@@ -236,16 +236,16 @@
   }
 
   // Zone governance stores
-  const zoneStewards = new Map(); // zoneId -> {stewards: [], elections: [], policies: {}}
-  const governanceLog = []; // Array of all governance actions
-  const zoneRegulars = new Map(); // zoneId -> Set(playerId) - players who visit regularly
+  var zoneStewards = new Map(); // zoneId -> {stewards: [], elections: [], policies: {}}
+  var governanceLog = []; // Array of all governance actions
+  var zoneRegulars = new Map(); // zoneId -> Set(playerId) - players who visit regularly
 
   // Governance constants
-  const STEWARD_TERM_LENGTH = 604800000; // 7 days in milliseconds
-  const ELECTION_DURATION = 172800000; // 2 days in milliseconds (voting period)
-  const MAX_STEWARDS_PER_ZONE = 3;
-  const REGULAR_VISIT_THRESHOLD = 5; // Visits needed to be considered a regular
-  const REGULAR_VISIT_WINDOW = 2592000000; // 30 days
+  var STEWARD_TERM_LENGTH = 604800000; // 7 days in milliseconds
+  var ELECTION_DURATION = 172800000; // 2 days in milliseconds (voting period)
+  var MAX_STEWARDS_PER_ZONE = 3;
+  var REGULAR_VISIT_THRESHOLD = 5; // Visits needed to be considered a regular
+  var REGULAR_VISIT_WINDOW = 2592000000; // 30 days
 
   /**
    * Initialize governance for a zone
@@ -276,13 +276,13 @@
    */
   function recordZoneVisit(zoneId, playerId) {
     initZoneGovernance(zoneId);
-    const regulars = zoneRegulars.get(zoneId);
+    var regulars = zoneRegulars.get(zoneId);
 
     if (!regulars.has(playerId)) {
       regulars.set(playerId, { count: 0, lastVisit: 0 });
     }
 
-    const record = regulars.get(playerId);
+    var record = regulars.get(playerId);
     record.count++;
     record.lastVisit = Date.now();
   }
@@ -295,13 +295,13 @@
    */
   function isZoneRegular(zoneId, playerId) {
     initZoneGovernance(zoneId);
-    const regulars = zoneRegulars.get(zoneId);
-    const record = regulars.get(playerId);
+    var regulars = zoneRegulars.get(zoneId);
+    var record = regulars.get(playerId);
 
     if (!record) return false;
 
     // Check if enough visits and within window
-    const withinWindow = (Date.now() - record.lastVisit) < REGULAR_VISIT_WINDOW;
+    var withinWindow = (Date.now() - record.lastVisit) < REGULAR_VISIT_WINDOW;
     return record.count >= REGULAR_VISIT_THRESHOLD && withinWindow;
   }
 
@@ -312,11 +312,11 @@
    */
   function getZoneStewards(zoneId) {
     initZoneGovernance(zoneId);
-    const governance = zoneStewards.get(zoneId);
+    var governance = zoneStewards.get(zoneId);
 
     // Filter active stewards (term not expired)
-    const now = Date.now();
-    governance.stewards = governance.stewards.filter(s => s.termEnd > now);
+    var now = Date.now();
+    governance.stewards = governance.stewards.filter(function(s) { return s.termEnd > now; });
 
     return governance.stewards;
   }
@@ -328,8 +328,8 @@
    * @returns {boolean}
    */
   function isZoneSteward(zoneId, playerId) {
-    const stewards = getZoneStewards(zoneId);
-    return stewards.some(s => s.playerId === playerId);
+    var stewards = getZoneStewards(zoneId);
+    return stewards.some(function(s) { return s.playerId === playerId; });
   }
 
   /**
@@ -340,16 +340,18 @@
    */
   function startElection(zoneId, candidates) {
     initZoneGovernance(zoneId);
-    const governance = zoneStewards.get(zoneId);
+    var governance = zoneStewards.get(zoneId);
 
-    const election = {
+    var election = {
       id: `election_${zoneId}_${Date.now()}`,
       zoneId,
-      candidates: candidates.map(playerId => ({
-        playerId,
-        votes: 0,
-        voters: new Set()
-      })),
+      candidates: candidates.map(function(playerId) {
+        return {
+          playerId: playerId,
+          votes: 0,
+          voters: new Set()
+        };
+      }),
       startTime: Date.now(),
       endTime: Date.now() + ELECTION_DURATION,
       status: 'active',
@@ -378,8 +380,8 @@
    */
   function castVote(electionId, voterId, candidateId) {
     // Find election across all zones
-    for (const [zoneId, governance] of zoneStewards.entries()) {
-      const election = governance.elections.find(e => e.id === electionId);
+    for (var [zoneId, governance] of zoneStewards.entries()) {
+      var election = governance.elections.find(function(e) { return e.id === electionId; });
       if (!election) continue;
 
       // Check election is active
@@ -398,13 +400,13 @@
       }
 
       // Check voter hasn't already voted
-      const hasVoted = election.candidates.some(c => c.voters.has(voterId));
+      var hasVoted = election.candidates.some(function(c) { return c.voters.has(voterId); });
       if (hasVoted) {
         return { success: false, error: 'You have already voted in this election' };
       }
 
       // Find candidate and cast vote
-      const candidate = election.candidates.find(c => c.playerId === candidateId);
+      var candidate = election.candidates.find(function(c) { return c.playerId === candidateId; });
       if (!candidate) {
         return { success: false, error: 'Candidate not found' };
       }
@@ -434,8 +436,8 @@
    * @returns {Object} {success: boolean, stewards?: Array, error?: string}
    */
   function finalizeElection(electionId) {
-    for (const [zoneId, governance] of zoneStewards.entries()) {
-      const election = governance.elections.find(e => e.id === electionId);
+    for (var [zoneId, governance] of zoneStewards.entries()) {
+      var election = governance.elections.find(function(e) { return e.id === electionId; });
       if (!election) continue;
 
       if (Date.now() < election.endTime) {
@@ -445,20 +447,22 @@
       election.status = 'finalized';
 
       // Sort candidates by votes
-      const sorted = [...election.candidates].sort((a, b) => b.votes - a.votes);
+      var sorted = [...election.candidates].sort(function(a, b) { return b.votes - a.votes; });
 
       // Top candidates become stewards (up to MAX_STEWARDS_PER_ZONE)
-      const winners = sorted.slice(0, MAX_STEWARDS_PER_ZONE);
+      var winners = sorted.slice(0, MAX_STEWARDS_PER_ZONE);
 
-      const newStewards = winners.map(winner => ({
-        playerId: winner.playerId,
-        zoneId,
-        electionId,
-        votes: winner.votes,
-        termStart: Date.now(),
-        termEnd: Date.now() + STEWARD_TERM_LENGTH,
-        actions: []
-      }));
+      var newStewards = winners.map(function(winner) {
+        return {
+          playerId: winner.playerId,
+          zoneId: zoneId,
+          electionId: electionId,
+          votes: winner.votes,
+          termStart: Date.now(),
+          termEnd: Date.now() + STEWARD_TERM_LENGTH,
+          actions: []
+        };
+      });
 
       // Clear existing stewards and set new ones
       governance.stewards = newStewards;
@@ -467,7 +471,7 @@
         type: 'election_finalized',
         zoneId,
         electionId,
-        stewards: newStewards.map(s => ({ playerId: s.playerId, votes: s.votes })),
+        stewards: newStewards.map(function(s) { return { playerId: s.playerId, votes: s.votes }; }),
         timestamp: Date.now()
       });
 
@@ -490,7 +494,7 @@
     }
 
     initZoneGovernance(zoneId);
-    const governance = zoneStewards.get(zoneId);
+    var governance = zoneStewards.get(zoneId);
     governance.policies.welcomeMessage = message;
 
     logGovernanceAction({
@@ -518,7 +522,7 @@
     }
 
     initZoneGovernance(zoneId);
-    const governance = zoneStewards.get(zoneId);
+    var governance = zoneStewards.get(zoneId);
 
     if (!governance.policies.hasOwnProperty(policy)) {
       return { success: false, error: 'Invalid policy' };
@@ -587,7 +591,7 @@
   function getGovernanceLog(zoneId, limit) {
     limit = limit || 50;
     return governanceLog
-      .filter(action => action.zoneId === zoneId)
+      .filter(function(action) { return action.zoneId === zoneId; })
       .slice(-limit);
   }
 
@@ -598,7 +602,7 @@
    */
   function getZonePolicies(zoneId) {
     initZoneGovernance(zoneId);
-    const governance = zoneStewards.get(zoneId);
+    var governance = zoneStewards.get(zoneId);
     return governance.policies;
   }
 
@@ -609,12 +613,12 @@
    */
   function getActiveElection(zoneId) {
     initZoneGovernance(zoneId);
-    const governance = zoneStewards.get(zoneId);
-    const now = Date.now();
+    var governance = zoneStewards.get(zoneId);
+    var now = Date.now();
 
-    return governance.elections.find(e =>
-      e.status === 'active' && e.endTime > now
-    ) || null;
+    return governance.elections.find(function(e) {
+      return e.status === 'active' && e.endTime > now;
+    }) || null;
   }
 
   // Export all functions and constants

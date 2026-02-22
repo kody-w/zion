@@ -4,6 +4,7 @@
   var keys = {};
   var chatMode = false;
   var buildMode = false;
+  var touchDelta = { x: 0, z: 0 }; // Virtual joystick movement (mobile)
   var canvas = null;
   var mouseNDC = { x: 0, y: 0 }; // Normalized device coordinates
 
@@ -315,8 +316,7 @@
         }
         break;
 
-      case 'j':
-      case 'J':
+      case '.':
         if (!chatMode) {
           if (callbacks.onAction) {
             callbacks.onAction('toggleAnchorPanel', {});
@@ -325,8 +325,7 @@
         }
         break;
 
-      case 'n':
-      case 'N':
+      case ',':
         if (!chatMode) {
           if (callbacks.onAction) {
             callbacks.onAction('toggleFederationProposal', {});
@@ -628,14 +627,9 @@
         stick.style.top = (35 + deltaY) + 'px';
       }
 
-      // Send movement
-      if (callbacks.onMove) {
-        callbacks.onMove({
-          x: normalizedDelta.x,
-          y: 0,
-          z: -normalizedDelta.y // Invert Y for forward/back
-        });
-      }
+      // Store touch delta for getMovementDelta() to pick up
+      touchDelta.x = normalizedDelta.x;
+      touchDelta.z = -normalizedDelta.y; // Invert Y for forward/back
     });
 
     joystick.addEventListener('touchend', function(e) {
@@ -643,6 +637,8 @@
       isDragging = false;
       stick.style.left = '35px';
       stick.style.top = '35px';
+      touchDelta.x = 0;
+      touchDelta.z = 0;
     });
 
     // Create action buttons overlay (bottom-right, circular arc layout)
@@ -827,6 +823,12 @@
     if (keys['a'] || keys['arrowleft']) delta.x -= 1;
     if (keys['d'] || keys['arrowright']) delta.x += 1;
 
+    // Merge virtual joystick input (mobile)
+    if (touchDelta.x !== 0 || touchDelta.z !== 0) {
+      delta.x = touchDelta.x;
+      delta.z = touchDelta.z;
+    }
+
     // Normalize diagonal movement
     if (delta.x !== 0 && delta.z !== 0) {
       var length = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
@@ -868,13 +870,15 @@
    * @param {string} zone - Current zone
    * @returns {object} - Protocol message
    */
-  function createMoveMessage(from, delta, currentPosition, zone) {
-    var baseSpeed = 0.3; // Units per frame
-    var speed = (keys['shift']) ? baseSpeed * 2.0 : baseSpeed; // Sprint with Shift
+  function createMoveMessage(from, delta, currentPosition, zone, deltaTime) {
+    var dt = (typeof deltaTime === 'number' && deltaTime > 0) ? deltaTime : 1 / 60;
+    var baseSpeed = 18; // Units per second (was 0.3/frame * 60fps = 18)
+    var speed = (keys['shift']) ? baseSpeed * 2.0 : baseSpeed;
+    var frameSpeed = speed * dt; // Scale by actual frame time
     var newPosition = {
-      x: currentPosition.x + delta.x * speed,
-      y: currentPosition.y + delta.y * speed,
-      z: currentPosition.z + delta.z * speed
+      x: currentPosition.x + delta.x * frameSpeed,
+      y: currentPosition.y + delta.y * frameSpeed,
+      z: currentPosition.z + delta.z * frameSpeed
     };
 
     return {

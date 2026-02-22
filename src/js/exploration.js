@@ -1,13 +1,13 @@
 (function(exports) {
 
   // Discovery types
-  const DISCOVERY_TYPES = [
+  var DISCOVERY_TYPES = [
     'location', 'creature', 'artifact', 'secret',
     'landmark', 'ruin', 'cave', 'spring'
   ];
 
   // Base rarity by discovery type
-  const BASE_RARITY = {
+  var BASE_RARITY = {
     location: 0.3,
     creature: 0.5,
     artifact: 0.7,
@@ -25,9 +25,9 @@
 
   // Calculate distance between two 3D positions
   function calculateDistance(pos1, pos2) {
-    const dx = pos1.x - pos2.x;
-    const dy = pos1.y - pos2.y;
-    const dz = pos1.z - pos2.z;
+    var dx = pos1.x - pos2.x;
+    var dy = pos1.y - pos2.y;
+    var dz = pos1.z - pos2.z;
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
 
@@ -38,9 +38,9 @@
     }
 
     // Check if player has already discovered within distance 5
-    for (const discovery of state.discoveries) {
+    for (var discovery of state.discoveries) {
       if (discovery.discoverer === playerId) {
-        const distance = calculateDistance(position, discovery.position);
+        var distance = calculateDistance(position, discovery.position);
         if (distance <= 5) {
           return true;
         }
@@ -61,8 +61,8 @@
 
   // Handle discovery
   function handleDiscover(msg, state) {
-    const position = msg.payload.position || {x: 0, y: 0, z: 0};
-    const playerId = msg.from;
+    var position = msg.payload.position || {x: 0, y: 0, z: 0};
+    var playerId = msg.from;
 
     // Check for duplicate
     if (isDuplicate(playerId, position, state)) {
@@ -72,7 +72,7 @@
       };
     }
 
-    const discoveryType = msg.payload.type || 'location';
+    var discoveryType = msg.payload.type || 'location';
     if (!DISCOVERY_TYPES.includes(discoveryType)) {
       return {
         success: false,
@@ -81,15 +81,15 @@
     }
 
     // Determine rarity
-    let rarity = msg.payload.rarity;
+    var rarity = msg.payload.rarity;
     if (typeof rarity !== 'number' || rarity < 0 || rarity > 1) {
       rarity = calculateRarity(discoveryType);
     }
 
     // Calculate Spark award
-    const sparkAwarded = 5 + Math.floor(rarity * 20);
+    var sparkAwarded = 5 + Math.floor(rarity * 20);
 
-    const discovery = {
+    var discovery = {
       id: generateId(),
       discoverer: playerId,
       type: discoveryType,
@@ -117,7 +117,7 @@
 
   // Handle inspection
   function handleInspect(msg, state) {
-    const targetId = msg.payload.target;
+    var targetId = msg.payload.target;
 
     if (!targetId) {
       return {
@@ -126,8 +126,8 @@
       };
     }
 
-    let info = null;
-    let entityType = null;
+    var info = null;
+    var entityType = null;
 
     // Search in players
     if (state.players && state.players[targetId]) {
@@ -141,7 +141,7 @@
 
     // Search in structures
     if (!info && state.structures && state.structures.length > 0) {
-      const structure = state.structures.find(s => s.id === targetId);
+      var structure = state.structures.find(function(s) { return s.id === targetId; });
       if (structure) {
         info = {
           type: 'structure',
@@ -154,12 +154,12 @@
 
     // Search in gardens
     if (!info && state.gardens && state.gardens.length > 0) {
-      const garden = state.gardens.find(g => g.id === targetId);
+      var garden = state.gardens.find(function(g) { return g.id === targetId; });
       if (garden) {
-        const now = Date.now();
-        const elapsed = now - garden.plantedAt;
-        const totalGrowthTime = garden.readyAt - garden.plantedAt;
-        const currentGrowthStage = Math.min(1.0, elapsed / totalGrowthTime);
+        var now = Date.now();
+        var elapsed = now - garden.plantedAt;
+        var totalGrowthTime = garden.readyAt - garden.plantedAt;
+        var currentGrowthStage = Math.min(1.0, elapsed / totalGrowthTime);
 
         info = {
           type: 'garden',
@@ -176,7 +176,7 @@
 
     // Search in discoveries
     if (!info && state.discoveries && state.discoveries.length > 0) {
-      const discovery = state.discoveries.find(d => d.id === targetId);
+      var discovery = state.discoveries.find(function(d) { return d.id === targetId; });
       if (discovery) {
         info = {
           type: 'discovery',

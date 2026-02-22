@@ -138,6 +138,14 @@
   var economyLedger = null;
   var playerProgression = null;
   var achievementState = null;
+
+  // Keep gameState.subsystems in sync when state vars are reassigned
+  function syncSubsystem(key, value) {
+    if (gameState && gameState.subsystems) {
+      gameState.subsystems[key] = value;
+    }
+  }
+
   var dailyChallengeState = null;
   var journalState = null;
   var npcReputationState = null;
@@ -1382,6 +1390,20 @@
         onPeerConnect: function(connectedPeerId) {
           console.log('Peer connected:', connectedPeerId);
           if (HUD) HUD.showNotification('Player connected: ' + connectedPeerId, 'info');
+          // Send our current state so the new peer can see us immediately
+          if (localPlayer && Network && Network.broadcastMessage) {
+            Network.broadcastMessage({
+              type: 'join',
+              from: localPlayer.id,
+              timestamp: Date.now(),
+              nonce: Math.random().toString(36).substr(2, 9),
+              payload: {
+                position: localPlayer.position,
+                zone: currentZone,
+                name: localPlayer.name || localPlayer.id
+              }
+            });
+          }
         },
         onPeerDisconnect: function(disconnectedPeerId) {
           console.log('Peer disconnected:', disconnectedPeerId);
@@ -1397,7 +1419,7 @@
         Network.joinLobby('main', username, currentZone);
       }
 
-      // Broadcast join message after a short delay to let connections establish
+      // Broadcast join message after a short delay to var connections establish
       setTimeout(function() {
         joinWorld();
       }, 2000);
@@ -2070,7 +2092,8 @@
           localPlayer.id,
           rotatedDelta,
           localPlayer.position,
-          currentZone
+          currentZone,
+          deltaTime
         );
 
         // Collision check — reject move if it would clip into a structure
@@ -2108,6 +2131,7 @@
           if (detectedZone !== currentZone) {
             var oldZone = currentZone;
             currentZone = detectedZone;
+            localPlayer.zone = currentZone;
             console.log('Entered zone:', currentZone);
 
             // Play zone entry swoosh sound
@@ -2202,7 +2226,7 @@
             // Track achievement stat: zone visits
             if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
               var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'zones_visited', 1);
-              achievementState = achResult.state;
+              achievementState = achResult.state; syncSubsystem('achievements', achievementState);
               // Also track zone-specific stat
               AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'zone_' + currentZone + '_visits', 1);
               if (achResult.newAchievements.length > 0) {
@@ -2478,8 +2502,8 @@
         var camTerrainY = World && World.getTerrainHeight ? World.getTerrainHeight(camTargetX, camTargetZ) : 0;
         if (camTargetY < camTerrainY + 2) camTargetY = camTerrainY + 2;
 
-        // Buttery smooth camera follow using lerp interpolation
-        var lerpFactor = 0.08;
+        // Buttery smooth camera follow — frame-rate-independent lerp
+        var lerpFactor = 1 - Math.pow(0.92, deltaTime * 60);
         sceneContext.camera.position.x += (camTargetX - sceneContext.camera.position.x) * lerpFactor;
         sceneContext.camera.position.y += (camTargetY - sceneContext.camera.position.y) * lerpFactor;
         sceneContext.camera.position.z += (camTargetZ - sceneContext.camera.position.z) * lerpFactor;
@@ -3918,7 +3942,7 @@
         // Track achievement stat: trades_completed
         if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
           var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'trades_completed', 1);
-          achievementState = achResult.state;
+          achievementState = achResult.state; syncSubsystem('achievements', achievementState);
           if (achResult.newAchievements.length > 0) {
             achResult.newAchievements.forEach(function(a) {
               if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
@@ -4381,7 +4405,7 @@
       // Track achievement stat: harvests
       if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
         var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'harvests', 1);
-        achievementState = achResult.state;
+        achievementState = achResult.state; syncSubsystem('achievements', achievementState);
         if (achResult.newAchievements.length > 0) {
           achResult.newAchievements.forEach(function(a) {
             if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
@@ -4510,7 +4534,7 @@
       // Track achievement stat: items_crafted
       if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
         var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'items_crafted', 1);
-        achievementState = achResult.state;
+        achievementState = achResult.state; syncSubsystem('achievements', achievementState);
         if (achResult.newAchievements.length > 0) {
           achResult.newAchievements.forEach(function(a) {
             if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
@@ -4988,7 +5012,7 @@
           // Track achievement stat: buildings_placed
           if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
             var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'buildings_placed', 1);
-            achievementState = achResult.state;
+            achievementState = achResult.state; syncSubsystem('achievements', achievementState);
             if (achResult.newAchievements.length > 0) {
               achResult.newAchievements.forEach(function(a) {
                 if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
@@ -5496,7 +5520,7 @@
                   // Track achievement stat: quests_completed
                   if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
                     var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'quests_completed', 1);
-                    achievementState = achResult.state;
+                    achievementState = achResult.state; syncSubsystem('achievements', achievementState);
                     if (achResult.newAchievements.length > 0) {
                       achResult.newAchievements.forEach(function(a) {
                         if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
@@ -5582,7 +5606,7 @@
             // Track achievement stat: npcs_befriended
             if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
               var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'npcs_befriended', 1);
-              achievementState = achResult.state;
+              achievementState = achResult.state; syncSubsystem('achievements', achievementState);
               if (achResult.newAchievements.length > 0) {
                 achResult.newAchievements.forEach(function(a) {
                   if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
@@ -5761,10 +5785,6 @@
 
       case 'toggleGovernance':
         if (HUD && localPlayer && Social && Zones) {
-          // Initialize governance panel with callback
-          if (!HUD.initGovernancePanel) {
-            HUD.initGovernancePanel(handleGovernanceAction);
-          }
           HUD.toggleGovernancePanel(currentZone, localPlayer);
         }
         break;
@@ -6123,7 +6143,7 @@
       var statName = statMap[eventType];
       if (statName) {
         var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, statName, 1);
-        achievementState = achResult.state;
+        achievementState = achResult.state; syncSubsystem('achievements', achievementState);
         if (achResult.newAchievements.length > 0) {
           achResult.newAchievements.forEach(function(a) {
             if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
@@ -6470,7 +6490,7 @@
         if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
           var fishRarity = result.fish.rarity || 1;
           var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'fish_caught', 1);
-          achievementState = achResult.state;
+          achievementState = achResult.state; syncSubsystem('achievements', achievementState);
           if (fishRarity >= 3) {
             AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'epic_fish_caught', 1);
           }

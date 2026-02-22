@@ -101,31 +101,31 @@
   var storedSceneContext = null;
 
   // NPC data
-  let npcAgents = [];
-  let npcStates = new Map(); // id -> behavior state
-  let npcBrains = new Map(); // id -> NpcAI brain object
-  let npcMeshes = new Map(); // id -> THREE.Group
-  let chatBubbles = new Map(); // id -> { mesh, timer }
-  let emoteSprites = new Map(); // id -> {sprite, currentEmote, timer, opacity}
-  let questIndicators = new Map(); // id -> {sprite, type} - quest marker sprites
-  let activityIndicators = new Map(); // id -> {mesh, currentActivity, rotationSpeed} - activity icon above head
-  let activityParticles = []; // {mesh, timer, velocity, startY}
-  let particleSpawnTimers = new Map(); // id -> timer (throttle particle spawn)
-  let pendingEvents = []; // events to broadcast to all NPCs
-  let npcUpdateFrame = 0; // frame counter for staggered updates
-  let lastPlayerIdForQuests = null; // Track player ID for quest indicators
-  let speechBubbles = new Map(); // id -> { element, timer, nextSpeechTime }
-  let speechBubbleContainer = null; // HTML container for speech bubbles
+  var npcAgents = [];
+  var npcStates = new Map(); // id -> behavior state
+  var npcBrains = new Map(); // id -> NpcAI brain object
+  var npcMeshes = new Map(); // id -> THREE.Group
+  var chatBubbles = new Map(); // id -> { mesh, timer }
+  var emoteSprites = new Map(); // id -> {sprite, currentEmote, timer, opacity}
+  var questIndicators = new Map(); // id -> {sprite, type} - quest marker sprites
+  var activityIndicators = new Map(); // id -> {mesh, currentActivity, rotationSpeed} - activity icon above head
+  var activityParticles = []; // {mesh, timer, velocity, startY}
+  var particleSpawnTimers = new Map(); // id -> timer (throttle particle spawn)
+  var pendingEvents = []; // events to broadcast to all NPCs
+  var npcUpdateFrame = 0; // frame counter for staggered updates
+  var lastPlayerIdForQuests = null; // Track player ID for quest indicators
+  var speechBubbles = new Map(); // id -> { element, timer, nextSpeechTime }
+  var speechBubbleContainer = null; // HTML container for speech bubbles
 
   // Seeded random number generator
   function seededRandom(seed) {
-    const x = Math.sin(seed) * 10000;
+    var x = Math.sin(seed) * 10000;
     return x - Math.floor(x);
   }
 
   // Get random from array using seeded random
   function randomChoice(arr, seed) {
-    const idx = Math.floor(seededRandom(seed) * arr.length);
+    var idx = Math.floor(seededRandom(seed) * arr.length);
     return arr[idx];
   }
 
@@ -283,7 +283,7 @@
   }
 
   // NPC daily schedules based on world time (0-1440 minutes = 24 hours)
-  const NPC_SCHEDULES = {
+  var NPC_SCHEDULES = {
     merchant: {
       dawn: 'opening_shop',        // 360-420 (6:00-7:00)
       morning: 'selling',          // 420-660 (7:00-11:00)
@@ -367,7 +367,7 @@
   };
 
   // Archetype dialogue
-  const ARCHETYPE_MESSAGES = {
+  var ARCHETYPE_MESSAGES = {
     gardener: [
       "These moonflowers are coming along beautifully.",
       "Nothing like fresh soil between your fingers.",
@@ -471,7 +471,7 @@
   };
 
   // Archetype colors (body/clothing)
-  const ARCHETYPE_COLORS = {
+  var ARCHETYPE_COLORS = {
     gardener: 0x4CAF50,    // green
     builder: 0xFF9800,     // orange
     storyteller: 0xE91E63, // red
@@ -501,7 +501,7 @@
   }
 
   // Activity-based dialogue for schedule system
-  const ACTIVITY_DIALOGUE = {
+  var ACTIVITY_DIALOGUE = {
     // Merchant activities
     opening_shop: [
       "Just opening up for the day. Fresh goods coming soon!",
@@ -711,7 +711,7 @@
   };
 
   // Archetype-specific speech messages for random ambient dialogue
-  const ARCHETYPE_SPEECH = {
+  var ARCHETYPE_SPEECH = {
     builder: [
       "Working on a new creation!",
       "Almost finished...",
@@ -785,7 +785,7 @@
   };
 
   // Behavior states and transitions
-  const BEHAVIOR_STATES = {
+  var BEHAVIOR_STATES = {
     idle: { duration: [3, 8] },
     walking: { duration: [0, 0] }, // until destination reached
     talking: { duration: [4, 6] },
@@ -793,7 +793,7 @@
     socializing: { duration: [0, 0] } // until near target
   };
 
-  const STATE_TRANSITIONS = {
+  var STATE_TRANSITIONS = {
     idle: { walking: 0.4, talking: 0.2, working: 0.3, socializing: 0.1 },
     walking: { idle: 0.6, working: 0.2, talking: 0.2 },
     talking: { idle: 0.5, walking: 0.3, working: 0.2 },
@@ -1123,16 +1123,16 @@
    * @returns {THREE.SpriteMaterial}
    */
   function createEmoteSprite(emoteType, THREE) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
     canvas.width = 64;
     canvas.height = 64;
 
     // Clear with transparency
     ctx.clearRect(0, 0, 64, 64);
 
-    const cx = 32;
-    const cy = 32;
+    var cx = 32;
+    var cy = 32;
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -1233,11 +1233,11 @@
         ctx.strokeStyle = '#DAA520';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        for (let i = 0; i < 5; i++) {
-          const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
-          const r = i % 2 === 0 ? 14 : 6;
-          const x = cx + r * Math.cos(angle);
-          const y = cy + r * Math.sin(angle);
+        for (var i = 0; i < 5; i++) {
+          var angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+          var r = i % 2 === 0 ? 14 : 6;
+          var x = cx + r * Math.cos(angle);
+          var y = cy + r * Math.sin(angle);
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
@@ -1356,7 +1356,7 @@
         return null;
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
+    var texture = new THREE.CanvasTexture(canvas);
     return new THREE.SpriteMaterial({
       map: texture,
       transparent: true,
@@ -1564,16 +1564,16 @@
    * @param {object} decision - AI decision (optional)
    */
   function updateEmoteIndicator(agent, state, mesh, playerPos, decision) {
-    const THREE = window.THREE;
+    var THREE = window.THREE;
     if (!THREE) return;
 
-    let desiredEmote = null;
+    var desiredEmote = null;
 
     // Check player proximity first (highest priority)
     if (playerPos) {
-      const dx = playerPos.x - agent.position.x;
-      const dz = playerPos.z - agent.position.z;
-      const dist = Math.sqrt(dx * dx + dz * dz);
+      var dx = playerPos.x - agent.position.x;
+      var dz = playerPos.z - agent.position.z;
+      var dist = Math.sqrt(dx * dx + dz * dz);
       if (dist < 8) {
         desiredEmote = 'eye';
       }
@@ -1586,8 +1586,8 @@
 
     // Otherwise, map state + archetype to emote
     if (!desiredEmote) {
-      const currentState = state.currentState;
-      const archetype = agent.archetype;
+      var currentState = state.currentState;
+      var archetype = agent.archetype;
 
       if (currentState === 'idle' && archetype === 'philosopher') {
         desiredEmote = '?';
@@ -1619,7 +1619,7 @@
     }
 
     // Get or create emote sprite data
-    let emoteData = emoteSprites.get(agent.id);
+    var emoteData = emoteSprites.get(agent.id);
 
     // Update emote if changed
     if (desiredEmote !== (emoteData ? emoteData.currentEmote : null)) {
@@ -1630,9 +1630,9 @@
 
       // Create new sprite if needed
       if (desiredEmote) {
-        const material = createEmoteSprite(desiredEmote, THREE);
+        var material = createEmoteSprite(desiredEmote, THREE);
         if (material) {
-          const sprite = new THREE.Sprite(material);
+          var sprite = new THREE.Sprite(material);
           sprite.scale.set(0.5, 0.5, 1);
           sprite.position.y = 2.8;
           mesh.add(sprite);
@@ -1723,11 +1723,11 @@
     if (activityParticles.length >= 20) return; // Global particle limit
 
     // Count particles for this NPC
-    const npcParticleCount = activityParticles.filter(p => p.npcId === npcMesh.userData.agentId).length;
+    var npcParticleCount = activityParticles.filter(function(p) { return p.npcId === npcMesh.userData.agentId; }).length;
     if (npcParticleCount >= 3) return; // Per-NPC limit
 
     // Determine particle color and type based on archetype
-    let color, size;
+    var color, size;
     switch (archetype) {
       case 'gardener':
         color = 0x4CAF50; // green
@@ -1743,7 +1743,7 @@
         break;
       case 'artist':
         // Rainbow colors
-        const colors = [0xFF0000, 0xFF7F00, 0xFFFF00, 0x00FF00, 0x0000FF, 0x4B0082, 0x9400D3];
+        var colors = [0xFF0000, 0xFF7F00, 0xFFFF00, 0x00FF00, 0x0000FF, 0x4B0082, 0x9400D3];
         color = colors[Math.floor(Math.random() * colors.length)];
         size = 0.05;
         break;
@@ -1756,12 +1756,12 @@
     }
 
     // Create particle geometry (reuse or create)
-    const geometry = new THREE.SphereGeometry(size, 6, 6);
-    const material = new THREE.MeshBasicMaterial({ color: color, transparent: true });
-    const particle = new THREE.Mesh(geometry, material);
+    var geometry = new THREE.SphereGeometry(size, 6, 6);
+    var material = new THREE.MeshBasicMaterial({ color: color, transparent: true });
+    var particle = new THREE.Mesh(geometry, material);
 
     // Position near NPC's hands (approximate)
-    const handOffset = Math.random() > 0.5 ? 0.3 : -0.3;
+    var handOffset = Math.random() > 0.5 ? 0.3 : -0.3;
     particle.position.set(
       npcMesh.position.x + handOffset + (Math.random() - 0.5) * 0.2,
       npcMesh.position.y + 1.0 + Math.random() * 0.2,
@@ -1796,8 +1796,8 @@
   function updateActivityParticles(deltaTime) {
     if (!storedSceneContext || !storedSceneContext.scene) return;
 
-    for (let i = activityParticles.length - 1; i >= 0; i--) {
-      const particle = activityParticles[i];
+    for (var i = activityParticles.length - 1; i >= 0; i--) {
+      var particle = activityParticles[i];
       particle.timer -= deltaTime;
 
       if (particle.timer <= 0) {
@@ -1811,7 +1811,7 @@
         particle.mesh.position.z += particle.velocity.z * deltaTime;
 
         // Fade out based on timer
-        const fadeProgress = particle.timer / 2.0;
+        var fadeProgress = particle.timer / 2.0;
         particle.mesh.material.opacity = fadeProgress;
 
         // Slow down upward velocity slightly over time
@@ -1860,7 +1860,7 @@
       console.log('NpcDialogue manager initialized');
     }
 
-    npcAgents.forEach(agent => {
+    npcAgents.forEach(function(agent) {
       npcStates.set(agent.id, {
         currentState: 'idle',
         stateTimer: 5,
@@ -1896,19 +1896,19 @@
   function addNPCsToScene(sceneContext) {
     if (!sceneContext || !sceneContext.scene) return;
 
-    const THREE = window.THREE;
+    var THREE = window.THREE;
     if (!THREE) return;
 
     // Store scene context for particle system
     storedSceneContext = sceneContext;
 
-    npcAgents.forEach(agent => {
+    npcAgents.forEach(function(agent) {
       // Create detailed humanoid NPC with unique skin tone
-      const group = createHumanoidNPC(agent.archetype, THREE, agent.id);
+      var group = createHumanoidNPC(agent.archetype, THREE, agent.id);
 
       // Name label with archetype subtitle
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
+      var canvas = document.createElement('canvas');
+      var context = canvas.getContext('2d');
       canvas.width = 256;
       canvas.height = 96;
 
@@ -1927,9 +1927,9 @@
       var archetypeCapitalized = agent.archetype.charAt(0).toUpperCase() + agent.archetype.slice(1);
       context.fillText(archetypeCapitalized, canvas.width / 2, 70);
 
-      const labelTexture = new THREE.CanvasTexture(canvas);
-      const labelMaterial = new THREE.SpriteMaterial({ map: labelTexture });
-      const label = new THREE.Sprite(labelMaterial);
+      var labelTexture = new THREE.CanvasTexture(canvas);
+      var labelMaterial = new THREE.SpriteMaterial({ map: labelTexture });
+      var label = new THREE.Sprite(labelMaterial);
       label.scale.set(2.5, 1.0, 1);
       label.position.y = 2.5;
       group.add(label);
@@ -2412,15 +2412,15 @@
    * Transition NPC to new state
    */
   function transitionState(agent, state, seed) {
-    const transitions = STATE_TRANSITIONS[state.currentState];
+    var transitions = STATE_TRANSITIONS[state.currentState];
     if (!transitions) return;
 
     // Weighted random selection
-    let roll = seededRandom(seed);
-    let cumulative = 0;
-    let newState = 'idle';
+    var roll = seededRandom(seed);
+    var cumulative = 0;
+    var newState = 'idle';
 
-    for (const [stateName, weight] of Object.entries(transitions)) {
+    for (var [stateName, weight] of Object.entries(transitions)) {
       cumulative += weight;
       if (roll < cumulative) {
         newState = stateName;
@@ -2432,8 +2432,8 @@
     state.currentState = newState;
 
     // Set duration
-    const durationRange = BEHAVIOR_STATES[newState].duration;
-    const duration = durationRange[0] +
+    var durationRange = BEHAVIOR_STATES[newState].duration;
+    var duration = durationRange[0] +
       seededRandom(seed + 1) * (durationRange[1] - durationRange[0]);
     state.stateTimer = duration;
 
@@ -2485,7 +2485,7 @@
 
       case 'socializing':
         // Find nearby NPCs by actual distance
-        const nearby = npcAgents.filter(other => {
+        var nearby = npcAgents.filter(function(other) {
           if (other.id === agent.id) return false;
           var dx = other.position.x - agent.position.x;
           var dz = other.position.z - agent.position.z;
@@ -2520,15 +2520,15 @@
       case 'socializing':
         if (state.destination) {
           // Smooth interpolation toward destination
-          const dx = state.destination.x - agent.position.x;
-          const dz = state.destination.z - agent.position.z;
-          const distance = Math.sqrt(dx * dx + dz * dz);
+          var dx = state.destination.x - agent.position.x;
+          var dz = state.destination.z - agent.position.z;
+          var distance = Math.sqrt(dx * dx + dz * dz);
 
           if (distance > 0.5) {
-            const speed = 1.5; // units per second
+            var speed = 1.5; // units per second
             state.movementSpeed = speed;
-            const moveAmount = speed * deltaTime;
-            const ratio = Math.min(moveAmount / distance, 1);
+            var moveAmount = speed * deltaTime;
+            var ratio = Math.min(moveAmount / distance, 1);
 
             agent.position.x += dx * ratio;
             agent.position.z += dz * ratio;
@@ -2578,11 +2578,11 @@
    * Apply procedural animations to NPC
    */
   function applyAnimations(mesh, state, agent) {
-    const userData = mesh.userData;
+    var userData = mesh.userData;
     if (!userData.head || !userData.torso) return;
 
-    const time = state.animationTime;
-    const currentState = state.currentState;
+    var time = state.animationTime;
+    var currentState = state.currentState;
 
     // Reset rotations to neutral
     userData.leftArm.rotation.x = 0;
@@ -2598,7 +2598,7 @@
     switch (currentState) {
       case 'idle':
         // Subtle breathing - torso Y scale oscillation
-        const breathPhase = Math.sin(time * 0.002);
+        var breathPhase = Math.sin(time * 0.002);
         userData.torso.scale.y = 1.0 + breathPhase * 0.02;
 
         // Gentle head sway
@@ -2674,7 +2674,7 @@
 
           case 'builder':
             // Arm hammering motion
-            const hammerPhase = Math.sin(time * 0.006);
+            var hammerPhase = Math.sin(time * 0.006);
             userData.rightArm.rotation.x = -0.5 + hammerPhase * 0.8;
             userData.leftArm.rotation.x = 0.2;
             break;
@@ -2728,13 +2728,13 @@
    * Update NPC visual representation
    */
   function updateNPCVisual(agent, state, sceneContext, deltaTime, playerPos) {
-    const mesh = npcMeshes.get(agent.id);
+    var mesh = npcMeshes.get(agent.id);
     if (!mesh) return;
-    const THREE = window.THREE;
+    var THREE = window.THREE;
     if (!THREE) return;
 
     // Update position with smooth interpolation
-    const lerpFactor = Math.min(deltaTime * 5, 1);
+    var lerpFactor = Math.min(deltaTime * 5, 1);
     mesh.position.x += (agent.position.x - mesh.position.x) * lerpFactor;
     mesh.position.z += (agent.position.z - mesh.position.z) * lerpFactor;
 
@@ -2772,20 +2772,20 @@
 
     // Update emote indicator (only for NPCs within 30 units of camera/player)
     if (playerPos || sceneContext.camera) {
-      let checkPos = playerPos;
+      var checkPos = playerPos;
       if (!checkPos && sceneContext.camera) {
         checkPos = { x: sceneContext.camera.position.x, z: sceneContext.camera.position.z };
       }
 
       if (checkPos) {
-        const dx = checkPos.x - agent.position.x;
-        const dz = checkPos.z - agent.position.z;
-        const dist = Math.sqrt(dx * dx + dz * dz);
+        var dx = checkPos.x - agent.position.x;
+        var dz = checkPos.z - agent.position.z;
+        var dist = Math.sqrt(dx * dx + dz * dz);
 
         if (dist < 30) {
           // Get AI decision if available (from brain)
-          let decision = null;
-          const brain = npcBrains.get(agent.id);
+          var decision = null;
+          var brain = npcBrains.get(agent.id);
           if (brain && brain.lastDecision) {
             decision = brain.lastDecision;
           }
@@ -2797,7 +2797,7 @@
 
           // Spawn activity particles for working NPCs (throttled)
           if (state.currentState === 'working') {
-            let spawnTimer = particleSpawnTimers.get(agent.id) || 0;
+            var spawnTimer = particleSpawnTimers.get(agent.id) || 0;
             spawnTimer -= deltaTime;
             if (spawnTimer <= 0) {
               spawnActivityParticle(mesh, agent.archetype, THREE);
@@ -2808,13 +2808,13 @@
           }
         } else {
           // Too far - remove emote sprite if exists
-          const emoteData = emoteSprites.get(agent.id);
+          var emoteData = emoteSprites.get(agent.id);
           if (emoteData && emoteData.sprite) {
             mesh.remove(emoteData.sprite);
             emoteSprites.delete(agent.id);
           }
           // Also remove activity indicator
-          const indicatorData = activityIndicators.get(agent.id);
+          var indicatorData = activityIndicators.get(agent.id);
           if (indicatorData && indicatorData.mesh) {
             mesh.remove(indicatorData.mesh);
             activityIndicators.delete(agent.id);
@@ -2848,25 +2848,25 @@
 
     if (!message) {
       // Fallback to archetype messages
-      const messages = ARCHETYPE_MESSAGES[agent.archetype] || ['...'];
+      var messages = ARCHETYPE_MESSAGES[agent.archetype] || ['...'];
       message = randomChoice(messages, seed);
     }
 
-    const mesh = npcMeshes.get(agent.id);
+    var mesh = npcMeshes.get(agent.id);
     if (!mesh) return;
 
-    const THREE = window.THREE;
+    var THREE = window.THREE;
     if (!THREE) return;
 
     // Remove existing bubble if any
-    const existing = chatBubbles.get(agent.id);
+    var existing = chatBubbles.get(agent.id);
     if (existing) {
       mesh.remove(existing.mesh);
     }
 
     // Create chat bubble sprite
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
+    var canvas = document.createElement('canvas');
+    var context = canvas.getContext('2d');
     canvas.width = 512;
     canvas.height = 128;
 
@@ -2876,7 +2876,7 @@
     context.lineWidth = 4;
 
     // Rounded rectangle
-    const x = 10, y = 10, w = canvas.width - 20, h = canvas.height - 20, r = 15;
+    var x = 10, y = 10, w = canvas.width - 20, h = canvas.height - 20, r = 15;
     context.beginPath();
     context.moveTo(x + r, y);
     context.lineTo(x + w - r, y);
@@ -2898,14 +2898,14 @@
     context.textBaseline = 'middle';
 
     // Word wrap
-    const words = message.split(' ');
-    let line = '';
-    let y_pos = 64;
-    const maxWidth = 480;
+    var words = message.split(' ');
+    var line = '';
+    var y_pos = 64;
+    var maxWidth = 480;
 
-    for (let word of words) {
-      const testLine = line + word + ' ';
-      const metrics = context.measureText(testLine);
+    for (var word of words) {
+      var testLine = line + word + ' ';
+      var metrics = context.measureText(testLine);
       if (metrics.width > maxWidth && line !== '') {
         context.fillText(line, canvas.width / 2, y_pos - 10);
         line = word + ' ';
@@ -2916,9 +2916,9 @@
     }
     context.fillText(line, canvas.width / 2, y_pos - 10);
 
-    const bubbleTexture = new THREE.CanvasTexture(canvas);
-    const bubbleMaterial = new THREE.SpriteMaterial({ map: bubbleTexture });
-    const bubble = new THREE.Sprite(bubbleMaterial);
+    var bubbleTexture = new THREE.CanvasTexture(canvas);
+    var bubbleMaterial = new THREE.SpriteMaterial({ map: bubbleTexture });
+    var bubble = new THREE.Sprite(bubbleMaterial);
     bubble.scale.set(4, 1, 1);
     bubble.position.y = 3.5;
 
@@ -2933,12 +2933,12 @@
    * Update chat bubbles (fade out)
    */
   function updateChatBubbles(deltaTime) {
-    for (const [agentId, bubble] of chatBubbles.entries()) {
+    for (var [agentId, bubble] of chatBubbles.entries()) {
       bubble.timer -= deltaTime;
 
       if (bubble.timer <= 0) {
         // Remove bubble
-        const npcMesh = npcMeshes.get(agentId);
+        var npcMesh = npcMeshes.get(agentId);
         if (npcMesh) {
           npcMesh.remove(bubble.mesh);
         }
@@ -3226,8 +3226,8 @@
   function reloadZoneNPCs(sceneContext, currentZone, playerPos) {
     if (!playerPos) {
       // Fallback: show all NPCs in current zone
-      npcMeshes.forEach((mesh, agentId) => {
-        const agent = npcAgents.find(a => a.id === agentId);
+      npcMeshes.forEach(function(mesh, agentId) {
+        var agent = npcAgents.find(function(a) { return a.id === agentId; });
         if (agent) {
           mesh.visible = (agent.position.zone === currentZone);
         }
@@ -3236,8 +3236,8 @@
     } else {
       // Show NPCs within 200 units of player
       var viewDist = 200;
-      npcMeshes.forEach((mesh, agentId) => {
-        const agent = npcAgents.find(a => a.id === agentId);
+      npcMeshes.forEach(function(mesh, agentId) {
+        var agent = npcAgents.find(function(a) { return a.id === agentId; });
         if (agent) {
           var dx = agent.position.x - playerPos.x;
           var dz = agent.position.z - playerPos.z;
@@ -3252,14 +3252,14 @@
    * Get NPCs in a specific zone
    */
   function getNPCsInZone(zone) {
-    return npcAgents.filter(agent => agent.position.zone === zone);
+    return npcAgents.filter(function(agent) { return agent.position.zone === zone; });
   }
 
   /**
    * Get specific NPC by ID
    */
   function getNPCById(id) {
-    return npcAgents.find(agent => agent.id === id);
+    return npcAgents.find(function(agent) { return agent.id === id; });
   }
 
   /**

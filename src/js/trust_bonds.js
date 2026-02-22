@@ -378,7 +378,7 @@
 
   var GOSSIP_POSITIVE = [
     '{player} is one of the finest souls I have met in ZION.',
-    'If you need help, seek out {player}. They have never let me down.',
+    'If you need help, seek out {player}. They have never var me down.',
     '{player} gave me a gift that I still think about. Remarkable person.',
     'I shared my deepest worries with {player} and they listened without judgement.',
     'They say fortune favours the bold — I say it favours people like {player}.',

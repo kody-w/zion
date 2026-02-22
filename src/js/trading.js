@@ -7,18 +7,18 @@
   'use strict';
 
   // Import references
-  const Protocol = typeof require !== 'undefined' ? require('./protocol') : window.Protocol;
-  const Inventory = typeof require !== 'undefined' ? require('./inventory') : window.Inventory;
-  const Economy = typeof require !== 'undefined' ? require('./economy') : window.Economy;
+  var Protocol = typeof require !== 'undefined' ? require('./protocol') : window.Protocol;
+  var Inventory = typeof require !== 'undefined' ? require('./inventory') : window.Inventory;
+  var Economy = typeof require !== 'undefined' ? require('./economy') : window.Economy;
 
   // Active trades by trade ID
-  const activeTrades = new Map();
+  var activeTrades = new Map();
 
   // Trade invitations (pending requests)
-  const pendingInvitations = new Map();
+  var pendingInvitations = new Map();
 
-  let tradeCounter = 0;
-  let messageCallback = null;
+  var tradeCounter = 0;
+  var messageCallback = null;
 
   /**
    * Initialize trading system
@@ -42,14 +42,14 @@
     }
 
     // Check if already in a trade with this player
-    for (const [tradeId, trade] of activeTrades.entries()) {
+    for (var [tradeId, trade] of activeTrades.entries()) {
       if ((trade.player1.id === fromPlayerId && trade.player2.id === toPlayerId) ||
           (trade.player1.id === toPlayerId && trade.player2.id === fromPlayerId)) {
         return { success: false, message: 'Already in a trade with this player' };
       }
     }
 
-    const tradeId = `trade_${tradeCounter++}_${Date.now()}`;
+    var tradeId = `trade_${tradeCounter++}_${Date.now()}`;
 
     // Create pending invitation
     pendingInvitations.set(tradeId, {
@@ -61,7 +61,7 @@
 
     // Send trade offer message
     if (messageCallback) {
-      const msg = Protocol.create.trade_offer(fromPlayerId, {
+      var msg = Protocol.create.trade_offer(fromPlayerId, {
         tradeId: tradeId,
         targetPlayer: toPlayerId
       }, { position: position });
@@ -79,7 +79,7 @@
    * @returns {Object} {success: boolean, trade?: Object}
    */
   function acceptTrade(tradeId, playerId, position) {
-    const invitation = pendingInvitations.get(tradeId);
+    var invitation = pendingInvitations.get(tradeId);
 
     if (!invitation) {
       return { success: false, message: 'Trade invitation not found' };
@@ -90,7 +90,7 @@
     }
 
     // Create trade session
-    const trade = {
+    var trade = {
       id: tradeId,
       player1: {
         id: invitation.from,
@@ -115,7 +115,7 @@
 
     // Send acceptance message
     if (messageCallback) {
-      const msg = Protocol.create.trade_accept(playerId, {
+      var msg = Protocol.create.trade_accept(playerId, {
         tradeId: tradeId
       }, { position: position });
       messageCallback(msg);
@@ -132,7 +132,7 @@
    * @returns {Object} {success: boolean}
    */
   function declineTrade(tradeId, playerId, position) {
-    const invitation = pendingInvitations.get(tradeId);
+    var invitation = pendingInvitations.get(tradeId);
 
     if (!invitation) {
       return { success: false, message: 'Trade invitation not found' };
@@ -146,7 +146,7 @@
 
     // Send decline message
     if (messageCallback) {
-      const msg = Protocol.create.trade_decline(playerId, {
+      var msg = Protocol.create.trade_decline(playerId, {
         tradeId: tradeId
       }, { position: position });
       messageCallback(msg);
@@ -165,7 +165,7 @@
    * @returns {Object} {success: boolean}
    */
   function addItemToTrade(tradeId, playerId, itemSlot, inventory, position) {
-    const trade = activeTrades.get(tradeId);
+    var trade = activeTrades.get(tradeId);
 
     if (!trade) {
       return { success: false, message: 'Trade not found' };
@@ -175,7 +175,7 @@
       return { success: false, message: 'Trade is not active' };
     }
 
-    const player = trade.player1.id === playerId ? trade.player1 : trade.player2;
+    var player = trade.player1.id === playerId ? trade.player1 : trade.player2;
 
     if (!player || player.id !== playerId) {
       return { success: false, message: 'Not part of this trade' };
@@ -187,13 +187,13 @@
     }
 
     // Verify item exists in inventory
-    const item = inventory.slots[itemSlot];
+    var item = inventory.slots[itemSlot];
     if (!item) {
       return { success: false, message: 'No item in that slot' };
     }
 
     // Check if already added
-    if (player.items.find(i => i.slot === itemSlot)) {
+    if (player.items.find(function(i) { return i.slot === itemSlot; })) {
       return { success: false, message: 'Item already in trade' };
     }
 
@@ -223,7 +223,7 @@
    * @returns {Object} {success: boolean}
    */
   function removeItemFromTrade(tradeId, playerId, tradeSlot, position) {
-    const trade = activeTrades.get(tradeId);
+    var trade = activeTrades.get(tradeId);
 
     if (!trade) {
       return { success: false, message: 'Trade not found' };
@@ -233,7 +233,7 @@
       return { success: false, message: 'Trade is not active' };
     }
 
-    const player = trade.player1.id === playerId ? trade.player1 : trade.player2;
+    var player = trade.player1.id === playerId ? trade.player1 : trade.player2;
 
     if (!player || player.id !== playerId) {
       return { success: false, message: 'Not part of this trade' };
@@ -266,7 +266,7 @@
    * @returns {Object} {success: boolean}
    */
   function setSparkOffer(tradeId, playerId, amount, ledger, position) {
-    const trade = activeTrades.get(tradeId);
+    var trade = activeTrades.get(tradeId);
 
     if (!trade) {
       return { success: false, message: 'Trade not found' };
@@ -276,7 +276,7 @@
       return { success: false, message: 'Trade is not active' };
     }
 
-    const player = trade.player1.id === playerId ? trade.player1 : trade.player2;
+    var player = trade.player1.id === playerId ? trade.player1 : trade.player2;
 
     if (!player || player.id !== playerId) {
       return { success: false, message: 'Not part of this trade' };
@@ -288,7 +288,7 @@
 
     // Verify player has enough Spark
     if (Economy && ledger) {
-      const balance = Economy.getBalance(ledger, playerId);
+      var balance = Economy.getBalance(ledger, playerId);
       if (balance < amount) {
         return { success: false, message: 'Insufficient Spark' };
       }
@@ -314,7 +314,7 @@
    * @returns {Object} {success: boolean, bothReady: boolean}
    */
   function setReady(tradeId, playerId, position) {
-    const trade = activeTrades.get(tradeId);
+    var trade = activeTrades.get(tradeId);
 
     if (!trade) {
       return { success: false, message: 'Trade not found' };
@@ -324,7 +324,7 @@
       return { success: false, message: 'Trade is not active' };
     }
 
-    const player = trade.player1.id === playerId ? trade.player1 : trade.player2;
+    var player = trade.player1.id === playerId ? trade.player1 : trade.player2;
 
     if (!player || player.id !== playerId) {
       return { success: false, message: 'Not part of this trade' };
@@ -335,7 +335,7 @@
     // Broadcast update
     broadcastTradeUpdate(trade, position);
 
-    const bothReady = trade.player1.ready && trade.player2.ready;
+    var bothReady = trade.player1.ready && trade.player2.ready;
     return { success: true, bothReady: bothReady };
   }
 
@@ -350,7 +350,7 @@
    * @returns {Object} {success: boolean, executed?: boolean}
    */
   function confirmTrade(tradeId, playerId, inventory1, inventory2, ledger, position) {
-    const trade = activeTrades.get(tradeId);
+    var trade = activeTrades.get(tradeId);
 
     if (!trade) {
       return { success: false, message: 'Trade not found' };
@@ -365,7 +365,7 @@
       return { success: false, message: 'Both players must be ready first' };
     }
 
-    const player = trade.player1.id === playerId ? trade.player1 : trade.player2;
+    var player = trade.player1.id === playerId ? trade.player1 : trade.player2;
 
     if (!player || player.id !== playerId) {
       return { success: false, message: 'Not part of this trade' };
@@ -375,14 +375,14 @@
 
     // Check if both confirmed - execute trade
     if (trade.player1.confirmed && trade.player2.confirmed) {
-      const result = executeTrade(trade, inventory1, inventory2, ledger);
+      var result = executeTrade(trade, inventory1, inventory2, ledger);
 
       if (result.success) {
         trade.status = 'completed';
 
         // Send completion message
         if (messageCallback) {
-          const msg = Protocol.create.trade_accept(playerId, {
+          var msg = Protocol.create.trade_accept(playerId, {
             tradeId: tradeId,
             status: 'completed'
           }, { position: position });
@@ -403,7 +403,7 @@
 
     // Send confirmation message
     if (messageCallback) {
-      const msg = Protocol.create.trade_accept(playerId, {
+      var msg = Protocol.create.trade_accept(playerId, {
         tradeId: tradeId,
         confirmed: true
       }, { position: position });
@@ -421,11 +421,11 @@
    * @returns {Object} {success: boolean}
    */
   function cancelTrade(tradeId, playerId, position) {
-    const trade = activeTrades.get(tradeId);
+    var trade = activeTrades.get(tradeId);
 
     if (!trade) {
       // Check pending invitations
-      const invitation = pendingInvitations.get(tradeId);
+      var invitation = pendingInvitations.get(tradeId);
       if (invitation) {
         pendingInvitations.delete(tradeId);
         return { success: true };
@@ -441,7 +441,7 @@
 
     // Send cancellation message
     if (messageCallback) {
-      const msg = Protocol.create.trade_decline(playerId, {
+      var msg = Protocol.create.trade_decline(playerId, {
         tradeId: tradeId,
         reason: 'cancelled'
       }, { position: position });
@@ -469,24 +469,24 @@
     // Verify both players have the items and Spark they're offering
 
     // Check player 1's items
-    for (const tradeItem of trade.player1.items) {
-      const invItem = inventory1.slots[tradeItem.slot];
+    for (var tradeItem of trade.player1.items) {
+      var invItem = inventory1.slots[tradeItem.slot];
       if (!invItem || invItem.itemId !== tradeItem.itemId || invItem.count < tradeItem.count) {
         return { success: false, message: 'Player 1 no longer has offered items' };
       }
     }
 
     // Check player 2's items
-    for (const tradeItem of trade.player2.items) {
-      const invItem = inventory2.slots[tradeItem.slot];
+    for (var tradeItem of trade.player2.items) {
+      var invItem = inventory2.slots[tradeItem.slot];
       if (!invItem || invItem.itemId !== tradeItem.itemId || invItem.count < tradeItem.count) {
         return { success: false, message: 'Player 2 no longer has offered items' };
       }
     }
 
     // Check Spark balances
-    const balance1 = Economy.getBalance(ledger, trade.player1.id);
-    const balance2 = Economy.getBalance(ledger, trade.player2.id);
+    var balance1 = Economy.getBalance(ledger, trade.player1.id);
+    var balance2 = Economy.getBalance(ledger, trade.player2.id);
 
     if (balance1 < trade.player1.spark) {
       return { success: false, message: 'Player 1 insufficient Spark' };
@@ -497,11 +497,11 @@
 
     // Verify both players have inventory space
     // Count empty slots needed
-    const p1NeedsSlots = trade.player2.items.length - trade.player1.items.length;
-    const p2NeedsSlots = trade.player1.items.length - trade.player2.items.length;
+    var p1NeedsSlots = trade.player2.items.length - trade.player1.items.length;
+    var p2NeedsSlots = trade.player1.items.length - trade.player2.items.length;
 
-    const p1EmptySlots = inventory1.slots.filter(s => s === null).length;
-    const p2EmptySlots = inventory2.slots.filter(s => s === null).length;
+    var p1EmptySlots = inventory1.slots.filter(function(s) { return s === null; }).length;
+    var p2EmptySlots = inventory2.slots.filter(function(s) { return s === null; }).length;
 
     if (p1NeedsSlots > p1EmptySlots) {
       return { success: false, message: 'Player 1 insufficient inventory space' };
@@ -513,18 +513,18 @@
     // Execute atomically:
 
     // 1. Remove items from both players
-    for (const tradeItem of trade.player1.items) {
+    for (var tradeItem of trade.player1.items) {
       Inventory.removeItem(inventory1, tradeItem.itemId, tradeItem.count);
     }
-    for (const tradeItem of trade.player2.items) {
+    for (var tradeItem of trade.player2.items) {
       Inventory.removeItem(inventory2, tradeItem.itemId, tradeItem.count);
     }
 
     // 2. Add items to other player
-    for (const tradeItem of trade.player1.items) {
+    for (var tradeItem of trade.player1.items) {
       Inventory.addItem(inventory2, tradeItem.itemId, tradeItem.count);
     }
-    for (const tradeItem of trade.player2.items) {
+    for (var tradeItem of trade.player2.items) {
       Inventory.addItem(inventory1, tradeItem.itemId, tradeItem.count);
     }
 
@@ -547,7 +547,7 @@
   function broadcastTradeUpdate(trade, position) {
     if (!messageCallback) return;
 
-    const msg = Protocol.create.trade_offer(trade.player1.id, {
+    var msg = Protocol.create.trade_offer(trade.player1.id, {
       tradeId: trade.id,
       player1: {
         items: trade.player1.items,
@@ -648,7 +648,7 @@
    * @returns {Object|null} Trade object or null
    */
   function getActiveTrade(playerId) {
-    for (const [tradeId, trade] of activeTrades.entries()) {
+    for (var [tradeId, trade] of activeTrades.entries()) {
       if (trade.player1.id === playerId || trade.player2.id === playerId) {
         return trade;
       }
@@ -662,7 +662,7 @@
    * @returns {Object|null} Invitation object or null
    */
   function getPendingInvitation(playerId) {
-    for (const [tradeId, invitation] of pendingInvitations.entries()) {
+    for (var [tradeId, invitation] of pendingInvitations.entries()) {
       if (invitation.to === playerId) {
         return invitation;
       }

@@ -3,10 +3,10 @@
   'use strict';
 
   // Protocol version
-  const PROTOCOL_VERSION = 1;
+  var PROTOCOL_VERSION = 1;
 
   // Valid message types
-  const MESSAGE_TYPES = new Set([
+  var MESSAGE_TYPES = new Set([
     'join',
     'leave',
     'heartbeat',
@@ -66,7 +66,7 @@
   ]);
 
   // Message types that require consent
-  const CONSENT_REQUIRED_TYPES = new Set([
+  var CONSENT_REQUIRED_TYPES = new Set([
     'whisper',
     'challenge',
     'trade_offer',
@@ -74,7 +74,7 @@
   ]);
 
   // Valid platforms
-  const PLATFORMS = new Set([
+  var PLATFORMS = new Set([
     'desktop',
     'phone',
     'vr',
@@ -83,7 +83,7 @@
   ]);
 
   // Per-player sequence counter storage
-  const sequenceCounters = new Map();
+  var sequenceCounters = new Map();
 
   /**
    * Get the next sequence number for a player
@@ -94,7 +94,7 @@
     if (!sequenceCounters.has(playerId)) {
       sequenceCounters.set(playerId, 0);
     }
-    const current = sequenceCounters.get(playerId);
+    var current = sequenceCounters.get(playerId);
     sequenceCounters.set(playerId, current + 1);
     return current;
   }
@@ -111,8 +111,8 @@
 
     // Fallback implementation
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      var r = Math.random() * 16 | 0;
+      var v = c === 'x' ? r : (r & 0x3 | 0x8);
       return v.toString(16);
     });
   }
@@ -133,7 +133,8 @@
    * @param {object} opts - Optional fields (platform, position, geo)
    * @returns {object} Valid message object
    */
-  function createMessage(type, from, payload, opts = {}) {
+  function createMessage(type, from, payload, opts) {
+    opts = opts || {};
     if (!MESSAGE_TYPES.has(type)) {
       throw new Error(`Invalid message type: ${type}`);
     }
@@ -146,7 +147,7 @@
       throw new Error('Invalid payload: must be an object');
     }
 
-    const message = {
+    var message = {
       v: PROTOCOL_VERSION,
       id: generateUUID(),
       ts: generateTimestamp(),
@@ -168,7 +169,7 @@
    * @returns {object} {valid: boolean, errors: string[]}
    */
   function validateMessage(msg) {
-    const errors = [];
+    var errors = [];
 
     // Check if msg is an object
     if (!msg || typeof msg !== 'object' || Array.isArray(msg)) {
@@ -190,7 +191,7 @@
       errors.push('Invalid ts: must be a non-empty string');
     } else {
       // Check if it's a valid ISO-8601 timestamp
-      const date = new Date(msg.ts);
+      var date = new Date(msg.ts);
       if (isNaN(date.getTime())) {
         errors.push('Invalid ts: must be a valid ISO-8601 timestamp');
       }

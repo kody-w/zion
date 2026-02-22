@@ -410,7 +410,7 @@
     var newPhase = 1;
     for (var i = 0; i < boss.phaseThresholds.length; i++) {
       if (ratio <= boss.phaseThresholds[i]) {
-        newPhase = i + 2; // threshold 0 => phase 2, threshold 1 => phase 3 ...
+        newPhase = i + 2; // threshold 0 gives phase 2, threshold 1 gives phase 3 ...
         // but we only track up to boss.phases
         break;
       }

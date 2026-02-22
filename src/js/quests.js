@@ -7,7 +7,7 @@
   'use strict';
 
   // Quest database - 25 quests across 8 zones
-  const QUEST_DATABASE = {
+  var QUEST_DATABASE = {
     // === NEXUS QUESTS (2) ===
     quest_nexus_001: {
       id: 'quest_nexus_001',
@@ -568,8 +568,8 @@
   };
 
   // Player quest state storage
-  const playerQuestStates = new Map(); // playerId -> { activeQuests: [], completedQuests: [], turnedInQuests: [] }
-  const MAX_ACTIVE_QUESTS = 5;
+  var playerQuestStates = new Map(); // playerId -> { activeQuests: [], completedQuests: [], turnedInQuests: [] }
+  var MAX_ACTIVE_QUESTS = 5;
 
   /**
    * Initialize quest system for a player
@@ -593,22 +593,22 @@
    */
   function getAvailableQuests(playerId, playerData) {
     initPlayerQuests(playerId);
-    const state = playerQuestStates.get(playerId);
+    var state = playerQuestStates.get(playerId);
 
-    const available = [];
-    for (const questId in QUEST_DATABASE) {
-      const quest = QUEST_DATABASE[questId];
+    var available = [];
+    for (var questId in QUEST_DATABASE) {
+      var quest = QUEST_DATABASE[questId];
 
       // Skip if already active or turned in (unless repeatable)
-      if (state.activeQuests.find(q => q.id === questId)) continue;
+      if (state.activeQuests.find(function(q) { return q.id === questId; })) continue;
       if (!quest.repeatable && state.turnedInQuests.includes(questId)) continue;
 
       // Check level requirement
       if (quest.requiredLevel > (playerData.level || 0)) continue;
 
       // Check prerequisites
-      let prereqsMet = true;
-      for (const prereqId of quest.prerequisiteQuests) {
+      var prereqsMet = true;
+      for (var prereqId of quest.prerequisiteQuests) {
         if (!state.turnedInQuests.includes(prereqId)) {
           prereqsMet = false;
           break;
@@ -630,7 +630,7 @@
    */
   function acceptQuest(playerId, questId) {
     initPlayerQuests(playerId);
-    const state = playerQuestStates.get(playerId);
+    var state = playerQuestStates.get(playerId);
 
     // Check if quest exists
     if (!QUEST_DATABASE[questId]) {
@@ -638,7 +638,7 @@
     }
 
     // Check if already active
-    if (state.activeQuests.find(q => q.id === questId)) {
+    if (state.activeQuests.find(function(q) { return q.id === questId; })) {
       return { success: false, message: 'Quest already active' };
     }
 
@@ -648,7 +648,7 @@
     }
 
     // Clone quest with fresh objectives
-    const quest = JSON.parse(JSON.stringify(QUEST_DATABASE[questId]));
+    var quest = JSON.parse(JSON.stringify(QUEST_DATABASE[questId]));
     quest.status = 'active';
     quest.startTime = Date.now();
 
@@ -666,15 +666,15 @@
    */
   function updateQuestProgress(playerId, eventType, eventData) {
     initPlayerQuests(playerId);
-    const state = playerQuestStates.get(playerId);
-    const updatedQuests = [];
+    var state = playerQuestStates.get(playerId);
+    var updatedQuests = [];
 
-    for (const quest of state.activeQuests) {
-      let questUpdated = false;
+    for (var quest of state.activeQuests) {
+      var questUpdated = false;
 
-      for (const objective of quest.objectives) {
+      for (var objective of quest.objectives) {
         // Match event type to objective type
-        let match = false;
+        var match = false;
 
         switch (objective.type) {
           case 'collect':
@@ -748,7 +748,7 @@
 
       // Check if quest is complete
       if (questUpdated) {
-        const allComplete = quest.objectives.every(obj => {
+        var allComplete = quest.objectives.every(function(obj) {
           if (obj.required !== undefined) return obj.current >= obj.required;
           if (obj.count !== undefined) return obj.current >= obj.count;
           return obj.current >= 1;
@@ -775,15 +775,15 @@
    */
   function completeQuest(playerId, questId, gameState) {
     initPlayerQuests(playerId);
-    const state = playerQuestStates.get(playerId);
+    var state = playerQuestStates.get(playerId);
 
     // Find quest in active quests
-    const questIndex = state.activeQuests.findIndex(q => q.id === questId);
+    var questIndex = state.activeQuests.findIndex(function(q) { return q.id === questId; });
     if (questIndex === -1) {
       return { success: false, message: 'Quest not active' };
     }
 
-    const quest = state.activeQuests[questIndex];
+    var quest = state.activeQuests[questIndex];
 
     // Check if complete
     if (quest.status !== 'complete') {
@@ -796,7 +796,7 @@
     }
 
     // Award items (inventory system would handle this - for now just return them)
-    const rewards = {
+    var rewards = {
       spark: quest.rewards.spark,
       items: quest.rewards.items
     };
@@ -819,7 +819,7 @@
    */
   function getActiveQuests(playerId) {
     initPlayerQuests(playerId);
-    const state = playerQuestStates.get(playerId);
+    var state = playerQuestStates.get(playerId);
     return state.activeQuests.slice();
   }
 
@@ -830,7 +830,7 @@
    */
   function getQuestLog(playerId, playerData) {
     initPlayerQuests(playerId);
-    const state = playerQuestStates.get(playerId);
+    var state = playerQuestStates.get(playerId);
 
     return {
       active: state.activeQuests.slice(),
@@ -847,19 +847,19 @@
    * @returns {string} Dialogue text
    */
   function getQuestDialogue(questId, status, quest) {
-    const questTemplate = QUEST_DATABASE[questId];
+    var questTemplate = QUEST_DATABASE[questId];
     if (!questTemplate || !questTemplate.dialogue[status]) {
       return '';
     }
 
-    let dialogue = questTemplate.dialogue[status];
+    var dialogue = questTemplate.dialogue[status];
 
     // Interpolate progress variables
     if (quest && status === 'progress') {
-      const objective = quest.objectives[0]; // Use first objective for now
+      var objective = quest.objectives[0]; // Use first objective for now
       if (objective) {
-        const required = objective.required || objective.count || 1;
-        const remaining = required - objective.current;
+        var required = objective.required || objective.count || 1;
+        var remaining = required - objective.current;
         dialogue = dialogue.replace('{current}', objective.current);
         dialogue = dialogue.replace('{remaining}', remaining);
       }
@@ -876,16 +876,16 @@
    */
   function getNpcQuests(npcId, playerId) {
     initPlayerQuests(playerId);
-    const state = playerQuestStates.get(playerId);
+    var state = playerQuestStates.get(playerId);
 
-    const npcQuests = [];
+    var npcQuests = [];
 
-    for (const questId in QUEST_DATABASE) {
-      const quest = QUEST_DATABASE[questId];
+    for (var questId in QUEST_DATABASE) {
+      var quest = QUEST_DATABASE[questId];
       if (quest.giverNpcId !== npcId) continue;
 
       // Check if active
-      const activeQuest = state.activeQuests.find(q => q.id === questId);
+      var activeQuest = state.activeQuests.find(function(q) { return q.id === questId; });
       if (activeQuest) {
         npcQuests.push({ quest: activeQuest, state: activeQuest.status });
         continue;
@@ -897,8 +897,8 @@
       }
 
       // Check prerequisites
-      let available = true;
-      for (const prereqId of quest.prerequisiteQuests) {
+      var available = true;
+      for (var prereqId of quest.prerequisiteQuests) {
         if (!state.turnedInQuests.includes(prereqId)) {
           available = false;
           break;
@@ -921,9 +921,9 @@
    */
   function abandonQuest(playerId, questId) {
     initPlayerQuests(playerId);
-    const state = playerQuestStates.get(playerId);
+    var state = playerQuestStates.get(playerId);
 
-    const questIndex = state.activeQuests.findIndex(q => q.id === questId);
+    var questIndex = state.activeQuests.findIndex(function(q) { return q.id === questId; });
     if (questIndex === -1) {
       return { success: false, message: 'Quest not active' };
     }

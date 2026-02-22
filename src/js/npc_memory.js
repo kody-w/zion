@@ -214,7 +214,7 @@
     friend: {
       gardener:     ['My friend! I saved some moonflower seeds for you.', 'There you are! I was hoping you\'d visit today.', 'Welcome, friend! The garden has missed you.'],
       builder:      ['My friend! Just in time — I need your opinion on this arch.', 'There you are! I want to show you my latest plans.', 'Glad you\'re here. I\'ve been saving the best work for your eyes.'],
-      storyteller:  ['My friend! I\'ve been saving my best tale just for you.', 'You arrived! I\'ve been writing about your journey, you know.', 'Perfect timing! Sit and let me tell you something extraordinary.'],
+      storyteller:  ['My friend! I\'ve been saving my best tale just for you.', 'You arrived! I\'ve been writing about your journey, you know.', 'Perfect timing! Sit and var me tell you something extraordinary.'],
       merchant:     ['Ah, my friend! I have special stock set aside just for you.', 'Excellent! Come, I\'ll give you the friend\'s discount.', 'There you are! I was hoping you\'d stop by.'],
       explorer:     ['My companion! I found something remarkable — you must hear about it.', 'You\'re here! I was going to send word to find you.', 'Friend! Come — the trails are calling and I want your company.'],
       teacher:      ['My student, my friend! You make learning a joy.', 'Ah, you\'re here! I\'ve prepared something special to teach you.', 'There you are! I have been thinking of our conversations.'],

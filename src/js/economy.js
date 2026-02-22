@@ -7,7 +7,7 @@
   'use strict';
 
   // Earn table: activity → Spark amount or [min, max]
-  const EARN_TABLE = {
+  var EARN_TABLE = {
     daily_login: 10,
     harvest: [5, 15],
     craft: [5, 50],
@@ -23,7 +23,7 @@
   };
 
   // Progressive tax brackets (§6.4): tax on NEW earnings only
-  const TAX_BRACKETS = [
+  var TAX_BRACKETS = [
     { min: 0,   max: 19,  rate: 0.00 },
     { min: 20,  max: 49,  rate: 0.05 },
     { min: 50,  max: 99,  rate: 0.10 },
@@ -32,17 +32,17 @@
     { min: 500, max: Infinity, rate: 0.40 },
   ];
 
-  const TREASURY_ID = 'TREASURY';
-  const BASE_UBI_AMOUNT = 5;
-  const WEALTH_TAX_THRESHOLD = 500;
-  const WEALTH_TAX_RATE = 0.02;
-  const BALANCE_FLOOR = 0;
-  const MAINTENANCE_COST = 1;
-  const LISTING_FEE_RATE = 0.05;
-  const SYSTEM_SINK_ID = 'SYSTEM';
+  var TREASURY_ID = 'TREASURY';
+  var BASE_UBI_AMOUNT = 5;
+  var WEALTH_TAX_THRESHOLD = 500;
+  var WEALTH_TAX_RATE = 0.02;
+  var BALANCE_FLOOR = 0;
+  var MAINTENANCE_COST = 1;
+  var LISTING_FEE_RATE = 0.05;
+  var SYSTEM_SINK_ID = 'SYSTEM';
 
-  let transactionCounter = 0;
-  let listingCounter = 0;
+  var transactionCounter = 0;
+  var listingCounter = 0;
 
   /**
    * Creates a new ledger instance
@@ -62,8 +62,9 @@
    * @param {Object} details - Activity details (may include complexity/rarity 0-1)
    * @returns {number} Calculated Spark amount
    */
-  function calculateEarnAmount(activity, details = {}) {
-    const earnValue = EARN_TABLE[activity];
+  function calculateEarnAmount(activity, details) {
+    details = details || {};
+    var earnValue = EARN_TABLE[activity];
 
     if (!earnValue) {
       return 0;
@@ -76,12 +77,12 @@
 
     // Range [min, max] - interpolate based on complexity or rarity
     if (Array.isArray(earnValue) && earnValue.length === 2) {
-      const [min, max] = earnValue;
-      const factor = details.complexity !== undefined ? details.complexity :
+      var [min, max] = earnValue;
+      var factor = details.complexity !== undefined ? details.complexity :
                      details.rarity !== undefined ? details.rarity : 0.5;
 
       // Clamp factor to [0, 1]
-      const clampedFactor = Math.max(0, Math.min(1, factor));
+      var clampedFactor = Math.max(0, Math.min(1, factor));
       return Math.round(min + (max - min) * clampedFactor);
     }
 
@@ -95,7 +96,7 @@
    */
   function getTaxRate(currentBalance) {
     if (currentBalance < 0) return 0;
-    for (let i = 0; i < TAX_BRACKETS.length; i++) {
+    for (var i = 0; i < TAX_BRACKETS.length; i++) {
       if (currentBalance >= TAX_BRACKETS[i].min && currentBalance <= TAX_BRACKETS[i].max) {
         return TAX_BRACKETS[i].rate;
       }
@@ -110,8 +111,8 @@
    * @returns {Object} {netAmount, taxAmount, taxRate}
    */
   function calculateTax(grossAmount, currentBalance) {
-    const taxRate = getTaxRate(currentBalance);
-    const taxAmount = Math.floor(grossAmount * taxRate);
+    var taxRate = getTaxRate(currentBalance);
+    var taxAmount = Math.floor(grossAmount * taxRate);
     return {
       netAmount: grossAmount - taxAmount,
       taxAmount: taxAmount,
@@ -128,8 +129,9 @@
    * @param {string} type - Transaction type
    * @param {Object} details - Additional details
    */
-  function recordTransaction(ledger, from, to, amount, type, details = {}) {
-    const transaction = {
+  function recordTransaction(ledger, from, to, amount, type, details) {
+    details = details || {};
+    var transaction = {
       id: `tx_${transactionCounter++}_${Date.now()}`,
       ts: Date.now(),
       from,
@@ -150,8 +152,9 @@
    * @param {Object} details - Activity details
    * @returns {number} Amount earned
    */
-  function earnSpark(ledger, playerId, activity, details = {}) {
-    const amount = calculateEarnAmount(activity, details);
+  function earnSpark(ledger, playerId, activity, details) {
+    details = details || {};
+    var amount = calculateEarnAmount(activity, details);
 
     if (amount <= 0) {
       return 0;
@@ -163,7 +166,7 @@
     }
 
     // Calculate tax based on current balance (§6.4)
-    const tax = calculateTax(amount, ledger.balances[playerId]);
+    var tax = calculateTax(amount, ledger.balances[playerId]);
 
     // Credit the player with net amount
     ledger.balances[playerId] += tax.netAmount;
@@ -202,7 +205,7 @@
    * @returns {Object} {success: boolean, balance: number}
    */
   function spendSpark(ledger, playerId, amount) {
-    const currentBalance = getBalance(ledger, playerId);
+    var currentBalance = getBalance(ledger, playerId);
 
     if (amount <= 0) {
       return { success: false, balance: currentBalance };
@@ -234,7 +237,7 @@
       return { success: false };
     }
 
-    const senderBalance = getBalance(ledger, from);
+    var senderBalance = getBalance(ledger, from);
     if (senderBalance < amount) {
       return { success: false };
     }
@@ -290,7 +293,7 @@
       feeRate: LISTING_FEE_RATE
     });
 
-    const listing = {
+    var listing = {
       id: `listing_${listingCounter++}_${Date.now()}`,
       seller: playerId,
       item,
@@ -313,14 +316,14 @@
    */
   function buyListing(ledger, buyerId, listingId) {
     // Find the listing
-    const listing = ledger.listings.find(l => l.id === listingId && l.active);
+    var listing = ledger.listings.find(function(l) { return l.id === listingId && l.active; });
 
     if (!listing) {
       return { success: false };
     }
 
     // Check buyer's balance
-    const buyerBalance = getBalance(ledger, buyerId);
+    var buyerBalance = getBalance(ledger, buyerId);
     if (buyerBalance < listing.price) {
       return { success: false };
     }
@@ -358,9 +361,9 @@
    * @returns {Array} Array of transactions
    */
   function getTransactionLog(ledger, playerId) {
-    return ledger.transactions.filter(tx =>
-      tx.from === playerId || tx.to === playerId
-    );
+    return ledger.transactions.filter(function(tx) {
+      return tx.from === playerId || tx.to === playerId;
+    });
   }
 
   // ========================================================================

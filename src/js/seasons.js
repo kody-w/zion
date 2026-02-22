@@ -2,7 +2,7 @@
   // Seasonal events system based on real-world date
 
   // Season definitions with date ranges
-  const SEASONS = {
+  var SEASONS = {
     spring: {
       id: 'spring',
       name: 'Spring',
@@ -98,7 +98,7 @@
   };
 
   // Seasonal items available per season
-  const SEASONAL_ITEMS = {
+  var SEASONAL_ITEMS = {
     spring: [
       {
         id: 'cherry_blossom',
@@ -194,7 +194,7 @@
   };
 
   // Decoration configurations per zone and season
-  const SEASONAL_DECORATIONS = {
+  var SEASONAL_DECORATIONS = {
     spring: {
       town: [
         { type: 'cherry_tree', count: 8, positions: 'random' },
@@ -258,7 +258,7 @@
   };
 
   // Particle system configurations per season
-  const SEASONAL_PARTICLES = {
+  var SEASONAL_PARTICLES = {
     spring: {
       type: 'cherry_blossom',
       count: 100,
@@ -302,7 +302,7 @@
   };
 
   // NPC greetings per season
-  const SEASONAL_GREETINGS = {
+  var SEASONAL_GREETINGS = {
     spring: [
       'The flowers are beautiful this season!',
       'Can you feel the renewal in the air?',
@@ -334,12 +334,12 @@
    * @returns {Object} Current season data
    */
   function getCurrentSeason() {
-    const now = new Date();
-    const month = now.getMonth(); // 0-indexed (0 = January)
+    var now = new Date();
+    var month = now.getMonth(); // 0-indexed (0 = January)
 
     // Check each season
-    for (const seasonKey in SEASONS) {
-      const season = SEASONS[seasonKey];
+    for (var seasonKey in SEASONS) {
+      var season = SEASONS[seasonKey];
 
       // Handle winter's wrap-around (Dec, Jan, Feb)
       if (season.id === 'winter') {
@@ -362,7 +362,7 @@
    * @returns {Array} Array of seasonal items
    */
   function getSeasonalItems() {
-    const season = getCurrentSeason();
+    var season = getCurrentSeason();
     return SEASONAL_ITEMS[season.id] || [];
   }
 
@@ -372,8 +372,8 @@
    * @returns {Array} Array of decoration configurations
    */
   function getSeasonalDecorations(zone) {
-    const season = getCurrentSeason();
-    const decorations = SEASONAL_DECORATIONS[season.id];
+    var season = getCurrentSeason();
+    var decorations = SEASONAL_DECORATIONS[season.id];
     return decorations[zone] || [];
   }
 
@@ -382,7 +382,7 @@
    * @returns {Object} Particle system configuration
    */
   function getSeasonalParticles() {
-    const season = getCurrentSeason();
+    var season = getCurrentSeason();
     return SEASONAL_PARTICLES[season.id];
   }
 
@@ -392,7 +392,7 @@
    * @returns {number} Multiplier (1.0 for no bonus, 1.25 for seasonal bonus)
    */
   function getSeasonBonus(activity) {
-    const season = getCurrentSeason();
+    var season = getCurrentSeason();
     if (season.bonus.activity === activity) {
       return season.bonus.multiplier;
     }
@@ -404,23 +404,23 @@
    * @returns {number} Days until season changes
    */
   function getDaysUntilSeasonEnd() {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    const season = getCurrentSeason();
+    var now = new Date();
+    var currentMonth = now.getMonth();
+    var currentYear = now.getFullYear();
+    var season = getCurrentSeason();
 
-    let endDate;
+    var endDate;
 
     // Handle winter's wrap-around
     if (season.id === 'winter') {
       if (currentMonth === 11) {
         // December - end is Feb 28/29 next year
-        const nextYear = currentYear + 1;
-        const isLeapYear = (nextYear % 4 === 0 && nextYear % 100 !== 0) || (nextYear % 400 === 0);
+        var nextYear = currentYear + 1;
+        var isLeapYear = (nextYear % 4 === 0 && nextYear % 100 !== 0) || (nextYear % 400 === 0);
         endDate = new Date(nextYear, 1, isLeapYear ? 29 : 28, 23, 59, 59);
       } else {
         // Jan or Feb
-        const isLeapYear = (currentYear % 4 === 0 && currentYear % 100 !== 0) || (currentYear % 400 === 0);
+        var isLeapYear = (currentYear % 4 === 0 && currentYear % 100 !== 0) || (currentYear % 400 === 0);
         endDate = new Date(currentYear, 1, isLeapYear ? 29 : 28, 23, 59, 59);
       }
     } else {
@@ -428,8 +428,8 @@
       endDate = new Date(currentYear, season.endMonth + 1, 0, 23, 59, 59);
     }
 
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const daysRemaining = Math.ceil((endDate - now) / msPerDay);
+    var msPerDay = 24 * 60 * 60 * 1000;
+    var daysRemaining = Math.ceil((endDate - now) / msPerDay);
 
     return Math.max(0, daysRemaining);
   }
@@ -439,8 +439,8 @@
    * @returns {string} Seasonal greeting text
    */
   function getSeasonalGreeting() {
-    const season = getCurrentSeason();
-    const greetings = SEASONAL_GREETINGS[season.id];
+    var season = getCurrentSeason();
+    var greetings = SEASONAL_GREETINGS[season.id];
     return greetings[Math.floor(Math.random() * greetings.length)];
   }
 
@@ -449,7 +449,7 @@
    * @returns {Object} Color palette with primary, secondary, accent, ambient
    */
   function getSeasonalColors() {
-    const season = getCurrentSeason();
+    var season = getCurrentSeason();
     return season.colors;
   }
 

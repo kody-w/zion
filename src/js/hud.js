@@ -518,7 +518,8 @@
    * @param {string} text - Notification text
    * @param {string} type - 'info', 'success', 'warning', 'error'
    */
-  function showNotification(text, type = 'info') {
+  function showNotification(text, type) {
+    type = type || 'info';
     if (!notificationContainer) return;
     if (typeof document === 'undefined') return;
 
@@ -9992,6 +9993,8 @@
       ['X', 'Emote'],
       ['Z', 'Fast Travel'],
       ['R', 'Radio'],
+      ['.', 'Anchors'],
+      [',', 'Federation'],
       ['F3', 'FPS Counter'],
       [';', 'Leaderboard'],
       ['[', 'Economy Viz'],

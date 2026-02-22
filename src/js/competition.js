@@ -1,13 +1,13 @@
 (function(exports) {
 
   // Competition types
-  const COMPETITION_TYPES = ['duel', 'race', 'puzzle_race', 'build_contest', 'music_battle'];
+  var COMPETITION_TYPES = ['duel', 'race', 'puzzle_race', 'build_contest', 'music_battle'];
 
   // Pending challenges store
-  const pendingChallenges = {};
+  var pendingChallenges = {};
 
   // Spark awards by competition type
-  const SPARK_AWARDS = {
+  var SPARK_AWARDS = {
     duel: 50,
     race: 30,
     puzzle_race: 40,
@@ -29,7 +29,7 @@
       };
     }
 
-    const challengeType = msg.payload.type;
+    var challengeType = msg.payload.type;
     if (!COMPETITION_TYPES.includes(challengeType)) {
       return {
         success: false,
@@ -37,8 +37,8 @@
       };
     }
 
-    const challengeId = generateId();
-    const challenge = {
+    var challengeId = generateId();
+    var challenge = {
       id: challengeId,
       challenger: msg.from,
       challenged: msg.payload.to,
@@ -57,13 +57,13 @@
 
   // Handle challenge acceptance
   function handleAcceptChallenge(msg, state) {
-    const playerId = msg.from;
+    var playerId = msg.from;
 
     // Find pending challenge targeting this player
-    let foundChallenge = null;
-    let challengeId = null;
+    var foundChallenge = null;
+    var challengeId = null;
 
-    for (const [id, challenge] of Object.entries(pendingChallenges)) {
+    for (var [id, challenge] of Object.entries(pendingChallenges)) {
       if (challenge.challenged === playerId) {
         foundChallenge = challenge;
         challengeId = id;
@@ -79,7 +79,7 @@
     }
 
     // Create active competition
-    const competition = {
+    var competition = {
       id: generateId(),
       players: [foundChallenge.challenger, foundChallenge.challenged],
       type: foundChallenge.type,
@@ -115,12 +115,12 @@
       };
     }
 
-    const playerId = msg.from;
+    var playerId = msg.from;
 
     // Find active competition involving this player
-    const competitionIndex = state.competitions.findIndex(comp =>
-      comp.status === 'active' && comp.players.includes(playerId)
-    );
+    var competitionIndex = state.competitions.findIndex(function(comp) {
+      return comp.status === 'active' && comp.players.includes(playerId);
+    });
 
     if (competitionIndex === -1) {
       return {
@@ -129,10 +129,10 @@
       };
     }
 
-    const competition = state.competitions[competitionIndex];
+    var competition = state.competitions[competitionIndex];
 
     // Determine winner (the other player)
-    const winner = competition.players.find(p => p !== playerId);
+    var winner = competition.players.find(function(p) { return p !== playerId; });
 
     // Update competition status
     competition.status = 'completed';
@@ -141,7 +141,7 @@
     competition.forfeitedBy = playerId;
 
     // Calculate Spark award
-    const sparkAward = SPARK_AWARDS[competition.type] || 20;
+    var sparkAward = SPARK_AWARDS[competition.type] || 20;
 
     return {
       success: true,
@@ -161,13 +161,13 @@
       };
     }
 
-    const playerId = msg.from;
-    const score = msg.payload.score;
+    var playerId = msg.from;
+    var score = msg.payload.score;
 
     // Find active competition involving this player
-    const competitionIndex = state.competitions.findIndex(comp =>
-      comp.status === 'active' && comp.players.includes(playerId)
-    );
+    var competitionIndex = state.competitions.findIndex(function(comp) {
+      return comp.status === 'active' && comp.players.includes(playerId);
+    });
 
     if (competitionIndex === -1) {
       return {
@@ -176,27 +176,29 @@
       };
     }
 
-    const competition = state.competitions[competitionIndex];
+    var competition = state.competitions[competitionIndex];
 
     // Record score
     competition.scores[playerId] = score;
 
     // Check if both players have scored
-    const allScored = competition.players.every(p =>
-      competition.scores.hasOwnProperty(p)
-    );
+    var allScored = competition.players.every(function(p) {
+      return competition.scores.hasOwnProperty(p);
+    });
 
-    let sparkAward = null;
-    let winner = null;
+    var sparkAward = null;
+    var winner = null;
 
     if (allScored) {
       // Determine winner (highest score)
-      const scores = competition.players.map(p => ({
-        player: p,
-        score: competition.scores[p]
-      }));
+      var scores = competition.players.map(function(p) {
+        return {
+          player: p,
+          score: competition.scores[p]
+        };
+      });
 
-      scores.sort((a, b) => b.score - a.score);
+      scores.sort(function(a, b) { return b.score - a.score; });
       winner = scores[0].player;
 
       // Update competition status
@@ -219,9 +221,9 @@
 
   // Get pending challenges for a player
   function getPendingChallenges(playerId) {
-    return Object.values(pendingChallenges).filter(c =>
-      c.challenged === playerId || c.challenger === playerId
-    );
+    return Object.values(pendingChallenges).filter(function(c) {
+      return c.challenged === playerId || c.challenger === playerId;
+    });
   }
 
   // Spectator tracking

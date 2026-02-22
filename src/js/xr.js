@@ -1,10 +1,10 @@
 // xr.js
 (function(exports) {
   // WebXR integration for VR/AR
-  let xrSession = null;
-  let xrReferenceSpace = null;
-  let lastPosition = { x: 0, y: 0, z: 0 };
-  let lastCheckTime = 0;
+  var xrSession = null;
+  var xrReferenceSpace = null;
+  var lastPosition = { x: 0, y: 0, z: 0 };
+  var lastCheckTime = 0;
 
   /**
    * Initialize XR and check capabilities
@@ -17,8 +17,8 @@
     }
 
     try {
-      const vrSupported = await navigator.xr.isSessionSupported('immersive-vr');
-      const arSupported = await navigator.xr.isSessionSupported('immersive-ar');
+      var vrSupported = await navigator.xr.isSessionSupported('immersive-vr');
+      var arSupported = await navigator.xr.isSessionSupported('immersive-ar');
 
       console.log('XR capabilities:', { vrSupported, arSupported });
 
@@ -55,7 +55,7 @@
       await renderer.xr.setSession(xrSession);
       renderer.xr.enabled = true;
 
-      xrSession.addEventListener('end', () => {
+      xrSession.addEventListener('end', function() {
         xrSession = null;
         renderer.xr.enabled = false;
         console.log('VR session ended');
@@ -67,7 +67,7 @@
       xrReferenceSpace = await xrSession.requestReferenceSpace('local-floor');
 
       // Start render loop
-      renderer.setAnimationLoop((timestamp, frame) => {
+      renderer.setAnimationLoop(function(timestamp, frame) {
         if (frame) {
           renderer.render(scene, camera);
         }
@@ -96,7 +96,7 @@
     }
 
     // Show safety warning first
-    const proceed = await showSafetyWarning();
+    var proceed = await showSafetyWarning();
     if (!proceed) {
       console.log('AR session cancelled by user');
       return;
@@ -114,7 +114,7 @@
       await renderer.xr.setSession(xrSession);
       renderer.xr.enabled = true;
 
-      xrSession.addEventListener('end', () => {
+      xrSession.addEventListener('end', function() {
         xrSession = null;
         renderer.xr.enabled = false;
         console.log('AR session ended');
@@ -129,15 +129,15 @@
       scene.background = null;
 
       // Start render loop with speed checking
-      renderer.setAnimationLoop((timestamp, frame) => {
+      renderer.setAnimationLoop(function(timestamp, frame) {
         if (frame) {
           // Check speed periodically
           if (timestamp - lastCheckTime > 1000) { // Every second
-            const pose = frame.getViewerPose(xrReferenceSpace);
+            var pose = frame.getViewerPose(xrReferenceSpace);
             if (pose) {
-              const position = pose.transform.position;
-              const deltaTime = (timestamp - lastCheckTime) / 1000;
-              const speedCheck = checkSpeed(position, lastPosition, deltaTime);
+              var position = pose.transform.position;
+              var deltaTime = (timestamp - lastCheckTime) / 1000;
+              var speedCheck = checkSpeed(position, lastPosition, deltaTime);
 
               if (!speedCheck.safe) {
                 console.warn(`Speed too high: ${speedCheck.speed.toFixed(1)} km/h. Pausing AR.`);
@@ -185,15 +185,15 @@
       return { safe: true, speed: 0 };
     }
 
-    const dx = position.x - lastPosition.x;
-    const dy = position.y - lastPosition.y;
-    const dz = position.z - lastPosition.z;
+    var dx = position.x - lastPosition.x;
+    var dy = position.y - lastPosition.y;
+    var dz = position.z - lastPosition.z;
 
-    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-    const speedMetersPerSecond = distance / deltaTime;
-    const speedKmPerHour = speedMetersPerSecond * 3.6;
+    var distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    var speedMetersPerSecond = distance / deltaTime;
+    var speedKmPerHour = speedMetersPerSecond * 3.6;
 
-    const MAX_SAFE_SPEED = 25; // km/h (walking/jogging speed)
+    var MAX_SAFE_SPEED = 25; // km/h (walking/jogging speed)
 
     return {
       safe: speedKmPerHour <= MAX_SAFE_SPEED,
@@ -210,8 +210,8 @@
       return Promise.resolve(true);
     }
 
-    return new Promise((resolve) => {
-      const overlay = document.createElement('div');
+    return new Promise(function(resolve) {
+      var overlay = document.createElement('div');
       overlay.style.cssText = `
         position: fixed;
         top: 0;
@@ -227,7 +227,7 @@
         font-family: Arial, sans-serif;
       `;
 
-      const content = document.createElement('div');
+      var content = document.createElement('div');
       content.style.cssText = `
         max-width: 500px;
         padding: 30px;
@@ -280,12 +280,12 @@
       overlay.appendChild(content);
       document.body.appendChild(overlay);
 
-      document.getElementById('ar-accept').addEventListener('click', () => {
+      document.getElementById('ar-accept').addEventListener('click', function() {
         overlay.remove();
         resolve(true);
       });
 
-      document.getElementById('ar-cancel').addEventListener('click', () => {
+      document.getElementById('ar-cancel').addEventListener('click', function() {
         overlay.remove();
         resolve(false);
       });
@@ -299,7 +299,7 @@
   function showSpeedWarning(speed) {
     if (typeof document === 'undefined') return;
 
-    let warningEl = document.getElementById('ar-speed-warning');
+    var warningEl = document.getElementById('ar-speed-warning');
     if (!warningEl) {
       warningEl = document.createElement('div');
       warningEl.id = 'ar-speed-warning';
@@ -331,7 +331,7 @@
     warningEl.style.display = 'block';
 
     // Hide after a few seconds if speed normalized
-    setTimeout(() => {
+    setTimeout(function() {
       if (warningEl) {
         warningEl.style.display = 'none';
       }

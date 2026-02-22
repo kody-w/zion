@@ -399,7 +399,7 @@
       weather_rain: [
         "*covering goods* Quick, before they get wet!",
         "Rain is bad for business, good for discounts!",
-        "Come inside my tent! Can't let merchandise get soaked."
+        "Come inside my tent! Can't var merchandise get soaked."
       ],
       weather_clear: [
         "Perfect market day!",

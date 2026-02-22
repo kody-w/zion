@@ -7,7 +7,7 @@
   'use strict';
 
   // In-memory live state
-  let liveState = null;
+  var liveState = null;
 
   /**
    * Creates initial world state with all required keys
@@ -63,11 +63,11 @@
       liveState = createWorldState();
     }
 
-    const parts = path.split('.');
-    let current = liveState;
+    var parts = path.split('.');
+    var current = liveState;
 
-    for (let i = 0; i < parts.length - 1; i++) {
-      const part = parts[i];
+    for (var i = 0; i < parts.length - 1; i++) {
+      var part = parts[i];
       if (!current[part]) {
         current[part] = {};
       }
@@ -86,7 +86,7 @@
     }
 
     try {
-      const state = getLiveState();
+      var state = getLiveState();
       localStorage.setItem('zion_state', JSON.stringify(state));
     } catch (e) {
       console.error('Failed to flush to localStorage:', e);
@@ -102,7 +102,7 @@
     }
 
     try {
-      const stored = localStorage.getItem('zion_state');
+      var stored = localStorage.getItem('zion_state');
       if (stored) {
         liveState = JSON.parse(stored);
       } else {
@@ -119,7 +119,7 @@
    * @returns {string} JSON string of current state
    */
   function flushToCanonical() {
-    const state = getLiveState();
+    var state = getLiveState();
     return JSON.stringify(state);
   }
 
@@ -144,10 +144,10 @@
    */
   function applyMessage(state, message) {
     // Deep clone state for immutability
-    const newState = JSON.parse(JSON.stringify(state));
+    var newState = JSON.parse(JSON.stringify(state));
 
-    const { type, from, payload } = message;
-    const timestamp = message.ts || Date.now();
+    var { type, from, payload } = message;
+    var timestamp = message.ts || Date.now();
 
     switch (type) {
       case 'join':
@@ -218,7 +218,7 @@
 
       case 'build':
         if (payload.structure) {
-          const structureId = `struct_${timestamp}_${from}`;
+          var structureId = `struct_${timestamp}_${from}`;
           newState.structures[structureId] = {
             id: structureId,
             builder: from,
@@ -232,7 +232,7 @@
 
       case 'plant':
         if (payload.plant) {
-          const gardenId = `garden_${timestamp}_${from}`;
+          var gardenId = `garden_${timestamp}_${from}`;
           newState.gardens[gardenId] = {
             id: gardenId,
             gardener: from,
@@ -247,7 +247,7 @@
 
       case 'harvest':
         if (payload.gardenId && newState.gardens[payload.gardenId]) {
-          const garden = newState.gardens[payload.gardenId];
+          var garden = newState.gardens[payload.gardenId];
           if (garden.ready || timestamp >= garden.ready_at) {
             delete newState.gardens[payload.gardenId];
             // Add harvested item to player inventory
@@ -276,7 +276,7 @@
 
       case 'compose':
         if (payload.art) {
-          const artId = `art_${timestamp}_${from}`;
+          var artId = `art_${timestamp}_${from}`;
           newState.structures[artId] = {
             id: artId,
             artist: from,
@@ -304,7 +304,7 @@
 
       case 'trade_accept':
         if (payload.tradeId) {
-          const trade = newState.actions.find(a => a.id === payload.tradeId);
+          var trade = newState.actions.find(function(a) { return a.id === payload.tradeId; });
           if (trade && trade.type === 'trade_offer') {
             trade.status = 'accepted';
             trade.completed_at = timestamp;
@@ -341,7 +341,7 @@
 
       case 'trade_decline':
         if (payload.tradeId) {
-          const trade = newState.actions.find(a => a.id === payload.tradeId);
+          var trade = newState.actions.find(function(a) { return a.id === payload.tradeId; });
           if (trade && trade.type === 'trade_offer') {
             trade.status = 'declined';
             trade.completed_at = timestamp;
@@ -478,7 +478,7 @@
 
       case 'mentor_accept':
         if (payload.mentorId) {
-          const mentorship = newState.actions.find(a => a.id === payload.mentorId);
+          var mentorship = newState.actions.find(function(a) { return a.id === payload.mentorId; });
           if (mentorship && mentorship.type === 'mentor_offer') {
             mentorship.status = 'accepted';
             mentorship.accepted_at = timestamp;
@@ -487,7 +487,7 @@
         break;
 
       case 'challenge':
-        const challengeId = `challenge_${timestamp}_${from}`;
+        var challengeId = `challenge_${timestamp}_${from}`;
         newState.competitions[challengeId] = {
           id: challengeId,
           challenger: from,
@@ -515,7 +515,7 @@
 
       case 'score':
         if (payload.challengeId && newState.competitions[payload.challengeId]) {
-          const comp = newState.competitions[payload.challengeId];
+          var comp = newState.competitions[payload.challengeId];
           if (!comp.scores) {
             comp.scores = {};
           }
@@ -525,7 +525,7 @@
 
       case 'discover':
         if (payload.discovery) {
-          const discoveryId = `discovery_${timestamp}_${from}`;
+          var discoveryId = `discovery_${timestamp}_${from}`;
           newState.discoveries[discoveryId] = {
             id: discoveryId,
             discoverer: from,
@@ -539,7 +539,7 @@
 
       case 'anchor_place':
         if (payload.anchor) {
-          const anchorId = `anchor_${timestamp}_${from}`;
+          var anchorId = `anchor_${timestamp}_${from}`;
           newState.anchors[anchorId] = {
             id: anchorId,
             owner: from,
@@ -585,7 +585,7 @@
 
       case 'return_home':
         if (newState.players[from]) {
-          const homeWorld = newState.players[from].home_world || 'default';
+          var homeWorld = newState.players[from].home_world || 'default';
           newState.players[from].current_world = homeWorld;
           if (payload.position) {
             newState.players[from].position = payload.position;
@@ -607,7 +607,7 @@
 
       case 'federation_handshake':
         if (payload.federationId) {
-          const fed = newState.federation.federations.find(f => f.id === payload.federationId);
+          var fed = newState.federation.federations.find(function(f) { return f.id === payload.federationId; });
           if (fed) {
             fed.handshake_complete = true;
             fed.handshake_at = timestamp;
@@ -826,19 +826,19 @@
    */
   function resolveConflict(stateA, stateB) {
     // Start with a deep clone of stateA
-    const merged = JSON.parse(JSON.stringify(stateA));
+    var merged = JSON.parse(JSON.stringify(stateA));
 
     // Merge changes arrays and sort by timestamp
-    const allChanges = [
+    var allChanges = [
       ...(stateA.changes || []),
       ...(stateB.changes || [])
-    ].sort((a, b) => a.ts - b.ts);
+    ].sort(function(a, b) { return a.ts - b.ts; });
 
     // Remove duplicates
-    const uniqueChanges = [];
-    const seen = new Set();
-    for (const change of allChanges) {
-      const key = `${change.type}_${change.from}_${change.ts}`;
+    var uniqueChanges = [];
+    var seen = new Set();
+    for (var change of allChanges) {
+      var key = `${change.type}_${change.from}_${change.ts}`;
       if (!seen.has(key)) {
         seen.add(key);
         uniqueChanges.push(change);
@@ -849,17 +849,17 @@
 
     // Merge players (last-writer-wins based on last_seen)
     merged.players = { ...stateA.players };
-    for (const [playerId, playerB] of Object.entries(stateB.players || {})) {
-      const playerA = merged.players[playerId];
+    for (var [playerId, playerB] of Object.entries(stateB.players || {})) {
+      var playerA = merged.players[playerId];
       if (!playerA || (playerB.last_seen || 0) > (playerA.last_seen || 0)) {
         merged.players[playerId] = playerB;
       }
     }
 
     // Merge collections (combine and deduplicate by ID)
-    const mergeById = (collectionA, collectionB) => {
-      const result = { ...collectionA };
-      for (const [id, item] of Object.entries(collectionB || {})) {
+    var mergeById = function(collectionA, collectionB) {
+      var result = { ...collectionA };
+      for (var [id, item] of Object.entries(collectionB || {})) {
         if (!result[id] || (item.ts || 0) > (result[id].ts || 0)) {
           result[id] = item;
         }
@@ -877,15 +877,15 @@
     merged.chat = [
       ...(stateA.chat || []),
       ...(stateB.chat || [])
-    ].sort((a, b) => a.ts - b.ts);
+    ].sort(function(a, b) { return a.ts - b.ts; });
 
     // Merge actions (combine and deduplicate)
     merged.actions = [
       ...(stateA.actions || []),
       ...(stateB.actions || [])
     ];
-    const actionIds = new Set();
-    merged.actions = merged.actions.filter(action => {
+    var actionIds = new Set();
+    merged.actions = merged.actions.filter(function(action) {
       if (actionIds.has(action.id)) {
         return false;
       }
@@ -899,7 +899,7 @@
       transactions: [
         ...(stateA.economy?.transactions || []),
         ...(stateB.economy?.transactions || [])
-      ].sort((a, b) => a.ts - b.ts),
+      ].sort(function(a, b) { return a.ts - b.ts; }),
       listings: [
         ...(stateA.economy?.listings || []),
         ...(stateB.economy?.listings || [])
@@ -915,8 +915,8 @@
     };
 
     // World state - use most recent
-    const worldATime = stateA.world?.time || 0;
-    const worldBTime = stateB.world?.time || 0;
+    var worldATime = stateA.world?.time || 0;
+    var worldBTime = stateB.world?.time || 0;
     merged.world = worldBTime > worldATime ? stateB.world : stateA.world;
 
     return merged;

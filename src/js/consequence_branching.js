@@ -342,7 +342,7 @@
         },
         {
           id: 'back_stronger_guild',
-          text: 'Back the stronger guild and let the outcome determine leadership.',
+          text: 'Back the stronger guild and var the outcome determine leadership.',
           branchXP: { power: 35 },
           locks: ['neutral_standing'],
           unlocks: []

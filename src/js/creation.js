@@ -1,7 +1,7 @@
 (function(exports) {
 
   // Plant species configuration
-  const PLANT_SPECIES = {
+  var PLANT_SPECIES = {
     sunflower: {
       growthTime: 300000, // 5 min
       yields: [{type: 'sunflower', quantity: 3}]
@@ -25,7 +25,7 @@
   };
 
   // Crafting recipes
-  const RECIPES = {
+  var RECIPES = {
     wooden_bench: {
       materials: {wood: 3},
       produces: {type: 'wooden_bench', quantity: 1},
@@ -54,7 +54,7 @@
   };
 
   // Structure types
-  const STRUCTURE_TYPES = [
+  var STRUCTURE_TYPES = [
     'house', 'workshop', 'garden_shed', 'monument', 'bridge',
     'fountain', 'stage', 'market_stall', 'bench', 'lantern'
   ];
@@ -73,7 +73,7 @@
       };
     }
 
-    const structureType = msg.payload.type;
+    var structureType = msg.payload.type;
     if (!STRUCTURE_TYPES.includes(structureType)) {
       return {
         success: false,
@@ -81,7 +81,7 @@
       };
     }
 
-    const structure = {
+    var structure = {
       id: generateId(),
       type: structureType,
       position: msg.payload.position || {x: 0, y: 0, z: 0},
@@ -112,7 +112,7 @@
       };
     }
 
-    const species = msg.payload.species;
+    var species = msg.payload.species;
     if (!PLANT_SPECIES[species]) {
       return {
         success: false,
@@ -120,11 +120,11 @@
       };
     }
 
-    const speciesData = PLANT_SPECIES[species];
-    const plantedAt = Date.now();
-    const readyAt = plantedAt + speciesData.growthTime;
+    var speciesData = PLANT_SPECIES[species];
+    var plantedAt = Date.now();
+    var readyAt = plantedAt + speciesData.growthTime;
 
-    const garden = {
+    var garden = {
       id: generateId(),
       species: species,
       position: msg.payload.position || {x: 0, y: 0, z: 0},
@@ -164,8 +164,8 @@
       };
     }
 
-    const targetId = msg.payload.target;
-    const gardenIndex = state.gardens.findIndex(g => g.id === targetId);
+    var targetId = msg.payload.target;
+    var gardenIndex = state.gardens.findIndex(function(g) { return g.id === targetId; });
 
     if (gardenIndex === -1) {
       return {
@@ -174,11 +174,11 @@
       };
     }
 
-    const garden = state.gardens[gardenIndex];
-    const now = Date.now();
+    var garden = state.gardens[gardenIndex];
+    var now = Date.now();
 
     // Check if growth is complete
-    const isReady = now >= garden.readyAt || garden.growthStage >= 1.0;
+    var isReady = now >= garden.readyAt || garden.growthStage >= 1.0;
 
     if (!isReady) {
       return {
@@ -187,8 +187,8 @@
       };
     }
 
-    const speciesData = PLANT_SPECIES[garden.species];
-    const items = speciesData.yields;
+    var speciesData = PLANT_SPECIES[garden.species];
+    var items = speciesData.yields;
 
     // Remove garden from state
     state.gardens.splice(gardenIndex, 1);
@@ -202,7 +202,7 @@
 
   // Handle crafting
   function handleCraft(msg, state) {
-    const recipeName = msg.payload.recipe;
+    var recipeName = msg.payload.recipe;
 
     if (!RECIPES[recipeName]) {
       return {
@@ -211,7 +211,7 @@
       };
     }
 
-    const recipe = RECIPES[recipeName];
+    var recipe = RECIPES[recipeName];
 
     // Initialize player inventory if needed
     if (!state.players) {
@@ -224,10 +224,10 @@
       state.players[msg.from].inventory = {};
     }
 
-    const inventory = state.players[msg.from].inventory;
+    var inventory = state.players[msg.from].inventory;
 
     // Check if player has required materials
-    for (const [material, quantity] of Object.entries(recipe.materials)) {
+    for (var [material, quantity] of Object.entries(recipe.materials)) {
       if (!inventory[material] || inventory[material] < quantity) {
         return {
           success: false,
@@ -237,7 +237,7 @@
     }
 
     // Consume materials
-    for (const [material, quantity] of Object.entries(recipe.materials)) {
+    for (var [material, quantity] of Object.entries(recipe.materials)) {
       inventory[material] -= quantity;
       if (inventory[material] === 0) {
         delete inventory[material];
@@ -245,7 +245,7 @@
     }
 
     // Produce item
-    const producedItem = recipe.produces;
+    var producedItem = recipe.produces;
     if (!inventory[producedItem.type]) {
       inventory[producedItem.type] = 0;
     }
@@ -259,7 +259,7 @@
   }
 
   // Compose types configuration
-  const COMPOSE_TYPES = {
+  var COMPOSE_TYPES = {
     poem: { name: 'Poem', maxLength: 500, sparkReward: [5, 20] },
     poetry: { name: 'Poetry', maxLength: 500, sparkReward: [5, 20] },
     song: { name: 'Song', maxLength: 300, sparkReward: [10, 30] },
@@ -271,9 +271,9 @@
 
   // Handle artistic composition
   function handleCompose(msg, state) {
-    const medium = msg.payload.medium || msg.payload.composeType || 'poem';
-    const title = msg.payload.title || 'Untitled';
-    const content = msg.payload.content || '';
+    var medium = msg.payload.medium || msg.payload.composeType || 'poem';
+    var title = msg.payload.title || 'Untitled';
+    var content = msg.payload.content || '';
 
     if (!COMPOSE_TYPES[medium]) {
       return {
@@ -282,7 +282,7 @@
       };
     }
 
-    const typeData = COMPOSE_TYPES[medium];
+    var typeData = COMPOSE_TYPES[medium];
 
     // Check max length for text-based types
     if (typeData.maxLength && content.length > typeData.maxLength) {
@@ -292,7 +292,7 @@
       };
     }
 
-    const composition = {
+    var composition = {
       id: generateId(),
       creator: msg.from,
       type: 'composition',
@@ -314,9 +314,9 @@
     state.structures.push(composition);
 
     // Calculate spark reward
-    const sparkMin = typeData.sparkReward[0];
-    const sparkMax = typeData.sparkReward[1];
-    const sparkReward = Math.floor(sparkMin + Math.random() * (sparkMax - sparkMin));
+    var sparkMin = typeData.sparkReward[0];
+    var sparkMax = typeData.sparkReward[1];
+    var sparkReward = Math.floor(sparkMin + Math.random() * (sparkMax - sparkMin));
 
     return {
       success: true,
@@ -332,7 +332,7 @@
       return { success: false, error: 'No artworks found' };
     }
 
-    const artwork = state.artworks.find(function(a) { return a.id === artworkId; });
+    var artwork = state.artworks.find(function(a) { return a.id === artworkId; });
     if (!artwork) {
       return { success: false, error: 'Artwork not found' };
     }
@@ -380,7 +380,7 @@
       return { success: false, error: 'No artworks found' };
     }
 
-    const artwork = state.artworks.find(function(a) { return a.id === artworkId; });
+    var artwork = state.artworks.find(function(a) { return a.id === artworkId; });
     if (!artwork) {
       return { success: false, error: 'Artwork not found' };
     }

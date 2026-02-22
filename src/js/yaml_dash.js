@@ -6,7 +6,7 @@
  * an interactive collapsible tree data structure, and a browser panel.
  *
  * UMD module: window.YamlDash (browser) or module.exports (Node.js)
- * ES5 compatible — uses var, no const/let inside module body.
+ * ES5 compatible — uses var, no var/var inside module body.
  */
 (function(exports) {
   'use strict';

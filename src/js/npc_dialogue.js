@@ -227,7 +227,7 @@
         "Greetings, traveler! I hope your journey here was eventful.",
         "There was once a stranger who walked into ZION... that's you!",
         "Hello! Legend has it the best stories begin with a chance meeting.",
-        "Welcome! Sit — let me tell you how this world began.",
+        "Welcome! Sit — var me tell you how this world began.",
         "Once, on a day like today, a hero arrived. Perhaps that is you.",
         "Ah! A new chapter begins. Welcome to ZION.",
         "Greetings! Your arrival adds a page to our ongoing saga.",

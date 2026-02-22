@@ -57,19 +57,19 @@
     if (!audioContext) return null;
 
     try {
-      const bufferSize = 2 * audioContext.sampleRate;
-      const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
+      var bufferSize = 2 * audioContext.sampleRate;
+      var noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      var output = noiseBuffer.getChannelData(0);
 
       // Brown noise: integrate white noise for warm 1/f² rolloff
       var lastOut = 0;
-      for (let i = 0; i < bufferSize; i++) {
+      for (var i = 0; i < bufferSize; i++) {
         var white = Math.random() * 2 - 1;
         lastOut = (lastOut + (0.02 * white)) / 1.02;
         output[i] = lastOut * 3.5; // normalize amplitude
       }
 
-      const whiteNoise = audioContext.createBufferSource();
+      var whiteNoise = audioContext.createBufferSource();
       whiteNoise.buffer = noiseBuffer;
       whiteNoise.loop = true;
       whiteNoise.start();
@@ -166,7 +166,7 @@
     try {
       // Stop all oscillators
       if (currentAmbient.oscillators && Array.isArray(currentAmbient.oscillators)) {
-        currentAmbient.oscillators.forEach(osc => {
+        currentAmbient.oscillators.forEach(function(osc) {
           if (osc && osc.stop) {
             try { osc.stop(); } catch (e) {}
           }
@@ -175,7 +175,7 @@
 
       // Stop and disconnect all nodes
       if (currentAmbient.nodes && Array.isArray(currentAmbient.nodes)) {
-        currentAmbient.nodes.forEach(node => {
+        currentAmbient.nodes.forEach(function(node) {
           if (node) {
             if (node.stop) {
               try { node.stop(); } catch (e) {}
@@ -194,12 +194,12 @@
 
       // Clear all intervals
       if (currentAmbient.intervals && Array.isArray(currentAmbient.intervals)) {
-        currentAmbient.intervals.forEach(id => clearInterval(id));
+        currentAmbient.intervals.forEach(function(id) { clearInterval(id); });
       }
 
       // Clear all timeouts
       if (currentAmbient.timeouts && Array.isArray(currentAmbient.timeouts)) {
-        currentAmbient.timeouts.forEach(id => clearTimeout(id));
+        currentAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
       }
 
       // Call cleanup function if exists
@@ -221,15 +221,15 @@
   function playNexusAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const oscillators = [];
-    const timeouts = [];
+    var nodes = [];
+    var oscillators = [];
+    var timeouts = [];
 
     try {
       // Deep resonant drone - C2 (65Hz) with octave harmonics
-      const drone1 = audioContext.createOscillator();
-      const drone2 = audioContext.createOscillator();
-      const droneGain = audioContext.createGain();
+      var drone1 = audioContext.createOscillator();
+      var drone2 = audioContext.createOscillator();
+      var droneGain = audioContext.createGain();
 
       drone1.type = 'sine';
       drone1.frequency.value = 65.41; // C2
@@ -249,12 +249,12 @@
       nodes.push(droneGain);
 
       // Ethereal pad - C4, E4, G4 triad with slow LFO
-      const pad1 = audioContext.createOscillator();
-      const pad2 = audioContext.createOscillator();
-      const pad3 = audioContext.createOscillator();
-      const lfo = audioContext.createOscillator();
-      const lfoGain = audioContext.createGain();
-      const padGain = audioContext.createGain();
+      var pad1 = audioContext.createOscillator();
+      var pad2 = audioContext.createOscillator();
+      var pad3 = audioContext.createOscillator();
+      var lfo = audioContext.createOscillator();
+      var lfoGain = audioContext.createGain();
+      var padGain = audioContext.createGain();
 
       pad1.type = 'sine';
       pad1.frequency.value = 261.63; // C4
@@ -289,12 +289,12 @@
       function playChime() {
         if (!audioContext || !masterGain) return;
 
-        const chime = audioContext.createOscillator();
-        const chimeGain = audioContext.createGain();
-        const delay1 = audioContext.createDelay();
-        const delay2 = audioContext.createDelay();
-        const delayGain1 = audioContext.createGain();
-        const delayGain2 = audioContext.createGain();
+        var chime = audioContext.createOscillator();
+        var chimeGain = audioContext.createGain();
+        var delay1 = audioContext.createDelay();
+        var delay2 = audioContext.createDelay();
+        var delayGain1 = audioContext.createGain();
+        var delayGain2 = audioContext.createGain();
 
         chime.type = 'sine';
         chime.frequency.value = 400 + Math.random() * 400;
@@ -319,11 +319,11 @@
         chime.start();
         chime.stop(audioContext.currentTime + 2.5);
 
-        const nextChime = setTimeout(playChime, 8000 + Math.random() * 12000);
+        var nextChime = setTimeout(playChime, 8000 + Math.random() * 12000);
         timeouts.push(nextChime);
       }
 
-      const firstChime = setTimeout(playChime, 2000);
+      var firstChime = setTimeout(playChime, 2000);
       timeouts.push(firstChime);
 
       return { oscillators, nodes, timeouts };
@@ -340,18 +340,18 @@
   function playGardensAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
-    const intervals = [];
+    var nodes = [];
+    var timeouts = [];
+    var intervals = [];
 
     try {
       // Gentle stream - filtered white noise with LFO
-      const stream = createWhiteNoise();
+      var stream = createWhiteNoise();
       if (stream) {
-        const streamFilter = audioContext.createBiquadFilter();
-        const streamLfo = audioContext.createOscillator();
-        const streamLfoGain = audioContext.createGain();
-        const streamGain = audioContext.createGain();
+        var streamFilter = audioContext.createBiquadFilter();
+        var streamLfo = audioContext.createOscillator();
+        var streamLfoGain = audioContext.createGain();
+        var streamGain = audioContext.createGain();
 
         streamFilter.type = 'lowpass';
         streamFilter.frequency.value = 400;
@@ -375,10 +375,10 @@
       }
 
       // Breeze - very low filtered noise
-      const breeze = createWhiteNoise();
+      var breeze = createWhiteNoise();
       if (breeze) {
-        const breezeFilter = audioContext.createBiquadFilter();
-        const breezeGain = audioContext.createGain();
+        var breezeFilter = audioContext.createBiquadFilter();
+        var breezeGain = audioContext.createGain();
 
         breezeFilter.type = 'lowpass';
         breezeFilter.frequency.value = 200;
@@ -395,13 +395,13 @@
       function chirp() {
         if (!audioContext || !masterGain) return;
 
-        const bird = audioContext.createOscillator();
-        const birdGain = audioContext.createGain();
+        var bird = audioContext.createOscillator();
+        var birdGain = audioContext.createGain();
 
         bird.type = 'sine';
         bird.frequency.value = 600 + Math.random() * 1200;
 
-        const duration = 0.1 + Math.random() * 0.2;
+        var duration = 0.1 + Math.random() * 0.2;
         birdGain.gain.value = 0.06;
         birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
 
@@ -411,20 +411,20 @@
         bird.start();
         bird.stop(audioContext.currentTime + duration);
 
-        const nextChirp = setTimeout(chirp, 500 + Math.random() * 3500);
+        var nextChirp = setTimeout(chirp, 500 + Math.random() * 3500);
         timeouts.push(nextChirp);
       }
 
-      for (let i = 0; i < 3; i++) {
-        const firstChirp = setTimeout(chirp, Math.random() * 2000);
+      for (var i = 0; i < 3; i++) {
+        var firstChirp = setTimeout(chirp, Math.random() * 2000);
         timeouts.push(firstChirp);
       }
 
       // Crickets - oscillating high frequency with AM
-      const cricket = audioContext.createOscillator();
-      const cricketAm = audioContext.createOscillator();
-      const cricketAmGain = audioContext.createGain();
-      const cricketGain = audioContext.createGain();
+      var cricket = audioContext.createOscillator();
+      var cricketAm = audioContext.createOscillator();
+      var cricketAmGain = audioContext.createGain();
+      var cricketGain = audioContext.createGain();
 
       cricket.type = 'sine';
       cricket.frequency.value = 4500;
@@ -450,10 +450,10 @@
       function rustle() {
         if (!audioContext || !masterGain) return;
 
-        const noise = createWhiteNoise(2);
+        var noise = createWhiteNoise(2);
         if (noise) {
-          const rustleFilter = audioContext.createBiquadFilter();
-          const rustleGain = audioContext.createGain();
+          var rustleFilter = audioContext.createBiquadFilter();
+          var rustleGain = audioContext.createGain();
 
           rustleFilter.type = 'bandpass';
           rustleFilter.frequency.value = 2000;
@@ -466,7 +466,7 @@
           rustleFilter.connect(rustleGain);
           rustleGain.connect(masterGain);
 
-          setTimeout(() => {
+          setTimeout(function() {
             try {
               if (noise.stop) noise.stop();
               if (rustleFilter.disconnect) rustleFilter.disconnect();
@@ -475,11 +475,11 @@
           }, 400);
         }
 
-        const nextRustle = setTimeout(rustle, 2000 + Math.random() * 3000);
+        var nextRustle = setTimeout(rustle, 2000 + Math.random() * 3000);
         timeouts.push(nextRustle);
       }
 
-      const firstRustle = setTimeout(rustle, 1000);
+      var firstRustle = setTimeout(rustle, 1000);
       timeouts.push(firstRustle);
 
       return { nodes, timeouts, intervals };
@@ -496,15 +496,15 @@
   function playAthenaeumAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
-    const intervals = [];
+    var nodes = [];
+    var timeouts = [];
+    var intervals = [];
 
     try {
       // Room tone - very quiet
-      const roomTone = createWhiteNoise();
+      var roomTone = createWhiteNoise();
       if (roomTone) {
-        const roomGain = audioContext.createGain();
+        var roomGain = audioContext.createGain();
         roomGain.gain.value = 0.01;
 
         roomTone.connect(roomGain);
@@ -517,10 +517,10 @@
       function turnPage() {
         if (!audioContext || !masterGain) return;
 
-        const page = createWhiteNoise(2);
+        var page = createWhiteNoise(2);
         if (page) {
-          const pageFilter = audioContext.createBiquadFilter();
-          const pageGain = audioContext.createGain();
+          var pageFilter = audioContext.createBiquadFilter();
+          var pageGain = audioContext.createGain();
 
           pageFilter.type = 'highpass';
           pageFilter.frequency.value = 2000;
@@ -532,7 +532,7 @@
           pageFilter.connect(pageGain);
           pageGain.connect(masterGain);
 
-          setTimeout(() => {
+          setTimeout(function() {
             try {
               if (page.stop) page.stop();
               if (pageFilter.disconnect) pageFilter.disconnect();
@@ -541,21 +541,21 @@
           }, 150);
         }
 
-        const nextPage = setTimeout(turnPage, 8000 + Math.random() * 7000);
+        var nextPage = setTimeout(turnPage, 8000 + Math.random() * 7000);
         timeouts.push(nextPage);
       }
 
-      const firstPage = setTimeout(turnPage, 3000);
+      var firstPage = setTimeout(turnPage, 3000);
       timeouts.push(firstPage);
 
       // Quill writing - intermittent
       function writeQuill() {
         if (!audioContext || !masterGain) return;
 
-        const quill = createWhiteNoise(2);
+        var quill = createWhiteNoise(2);
         if (quill) {
-          const quillFilter = audioContext.createBiquadFilter();
-          const quillGain = audioContext.createGain();
+          var quillFilter = audioContext.createBiquadFilter();
+          var quillGain = audioContext.createGain();
 
           quillFilter.type = 'bandpass';
           quillFilter.frequency.value = 3000;
@@ -567,7 +567,7 @@
           quillFilter.connect(quillGain);
           quillGain.connect(masterGain);
 
-          setTimeout(() => {
+          setTimeout(function() {
             try {
               if (quill.stop) quill.stop();
               if (quillFilter.disconnect) quillFilter.disconnect();
@@ -576,19 +576,19 @@
           }, 200 + Math.random() * 500);
         }
 
-        const nextQuill = setTimeout(writeQuill, 5000 + Math.random() * 10000);
+        var nextQuill = setTimeout(writeQuill, 5000 + Math.random() * 10000);
         timeouts.push(nextQuill);
       }
 
-      const firstQuill = setTimeout(writeQuill, 5000);
+      var firstQuill = setTimeout(writeQuill, 5000);
       timeouts.push(firstQuill);
 
       // Distant footsteps
       function footstep() {
         if (!audioContext || !masterGain) return;
 
-        const step = audioContext.createOscillator();
-        const stepGain = audioContext.createGain();
+        var step = audioContext.createOscillator();
+        var stepGain = audioContext.createGain();
 
         step.type = 'sine';
         step.frequency.value = 60;
@@ -602,19 +602,19 @@
         step.start();
         step.stop(audioContext.currentTime + 0.05);
 
-        const nextStep = setTimeout(footstep, 5000 + Math.random() * 5000);
+        var nextStep = setTimeout(footstep, 5000 + Math.random() * 5000);
         timeouts.push(nextStep);
       }
 
-      const firstStep = setTimeout(footstep, 2000);
+      var firstStep = setTimeout(footstep, 2000);
       timeouts.push(firstStep);
 
       // Clock ticking
       function tick() {
         if (!audioContext || !masterGain) return;
 
-        const click = audioContext.createOscillator();
-        const clickGain = audioContext.createGain();
+        var click = audioContext.createOscillator();
+        var clickGain = audioContext.createGain();
 
         click.type = 'sine';
         click.frequency.value = 800;
@@ -629,7 +629,7 @@
         click.stop(audioContext.currentTime + 0.02);
       }
 
-      const tickInterval = setInterval(tick, 1000);
+      var tickInterval = setInterval(tick, 1000);
       intervals.push(tickInterval);
 
       return { nodes, timeouts, intervals };
@@ -646,17 +646,17 @@
   function playStudioAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const oscillators = [];
-    const timeouts = [];
-    const intervals = [];
+    var nodes = [];
+    var oscillators = [];
+    var timeouts = [];
+    var intervals = [];
 
     try {
       // Creative energy hum - 110Hz with modulation
-      const hum = audioContext.createOscillator();
-      const humLfo = audioContext.createOscillator();
-      const humLfoGain = audioContext.createGain();
-      const humGain = audioContext.createGain();
+      var hum = audioContext.createOscillator();
+      var humLfo = audioContext.createOscillator();
+      var humLfoGain = audioContext.createGain();
+      var humGain = audioContext.createGain();
 
       hum.type = 'sine';
       hum.frequency.value = 110;
@@ -683,8 +683,8 @@
       function tap() {
         if (!audioContext || !masterGain) return;
 
-        const thud = audioContext.createOscillator();
-        const thudGain = audioContext.createGain();
+        var thud = audioContext.createOscillator();
+        var thudGain = audioContext.createGain();
 
         thud.type = 'sine';
         thud.frequency.value = 100 + Math.random() * 200;
@@ -698,19 +698,19 @@
         thud.start();
         thud.stop(audioContext.currentTime + 0.08);
 
-        const nextTap = setTimeout(tap, 500 + Math.random() * 1500);
+        var nextTap = setTimeout(tap, 500 + Math.random() * 1500);
         timeouts.push(nextTap);
       }
 
-      const firstTap = setTimeout(tap, 500);
+      var firstTap = setTimeout(tap, 500);
       timeouts.push(firstTap);
 
       // Metallic chimes
       function chime() {
         if (!audioContext || !masterGain) return;
 
-        const bell = audioContext.createOscillator();
-        const bellGain = audioContext.createGain();
+        var bell = audioContext.createOscillator();
+        var bellGain = audioContext.createGain();
 
         bell.type = 'triangle';
         bell.frequency.value = 500 + Math.random() * 700;
@@ -724,28 +724,28 @@
         bell.start();
         bell.stop(audioContext.currentTime + 1.2);
 
-        const nextChime = setTimeout(chime, 3000 + Math.random() * 5000);
+        var nextChime = setTimeout(chime, 3000 + Math.random() * 5000);
         timeouts.push(nextChime);
       }
 
-      const firstChime = setTimeout(chime, 2000);
+      var firstChime = setTimeout(chime, 2000);
       timeouts.push(firstChime);
 
       // Melodic phrases
       function melody() {
         if (!audioContext || !masterGain) return;
 
-        const notes = [261.63, 293.66, 329.63, 392.00, 440.00]; // C, D, E, G, A
-        const numNotes = 3 + Math.floor(Math.random() * 3);
+        var notes = [261.63, 293.66, 329.63, 392.00, 440.00]; // C, D, E, G, A
+        var numNotes = 3 + Math.floor(Math.random() * 3);
 
-        for (let i = 0; i < numNotes; i++) {
-          const note = audioContext.createOscillator();
-          const noteGain = audioContext.createGain();
+        for (var i = 0; i < numNotes; i++) {
+          var note = audioContext.createOscillator();
+          var noteGain = audioContext.createGain();
 
           note.type = 'sine';
           note.frequency.value = notes[Math.floor(Math.random() * notes.length)];
 
-          const startTime = audioContext.currentTime + i * 0.2;
+          var startTime = audioContext.currentTime + i * 0.2;
           noteGain.gain.setValueAtTime(0, startTime);
           noteGain.gain.linearRampToValueAtTime(0.03, startTime + 0.05);
           noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
@@ -757,11 +757,11 @@
           note.stop(startTime + 0.4);
         }
 
-        const nextMelody = setTimeout(melody, 15000 + Math.random() * 15000);
+        var nextMelody = setTimeout(melody, 15000 + Math.random() * 15000);
         timeouts.push(nextMelody);
       }
 
-      const firstMelody = setTimeout(melody, 10000);
+      var firstMelody = setTimeout(melody, 10000);
       timeouts.push(firstMelody);
 
       return { oscillators, nodes, timeouts, intervals };
@@ -778,16 +778,16 @@
   function playWildsAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
-    const intervals = [];
+    var nodes = [];
+    var timeouts = [];
+    var intervals = [];
 
     try {
       // Heavy wind with varying intensity
-      const wind = createWhiteNoise();
+      var wind = createWhiteNoise();
       if (wind) {
-        const windFilter = audioContext.createBiquadFilter();
-        const windGain = audioContext.createGain();
+        var windFilter = audioContext.createBiquadFilter();
+        var windGain = audioContext.createGain();
 
         windFilter.type = 'lowpass';
         windFilter.frequency.value = 150;
@@ -802,11 +802,11 @@
         // Vary wind intensity
         function varyWind() {
           if (!windGain || !audioContext) return;
-          const target = 0.05 + Math.random() * 0.06;
+          var target = 0.05 + Math.random() * 0.06;
           windGain.gain.linearRampToValueAtTime(target, audioContext.currentTime + 3);
         }
 
-        const windInterval = setInterval(varyWind, 4000);
+        var windInterval = setInterval(varyWind, 4000);
         intervals.push(windInterval);
       }
 
@@ -814,10 +814,10 @@
       function howl() {
         if (!audioContext || !masterGain) return;
 
-        const wolf = audioContext.createOscillator();
-        const wolfVibrato = audioContext.createOscillator();
-        const wolfVibratoGain = audioContext.createGain();
-        const wolfGain = audioContext.createGain();
+        var wolf = audioContext.createOscillator();
+        var wolfVibrato = audioContext.createOscillator();
+        var wolfVibratoGain = audioContext.createGain();
+        var wolfGain = audioContext.createGain();
 
         wolf.type = 'sine';
         wolf.frequency.value = 400;
@@ -844,21 +844,21 @@
         wolf.stop(audioContext.currentTime + 2.5);
         wolfVibrato.stop(audioContext.currentTime + 2.5);
 
-        const nextHowl = setTimeout(howl, 20000 + Math.random() * 20000);
+        var nextHowl = setTimeout(howl, 20000 + Math.random() * 20000);
         timeouts.push(nextHowl);
       }
 
-      const firstHowl = setTimeout(howl, 5000);
+      var firstHowl = setTimeout(howl, 5000);
       timeouts.push(firstHowl);
 
       // Thunder rumble
       function thunder() {
         if (!audioContext || !masterGain) return;
 
-        const rumble = createWhiteNoise(2);
+        var rumble = createWhiteNoise(2);
         if (rumble) {
-          const rumbleFilter = audioContext.createBiquadFilter();
-          const rumbleGain = audioContext.createGain();
+          var rumbleFilter = audioContext.createBiquadFilter();
+          var rumbleGain = audioContext.createGain();
 
           rumbleFilter.type = 'lowpass';
           rumbleFilter.frequency.value = 60;
@@ -870,7 +870,7 @@
           rumbleFilter.connect(rumbleGain);
           rumbleGain.connect(masterGain);
 
-          setTimeout(() => {
+          setTimeout(function() {
             try {
               if (rumble.stop) rumble.stop();
               if (rumbleFilter.disconnect) rumbleFilter.disconnect();
@@ -879,21 +879,21 @@
           }, 2500);
         }
 
-        const nextThunder = setTimeout(thunder, 30000 + Math.random() * 30000);
+        var nextThunder = setTimeout(thunder, 30000 + Math.random() * 30000);
         timeouts.push(nextThunder);
       }
 
-      const firstThunder = setTimeout(thunder, 15000);
+      var firstThunder = setTimeout(thunder, 15000);
       timeouts.push(firstThunder);
 
       // Rustling underbrush
       function rustle() {
         if (!audioContext || !masterGain) return;
 
-        const brush = createWhiteNoise(2);
+        var brush = createWhiteNoise(2);
         if (brush) {
-          const brushFilter = audioContext.createBiquadFilter();
-          const brushGain = audioContext.createGain();
+          var brushFilter = audioContext.createBiquadFilter();
+          var brushGain = audioContext.createGain();
 
           brushFilter.type = 'bandpass';
           brushFilter.frequency.value = 1000;
@@ -906,7 +906,7 @@
           brushFilter.connect(brushGain);
           brushGain.connect(masterGain);
 
-          setTimeout(() => {
+          setTimeout(function() {
             try {
               if (brush.stop) brush.stop();
               if (brushFilter.disconnect) brushFilter.disconnect();
@@ -915,11 +915,11 @@
           }, 400);
         }
 
-        const nextRustle = setTimeout(rustle, 3000 + Math.random() * 4000);
+        var nextRustle = setTimeout(rustle, 3000 + Math.random() * 4000);
         timeouts.push(nextRustle);
       }
 
-      const firstRustle = setTimeout(rustle, 2000);
+      var firstRustle = setTimeout(rustle, 2000);
       timeouts.push(firstRustle);
 
       // Owl hoots
@@ -927,8 +927,8 @@
         if (!audioContext || !masterGain) return;
 
         // Two-tone hoot
-        const hoot1 = audioContext.createOscillator();
-        const hoot1Gain = audioContext.createGain();
+        var hoot1 = audioContext.createOscillator();
+        var hoot1Gain = audioContext.createGain();
 
         hoot1.type = 'sine';
         hoot1.frequency.value = 350;
@@ -943,8 +943,8 @@
         hoot1.stop(audioContext.currentTime + 0.3);
 
         // Second hoot
-        const hoot2 = audioContext.createOscillator();
-        const hoot2Gain = audioContext.createGain();
+        var hoot2 = audioContext.createOscillator();
+        var hoot2Gain = audioContext.createGain();
 
         hoot2.type = 'sine';
         hoot2.frequency.value = 280;
@@ -959,11 +959,11 @@
         hoot2.start(audioContext.currentTime + 0.35);
         hoot2.stop(audioContext.currentTime + 0.7);
 
-        const nextHoot = setTimeout(hoot, 15000 + Math.random() * 10000);
+        var nextHoot = setTimeout(hoot, 15000 + Math.random() * 10000);
         timeouts.push(nextHoot);
       }
 
-      const firstHoot = setTimeout(hoot, 8000);
+      var firstHoot = setTimeout(hoot, 8000);
       timeouts.push(firstHoot);
 
       return { nodes, timeouts, intervals };
@@ -980,18 +980,18 @@
   function playAgoraAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
-    const intervals = [];
+    var nodes = [];
+    var timeouts = [];
+    var intervals = [];
 
     try {
       // Crowd murmur - bandpass filtered noise with modulation
-      const crowd = createWhiteNoise();
+      var crowd = createWhiteNoise();
       if (crowd) {
-        const crowdFilter = audioContext.createBiquadFilter();
-        const crowdLfo = audioContext.createOscillator();
-        const crowdLfoGain = audioContext.createGain();
-        const crowdGain = audioContext.createGain();
+        var crowdFilter = audioContext.createBiquadFilter();
+        var crowdLfo = audioContext.createOscillator();
+        var crowdLfoGain = audioContext.createGain();
+        var crowdGain = audioContext.createGain();
 
         crowdFilter.type = 'bandpass';
         crowdFilter.frequency.value = 500;
@@ -1019,17 +1019,17 @@
       function vendorCall() {
         if (!audioContext || !masterGain) return;
 
-        const notes = [220, 247, 262, 294, 330, 349, 392, 440, 494];
-        const numNotes = 2 + Math.floor(Math.random() * 2);
+        var notes = [220, 247, 262, 294, 330, 349, 392, 440, 494];
+        var numNotes = 2 + Math.floor(Math.random() * 2);
 
-        for (let i = 0; i < numNotes; i++) {
-          const call = audioContext.createOscillator();
-          const callGain = audioContext.createGain();
+        for (var i = 0; i < numNotes; i++) {
+          var call = audioContext.createOscillator();
+          var callGain = audioContext.createGain();
 
           call.type = 'sine';
           call.frequency.value = notes[Math.floor(Math.random() * notes.length)];
 
-          const startTime = audioContext.currentTime + i * 0.15;
+          var startTime = audioContext.currentTime + i * 0.15;
           callGain.gain.setValueAtTime(0, startTime);
           callGain.gain.linearRampToValueAtTime(0.04, startTime + 0.05);
           callGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
@@ -1041,19 +1041,19 @@
           call.stop(startTime + 0.25);
         }
 
-        const nextCall = setTimeout(vendorCall, 8000 + Math.random() * 7000);
+        var nextCall = setTimeout(vendorCall, 8000 + Math.random() * 7000);
         timeouts.push(nextCall);
       }
 
-      const firstCall = setTimeout(vendorCall, 3000);
+      var firstCall = setTimeout(vendorCall, 3000);
       timeouts.push(firstCall);
 
       // Coin sounds
       function coinDrop() {
         if (!audioContext || !masterGain) return;
 
-        const coin = audioContext.createOscillator();
-        const coinGain = audioContext.createGain();
+        var coin = audioContext.createOscillator();
+        var coinGain = audioContext.createGain();
 
         coin.type = 'triangle';
         coin.frequency.value = 2000 + Math.random() * 1000;
@@ -1067,21 +1067,21 @@
         coin.start();
         coin.stop(audioContext.currentTime + 0.15);
 
-        const nextCoin = setTimeout(coinDrop, 3000 + Math.random() * 5000);
+        var nextCoin = setTimeout(coinDrop, 3000 + Math.random() * 5000);
         timeouts.push(nextCoin);
       }
 
-      const firstCoin = setTimeout(coinDrop, 2000);
+      var firstCoin = setTimeout(coinDrop, 2000);
       timeouts.push(firstCoin);
 
       // Cart wheels rumbling
       function cartRumble() {
         if (!audioContext || !masterGain) return;
 
-        const cart = createWhiteNoise(2);
+        var cart = createWhiteNoise(2);
         if (cart) {
-          const cartFilter = audioContext.createBiquadFilter();
-          const cartGain = audioContext.createGain();
+          var cartFilter = audioContext.createBiquadFilter();
+          var cartGain = audioContext.createGain();
 
           cartFilter.type = 'lowpass';
           cartFilter.frequency.value = 80;
@@ -1093,7 +1093,7 @@
           cartFilter.connect(cartGain);
           cartGain.connect(masterGain);
 
-          setTimeout(() => {
+          setTimeout(function() {
             try {
               if (cart.stop) cart.stop();
               if (cartFilter.disconnect) cartFilter.disconnect();
@@ -1102,11 +1102,11 @@
           }, 2500);
         }
 
-        const nextCart = setTimeout(cartRumble, 15000 + Math.random() * 15000);
+        var nextCart = setTimeout(cartRumble, 15000 + Math.random() * 15000);
         timeouts.push(nextCart);
       }
 
-      const firstCart = setTimeout(cartRumble, 5000);
+      var firstCart = setTimeout(cartRumble, 5000);
       timeouts.push(firstCart);
 
       return { nodes, timeouts, intervals };
@@ -1123,16 +1123,16 @@
   function playCommonsAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
-    const intervals = [];
+    var nodes = [];
+    var timeouts = [];
+    var intervals = [];
 
     try {
       // Friendly chatter
-      const chatter = createWhiteNoise();
+      var chatter = createWhiteNoise();
       if (chatter) {
-        const chatterFilter = audioContext.createBiquadFilter();
-        const chatterGain = audioContext.createGain();
+        var chatterFilter = audioContext.createBiquadFilter();
+        var chatterGain = audioContext.createGain();
 
         chatterFilter.type = 'bandpass';
         chatterFilter.frequency.value = 450;
@@ -1151,16 +1151,16 @@
       function crackle() {
         if (!audioContext || !masterGain) return;
 
-        const fire = createWhiteNoise(2);
+        var fire = createWhiteNoise(2);
         if (fire) {
-          const fireFilter = audioContext.createBiquadFilter();
-          const fireGain = audioContext.createGain();
+          var fireFilter = audioContext.createBiquadFilter();
+          var fireGain = audioContext.createGain();
 
           fireFilter.type = 'bandpass';
           fireFilter.frequency.value = 1500 + Math.random() * 1500;
           fireFilter.Q.value = 3;
 
-          const gain = 0.01 + Math.random() * 0.02;
+          var gain = 0.01 + Math.random() * 0.02;
           fireGain.gain.value = gain;
           fireGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
 
@@ -1168,7 +1168,7 @@
           fireFilter.connect(fireGain);
           fireGain.connect(masterGain);
 
-          setTimeout(() => {
+          setTimeout(function() {
             try {
               if (fire.stop) fire.stop();
               if (fireFilter.disconnect) fireFilter.disconnect();
@@ -1177,20 +1177,20 @@
           }, 150);
         }
 
-        const nextCrackle = setTimeout(crackle, 100 + Math.random() * 300);
+        var nextCrackle = setTimeout(crackle, 100 + Math.random() * 300);
         timeouts.push(nextCrackle);
       }
 
-      const firstCrackle = setTimeout(crackle, 500);
+      var firstCrackle = setTimeout(crackle, 500);
       timeouts.push(firstCrackle);
 
       // Hammering - rhythmic with pauses
-      let hammerActive = true;
+      var hammerActive = true;
       function hammer() {
         if (!audioContext || !masterGain || !hammerActive) return;
 
-        const thunk = audioContext.createOscillator();
-        const thunkGain = audioContext.createGain();
+        var thunk = audioContext.createOscillator();
+        var thunkGain = audioContext.createGain();
 
         thunk.type = 'square';
         thunk.frequency.value = 80;
@@ -1204,7 +1204,7 @@
         thunk.start();
         thunk.stop(audioContext.currentTime + 0.1);
 
-        const nextHammer = setTimeout(hammer, 800 + Math.random() * 400);
+        var nextHammer = setTimeout(hammer, 800 + Math.random() * 400);
         timeouts.push(nextHammer);
       }
 
@@ -1215,21 +1215,21 @@
         }
       }
 
-      const firstHammer = setTimeout(hammer, 1000);
+      var firstHammer = setTimeout(hammer, 1000);
       timeouts.push(firstHammer);
 
-      const hammerToggle = setInterval(toggleHammer, 8000);
+      var hammerToggle = setInterval(toggleHammer, 8000);
       intervals.push(hammerToggle);
 
       // Sawing - filtered noise sweep
-      let sawActive = false;
+      var sawActive = false;
       function saw() {
         if (!audioContext || !masterGain || !sawActive) return;
 
-        const sawNoise = createWhiteNoise(2);
+        var sawNoise = createWhiteNoise(2);
         if (sawNoise) {
-          const sawFilter = audioContext.createBiquadFilter();
-          const sawGain = audioContext.createGain();
+          var sawFilter = audioContext.createBiquadFilter();
+          var sawGain = audioContext.createGain();
 
           sawFilter.type = 'bandpass';
           sawFilter.frequency.value = 400;
@@ -1243,7 +1243,7 @@
 
           sawFilter.frequency.linearRampToValueAtTime(1000, audioContext.currentTime + 0.5);
 
-          setTimeout(() => {
+          setTimeout(function() {
             try {
               if (sawNoise.stop) sawNoise.stop();
               if (sawFilter.disconnect) sawFilter.disconnect();
@@ -1252,7 +1252,7 @@
           }, 550);
         }
 
-        const nextSaw = setTimeout(saw, 1000);
+        var nextSaw = setTimeout(saw, 1000);
         timeouts.push(nextSaw);
       }
 
@@ -1263,7 +1263,7 @@
         }
       }
 
-      const sawToggle = setInterval(toggleSaw, 6000);
+      var sawToggle = setInterval(toggleSaw, 6000);
       intervals.push(sawToggle);
 
       return { nodes, timeouts, intervals };
@@ -1280,16 +1280,16 @@
   function playArenaAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
-    const intervals = [];
+    var nodes = [];
+    var timeouts = [];
+    var intervals = [];
 
     try {
       // Crowd roar with periodic swells
-      const crowd = createWhiteNoise();
+      var crowd = createWhiteNoise();
       if (crowd) {
-        const crowdFilter = audioContext.createBiquadFilter();
-        const crowdGain = audioContext.createGain();
+        var crowdFilter = audioContext.createBiquadFilter();
+        var crowdGain = audioContext.createGain();
 
         crowdFilter.type = 'bandpass';
         crowdFilter.frequency.value = 600;
@@ -1310,7 +1310,7 @@
           crowdGain.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 4);
         }
 
-        const swellInterval = setInterval(swell, 12000);
+        var swellInterval = setInterval(swell, 12000);
         intervals.push(swellInterval);
       }
 
@@ -1318,8 +1318,8 @@
       function drumBeat() {
         if (!audioContext || !masterGain) return;
 
-        const drum = audioContext.createOscillator();
-        const drumGain = audioContext.createGain();
+        var drum = audioContext.createOscillator();
+        var drumGain = audioContext.createGain();
 
         drum.type = 'sine';
         drum.frequency.value = 55;
@@ -1334,17 +1334,17 @@
         drum.stop(audioContext.currentTime + 0.15);
       }
 
-      const drumInterval = setInterval(drumBeat, 500); // 120 BPM
+      var drumInterval = setInterval(drumBeat, 500); // 120 BPM
       intervals.push(drumInterval);
 
       // Clash sounds
       function clash() {
         if (!audioContext || !masterGain) return;
 
-        const metal = createWhiteNoise(2);
+        var metal = createWhiteNoise(2);
         if (metal) {
-          const metalFilter = audioContext.createBiquadFilter();
-          const metalGain = audioContext.createGain();
+          var metalFilter = audioContext.createBiquadFilter();
+          var metalGain = audioContext.createGain();
 
           metalFilter.type = 'bandpass';
           metalFilter.frequency.value = 3000;
@@ -1357,7 +1357,7 @@
           metalFilter.connect(metalGain);
           metalGain.connect(masterGain);
 
-          setTimeout(() => {
+          setTimeout(function() {
             try {
               if (metal.stop) metal.stop();
               if (metalFilter.disconnect) metalFilter.disconnect();
@@ -1366,19 +1366,19 @@
           }, 250);
         }
 
-        const nextClash = setTimeout(clash, 5000 + Math.random() * 5000);
+        var nextClash = setTimeout(clash, 5000 + Math.random() * 5000);
         timeouts.push(nextClash);
       }
 
-      const firstClash = setTimeout(clash, 3000);
+      var firstClash = setTimeout(clash, 3000);
       timeouts.push(firstClash);
 
       // Horn call
       function hornCall() {
         if (!audioContext || !masterGain) return;
 
-        const horn = audioContext.createOscillator();
-        const hornGain = audioContext.createGain();
+        var horn = audioContext.createOscillator();
+        var hornGain = audioContext.createGain();
 
         horn.type = 'sawtooth';
         horn.frequency.value = 220;
@@ -1394,11 +1394,11 @@
         horn.start();
         horn.stop(audioContext.currentTime + 1);
 
-        const nextHorn = setTimeout(hornCall, 20000 + Math.random() * 10000);
+        var nextHorn = setTimeout(hornCall, 20000 + Math.random() * 10000);
         timeouts.push(nextHorn);
       }
 
-      const firstHorn = setTimeout(hornCall, 10000);
+      var firstHorn = setTimeout(hornCall, 10000);
       timeouts.push(firstHorn);
 
       return { nodes, timeouts, intervals };
@@ -1505,8 +1505,8 @@
   function playChatSound() {
     if (!audioContext || !masterGain) return;
 
-    const blip1 = audioContext.createOscillator();
-    const blip1Gain = audioContext.createGain();
+    var blip1 = audioContext.createOscillator();
+    var blip1Gain = audioContext.createGain();
 
     blip1.type = 'sine';
     blip1.frequency.value = 600;
@@ -1520,8 +1520,8 @@
     blip1.start();
     blip1.stop(audioContext.currentTime + 0.05);
 
-    const blip2 = audioContext.createOscillator();
-    const blip2Gain = audioContext.createGain();
+    var blip2 = audioContext.createOscillator();
+    var blip2Gain = audioContext.createGain();
 
     blip2.type = 'sine';
     blip2.frequency.value = 900;
@@ -1543,12 +1543,12 @@
   function playWarpSound() {
     if (!audioContext || !masterGain) return;
 
-    const warp = audioContext.createOscillator();
-    const warpGain = audioContext.createGain();
-    const delay1 = audioContext.createDelay();
-    const delay2 = audioContext.createDelay();
-    const delayGain1 = audioContext.createGain();
-    const delayGain2 = audioContext.createGain();
+    var warp = audioContext.createOscillator();
+    var warpGain = audioContext.createGain();
+    var delay1 = audioContext.createDelay();
+    var delay2 = audioContext.createDelay();
+    var delayGain1 = audioContext.createGain();
+    var delayGain2 = audioContext.createGain();
 
     warp.type = 'sawtooth';
     warp.frequency.value = 800;
@@ -1581,9 +1581,9 @@
   function playHarvestSound() {
     if (!audioContext || !masterGain) return;
 
-    const pluck = audioContext.createOscillator();
-    const harmonic = audioContext.createOscillator();
-    const pluckGain = audioContext.createGain();
+    var pluck = audioContext.createOscillator();
+    var harmonic = audioContext.createOscillator();
+    var pluckGain = audioContext.createGain();
 
     pluck.type = 'triangle';
     pluck.frequency.value = 330;
@@ -1610,8 +1610,8 @@
   function playBuildSound() {
     if (!audioContext || !masterGain) return;
 
-    const thump = audioContext.createOscillator();
-    const thumpGain = audioContext.createGain();
+    var thump = audioContext.createOscillator();
+    var thumpGain = audioContext.createGain();
 
     thump.type = 'square';
     thump.frequency.value = 80;
@@ -1625,8 +1625,8 @@
     thump.start();
     thump.stop(audioContext.currentTime + 0.15);
 
-    const click = audioContext.createOscillator();
-    const clickGain = audioContext.createGain();
+    var click = audioContext.createOscillator();
+    var clickGain = audioContext.createGain();
 
     click.type = 'sine';
     click.frequency.value = 2000;
@@ -1647,11 +1647,11 @@
   function playTradeSound() {
     if (!audioContext || !masterGain) return;
 
-    const coin1 = audioContext.createOscillator();
-    const coin2 = audioContext.createOscillator();
-    const wobble = audioContext.createOscillator();
-    const wobbleGain = audioContext.createGain();
-    const coinGain = audioContext.createGain();
+    var coin1 = audioContext.createOscillator();
+    var coin2 = audioContext.createOscillator();
+    var wobble = audioContext.createOscillator();
+    var wobbleGain = audioContext.createGain();
+    var coinGain = audioContext.createGain();
 
     coin1.type = 'sine';
     coin1.frequency.value = 1200;
@@ -1688,16 +1688,16 @@
   function playDiscoverSound() {
     if (!audioContext || !masterGain) return;
 
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    var notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
 
-    notes.forEach((freq, i) => {
-      const note = audioContext.createOscillator();
-      const noteGain = audioContext.createGain();
+    notes.forEach(function(freq, i) {
+      var note = audioContext.createOscillator();
+      var noteGain = audioContext.createGain();
 
       note.type = 'sine';
       note.frequency.value = freq;
 
-      const startTime = audioContext.currentTime + i * 0.08;
+      var startTime = audioContext.currentTime + i * 0.08;
       noteGain.gain.setValueAtTime(0, startTime);
       noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
       noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
@@ -1716,9 +1716,9 @@
   function playChallengeSound() {
     if (!audioContext || !masterGain) return;
 
-    const horn1 = audioContext.createOscillator();
-    const horn2 = audioContext.createOscillator();
-    const hornGain = audioContext.createGain();
+    var horn1 = audioContext.createOscillator();
+    var horn2 = audioContext.createOscillator();
+    var hornGain = audioContext.createGain();
 
     horn1.type = 'sawtooth';
     horn1.frequency.value = 220;
@@ -1747,16 +1747,16 @@
   function playLevelUpSound() {
     if (!audioContext || !masterGain) return;
 
-    const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+    var notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
 
-    notes.forEach((freq, i) => {
-      const note = audioContext.createOscillator();
-      const noteGain = audioContext.createGain();
+    notes.forEach(function(freq, i) {
+      var note = audioContext.createOscillator();
+      var noteGain = audioContext.createGain();
 
       note.type = 'sine';
       note.frequency.value = freq;
 
-      const startTime = audioContext.currentTime + i * 0.1;
+      var startTime = audioContext.currentTime + i * 0.1;
       noteGain.gain.setValueAtTime(0, startTime);
       noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.1);
       noteGain.gain.linearRampToValueAtTime(0.03, startTime + 0.5);
@@ -1776,8 +1776,8 @@
   function playErrorSound() {
     if (!audioContext || !masterGain) return;
 
-    const buzz = audioContext.createOscillator();
-    const buzzGain = audioContext.createGain();
+    var buzz = audioContext.createOscillator();
+    var buzzGain = audioContext.createGain();
 
     buzz.type = 'square';
     buzz.frequency.value = 100;
@@ -1798,8 +1798,8 @@
   function playNotificationSound() {
     if (!audioContext || !masterGain) return;
 
-    const bell = audioContext.createOscillator();
-    const bellGain = audioContext.createGain();
+    var bell = audioContext.createOscillator();
+    var bellGain = audioContext.createGain();
 
     bell.type = 'sine';
     bell.frequency.value = 800;
@@ -1820,8 +1820,8 @@
   function playTradeRequestSound() {
     if (!audioContext || !masterGain) return;
 
-    const bell = audioContext.createOscillator();
-    const bellGain = audioContext.createGain();
+    var bell = audioContext.createOscillator();
+    var bellGain = audioContext.createGain();
 
     bell.type = 'sine';
     bell.frequency.value = 700;
@@ -1843,8 +1843,8 @@
     if (!audioContext || !masterGain) return;
 
     // Anvil strike - low metallic thump
-    const anvil = audioContext.createOscillator();
-    const anvilGain = audioContext.createGain();
+    var anvil = audioContext.createOscillator();
+    var anvilGain = audioContext.createGain();
 
     anvil.type = 'square';
     anvil.frequency.value = 120;
@@ -1859,10 +1859,10 @@
     anvil.stop(audioContext.currentTime + 0.2);
 
     // Sparkle - high chime
-    const sparkle1 = audioContext.createOscillator();
-    const sparkle2 = audioContext.createOscillator();
-    const sparkle3 = audioContext.createOscillator();
-    const sparkleGain = audioContext.createGain();
+    var sparkle1 = audioContext.createOscillator();
+    var sparkle2 = audioContext.createOscillator();
+    var sparkle3 = audioContext.createOscillator();
+    var sparkleGain = audioContext.createGain();
 
     sparkle1.type = 'sine';
     sparkle1.frequency.value = 1800;
@@ -1871,7 +1871,7 @@
     sparkle3.type = 'sine';
     sparkle3.frequency.value = 2600;
 
-    const startTime = audioContext.currentTime + 0.1;
+    var startTime = audioContext.currentTime + 0.1;
     sparkleGain.gain.setValueAtTime(0, startTime);
     sparkleGain.gain.linearRampToValueAtTime(0.04, startTime + 0.02);
     sparkleGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
@@ -1895,16 +1895,16 @@
   function playQuestAcceptSound() {
     if (!audioContext || !masterGain) return;
 
-    const notes = [392.00, 493.88, 587.33]; // G4, B4, D5
+    var notes = [392.00, 493.88, 587.33]; // G4, B4, D5
 
-    notes.forEach((freq, i) => {
-      const note = audioContext.createOscillator();
-      const noteGain = audioContext.createGain();
+    notes.forEach(function(freq, i) {
+      var note = audioContext.createOscillator();
+      var noteGain = audioContext.createGain();
 
       note.type = 'sine';
       note.frequency.value = freq;
 
-      const startTime = audioContext.currentTime + i * 0.08;
+      var startTime = audioContext.currentTime + i * 0.08;
       noteGain.gain.setValueAtTime(0, startTime);
       noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
       noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
@@ -1924,10 +1924,10 @@
     if (!audioContext || !masterGain) return;
 
     // Triumphant chord - C major (C5, E5, G5)
-    const chord1 = audioContext.createOscillator();
-    const chord2 = audioContext.createOscillator();
-    const chord3 = audioContext.createOscillator();
-    const chordGain = audioContext.createGain();
+    var chord1 = audioContext.createOscillator();
+    var chord2 = audioContext.createOscillator();
+    var chord3 = audioContext.createOscillator();
+    var chordGain = audioContext.createGain();
 
     chord1.type = 'sine';
     chord1.frequency.value = 523.25; // C5
@@ -1962,23 +1962,23 @@
 
     try {
       // Create short white noise burst
-      const bufferSize = audioContext.sampleRate * 0.05; // 50ms
-      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-      const data = buffer.getChannelData(0);
+      var bufferSize = audioContext.sampleRate * 0.05; // 50ms
+      var buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      var data = buffer.getChannelData(0);
 
-      for (let i = 0; i < bufferSize; i++) {
+      for (var i = 0; i < bufferSize; i++) {
         data[i] = Math.random() * 2 - 1;
       }
 
-      const noise = audioContext.createBufferSource();
+      var noise = audioContext.createBufferSource();
       noise.buffer = buffer;
 
-      const filter = audioContext.createBiquadFilter();
+      var filter = audioContext.createBiquadFilter();
       filter.type = 'bandpass';
       filter.frequency.value = 1000;
       filter.Q.value = 1;
 
-      const noiseGain = audioContext.createGain();
+      var noiseGain = audioContext.createGain();
       noiseGain.gain.value = 0.05;
       noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
 
@@ -1999,8 +1999,8 @@
   function playNPCGreetSound() {
     if (!audioContext || !masterGain) return;
 
-    const greet = audioContext.createOscillator();
-    const greetGain = audioContext.createGain();
+    var greet = audioContext.createOscillator();
+    var greetGain = audioContext.createGain();
 
     greet.type = 'sine';
     greet.frequency.value = 440; // A4
@@ -2024,25 +2024,25 @@
 
     try {
       // Create noise for whoosh
-      const bufferSize = audioContext.sampleRate * 0.8;
-      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-      const data = buffer.getChannelData(0);
+      var bufferSize = audioContext.sampleRate * 0.8;
+      var buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      var data = buffer.getChannelData(0);
 
-      for (let i = 0; i < bufferSize; i++) {
+      for (var i = 0; i < bufferSize; i++) {
         data[i] = Math.random() * 2 - 1;
       }
 
-      const noise = audioContext.createBufferSource();
+      var noise = audioContext.createBufferSource();
       noise.buffer = buffer;
 
       // Sweeping filter for magical effect
-      const filter = audioContext.createBiquadFilter();
+      var filter = audioContext.createBiquadFilter();
       filter.type = 'bandpass';
       filter.frequency.value = 200;
       filter.frequency.exponentialRampToValueAtTime(4000, audioContext.currentTime + 0.8);
       filter.Q.value = 5;
 
-      const whooshGain = audioContext.createGain();
+      var whooshGain = audioContext.createGain();
       whooshGain.gain.value = 0.06;
       whooshGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
 
@@ -2054,8 +2054,8 @@
       noise.stop(audioContext.currentTime + 0.8);
 
       // Add ethereal tone
-      const tone = audioContext.createOscillator();
-      const toneGain = audioContext.createGain();
+      var tone = audioContext.createOscillator();
+      var toneGain = audioContext.createGain();
 
       tone.type = 'sine';
       tone.frequency.value = 800;
@@ -2080,8 +2080,8 @@
   function playBuildPlaceSound() {
     if (!audioContext || !masterGain) return;
 
-    const thunk = audioContext.createOscillator();
-    const thunkGain = audioContext.createGain();
+    var thunk = audioContext.createOscillator();
+    var thunkGain = audioContext.createGain();
 
     thunk.type = 'square';
     thunk.frequency.value = 60;
@@ -2229,23 +2229,23 @@
 
     try {
       // Create very short white noise burst
-      const bufferSize = audioContext.sampleRate * 0.03; // 30ms
-      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-      const data = buffer.getChannelData(0);
+      var bufferSize = audioContext.sampleRate * 0.03; // 30ms
+      var buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      var data = buffer.getChannelData(0);
 
-      for (let i = 0; i < bufferSize; i++) {
+      for (var i = 0; i < bufferSize; i++) {
         data[i] = Math.random() * 2 - 1;
       }
 
-      const noise = audioContext.createBufferSource();
+      var noise = audioContext.createBufferSource();
       noise.buffer = buffer;
 
-      const filter = audioContext.createBiquadFilter();
+      var filter = audioContext.createBiquadFilter();
       filter.type = 'lowpass';
       filter.frequency.value = 300 + Math.random() * 200; // Vary pitch slightly
       filter.Q.value = 0.5;
 
-      const stepGain = audioContext.createGain();
+      var stepGain = audioContext.createGain();
       stepGain.gain.value = 0.05; // Very subtle
       stepGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
 
@@ -2303,10 +2303,10 @@
   function playGrassFootstep() {
     if (!audioContext || !masterGain) return;
 
-    const grass = createWhiteNoise(2);
+    var grass = createWhiteNoise(2);
     if (grass) {
-      const grassFilter = audioContext.createBiquadFilter();
-      const grassGain = audioContext.createGain();
+      var grassFilter = audioContext.createBiquadFilter();
+      var grassGain = audioContext.createGain();
 
       grassFilter.type = 'lowpass';
       grassFilter.frequency.value = 500;
@@ -2318,7 +2318,7 @@
       grassFilter.connect(grassGain);
       grassGain.connect(masterGain);
 
-      setTimeout(() => {
+      setTimeout(function() {
         try {
           if (grass.stop) grass.stop();
           if (grassFilter.disconnect) grassFilter.disconnect();
@@ -2334,8 +2334,8 @@
   function playStoneFootstep() {
     if (!audioContext || !masterGain) return;
 
-    const thud = audioContext.createOscillator();
-    const thudGain = audioContext.createGain();
+    var thud = audioContext.createOscillator();
+    var thudGain = audioContext.createGain();
 
     thud.type = 'sine';
     thud.frequency.value = 200;
@@ -2349,8 +2349,8 @@
     thud.start();
     thud.stop(audioContext.currentTime + 0.05);
 
-    const click = audioContext.createOscillator();
-    const clickGain = audioContext.createGain();
+    var click = audioContext.createOscillator();
+    var clickGain = audioContext.createGain();
 
     click.type = 'sine';
     click.frequency.value = 3000;
@@ -2371,10 +2371,10 @@
   function playSandFootstep() {
     if (!audioContext || !masterGain) return;
 
-    const sand = createWhiteNoise(2);
+    var sand = createWhiteNoise(2);
     if (sand) {
-      const sandFilter = audioContext.createBiquadFilter();
-      const sandGain = audioContext.createGain();
+      var sandFilter = audioContext.createBiquadFilter();
+      var sandGain = audioContext.createGain();
 
       sandFilter.type = 'lowpass';
       sandFilter.frequency.value = 300;
@@ -2386,7 +2386,7 @@
       sandFilter.connect(sandGain);
       sandGain.connect(masterGain);
 
-      setTimeout(() => {
+      setTimeout(function() {
         try {
           if (sand.stop) sand.stop();
           if (sandFilter.disconnect) sandFilter.disconnect();
@@ -2402,10 +2402,10 @@
   function playWaterFootstep() {
     if (!audioContext || !masterGain) return;
 
-    const splash = createWhiteNoise(2);
+    var splash = createWhiteNoise(2);
     if (splash) {
-      const splashFilter = audioContext.createBiquadFilter();
-      const splashGain = audioContext.createGain();
+      var splashFilter = audioContext.createBiquadFilter();
+      var splashGain = audioContext.createGain();
 
       splashFilter.type = 'bandpass';
       splashFilter.frequency.value = 800;
@@ -2418,7 +2418,7 @@
       splashFilter.connect(splashGain);
       splashGain.connect(masterGain);
 
-      setTimeout(() => {
+      setTimeout(function() {
         try {
           if (splash.stop) splash.stop();
           if (splashFilter.disconnect) splashFilter.disconnect();
@@ -2428,10 +2428,10 @@
     }
 
     // Bubbles
-    for (let i = 0; i < 2; i++) {
-      setTimeout(() => {
-        const bubble = audioContext.createOscillator();
-        const bubbleGain = audioContext.createGain();
+    for (var i = 0; i < 2; i++) {
+      setTimeout(function() {
+        var bubble = audioContext.createOscillator();
+        var bubbleGain = audioContext.createGain();
 
         bubble.type = 'sine';
         bubble.frequency.value = 1500 + Math.random() * 1500;
@@ -2454,8 +2454,8 @@
   function playWoodFootstep() {
     if (!audioContext || !masterGain) return;
 
-    const knock = audioContext.createOscillator();
-    const knockGain = audioContext.createGain();
+    var knock = audioContext.createOscillator();
+    var knockGain = audioContext.createGain();
 
     knock.type = 'sine';
     knock.frequency.value = 150;
@@ -2476,8 +2476,8 @@
   function playDefaultFootstep() {
     if (!audioContext || !masterGain) return;
 
-    const thud = audioContext.createOscillator();
-    const thudGain = audioContext.createGain();
+    var thud = audioContext.createOscillator();
+    var thudGain = audioContext.createGain();
 
     thud.type = 'sine';
     thud.frequency.value = 100;
@@ -2547,7 +2547,7 @@
   // TIME-OF-DAY AMBIENT LAYERS
   // ============================================================================
 
-  let currentTimeAmbient = null;
+  var currentTimeAmbient = null;
 
   // Night cricket ambient layer
   var cricketLayer = null;
@@ -2687,7 +2687,7 @@
 
     try {
       if (currentTimeAmbient.oscillators && Array.isArray(currentTimeAmbient.oscillators)) {
-        currentTimeAmbient.oscillators.forEach(osc => {
+        currentTimeAmbient.oscillators.forEach(function(osc) {
           if (osc && osc.stop) {
             try { osc.stop(); } catch (e) {}
           }
@@ -2695,7 +2695,7 @@
       }
 
       if (currentTimeAmbient.nodes && Array.isArray(currentTimeAmbient.nodes)) {
-        currentTimeAmbient.nodes.forEach(node => {
+        currentTimeAmbient.nodes.forEach(function(node) {
           if (node) {
             if (node.stop) {
               try { node.stop(); } catch (e) {}
@@ -2708,11 +2708,11 @@
       }
 
       if (currentTimeAmbient.intervals && Array.isArray(currentTimeAmbient.intervals)) {
-        currentTimeAmbient.intervals.forEach(id => clearInterval(id));
+        currentTimeAmbient.intervals.forEach(function(id) { clearInterval(id); });
       }
 
       if (currentTimeAmbient.timeouts && Array.isArray(currentTimeAmbient.timeouts)) {
-        currentTimeAmbient.timeouts.forEach(id => clearTimeout(id));
+        currentTimeAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
       }
 
       if (currentTimeAmbient.cleanup && typeof currentTimeAmbient.cleanup === 'function') {
@@ -2732,15 +2732,15 @@
   function playDawnAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
+    var nodes = [];
+    var timeouts = [];
 
     try {
       // Gentle wind
-      const wind = createWhiteNoise();
+      var wind = createWhiteNoise();
       if (wind) {
-        const windFilter = audioContext.createBiquadFilter();
-        const windGain = audioContext.createGain();
+        var windFilter = audioContext.createBiquadFilter();
+        var windGain = audioContext.createGain();
 
         windFilter.type = 'lowpass';
         windFilter.frequency.value = 180;
@@ -2757,13 +2757,13 @@
       function dawnChirp() {
         if (!audioContext || !masterGain) return;
 
-        const bird = audioContext.createOscillator();
-        const birdGain = audioContext.createGain();
+        var bird = audioContext.createOscillator();
+        var birdGain = audioContext.createGain();
 
         bird.type = 'sine';
         bird.frequency.value = 800 + Math.random() * 1000;
 
-        const duration = 0.05 + Math.random() * 0.1;
+        var duration = 0.05 + Math.random() * 0.1;
         birdGain.gain.value = 0.04;
         birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
 
@@ -2773,12 +2773,12 @@
         bird.start();
         bird.stop(audioContext.currentTime + duration);
 
-        const nextChirp = setTimeout(dawnChirp, 800 + Math.random() * 2000);
+        var nextChirp = setTimeout(dawnChirp, 800 + Math.random() * 2000);
         timeouts.push(nextChirp);
       }
 
-      for (let i = 0; i < 2; i++) {
-        const firstChirp = setTimeout(dawnChirp, Math.random() * 1000);
+      for (var i = 0; i < 2; i++) {
+        var firstChirp = setTimeout(dawnChirp, Math.random() * 1000);
         timeouts.push(firstChirp);
       }
 
@@ -2795,15 +2795,15 @@
   function playMorningAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
+    var nodes = [];
+    var timeouts = [];
 
     try {
       // Gentle breeze
-      const breeze = createWhiteNoise();
+      var breeze = createWhiteNoise();
       if (breeze) {
-        const breezeFilter = audioContext.createBiquadFilter();
-        const breezeGain = audioContext.createGain();
+        var breezeFilter = audioContext.createBiquadFilter();
+        var breezeGain = audioContext.createGain();
 
         breezeFilter.type = 'lowpass';
         breezeFilter.frequency.value = 200;
@@ -2820,13 +2820,13 @@
       function morningChirp() {
         if (!audioContext || !masterGain) return;
 
-        const bird = audioContext.createOscillator();
-        const birdGain = audioContext.createGain();
+        var bird = audioContext.createOscillator();
+        var birdGain = audioContext.createGain();
 
         bird.type = 'sine';
         bird.frequency.value = 700 + Math.random() * 1200;
 
-        const duration = 0.08 + Math.random() * 0.15;
+        var duration = 0.08 + Math.random() * 0.15;
         birdGain.gain.value = 0.05;
         birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
 
@@ -2836,12 +2836,12 @@
         bird.start();
         bird.stop(audioContext.currentTime + duration);
 
-        const nextChirp = setTimeout(morningChirp, 400 + Math.random() * 2500);
+        var nextChirp = setTimeout(morningChirp, 400 + Math.random() * 2500);
         timeouts.push(nextChirp);
       }
 
-      for (let i = 0; i < 3; i++) {
-        const firstChirp = setTimeout(morningChirp, Math.random() * 1500);
+      for (var i = 0; i < 3; i++) {
+        var firstChirp = setTimeout(morningChirp, Math.random() * 1500);
         timeouts.push(firstChirp);
       }
 
@@ -2849,8 +2849,8 @@
       function buzz() {
         if (!audioContext || !masterGain) return;
 
-        const insect = audioContext.createOscillator();
-        const insectGain = audioContext.createGain();
+        var insect = audioContext.createOscillator();
+        var insectGain = audioContext.createGain();
 
         insect.type = 'sawtooth';
         insect.frequency.value = 250 + Math.random() * 100;
@@ -2864,11 +2864,11 @@
         insect.start();
         insect.stop(audioContext.currentTime + 0.3);
 
-        const nextBuzz = setTimeout(buzz, 8000 + Math.random() * 12000);
+        var nextBuzz = setTimeout(buzz, 8000 + Math.random() * 12000);
         timeouts.push(nextBuzz);
       }
 
-      const firstBuzz = setTimeout(buzz, 5000);
+      var firstBuzz = setTimeout(buzz, 5000);
       timeouts.push(firstBuzz);
 
       return { nodes, timeouts };
@@ -2884,16 +2884,16 @@
   function playMiddayAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const oscillators = [];
-    const timeouts = [];
+    var nodes = [];
+    var oscillators = [];
+    var timeouts = [];
 
     try {
       // Warm breeze
-      const breeze = createWhiteNoise();
+      var breeze = createWhiteNoise();
       if (breeze) {
-        const breezeFilter = audioContext.createBiquadFilter();
-        const breezeGain = audioContext.createGain();
+        var breezeFilter = audioContext.createBiquadFilter();
+        var breezeGain = audioContext.createGain();
 
         breezeFilter.type = 'lowpass';
         breezeFilter.frequency.value = 220;
@@ -2907,10 +2907,10 @@
       }
 
       // Cicada-like sustained tone with AM
-      const cicada = audioContext.createOscillator();
-      const cicadaAm = audioContext.createOscillator();
-      const cicadaAmGain = audioContext.createGain();
-      const cicadaGain = audioContext.createGain();
+      var cicada = audioContext.createOscillator();
+      var cicadaAm = audioContext.createOscillator();
+      var cicadaAmGain = audioContext.createGain();
+      var cicadaGain = audioContext.createGain();
 
       cicada.type = 'sine';
       cicada.frequency.value = 3500 + Math.random() * 500;
@@ -2937,13 +2937,13 @@
       function middayChirp() {
         if (!audioContext || !masterGain) return;
 
-        const bird = audioContext.createOscillator();
-        const birdGain = audioContext.createGain();
+        var bird = audioContext.createOscillator();
+        var birdGain = audioContext.createGain();
 
         bird.type = 'sine';
         bird.frequency.value = 600 + Math.random() * 800;
 
-        const duration = 0.1 + Math.random() * 0.15;
+        var duration = 0.1 + Math.random() * 0.15;
         birdGain.gain.value = 0.03;
         birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
 
@@ -2953,11 +2953,11 @@
         bird.start();
         bird.stop(audioContext.currentTime + duration);
 
-        const nextChirp = setTimeout(middayChirp, 3000 + Math.random() * 5000);
+        var nextChirp = setTimeout(middayChirp, 3000 + Math.random() * 5000);
         timeouts.push(nextChirp);
       }
 
-      const firstChirp = setTimeout(middayChirp, 2000);
+      var firstChirp = setTimeout(middayChirp, 2000);
       timeouts.push(firstChirp);
 
       return { nodes, oscillators, timeouts };
@@ -2973,15 +2973,15 @@
   function playAfternoonAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
+    var nodes = [];
+    var timeouts = [];
 
     try {
       // Gentle breeze
-      const breeze = createWhiteNoise();
+      var breeze = createWhiteNoise();
       if (breeze) {
-        const breezeFilter = audioContext.createBiquadFilter();
-        const breezeGain = audioContext.createGain();
+        var breezeFilter = audioContext.createBiquadFilter();
+        var breezeGain = audioContext.createGain();
 
         breezeFilter.type = 'lowpass';
         breezeFilter.frequency.value = 190;
@@ -2998,13 +2998,13 @@
       function afternoonChirp() {
         if (!audioContext || !masterGain) return;
 
-        const bird = audioContext.createOscillator();
-        const birdGain = audioContext.createGain();
+        var bird = audioContext.createOscillator();
+        var birdGain = audioContext.createGain();
 
         bird.type = 'sine';
         bird.frequency.value = 500 + Math.random() * 900;
 
-        const duration = 0.1 + Math.random() * 0.2;
+        var duration = 0.1 + Math.random() * 0.2;
         birdGain.gain.value = 0.04;
         birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
 
@@ -3014,12 +3014,12 @@
         bird.start();
         bird.stop(audioContext.currentTime + duration);
 
-        const nextChirp = setTimeout(afternoonChirp, 1500 + Math.random() * 4000);
+        var nextChirp = setTimeout(afternoonChirp, 1500 + Math.random() * 4000);
         timeouts.push(nextChirp);
       }
 
-      for (let i = 0; i < 2; i++) {
-        const firstChirp = setTimeout(afternoonChirp, Math.random() * 2000);
+      for (var i = 0; i < 2; i++) {
+        var firstChirp = setTimeout(afternoonChirp, Math.random() * 2000);
         timeouts.push(firstChirp);
       }
 
@@ -3027,10 +3027,10 @@
       function rustle() {
         if (!audioContext || !masterGain) return;
 
-        const noise = createWhiteNoise(2);
+        var noise = createWhiteNoise(2);
         if (noise) {
-          const rustleFilter = audioContext.createBiquadFilter();
-          const rustleGain = audioContext.createGain();
+          var rustleFilter = audioContext.createBiquadFilter();
+          var rustleGain = audioContext.createGain();
 
           rustleFilter.type = 'bandpass';
           rustleFilter.frequency.value = 1800 + Math.random() * 400;
@@ -3043,7 +3043,7 @@
           rustleFilter.connect(rustleGain);
           rustleGain.connect(masterGain);
 
-          setTimeout(() => {
+          setTimeout(function() {
             try {
               if (noise.stop) noise.stop();
               if (rustleFilter.disconnect) rustleFilter.disconnect();
@@ -3052,11 +3052,11 @@
           }, 450);
         }
 
-        const nextRustle = setTimeout(rustle, 2500 + Math.random() * 3500);
+        var nextRustle = setTimeout(rustle, 2500 + Math.random() * 3500);
         timeouts.push(nextRustle);
       }
 
-      const firstRustle = setTimeout(rustle, 1500);
+      var firstRustle = setTimeout(rustle, 1500);
       timeouts.push(firstRustle);
 
       return { nodes, timeouts };
@@ -3072,16 +3072,16 @@
   function playEveningAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const oscillators = [];
-    const timeouts = [];
+    var nodes = [];
+    var oscillators = [];
+    var timeouts = [];
 
     try {
       // Gentle wind
-      const wind = createWhiteNoise();
+      var wind = createWhiteNoise();
       if (wind) {
-        const windFilter = audioContext.createBiquadFilter();
-        const windGain = audioContext.createGain();
+        var windFilter = audioContext.createBiquadFilter();
+        var windGain = audioContext.createGain();
 
         windFilter.type = 'lowpass';
         windFilter.frequency.value = 170;
@@ -3095,10 +3095,10 @@
       }
 
       // Cricket chirps - rapid oscillator pulses
-      const cricket = audioContext.createOscillator();
-      const cricketAm = audioContext.createOscillator();
-      const cricketAmGain = audioContext.createGain();
-      const cricketGain = audioContext.createGain();
+      var cricket = audioContext.createOscillator();
+      var cricketAm = audioContext.createOscillator();
+      var cricketAmGain = audioContext.createGain();
+      var cricketGain = audioContext.createGain();
 
       cricket.type = 'sine';
       cricket.frequency.value = 4000 + Math.random() * 500;
@@ -3125,10 +3125,10 @@
       function hoot() {
         if (!audioContext || !masterGain) return;
 
-        const owl = audioContext.createOscillator();
-        const owlVibrato = audioContext.createOscillator();
-        const owlVibratoGain = audioContext.createGain();
-        const owlGain = audioContext.createGain();
+        var owl = audioContext.createOscillator();
+        var owlVibrato = audioContext.createOscillator();
+        var owlVibratoGain = audioContext.createGain();
+        var owlGain = audioContext.createGain();
 
         owl.type = 'sine';
         owl.frequency.value = 320;
@@ -3152,11 +3152,11 @@
         owl.stop(audioContext.currentTime + 0.4);
         owlVibrato.stop(audioContext.currentTime + 0.4);
 
-        const nextHoot = setTimeout(hoot, 12000 + Math.random() * 12000);
+        var nextHoot = setTimeout(hoot, 12000 + Math.random() * 12000);
         timeouts.push(nextHoot);
       }
 
-      const firstHoot = setTimeout(hoot, 5000);
+      var firstHoot = setTimeout(hoot, 5000);
       timeouts.push(firstHoot);
 
       return { nodes, oscillators, timeouts };
@@ -3172,16 +3172,16 @@
   function playNightAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const oscillators = [];
-    const timeouts = [];
+    var nodes = [];
+    var oscillators = [];
+    var timeouts = [];
 
     try {
       // Very quiet wind
-      const wind = createWhiteNoise();
+      var wind = createWhiteNoise();
       if (wind) {
-        const windFilter = audioContext.createBiquadFilter();
-        const windGain = audioContext.createGain();
+        var windFilter = audioContext.createBiquadFilter();
+        var windGain = audioContext.createGain();
 
         windFilter.type = 'lowpass';
         windFilter.frequency.value = 150;
@@ -3195,10 +3195,10 @@
       }
 
       // Deep crickets
-      const cricket = audioContext.createOscillator();
-      const cricketAm = audioContext.createOscillator();
-      const cricketAmGain = audioContext.createGain();
-      const cricketGain = audioContext.createGain();
+      var cricket = audioContext.createOscillator();
+      var cricketAm = audioContext.createOscillator();
+      var cricketAmGain = audioContext.createGain();
+      var cricketGain = audioContext.createGain();
 
       cricket.type = 'sine';
       cricket.frequency.value = 3500 + Math.random() * 300;
@@ -3225,10 +3225,10 @@
       function nightHoot() {
         if (!audioContext || !masterGain) return;
 
-        const owl = audioContext.createOscillator();
-        const owlVibrato = audioContext.createOscillator();
-        const owlVibratoGain = audioContext.createGain();
-        const owlGain = audioContext.createGain();
+        var owl = audioContext.createOscillator();
+        var owlVibrato = audioContext.createOscillator();
+        var owlVibratoGain = audioContext.createGain();
+        var owlGain = audioContext.createGain();
 
         owl.type = 'sine';
         owl.frequency.value = 280;
@@ -3252,21 +3252,21 @@
         owl.stop(audioContext.currentTime + 0.5);
         owlVibrato.stop(audioContext.currentTime + 0.5);
 
-        const nextHoot = setTimeout(nightHoot, 18000 + Math.random() * 18000);
+        var nextHoot = setTimeout(nightHoot, 18000 + Math.random() * 18000);
         timeouts.push(nextHoot);
       }
 
-      const firstHoot = setTimeout(nightHoot, 8000);
+      var firstHoot = setTimeout(nightHoot, 8000);
       timeouts.push(firstHoot);
 
       // Distant wolf-like howl (very rare)
       function distantHowl() {
         if (!audioContext || !masterGain) return;
 
-        const wolf = audioContext.createOscillator();
-        const wolfVibrato = audioContext.createOscillator();
-        const wolfVibratoGain = audioContext.createGain();
-        const wolfGain = audioContext.createGain();
+        var wolf = audioContext.createOscillator();
+        var wolfVibrato = audioContext.createOscillator();
+        var wolfVibratoGain = audioContext.createGain();
+        var wolfGain = audioContext.createGain();
 
         wolf.type = 'sine';
         wolf.frequency.value = 350;
@@ -3293,11 +3293,11 @@
         wolf.stop(audioContext.currentTime + 2.5);
         wolfVibrato.stop(audioContext.currentTime + 2.5);
 
-        const nextHowl = setTimeout(distantHowl, 60000 + Math.random() * 60000);
+        var nextHowl = setTimeout(distantHowl, 60000 + Math.random() * 60000);
         timeouts.push(nextHowl);
       }
 
-      const firstHowl = setTimeout(distantHowl, 30000);
+      var firstHowl = setTimeout(distantHowl, 30000);
       timeouts.push(firstHowl);
 
       return { nodes, oscillators, timeouts };
@@ -3311,7 +3311,7 @@
   // WEATHER AMBIENT LAYERS
   // ============================================================================
 
-  let currentWeatherAmbient = null;
+  var currentWeatherAmbient = null;
 
   /**
    * Update ambient sounds based on weather
@@ -3359,7 +3359,7 @@
 
     try {
       if (currentWeatherAmbient.oscillators && Array.isArray(currentWeatherAmbient.oscillators)) {
-        currentWeatherAmbient.oscillators.forEach(osc => {
+        currentWeatherAmbient.oscillators.forEach(function(osc) {
           if (osc && osc.stop) {
             try { osc.stop(); } catch (e) {}
           }
@@ -3367,7 +3367,7 @@
       }
 
       if (currentWeatherAmbient.nodes && Array.isArray(currentWeatherAmbient.nodes)) {
-        currentWeatherAmbient.nodes.forEach(node => {
+        currentWeatherAmbient.nodes.forEach(function(node) {
           if (node) {
             if (node.stop) {
               try { node.stop(); } catch (e) {}
@@ -3380,11 +3380,11 @@
       }
 
       if (currentWeatherAmbient.intervals && Array.isArray(currentWeatherAmbient.intervals)) {
-        currentWeatherAmbient.intervals.forEach(id => clearInterval(id));
+        currentWeatherAmbient.intervals.forEach(function(id) { clearInterval(id); });
       }
 
       if (currentWeatherAmbient.timeouts && Array.isArray(currentWeatherAmbient.timeouts)) {
-        currentWeatherAmbient.timeouts.forEach(id => clearTimeout(id));
+        currentWeatherAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
       }
 
       if (currentWeatherAmbient.cleanup && typeof currentWeatherAmbient.cleanup === 'function') {
@@ -3404,13 +3404,13 @@
   function playCloudyAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
+    var nodes = [];
 
     try {
-      const wind = createWhiteNoise();
+      var wind = createWhiteNoise();
       if (wind) {
-        const windFilter = audioContext.createBiquadFilter();
-        const windGain = audioContext.createGain();
+        var windFilter = audioContext.createBiquadFilter();
+        var windGain = audioContext.createGain();
 
         windFilter.type = 'lowpass';
         windFilter.frequency.value = 200;
@@ -3436,15 +3436,15 @@
   function playRainAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
+    var nodes = [];
+    var timeouts = [];
 
     try {
       // Rain sound - white noise filtered through bandpass at ~4000Hz
-      const rain = createWhiteNoise();
+      var rain = createWhiteNoise();
       if (rain) {
-        const rainFilter = audioContext.createBiquadFilter();
-        const rainGain = audioContext.createGain();
+        var rainFilter = audioContext.createBiquadFilter();
+        var rainGain = audioContext.createGain();
 
         rainFilter.type = 'bandpass';
         rainFilter.frequency.value = 4000;
@@ -3463,10 +3463,10 @@
       function thunder() {
         if (!audioContext || !masterGain) return;
 
-        const rumble = createWhiteNoise(2);
+        var rumble = createWhiteNoise(2);
         if (rumble) {
-          const rumbleFilter = audioContext.createBiquadFilter();
-          const rumbleGain = audioContext.createGain();
+          var rumbleFilter = audioContext.createBiquadFilter();
+          var rumbleGain = audioContext.createGain();
 
           rumbleFilter.type = 'lowpass';
           rumbleFilter.frequency.value = 80;
@@ -3478,7 +3478,7 @@
           rumbleFilter.connect(rumbleGain);
           rumbleGain.connect(masterGain);
 
-          setTimeout(() => {
+          setTimeout(function() {
             try {
               if (rumble.stop) rumble.stop();
               if (rumbleFilter.disconnect) rumbleFilter.disconnect();
@@ -3487,11 +3487,11 @@
           }, 3000);
         }
 
-        const nextThunder = setTimeout(thunder, 25000 + Math.random() * 35000);
+        var nextThunder = setTimeout(thunder, 25000 + Math.random() * 35000);
         timeouts.push(nextThunder);
       }
 
-      const firstThunder = setTimeout(thunder, 15000);
+      var firstThunder = setTimeout(thunder, 15000);
       timeouts.push(firstThunder);
 
       return { nodes, timeouts };
@@ -3507,14 +3507,14 @@
   function playSnowAmbient() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
+    var nodes = [];
 
     try {
       // Soft wind
-      const wind = createWhiteNoise();
+      var wind = createWhiteNoise();
       if (wind) {
-        const windFilter = audioContext.createBiquadFilter();
-        const windGain = audioContext.createGain();
+        var windFilter = audioContext.createBiquadFilter();
+        var windGain = audioContext.createGain();
 
         windFilter.type = 'lowpass';
         windFilter.frequency.value = 120;
@@ -3538,7 +3538,7 @@
   // ZONE-SPECIFIC ENHANCEMENTS
   // ============================================================================
 
-  let currentZoneAmbient = null;
+  var currentZoneAmbient = null;
 
   /**
    * Set zone-specific ambient layer (on top of base ambient)
@@ -3652,7 +3652,7 @@
 
     try {
       if (currentZoneAmbient.oscillators && Array.isArray(currentZoneAmbient.oscillators)) {
-        currentZoneAmbient.oscillators.forEach(osc => {
+        currentZoneAmbient.oscillators.forEach(function(osc) {
           if (osc && osc.stop) {
             try { osc.stop(); } catch (e) {}
           }
@@ -3660,7 +3660,7 @@
       }
 
       if (currentZoneAmbient.nodes && Array.isArray(currentZoneAmbient.nodes)) {
-        currentZoneAmbient.nodes.forEach(node => {
+        currentZoneAmbient.nodes.forEach(function(node) {
           if (node) {
             if (node.stop) {
               try { node.stop(); } catch (e) {}
@@ -3673,11 +3673,11 @@
       }
 
       if (currentZoneAmbient.intervals && Array.isArray(currentZoneAmbient.intervals)) {
-        currentZoneAmbient.intervals.forEach(id => clearInterval(id));
+        currentZoneAmbient.intervals.forEach(function(id) { clearInterval(id); });
       }
 
       if (currentZoneAmbient.timeouts && Array.isArray(currentZoneAmbient.timeouts)) {
-        currentZoneAmbient.timeouts.forEach(id => clearTimeout(id));
+        currentZoneAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
       }
 
       if (currentZoneAmbient.cleanup && typeof currentZoneAmbient.cleanup === 'function') {
@@ -3697,16 +3697,16 @@
   function playNexusZoneLayer() {
     if (!audioContext || !masterGain) return null;
 
-    const oscillators = [];
-    const nodes = [];
+    var oscillators = [];
+    var nodes = [];
 
     try {
       // Soft crystalline shimmer — two detuned sines at gentle frequencies
-      const crystal1 = audioContext.createOscillator();
-      const crystal2 = audioContext.createOscillator();
-      const lfo = audioContext.createOscillator();
-      const lfoGain = audioContext.createGain();
-      const layerGain = audioContext.createGain();
+      var crystal1 = audioContext.createOscillator();
+      var crystal2 = audioContext.createOscillator();
+      var lfo = audioContext.createOscillator();
+      var lfoGain = audioContext.createGain();
+      var layerGain = audioContext.createGain();
 
       crystal1.type = 'sine';
       crystal1.frequency.value = 523; // C5 — much gentler than 2000Hz
@@ -3748,17 +3748,17 @@
   function playGardensZoneLayer() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
+    var nodes = [];
+    var timeouts = [];
 
     try {
       // Water trickling - filtered noise with LFO
-      const water = createWhiteNoise();
+      var water = createWhiteNoise();
       if (water) {
-        const waterFilter = audioContext.createBiquadFilter();
-        const waterLfo = audioContext.createOscillator();
-        const waterLfoGain = audioContext.createGain();
-        const waterGain = audioContext.createGain();
+        var waterFilter = audioContext.createBiquadFilter();
+        var waterLfo = audioContext.createOscillator();
+        var waterLfoGain = audioContext.createGain();
+        var waterGain = audioContext.createGain();
 
         waterFilter.type = 'highpass';
         waterFilter.frequency.value = 2000;
@@ -3794,18 +3794,18 @@
   function playAthenaeumZoneLayer() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
+    var nodes = [];
+    var timeouts = [];
 
     try {
       // Page rustling - short noise bursts
       function pageRustle() {
         if (!audioContext || !masterGain) return;
 
-        const page = createWhiteNoise(2);
+        var page = createWhiteNoise(2);
         if (page) {
-          const pageFilter = audioContext.createBiquadFilter();
-          const pageGain = audioContext.createGain();
+          var pageFilter = audioContext.createBiquadFilter();
+          var pageGain = audioContext.createGain();
 
           pageFilter.type = 'highpass';
           pageFilter.frequency.value = 2500;
@@ -3817,7 +3817,7 @@
           pageFilter.connect(pageGain);
           pageGain.connect(masterGain);
 
-          setTimeout(() => {
+          setTimeout(function() {
             try {
               if (page.stop) page.stop();
               if (pageFilter.disconnect) pageFilter.disconnect();
@@ -3826,11 +3826,11 @@
           }, 100);
         }
 
-        const nextRustle = setTimeout(pageRustle, 10000 + Math.random() * 10000);
+        var nextRustle = setTimeout(pageRustle, 10000 + Math.random() * 10000);
         timeouts.push(nextRustle);
       }
 
-      const firstRustle = setTimeout(pageRustle, 5000);
+      var firstRustle = setTimeout(pageRustle, 5000);
       timeouts.push(firstRustle);
 
       return { nodes, timeouts, gainNode: null };
@@ -3846,17 +3846,17 @@
   function playStudioZoneLayer() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
+    var nodes = [];
+    var timeouts = [];
 
     try {
       // Random melodic tones
       function creativeNote() {
         if (!audioContext || !masterGain) return;
 
-        const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00];
-        const note = audioContext.createOscillator();
-        const noteGain = audioContext.createGain();
+        var notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00];
+        var note = audioContext.createOscillator();
+        var noteGain = audioContext.createGain();
 
         note.type = 'sine';
         note.frequency.value = notes[Math.floor(Math.random() * notes.length)];
@@ -3870,11 +3870,11 @@
         note.start();
         note.stop(audioContext.currentTime + 0.3);
 
-        const nextNote = setTimeout(creativeNote, 8000 + Math.random() * 12000);
+        var nextNote = setTimeout(creativeNote, 8000 + Math.random() * 12000);
         timeouts.push(nextNote);
       }
 
-      const firstNote = setTimeout(creativeNote, 4000);
+      var firstNote = setTimeout(creativeNote, 4000);
       timeouts.push(firstNote);
 
       return { nodes, timeouts, gainNode: null };
@@ -3890,14 +3890,14 @@
   function playWildsZoneLayer() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
+    var nodes = [];
 
     try {
       // Rushing water - white noise with bandpass
-      const water = createWhiteNoise();
+      var water = createWhiteNoise();
       if (water) {
-        const waterFilter = audioContext.createBiquadFilter();
-        const waterGain = audioContext.createGain();
+        var waterFilter = audioContext.createBiquadFilter();
+        var waterGain = audioContext.createGain();
 
         waterFilter.type = 'bandpass';
         waterFilter.frequency.value = 800;
@@ -3925,15 +3925,15 @@
   function playAgoraZoneLayer() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
+    var nodes = [];
+    var timeouts = [];
 
     try {
       // Enhanced crowd murmur
-      const crowd = createWhiteNoise();
+      var crowd = createWhiteNoise();
       if (crowd) {
-        const crowdFilter = audioContext.createBiquadFilter();
-        const crowdGain = audioContext.createGain();
+        var crowdFilter = audioContext.createBiquadFilter();
+        var crowdGain = audioContext.createGain();
 
         crowdFilter.type = 'bandpass';
         crowdFilter.frequency.value = 450;
@@ -3961,16 +3961,16 @@
   function playCommonsZoneLayer() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
-    const timeouts = [];
+    var nodes = [];
+    var timeouts = [];
 
     try {
       // Wind chimes - random high notes
       function chime() {
         if (!audioContext || !masterGain) return;
 
-        const bell = audioContext.createOscillator();
-        const bellGain = audioContext.createGain();
+        var bell = audioContext.createOscillator();
+        var bellGain = audioContext.createGain();
 
         bell.type = 'sine';
         bell.frequency.value = 800 + Math.random() * 600;
@@ -3984,11 +3984,11 @@
         bell.start();
         bell.stop(audioContext.currentTime + 1.5);
 
-        const nextChime = setTimeout(chime, 5000 + Math.random() * 8000);
+        var nextChime = setTimeout(chime, 5000 + Math.random() * 8000);
         timeouts.push(nextChime);
       }
 
-      const firstChime = setTimeout(chime, 3000);
+      var firstChime = setTimeout(chime, 3000);
       timeouts.push(firstChime);
 
       return { nodes, timeouts, gainNode: null };
@@ -4004,16 +4004,16 @@
   function playArenaZoneLayer() {
     if (!audioContext || !masterGain) return null;
 
-    const nodes = [];
+    var nodes = [];
 
     try {
       // Subtle echo ambiance
-      const echo = createWhiteNoise(2);
+      var echo = createWhiteNoise(2);
       if (echo) {
-        const echoFilter = audioContext.createBiquadFilter();
-        const echoDelay = audioContext.createDelay();
-        const echoDelayGain = audioContext.createGain();
-        const echoGain = audioContext.createGain();
+        var echoFilter = audioContext.createBiquadFilter();
+        var echoDelay = audioContext.createDelay();
+        var echoDelayGain = audioContext.createGain();
+        var echoGain = audioContext.createGain();
 
         echoFilter.type = 'bandpass';
         echoFilter.frequency.value = 700;
@@ -4091,8 +4091,8 @@
   function playNPCHammerSound() {
     if (!audioContext || !masterGain) return;
 
-    const hammer = audioContext.createOscillator();
-    const hammerGain = audioContext.createGain();
+    var hammer = audioContext.createOscillator();
+    var hammerGain = audioContext.createGain();
 
     hammer.type = 'square';
     hammer.frequency.value = 90;
@@ -4107,8 +4107,8 @@
     hammer.stop(audioContext.currentTime + 0.2);
 
     // Metal ring
-    const ring = audioContext.createOscillator();
-    const ringGain = audioContext.createGain();
+    var ring = audioContext.createOscillator();
+    var ringGain = audioContext.createGain();
 
     ring.type = 'sine';
     ring.frequency.value = 2500;
@@ -4129,16 +4129,16 @@
   function playNPCMusicSound() {
     if (!audioContext || !masterGain) return;
 
-    const notes = [392.00, 440.00, 493.88]; // G4, A4, B4
+    var notes = [392.00, 440.00, 493.88]; // G4, A4, B4
 
-    notes.forEach((freq, i) => {
-      const note = audioContext.createOscillator();
-      const noteGain = audioContext.createGain();
+    notes.forEach(function(freq, i) {
+      var note = audioContext.createOscillator();
+      var noteGain = audioContext.createGain();
 
       note.type = 'sine';
       note.frequency.value = freq;
 
-      const startTime = audioContext.currentTime + i * 0.15;
+      var startTime = audioContext.currentTime + i * 0.15;
       noteGain.gain.setValueAtTime(0, startTime);
       noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
       noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
@@ -4157,10 +4157,10 @@
   function playNPCGardenSound() {
     if (!audioContext || !masterGain) return;
 
-    const rustle = createWhiteNoise(2);
+    var rustle = createWhiteNoise(2);
     if (rustle) {
-      const rustleFilter = audioContext.createBiquadFilter();
-      const rustleGain = audioContext.createGain();
+      var rustleFilter = audioContext.createBiquadFilter();
+      var rustleGain = audioContext.createGain();
 
       rustleFilter.type = 'bandpass';
       rustleFilter.frequency.value = 1200;
@@ -4173,7 +4173,7 @@
       rustleFilter.connect(rustleGain);
       rustleGain.connect(masterGain);
 
-      setTimeout(() => {
+      setTimeout(function() {
         try {
           if (rustle.stop) rustle.stop();
           if (rustleFilter.disconnect) rustleFilter.disconnect();
@@ -4189,8 +4189,8 @@
   function playNPCTradeSound() {
     if (!audioContext || !masterGain) return;
 
-    const coin = audioContext.createOscillator();
-    const coinGain = audioContext.createGain();
+    var coin = audioContext.createOscillator();
+    var coinGain = audioContext.createGain();
 
     coin.type = 'triangle';
     coin.frequency.value = 1800 + Math.random() * 500;
@@ -4212,8 +4212,8 @@
     if (!audioContext || !masterGain) return;
 
     // Book thump
-    const thump = audioContext.createOscillator();
-    const thumpGain = audioContext.createGain();
+    var thump = audioContext.createOscillator();
+    var thumpGain = audioContext.createGain();
 
     thump.type = 'sine';
     thump.frequency.value = 80;
@@ -4228,11 +4228,11 @@
     thump.stop(audioContext.currentTime + 0.1);
 
     // Page turn
-    setTimeout(() => {
-      const page = createWhiteNoise(2);
+    setTimeout(function() {
+      var page = createWhiteNoise(2);
       if (page) {
-        const pageFilter = audioContext.createBiquadFilter();
-        const pageGain = audioContext.createGain();
+        var pageFilter = audioContext.createBiquadFilter();
+        var pageGain = audioContext.createGain();
 
         pageFilter.type = 'highpass';
         pageFilter.frequency.value = 2200;
@@ -4244,7 +4244,7 @@
         pageFilter.connect(pageGain);
         pageGain.connect(masterGain);
 
-        setTimeout(() => {
+        setTimeout(function() {
           try {
             if (page.stop) page.stop();
             if (pageFilter.disconnect) pageFilter.disconnect();
@@ -4261,16 +4261,16 @@
   function playNPCHealSound() {
     if (!audioContext || !masterGain) return;
 
-    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+    var notes = [523.25, 659.25, 783.99]; // C5, E5, G5
 
-    notes.forEach((freq, i) => {
-      const note = audioContext.createOscillator();
-      const noteGain = audioContext.createGain();
+    notes.forEach(function(freq, i) {
+      var note = audioContext.createOscillator();
+      var noteGain = audioContext.createGain();
 
       note.type = 'sine';
       note.frequency.value = freq;
 
-      const startTime = audioContext.currentTime + i * 0.1;
+      var startTime = audioContext.currentTime + i * 0.1;
       noteGain.gain.setValueAtTime(0, startTime);
       noteGain.gain.linearRampToValueAtTime(0.04, startTime + 0.02);
       noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);

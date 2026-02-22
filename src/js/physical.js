@@ -1,7 +1,7 @@
 (function(exports) {
 
   // Anchor types
-  const ANCHOR_TYPES = [
+  var ANCHOR_TYPES = [
     'zone_portal', 'resource_node', 'discovery_point',
     'gathering_spot', 'garden_plot'
   ];
@@ -13,18 +13,18 @@
 
   // Haversine distance calculation (returns km)
   function haversineDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth radius in km
-    const toRad = deg => deg * Math.PI / 180;
+    var R = 6371; // Earth radius in km
+    var toRad = function(deg) { return deg * Math.PI / 180; };
 
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
+    var dLat = toRad(lat2 - lat1);
+    var dLon = toRad(lon2 - lon1);
 
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
               Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
               Math.sin(dLon / 2) * Math.sin(dLon / 2);
 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    var distance = R * c;
 
     return distance;
   }
@@ -59,8 +59,8 @@
 
   // Create anchor
   function createAnchor(msg, state) {
-    const lat = msg.payload.lat;
-    const lon = msg.payload.lon;
+    var lat = msg.payload.lat;
+    var lon = msg.payload.lon;
 
     // Validate GPS coordinates
     if (lat === undefined || lon === undefined) {
@@ -70,7 +70,7 @@
       };
     }
 
-    const validation = validateAnchorLocation(lat, lon);
+    var validation = validateAnchorLocation(lat, lon);
     if (!validation.safe) {
       return {
         success: false,
@@ -78,7 +78,7 @@
       };
     }
 
-    const anchorType = msg.payload.type || 'discovery_point';
+    var anchorType = msg.payload.type || 'discovery_point';
     if (!ANCHOR_TYPES.includes(anchorType)) {
       return {
         success: false,
@@ -86,7 +86,7 @@
       };
     }
 
-    const anchor = {
+    var anchor = {
       id: generateId(),
       type: anchorType,
       position: msg.payload.position || {x: 0, y: 0, z: 0},
@@ -119,27 +119,27 @@
       return 0;
     }
 
-    let totalKm = 0;
-    const maxWalkingSpeed = 25; // km/h - filter out driving
+    var totalKm = 0;
+    var maxWalkingSpeed = 25; // km/h - filter out driving
 
-    for (let i = 1; i < gpsHistory.length; i++) {
-      const prev = gpsHistory[i - 1];
-      const curr = gpsHistory[i];
+    for (var i = 1; i < gpsHistory.length; i++) {
+      var prev = gpsHistory[i - 1];
+      var curr = gpsHistory[i];
 
       // Skip if missing data
       if (!prev.lat || !prev.lon || !curr.lat || !curr.lon || !prev.ts || !curr.ts) {
         continue;
       }
 
-      const distance = haversineDistance(prev.lat, prev.lon, curr.lat, curr.lon);
-      const timeHours = (curr.ts - prev.ts) / (1000 * 60 * 60);
+      var distance = haversineDistance(prev.lat, prev.lon, curr.lat, curr.lon);
+      var timeHours = (curr.ts - prev.ts) / (1000 * 60 * 60);
 
       // Skip if time is zero or negative
       if (timeHours <= 0) {
         continue;
       }
 
-      const speed = distance / timeHours;
+      var speed = distance / timeHours;
 
       // Filter out driving speed
       if (speed <= maxWalkingSpeed) {
@@ -148,7 +148,7 @@
     }
 
     // Return warmth capped at 100
-    const warmth = Math.min(100, totalKm * 10);
+    var warmth = Math.min(100, totalKm * 10);
     return warmth;
   }
 
