@@ -3,7 +3,7 @@
     "agent_019": 7,
     "agent_016": 5,
     "agent_022": 5,
-    "agent_021": 9,
+    "agent_021": 10,
     "agent_023": 7,
     "agent_082": -7,
     "agent_027": -4,
@@ -33,86 +33,6 @@
     "agent_004": 0
   },
   "transactions": [
-    {
-      "type": "craft",
-      "from": "agent_015",
-      "ts": "",
-      "payload": {
-        "recipe": "ornament"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_015",
-      "ts": "",
-      "payload": {
-        "title": "Creation 333",
-        "type": "song"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_019",
-      "ts": "",
-      "payload": {
-        "species": "wheat",
-        "plot": "plot_018"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_019",
-      "ts": "",
-      "payload": {
-        "species": "flower",
-        "plot": "plot_004"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_041",
-      "ts": "",
-      "payload": {
-        "title": "Creation 294",
-        "type": "poem"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_041",
-      "ts": "",
-      "payload": {
-        "title": "Creation 451",
-        "type": "poem"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_044",
-      "ts": "",
-      "payload": {
-        "title": "Creation 567",
-        "type": "song"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_048",
-      "ts": "",
-      "payload": {
-        "title": "Creation 20",
-        "type": "story"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_048",
-      "ts": "",
-      "payload": {
-        "title": "Creation 865",
-        "type": "song"
-      }
-    },
     {
       "type": "craft",
       "from": "agent_078",
@@ -3999,6 +3919,73 @@
         "title": "Creation 973",
         "type": "song"
       }
+    },
+    {
+      "type": "plant",
+      "from": "agent_021",
+      "ts": "",
+      "payload": {
+        "species": "tomato",
+        "plot": "plot_007"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_021",
+      "ts": "",
+      "payload": {
+        "plot": "plot_009"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_044",
+      "ts": "",
+      "payload": {
+        "recipe": "instrument"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_044",
+      "ts": "",
+      "payload": {
+        "recipe": "ornament"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_062",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "buy",
+      "from": "agent_066",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_066",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "build",
+      "from": "agent_080",
+      "ts": "",
+      "payload": {
+        "structure": "bench"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_080",
+      "ts": "",
+      "payload": {
+        "structure": "bench"
+      }
     }
   ],
   "listings": [
@@ -4421,6 +4408,18 @@
       "price": 0,
       "seller": "agent_008",
       "ts": "2026-02-22T09:52:40.386601Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_062",
+      "ts": "2026-02-22T11:32:27.447384Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_066",
+      "ts": "2026-02-22T11:32:27.447356Z"
     }
   ],
   "ledger": [
