@@ -538,6 +538,15 @@
   async function init() {
     console.log('Initializing ZION MMO...');
 
+    // --- Dashboard Mode Check ---
+    // If ?mode=dashboard or #dashboard, launch UI-only mode
+    if (typeof window !== 'undefined' && typeof Dashboard !== 'undefined' && Dashboard.isDashboardMode) {
+      if (Dashboard.isDashboardMode()) {
+        console.log('[Dashboard] UI-only mode detected');
+        return initDashboardMode();
+      }
+    }
+
     // Detect platform
     if (Input) {
       platform = Input.getPlatform();
@@ -591,6 +600,252 @@
 
     // Start game loop
     startGameLoop();
+  }
+
+  /**
+   * Initialize dashboard (UI-only) mode — no 3D world, text/panel interface
+   */
+  function initDashboardMode() {
+    console.log('[Dashboard] Launching dashboard mode...');
+
+    // Hide login screen, loading overlay, and 3D canvas
+    if (typeof document !== 'undefined') {
+      var loginEl = document.getElementById('login-screen');
+      if (loginEl) loginEl.style.display = 'none';
+      var loadingEl = document.getElementById('loading-overlay');
+      if (loadingEl) loadingEl.style.display = 'none';
+      var canvas = document.getElementById('world-canvas');
+      if (canvas) canvas.style.display = 'none';
+      var hudContainer = document.getElementById('hud-container');
+      if (hudContainer) hudContainer.style.display = 'none';
+    }
+
+    // Inject dashboard CSS
+    if (typeof DashboardCSS !== 'undefined' && DashboardCSS.injectStyles) {
+      DashboardCSS.injectStyles();
+    }
+
+    // Get container
+    var container = typeof document !== 'undefined'
+      ? (document.getElementById('game-container') || document.body)
+      : null;
+
+    // Get player name (from Auth if available, else prompt or default)
+    var playerName = 'Traveler';
+    if (typeof Auth !== 'undefined' && Auth.isAuthenticated && Auth.isAuthenticated()) {
+      playerName = Auth.getUsername() || 'Traveler';
+    } else if (typeof localStorage !== 'undefined') {
+      playerName = localStorage.getItem('zion_dashboard_player') || 'Traveler';
+    }
+
+    // Initialize dashboard shell
+    if (typeof Dashboard !== 'undefined' && Dashboard.initDashboard) {
+      Dashboard.initDashboard(container);
+    }
+
+    // Create game state via DashboardMain
+    var dashState = null;
+    if (typeof DashboardMain !== 'undefined' && DashboardMain.createGameState) {
+      // Try loading saved state first
+      dashState = DashboardMain.loadState ? DashboardMain.loadState() : null;
+      if (!dashState) {
+        dashState = DashboardMain.createGameState(playerName);
+      }
+    }
+
+    // Create dashboard UI inside the container
+    if (container && typeof document !== 'undefined') {
+      // Create the dashboard container div
+      var dashEl = document.createElement('div');
+      dashEl.className = 'dashboard-container';
+      dashEl.id = 'dashboard-root';
+
+      // Header
+      var header = document.createElement('div');
+      header.className = 'dashboard-header';
+      header.innerHTML =
+        '<div class="dashboard-logo">ZION</div>' +
+        '<div class="dashboard-player-info">' +
+          '<span id="dash-player-name">' + _escHtml(playerName) + '</span>' +
+          ' | <span class="dashboard-spark" id="dash-spark">' + (dashState ? dashState.player.spark : 100) + ' Spark</span>' +
+          ' | <span class="dashboard-zone" id="dash-zone">' + (dashState ? _zoneDisplayName(dashState.player.zone) : 'The Nexus') + '</span>' +
+          ' | <span class="dashboard-time" id="dash-time">Day 1 | 06:00</span>' +
+        '</div>';
+      dashEl.appendChild(header);
+
+      // Main panel grid
+      var main = document.createElement('div');
+      main.className = 'dashboard-main';
+      main.id = 'dashboard-panels';
+
+      // Create panels from available modules
+      var panels = [];
+
+      // Zone Navigator
+      if (typeof DashboardZones !== 'undefined' && DashboardZones.createZoneNavigator) {
+        var zonePanel = _wrapPanel('Zone Navigator', DashboardZones.createZoneNavigator());
+        panels.push(zonePanel);
+      }
+
+      // NPC Panel
+      if (typeof DashboardNPCs !== 'undefined' && DashboardNPCs.createNPCPanel) {
+        var npcPanel = _wrapPanel('NPCs', DashboardNPCs.createNPCPanel());
+        panels.push(npcPanel);
+      }
+
+      // Inventory
+      if (typeof DashboardInventory !== 'undefined' && DashboardInventory.createInventoryPanel) {
+        var invPanel = _wrapPanel('Inventory & Crafting', DashboardInventory.createInventoryPanel());
+        panels.push(invPanel);
+      }
+
+      // Economy
+      if (typeof DashboardEconomy !== 'undefined' && DashboardEconomy.createEconomyPanel) {
+        var ecoPanel = _wrapPanel('Economy & Trading', DashboardEconomy.createEconomyPanel());
+        panels.push(ecoPanel);
+      }
+
+      // Quests
+      if (typeof DashboardQuests !== 'undefined' && DashboardQuests.createQuestPanel) {
+        var questPanel = _wrapPanel('Quests & Achievements', DashboardQuests.createQuestPanel());
+        panels.push(questPanel);
+      }
+
+      // Social
+      if (typeof DashboardSocial !== 'undefined' && DashboardSocial.createSocialPanel) {
+        var socialPanel = _wrapPanel('Social Hub', DashboardSocial.createSocialPanel());
+        panels.push(socialPanel);
+      }
+
+      // Mini-Games
+      if (typeof DashboardGames !== 'undefined' && DashboardGames.createGamesPanel) {
+        var gamesPanel = _wrapPanel('Mini-Games', DashboardGames.createGamesPanel());
+        panels.push(gamesPanel);
+      }
+
+      // World Status
+      if (typeof DashboardWorld !== 'undefined' && DashboardWorld.createWorldPanel) {
+        var worldPanel = _wrapPanel('World Status', DashboardWorld.createWorldPanel());
+        panels.push(worldPanel);
+      }
+
+      // If no module panels created, show a basic welcome panel
+      if (panels.length === 0) {
+        var welcomePanel = document.createElement('div');
+        welcomePanel.className = 'dashboard-panel';
+        welcomePanel.innerHTML =
+          '<div class="dashboard-panel-header"><span class="dashboard-panel-title">Welcome to ZION</span></div>' +
+          '<div class="dashboard-panel-body">' +
+            '<p>Dashboard mode is active. You are exploring ZION through a text-based interface.</p>' +
+            '<p style="color:#DAA520;margin-top:12px">Current Zone: ' + (dashState ? _zoneDisplayName(dashState.player.zone) : 'The Nexus') + '</p>' +
+            '<p style="color:#A0978E;margin-top:8px">Use keyboard shortcuts: I (Inventory), J (Quests), M (Map), G (Guild)</p>' +
+          '</div>';
+        panels.push(welcomePanel);
+      }
+
+      for (var pi = 0; pi < panels.length; pi++) {
+        main.appendChild(panels[pi]);
+      }
+      dashEl.appendChild(main);
+
+      // Footer tabs
+      var footer = document.createElement('div');
+      footer.className = 'dashboard-footer';
+      var tabLabels = ['All', 'Navigate', 'Social', 'Economy', 'Gameplay', 'Info'];
+      for (var ti = 0; ti < tabLabels.length; ti++) {
+        var tab = document.createElement('button');
+        tab.className = 'dashboard-tab' + (ti === 0 ? ' active' : '');
+        tab.textContent = tabLabels[ti];
+        footer.appendChild(tab);
+      }
+      dashEl.appendChild(footer);
+
+      container.appendChild(dashEl);
+    }
+
+    // Start dashboard game loop
+    if (typeof DashboardMain !== 'undefined' && DashboardMain.dashboardTick && dashState) {
+      var dashInterval = setInterval(function() {
+        dashState = DashboardMain.dashboardTick(dashState, 1);
+
+        // Update header
+        if (typeof document !== 'undefined') {
+          var sparkEl = document.getElementById('dash-spark');
+          if (sparkEl) sparkEl.textContent = (dashState.player.spark || 0) + ' Spark';
+          var zoneEl = document.getElementById('dash-zone');
+          if (zoneEl) zoneEl.textContent = _zoneDisplayName(dashState.player.zone);
+          var timeEl = document.getElementById('dash-time');
+          if (timeEl && dashState.world && dashState.world.time) {
+            var dayNum = Math.floor(dashState.world.time.tick / (dashState.world.time.dayLength || 1200)) + 1;
+            var timeOfDay = (dashState.world.time.tick % (dashState.world.time.dayLength || 1200)) / (dashState.world.time.dayLength || 1200);
+            var hours = Math.floor(timeOfDay * 24);
+            var mins = Math.floor((timeOfDay * 24 - hours) * 60);
+            timeEl.textContent = 'Day ' + dayNum + ' | ' + (hours < 10 ? '0' : '') + hours + ':' + (mins < 10 ? '0' : '') + mins;
+          }
+        }
+      }, 1000);
+
+      // Store interval for cleanup
+      if (typeof window !== 'undefined') {
+        window._zionDashInterval = dashInterval;
+      }
+    }
+
+    console.log('[Dashboard] Dashboard mode initialized');
+  }
+
+  function _wrapPanel(title, contentEl) {
+    if (typeof document === 'undefined') return null;
+    var panel = document.createElement('div');
+    panel.className = 'dashboard-panel';
+    var hdr = document.createElement('div');
+    hdr.className = 'dashboard-panel-header';
+    hdr.innerHTML = '<span class="dashboard-panel-title">' + _escHtml(title) + '</span>' +
+      '<div class="dashboard-panel-controls">' +
+        '<button class="dashboard-panel-btn" title="Minimize">[-]</button>' +
+        '<button class="dashboard-panel-btn" title="Close">[x]</button>' +
+      '</div>';
+    panel.appendChild(hdr);
+    var body = document.createElement('div');
+    body.className = 'dashboard-panel-body';
+    if (contentEl) body.appendChild(contentEl);
+    panel.appendChild(body);
+
+    // Wire minimize toggle
+    var minBtn = hdr.querySelector('[title="Minimize"]');
+    if (minBtn) {
+      minBtn.addEventListener('click', function() {
+        if (body.style.display === 'none') {
+          body.style.display = 'block';
+          minBtn.textContent = '[-]';
+        } else {
+          body.style.display = 'none';
+          minBtn.textContent = '[+]';
+        }
+      });
+    }
+    // Wire close
+    var closeBtn = hdr.querySelector('[title="Close"]');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        panel.style.display = 'none';
+      });
+    }
+    return panel;
+  }
+
+  function _escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function _zoneDisplayName(zoneId) {
+    var names = {
+      nexus: 'The Nexus', gardens: 'The Gardens', athenaeum: 'The Athenaeum',
+      studio: 'The Studio', wilds: 'The Wilds', agora: 'The Agora',
+      commons: 'The Commons', arena: 'The Arena'
+    };
+    return names[zoneId] || zoneId || 'Unknown';
   }
 
   /**
