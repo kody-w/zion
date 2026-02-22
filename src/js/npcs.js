@@ -83,6 +83,9 @@
   // NPC AI reference (loaded from npc_ai.js)
   var NpcAI = typeof window !== 'undefined' ? window.NpcAI : null;
 
+  // SpatialGrid reference for O(1) nearby-entity lookups
+  var SpatialGridRef = typeof window !== 'undefined' ? window.SpatialGrid : (typeof require !== 'undefined' ? require('./spatial_grid') : null);
+
   // NpcDialogue reference — optional, provides richer personality-driven dialogue
   // Backward compatible: game works without it
   var dialogue = (typeof NpcDialogue !== 'undefined') ? NpcDialogue : null;
@@ -2084,6 +2087,18 @@
     var timeSeed = Math.floor(worldTime);
     var playerPos = worldState && worldState.playerPosition ? worldState.playerPosition : null;
 
+    // Build spatial grid for O(1) NPC proximity lookups (replaces O(n^2) nested loop)
+    var npcGrid = null;
+    var npcAgentMap = {};
+    if (SpatialGridRef && SpatialGridRef.createGrid) {
+      npcGrid = SpatialGridRef.createGrid(25);
+      for (var gi = 0; gi < npcAgents.length; gi++) {
+        var a = npcAgents[gi];
+        SpatialGridRef.insert(npcGrid, a.id, a.position.x, a.position.z);
+        npcAgentMap[a.id] = a;
+      }
+    }
+
     npcAgents.forEach(function(agent, index) {
       var state = npcStates.get(agent.id);
       if (!state) return;
@@ -2136,24 +2151,43 @@
           }
         }
 
-        // Add nearby NPCs for perception
-        npcAgents.forEach(function(other) {
-          if (other.id === agent.id) return;
-          var ndx = other.position.x - agent.position.x;
-          var ndz = other.position.z - agent.position.z;
-          var nDist = Math.sqrt(ndx * ndx + ndz * ndz);
-          if (nDist < 25) {
-            var otherBrain = npcBrains.get(other.id);
+        // Add nearby NPCs for perception (spatial grid: O(k) instead of O(n))
+        if (npcGrid) {
+          var nearbyHits = SpatialGridRef.queryRadius(npcGrid, agent.position.x, agent.position.z, 25);
+          for (var ni = 0; ni < nearbyHits.length; ni++) {
+            var hit = nearbyHits[ni];
+            if (hit.id === agent.id) continue;
+            var otherBrain = npcBrains.get(hit.id);
+            var ndx = hit.x - agent.position.x;
+            var ndz = hit.z - agent.position.z;
             aiWorldState.nearbyNPCs.push({
-              id: other.id,
-              distance: nDist,
+              id: hit.id,
+              distance: hit.dist,
               direction: { x: ndx, z: ndz },
-              archetype: other.archetype,
+              archetype: npcAgentMap[hit.id] ? npcAgentMap[hit.id].archetype : 'unknown',
               currentActivity: otherBrain ? NpcAI.getGoal(otherBrain) : 'idle',
               mood: otherBrain ? NpcAI.getMood(otherBrain) : 'neutral'
             });
           }
-        });
+        } else {
+          npcAgents.forEach(function(other) {
+            if (other.id === agent.id) return;
+            var ndx = other.position.x - agent.position.x;
+            var ndz = other.position.z - agent.position.z;
+            var nDist = Math.sqrt(ndx * ndx + ndz * ndz);
+            if (nDist < 25) {
+              var otherBrain = npcBrains.get(other.id);
+              aiWorldState.nearbyNPCs.push({
+                id: other.id,
+                distance: nDist,
+                direction: { x: ndx, z: ndz },
+                archetype: other.archetype,
+                currentActivity: otherBrain ? NpcAI.getGoal(otherBrain) : 'idle',
+                mood: otherBrain ? NpcAI.getMood(otherBrain) : 'neutral'
+              });
+            }
+          });
+        }
 
         // Get AI decision
         var npcObj = { x: agent.position.x, z: agent.position.z, name: agent.name, zone: agent.position.zone };

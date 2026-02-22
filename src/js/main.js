@@ -170,6 +170,7 @@
   let lastSimCrmTick = 0;
   var SIM_CRM_TICK_INTERVAL = 45000; // 45 seconds between CRM ticks
   let npcUpdateFrame = 0;
+  let cachedNearbyPlayers = null;
   let visitedZones = { nexus: true }; // Track discovered zones for piano accents
 
   // Performance tracking
@@ -2706,18 +2707,19 @@
         HUD.updateMinimapNPCs(NPCs.getNPCPositions(), localPlayer.position);
       }
 
-      // Update nearby players
-      const nearby = players
-        .filter(p => p.id !== localPlayer.id && p.zone === currentZone)
-        .map(p => {
-          const dx = p.position.x - localPlayer.position.x;
-          const dz = p.position.z - localPlayer.position.z;
-          const distance = Math.sqrt(dx * dx + dz * dz);
-          return { id: p.id, name: p.name, distance };
-        })
-        .sort((a, b) => a.distance - b.distance);
-
-      HUD.updateNearbyPlayers(nearby);
+      // Update nearby players (throttled to every 10 frames)
+      if (npcUpdateFrame % 10 === 0 || !cachedNearbyPlayers) {
+        cachedNearbyPlayers = players
+          .filter(p => p.id !== localPlayer.id && p.zone === currentZone)
+          .map(p => {
+            const dx = p.position.x - localPlayer.position.x;
+            const dz = p.position.z - localPlayer.position.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+            return { id: p.id, name: p.name, distance };
+          })
+          .sort((a, b) => a.distance - b.distance);
+      }
+      HUD.updateNearbyPlayers(cachedNearbyPlayers);
 
       // Update coordinates display
       if (HUD.updateCoords && localPlayer) {
@@ -3029,9 +3031,12 @@
    * Process queued incoming messages
    */
   function processMessageQueue() {
-    while (messageQueue.length > 0) {
+    var maxPerFrame = 50;
+    var processed = 0;
+    while (messageQueue.length > 0 && processed < maxPerFrame) {
       const msg = messageQueue.shift();
       applyMessage(msg);
+      processed++;
     }
   }
 

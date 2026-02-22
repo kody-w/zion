@@ -16,6 +16,7 @@ import re
 # JavaScript files in dependency order
 JS_FILES = [
     'protocol.js',
+    'spatial_grid.js',
     'zones.js',
     'economy.js',
     'economy_viz.js',

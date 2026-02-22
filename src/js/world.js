@@ -6,6 +6,7 @@
 
   // Module references (set at runtime from window globals)
   var Seasons = (typeof window !== 'undefined' && window.Seasons) ? window.Seasons : null;
+  var SpatialGridRef = (typeof window !== 'undefined' && window.SpatialGrid) ? window.SpatialGrid : (typeof require !== 'undefined' ? require('./spatial_grid') : null);
 
   var playerMeshes = new Map();
   var skyDome = null, sunMesh = null, moonMesh = null, stars = null;
@@ -3791,7 +3792,23 @@
   // Used by main.js and npcs.js
   // Also provides basic collision checking for future use
   function checkCollision(x, z, radius) {
-    // Check against placed structures only (not zone centers, which are walkable)
+    // Spatial grid path: O(k) nearby lookups instead of O(n) linear scan
+    if (structureGrid && SpatialGridRef) {
+      var maxStructRadius = 5; // conservative upper bound for structure collision radii
+      var searchRadius = radius + maxStructRadius;
+      var hits = SpatialGridRef.queryRadius(structureGrid, x, z, searchRadius);
+      for (var j = 0; j < hits.length; j++) {
+        var idx = parseInt(hits[j].id.replace('s', ''), 10);
+        var s = placedStructures[idx];
+        if (!s || !s.position) continue;
+        var structRadius = s.collisionRadius || 1.5;
+        if (hits[j].dist < structRadius + radius) {
+          return true;
+        }
+      }
+      return false;
+    }
+    // Fallback: linear scan
     if (placedStructures) {
       for (var i = 0; i < placedStructures.length; i++) {
         var s = placedStructures[i];
@@ -3807,11 +3824,21 @@
     return false;
   }
 
+  function registerStructureInGrid(index) {
+    if (!SpatialGridRef || !placedStructures[index]) return;
+    if (!structureGrid) structureGrid = SpatialGridRef.createGrid(25);
+    var s = placedStructures[index];
+    if (s && s.position) {
+      SpatialGridRef.insert(structureGrid, 's' + index, s.position.x, s.position.z);
+    }
+  }
+
   // ========================================================================
   // PLACED STRUCTURES (for collision)
   // ========================================================================
 
   var placedStructures = [];
+  var structureGrid = null;
 
   // ========================================================================
   // PARTICLE SYSTEM
@@ -7685,13 +7712,35 @@
     worldMemory[key].steps++;
     worldMemory[key].lastStep = Date.now();
 
-    // Cap at max cells
+    // Cap at max cells — evict lowest-steps non-flower cells
+    // Typical case: overflow by 1 → single O(n) scan instead of O(n log n) sort
     var keys = Object.keys(worldMemory);
     if (keys.length > MEMORY_MAX_CELLS) {
-      keys.sort(function(a, b) { return worldMemory[a].steps - worldMemory[b].steps; });
       var toRemove = keys.length - MEMORY_MAX_CELLS;
-      for (var i = 0; i < toRemove; i++) {
-        if (!worldMemory[keys[i]].flowers) delete worldMemory[keys[i]];
+      if (toRemove <= 3) {
+        // Small overflow: find and remove minimums individually (O(n) per removal)
+        for (var r = 0; r < toRemove; r++) {
+          var minKey = null;
+          var minSteps = Infinity;
+          for (var mk in worldMemory) {
+            var m = worldMemory[mk];
+            if (m && !m.flowers && m.steps < minSteps) {
+              minSteps = m.steps;
+              minKey = mk;
+            }
+          }
+          if (minKey) {
+            delete worldMemory[minKey];
+          } else {
+            break;
+          }
+        }
+      } else {
+        // Large overflow: sort is more efficient
+        keys.sort(function(a, b) { return worldMemory[a].steps - worldMemory[b].steps; });
+        for (var i = 0; i < toRemove; i++) {
+          if (!worldMemory[keys[i]].flowers) delete worldMemory[keys[i]];
+        }
       }
     }
   }

@@ -798,8 +798,9 @@
   exports.getCurrentEvent = getCurrentEvent;
   exports.applyEventModifier = applyEventModifier;
 
-  // Aliases used by sim_classroom.js and emote_builder.js
+  // Aliases used by sim_classroom.js, emote_builder.js, visual_gallery.js
   exports.addSpark = earnSpark;
   exports.transfer = transferSpark;
+  exports.earn = earnSpark;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Economy = {}));
