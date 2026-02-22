@@ -1,16 +1,16 @@
 (function(exports) {
   // HUD overlay management
-  let hudContainer = null;
-  let chatPanel = null;
-  let playerInfoPanel = null;
-  let minimapCanvas = null;
-  let minimapCtx = null;
-  let zoneLabel = null;
-  let nearbyPlayersList = null;
-  let chatInput = null;
-  let notificationContainer = null;
-  let federationPanel = null;
-  let lastChatMessageCount = -1; // Dirty tracking for chat rebuild
+  var hudContainer = null;
+  var chatPanel = null;
+  var playerInfoPanel = null;
+  var minimapCanvas = null;
+  var minimapCtx = null;
+  var zoneLabel = null;
+  var nearbyPlayersList = null;
+  var chatInput = null;
+  var notificationContainer = null;
+  var federationPanel = null;
+  var lastChatMessageCount = -1; // Dirty tracking for chat rebuild
 
   /**
    * Initialize HUD
@@ -25,7 +25,7 @@
     hudContainer = container;
 
     // Create main HUD overlay
-    const hudOverlay = document.createElement('div');
+    var hudOverlay = document.createElement('div');
     hudOverlay.id = 'zion-hud';
     hudOverlay.style.cssText = `
       position: absolute;
@@ -90,7 +90,7 @@
     hudOverlay.appendChild(zoneLabel);
 
     // Minimap (top-right)
-    const minimapContainer = document.createElement('div');
+    var minimapContainer = document.createElement('div');
     minimapContainer.style.cssText = `
       position: absolute;
       top: 20px;
@@ -181,15 +181,15 @@
 
     chatPanel.innerHTML = '';
 
-    messages.slice(-10).forEach(msg => {
-      const msgEl = document.createElement('div');
+    messages.slice(-10).forEach(function(msg) {
+      var msgEl = document.createElement('div');
       msgEl.style.cssText = `
         margin-bottom: 5px;
         padding: 3px;
         border-radius: 3px;
       `;
 
-      const time = new Date(msg.timestamp).toLocaleTimeString([], {
+      var time = new Date(msg.timestamp).toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit'
       });
@@ -410,15 +410,15 @@
     nearbyPlayersList.innerHTML = '<div style="font-weight: bold; margin-bottom: 5px;">Nearby Players</div>';
 
     if (players.length === 0) {
-      const emptyMsg = document.createElement('div');
+      var emptyMsg = document.createElement('div');
       emptyMsg.style.cssText = 'color: #888; font-size: 12px; font-style: italic;';
       emptyMsg.textContent = 'No players nearby';
       nearbyPlayersList.appendChild(emptyMsg);
       return;
     }
 
-    players.slice(0, 10).forEach(player => {
-      const playerEl = document.createElement('div');
+    players.slice(0, 10).forEach(function(player) {
+      var playerEl = document.createElement('div');
       playerEl.style.cssText = `
         padding: 5px;
         margin-bottom: 3px;
@@ -427,7 +427,7 @@
         font-size: 13px;
       `;
 
-      const distanceStr = player.distance ? `(${player.distance.toFixed(1)}m)` : '';
+      var distanceStr = player.distance ? `(${player.distance.toFixed(1)}m)` : '';
       playerEl.innerHTML = `
         <span style="color: #4f4;">${player.name || player.id}</span>
         <span style="color: #888; font-size: 11px; margin-left: 5px;">${distanceStr}</span>
@@ -474,9 +474,9 @@
       display: none;
     `;
 
-    chatInput.addEventListener('keydown', (e) => {
+    chatInput.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
-        const text = chatInput.value.trim();
+        var text = chatInput.value.trim();
         if (text && onSubmit) {
           onSubmit(text);
         }
@@ -522,14 +522,14 @@
     if (!notificationContainer) return;
     if (typeof document === 'undefined') return;
 
-    const colors = {
+    var colors = {
       info: '#4af',
       success: '#4f4',
       warning: '#fa4',
       error: '#f44'
     };
 
-    const notification = document.createElement('div');
+    var notification = document.createElement('div');
     notification.className = 'notification';
     notification.style.cssText = `
       background: rgba(0, 0, 0, 0.8);
@@ -560,7 +560,7 @@
 
   // Add CSS animations
   if (typeof document !== 'undefined') {
-    const style = document.createElement('style');
+    var style = document.createElement('style');
     style.textContent = `
       @keyframes slideIn {
         from {
@@ -2510,8 +2510,8 @@
   // BUILD TOOLBAR
   // ========================================================================
 
-  let buildToolbar = null;
-  let selectedBuildType = 'bench';
+  var buildToolbar = null;
+  var selectedBuildType = 'bench';
 
   var BUILD_TYPES = [
     { id: 'bench', icon: '\u{1F6CB}', label: 'Bench', cost: 50 },
@@ -2667,8 +2667,8 @@
   }
 
   // Settings Menu
-  let settingsMenuPanel = null;
-  let settingsData = {
+  var settingsMenuPanel = null;
+  var settingsData = {
     masterVolume: 50,
     musicVolume: 30,
     sfxVolume: 70,
@@ -6595,8 +6595,8 @@
   // FISHING MINIGAME UI
   // ========================================================================
 
-  let fishingUIActive = false;
-  let fishingCallback = null;
+  var fishingUIActive = false;
+  var fishingCallback = null;
 
   /**
    * Show fishing UI with casting and reeling mechanics
@@ -6611,7 +6611,7 @@
     fishingCallback = onResult;
 
     // Create fishing overlay with ocean theme
-    const fishingOverlay = document.createElement('div');
+    var fishingOverlay = document.createElement('div');
     fishingOverlay.id = 'fishing-ui';
     fishingOverlay.style.cssText = `
       position: absolute;
@@ -6628,7 +6628,7 @@
     `;
 
     // Fishing panel
-    const fishingPanel = document.createElement('div');
+    var fishingPanel = document.createElement('div');
     fishingPanel.style.cssText = `
       background: linear-gradient(135deg, rgba(0, 80, 140, 0.95) 0%, rgba(0, 120, 180, 0.95) 100%);
       border: 3px solid rgba(100, 200, 255, 0.8);
@@ -6641,7 +6641,7 @@
     `;
 
     // Add wave animation
-    const style = document.createElement('style');
+    var style = document.createElement('style');
     style.textContent = `
       @keyframes wave-effect {
         0%, 100% { transform: translateY(0px); }
@@ -6655,7 +6655,7 @@
     document.head.appendChild(style);
 
     // Fishing icon
-    const fishingIcon = document.createElement('div');
+    var fishingIcon = document.createElement('div');
     fishingIcon.style.cssText = `
       font-size: 64px;
       margin-bottom: 20px;
@@ -6665,7 +6665,7 @@
     fishingPanel.appendChild(fishingIcon);
 
     // Status text
-    const statusText = document.createElement('div');
+    var statusText = document.createElement('div');
     statusText.style.cssText = `
       font-size: 24px;
       font-weight: bold;
@@ -6677,7 +6677,7 @@
     fishingPanel.appendChild(statusText);
 
     // Subtext
-    const subText = document.createElement('div');
+    var subText = document.createElement('div');
     subText.style.cssText = `
       font-size: 16px;
       color: rgba(200, 240, 255, 0.9);
@@ -6690,9 +6690,9 @@
     hudContainer.appendChild(fishingOverlay);
 
     // Random casting time (2-5 seconds)
-    const castTime = 2000 + Math.random() * 3000;
+    var castTime = 2000 + Math.random() * 3000;
 
-    setTimeout(() => {
+    setTimeout(function() {
       if (!document.getElementById('fishing-ui')) return;
 
       // Fish on! Show reeling prompt
@@ -6703,24 +6703,24 @@
       subText.style.color = '#ffff00';
       fishingIcon.textContent = '🐟';
 
-      let caughtFish = false;
-      const reelWindow = 1500; // 1.5 second window to press E
+      var caughtFish = false;
+      var reelWindow = 1500; // 1.5 second window to press E
 
       // Listen for E key
-      const reelHandler = (e) => {
+      var reelHandler = function(e) {
         if (e.key === 'e' || e.key === 'E') {
           caughtFish = true;
           document.removeEventListener('keydown', reelHandler);
 
           // Determine caught fish based on zone
-          const fishResult = determineCatch(zoneId);
+          var fishResult = determineCatch(zoneId);
 
-          statusText.textContent = `Caught ${fishResult.name}!`;
+          statusText.textContent = 'Caught ' + fishResult.name + '!';
           statusText.style.color = '#4f4';
-          subText.textContent = `+${fishResult.value} Spark`;
+          subText.textContent = '+' + fishResult.value + ' Spark';
           fishingIcon.textContent = fishResult.icon;
 
-          setTimeout(() => {
+          setTimeout(function() {
             hideFishingUI();
             if (fishingCallback) {
               fishingCallback({ success: true, fish: fishResult });
@@ -6732,7 +6732,7 @@
       document.addEventListener('keydown', reelHandler);
 
       // Miss window timeout
-      setTimeout(() => {
+      setTimeout(function() {
         if (!caughtFish) {
           document.removeEventListener('keydown', reelHandler);
           statusText.textContent = 'The fish got away...';
@@ -6740,7 +6740,7 @@
           subText.textContent = 'Try again!';
           fishingIcon.textContent = '💨';
 
-          setTimeout(() => {
+          setTimeout(function() {
             hideFishingUI();
             if (fishingCallback) {
               fishingCallback({ success: false });
@@ -6757,7 +6757,7 @@
    * @returns {Object} Fish data {id, name, icon, value, rarity}
    */
   function determineCatch(zoneId) {
-    const zoneFishTables = {
+    var zoneFishTables = {
       gardens: {
         common: [
           { id: 'fish_common', name: 'Common Carp', icon: '🐟', value: 5, rarity: 'common' },
@@ -6810,11 +6810,11 @@
     };
 
     // Default to commons if zone not found
-    const table = zoneFishTables[zoneId] || zoneFishTables.commons;
+    var table = zoneFishTables[zoneId] || zoneFishTables.commons;
 
     // Roll for rarity: 70% common, 25% uncommon, 5% rare
-    const roll = Math.random();
-    let pool;
+    var roll = Math.random();
+    var pool;
     if (roll < 0.05 && table.rare && table.rare.length > 0) {
       pool = table.rare;
     } else if (roll < 0.30 && table.uncommon && table.uncommon.length > 0) {
@@ -6830,7 +6830,7 @@
    * Hide fishing UI
    */
   function hideFishingUI() {
-    const fishingUI = document.getElementById('fishing-ui');
+    var fishingUI = document.getElementById('fishing-ui');
     if (fishingUI) {
       fishingUI.remove();
     }
@@ -6847,7 +6847,7 @@
     if (!notificationContainer) return;
     if (typeof document === 'undefined') return;
 
-    const notification = document.createElement('div');
+    var notification = document.createElement('div');
     notification.style.cssText = `
       background: linear-gradient(135deg, rgba(0, 120, 200, 0.95) 0%, rgba(0, 180, 255, 0.95) 100%);
       border: 2px solid rgba(100, 220, 255, 0.9);
@@ -6860,7 +6860,7 @@
       text-align: center;
     `;
 
-    const fishIcon = document.createElement('div');
+    var fishIcon = document.createElement('div');
     fishIcon.style.cssText = `
       font-size: 48px;
       margin-bottom: 10px;
@@ -6868,7 +6868,7 @@
     fishIcon.textContent = '🎣';
     notification.appendChild(fishIcon);
 
-    const fishText = document.createElement('div');
+    var fishText = document.createElement('div');
     fishText.style.cssText = `
       font-size: 20px;
       font-weight: bold;
@@ -6879,7 +6879,7 @@
     fishText.textContent = `Caught ${fishName}!`;
     notification.appendChild(fishText);
 
-    const valueText = document.createElement('div');
+    var valueText = document.createElement('div');
     valueText.style.cssText = `
       font-size: 16px;
       color: #ffff00;
@@ -6890,7 +6890,7 @@
 
     notificationContainer.appendChild(notification);
 
-    setTimeout(() => {
+    setTimeout(function() {
       if (notification.parentNode) {
         notification.remove();
       }

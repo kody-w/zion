@@ -8364,6 +8364,122 @@
     return result;
   }
 
+  // ========================================================================
+  // ANCHOR BRIDGE — render GPS anchors as 3D objects in the world
+  // ========================================================================
+
+  var anchorMeshes = {}; // anchorId -> THREE.Group
+  var ANCHOR_COLORS = {
+    portal: 0x9b59b6,
+    resource_node: 0xe67e22,
+    discovery_point: 0x3498db,
+    garden: 0x2ecc71,
+    monument: 0xf1c40f,
+    zone_portal: 0x9b59b6,
+    gathering_spot: 0xe74c3c,
+    garden_plot: 0x2ecc71
+  };
+
+  /**
+   * Render anchors for a zone as 3D beacons in the world
+   * @param {Object} sceneCtx - Scene context
+   * @param {string} zone - Zone name
+   * @param {Array} anchors - Array of anchor objects {id, type, name, lat, lng, zone}
+   */
+  function renderAnchors(sceneCtx, zone, anchors) {
+    if (!sceneCtx || !sceneCtx.scene || typeof THREE === 'undefined') return;
+    if (!anchors || anchors.length === 0) return;
+
+    var zoneData = ZONES[zone];
+    if (!zoneData) return;
+
+    for (var i = 0; i < anchors.length; i++) {
+      var anchor = anchors[i];
+      if (!anchor || !anchor.id) continue;
+
+      // Skip if already rendered
+      if (anchorMeshes[anchor.id]) continue;
+
+      // Position anchor within zone using seeded placement from anchor id
+      var seed = 0;
+      for (var c = 0; c < anchor.id.length; c++) {
+        seed = ((seed << 5) - seed) + anchor.id.charCodeAt(c);
+        seed = seed & seed;
+      }
+      var rng = Math.abs(seed);
+      var angle = (rng % 360) * Math.PI / 180;
+      var dist = 10 + (rng % Math.floor(zoneData.radius * 0.6));
+      var ax = zoneData.cx + Math.cos(angle) * dist;
+      var az = zoneData.cz + Math.sin(angle) * dist;
+      var ay = terrainHeight(ax, az) + 0.5;
+
+      var color = ANCHOR_COLORS[anchor.type] || 0xffffff;
+      var group = new THREE.Group();
+      group.position.set(ax, ay, az);
+      group.userData.anchorId = anchor.id;
+      group.userData.anchorType = anchor.type;
+
+      // Base pillar
+      var pillarGeo = new THREE.CylinderBufferGeometry(0.3, 0.4, 2, 6);
+      var pillarMat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.3 });
+      var pillar = new THREE.Mesh(pillarGeo, pillarMat);
+      pillar.position.y = 1;
+      group.add(pillar);
+
+      // Floating beacon sphere
+      var beaconGeo = new THREE.SphereBufferGeometry(0.5, 8, 8);
+      var beaconMat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.6, transparent: true, opacity: 0.8 });
+      var beacon = new THREE.Mesh(beaconGeo, beaconMat);
+      beacon.position.y = 2.5;
+      beacon.userData.bobPhase = rng * 0.01;
+      group.add(beacon);
+
+      // Point light for glow
+      var glow = new THREE.PointLight(color, 0.5, 8);
+      glow.position.y = 2.5;
+      group.add(glow);
+      trackedLights.push(glow);
+
+      sceneCtx.scene.add(group);
+      anchorMeshes[anchor.id] = group;
+    }
+  }
+
+  /**
+   * Animate anchor beacons (bobbing effect)
+   * @param {number} time - Current time in seconds
+   */
+  function updateAnchorAnimations(time) {
+    var keys = Object.keys(anchorMeshes);
+    for (var i = 0; i < keys.length; i++) {
+      var group = anchorMeshes[keys[i]];
+      if (!group || !group.children) continue;
+      // Animate the beacon sphere (second child)
+      if (group.children.length >= 2) {
+        var beacon = group.children[1];
+        var phase = beacon.userData.bobPhase || 0;
+        beacon.position.y = 2.5 + Math.sin(time * 2 + phase) * 0.3;
+      }
+    }
+  }
+
+  /**
+   * Remove all anchor meshes for a zone
+   * @param {Object} sceneCtx - Scene context
+   * @param {string} zone - Zone name
+   */
+  function clearAnchors(sceneCtx, zone) {
+    if (!sceneCtx || !sceneCtx.scene) return;
+    var keys = Object.keys(anchorMeshes);
+    for (var i = 0; i < keys.length; i++) {
+      var group = anchorMeshes[keys[i]];
+      if (group && group.parent) {
+        group.parent.remove(group);
+      }
+      delete anchorMeshes[keys[i]];
+    }
+  }
+
   function createPortal(sceneCtx, fromZone, toZone, position) {
     if (!sceneCtx || !sceneCtx.scene) return null;
     return { from: fromZone, to: toZone, position: position };
@@ -8455,6 +8571,9 @@
   exports.weatherCallbacks = weatherCallbacks;
   exports.addStructure = addStructure;
   exports.createPortal = createPortal;
+  exports.renderAnchors = renderAnchors;
+  exports.updateAnchorAnimations = updateAnchorAnimations;
+  exports.clearAnchors = clearAnchors;
   exports.clearTerrainCache = clearTerrainCache;
   exports.terrainHeightUncached = terrainHeightUncached;
   exports.registerLodObject = registerLodObject;

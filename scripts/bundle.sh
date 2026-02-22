@@ -8,7 +8,7 @@ OUT="$PROJECT_DIR/docs/index.html"
 
 mkdir -p "$PROJECT_DIR/docs"
 
-python3 "$PROJECT_DIR/scripts/bundle_helper.py" "$SRC" "$OUT"
+python3 "$PROJECT_DIR/scripts/bundle_helper.py" "$SRC" "$OUT" --minify
 
 if [ -f "$OUT" ]; then
     echo "Bundled to $OUT ($(wc -c < "$OUT" | tr -d ' ') bytes)"

@@ -6,20 +6,19 @@
  */
 
 (function(exports) {
-  'use strict';
 
   // Internal store: playerId -> intentions[]
-  const intentionStore = new Map();
+  var intentionStore = new Map();
 
   // Consent-required action types (actions that need explicit permission)
-  const CONSENT_REQUIRED_TYPES = new Set([
+  var CONSENT_REQUIRED_TYPES = new Set([
     'whisper',
     'challenge',
     'trade_offer',
     'mentor_offer'
   ]);
 
-  const MAX_INTENTIONS_PER_PLAYER = 10;
+  var MAX_INTENTIONS_PER_PLAYER = 10;
 
   /**
    * Register a new intention for a player
@@ -74,18 +73,17 @@
     }
 
     // Check max intentions limit
-    const playerIntentions = intentionStore.get(playerId) || [];
+    var playerIntentions = intentionStore.get(playerId) || [];
     if (playerIntentions.length >= MAX_INTENTIONS_PER_PLAYER) {
-      return { success: false, error: `Maximum ${MAX_INTENTIONS_PER_PLAYER} intentions per player exceeded` };
+      return { success: false, error: 'Maximum ' + MAX_INTENTIONS_PER_PLAYER + ' intentions per player exceeded' };
     }
 
     // Add internal tracking fields
-    const intentionWithMeta = {
-      ...intention,
+    var intentionWithMeta = Object.assign({}, intention, {
       createdAt: Date.now(),
       lastFired: null,
       fireCount: 0
-    };
+    });
 
     playerIntentions.push(intentionWithMeta);
     intentionStore.set(playerId, playerIntentions);
@@ -134,7 +132,7 @@
 
     // Check cooldown
     if (intention.lastFired !== null) {
-      const timeSinceLastFire = now - intention.lastFired;
+      var timeSinceLastFire = now - intention.lastFired;
       if (timeSinceLastFire < (intention.cooldown * 1000)) {
         return false;
       }
@@ -146,27 +144,30 @@
   /**
    * Trigger evaluators
    */
-  const triggerEvaluators = {
+  var triggerEvaluators = {
     /**
      * Check if a player is nearby
      */
     player_nearby: function(params, worldState, ownerId) {
-      const owner = worldState.players.get(ownerId);
+      var owner = worldState.players.get(ownerId);
       if (!owner || !owner.position) return false;
 
-      const distanceLimit = params.distance_lt || 10;
-      const onlyUnknown = params.known === false;
+      var distanceLimit = params.distance_lt || 10;
+      var onlyUnknown = params.known === false;
 
-      for (const [playerId, player] of worldState.players.entries()) {
+      var entries = Array.from(worldState.players.entries());
+      for (var i = 0; i < entries.length; i++) {
+        var playerId = entries[i][0];
+        var player = entries[i][1];
         if (playerId === ownerId) continue;
         if (!player.position) continue;
 
-        const distance = getDistance(owner.position, player.position);
+        var distance = getDistance(owner.position, player.position);
         if (distance < distanceLimit) {
           // If we only want unknown players, check if this player is known
           if (onlyUnknown) {
             // Assume players are known if they're in the owner's known list
-            const knownPlayers = owner.knownPlayers || new Set();
+            var knownPlayers = owner.knownPlayers || new Set();
             if (!knownPlayers.has(playerId)) {
               return true;
             }
@@ -183,21 +184,22 @@
      * Check if a player said a keyword nearby
      */
     player_say: function(params, worldState, ownerId) {
-      const owner = worldState.players.get(ownerId);
+      var owner = worldState.players.get(ownerId);
       if (!owner || !owner.position) return false;
 
-      const keyword = params.keyword;
-      const distanceLimit = params.distance_lt || 20;
-      const recentChats = worldState.recentChats || [];
+      var keyword = params.keyword;
+      var distanceLimit = params.distance_lt || 20;
+      var recentChats = worldState.recentChats || [];
 
       // Check recent chat messages
-      for (const chat of recentChats) {
+      for (var i = 0; i < recentChats.length; i++) {
+        var chat = recentChats[i];
         if (chat.from === ownerId) continue;
 
-        const speaker = worldState.players.get(chat.from);
+        var speaker = worldState.players.get(chat.from);
         if (!speaker || !speaker.position) continue;
 
-        const distance = getDistance(owner.position, speaker.position);
+        var distance = getDistance(owner.position, speaker.position);
         if (distance < distanceLimit) {
           if (chat.message && chat.message.toLowerCase().includes(keyword.toLowerCase())) {
             return true;
@@ -212,7 +214,7 @@
      * Timer trigger - fires every interval
      */
     timer: function(params, worldState, ownerId, intention, now) {
-      const intervalMs = params.interval_seconds * 1000;
+      var intervalMs = params.interval_seconds * 1000;
 
       // If never fired, fire immediately
       if (intention.lastFired === null) {
@@ -227,7 +229,7 @@
      * Zone enter trigger
      */
     zone_enter: function(params, worldState, ownerId) {
-      const owner = worldState.players.get(ownerId);
+      var owner = worldState.players.get(ownerId);
       if (!owner || !owner.position) return false;
 
       return owner.position.zone === params.zone_id;
@@ -237,16 +239,17 @@
      * Garden needs attention trigger
      */
     garden_needs: function(params, worldState, ownerId) {
-      const owner = worldState.players.get(ownerId);
+      var owner = worldState.players.get(ownerId);
       if (!owner || !owner.position) return false;
 
-      const distanceLimit = params.distance_lt || 10;
-      const gardens = worldState.gardens || [];
+      var distanceLimit = params.distance_lt || 10;
+      var gardens = worldState.gardens || [];
 
-      for (const garden of gardens) {
+      for (var i = 0; i < gardens.length; i++) {
+        var garden = gardens[i];
         if (!garden.position) continue;
 
-        const distance = getDistance(owner.position, garden.position);
+        var distance = getDistance(owner.position, garden.position);
         if (distance < distanceLimit) {
           // Check if garden needs attention
           if (garden.needsWater || garden.needsHarvest || garden.needsWeeding) {
@@ -262,17 +265,18 @@
      * Resource ready for harvest trigger
      */
     resource_ready: function(params, worldState, ownerId) {
-      const owner = worldState.players.get(ownerId);
+      var owner = worldState.players.get(ownerId);
       if (!owner || !owner.position) return false;
 
-      const distanceLimit = params.distance_lt || 10;
-      const resources = worldState.resources || [];
+      var distanceLimit = params.distance_lt || 10;
+      var resources = worldState.resources || [];
 
-      for (const resource of resources) {
+      for (var i = 0; i < resources.length; i++) {
+        var resource = resources[i];
         if (!resource.position) continue;
         if (!resource.harvestable) continue;
 
-        const distance = getDistance(owner.position, resource.position);
+        var distance = getDistance(owner.position, resource.position);
         if (distance < distanceLimit) {
           return true;
         }
@@ -422,9 +426,10 @@
       var distanceLimit = params.distance_lt || 20;
       var groupId = params.group_id || null;
 
-      for (var entry of worldState.players.entries()) {
-        var playerId = entry[0];
-        var player = entry[1];
+      var entries = Array.from(worldState.players.entries());
+      for (var i = 0; i < entries.length; i++) {
+        var playerId = entries[i][0];
+        var player = entries[i][1];
         if (playerId === ownerId) continue;
         if (!player.position) continue;
 
@@ -455,9 +460,9 @@
    * Calculate Euclidean distance between two 3D positions
    */
   function getDistance(posA, posB) {
-    const dx = posB.x - posA.x;
-    const dy = posB.y - posA.y;
-    const dz = posB.z - posA.z;
+    var dx = posB.x - posA.x;
+    var dy = posB.y - posA.y;
+    var dz = posB.z - posA.z;
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
 
@@ -465,8 +470,8 @@
    * Generate action message from intention
    */
   function generateActionMessage(intention, playerId, worldState) {
-    const action = intention.action;
-    const player = worldState.players.get(playerId);
+    var action = intention.action;
+    var player = worldState.players.get(playerId);
 
     if (!player) return null;
 
@@ -476,11 +481,11 @@
     }
 
     // Base message structure
-    const message = {
+    var message = {
       type: action.type,
       from: playerId,
-      payload: { ...action.params },
-      position: player.position ? { ...player.position } : null
+      payload: Object.assign({}, action.params),
+      position: player.position ? Object.assign({}, player.position) : null
     };
 
     return message;
@@ -494,14 +499,16 @@
    * @returns {Array} Array of action messages to execute
    */
   function evaluateTriggers(playerId, worldState, deltaTime) {
-    const intentions = intentionStore.get(playerId) || [];
-    const now = Date.now();
-    const actions = [];
+    var intentions = intentionStore.get(playerId) || [];
+    var now = Date.now();
+    var actions = [];
 
     // Sort by priority (higher priority first)
-    const sortedIntentions = [...intentions].sort((a, b) => b.priority - a.priority);
+    var sortedIntentions = intentions.slice().sort(function(a, b) { return b.priority - a.priority; });
 
-    for (const intention of sortedIntentions) {
+    for (var i = 0; i < sortedIntentions.length; i++) {
+      var intention = sortedIntentions[i];
+
       // Check if expired
       if (isIntentionExpired(intention, now)) {
         continue;
@@ -513,15 +520,15 @@
       }
 
       // Evaluate trigger
-      const triggerType = intention.trigger.condition;
-      const evaluator = triggerEvaluators[triggerType];
+      var triggerType = intention.trigger.condition;
+      var evaluator = triggerEvaluators[triggerType];
 
       if (!evaluator) {
         // Stub for unknown triggers
         continue;
       }
 
-      let triggered = false;
+      var triggered = false;
       try {
         triggered = evaluator(
           intention.trigger.params,
@@ -537,7 +544,7 @@
 
       if (triggered) {
         // Generate action message
-        const actionMessage = generateActionMessage(intention, playerId, worldState);
+        var actionMessage = generateActionMessage(intention, playerId, worldState);
 
         if (actionMessage) {
           actions.push(actionMessage);

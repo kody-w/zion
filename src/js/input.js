@@ -353,6 +353,13 @@
           e.preventDefault();
         }
         break;
+
+      case 'F3':
+        if (callbacks.onAction) {
+          callbacks.onAction('toggleFPS', {});
+        }
+        e.preventDefault();
+        break;
     }
 
     // Emote hotkeys: F+Number

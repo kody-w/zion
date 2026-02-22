@@ -1,12 +1,12 @@
 (function(exports) {
   // PeerJS mesh networking
-  let peer = null;
-  let connections = new Map(); // peerId -> connection
-  let messageCallback = null;
-  let peerConnectCallback = null;
-  let peerDisconnectCallback = null;
-  let seenMessages = new Set(); // For deduplication
-  const MAX_SEEN_MESSAGES = 1000;
+  var peer = null;
+  var connections = new Map(); // peerId -> connection
+  var messageCallback = null;
+  var peerConnectCallback = null;
+  var peerDisconnectCallback = null;
+  var seenMessages = new Set(); // For deduplication
+  var MAX_SEEN_MESSAGES = 1000;
 
   /**
    * Initialize PeerJS mesh network
@@ -16,31 +16,39 @@
    * @param {function} options.onPeerConnect - Callback when peer connects (peerId)
    * @param {function} options.onPeerDisconnect - Callback when peer disconnects (peerId)
    */
-  function initMesh(peerId, options = {}) {
+  function initMesh(peerId, options) {
+    options = options || {};
     // Check if PeerJS is available
     if (typeof Peer === 'undefined') {
       console.warn('PeerJS not available. Network mesh disabled.');
       return null;
     }
 
-    messageCallback = options.onMessage || (() => {});
-    peerConnectCallback = options.onPeerConnect || (() => {});
-    peerDisconnectCallback = options.onPeerDisconnect || (() => {});
+    messageCallback = options.onMessage || function() {};
+    peerConnectCallback = options.onPeerConnect || function() {};
+    peerDisconnectCallback = options.onPeerDisconnect || function() {};
 
-    // Create peer with optional config
+    // Create peer with STUN/TURN config for NAT traversal
     peer = new Peer(peerId, {
-      debug: 2 // Set to 3 for verbose logging
+      debug: 1,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' }
+        ]
+      }
     });
 
-    peer.on('open', (id) => {
+    peer.on('open', function(id) {
       console.log('Mesh network initialized. Peer ID:', id);
     });
 
-    peer.on('connection', (conn) => {
+    peer.on('connection', function(conn) {
       handleConnection(conn);
     });
 
-    peer.on('error', (err) => {
+    peer.on('error', function(err) {
       // peer-unavailable is normal when lobby/seed peers don't exist yet
       if (err.type === 'peer-unavailable') {
         // Silently ignore — this just means no other players are online
@@ -53,7 +61,7 @@
       }
     });
 
-    peer.on('disconnected', () => {
+    peer.on('disconnected', function() {
       console.warn('Peer disconnected from signaling server');
       attemptReconnect(peerId, 0);
     });
@@ -66,25 +74,25 @@
    * @param {DataConnection} conn
    */
   function handleConnection(conn) {
-    const remotePeerId = conn.peer;
+    var remotePeerId = conn.peer;
 
-    conn.on('open', () => {
+    conn.on('open', function() {
       console.log('Connected to peer:', remotePeerId);
       connections.set(remotePeerId, conn);
       peerConnectCallback(remotePeerId);
     });
 
-    conn.on('data', (data) => {
+    conn.on('data', function(data) {
       handleIncomingMessage(data, remotePeerId);
     });
 
-    conn.on('close', () => {
+    conn.on('close', function() {
       console.log('Peer disconnected:', remotePeerId);
       connections.delete(remotePeerId);
       peerDisconnectCallback(remotePeerId);
     });
 
-    conn.on('error', (err) => {
+    conn.on('error', function(err) {
       // Don't log errors for expected lobby/seed peer failures
       if (err && err.type !== 'peer-unavailable') {
         console.warn('Connection error with peer', remotePeerId, ':', err);
@@ -101,10 +109,10 @@
    */
   function handleIncomingMessage(data, fromPeer) {
     try {
-      const msg = typeof data === 'string' ? JSON.parse(data) : data;
+      var msg = typeof data === 'string' ? JSON.parse(data) : data;
 
       // Generate message ID for deduplication
-      const msgId = generateMessageId(msg);
+      var msgId = generateMessageId(msg);
 
       // Check if already seen
       if (seenMessages.has(msgId)) {
@@ -116,7 +124,7 @@
 
       // Evict oldest if over limit
       if (seenMessages.size > MAX_SEEN_MESSAGES) {
-        const firstItem = seenMessages.values().next().value;
+        var firstItem = seenMessages.values().next().value;
         seenMessages.delete(firstItem);
       }
 
@@ -137,7 +145,7 @@
    */
   function generateMessageId(msg) {
     // Use message fields to create unique ID
-    const str = JSON.stringify({
+    var str = JSON.stringify({
       type: msg.type,
       from: msg.from,
       timestamp: msg.timestamp,
@@ -152,9 +160,9 @@
    * @returns {string}
    */
   function simpleHash(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+      var char = str.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
@@ -167,7 +175,7 @@
    * @param {string} excludePeer
    */
   function relayMessage(msg, excludePeer) {
-    connections.forEach((conn, peerId) => {
+    connections.forEach(function(conn, peerId) {
       if (peerId !== excludePeer && conn.open) {
         try {
           conn.send(msg);
@@ -189,10 +197,10 @@
     }
 
     // Add to seen messages to prevent echo
-    const msgId = generateMessageId(msg);
+    var msgId = generateMessageId(msg);
     seenMessages.add(msgId);
 
-    connections.forEach((conn, peerId) => {
+    connections.forEach(function(conn, peerId) {
       if (conn.open) {
         try {
           conn.send(msg);
@@ -235,7 +243,7 @@
     }
 
     console.log('Connecting to peer:', peerId);
-    const conn = peer.connect(peerId, {
+    var conn = peer.connect(peerId, {
       reliable: true
     });
 
@@ -248,7 +256,7 @@
   function disconnect() {
     if (!peer) return;
 
-    connections.forEach((conn) => {
+    connections.forEach(function(conn) {
       conn.close();
     });
 
@@ -265,22 +273,22 @@
    * @param {number} attempt
    */
   function attemptReconnect(peerId, attempt) {
-    const maxAttempts = 3;
+    var maxAttempts = 3;
     if (attempt >= maxAttempts) {
       console.log('Max reconnection attempts reached, will retry on next discovery cycle');
       return;
     }
 
-    const delay = Math.pow(2, attempt) * 1000; // Exponential: 1s, 2s, 4s
-    console.log(`Reconnecting in ${delay}ms (attempt ${attempt + 1}/${maxAttempts})`);
+    var delay = Math.pow(2, attempt) * 1000; // Exponential: 1s, 2s, 4s
+    console.log('Reconnecting in ' + delay + 'ms (attempt ' + (attempt + 1) + '/' + maxAttempts + ')');
 
-    setTimeout(() => {
+    setTimeout(function() {
       if (!peer || peer.destroyed) {
         console.log('Attempting to reconnect...');
         peer.reconnect();
 
         // Check if reconnection succeeded after 2 seconds
-        setTimeout(() => {
+        setTimeout(function() {
           if (peer && !peer.open) {
             attemptReconnect(peerId, attempt + 1);
           }
@@ -294,8 +302,9 @@
    * @param {string} worldId - World identifier (default: 'main')
    * @returns {string}
    */
-  function getLobbyPeerId(worldId = 'main') {
-    return `zion-lobby-${worldId}`;
+  function getLobbyPeerId(worldId) {
+    worldId = worldId || 'main';
+    return 'zion-lobby-' + worldId;
   }
 
   // ========================================================================
@@ -333,13 +342,32 @@
     if (peer.id !== lobbyId) {
       // Not the lobby — try connecting to it
       connectToPeer(lobbyId);
+
+      // Auto-host promotion: if lobby is unreachable after 5s, re-init as lobby
+      setTimeout(function() {
+        if (connections.size === 0 && peer && !peer.destroyed) {
+          console.log('No lobby found — promoting self to lobby host');
+          try {
+            peer.destroy();
+          } catch (e) { /* ignore */ }
+          peer = null;
+          // Re-init with the well-known lobby ID
+          initMesh(lobbyId, {
+            onMessage: messageCallback,
+            onPeerConnect: peerConnectCallback,
+            onPeerDisconnect: peerDisconnectCallback
+          });
+          lobbyState.peerId = lobbyId;
+        }
+      }, 5000);
     }
 
-    // Also try a list of "seed" peer IDs derived from the world
-    // This creates a gossip-based discovery pattern
-    var seedCount = 5;
+    // Also try connecting to time-bucketed seed peers
+    // Bucket changes every 10 minutes so peers in the same time window find each other
+    var timeBucket = Math.floor(Date.now() / 600000);
+    var seedCount = 3;
     for (var i = 0; i < seedCount; i++) {
-      var seedId = 'zion-seed-' + lobbyState.worldId + '-' + i;
+      var seedId = 'zion-seed-' + lobbyState.worldId + '-' + timeBucket + '-' + i;
       if (seedId !== peer.id) {
         connectToPeer(seedId);
       }
@@ -352,6 +380,13 @@
 
     lobbyState.discoveryInterval = setInterval(function() {
       announcePresence();
+      // Retry lobby connection if still isolated
+      if (connections.size === 0 && peer && peer.open) {
+        var currentLobbyId = getLobbyPeerId(lobbyState.worldId);
+        if (peer.id !== currentLobbyId) {
+          connectToPeer(currentLobbyId);
+        }
+      }
     }, 10000); // Every 10 seconds
 
     // Start heartbeat
@@ -505,7 +540,7 @@
    * @returns {string}
    */
   function getFederatedPeerId(worldId, playerId) {
-    return `zion-fed-${worldId}-${playerId}`;
+    return 'zion-fed-' + worldId + '-' + playerId;
   }
 
   /**
@@ -591,15 +626,15 @@
 
     if (msg.type === 'federation_announce') {
       // Another world announced itself
-      var worldId = msg.worldId || msg.payload?.worldId;
+      var worldId = msg.worldId || (msg.payload && msg.payload.worldId);
       if (worldId && worldId !== federationState.worldId) {
         var worldInfo = {
           worldId: worldId,
-          worldName: msg.worldName || msg.payload?.worldName,
-          endpoint: msg.endpoint || msg.payload?.endpoint,
-          protocolVersion: msg.protocolVersion || msg.payload?.protocolVersion || 1,
-          playerCount: msg.playerCount || msg.payload?.playerCount || 0,
-          peerId: msg.peerId || msg.payload?.peerId,
+          worldName: msg.worldName || (msg.payload && msg.payload.worldName),
+          endpoint: msg.endpoint || (msg.payload && msg.payload.endpoint),
+          protocolVersion: msg.protocolVersion || (msg.payload && msg.payload.protocolVersion) || 1,
+          playerCount: msg.playerCount || (msg.payload && msg.payload.playerCount) || 0,
+          peerId: msg.peerId || (msg.payload && msg.payload.peerId),
           timestamp: msg.timestamp || Date.now()
         };
 
@@ -621,16 +656,16 @@
 
     if (msg.type === 'federation_handshake') {
       // Another world wants to federate with us
-      var fromWorld = msg.from_world || msg.payload?.from_world;
-      var toWorld = msg.to_world || msg.payload?.to_world;
+      var fromWorld = msg.from_world || (msg.payload && msg.payload.from_world);
+      var toWorld = msg.to_world || (msg.payload && msg.payload.to_world);
 
       if (toWorld === federationState.worldId && fromWorld) {
         var worldInfo = {
           worldId: fromWorld,
-          worldName: msg.worldName || msg.payload?.worldName,
-          endpoint: msg.endpoint || msg.payload?.endpoint,
-          protocolVersion: msg.protocolVersion || msg.payload?.protocolVersion || 1,
-          peerId: msg.peerId || msg.payload?.peerId,
+          worldName: msg.worldName || (msg.payload && msg.payload.worldName),
+          endpoint: msg.endpoint || (msg.payload && msg.payload.endpoint),
+          protocolVersion: msg.protocolVersion || (msg.payload && msg.payload.protocolVersion) || 1,
+          peerId: msg.peerId || (msg.payload && msg.payload.peerId),
           timestamp: msg.timestamp || Date.now()
         };
 
@@ -668,8 +703,8 @@
         federationState.federationCallback({
           type: 'cross_world_warp',
           playerId: msg.from,
-          targetWorld: msg.payload?.target_world,
-          position: msg.payload?.position
+          targetWorld: msg.payload && msg.payload.target_world,
+          position: msg.payload && msg.payload.position
         });
       }
       return true;
@@ -681,7 +716,7 @@
         federationState.federationCallback({
           type: 'player_returned',
           playerId: msg.from,
-          position: msg.payload?.position
+          position: msg.payload && msg.payload.position
         });
       }
       return true;

@@ -2,214 +2,218 @@
   // Main entry point and game loop orchestrator
 
   // Import references (browser globals or require)
-  const Protocol = typeof require !== 'undefined' ? require('./protocol') : window.Protocol;
-  const State = typeof require !== 'undefined' ? require('./state') : window.State;
-  const Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
-  const Economy = typeof require !== 'undefined' ? require('./economy') : window.Economy;
-  const Inventory = typeof require !== 'undefined' ? require('./inventory') : window.Inventory;
-  const Trading = typeof require !== 'undefined' ? require('./trading') : window.Trading;
-  const Intentions = typeof require !== 'undefined' ? require('./intentions') : window.Intentions;
-  const Social = typeof require !== 'undefined' ? require('./social') : window.Social;
-  const Creation = typeof require !== 'undefined' ? require('./creation') : window.Creation;
-  const Competition = typeof require !== 'undefined' ? require('./competition') : window.Competition;
-  const Exploration = typeof require !== 'undefined' ? require('./exploration') : window.Exploration;
-  const Physical = typeof require !== 'undefined' ? require('./physical') : window.Physical;
-  const Auth = typeof require !== 'undefined' ? require('./auth') : window.Auth;
-  const Network = typeof require !== 'undefined' ? require('./network') : window.Network;
-  const Models = typeof require !== 'undefined' ? require('./models') : window.Models;
-  const World = typeof require !== 'undefined' ? require('./world') : window.World;
-  const Input = typeof require !== 'undefined' ? require('./input') : window.Input;
-  const HUD = typeof require !== 'undefined' ? require('./hud') : window.HUD;
-  const XR = typeof require !== 'undefined' ? require('./xr') : window.XR;
-  const Audio = typeof require !== 'undefined' ? require('./audio') : window.Audio;
-  const NPCs = typeof require !== 'undefined' ? require('./npcs') : window.NPCs;
-  const Quests = typeof require !== 'undefined' ? require('./quests') : window.Quests;
-  const Mentoring = typeof require !== 'undefined' ? require('./mentoring') : window.Mentoring;
-  const Guilds = typeof require !== 'undefined' ? require('./guilds') : window.Guilds;
-  const Seasons = typeof require !== 'undefined' ? require('./seasons') : window.Seasons;
-  const Pets = typeof require !== 'undefined' ? require('./pets') : window.Pets;
-  const ApiBridge = typeof require !== 'undefined' ? require('./api_bridge') : window.ApiBridge;
-  const FastTravel = typeof require !== 'undefined' ? require('./fast_travel') : window.FastTravel;
-  const WeatherFX = typeof require !== 'undefined' ? require('./weather_fx') : window.WeatherFX;
-  const Progression = typeof require !== 'undefined' ? require('./progression') : window.Progression;
-  const NpcReputation = typeof require !== 'undefined' ? require('./npc_reputation') : window.NpcReputation;
-  const Loot = typeof require !== 'undefined' ? require('./loot') : window.Loot;
-  const GuildProgression = typeof require !== 'undefined' ? require('./guild_progression') : window.GuildProgression;
-  const DailyChallenges = typeof require !== 'undefined' ? require('./daily_challenges') : window.DailyChallenges;
-  const Apprenticeship = typeof require !== 'undefined' ? require('./apprenticeship') : window.Apprenticeship;
-  const EventVoting = typeof require !== 'undefined' ? require('./event_voting') : window.EventVoting;
-  const HousingSocial = typeof require !== 'undefined' ? require('./housing_social') : window.HousingSocial;
-  const Prestige = typeof require !== 'undefined' ? require('./prestige') : window.Prestige;
-  const MentorshipMarket = typeof require !== 'undefined' ? require('./mentorship_market') : window.MentorshipMarket;
-  const AchievementEngine = typeof require !== 'undefined' ? require('./achievement_engine') : window.AchievementEngine;
-  const ArenaScheduler = typeof require !== 'undefined' ? require('./arena_scheduler') : window.ArenaScheduler;
-  const MarketDynamics = typeof require !== 'undefined' ? require('./market_dynamics') : window.MarketDynamics;
-  const SocialSpaces = typeof require !== 'undefined' ? require('./social_spaces') : window.SocialSpaces;
-  const Wiring = typeof require !== 'undefined' ? require('./wiring') : window.Wiring;
-  const Cooking = typeof require !== 'undefined' ? require('./cooking') : window.Cooking;
-  const Crafting = typeof require !== 'undefined' ? require('./crafting') : window.Crafting;
-  const Journal = typeof require !== 'undefined' ? require('./journal') : window.Journal;
-  const StoryEngine = typeof require !== 'undefined' ? require('./story_engine') : window.StoryEngine;
-  const WorldPersistence = typeof require !== 'undefined' ? require('./world_persistence') : window.WorldPersistence;
-  const Cosmetics = typeof require !== 'undefined' ? require('./cosmetics') : window.Cosmetics;
-  const RaidSystem = typeof require !== 'undefined' ? require('./raid_system') : window.RaidSystem;
-  const Specializations = typeof require !== 'undefined' ? require('./specializations') : window.Specializations;
-  const Archival = typeof require !== 'undefined' ? require('./archival') : window.Archival;
-  const BattlePass = typeof require !== 'undefined' ? require('./battle_pass') : window.BattlePass;
-  const Contracts = typeof require !== 'undefined' ? require('./contracts') : window.Contracts;
-  const GuildWars = typeof require !== 'undefined' ? require('./guild_wars') : window.GuildWars;
-  const MarketSpeculation = typeof require !== 'undefined' ? require('./market_speculation') : window.MarketSpeculation;
-  const MentorGuilds = typeof require !== 'undefined' ? require('./mentor_guilds') : window.MentorGuilds;
-  const MetaEvents = typeof require !== 'undefined' ? require('./meta_events') : window.MetaEvents;
-  const AsyncCollab = typeof require !== 'undefined' ? require('./async_collab') : window.AsyncCollab;
-  const EconomySimulator = typeof require !== 'undefined' ? require('./economy_simulator') : window.EconomySimulator;
-  const NarrativeThreads = typeof require !== 'undefined' ? require('./narrative_threads') : window.NarrativeThreads;
-  const MinigameForge = typeof require !== 'undefined' ? require('./minigame_forge') : window.MinigameForge;
-  const MultiverseReputation = typeof require !== 'undefined' ? require('./multiverse_reputation') : window.MultiverseReputation;
-  const NpcDelegation = typeof require !== 'undefined' ? require('./npc_delegation') : window.NpcDelegation;
-  const RadioStation = typeof require !== 'undefined' ? require('./radio_station') : window.RadioStation;
-  const SeasonalEventsAuto = typeof require !== 'undefined' ? require('./seasonal_events_auto') : window.SeasonalEventsAuto;
-  const EventConsequences = typeof require !== 'undefined' ? require('./event_consequences') : window.EventConsequences;
-  const PlayerOnboarding = typeof require !== 'undefined' ? require('./player_onboarding') : window.PlayerOnboarding;
-  const SkillMastery = typeof require !== 'undefined' ? require('./skill_mastery') : window.SkillMastery;
-  const WorldShaper = typeof require !== 'undefined' ? require('./world_shaper') : window.WorldShaper;
-  const TrustBonds = typeof require !== 'undefined' ? require('./trust_bonds') : window.TrustBonds;
-  const RecoverySystem = typeof require !== 'undefined' ? require('./recovery_system') : window.RecoverySystem;
-  const BountyBoard = typeof require !== 'undefined' ? require('./bounty_board') : window.BountyBoard;
-  const MarketSignals = typeof require !== 'undefined' ? require('./market_signals') : window.MarketSignals;
-  const ConsequenceBranching = typeof require !== 'undefined' ? require('./consequence_branching') : window.ConsequenceBranching;
-  const DiplomaticSystem = typeof require !== 'undefined' ? require('./diplomatic_system') : window.DiplomaticSystem;
-  const MerchantGuilds = typeof require !== 'undefined' ? require('./merchant_guilds') : window.MerchantGuilds;
-  const GriefRecovery = typeof require !== 'undefined' ? require('./grief_recovery') : window.GriefRecovery;
-  const AnchorManagement = typeof require !== 'undefined' ? require('./anchor_management') : window.AnchorManagement;
-  const CommunityBoard = typeof require !== 'undefined' ? require('./community_board') : window.CommunityBoard;
-  const ConstitutionAmendments = typeof require !== 'undefined' ? require('./constitution_amendments') : window.ConstitutionAmendments;
-  const LoreDiscovery = typeof require !== 'undefined' ? require('./lore_discovery') : window.LoreDiscovery;
-  const SpectatorSystem = typeof require !== 'undefined' ? require('./spectator_system') : window.SpectatorSystem;
-  const WarmthSystem = typeof require !== 'undefined' ? require('./warmth_system') : window.WarmthSystem;
-  const ZoneStewards = typeof require !== 'undefined' ? require('./zone_stewards') : window.ZoneStewards;
+  var Protocol = typeof require !== 'undefined' ? require('./protocol') : window.Protocol;
+  var State = typeof require !== 'undefined' ? require('./state') : window.State;
+  var Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
+  var Economy = typeof require !== 'undefined' ? require('./economy') : window.Economy;
+  var Inventory = typeof require !== 'undefined' ? require('./inventory') : window.Inventory;
+  var Trading = typeof require !== 'undefined' ? require('./trading') : window.Trading;
+  var Intentions = typeof require !== 'undefined' ? require('./intentions') : window.Intentions;
+  var Social = typeof require !== 'undefined' ? require('./social') : window.Social;
+  var Creation = typeof require !== 'undefined' ? require('./creation') : window.Creation;
+  var Competition = typeof require !== 'undefined' ? require('./competition') : window.Competition;
+  var Exploration = typeof require !== 'undefined' ? require('./exploration') : window.Exploration;
+  var Physical = typeof require !== 'undefined' ? require('./physical') : window.Physical;
+  var Auth = typeof require !== 'undefined' ? require('./auth') : window.Auth;
+  var Network = typeof require !== 'undefined' ? require('./network') : window.Network;
+  var Models = typeof require !== 'undefined' ? require('./models') : window.Models;
+  var World = typeof require !== 'undefined' ? require('./world') : window.World;
+  var Input = typeof require !== 'undefined' ? require('./input') : window.Input;
+  var HUD = typeof require !== 'undefined' ? require('./hud') : window.HUD;
+  var XR = typeof require !== 'undefined' ? require('./xr') : window.XR;
+  var Audio = typeof require !== 'undefined' ? require('./audio') : window.Audio;
+  var NPCs = typeof require !== 'undefined' ? require('./npcs') : window.NPCs;
+  var Quests = typeof require !== 'undefined' ? require('./quests') : window.Quests;
+  var Mentoring = typeof require !== 'undefined' ? require('./mentoring') : window.Mentoring;
+  var Guilds = typeof require !== 'undefined' ? require('./guilds') : window.Guilds;
+  var Seasons = typeof require !== 'undefined' ? require('./seasons') : window.Seasons;
+  var Pets = typeof require !== 'undefined' ? require('./pets') : window.Pets;
+  var ApiBridge = typeof require !== 'undefined' ? require('./api_bridge') : window.ApiBridge;
+  var FastTravel = typeof require !== 'undefined' ? require('./fast_travel') : window.FastTravel;
+  var WeatherFX = typeof require !== 'undefined' ? require('./weather_fx') : window.WeatherFX;
+  var Progression = typeof require !== 'undefined' ? require('./progression') : window.Progression;
+  var NpcReputation = typeof require !== 'undefined' ? require('./npc_reputation') : window.NpcReputation;
+  var Loot = typeof require !== 'undefined' ? require('./loot') : window.Loot;
+  var GuildProgression = typeof require !== 'undefined' ? require('./guild_progression') : window.GuildProgression;
+  var DailyChallenges = typeof require !== 'undefined' ? require('./daily_challenges') : window.DailyChallenges;
+  var Apprenticeship = typeof require !== 'undefined' ? require('./apprenticeship') : window.Apprenticeship;
+  var EventVoting = typeof require !== 'undefined' ? require('./event_voting') : window.EventVoting;
+  var HousingSocial = typeof require !== 'undefined' ? require('./housing_social') : window.HousingSocial;
+  var Prestige = typeof require !== 'undefined' ? require('./prestige') : window.Prestige;
+  var MentorshipMarket = typeof require !== 'undefined' ? require('./mentorship_market') : window.MentorshipMarket;
+  var AchievementEngine = typeof require !== 'undefined' ? require('./achievement_engine') : window.AchievementEngine;
+  var ArenaScheduler = typeof require !== 'undefined' ? require('./arena_scheduler') : window.ArenaScheduler;
+  var MarketDynamics = typeof require !== 'undefined' ? require('./market_dynamics') : window.MarketDynamics;
+  var SocialSpaces = typeof require !== 'undefined' ? require('./social_spaces') : window.SocialSpaces;
+  var Wiring = typeof require !== 'undefined' ? require('./wiring') : window.Wiring;
+  var Cooking = typeof require !== 'undefined' ? require('./cooking') : window.Cooking;
+  var Crafting = typeof require !== 'undefined' ? require('./crafting') : window.Crafting;
+  var Journal = typeof require !== 'undefined' ? require('./journal') : window.Journal;
+  var StoryEngine = typeof require !== 'undefined' ? require('./story_engine') : window.StoryEngine;
+  var WorldPersistence = typeof require !== 'undefined' ? require('./world_persistence') : window.WorldPersistence;
+  var Cosmetics = typeof require !== 'undefined' ? require('./cosmetics') : window.Cosmetics;
+  var RaidSystem = typeof require !== 'undefined' ? require('./raid_system') : window.RaidSystem;
+  var Specializations = typeof require !== 'undefined' ? require('./specializations') : window.Specializations;
+  var Archival = typeof require !== 'undefined' ? require('./archival') : window.Archival;
+  var BattlePass = typeof require !== 'undefined' ? require('./battle_pass') : window.BattlePass;
+  var Contracts = typeof require !== 'undefined' ? require('./contracts') : window.Contracts;
+  var GuildWars = typeof require !== 'undefined' ? require('./guild_wars') : window.GuildWars;
+  var MarketSpeculation = typeof require !== 'undefined' ? require('./market_speculation') : window.MarketSpeculation;
+  var MentorGuilds = typeof require !== 'undefined' ? require('./mentor_guilds') : window.MentorGuilds;
+  var MetaEvents = typeof require !== 'undefined' ? require('./meta_events') : window.MetaEvents;
+  var AsyncCollab = typeof require !== 'undefined' ? require('./async_collab') : window.AsyncCollab;
+  var EconomySimulator = typeof require !== 'undefined' ? require('./economy_simulator') : window.EconomySimulator;
+  var NarrativeThreads = typeof require !== 'undefined' ? require('./narrative_threads') : window.NarrativeThreads;
+  var MinigameForge = typeof require !== 'undefined' ? require('./minigame_forge') : window.MinigameForge;
+  var MultiverseReputation = typeof require !== 'undefined' ? require('./multiverse_reputation') : window.MultiverseReputation;
+  var NpcDelegation = typeof require !== 'undefined' ? require('./npc_delegation') : window.NpcDelegation;
+  var RadioStation = typeof require !== 'undefined' ? require('./radio_station') : window.RadioStation;
+  var SeasonalEventsAuto = typeof require !== 'undefined' ? require('./seasonal_events_auto') : window.SeasonalEventsAuto;
+  var EventConsequences = typeof require !== 'undefined' ? require('./event_consequences') : window.EventConsequences;
+  var PlayerOnboarding = typeof require !== 'undefined' ? require('./player_onboarding') : window.PlayerOnboarding;
+  var SkillMastery = typeof require !== 'undefined' ? require('./skill_mastery') : window.SkillMastery;
+  var WorldShaper = typeof require !== 'undefined' ? require('./world_shaper') : window.WorldShaper;
+  var TrustBonds = typeof require !== 'undefined' ? require('./trust_bonds') : window.TrustBonds;
+  var RecoverySystem = typeof require !== 'undefined' ? require('./recovery_system') : window.RecoverySystem;
+  var BountyBoard = typeof require !== 'undefined' ? require('./bounty_board') : window.BountyBoard;
+  var MarketSignals = typeof require !== 'undefined' ? require('./market_signals') : window.MarketSignals;
+  var ConsequenceBranching = typeof require !== 'undefined' ? require('./consequence_branching') : window.ConsequenceBranching;
+  var DiplomaticSystem = typeof require !== 'undefined' ? require('./diplomatic_system') : window.DiplomaticSystem;
+  var MerchantGuilds = typeof require !== 'undefined' ? require('./merchant_guilds') : window.MerchantGuilds;
+  var GriefRecovery = typeof require !== 'undefined' ? require('./grief_recovery') : window.GriefRecovery;
+  var AnchorManagement = typeof require !== 'undefined' ? require('./anchor_management') : window.AnchorManagement;
+  var CommunityBoard = typeof require !== 'undefined' ? require('./community_board') : window.CommunityBoard;
+  var ConstitutionAmendments = typeof require !== 'undefined' ? require('./constitution_amendments') : window.ConstitutionAmendments;
+  var LoreDiscovery = typeof require !== 'undefined' ? require('./lore_discovery') : window.LoreDiscovery;
+  var SpectatorSystem = typeof require !== 'undefined' ? require('./spectator_system') : window.SpectatorSystem;
+  var WarmthSystem = typeof require !== 'undefined' ? require('./warmth_system') : window.WarmthSystem;
+  var ZoneStewards = typeof require !== 'undefined' ? require('./zone_stewards') : window.ZoneStewards;
+  var PlayerWellness = typeof require !== 'undefined' ? require('./player_wellness') : window.PlayerWellness;
+  var Anchors = typeof require !== 'undefined' ? require('./anchors') : window.Anchors;
 
   // Embedded soul data (replaced at bundle time)
   var EMBEDDED_SOULS = SOULS_PLACEHOLDER;
 
   // Game state
-  let gameState = null;
-  let sceneContext = null;
-  let messageQueue = [];
-  let isRunning = false;
-  let lastTimestamp = 0;
-  let worldTime = 0; // Minutes in 24-hour cycle (0-1440)
-  let currentZone = 'nexus';
-  let currentWeather = 'clear';
-  let npcIntentionIndex = 0; // Throttle: which NPC to evaluate next
-  let localPlayer = null;
-  let playStartTime = 0;
-  let lastBreakReminder = 0;
-  let footstepTimer = 0;
-  let currentTimePeriod = 'morning';  // tracks dawn/morning/midday/afternoon/evening/night
-  let cameraYaw = 0;       // horizontal camera orbit angle (radians)
-  let cameraPitch = 0.35;  // vertical tilt (0 = flat, higher = more top-down)
-  let cameraDistance = 18;  // distance from player
-  let isDragging = false;
-  let lastMouseX = 0, lastMouseY = 0;
-  let playerInventory = null;
-  let economyLedger = null;
-  let playerProgression = null;
-  let achievementState = null;
-  let dailyChallengeState = null;
-  let journalState = null;
-  let npcReputationState = null;
-  let lootHistory = null;
-  let battlePassState = null;
-  let cosmeticsState = null;
-  let specState = null;
-  let worldPersistState = null;
-  let storyState = null;
-  let marketDynamicsState = null;
-  let cookingBuffs = null;
-  let metaEventsState = null;
-  let guildProgressionState = null;
-  let apprenticeshipState = null;
-  let eventVotingState = null;
-  let housingSocialState = null;
-  let prestigeState = null;
-  let mentorshipMarketState = null;
-  let arenaSchedule = null;
-  let socialSpacesState = null;
-  let raidStateStore = null;
-  let guildWarsState = null;
-  let asyncCollabState = null;
-  let economySimState = null;
-  let narrativeThreadsState = null;
-  let minigameForgeState = null;
-  let multiverseRepState = null;
-  let npcDelegationState = null;
-  let radioStationState = null;
-  let seasonalEventsAutoState = null;
-  let eventConsequencesState = null;
-  let playerOnboardingState = null;
-  let skillMasteryState = null;
-  let worldShaperState = null;
-  let trustBondsState = null;
-  let recoveryState = null;
-  let bountyBoardState = null;
-  let marketSignalsState = null;
-  let consequenceBranchingState = null;
-  let diplomaticState = null;
-  let merchantGuildsState = null;
-  let griefRecoveryState = null;
-  let anchorManagementState = null;
-  let communityBoardState = null;
-  let constitutionState = null;
-  let loreDiscoveryState = null;
-  let spectatorState = null;
-  let warmthState = null;
-  let zoneStewardsState = null;
-  let raycaster = null;
-  let simCrmState = null;
-  let lastSimCrmTick = 0;
+  var gameState = null;
+  var sceneContext = null;
+  var messageQueue = [];
+  var isRunning = false;
+  var lastTimestamp = 0;
+  var worldTime = 0; // Minutes in 24-hour cycle (0-1440)
+  var currentZone = 'nexus';
+  var currentWeather = 'clear';
+  var npcIntentionIndex = 0; // Throttle: which NPC to evaluate next
+  var localPlayer = null;
+  var playStartTime = 0;
+  var lastBreakReminder = 0;
+  var wellnessState = null;
+  var wellnessSessionId = null;
+  var footstepTimer = 0;
+  var currentTimePeriod = 'morning';  // tracks dawn/morning/midday/afternoon/evening/night
+  var cameraYaw = 0;       // horizontal camera orbit angle (radians)
+  var cameraPitch = 0.35;  // vertical tilt (0 = flat, higher = more top-down)
+  var cameraDistance = 18;  // distance from player
+  var isDragging = false;
+  var lastMouseX = 0, lastMouseY = 0;
+  var playerInventory = null;
+  var economyLedger = null;
+  var playerProgression = null;
+  var achievementState = null;
+  var dailyChallengeState = null;
+  var journalState = null;
+  var npcReputationState = null;
+  var lootHistory = null;
+  var battlePassState = null;
+  var cosmeticsState = null;
+  var specState = null;
+  var worldPersistState = null;
+  var storyState = null;
+  var marketDynamicsState = null;
+  var cookingBuffs = null;
+  var metaEventsState = null;
+  var guildProgressionState = null;
+  var apprenticeshipState = null;
+  var eventVotingState = null;
+  var housingSocialState = null;
+  var prestigeState = null;
+  var mentorshipMarketState = null;
+  var arenaSchedule = null;
+  var socialSpacesState = null;
+  var raidStateStore = null;
+  var guildWarsState = null;
+  var asyncCollabState = null;
+  var economySimState = null;
+  var narrativeThreadsState = null;
+  var minigameForgeState = null;
+  var multiverseRepState = null;
+  var npcDelegationState = null;
+  var radioStationState = null;
+  var seasonalEventsAutoState = null;
+  var eventConsequencesState = null;
+  var playerOnboardingState = null;
+  var skillMasteryState = null;
+  var worldShaperState = null;
+  var trustBondsState = null;
+  var recoveryState = null;
+  var bountyBoardState = null;
+  var marketSignalsState = null;
+  var consequenceBranchingState = null;
+  var diplomaticState = null;
+  var merchantGuildsState = null;
+  var griefRecoveryState = null;
+  var anchorManagementState = null;
+  var communityBoardState = null;
+  var constitutionState = null;
+  var loreDiscoveryState = null;
+  var spectatorState = null;
+  var warmthState = null;
+  var zoneStewardsState = null;
+  var raycaster = null;
+  var simCrmState = null;
+  var lastSimCrmTick = 0;
   var SIM_CRM_TICK_INTERVAL = 45000; // 45 seconds between CRM ticks
-  let npcUpdateFrame = 0;
-  let cachedNearbyPlayers = null;
-  let visitedZones = { nexus: true }; // Track discovered zones for piano accents
+  var npcUpdateFrame = 0;
+  var cachedNearbyPlayers = null;
+  var visitedZones = { nexus: true }; // Track discovered zones for piano accents
 
   // Performance tracking
-  let frameCount = 0;
-  let fpsFrameTimes = [];
-  let currentFPS = 60;
-  let showDebug = false; // Set to true to show FPS counter
+  var frameCount = 0;
+  var fpsFrameTimes = [];
+  var currentFPS = 60;
+  var showDebug = false; // Set to true to show FPS counter
 
   // Play time tracking
-  let playTimeSeconds = 0;
-  let recentActivities = [];
+  var playTimeSeconds = 0;
+  var recentActivities = [];
 
   // Auto-save tracking
-  let lastAutoSave = 0;
-  let AUTO_SAVE_INTERVAL = 60000; // 60 seconds
+  var lastAutoSave = 0;
+  var AUTO_SAVE_INTERVAL = 60000; // 60 seconds
 
   // Secret discovery tracking
-  let lastSecretCheck = 0;
-  let SECRET_CHECK_INTERVAL = 2000; // Check every 2 seconds
+  var lastSecretCheck = 0;
+  var SECRET_CHECK_INTERVAL = 2000; // Check every 2 seconds
 
   // Economic event tracking
-  let currentEconomicEvent = null;
-  let lastEventCheck = 0;
+  var currentEconomicEvent = null;
+  var lastEventCheck = 0;
 
   // Seasonal event tracking
-  let currentSeason = null;
-  let lastSeasonCheck = 0;
-  let SEASON_CHECK_INTERVAL = 60000; // Check season every 60s
+  var currentSeason = null;
+  var lastSeasonCheck = 0;
+  var SEASON_CHECK_INTERVAL = 60000; // Check season every 60s
 
   // Pet tracking
-  let lastPetUpdate = 0;
-  let PET_UPDATE_INTERVAL = 30000; // Update pet every 30s
+  var lastPetUpdate = 0;
+  var PET_UPDATE_INTERVAL = 30000; // Update pet every 30s
 
   // Race checkpoint tracking
   var lastRaceCheck = 0;
   var RACE_CHECK_INTERVAL = 500; // Check every 500ms
 
   // Fishing state
-  let isFishing = false;
+  var isFishing = false;
 
   // World events tracking
   var worldEvents = {
@@ -249,12 +253,12 @@
   };
 
   // Warmth tracking (GPS-based outdoor play bonus)
-  let gpsHistory = [];
-  let gpsWatchId = null;
-  let lastWarmthUpdate = 0;
+  var gpsHistory = [];
+  var gpsWatchId = null;
+  var lastWarmthUpdate = 0;
 
   // Platform detection
-  let platform = 'desktop';
+  var platform = 'desktop';
 
   // Camera shake system
   var cameraShake = { intensity: 0, duration: 0, elapsed: 0, active: false };
@@ -689,7 +693,7 @@
     }
 
     // Get username
-    const username = Auth.getUsername();
+    var username = Auth.getUsername();
     console.log('Authenticated as:', username);
 
     // Initialize game systems with loading progress
@@ -1340,30 +1344,27 @@
     // Initialize network
     if (Network) {
       // Host mode: use well-known lobby peer ID so other players auto-connect
-      const urlParams = typeof URLSearchParams !== 'undefined' && typeof window !== 'undefined'
+      // Auto-promotion in joinLobby handles becoming lobby if no host exists
+      var urlParams = typeof URLSearchParams !== 'undefined' && typeof window !== 'undefined'
         ? new URLSearchParams(window.location.search) : null;
-      const isHost = urlParams && urlParams.get('host') === 'true';
-      const peerId = isHost ? 'zion-lobby-main' : `zion-${username}-${Date.now()}`;
+      var isHost = urlParams && urlParams.get('host') === 'true';
+      var peerId = isHost ? 'zion-lobby-main' : 'zion-' + username + '-' + Date.now();
       Network.initMesh(peerId, {
         onMessage: handleIncomingMessage,
-        onPeerConnect: (peerId) => {
-          console.log('Peer connected:', peerId);
-          HUD && HUD.showNotification(`Player connected: ${peerId}`, 'info');
+        onPeerConnect: function(connectedPeerId) {
+          console.log('Peer connected:', connectedPeerId);
+          if (HUD) HUD.showNotification('Player connected: ' + connectedPeerId, 'info');
         },
-        onPeerDisconnect: (peerId) => {
-          console.log('Peer disconnected:', peerId);
-          HUD && HUD.showNotification(`Player disconnected: ${peerId}`, 'info');
+        onPeerDisconnect: function(disconnectedPeerId) {
+          console.log('Peer disconnected:', disconnectedPeerId);
+          if (HUD) HUD.showNotification('Player disconnected: ' + disconnectedPeerId, 'info');
           if (gameState && State) {
-            State.removePlayer(gameState, peerId);
+            State.removePlayer(gameState, disconnectedPeerId);
           }
         }
       });
 
-      // Connect to lobby peer
-      const lobbyPeer = Network.getLobbyPeerId('main');
-      Network.connectToPeer(lobbyPeer);
-
-      // Join lobby for automatic peer discovery
+      // Join lobby for automatic peer discovery (includes lobby connect + auto-host promotion)
       if (Network.joinLobby) {
         Network.joinLobby('main', username, currentZone);
       }
@@ -1374,29 +1375,50 @@
       }, 2000);
 
       // Initialize federation
-      const worldId = Network.deriveWorldId();
-      const worldName = 'ZION'; // Could be customized per fork
-      const endpoint = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+      var worldId = Network.deriveWorldId();
+      var worldName = 'ZION';
+      var endpoint = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
       Network.initFederation(worldId, worldName, endpoint);
 
       // Register federation event handler
-      Network.onFederationEvent((event) => {
+      Network.onFederationEvent(function(event) {
         handleFederationEvent(event);
       });
 
       // Announce to federation network periodically
-      setInterval(() => {
+      setInterval(function() {
         if (Network.announceFederation) {
           Network.announceFederation();
         }
-      }, 60000); // Every 60 seconds
+      }, 60000);
 
-      // Initial announce
-      setTimeout(() => {
+      // Initial announce after connections establish
+      setTimeout(function() {
         if (Network.announceFederation) {
           Network.announceFederation();
         }
-      }, 5000); // After 5 seconds to let connections establish
+      }, 5000);
+
+      // Federation heartbeat: check connection health every 30 seconds
+      setInterval(function() {
+        if (!Network.getFederatedWorlds) return;
+        var fedWorlds = Network.getFederatedWorlds();
+        if (fedWorlds && fedWorlds.length > 0) {
+          for (var fi = 0; fi < fedWorlds.length; fi++) {
+            var fw = fedWorlds[fi];
+            // Re-handshake stale connections (no activity in 120s)
+            if (fw.lastSeen && (Date.now() - fw.lastSeen > 120000)) {
+              if (Network.federationHandshake) {
+                Network.federationHandshake(fw.worldId, fw);
+              }
+            }
+          }
+        }
+        // Also try to discover new worlds if we have none
+        if ((!fedWorlds || fedWorlds.length === 0) && Network.announceFederation) {
+          Network.announceFederation();
+        }
+      }, 30000);
     }
 
     // Initialize API bridge for AI agent communication
@@ -1411,8 +1433,8 @@
 
     // Load canonical state from GitHub (so solo visitors see agent activity)
     if (typeof fetch !== 'undefined' && State && State.getLiveState && State.setLiveState) {
-      const RAW = 'https://raw.githubusercontent.com/kody-w/zion/main/state';
-      const loadCanonical = function(file) {
+      var RAW = 'https://raw.githubusercontent.com/kody-w/zion/main/state';
+      var loadCanonical = function(file) {
         return fetch(RAW + '/' + file, { cache: 'no-cache' })
           .then(function(r) { return r.ok ? r.json() : null; })
           .catch(function() { return null; });
@@ -1470,7 +1492,7 @@
 
     // Initialize 3D scene
     if (typeof document !== 'undefined' && World) {
-      const container = document.getElementById('game-container') || document.body;
+      var container = document.getElementById('game-container') || document.body;
       sceneContext = World.initScene(container);
 
       if (sceneContext) {
@@ -1558,7 +1580,7 @@
 
     // Initialize HUD
     if (typeof document !== 'undefined' && HUD) {
-      const container = document.getElementById('game-container') || document.body;
+      var container = document.getElementById('game-container') || document.body;
       HUD.initHUD(container);
       HUD.updateZoneLabel(currentZone);
       HUD.updatePlayerInfo(localPlayer);
@@ -1624,7 +1646,7 @@
       getPlayTimeSeconds();
 
       // Add chat input
-      HUD.addChatInput((text) => {
+      HUD.addChatInput(function(text) {
         handleLocalAction('chat', { message: text });
         HUD.hideChatInput();
       });
@@ -1683,18 +1705,18 @@
     // Initialize input
     if (Input) {
       Input.initInput({
-        onMove: (delta) => {
+        onMove: function(delta) {
           // Movement handled in game loop
         },
-        onAction: (type, data) => {
+        onAction: function(type, data) {
           handleLocalAction(type, data);
         },
-        onChat: (data) => {
+        onChat: function(data) {
           if (data.mode === 'open') {
             HUD && HUD.showChatInput();
           }
         },
-        onBuild: (data) => {
+        onBuild: function(data) {
           handleBuildAction(data);
         }
       });
@@ -1814,6 +1836,13 @@
     // Record play start time
     playStartTime = Date.now();
 
+    // Start PlayerWellness session for tiered break reminders
+    if (PlayerWellness && PlayerWellness.createState) {
+      if (!wellnessState) wellnessState = PlayerWellness.createState();
+      var session = PlayerWellness.startSession(wellnessState, localPlayer ? localPlayer.id : 'local');
+      if (session) wellnessSessionId = session.id || null;
+    }
+
     // Start GPS tracking for Warmth (only if geolocation available)
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       try {
@@ -1866,7 +1895,7 @@
       return;
     }
 
-    const loginScreen = document.createElement('div');
+    var loginScreen = document.createElement('div');
     loginScreen.id = 'login-screen';
     loginScreen.style.cssText = `
       position: fixed;
@@ -1909,7 +1938,7 @@
     }
     animateLoginStars();
 
-    const content = document.createElement('div');
+    var content = document.createElement('div');
     content.style.cssText = 'text-align:center;color:white;position:relative;z-index:1;';
 
     content.innerHTML = `
@@ -1935,7 +1964,7 @@
     loginScreen.appendChild(content);
     document.body.appendChild(loginScreen);
 
-    document.getElementById('github-login').addEventListener('click', () => {
+    document.getElementById('github-login').addEventListener('click', function() {
       if (Auth) {
         Auth.initiateOAuth();
       }
@@ -1962,7 +1991,7 @@
   function gameLoop(timestamp) {
     if (!isRunning) return;
 
-    const deltaTime = (timestamp - lastTimestamp) / 1000; // seconds
+    var deltaTime = (timestamp - lastTimestamp) / 1000; // seconds
     lastTimestamp = timestamp;
 
     // Increment frame counter for periodic updates
@@ -1999,7 +2028,7 @@
 
     // Process local player movement (skip in photo mode)
     if (Input && localPlayer && gameState && !photoMode.active) {
-      const delta = Input.getMovementDelta();
+      var delta = Input.getMovementDelta();
       if (delta.x !== 0 || delta.z !== 0) {
         // Rotate movement delta by camera yaw so WASD is camera-relative
         var sinYaw = Math.sin(cameraYaw);
@@ -2010,7 +2039,7 @@
           z: delta.x * sinYaw + delta.z * cosYaw
         };
 
-        const moveMsg = Input.createMoveMessage(
+        var moveMsg = Input.createMoveMessage(
           localPlayer.id,
           rotatedDelta,
           localPlayer.position,
@@ -2195,11 +2224,16 @@
               WarmthSystem.recordMovement(warmthState, localPlayer.id, { zone: currentZone }, worldTime);
             }
 
-            // AnchorManagement: check for nearby anchors in new zone
+            // AnchorManagement: check for nearby anchors in new zone and render in 3D
             if (AnchorManagement && AnchorManagement.getAnchorsInZone && anchorManagementState) {
               var zoneAnchors = AnchorManagement.getAnchorsInZone(anchorManagementState, currentZone);
-              if (zoneAnchors && zoneAnchors.length > 0 && HUD) {
-                HUD.showNotification(zoneAnchors.length + ' anchor(s) nearby in ' + currentZone, 'info');
+              if (zoneAnchors && zoneAnchors.length > 0) {
+                if (HUD) HUD.showNotification(zoneAnchors.length + ' anchor(s) nearby in ' + currentZone, 'info');
+                // Render anchors as 3D beacons
+                if (World && World.renderAnchors && sceneContext) {
+                  World.clearAnchors(sceneContext, currentZone);
+                  World.renderAnchors(sceneContext, currentZone, zoneAnchors);
+                }
               }
             }
 
@@ -2371,8 +2405,8 @@
     if (sceneContext && World) {
       // Update player positions
       if (gameState && State) {
-        const players = State.getPlayers(gameState);
-        players.forEach(player => {
+        var players = State.getPlayers(gameState);
+        players.forEach(function(player) {
           if (player.id !== localPlayer.id) {
             World.movePlayer(sceneContext, player.id, player.position);
           } else {
@@ -2578,6 +2612,11 @@
       if (World.updateInteractiveAnimations) {
         World.updateInteractiveAnimations(deltaTime);
       }
+
+      // Update anchor beacon animations (bobbing glow)
+      if (World.updateAnchorAnimations) {
+        World.updateAnchorAnimations(worldTime * 0.001);
+      }
       if (npcUpdateFrame % 5 === 0 && World.updateInteractiveHighlights && localPlayer) {
         World.updateInteractiveHighlights(localPlayer.position.x, localPlayer.position.z, 4);
       }
@@ -2679,7 +2718,7 @@
       }
 
       // Update minimap and emote bubbles
-      const players = State.getPlayers(gameState);
+      var players = State.getPlayers(gameState);
 
       // Update emote bubble positions (every 3 frames)
       if (npcUpdateFrame % 3 === 0 && HUD.updateEmoteBubbles && sceneContext && sceneContext.camera) {
@@ -2700,11 +2739,11 @@
 
       // Update minimap (every 5 frames)
       if (npcUpdateFrame % 5 === 0) {
-        const mapPlayers = players.map(p => ({
+        var mapPlayers = players.map(function(p) { return {
           id: p.id,
           position: p.position,
           isLocal: p.id === localPlayer.id
-        }));
+        }; });
         HUD.updateMinimap(mapPlayers, currentZone);
 
         // Update NPC dots on minimap
@@ -2716,14 +2755,14 @@
       // Update nearby players (throttled to every 10 frames)
       if (npcUpdateFrame % 10 === 0 || !cachedNearbyPlayers) {
         cachedNearbyPlayers = players
-          .filter(p => p.id !== localPlayer.id && p.zone === currentZone)
-          .map(p => {
-            const dx = p.position.x - localPlayer.position.x;
-            const dz = p.position.z - localPlayer.position.z;
-            const distance = Math.sqrt(dx * dx + dz * dz);
-            return { id: p.id, name: p.name, distance };
+          .filter(function(p) { return p.id !== localPlayer.id && p.zone === currentZone; })
+          .map(function(p) {
+            var dx = p.position.x - localPlayer.position.x;
+            var dz = p.position.z - localPlayer.position.z;
+            var distance = Math.sqrt(dx * dx + dz * dz);
+            return { id: p.id, name: p.name, distance: distance };
           })
-          .sort((a, b) => a.distance - b.distance);
+          .sort(function(a, b) { return a.distance - b.distance; });
       }
       HUD.updateNearbyPlayers(cachedNearbyPlayers);
 
@@ -2739,7 +2778,7 @@
 
       // Update chat (every 60 frames — with dirty tracking in hud.js)
       if (npcUpdateFrame % 60 === 0) {
-        const messages = Social ? Social.getRecentMessages(gameState) : [];
+        var messages = Social ? Social.getRecentMessages(gameState) : [];
         HUD.updateChat(messages);
       }
 
@@ -2798,12 +2837,17 @@
       }
     }
 
-    // Check for break reminder (every 30 minutes)
-    const minutesPlayed = (Date.now() - playStartTime) / 60000;
-    if (minutesPlayed > 30 && minutesPlayed - lastBreakReminder > 30) {
-      if (HUD) {
+    // Tiered break reminders via PlayerWellness (checks at 2h/3h/4h/5h)
+    var minutesPlayed = (Date.now() - playStartTime) / 60000;
+    if (PlayerWellness && PlayerWellness.checkBreakThreshold && wellnessState && localPlayer) {
+      var activeTicks = Math.floor(minutesPlayed * 60); // approximate ticks
+      var breakResult = PlayerWellness.checkBreakThreshold(wellnessState, localPlayer.id, activeTicks);
+      if (breakResult && breakResult.shouldNotify && HUD) {
         HUD.showBreakReminder(Math.floor(minutesPlayed));
       }
+    } else if (minutesPlayed > 30 && minutesPlayed - lastBreakReminder > 30) {
+      // Fallback: flat 30-min reminder if PlayerWellness unavailable
+      if (HUD) HUD.showBreakReminder(Math.floor(minutesPlayed));
       lastBreakReminder = minutesPlayed;
     }
 
@@ -2921,6 +2965,18 @@
     // ZoneStewards: expire terms and close elections (~every 60 seconds)
     if (ZoneStewards && zoneStewardsState && Math.random() < 0.0003) {
       if (ZoneStewards.expireTerms) ZoneStewards.expireTerms(zoneStewardsState, worldTime);
+      // Auto-close any open elections past their window
+      if (ZoneStewards.closeElection && ZoneStewards.isElectionOpen) {
+        var stewardZones = ZoneStewards.ZONES || ['nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'];
+        for (var zi = 0; zi < stewardZones.length; zi++) {
+          if (ZoneStewards.isElectionOpen(zoneStewardsState, stewardZones[zi])) {
+            var closeResult = ZoneStewards.closeElection(zoneStewardsState, stewardZones[zi], worldTime);
+            if (closeResult.success && closeResult.winner && HUD) {
+              HUD.showNotification(closeResult.winner + ' elected steward of ' + stewardZones[zi] + '!', 'success');
+            }
+          }
+        }
+      }
     }
 
     // WarmthSystem: decay warmth for inactive players (~every 30 seconds)
@@ -3042,7 +3098,7 @@
     var maxPerFrame = 50;
     var processed = 0;
     while (messageQueue.length > 0 && processed < maxPerFrame) {
-      const msg = messageQueue.shift();
+      var msg = messageQueue.shift();
       applyMessage(msg);
       processed++;
     }
@@ -3309,7 +3365,7 @@
     }
 
     // Show notification
-    var worldName = msg.worldName || msg.payload?.worldName || 'Unknown World';
+    var worldName = msg.worldName || (msg.payload && msg.payload.worldName) || 'Unknown World';
     if (HUD && HUD.showNotification) {
       HUD.showNotification('Federation established with ' + worldName, 'success');
     }
@@ -3456,7 +3512,7 @@
    * Handle join message
    */
   function handleJoinMessage(msg) {
-    const player = {
+    var player = {
       id: msg.from,
       name: msg.from,
       position: msg.payload.position || { x: 0, y: 0, z: 0 },
@@ -3499,7 +3555,7 @@
    * Handle move message
    */
   function handleMoveMessage(msg) {
-    const player = State.getPlayer(gameState, msg.from);
+    var player = State.getPlayer(gameState, msg.from);
     if (!player) return;
 
     player.position = msg.payload.position;
@@ -3543,7 +3599,7 @@
    * Handle warp message
    */
   function handleWarpMessage(msg) {
-    const player = State.getPlayer(gameState, msg.from);
+    var player = State.getPlayer(gameState, msg.from);
     if (!player) return;
 
     player.zone = msg.payload.zone;
@@ -3622,7 +3678,7 @@
     }
 
     if (Creation && World && sceneContext) {
-      const structure = msg.payload.structure;
+      var structure = msg.payload.structure;
       World.addStructure(sceneContext, structure);
     }
 
@@ -4602,8 +4658,15 @@
           return;
         }
 
-        // For now, create a simple election with the local player as a candidate
-        // In a full implementation, this would open a dialog to add candidates
+        // Register nomination in ZoneStewards system
+        if (ZoneStewards && ZoneStewards.nominateSelf && zoneStewardsState) {
+          var nomination = ZoneStewards.nominateSelf(zoneStewardsState, localPlayer.id, zoneId, worldTime);
+          if (!nomination.success) {
+            if (HUD) HUD.showNotification(nomination.reason || 'Cannot nominate right now', 'error');
+            return;
+          }
+        }
+
         var candidates = [localPlayer.id];
         var election = Zones.startElection(zoneId, candidates);
 
@@ -4630,6 +4693,11 @@
 
         var voteResult = Zones.castVote(electionId, localPlayer.id, candidateId);
         if (voteResult.success) {
+          // Also record in ZoneStewards system
+          if (ZoneStewards && ZoneStewards.castElectionVote && zoneStewardsState) {
+            ZoneStewards.castElectionVote(zoneStewardsState, localPlayer.id, currentZone, candidateId, worldTime);
+          }
+
           if (HUD) {
             HUD.showNotification('Vote cast for ' + candidateId, 'success');
             HUD.hideGovernancePanel();
@@ -4896,7 +4964,7 @@
    * Handle local action (created by this client)
    */
   function handleLocalAction(type, payload) {
-    let msg = null;
+    var msg = null;
 
     switch (type) {
       case 'move':
@@ -5076,6 +5144,14 @@
 
       case 'togglePhotoMode':
         togglePhotoMode();
+        break;
+
+      case 'toggleFPS':
+        showDebug = !showDebug;
+        var fpsEl = typeof document !== 'undefined' ? document.getElementById('fps-counter') : null;
+        if (fpsEl && !showDebug) fpsEl.style.display = 'none';
+        if (fpsEl && showDebug) fpsEl.style.display = 'block';
+        if (HUD && HUD.showNotification) HUD.showNotification('FPS display ' + (showDebug ? 'ON' : 'OFF'), 'info');
         break;
 
       case 'toggleSettings':
@@ -5706,7 +5782,7 @@
   function joinWorld() {
     if (!Protocol || !Network) return;
 
-    const msg = Protocol.create.join(localPlayer.id, {
+    var msg = Protocol.create.join(localPlayer.id, {
       position: localPlayer.position,
       zone: currentZone
     });
@@ -5723,7 +5799,7 @@
   function leaveWorld() {
     if (!Protocol || !Network || !localPlayer) return;
 
-    const msg = Protocol.create.leave(localPlayer.id);
+    var msg = Protocol.create.leave(localPlayer.id);
 
     // Broadcast leave message
     Network.broadcastMessage(msg);
@@ -5747,7 +5823,7 @@
     window.addEventListener('DOMContentLoaded', init);
 
     // Handle page unload — save and leave, register player star
-    window.addEventListener('beforeunload', () => {
+    window.addEventListener('beforeunload', function() {
       // Register player's constellation star before leaving
       if (World && World.registerPlayerStar && localPlayer) {
         World.registerPlayerStar(localPlayer.id, localPlayer.name || localPlayer.id);
@@ -5925,6 +6001,13 @@
       cosmetics: cosmeticsState
     };
     Auth.savePlayerData(saveData);
+    // Also persist to localStorage directly as backup
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('zion_player_state', JSON.stringify(saveData));
+        localStorage.setItem('zion_player_state_ts', new Date().toISOString());
+      } catch (e) { /* localStorage full or unavailable */ }
+    }
     // Flush player into live state for canonical visibility
     if (State) {
       State.addPlayer(gameState, localPlayer);
@@ -5936,8 +6019,15 @@
    * Restore player state from saved data
    */
   function restorePlayerData() {
-    if (!Auth || !Auth.loadPlayerData || !localPlayer) return false;
-    var data = Auth.loadPlayerData();
+    if (!localPlayer) return false;
+    var data = (Auth && Auth.loadPlayerData) ? Auth.loadPlayerData() : null;
+    // Fallback: try localStorage direct backup
+    if (!data && typeof localStorage !== 'undefined') {
+      try {
+        var raw = localStorage.getItem('zion_player_state');
+        if (raw) data = JSON.parse(raw);
+      } catch (e) { /* ignore parse errors */ }
+    }
     if (!data) return false;
 
     // Restore position
