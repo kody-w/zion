@@ -861,4 +861,15 @@
   exports.deriveWorldId = deriveWorldId;
   exports.getFederatedPeerId = getFederatedPeerId;
 
+  // Test internals — only used by stress tests
+  exports._test = {
+    generateMessageId: generateMessageId,
+    simpleHash: simpleHash,
+    getSeenMessages: function() { return seenMessages; },
+    getSeenMessagesCount: function() { return seenMessagesCount; },
+    resetSeenMessages: function() { seenMessages = {}; seenMessagesCount = 0; },
+    MAX_SEEN_MESSAGES: MAX_SEEN_MESSAGES,
+    SEEN_MESSAGE_TTL: SEEN_MESSAGE_TTL
+  };
+
 })(typeof module !== 'undefined' ? module.exports : (window.Network = {}));

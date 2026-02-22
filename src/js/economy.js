@@ -762,6 +762,74 @@
     return baseAmount;
   }
 
+  // =========================================================================
+  // ECONOMY ACHIEVEMENTS
+  // =========================================================================
+
+  var ECONOMY_ACHIEVEMENTS = [
+    { id: 'first_trade', name: 'First Trade', description: 'Complete your first trade', threshold: 1, eventType: 'trade', reward: 10 },
+    { id: 'market_regular', name: 'Market Regular', description: 'Complete 10 transactions', threshold: 10, eventType: 'transaction', reward: 50 },
+    { id: 'trade_route_pioneer', name: 'Trade Route Pioneer', description: 'Make a profit on a cross-zone trade', threshold: 1, eventType: 'cross_zone_profit', reward: 100 },
+    { id: 'master_crafter_seller', name: 'Master Crafter Seller', description: 'Sell a masterwork quality item', threshold: 1, eventType: 'sell_masterwork', reward: 200 },
+    { id: 'spark_millionaire', name: 'Spark Millionaire', description: 'Accumulate 1000 spark', threshold: 1000, eventType: 'balance_check', reward: 50 }
+  ];
+
+  function checkEconomyAchievement(ledger, playerId, eventType, details) {
+    if (!ledger || !playerId) return null;
+
+    for (var i = 0; i < ECONOMY_ACHIEVEMENTS.length; i++) {
+      var achievement = ECONOMY_ACHIEVEMENTS[i];
+      if (achievement.eventType !== eventType) continue;
+
+      // Check if already earned
+      if (ledger._achievements && ledger._achievements[playerId] &&
+          ledger._achievements[playerId][achievement.id]) {
+        continue;
+      }
+
+      var earned = false;
+
+      switch (eventType) {
+        case 'trade':
+          var tradeCount = (details && details.tradeCount) || 0;
+          if (tradeCount >= achievement.threshold) earned = true;
+          break;
+        case 'transaction':
+          var txCount = (details && details.transactionCount) || 0;
+          if (txCount >= achievement.threshold) earned = true;
+          break;
+        case 'cross_zone_profit':
+          var profit = (details && details.profit) || 0;
+          if (profit > 0) earned = true;
+          break;
+        case 'sell_masterwork':
+          var quality = (details && details.quality) || '';
+          if (quality === 'masterwork' || quality === 'legendary') earned = true;
+          break;
+        case 'balance_check':
+          var balance = (details && details.balance) || 0;
+          if (balance >= achievement.threshold) earned = true;
+          break;
+      }
+
+      if (earned) {
+        // Record achievement
+        if (!ledger._achievements) ledger._achievements = {};
+        if (!ledger._achievements[playerId]) ledger._achievements[playerId] = {};
+        ledger._achievements[playerId][achievement.id] = Date.now();
+
+        return {
+          id: achievement.id,
+          name: achievement.name,
+          description: achievement.description,
+          reward: achievement.reward
+        };
+      }
+    }
+
+    return null;
+  }
+
   // Export public API
   exports.createLedger = createLedger;
   exports.earnSpark = earnSpark;
@@ -805,5 +873,8 @@
   exports.addSpark = earnSpark;
   exports.transfer = transferSpark;
   exports.earn = earnSpark;
+
+  exports.ECONOMY_ACHIEVEMENTS = ECONOMY_ACHIEVEMENTS;
+  exports.checkEconomyAchievement = checkEconomyAchievement;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Economy = {}));

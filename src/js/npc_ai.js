@@ -2849,6 +2849,244 @@
   }
 
   // ============================================================================
+  // NPC-TO-NPC SOCIAL EVENTS
+  // ============================================================================
+
+  var NPC_SOCIAL_EVENTS = {
+    trade_goods: {
+      archetypes: ['merchant', 'gardener', 'explorer', 'healer'],
+      chance: 0.15,
+      cooldown: 300000,  // 5 minutes
+      duration: 30000,   // 30 seconds
+      outcomes: [
+        '{a} and {b} exchange rare herbs for crafting supplies.',
+        '{a} barters fresh produce with {b} for travel provisions.',
+        '{b} trades healing salves to {a} for exotic seeds.'
+      ]
+    },
+    teach_skill: {
+      archetypes: ['teacher', 'builder', 'musician', 'healer', 'gardener'],
+      chance: 0.10,
+      cooldown: 600000,  // 10 minutes
+      duration: 45000,   // 45 seconds
+      outcomes: [
+        '{a} shows {b} a new technique for working with materials.',
+        '{b} learns a melody from {a} that soothes the spirit.',
+        '{a} and {b} practice building techniques together.'
+      ]
+    },
+    perform_together: {
+      archetypes: ['musician', 'storyteller', 'artist'],
+      chance: 0.20,
+      cooldown: 300000,
+      duration: 60000,
+      outcomes: [
+        '{a} and {b} perform a duet that draws a small crowd.',
+        '{b} illustrates while {a} narrates an ancient tale.',
+        '{a} and {b} collaborate on an impromptu art piece.'
+      ]
+    },
+    philosophical_debate: {
+      archetypes: ['philosopher', 'teacher', 'storyteller'],
+      chance: 0.12,
+      cooldown: 600000,
+      duration: 45000,
+      outcomes: [
+        '{a} and {b} debate the nature of consciousness in Zion.',
+        '{b} challenges {a} with a paradox about creation and destruction.',
+        '{a} and {b} reach a surprising consensus on the meaning of community.'
+      ]
+    },
+    healing_circle: {
+      archetypes: ['healer', 'musician', 'philosopher'],
+      chance: 0.08,
+      cooldown: 900000,  // 15 minutes
+      duration: 60000,
+      outcomes: [
+        '{a} and {b} create a healing circle with gentle music and meditation.',
+        '{b} guides {a} through a restorative breathing exercise.',
+        '{a} and {b} combine philosophy and healing into a calming ritual.'
+      ]
+    }
+  };
+
+  function checkSocialEvents(npc, memory, perception, worldState) {
+    if (!npc || !perception || !perception.nearbyNPCs || perception.nearbyNPCs.length === 0) {
+      return null;
+    }
+
+    var now = worldState && worldState.time ? worldState.time : Date.now();
+    var npcArchetype = npc.archetype || 'explorer';
+
+    for (var eventType in NPC_SOCIAL_EVENTS) {
+      var event = NPC_SOCIAL_EVENTS[eventType];
+
+      // Check if this NPC's archetype can participate
+      if (event.archetypes.indexOf(npcArchetype) === -1) continue;
+
+      // Check cooldown
+      if (memory && memory.lastSocialEvent && memory.lastSocialEvent[eventType]) {
+        if (now - memory.lastSocialEvent[eventType] < event.cooldown) continue;
+      }
+
+      // Find a compatible partner among nearby NPCs
+      for (var i = 0; i < perception.nearbyNPCs.length; i++) {
+        var partner = perception.nearbyNPCs[i];
+        var partnerArchetype = partner.archetype || 'explorer';
+
+        if (event.archetypes.indexOf(partnerArchetype) === -1) continue;
+
+        // Roll for chance
+        var roll = Math.random();
+        if (roll > event.chance) continue;
+
+        // Pick a random outcome
+        var outcomeTemplate = event.outcomes[Math.floor(Math.random() * event.outcomes.length)];
+        var npcName = npc.name || 'Unknown';
+        var partnerName = partner.name || 'Unknown';
+        var outcome = outcomeTemplate.replace(/\{a\}/g, npcName).replace(/\{b\}/g, partnerName);
+
+        return {
+          type: eventType,
+          partner: partner,
+          description: eventType.replace(/_/g, ' '),
+          outcome: outcome,
+          duration: event.duration
+        };
+      }
+    }
+
+    return null;
+  }
+
+  // ============================================================================
+  // SEASONAL BEHAVIOR MODIFIERS
+  // ============================================================================
+
+  var SEASONAL_MODIFIERS = {
+    spring: {
+      energy_bonus: 0.15,
+      social_bonus: 0.10,
+      work_bonus: 0.05,
+      special_activities: {
+        gardener: 'plant_festival',
+        builder: 'spring_construction',
+        musician: 'spring_concert',
+        artist: 'plein_air_painting',
+        healer: 'herb_gathering_expedition'
+      },
+      dialogue_additions: {
+        gardener: 'The spring rains have been wonderful for the gardens!',
+        builder: 'Perfect weather for laying foundations.',
+        musician: 'I have composed a new spring melody!',
+        storyteller: 'Spring reminds me of the tale of renewal...',
+        philosopher: 'Spring teaches us that change is the only constant.',
+        merchant: 'Spring brings fresh goods to trade!',
+        explorer: 'New paths open up as the snow melts.',
+        teacher: 'A new season of learning begins!',
+        healer: 'Fresh herbs are sprouting everywhere!',
+        artist: 'The colors of spring are truly inspiring.'
+      }
+    },
+    summer: {
+      energy_bonus: 0.10,
+      social_bonus: 0.20,
+      work_bonus: -0.05,
+      special_activities: {
+        musician: 'summer_festival_performance',
+        storyteller: 'campfire_stories',
+        artist: 'mural_painting',
+        explorer: 'deep_wilderness_expedition',
+        merchant: 'summer_market_fair'
+      },
+      dialogue_additions: {
+        gardener: 'The harvest will be bountiful this year!',
+        builder: 'It is a bit warm for heavy lifting, but progress continues.',
+        musician: 'Summer nights are perfect for performances!',
+        storyteller: 'Gather round the fire for a summer tale...',
+        philosopher: 'In the heat, one finds clarity through stillness.',
+        merchant: 'The summer fair brings travelers from afar!',
+        explorer: 'The long days mean more time for exploration.',
+        teacher: 'Summer is for hands-on learning!',
+        healer: 'Stay hydrated, friend. The sun is strong.',
+        artist: 'The long summer light is perfect for painting.'
+      }
+    },
+    autumn: {
+      energy_bonus: 0.05,
+      social_bonus: 0.05,
+      work_bonus: 0.15,
+      special_activities: {
+        gardener: 'harvest_festival',
+        merchant: 'autumn_auction',
+        storyteller: 'harvest_tales',
+        philosopher: 'autumn_symposium',
+        healer: 'medicine_preparation'
+      },
+      dialogue_additions: {
+        gardener: 'The harvest keeps me busy, but it is rewarding work.',
+        builder: 'We must finish before winter sets in.',
+        musician: 'Autumn melodies carry a bittersweet beauty.',
+        storyteller: 'Autumn is the season of endings and beginnings.',
+        philosopher: 'As leaves fall, we shed what no longer serves us.',
+        merchant: 'Stock up before winter! Best prices of the season.',
+        explorer: 'The autumn colors make every trail breathtaking.',
+        teacher: 'Let us reflect on what we have learned this year.',
+        healer: 'I am preparing medicines for the cold months ahead.',
+        artist: 'The golden light of autumn is unmatched.'
+      }
+    },
+    winter: {
+      energy_bonus: -0.10,
+      social_bonus: 0.15,
+      work_bonus: -0.10,
+      special_activities: {
+        storyteller: 'winter_tale_festival',
+        philosopher: 'winter_meditation',
+        teacher: 'winter_academy',
+        healer: 'community_wellness_check',
+        musician: 'hearthside_concert'
+      },
+      dialogue_additions: {
+        gardener: 'Even in winter, I plan for the spring garden.',
+        builder: 'Indoor projects keep me busy through the cold.',
+        musician: 'There is warmth in music, even on the coldest nights.',
+        storyteller: 'Winter nights are made for long stories by the fire.',
+        philosopher: 'Winter teaches patience and inner strength.',
+        merchant: 'Warm goods are in high demand! Come see my wares.',
+        explorer: 'The frozen landscape reveals hidden paths.',
+        teacher: 'Winter is ideal for deep study and reflection.',
+        healer: 'Stay warm and well, friend. I have tonics if you need.',
+        artist: 'The stark beauty of winter inspires minimalism.'
+      }
+    }
+  };
+
+  function applySeasonalModifiers(baseStats, season) {
+    var mods = SEASONAL_MODIFIERS[season];
+    if (!mods) return baseStats;
+
+    var result = {};
+    for (var key in baseStats) {
+      if (baseStats.hasOwnProperty(key)) {
+        result[key] = baseStats[key];
+      }
+    }
+
+    if (typeof result.energy === 'number') {
+      result.energy = result.energy * (1 + mods.energy_bonus);
+    }
+    if (typeof result.social === 'number') {
+      result.social = result.social * (1 + mods.social_bonus);
+    }
+    if (typeof result.work === 'number') {
+      result.work = result.work * (1 + mods.work_bonus);
+    }
+
+    return result;
+  }
+
+  // ============================================================================
   // EXPORTS
   // ============================================================================
 
@@ -2885,5 +3123,9 @@
   exports.getDailySchedule = getDailySchedule;
   exports.getNPCReaction = getNPCReaction;
   exports.generateNPCInteraction = generateNPCInteraction;
+  exports.NPC_SOCIAL_EVENTS = NPC_SOCIAL_EVENTS;
+  exports.checkSocialEvents = checkSocialEvents;
+  exports.SEASONAL_MODIFIERS = SEASONAL_MODIFIERS;
+  exports.applySeasonalModifiers = applySeasonalModifiers;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NpcAI = {}));

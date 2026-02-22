@@ -57,12 +57,11 @@ suite('Quest Database & Initialization', function() {
   test('Quest database contains 25 quests covering 8 zones', function() {
     var p = uid();
     var available = Quests.getAvailableQuests(p, { level: 99 });
-    // All 25 quests in the DB have no level requirement and either no prereqs or
-    // prereqs that haven't been met yet — count at least the ones with no prereqs.
-    // We know there are 25 total; many need prerequisites, so available < 25 for a fresh player.
-    // The right check: total in DB >= 20 (we can verify via getPlayerQuestStats).
+    // DB now has 35 quests (original 25 + 10 new Phase 4 quests).
+    // Many need prerequisites, so available < 35 for a fresh player.
+    // The right check: total in DB >= 35 (we can verify via getPlayerQuestStats).
     var stats = Quests.getPlayerQuestStats(p);
-    assert(stats.totalAvailable === 25, 'Quest database should contain exactly 25 quests');
+    assert(stats.totalAvailable === 35, 'Quest database should contain exactly 35 quests');
   });
 
   test('Quest database includes quests from 8 different zones', function() {
@@ -1021,10 +1020,10 @@ suite('getPlayerQuestStats', function() {
     assert(Array.isArray(stats.titles), 'Should have titles array');
   });
 
-  test('getPlayerQuestStats totalAvailable equals 25 (database size)', function() {
+  test('getPlayerQuestStats totalAvailable equals 35 (database size)', function() {
     var p = uid();
     var stats = Quests.getPlayerQuestStats(p);
-    assert(stats.totalAvailable === 25, 'totalAvailable should be 25');
+    assert(stats.totalAvailable === 35, 'totalAvailable should be 35');
   });
 
   test('getPlayerQuestStats activeQuests increments as quests accepted', function() {

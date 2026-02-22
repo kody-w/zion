@@ -602,6 +602,90 @@
   }
 
   // ---------------------------------------------------------------------------
+  // ZONE PRICE MODIFIERS — regional pricing differences
+  // ---------------------------------------------------------------------------
+
+  var ZONE_PRICE_MODIFIERS = {
+    gardens:    { materials: 0.8, food: 0.7, tools: 1.1, potions: 0.9, rare: 1.0 },
+    wilds:      { materials: 0.7, food: 1.2, tools: 0.9, potions: 1.1, rare: 0.8 },
+    agora:      { materials: 1.0, food: 1.0, tools: 1.0, potions: 1.0, rare: 1.0 },
+    athenaeum:  { materials: 1.2, food: 1.1, tools: 1.2, potions: 0.8, rare: 0.9 },
+    studio:     { materials: 0.9, food: 1.1, tools: 0.8, potions: 1.0, rare: 1.2 },
+    nexus:      { materials: 1.0, food: 1.0, tools: 1.0, potions: 1.0, rare: 1.0 },
+    commons:    { materials: 0.9, food: 0.9, tools: 0.9, potions: 1.0, rare: 1.1 },
+    arena:      { materials: 1.1, food: 1.0, tools: 1.1, potions: 0.7, rare: 1.0 }
+  };
+
+  // ---------------------------------------------------------------------------
+  // getCraftedItemPrice(state, recipe)
+  // ---------------------------------------------------------------------------
+
+  function getCraftedItemPrice(state, recipe) {
+    if (!recipe || !recipe.materials) return 0;
+    var total = 0;
+    for (var i = 0; i < recipe.materials.length; i++) {
+      var mat = recipe.materials[i];
+      var matId = mat.id || mat;
+      var qty = mat.quantity || 1;
+      var price = getPrice(state, matId);
+      if (price === null) price = 5; // fallback for unknown materials
+      total += price * qty;
+    }
+    // Apply 1.5x craft premium
+    return Math.ceil(total * 1.5);
+  }
+
+  // ---------------------------------------------------------------------------
+  // getZonePrice(state, itemId, zone)
+  // ---------------------------------------------------------------------------
+
+  function getZonePrice(state, itemId, zone) {
+    var basePrice = getPrice(state, itemId);
+    if (basePrice === null) return null;
+
+    var zoneMods = ZONE_PRICE_MODIFIERS[zone];
+    if (!zoneMods) return basePrice;
+
+    // Determine item category
+    var itemDef = getItemDef(itemId);
+    var category = itemDef ? itemDef.category : null;
+
+    // Map some categories that don't have direct modifiers
+    var modCategory = category;
+    if (category === 'weapons' || category === 'armor') modCategory = 'tools';
+    if (category === 'decorations') modCategory = 'rare';
+
+    var modifier = zoneMods[modCategory];
+    if (modifier === undefined) modifier = 1.0;
+
+    return Math.round(basePrice * modifier);
+  }
+
+  // ---------------------------------------------------------------------------
+  // getTradeRouteProfit(state, itemId, buyZone, sellZone, quantity)
+  // ---------------------------------------------------------------------------
+
+  function getTradeRouteProfit(state, itemId, buyZone, sellZone, quantity) {
+    var qty = quantity || 1;
+    var buyPrice = getZonePrice(state, itemId, buyZone);
+    var sellPrice = getZonePrice(state, itemId, sellZone);
+
+    if (buyPrice === null || sellPrice === null) return { profit: 0, buyTotal: 0, sellTotal: 0 };
+
+    // Apply buy fee and sell discount
+    var buyTotal = Math.ceil(buyPrice * qty * (1 + BUY_FEE_RATE));
+    var sellTotal = Math.floor(sellPrice * qty * SELL_RATE);
+
+    return {
+      profit: sellTotal - buyTotal,
+      buyTotal: buyTotal,
+      sellTotal: sellTotal,
+      buyPriceEach: buyPrice,
+      sellPriceEach: sellPrice
+    };
+  }
+
+  // ---------------------------------------------------------------------------
   // Exports
   // ---------------------------------------------------------------------------
 
@@ -631,5 +715,9 @@
   exports.applyEventEffect   = applyEventEffect;
   exports.getSupplyDemand    = getSupplyDemand;
   exports.predictPrice       = predictPrice;
+  exports.ZONE_PRICE_MODIFIERS  = ZONE_PRICE_MODIFIERS;
+  exports.getCraftedItemPrice   = getCraftedItemPrice;
+  exports.getZonePrice          = getZonePrice;
+  exports.getTradeRouteProfit   = getTradeRouteProfit;
 
 })(typeof module !== 'undefined' ? module.exports : (window.MarketDynamics = {}));

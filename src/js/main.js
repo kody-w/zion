@@ -1546,6 +1546,9 @@
     if (typeof document !== 'undefined' && World) {
       var container = document.getElementById('game-container') || document.body;
       sceneContext = World.initScene(container);
+        if (World.setPerformanceSceneContext) {
+          World.setPerformanceSceneContext(sceneContext);
+        }
 
       if (sceneContext) {
         // Load initial zone - positions player at nexus center

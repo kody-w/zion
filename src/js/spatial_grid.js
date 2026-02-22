@@ -127,4 +127,92 @@
   exports.queryRadius = queryRadius;
   exports.clear = clear;
 
+  // =========================================================================
+  // ADAPTIVE SPATIAL GRID — brute-force below threshold, hash grid above
+  // =========================================================================
+
+  var ADAPTIVE_THRESHOLD = 200;
+
+  function createAdaptiveGrid(cellSize) {
+    return {
+      grid: createGrid(cellSize),
+      entities: {},  // id -> {id, x, z}
+      count: 0,
+      threshold: ADAPTIVE_THRESHOLD,
+      gridPopulated: false
+    };
+  }
+
+  function adaptiveInsert(ag, id, x, z) {
+    ag.entities[id] = { id: id, x: x, z: z };
+    ag.count++;
+
+    if (ag.count >= ag.threshold) {
+      if (!ag.gridPopulated) {
+        // Bulk-insert all entities into the hash grid
+        var ids = Object.keys(ag.entities);
+        for (var i = 0; i < ids.length; i++) {
+          var e = ag.entities[ids[i]];
+          insert(ag.grid, e.id, e.x, e.z);
+        }
+        ag.gridPopulated = true;
+      } else {
+        insert(ag.grid, id, x, z);
+      }
+    }
+  }
+
+  function adaptiveRemove(ag, id) {
+    if (ag.entities[id]) {
+      delete ag.entities[id];
+      ag.count--;
+    }
+    if (ag.gridPopulated) {
+      remove(ag.grid, id);
+    }
+  }
+
+  function adaptiveUpdate(ag, id, x, z) {
+    ag.entities[id] = { id: id, x: x, z: z };
+    if (ag.gridPopulated) {
+      update(ag.grid, id, x, z);
+    }
+  }
+
+  function adaptiveQueryRadius(ag, x, z, r) {
+    if (ag.gridPopulated) {
+      return queryRadius(ag.grid, x, z, r);
+    }
+
+    // Brute-force path for small entity counts
+    var results = [];
+    var r2 = r * r;
+    var ids = Object.keys(ag.entities);
+    for (var i = 0; i < ids.length; i++) {
+      var e = ag.entities[ids[i]];
+      var dx = e.x - x;
+      var dz = e.z - z;
+      var d2 = dx * dx + dz * dz;
+      if (d2 <= r2) {
+        results.push({ id: e.id, x: e.x, z: e.z, dist: Math.sqrt(d2) });
+      }
+    }
+    return results;
+  }
+
+  function adaptiveClear(ag) {
+    ag.entities = {};
+    ag.count = 0;
+    ag.gridPopulated = false;
+    clear(ag.grid);
+  }
+
+  exports.ADAPTIVE_THRESHOLD = ADAPTIVE_THRESHOLD;
+  exports.createAdaptiveGrid = createAdaptiveGrid;
+  exports.adaptiveInsert = adaptiveInsert;
+  exports.adaptiveRemove = adaptiveRemove;
+  exports.adaptiveUpdate = adaptiveUpdate;
+  exports.adaptiveQueryRadius = adaptiveQueryRadius;
+  exports.adaptiveClear = adaptiveClear;
+
 })(typeof module !== 'undefined' ? module.exports : (window.SpatialGrid = {}));

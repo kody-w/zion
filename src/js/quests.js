@@ -564,6 +564,237 @@
         complete: "Incredible! You've achieved perfection. This medal marks your mastery."
       },
       status: 'available'
+    },
+
+    quest_agora_004: {
+      id: 'quest_agora_004',
+      title: 'Trade Route Pioneer',
+      description: 'Establish a profitable trade route between the Gardens and the Agora by buying low and selling high.',
+      giverNpcId: 'npc_merchant_01',
+      type: 'deliver',
+      objectives: [
+        { id: 'buy_gardens', description: 'Purchase goods in the Gardens', type: 'buy', target: 'gardens', count: 3, progress: 0 },
+        { id: 'sell_agora', description: 'Sell goods in the Agora for profit', type: 'sell', target: 'agora', count: 3, progress: 0 }
+      ],
+      rewards: { spark: 80, xp: 120, items: ['enchanted_map'] },
+      requiredLevel: 3,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: null,
+      dialogue: {
+        start: 'Trade is the lifeblood of Zion! Buy goods where they are cheap and sell where demand is high.',
+        progress: 'How are your trades going? The Gardens and Agora complement each other perfectly.',
+        complete: 'A natural trader! You have proven the value of connecting our communities.'
+      },
+      status: 'available'
+    },
+    quest_nexus_003: {
+      id: 'quest_nexus_003',
+      title: 'The Mediator',
+      description: 'Two NPCs in the Nexus have a disagreement. Help mediate and find common ground.',
+      giverNpcId: 'npc_philosopher_01',
+      type: 'social',
+      objectives: [
+        { id: 'talk_npc_a', description: 'Speak with the first NPC about the dispute', type: 'talk', target: 'npc_builder_02', count: 1, progress: 0 },
+        { id: 'talk_npc_b', description: 'Speak with the second NPC about the dispute', type: 'talk', target: 'npc_gardener_03', count: 1, progress: 0 },
+        { id: 'mediate', description: 'Propose a solution to both parties', type: 'talk', target: 'npc_philosopher_01', count: 1, progress: 0 }
+      ],
+      rewards: { spark: 60, xp: 100, items: [] },
+      requiredLevel: 2,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: null,
+      dialogue: {
+        start: 'There is tension between two of our friends. Perhaps a fresh perspective could help them see eye to eye.',
+        progress: 'Have you spoken with both parties? Understanding each side is key to resolution.',
+        complete: 'Peace has been restored. You have a gift for bringing people together.'
+      },
+      status: 'available'
+    },
+    quest_gardens_006: {
+      id: 'quest_gardens_006',
+      title: 'Seasonal Harvest',
+      description: 'Collect three rare seasonal plants that only bloom during this time of year in the Gardens.',
+      giverNpcId: 'npc_gardener_01',
+      type: 'gather',
+      objectives: [
+        { id: 'gather_moonbloom', description: 'Find a Moonbloom flower', type: 'gather', target: 'moonbloom', count: 1, progress: 0 },
+        { id: 'gather_sunroot', description: 'Dig up a Sunroot herb', type: 'gather', target: 'sunroot', count: 1, progress: 0 },
+        { id: 'gather_windleaf', description: 'Collect Windleaf greens', type: 'gather', target: 'windleaf', count: 1, progress: 0 }
+      ],
+      rewards: { spark: 50, xp: 80, items: ['herb_bundle'] },
+      requiredLevel: 1,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: null,
+      dialogue: {
+        start: 'The seasonal plants are blooming! Each one has unique properties. Can you gather them for me?',
+        progress: 'Keep searching among the garden beds. These plants hide in unexpected places.',
+        complete: 'Wonderful! These seasonal herbs will help the whole community.'
+      },
+      status: 'available'
+    },
+    quest_wilds_005: {
+      id: 'quest_wilds_005',
+      title: "Lost Explorer's Cache",
+      description: 'An explorer left behind a hidden cache somewhere in the Wilds. Gather clues from three NPCs who saw the explorer pass by.',
+      giverNpcId: 'npc_explorer_01',
+      type: 'explore',
+      objectives: [
+        { id: 'clue_1', description: 'Ask the storyteller about the lost explorer', type: 'talk', target: 'npc_storyteller_02', count: 1, progress: 0 },
+        { id: 'clue_2', description: 'Ask the healer about unusual tracks', type: 'talk', target: 'npc_healer_01', count: 1, progress: 0 },
+        { id: 'clue_3', description: 'Ask the musician about strange sounds', type: 'talk', target: 'npc_musician_02', count: 1, progress: 0 },
+        { id: 'find_cache', description: 'Locate the hidden cache', type: 'explore', target: 'wilds', count: 1, progress: 0 }
+      ],
+      rewards: { spark: 100, xp: 150, items: ['ancient_coin'] },
+      requiredLevel: 4,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: null,
+      dialogue: {
+        start: 'A fellow explorer vanished months ago but left clues about a hidden cache. Talk to those who saw them last.',
+        progress: 'Each NPC remembers a different detail. Piece the clues together to find the cache.',
+        complete: 'You found it! The cache contains treasures from many adventures. Well done, explorer.'
+      },
+      status: 'available'
+    },
+    quest_athenaeum_004: {
+      id: 'quest_athenaeum_004',
+      title: 'Cross-Reference',
+      description: 'The Athenaeum scholars need three types of knowledge artifacts: a story, a diagram, and a formula.',
+      giverNpcId: 'npc_teacher_01',
+      type: 'gather',
+      objectives: [
+        { id: 'collect_story', description: 'Collect a written story from a storyteller', type: 'gather', target: 'written_story', count: 1, progress: 0 },
+        { id: 'collect_diagram', description: 'Obtain an architectural diagram from a builder', type: 'gather', target: 'arch_diagram', count: 1, progress: 0 },
+        { id: 'collect_formula', description: 'Get an alchemical formula from a healer', type: 'gather', target: 'alch_formula', count: 1, progress: 0 }
+      ],
+      rewards: { spark: 70, xp: 110, items: ['clarity_elixir'] },
+      requiredLevel: 3,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: null,
+      dialogue: {
+        start: 'Knowledge comes in many forms. We need a story, a diagram, and a formula to complete our cross-reference archive.',
+        progress: 'Have you gathered all three artifacts? Each represents a different way of understanding the world.',
+        complete: 'Magnificent! With these three perspectives combined, our understanding deepens.'
+      },
+      status: 'available'
+    },
+    quest_commons_004: {
+      id: 'quest_commons_004',
+      title: 'Community Feast',
+      description: 'The Commons is hosting a feast! Gather ingredients and deliver them to the cook.',
+      giverNpcId: 'npc_gardener_02',
+      type: 'deliver',
+      objectives: [
+        { id: 'gather_bread', description: 'Obtain bread loaves', type: 'gather', target: 'bread_loaf', count: 3, progress: 0 },
+        { id: 'gather_fish', description: 'Obtain grilled fish', type: 'gather', target: 'grilled_fish', count: 2, progress: 0 },
+        { id: 'deliver_food', description: 'Deliver food to the feast coordinator', type: 'deliver', target: 'npc_gardener_02', count: 1, progress: 0 }
+      ],
+      rewards: { spark: 55, xp: 90, items: ['honey_jar'] },
+      requiredLevel: 2,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: null,
+      dialogue: {
+        start: 'We are preparing a community feast! Can you help gather the ingredients?',
+        progress: 'We still need more food for the feast. Keep gathering!',
+        complete: 'The feast is a success thanks to you! Everyone is eating well tonight.'
+      },
+      status: 'available'
+    },
+    quest_arena_004: {
+      id: 'quest_arena_004',
+      title: "Champion's Challenge",
+      description: 'Prove your worth by winning three different competitions in the Arena.',
+      giverNpcId: 'npc_builder_01',
+      type: 'social',
+      objectives: [
+        { id: 'win_race', description: 'Win a footrace', type: 'compete', target: 'arena', count: 1, progress: 0 },
+        { id: 'win_crafting', description: 'Win a crafting contest', type: 'compete', target: 'arena', count: 1, progress: 0 },
+        { id: 'win_trivia', description: 'Win a trivia challenge', type: 'compete', target: 'arena', count: 1, progress: 0 }
+      ],
+      rewards: { spark: 120, xp: 180, items: ['iron_shield'] },
+      requiredLevel: 5,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: null,
+      dialogue: {
+        start: 'Think you have what it takes to be champion? Win three different competitions to prove it!',
+        progress: 'You have more competitions to win. Keep at it!',
+        complete: 'A true champion of the Arena! Your name will be remembered.'
+      },
+      status: 'available'
+    },
+    quest_studio_004: {
+      id: 'quest_studio_004',
+      title: 'Masterwork Commission',
+      description: 'A patron has commissioned three Fine-quality or better crafted items from the Studio.',
+      giverNpcId: 'npc_artist_01',
+      type: 'craft',
+      objectives: [
+        { id: 'craft_item_1', description: 'Craft a Fine+ quality item', type: 'craft', target: 'fine_quality', count: 1, progress: 0 },
+        { id: 'craft_item_2', description: 'Craft a second Fine+ quality item', type: 'craft', target: 'fine_quality', count: 1, progress: 0 },
+        { id: 'craft_item_3', description: 'Craft a third Fine+ quality item', type: 'craft', target: 'fine_quality', count: 1, progress: 0 }
+      ],
+      rewards: { spark: 150, xp: 200, items: ['star_crystal'] },
+      requiredLevel: 5,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: null,
+      dialogue: {
+        start: 'A wealthy patron seeks three masterfully crafted items. Only Fine quality or better will do!',
+        progress: 'Quality takes time. Keep refining your craft.',
+        complete: 'Exquisite work! The patron is delighted with your craftsmanship.'
+      },
+      status: 'available'
+    },
+    quest_agora_005: {
+      id: 'quest_agora_005',
+      title: 'Market Analyst',
+      description: 'Survey market prices across three different zones to help merchants plan trade routes.',
+      giverNpcId: 'npc_merchant_02',
+      type: 'explore',
+      objectives: [
+        { id: 'check_gardens', description: 'Check prices in the Gardens', type: 'visit', target: 'gardens', count: 1, progress: 0 },
+        { id: 'check_wilds', description: 'Check prices in the Wilds', type: 'visit', target: 'wilds', count: 1, progress: 0 },
+        { id: 'check_athenaeum', description: 'Check prices in the Athenaeum', type: 'visit', target: 'athenaeum', count: 1, progress: 0 }
+      ],
+      rewards: { spark: 65, xp: 100, items: [] },
+      requiredLevel: 2,
+      prerequisiteQuests: [],
+      repeatable: true,
+      timeLimit: null,
+      dialogue: {
+        start: 'Knowledge is profit! Survey the prices in Gardens, Wilds, and Athenaeum for me.',
+        progress: 'Have you checked all three zones? Each market has its own pricing.',
+        complete: 'Excellent data! This will help all our merchants plan better routes.'
+      },
+      status: 'available'
+    },
+    quest_nexus_004: {
+      id: 'quest_nexus_004',
+      title: 'Cultural Bridge',
+      description: 'Attend social events in three different zones to build cross-community connections.',
+      giverNpcId: 'npc_storyteller_01',
+      type: 'social',
+      objectives: [
+        { id: 'attend_gardens', description: 'Attend a social event in the Gardens', type: 'attend', target: 'gardens', count: 1, progress: 0 },
+        { id: 'attend_commons', description: 'Attend a social event in the Commons', type: 'attend', target: 'commons', count: 1, progress: 0 },
+        { id: 'attend_studio', description: 'Attend a social event in the Studio', type: 'attend', target: 'studio', count: 1, progress: 0 }
+      ],
+      rewards: { spark: 75, xp: 120, items: [] },
+      requiredLevel: 3,
+      prerequisiteQuests: [],
+      repeatable: false,
+      timeLimit: null,
+      dialogue: {
+        start: 'Zion thrives when its communities connect! Attend events in three different zones.',
+        progress: 'Each zone has its own culture. Experience them all!',
+        complete: 'You are truly a bridge between our communities. Zion is stronger for it.'
+      },
+      status: 'available'
     }
   };
 

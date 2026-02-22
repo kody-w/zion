@@ -9,6 +9,10 @@
   var SpatialGridRef = (typeof window !== 'undefined' && window.SpatialGrid) ? window.SpatialGrid : (typeof require !== 'undefined' ? require('./spatial_grid') : null);
 
   var playerMeshes = new Map();
+  var _perfSceneCtx = null;
+  var _perfStatsCache = null;
+  var _perfStatsCacheTime = 0;
+  var PERF_STATS_TTL = 2000;
   var skyDome = null, sunMesh = null, moonMesh = null, stars = null;
   var clouds = [];
   var animatedObjects = [];
@@ -6833,9 +6837,21 @@
   // ========================================================================
 
   /**
+   * Set the scene context for performance stats traversal
+   */
+  function setPerformanceSceneContext(ctx) {
+    _perfSceneCtx = ctx;
+  }
+
+  /**
    * Get performance statistics
    */
   function getPerformanceStats() {
+    // Return cached stats if still fresh
+    if (_perfStatsCache && (Date.now() - _perfStatsCacheTime < PERF_STATS_TTL)) {
+      return _perfStatsCache;
+    }
+
     var stats = {
       totalObjects: 0,
       visibleObjects: 0,
@@ -6844,9 +6860,9 @@
       estimatedTriangles: 0
     };
 
-    // Count scene objects
-    if (sceneContext && sceneContext.scene) {
-      sceneContext.scene.traverse(function(obj) {
+    // Count scene objects using _perfSceneCtx
+    if (_perfSceneCtx && _perfSceneCtx.scene) {
+      _perfSceneCtx.scene.traverse(function(obj) {
         stats.totalObjects++;
         if (obj.visible) {
           stats.visibleObjects++;
@@ -6870,6 +6886,10 @@
     }
 
     stats.estimatedTriangles = Math.floor(stats.estimatedTriangles);
+
+    // Cache the result
+    _perfStatsCache = stats;
+    _perfStatsCacheTime = Date.now();
 
     return stats;
   }
@@ -8553,6 +8573,7 @@
   exports.getFromPool = getFromPool;
   exports.returnToPool = returnToPool;
   exports.getPerformanceStats = getPerformanceStats;
+  exports.setPerformanceSceneContext = setPerformanceSceneContext;
   exports.spawnZoneInteractives = spawnZoneInteractives;
   exports.createInteractiveObject = createInteractiveObject;
   exports.getInteractiveAtPosition = getInteractiveAtPosition;
