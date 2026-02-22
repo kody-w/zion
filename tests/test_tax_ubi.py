@@ -270,5 +270,84 @@ class TestSimMaintenance(unittest.TestCase):
                          'Build should cost 5 spark')
 
 
+class TestEconTxnRefusal(unittest.TestCase):
+    """Test that _econ_txn refuses actions when agent can't afford them (§6.4)."""
+
+    def setUp(self):
+        from civilization_sim import _econ_txn, SIM_TREASURY_ID
+        self._econ_txn = _econ_txn
+        self.SIM_TREASURY_ID = SIM_TREASURY_ID
+
+    def _make_state(self, balance):
+        return {
+            'economy': {'balances': {'agent1': balance}, 'transactions': [], 'listings': []},
+        }
+
+    def test_refuse_when_cant_afford(self):
+        """Agent with 2 spark can't pay 5 — transaction refused."""
+        state = self._make_state(2)
+        result = self._econ_txn(state, 'build', 'agent1', -5, 0)
+        self.assertFalse(result)
+        self.assertEqual(state['economy']['balances']['agent1'], 2,
+                         'Balance should be unchanged after refusal')
+
+    def test_refuse_at_zero_balance(self):
+        """Agent with 0 spark can't pay anything — transaction refused."""
+        state = self._make_state(0)
+        result = self._econ_txn(state, 'craft', 'agent1', -3, 0)
+        self.assertFalse(result)
+        self.assertEqual(state['economy']['balances']['agent1'], 0)
+
+    def test_allow_when_can_afford(self):
+        """Agent with 10 spark can pay 5 — transaction succeeds."""
+        state = self._make_state(10)
+        result = self._econ_txn(state, 'build', 'agent1', -5, 0)
+        self.assertTrue(result)
+        self.assertEqual(state['economy']['balances']['agent1'], 5)
+
+    def test_allow_exact_balance(self):
+        """Agent with exactly 3 spark can pay 3 — balance goes to 0."""
+        state = self._make_state(3)
+        result = self._econ_txn(state, 'plant', 'agent1', -3, 0)
+        self.assertTrue(result)
+        self.assertEqual(state['economy']['balances']['agent1'], 0)
+
+
+class TestHarvestYieldReduced(unittest.TestCase):
+    """Test that harvest yield is in the reduced range."""
+
+    def test_harvest_yield_range(self):
+        """Harvest should yield 1-4 spark (mean 2.5), not 2-8."""
+        from civilization_sim import _apply_action
+        import random
+        rng = random.Random(42)
+
+        state = {
+            'economy': {'balances': {'agent1': 100}, 'transactions': [], 'listings': []},
+            'structures': {}, 'chat': [], 'discoveries': {},
+            'gardens': {
+                'plot_nexus_001': {
+                    'plants': [{'species': 'wheat', 'plantedBy': 'Test',
+                                'growthStage': 1.0, 'growthTime': 3600, 'tick': 0}],
+                },
+            },
+            'citizens': {'agent1': {'id': 'agent1', 'name': 'Test', 'archetype': 'builder',
+                                    'zone': 'nexus', 'actions': 0, 'spark': 100}},
+        }
+
+        action = {'type': 'harvest', 'agent': {'id': 'agent1', 'name': 'Test',
+                  'archetype': 'builder', 'position': {'zone': 'nexus'}}, 'zone': 'nexus'}
+        result = _apply_action(action, state, 0, rng)
+        self.assertIsNotNone(result, 'Harvest should succeed with mature plant')
+
+        # Check the earnings transaction
+        harvest_txns = [t for t in state['economy']['transactions']
+                        if t['type'] == 'harvest']
+        self.assertEqual(len(harvest_txns), 1)
+        earnings = harvest_txns[0]['amount']
+        self.assertGreaterEqual(earnings, 1, 'Min harvest yield should be 1')
+        self.assertLessEqual(earnings, 4, 'Max harvest yield should be 4')
+
+
 if __name__ == '__main__':
     unittest.main()

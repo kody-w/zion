@@ -276,6 +276,9 @@ def _apply_action(action, state, tick_num, rng):
         return None
 
     elif action_type == 'build':
+        # Pay first — refuse if agent can't afford (§6.4)
+        if not _econ_txn(state, 'build', agent_id, -5, tick_num):
+            return None
         struct_types = ['bench', 'statue', 'path', 'shrine', 'fountain', 'bridge',
                         'tower', 'garden_wall', 'archway', 'monument']
         struct_type = rng.choice(struct_types)
@@ -291,7 +294,6 @@ def _apply_action(action, state, tick_num, rng):
             oldest = sorted(state['structures'].keys())[:50]
             for k in oldest:
                 del state['structures'][k]
-        _econ_txn(state, 'build', agent_id, -5, tick_num)
         return ('build', '%s built a %s in %s' % (agent_name, struct_type, zone))
 
     elif action_type == 'compose':
@@ -318,6 +320,9 @@ def _apply_action(action, state, tick_num, rng):
         return ('creation', '%s composed "%s" (%s) in %s' % (agent_name, title, ctype, zone))
 
     elif action_type == 'plant':
+        # Pay first — refuse if agent can't afford (§6.4)
+        if not _econ_txn(state, 'plant', agent_id, -3, tick_num):
+            return None
         species = rng.choice(['tomato', 'wheat', 'flower', 'tree', 'herb', 'vine'])
         plot_id = 'plot_%s_%03d' % (zone, rng.randint(1, 30))
         if plot_id not in state['gardens']:
@@ -329,7 +334,6 @@ def _apply_action(action, state, tick_num, rng):
             'growthTime': rng.randint(1800, 7200),
             'tick': tick_num,
         })
-        _econ_txn(state, 'plant', agent_id, -3, tick_num)
         return ('plant', '%s planted %s in %s' % (agent_name, species, zone))
 
     elif action_type == 'harvest':
@@ -339,15 +343,17 @@ def _apply_action(action, state, tick_num, rng):
             if mature:
                 plant = mature[0]
                 plot['plants'].remove(plant)
-                earnings = rng.randint(2, 8)
+                earnings = rng.randint(1, 4)
                 _econ_txn(state, 'harvest', agent_id, earnings, tick_num)
                 return ('harvest', '%s harvested %s (+%d spark)' % (agent_name, plant['species'], earnings))
         return None
 
     elif action_type == 'craft':
+        # Pay first — refuse if agent can't afford (§6.4)
+        if not _econ_txn(state, 'craft', agent_id, -3, tick_num):
+            return None
         items = ['tool', 'ornament', 'instrument', 'potion', 'amulet', 'scroll']
         item = rng.choice(items)
-        _econ_txn(state, 'craft', agent_id, -3, tick_num)
         return ('craft', '%s crafted a %s' % (agent_name, item))
 
     elif action_type == 'trade_offer':
@@ -417,7 +423,11 @@ def _sim_tax_rate(balance):
 
 
 def _econ_txn(state, txn_type, agent_id, amount, tick_num):
-    """Record an economy transaction and adjust balance, with tax on positive earnings."""
+    """Record an economy transaction and adjust balance, with tax on positive earnings.
+
+    Returns True if the transaction succeeded, False if refused (insufficient funds).
+    Constitution §6.4: actions that would reduce a balance below 0 are refused.
+    """
     econ = state['economy']
     current_balance = econ['balances'].get(agent_id, 100)
 
@@ -435,17 +445,17 @@ def _econ_txn(state, txn_type, agent_id, amount, tick_num):
                 'type': 'tax', 'agent': agent_id, 'amount': tax_amount, 'tick': tick_num,
             })
     else:
-        # Balance floor (§6.4): never go below 0
+        # Balance floor (§6.4): refuse if agent can't afford full cost
         new_balance = current_balance + amount
         if new_balance < SIM_BALANCE_FLOOR:
-            amount = SIM_BALANCE_FLOOR - current_balance  # reduce cost to floor
-            new_balance = SIM_BALANCE_FLOOR
+            return False
         econ['balances'][agent_id] = new_balance
 
     econ['transactions'].append({
         'type': txn_type, 'agent': agent_id, 'amount': amount, 'tick': tick_num,
     })
     econ['transactions'] = econ['transactions'][-2000:]
+    return True
 
 
 # ─── Metrics Collection ───────────────────────────────────────
