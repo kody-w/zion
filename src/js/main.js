@@ -16,7 +16,6 @@
   var Physical = typeof require !== 'undefined' ? require('./physical') : window.Physical;
   var Auth = typeof require !== 'undefined' ? require('./auth') : window.Auth;
   var Network = typeof require !== 'undefined' ? require('./network') : window.Network;
-  var Models = typeof require !== 'undefined' ? require('./models') : window.Models;
   var World = typeof require !== 'undefined' ? require('./world') : window.World;
   var Input = typeof require !== 'undefined' ? require('./input') : window.Input;
   var HUD = typeof require !== 'undefined' ? require('./hud') : window.HUD;
@@ -94,10 +93,29 @@
   // Embedded soul data (replaced at bundle time)
   var EMBEDDED_SOULS = SOULS_PLACEHOLDER;
 
+  // Zone-specific gameplay bonuses (Constitution-aligned zone identity)
+  var ZONE_BONUSES = {
+    nexus:     { harvest: 1.0, craft: 1.0,  trade: 1.0,  explore: 1.0,  fish: 1.0,  combat: 1.0,  label: 'Hub — balanced' },
+    gardens:   { harvest: 1.5, craft: 1.0,  trade: 1.0,  explore: 1.0,  fish: 1.2,  combat: 0.8,  label: 'Harvest +50%' },
+    athenaeum: { harvest: 1.0, craft: 1.3,  trade: 1.0,  explore: 1.5,  fish: 1.0,  combat: 0.7,  label: 'Research +50%' },
+    studio:    { harvest: 1.0, craft: 1.5,  trade: 1.0,  explore: 1.0,  fish: 1.0,  combat: 0.8,  label: 'Crafting +50%' },
+    wilds:     { harvest: 1.2, craft: 1.0,  trade: 0.8,  explore: 1.5,  fish: 1.3,  combat: 1.3,  label: 'Exploration +50%' },
+    agora:     { harvest: 1.0, craft: 1.0,  trade: 1.5,  explore: 1.0,  fish: 1.0,  combat: 0.5,  label: 'Trading +50%' },
+    commons:   { harvest: 1.2, craft: 1.2,  trade: 1.2,  explore: 1.2,  fish: 1.2,  combat: 1.0,  label: 'Social — +20% all' },
+    arena:     { harvest: 0.5, craft: 0.8,  trade: 1.0,  explore: 1.0,  fish: 0.5,  combat: 1.5,  label: 'Combat +50%' }
+  };
+
+  function getZoneBonus(type) {
+    var bonuses = ZONE_BONUSES[currentZone];
+    if (!bonuses) return 1.0;
+    return bonuses[type] || 1.0;
+  }
+
   // Game state
   var gameState = null;
   var sceneContext = null;
   var messageQueue = [];
+  var MAX_MESSAGE_QUEUE = 500; // Drop oldest if queue grows beyond this
   var isRunning = false;
   var lastTimestamp = 0;
   var worldTime = 0; // Minutes in 24-hour cycle (0-1440)
@@ -738,9 +756,14 @@
       }
     }
 
-    // Start tutorial for new players
+    // Start tutorial for new players (tooltip guide)
     if (HUD && HUD.initTutorial) {
       setTimeout(function() { HUD.initTutorial(); }, 1500);
+    }
+
+    // Show onboarding walkthrough panel for first-time players
+    if (HUD && HUD.initOnboarding) {
+      setTimeout(function() { HUD.initOnboarding(); }, 2000);
     }
 
     // Start game loop
@@ -1277,6 +1300,11 @@
     // Initialize zone stewards
     if (ZoneStewards && ZoneStewards.createState) {
       zoneStewardsState = ZoneStewards.createState();
+    }
+
+    // Initialize guilds system
+    if (Guilds && Guilds.initGuilds) {
+      Guilds.initGuilds(null); // Fresh state; could load from persistence later
     }
 
     // Attach subsystem states to gameState for cross-system access
@@ -2237,9 +2265,15 @@
               }
             }
 
-            // BattlePass XP for exploration
+            // BattlePass XP for exploration (zone bonus applies)
             if (BattlePass && BattlePass.addXP && battlePassState) {
-              BattlePass.addXP(battlePassState, 6, 'exploring');
+              var exploreXP = Math.round(6 * getZoneBonus('explore'));
+              BattlePass.addXP(battlePassState, exploreXP, 'exploring');
+            }
+
+            // Show zone bonus on entry
+            if (HUD && ZONE_BONUSES[currentZone]) {
+              HUD.showNotification('Zone: ' + ZONE_BONUSES[currentZone].label, 'info');
             }
 
             // PlayerOnboarding: complete zone visit step
@@ -3196,8 +3230,11 @@
       }
     }
 
-    // Add to queue for processing
+    // Add to queue for processing; drop oldest if overflowing
     messageQueue.push(msg);
+    while (messageQueue.length > MAX_MESSAGE_QUEUE) {
+      messageQueue.shift();
+    }
   }
 
   /**
@@ -3653,8 +3690,12 @@
    * Handle harvest message
    */
   function handleHarvestMessage(msg) {
+    var baseAmount = msg.payload.amount || 10;
+    var bonus = (msg.from === localPlayer.id) ? getZoneBonus('harvest') : 1.0;
+    var amount = Math.round(baseAmount * bonus);
+
     if (Economy) {
-      Economy.earnSpark(gameState, msg.from, msg.payload.amount || 10);
+      Economy.earnSpark(gameState, msg.from, amount);
     }
 
     if (Audio) {
@@ -3662,7 +3703,8 @@
     }
 
     if (msg.from === localPlayer.id && HUD) {
-      HUD.showNotification(`Harvested ${msg.payload.amount || 10} Spark`, 'success');
+      var bonusText = bonus > 1.0 ? ' (' + ZONE_BONUSES[currentZone].label + ')' : '';
+      HUD.showNotification('Harvested ' + amount + ' Spark' + bonusText, 'success');
     }
   }
 
@@ -3697,11 +3739,17 @@
    */
   function handleTradeMessage(msg) {
     if (Economy) {
+      // Apply zone trading bonus to incoming trades for the local player
+      var tradeAmount = msg.payload.amount;
+      if (msg.payload.to === localPlayer.id) {
+        var tradeBonus = getZoneBonus('trade');
+        tradeAmount = Math.round(tradeAmount * tradeBonus);
+      }
       Economy.transferSpark(
         gameState,
         msg.payload.from,
         msg.payload.to,
-        msg.payload.amount
+        tradeAmount
       );
     }
 
@@ -3710,10 +3758,8 @@
     }
 
     if (HUD && (msg.payload.from === localPlayer.id || msg.payload.to === localPlayer.id)) {
-      HUD.showNotification(
-        `Trade: ${msg.payload.amount} Spark`,
-        'success'
-      );
+      var bonusLabel = getZoneBonus('trade') > 1.0 ? ' (' + ZONE_BONUSES[currentZone].label + ')' : '';
+      HUD.showNotification('Trade: ' + (msg.payload.amount) + ' Spark' + bonusLabel, 'success');
     }
   }
 
@@ -4372,10 +4418,14 @@
       }
 
       if (Mentoring) {
-        var xpResult = Mentoring.addSkillXP(localPlayer.id, 'crafting', 10);
+        var craftXP = Math.round(10 * getZoneBonus('craft'));
+        var xpResult = Mentoring.addSkillXP(localPlayer.id, 'crafting', craftXP);
         if (xpResult.leveledUp && HUD) {
           HUD.showNotification('Crafting skill increased to ' + xpResult.newLevelName, 'success');
           emitLevelUpParticles();
+        }
+        if (getZoneBonus('craft') > 1.0 && HUD) {
+          HUD.showNotification(ZONE_BONUSES[currentZone].label, 'info');
         }
       }
 
@@ -5152,6 +5202,12 @@
         if (fpsEl && !showDebug) fpsEl.style.display = 'none';
         if (fpsEl && showDebug) fpsEl.style.display = 'block';
         if (HUD && HUD.showNotification) HUD.showNotification('FPS display ' + (showDebug ? 'ON' : 'OFF'), 'info');
+        break;
+
+      case 'toggleHelp':
+        if (HUD && HUD.toggleHelpPanel) {
+          HUD.toggleHelpPanel();
+        }
         break;
 
       case 'toggleSettings':
@@ -6278,10 +6334,11 @@
             HUD.updateInventoryDisplay(playerInventory);
           }
         }
-        // Award Spark
+        // Award Spark (zone + season bonus)
         var sparkAmount = result.fish.value || 5;
         var seasonBonus = getSeasonalBonus('harvest');
-        sparkAmount = Math.round(sparkAmount * seasonBonus);
+        var fishZoneBonus = getZoneBonus('fish');
+        sparkAmount = Math.round(sparkAmount * seasonBonus * fishZoneBonus);
         if (economyLedger && Economy) {
           Economy.earnSpark(economyLedger, localPlayer.id, sparkAmount, 'fishing');
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);

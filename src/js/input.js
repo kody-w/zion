@@ -360,6 +360,23 @@
         }
         e.preventDefault();
         break;
+
+      case 'F1':
+        if (callbacks.onAction) {
+          callbacks.onAction('toggleHelp', {});
+        }
+        e.preventDefault();
+        break;
+
+      case '?':
+      case '/':
+        if (!chatMode) {
+          if (callbacks.onAction) {
+            callbacks.onAction('toggleHelp', {});
+          }
+          e.preventDefault();
+        }
+        break;
     }
 
     // Emote hotkeys: F+Number
@@ -538,14 +555,14 @@
     var touchStartPos = { x: 0, y: 0 };
     var isDragging = false;
 
-    joystick.addEventListener('touchstart', (e) => {
+    joystick.addEventListener('touchstart', function(e) {
       e.preventDefault();
       isDragging = true;
       var touch = e.touches[0];
       touchStartPos = { x: touch.clientX, y: touch.clientY };
     });
 
-    joystick.addEventListener('touchmove', (e) => {
+    joystick.addEventListener('touchmove', function(e) {
       if (!isDragging) return;
       e.preventDefault();
 
@@ -579,7 +596,7 @@
       }
     });
 
-    joystick.addEventListener('touchend', (e) => {
+    joystick.addEventListener('touchend', function(e) {
       e.preventDefault();
       isDragging = false;
       stick.style.left = '35px';

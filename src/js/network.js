@@ -5,8 +5,10 @@
   var messageCallback = null;
   var peerConnectCallback = null;
   var peerDisconnectCallback = null;
-  var seenMessages = new Set(); // For deduplication
-  var MAX_SEEN_MESSAGES = 1000;
+  var seenMessages = {}; // msgId -> timestamp for deduplication
+  var seenMessagesCount = 0;
+  var MAX_SEEN_MESSAGES = 5000;
+  var SEEN_MESSAGE_TTL = 60000; // Evict messages older than 60 seconds
 
   /**
    * Initialize PeerJS mesh network
@@ -115,17 +117,34 @@
       var msgId = generateMessageId(msg);
 
       // Check if already seen
-      if (seenMessages.has(msgId)) {
+      if (seenMessages[msgId]) {
         return; // Duplicate, ignore
       }
 
-      // Add to seen messages
-      seenMessages.add(msgId);
+      // Add to seen messages with timestamp
+      var now = Date.now();
+      seenMessages[msgId] = now;
+      seenMessagesCount++;
 
-      // Evict oldest if over limit
-      if (seenMessages.size > MAX_SEEN_MESSAGES) {
-        var firstItem = seenMessages.values().next().value;
-        seenMessages.delete(firstItem);
+      // Evict old messages if over limit or periodically by age
+      if (seenMessagesCount > MAX_SEEN_MESSAGES) {
+        var keys = Object.keys(seenMessages);
+        for (var si = 0; si < keys.length; si++) {
+          if (now - seenMessages[keys[si]] > SEEN_MESSAGE_TTL) {
+            delete seenMessages[keys[si]];
+            seenMessagesCount--;
+          }
+        }
+        // If still over limit, drop oldest half
+        if (seenMessagesCount > MAX_SEEN_MESSAGES) {
+          keys = Object.keys(seenMessages);
+          keys.sort(function(a, b) { return seenMessages[a] - seenMessages[b]; });
+          var toRemove = Math.floor(keys.length / 2);
+          for (var ri = 0; ri < toRemove; ri++) {
+            delete seenMessages[keys[ri]];
+            seenMessagesCount--;
+          }
+        }
       }
 
       // Relay to other peers (mesh propagation)
@@ -198,7 +217,8 @@
 
     // Add to seen messages to prevent echo
     var msgId = generateMessageId(msg);
-    seenMessages.add(msgId);
+    seenMessages[msgId] = Date.now();
+    seenMessagesCount++;
 
     connections.forEach(function(conn, peerId) {
       if (conn.open) {
@@ -284,7 +304,36 @@
 
     setTimeout(function() {
       if (!peer || peer.destroyed) {
-        console.log('Attempting to reconnect...');
+        // Peer is null or destroyed — must reinitialize, not reconnect
+        console.log('Peer destroyed, reinitializing...');
+        if (typeof Peer !== 'undefined') {
+          peer = new Peer(peerId, {
+            debug: 1,
+            config: {
+              iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
+              ]
+            }
+          });
+          peer.on('open', function() {
+            console.log('Peer reinitialized successfully');
+          });
+          peer.on('connection', function(conn) {
+            handleConnection(conn);
+          });
+          peer.on('error', function(err) {
+            if (err.type === 'peer-unavailable') return;
+            console.error('Peer error after reinit:', err);
+          });
+          peer.on('disconnected', function() {
+            attemptReconnect(peerId, attempt + 1);
+          });
+        }
+      } else if (!peer.open) {
+        // Peer exists but disconnected from signaling — try reconnect
+        console.log('Attempting to reconnect to signaling server...');
         peer.reconnect();
 
         // Check if reconnection succeeded after 2 seconds
@@ -343,10 +392,12 @@
       // Not the lobby — try connecting to it
       connectToPeer(lobbyId);
 
-      // Auto-host promotion: if lobby is unreachable after 5s, re-init as lobby
+      // Auto-host promotion: if lobby is unreachable, re-init as lobby
+      // Add randomized jitter (5-8s) to prevent simultaneous promotion
+      var promotionDelay = 5000 + Math.floor(Math.random() * 3000);
       setTimeout(function() {
         if (connections.size === 0 && peer && !peer.destroyed) {
-          console.log('No lobby found — promoting self to lobby host');
+          console.log('No lobby found after ' + promotionDelay + 'ms — promoting self to lobby host');
           try {
             peer.destroy();
           } catch (e) { /* ignore */ }
@@ -359,7 +410,7 @@
           });
           lobbyState.peerId = lobbyId;
         }
-      }, 5000);
+      }, promotionDelay);
     }
 
     // Also try connecting to time-bucketed seed peers
@@ -502,7 +553,7 @@
       connected: peer ? peer.open : false,
       peerCount: connections.size,
       knownPeers: lobbyState.knownPeers.length,
-      seenMessages: seenMessages.size
+      seenMessages: seenMessagesCount
     };
   }
 

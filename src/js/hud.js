@@ -9950,5 +9950,229 @@
   exports.toggleLeaderboardPanel = toggleLeaderboardPanel;
   exports.refreshLeaderboardPanel = refreshLeaderboardPanel;
 
+  // =============================================================================
+  // KEYBOARD HELP PANEL — shows all keybindings (F1 or ?)
+  // =============================================================================
+  var helpPanelEl = null;
+  var helpVisible = false;
+
+  function showHelpPanel() {
+    if (typeof document === 'undefined') return;
+    hideHelpPanel();
+
+    helpPanelEl = document.createElement('div');
+    helpPanelEl.id = 'help-panel';
+    helpPanelEl.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'background:rgba(10,14,26,0.95);border:2px solid #DAA520;border-radius:12px;' +
+      'padding:24px;width:520px;max-height:80vh;overflow-y:auto;pointer-events:auto;z-index:400;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);color:#E8E0D8;font-family:Arial,sans-serif;';
+
+    var shortcuts = [
+      ['WASD', 'Move around'],
+      ['Mouse Drag', 'Orbit camera'],
+      ['Scroll', 'Zoom in/out'],
+      ['E', 'Interact / Harvest'],
+      ['I', 'Inventory'],
+      ['C', 'Crafting'],
+      ['J', 'Journal'],
+      ['T', 'Trading'],
+      ['F', 'Fishing'],
+      ['M', 'Map / Minimap'],
+      ['P', 'Profile'],
+      ['K', 'Skills'],
+      ['N', 'NPC Dialog'],
+      ['G', 'Guild'],
+      ['L', 'Leaderboard'],
+      ['V', 'Pets'],
+      ['H', 'Governance'],
+      ['U', 'Auction House'],
+      ['Y', 'Compose / Create'],
+      ['B', 'Build Mode'],
+      ['Q', 'Quest Log'],
+      ['X', 'Emote'],
+      ['Z', 'Fast Travel'],
+      ['R', 'Radio'],
+      ['F3', 'FPS Counter'],
+      ['Enter', 'Open Chat'],
+      ['Esc', 'Close Panel / Exit Build'],
+      ['F1 / ?', 'This Help']
+    ];
+
+    var rows = '';
+    for (var i = 0; i < shortcuts.length; i++) {
+      var bg = i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent';
+      rows += '<tr style="background:' + bg + '">' +
+        '<td style="padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.06);">' +
+        '<kbd style="background:rgba(255,255,255,0.12);padding:2px 8px;border-radius:4px;' +
+        'font-family:monospace;font-size:13px;border:1px solid rgba(255,255,255,0.2);">' +
+        shortcuts[i][0] + '</kbd></td>' +
+        '<td style="padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.06);color:#aaa;font-size:13px;">' +
+        shortcuts[i][1] + '</td></tr>';
+    }
+
+    helpPanelEl.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+      '<h2 style="color:#DAA520;margin:0;font-size:18px;">Keyboard Shortcuts</h2>' +
+      '<button id="help-close" style="background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.3);' +
+      'border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;">x</button></div>' +
+      '<table style="width:100%;border-collapse:collapse;">' +
+      '<thead><tr><th style="text-align:left;padding:8px 12px;color:#DAA520;font-size:12px;border-bottom:2px solid rgba(218,165,32,0.3);">Key</th>' +
+      '<th style="text-align:left;padding:8px 12px;color:#DAA520;font-size:12px;border-bottom:2px solid rgba(218,165,32,0.3);">Action</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table>' +
+      '<p style="text-align:center;color:#666;font-size:11px;margin-top:12px;">Press F1 or ? to toggle this panel</p>';
+
+    document.body.appendChild(helpPanelEl);
+    helpVisible = true;
+
+    document.getElementById('help-close').onclick = function() {
+      hideHelpPanel();
+    };
+  }
+
+  function hideHelpPanel() {
+    if (helpPanelEl && helpPanelEl.parentNode) {
+      helpPanelEl.parentNode.removeChild(helpPanelEl);
+      helpPanelEl = null;
+    }
+    helpVisible = false;
+  }
+
+  function toggleHelpPanel() {
+    if (helpVisible) {
+      hideHelpPanel();
+    } else {
+      showHelpPanel();
+    }
+  }
+
+  exports.showHelpPanel = showHelpPanel;
+  exports.hideHelpPanel = hideHelpPanel;
+  exports.toggleHelpPanel = toggleHelpPanel;
+
+  // =============================================================================
+  // ONBOARDING TUTORIAL — step-by-step new player guide
+  // =============================================================================
+  var tutorialEl = null;
+  var tutorialStep = 0;
+  var tutorialActive = false;
+  var tutorialCallback = null;
+
+  var TUTORIAL_STEPS = [
+    { title: 'Welcome to ZION!', text: 'A world governed by its own constitution, built by its citizens. Let\'s learn the basics.', action: 'Press any key to continue' },
+    { title: 'Movement', text: 'Use WASD to move around. Drag the mouse to orbit the camera. Scroll to zoom.', action: 'Try moving with WASD' },
+    { title: 'Explore', text: 'Walk toward the glowing resource nodes to harvest materials. Press E when near one.', action: 'Press E near a resource' },
+    { title: 'Inventory', text: 'Press I to open your inventory and see collected items.', action: 'Press I to open inventory' },
+    { title: 'Crafting', text: 'Press C to open the crafting panel. Combine materials to create useful items.', action: 'Press C to see crafting' },
+    { title: 'Chat', text: 'Press Enter to open chat. Talk to other players and NPCs in the world.', action: 'Press Enter to chat' },
+    { title: 'Zones', text: 'ZION has 8 unique zones. Press Z for fast travel, or walk to discover them. Each zone has its own steward and rules.', action: 'Press Z to see zones' },
+    { title: 'Help', text: 'Press F1 anytime to see all keyboard shortcuts. Press H for governance, G for guilds, and more.', action: 'Press F1 for help' },
+    { title: 'Ready!', text: 'You know the basics! Explore, build, trade, and shape this world. Your actions are governed by the Constitution.', action: 'Press any key to begin' }
+  ];
+
+  function showTutorial(callback) {
+    if (typeof document === 'undefined') return;
+    tutorialCallback = callback || null;
+    tutorialStep = 0;
+    tutorialActive = true;
+    renderTutorialStep();
+  }
+
+  function renderTutorialStep() {
+    if (!tutorialActive || tutorialStep >= TUTORIAL_STEPS.length) {
+      hideTutorial();
+      return;
+    }
+
+    var step = TUTORIAL_STEPS[tutorialStep];
+
+    if (tutorialEl && tutorialEl.parentNode) {
+      tutorialEl.parentNode.removeChild(tutorialEl);
+    }
+
+    tutorialEl = document.createElement('div');
+    tutorialEl.id = 'tutorial-overlay';
+    tutorialEl.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);' +
+      'background:rgba(10,14,26,0.92);border:2px solid #DAA520;border-radius:12px;' +
+      'padding:20px 28px;width:440px;pointer-events:auto;z-index:500;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.8);color:#E8E0D8;font-family:Arial,sans-serif;' +
+      'animation:fadeIn 0.3s ease;';
+
+    var progress = '';
+    for (var i = 0; i < TUTORIAL_STEPS.length; i++) {
+      var dotColor = i === tutorialStep ? '#DAA520' : (i < tutorialStep ? '#666' : '#333');
+      progress += '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;' +
+        'background:' + dotColor + ';margin:0 3px;"></span>';
+    }
+
+    tutorialEl.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+      '<h3 style="color:#DAA520;margin:0;font-size:16px;">' + step.title + '</h3>' +
+      '<span style="color:#666;font-size:12px;">Step ' + (tutorialStep + 1) + '/' + TUTORIAL_STEPS.length + '</span></div>' +
+      '<p style="color:#ccc;font-size:14px;margin:0 0 12px 0;line-height:1.5;">' + step.text + '</p>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<div>' + progress + '</div>' +
+      '<div>' +
+      (tutorialStep > 0 ? '<button id="tut-back" style="background:rgba(255,255,255,0.1);color:#aaa;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px 14px;cursor:pointer;font-size:12px;margin-right:8px;">Back</button>' : '') +
+      '<button id="tut-next" style="background:rgba(218,165,32,0.2);color:#DAA520;border:1px solid rgba(218,165,32,0.5);border-radius:6px;padding:6px 14px;cursor:pointer;font-size:12px;">' +
+      (tutorialStep < TUTORIAL_STEPS.length - 1 ? 'Next' : 'Start Playing') + '</button>' +
+      '<button id="tut-skip" style="background:none;color:#666;border:none;cursor:pointer;font-size:11px;margin-left:12px;">Skip</button>' +
+      '</div></div>';
+
+    document.body.appendChild(tutorialEl);
+
+    var nextBtn = document.getElementById('tut-next');
+    if (nextBtn) {
+      nextBtn.onclick = function() {
+        tutorialStep++;
+        if (tutorialStep >= TUTORIAL_STEPS.length) {
+          hideTutorial();
+          if (tutorialCallback) tutorialCallback('complete');
+        } else {
+          renderTutorialStep();
+        }
+      };
+    }
+
+    var skipBtn = document.getElementById('tut-skip');
+    if (skipBtn) {
+      skipBtn.onclick = function() {
+        hideTutorial();
+        if (tutorialCallback) tutorialCallback('skipped');
+      };
+    }
+
+    var backBtn = document.getElementById('tut-back');
+    if (backBtn) {
+      backBtn.onclick = function() {
+        if (tutorialStep > 0) {
+          tutorialStep--;
+          renderTutorialStep();
+        }
+      };
+    }
+  }
+
+  function hideTutorial() {
+    tutorialActive = false;
+    if (tutorialEl && tutorialEl.parentNode) {
+      tutorialEl.parentNode.removeChild(tutorialEl);
+      tutorialEl = null;
+    }
+  }
+
+  function initOnboardingFlow() {
+    // Check if user has seen tutorial before
+    if (typeof localStorage !== 'undefined') {
+      var seen = localStorage.getItem('zion_tutorial_complete');
+      if (seen) return; // Already seen
+    }
+    showTutorial(function(result) {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('zion_tutorial_complete', '1');
+      }
+    });
+  }
+
+  exports.showOnboarding = showTutorial;
+  exports.hideOnboarding = hideTutorial;
+  exports.initOnboarding = initOnboardingFlow;
 
 })(typeof module !== 'undefined' ? module.exports : (window.HUD = {}));
