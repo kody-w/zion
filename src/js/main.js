@@ -40,6 +40,16 @@
   const HousingSocial = typeof require !== 'undefined' ? require('./housing_social') : window.HousingSocial;
   const Prestige = typeof require !== 'undefined' ? require('./prestige') : window.Prestige;
   const MentorshipMarket = typeof require !== 'undefined' ? require('./mentorship_market') : window.MentorshipMarket;
+  const AchievementEngine = typeof require !== 'undefined' ? require('./achievement_engine') : window.AchievementEngine;
+  const ArenaScheduler = typeof require !== 'undefined' ? require('./arena_scheduler') : window.ArenaScheduler;
+  const MarketDynamics = typeof require !== 'undefined' ? require('./market_dynamics') : window.MarketDynamics;
+  const SocialSpaces = typeof require !== 'undefined' ? require('./social_spaces') : window.SocialSpaces;
+  const Wiring = typeof require !== 'undefined' ? require('./wiring') : window.Wiring;
+  const Cooking = typeof require !== 'undefined' ? require('./cooking') : window.Cooking;
+  const Crafting = typeof require !== 'undefined' ? require('./crafting') : window.Crafting;
+  const Journal = typeof require !== 'undefined' ? require('./journal') : window.Journal;
+  const StoryEngine = typeof require !== 'undefined' ? require('./story_engine') : window.StoryEngine;
+  const WorldPersistence = typeof require !== 'undefined' ? require('./world_persistence') : window.WorldPersistence;
 
   // Embedded soul data (replaced at bundle time)
   var EMBEDDED_SOULS = SOULS_PLACEHOLDER;
@@ -967,6 +977,11 @@
     // Initialize API bridge for AI agent communication
     if (ApiBridge && ApiBridge.init) {
       ApiBridge.init();
+    }
+
+    // Initialize cross-system wiring hub (event dispatch)
+    if (Wiring && Wiring.init) {
+      Wiring.init();
     }
 
     // Load canonical state from GitHub (so solo visitors see agent activity)
