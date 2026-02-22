@@ -29,6 +29,7 @@ var EXPECTED_MODULES = [
   'achievement_engine.js', 'arena_scheduler.js', 'market_dynamics.js',
   'social_spaces.js', 'wiring.js', 'cooking.js', 'crafting.js',
   'journal.js', 'story_engine.js', 'world_persistence.js',
+  'cosmetics.js', 'raid_system.js', 'specializations.js',
   'dashboard.js', 'dashboard_css.js', 'dashboard_zones.js',
   'dashboard_npcs.js', 'dashboard_inventory.js', 'dashboard_economy.js',
   'dashboard_quests.js', 'dashboard_social.js', 'dashboard_games.js',

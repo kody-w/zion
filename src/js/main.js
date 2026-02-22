@@ -50,6 +50,9 @@
   const Journal = typeof require !== 'undefined' ? require('./journal') : window.Journal;
   const StoryEngine = typeof require !== 'undefined' ? require('./story_engine') : window.StoryEngine;
   const WorldPersistence = typeof require !== 'undefined' ? require('./world_persistence') : window.WorldPersistence;
+  const Cosmetics = typeof require !== 'undefined' ? require('./cosmetics') : window.Cosmetics;
+  const RaidSystem = typeof require !== 'undefined' ? require('./raid_system') : window.RaidSystem;
+  const Specializations = typeof require !== 'undefined' ? require('./specializations') : window.Specializations;
 
   // Embedded soul data (replaced at bundle time)
   var EMBEDDED_SOULS = SOULS_PLACEHOLDER;

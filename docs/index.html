@@ -94526,6 +94526,3053 @@ html, body {
 })(typeof module !== 'undefined' ? module.exports : (window.WorldPersistence = {}));
 
 
+// cosmetics.js
+// cosmetics.js
+/**
+ * ZION Cosmetics System — Unified Avatar Appearance Customization
+ * Purely aesthetic with zero gameplay impact.
+ * Earned from achievements, badges, prestige, festivals, daily challenges.
+ */
+(function(exports) {
+  'use strict';
+
+  // ── Slot registry ──────────────────────────────────────────────────────────
+  var COSMETIC_SLOTS = [
+    'skin_tone',
+    'hair_style',
+    'hair_color',
+    'outfit',
+    'accessory',
+    'emote_set',
+    'title',
+    'name_color',
+    'aura',
+    'pet_skin'
+  ];
+
+  // ── Rarity tiers ──────────────────────────────────────────────────────────
+  var RARITIES = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+
+  // ── Default equipped values per slot ──────────────────────────────────────
+  var SLOT_DEFAULTS = {
+    skin_tone:  'tan',
+    hair_style: 'short',
+    hair_color: 'black',
+    outfit:     'peasant',
+    accessory:  'none',
+    emote_set:  'default',
+    title:      'Citizen',
+    name_color: 'white',
+    aura:       'none',
+    pet_skin:   'default'
+  };
+
+  // ── Master cosmetics catalogue ────────────────────────────────────────────
+  var COSMETICS = [
+    // ── skin_tone (8) ────────────────────────────────────────────────────────
+    { id: 'light',     name: 'Light',     slot: 'skin_tone', rarity: 'common',   source: 'default',     sourceId: null,              description: 'A light skin tone.',              season: null,           tradeable: false },
+    { id: 'tan',       name: 'Tan',       slot: 'skin_tone', rarity: 'common',   source: 'default',     sourceId: null,              description: 'A warm tan skin tone.',           season: null,           tradeable: false },
+    { id: 'brown',     name: 'Brown',     slot: 'skin_tone', rarity: 'common',   source: 'default',     sourceId: null,              description: 'A rich brown skin tone.',         season: null,           tradeable: false },
+    { id: 'dark',      name: 'Dark',      slot: 'skin_tone', rarity: 'common',   source: 'default',     sourceId: null,              description: 'A deep dark skin tone.',          season: null,           tradeable: false },
+    { id: 'olive',     name: 'Olive',     slot: 'skin_tone', rarity: 'common',   source: 'default',     sourceId: null,              description: 'An olive skin tone.',             season: null,           tradeable: false },
+    { id: 'pale',      name: 'Pale',      slot: 'skin_tone', rarity: 'common',   source: 'default',     sourceId: null,              description: 'A pale porcelain skin tone.',     season: null,           tradeable: false },
+    { id: 'copper',    name: 'Copper',    slot: 'skin_tone', rarity: 'uncommon', source: 'quest',       sourceId: 'the_forge_trial', description: 'Copper-kissed by the forge.',     season: null,           tradeable: false },
+    { id: 'ebony',     name: 'Ebony',     slot: 'skin_tone', rarity: 'uncommon', source: 'quest',       sourceId: 'wilds_trial',     description: 'Deep ebony, beloved of night.',  season: null,           tradeable: false },
+
+    // ── hair_style (10) ──────────────────────────────────────────────────────
+    { id: 'short',     name: 'Short',     slot: 'hair_style', rarity: 'common',   source: 'default',     sourceId: null,                description: 'A neat short cut.',               season: null,           tradeable: false },
+    { id: 'long',      name: 'Long',      slot: 'hair_style', rarity: 'common',   source: 'default',     sourceId: null,                description: 'Flowing long hair.',              season: null,           tradeable: false },
+    { id: 'braided',   name: 'Braided',   slot: 'hair_style', rarity: 'common',   source: 'default',     sourceId: null,                description: 'Neat intricate braids.',          season: null,           tradeable: false },
+    { id: 'mohawk',    name: 'Mohawk',    slot: 'hair_style', rarity: 'uncommon', source: 'achievement', sourceId: 'daring_soul',       description: 'A bold mohawk.',                  season: null,           tradeable: false },
+    { id: 'bun',       name: 'Bun',       slot: 'hair_style', rarity: 'common',   source: 'default',     sourceId: null,                description: 'A tidy upward bun.',             season: null,           tradeable: false },
+    { id: 'ponytail',  name: 'Ponytail',  slot: 'hair_style', rarity: 'common',   source: 'default',     sourceId: null,                description: 'A classic ponytail.',             season: null,           tradeable: false },
+    { id: 'curly',     name: 'Curly',     slot: 'hair_style', rarity: 'common',   source: 'default',     sourceId: null,                description: 'Natural curly coils.',            season: null,           tradeable: false },
+    { id: 'shaved',    name: 'Shaved',    slot: 'hair_style', rarity: 'uncommon', source: 'badge',       sourceId: 'warrior_badge',     description: 'Closely shaved head.',            season: null,           tradeable: false },
+    { id: 'flowing',   name: 'Flowing',   slot: 'hair_style', rarity: 'rare',     source: 'prestige',    sourceId: 'prestige_3',        description: 'Ethereally flowing strands.',     season: null,           tradeable: false },
+    { id: 'spiked',    name: 'Spiked',    slot: 'hair_style', rarity: 'uncommon', source: 'challenge',   sourceId: 'lightning_challenge',description: 'Gravity-defying spikes.',        season: null,           tradeable: false },
+
+    // ── hair_color (8) ───────────────────────────────────────────────────────
+    { id: 'black',     name: 'Black',     slot: 'hair_color', rarity: 'common',   source: 'default',     sourceId: null,              description: 'Classic jet black hair.',         season: null,           tradeable: false },
+    { id: 'brown',     name: 'Brown',     slot: 'hair_color', rarity: 'common',   source: 'default',     sourceId: null,              description: 'Rich chestnut brown hair.',        season: null,           tradeable: false },
+    { id: 'blonde',    name: 'Blonde',    slot: 'hair_color', rarity: 'common',   source: 'default',     sourceId: null,              description: 'Sunny blonde hair.',              season: null,           tradeable: false },
+    { id: 'red',       name: 'Red',       slot: 'hair_color', rarity: 'common',   source: 'default',     sourceId: null,              description: 'Fiery red hair.',                 season: null,           tradeable: false },
+    { id: 'white',     name: 'White',     slot: 'hair_color', rarity: 'uncommon', source: 'achievement', sourceId: 'elder_sage',       description: 'Wise silvery-white hair.',        season: null,           tradeable: false },
+    { id: 'blue',      name: 'Blue',      slot: 'hair_color', rarity: 'rare',     source: 'festival',    sourceId: 'water_festival',   description: 'Ocean-blue hair dye.',            season: 'water_2025',   tradeable: false },
+    { id: 'green',     name: 'Green',     slot: 'hair_color', rarity: 'rare',     source: 'festival',    sourceId: 'harvest_festival', description: 'Verdant green hair dye.',         season: 'harvest_2025', tradeable: false },
+    { id: 'purple',    name: 'Purple',    slot: 'hair_color', rarity: 'rare',     source: 'prestige',    sourceId: 'prestige_5',       description: 'Royal purple hair dye.',          season: null,           tradeable: false },
+
+    // ── outfit (12) ──────────────────────────────────────────────────────────
+    { id: 'peasant',   name: 'Peasant',   slot: 'outfit', rarity: 'common',   source: 'default',     sourceId: null,                  description: 'Simple humble peasant clothes.',  season: null,           tradeable: false },
+    { id: 'noble',     name: 'Noble',     slot: 'outfit', rarity: 'rare',     source: 'achievement', sourceId: 'noble_lineage',        description: 'Refined noble garb.',             season: null,           tradeable: false },
+    { id: 'explorer',  name: 'Explorer',  slot: 'outfit', rarity: 'uncommon', source: 'achievement', sourceId: 'first_expedition',     description: 'Rugged explorer gear.',           season: null,           tradeable: false },
+    { id: 'warrior',   name: 'Warrior',   slot: 'outfit', rarity: 'uncommon', source: 'badge',       sourceId: 'arena_bronze',         description: 'Battle-hardened armor.',          season: null,           tradeable: false },
+    { id: 'mage',      name: 'Mage',      slot: 'outfit', rarity: 'rare',     source: 'achievement', sourceId: 'arcane_student',       description: 'Flowing mage robes.',             season: null,           tradeable: false },
+    { id: 'artisan',   name: 'Artisan',   slot: 'outfit', rarity: 'uncommon', source: 'achievement', sourceId: 'master_crafter',       description: 'Stout workshop attire.',          season: null,           tradeable: false },
+    { id: 'merchant',  name: 'Merchant',  slot: 'outfit', rarity: 'uncommon', source: 'achievement', sourceId: 'market_regular',       description: 'Prosperous merchant clothes.',    season: null,           tradeable: false },
+    { id: 'scholar',   name: 'Scholar',   slot: 'outfit', rarity: 'uncommon', source: 'achievement', sourceId: 'bookworm',             description: 'Ink-stained scholar robes.',      season: null,           tradeable: false },
+    { id: 'ranger',    name: 'Ranger',    slot: 'outfit', rarity: 'uncommon', source: 'achievement', sourceId: 'trail_blazer',         description: 'Swift woodland ranger suit.',     season: null,           tradeable: false },
+    { id: 'bard',      name: 'Bard',      slot: 'outfit', rarity: 'rare',     source: 'achievement', sourceId: 'crowd_pleaser',        description: 'Colorful performer costume.',     season: null,           tradeable: false },
+    { id: 'gardener',  name: 'Gardener',  slot: 'outfit', rarity: 'common',   source: 'quest',       sourceId: 'green_thumb',          description: 'Earthy gardener overalls.',       season: null,           tradeable: false },
+    { id: 'fisher',    name: 'Fisher',    slot: 'outfit', rarity: 'common',   source: 'quest',       sourceId: 'first_catch',          description: 'Waterproof fishing waders.',      season: null,           tradeable: false },
+
+    // ── accessory (10) ───────────────────────────────────────────────────────
+    { id: 'none',           name: 'None',           slot: 'accessory', rarity: 'common',    source: 'default',     sourceId: null,                 description: 'No accessory.',                   season: null,            tradeable: false },
+    { id: 'golden_crown',   name: 'Golden Crown',   slot: 'accessory', rarity: 'legendary', source: 'achievement', sourceId: 'master_crafter',     description: 'A crown forged in the fires of mastery.', season: null, tradeable: false },
+    { id: 'silver_tiara',   name: 'Silver Tiara',   slot: 'accessory', rarity: 'epic',      source: 'achievement', sourceId: 'noble_lineage',      description: 'Elegant noble silverwork.',        season: null,            tradeable: false },
+    { id: 'eye_patch',      name: 'Eye Patch',      slot: 'accessory', rarity: 'uncommon',  source: 'badge',       sourceId: 'pirate_badge',       description: 'A roguish eye patch.',            season: null,            tradeable: false },
+    { id: 'monocle',        name: 'Monocle',        slot: 'accessory', rarity: 'uncommon',  source: 'achievement', sourceId: 'scholar_badge',      description: 'A distinguished monocle.',        season: null,            tradeable: false },
+    { id: 'scarf',          name: 'Scarf',           slot: 'accessory', rarity: 'common',    source: 'craft',       sourceId: 'tailoring_1',        description: 'A warm knitted scarf.',           season: null,            tradeable: true  },
+    { id: 'cape',           name: 'Cape',            slot: 'accessory', rarity: 'rare',      source: 'prestige',    sourceId: 'prestige_2',         description: 'A flowing prestige cape.',        season: null,            tradeable: false },
+    { id: 'flower_wreath',  name: 'Flower Wreath',  slot: 'accessory', rarity: 'uncommon',  source: 'festival',    sourceId: 'spring_festival',    description: 'A wreath of spring blossoms.',    season: 'spring_2025',   tradeable: false },
+    { id: 'bandana',        name: 'Bandana',         slot: 'accessory', rarity: 'common',    source: 'craft',       sourceId: 'tailoring_1',        description: 'A trusty adventurer bandana.',   season: null,            tradeable: true  },
+    { id: 'mask',           name: 'Mask',            slot: 'accessory', rarity: 'epic',      source: 'festival',    sourceId: 'shadow_festival',    description: 'An enigmatic festival mask.',     season: 'shadow_2025',   tradeable: false },
+
+    // ── emote_set (6) ────────────────────────────────────────────────────────
+    { id: 'default',    name: 'Default',    slot: 'emote_set', rarity: 'common',   source: 'default',     sourceId: null,               description: 'Standard emote pack.',            season: null,           tradeable: false },
+    { id: 'cheerful',   name: 'Cheerful',   slot: 'emote_set', rarity: 'uncommon', source: 'achievement', sourceId: 'social_butterfly',  description: 'Sunny upbeat emotes.',            season: null,           tradeable: false },
+    { id: 'dramatic',   name: 'Dramatic',   slot: 'emote_set', rarity: 'rare',     source: 'achievement', sourceId: 'crowd_pleaser',     description: 'Over-the-top theatrical emotes.', season: null,           tradeable: false },
+    { id: 'mysterious', name: 'Mysterious', slot: 'emote_set', rarity: 'rare',     source: 'prestige',    sourceId: 'prestige_4',       description: 'Subtle cryptic emotes.',          season: null,           tradeable: false },
+    { id: 'playful',    name: 'Playful',    slot: 'emote_set', rarity: 'uncommon', source: 'challenge',   sourceId: 'fun_challenge',    description: 'Lighthearted playful emotes.',    season: null,           tradeable: false },
+    { id: 'stoic',      name: 'Stoic',      slot: 'emote_set', rarity: 'uncommon', source: 'badge',       sourceId: 'veteran_badge',    description: 'Calm measured emotes.',           season: null,           tradeable: false },
+
+    // ── title (10) ───────────────────────────────────────────────────────────
+    { id: 'Citizen',   name: 'Citizen',   slot: 'title', rarity: 'common',    source: 'default',     sourceId: null,                  description: 'A proud citizen of ZION.',        season: null,           tradeable: false },
+    { id: 'Explorer',  name: 'Explorer',  slot: 'title', rarity: 'common',    source: 'achievement', sourceId: 'first_expedition',    description: 'A bold explorer of new lands.',   season: null,           tradeable: false },
+    { id: 'Artisan',   name: 'Artisan',   slot: 'title', rarity: 'uncommon',  source: 'achievement', sourceId: 'master_crafter',      description: 'A skilled maker of things.',      season: null,           tradeable: false },
+    { id: 'Scholar',   name: 'Scholar',   slot: 'title', rarity: 'uncommon',  source: 'achievement', sourceId: 'bookworm',             description: 'A seeker of knowledge.',          season: null,           tradeable: false },
+    { id: 'Champion',  name: 'Champion',  slot: 'title', rarity: 'rare',      source: 'badge',       sourceId: 'arena_gold',          description: 'A proven arena champion.',        season: null,           tradeable: false },
+    { id: 'Veteran',   name: 'Veteran',   slot: 'title', rarity: 'rare',      source: 'badge',       sourceId: 'veteran_badge',       description: 'A seasoned veteran of ZION.',     season: null,           tradeable: false },
+    { id: 'Legend',    name: 'Legend',    slot: 'title', rarity: 'epic',      source: 'prestige',    sourceId: 'prestige_5',          description: 'A living legend.',               season: null,           tradeable: false },
+    { id: 'Pioneer',   name: 'Pioneer',   slot: 'title', rarity: 'epic',      source: 'achievement', sourceId: 'first_settler',       description: 'One of the founding pioneers.',   season: null,           tradeable: false },
+    { id: 'Sage',      name: 'Sage',      slot: 'title', rarity: 'epic',      source: 'achievement', sourceId: 'elder_sage',           description: 'A wellspring of ancient wisdom.', season: null,           tradeable: false },
+    { id: 'Eternal',   name: 'Eternal',   slot: 'title', rarity: 'legendary', source: 'prestige',    sourceId: 'prestige_10',         description: 'Transcendent — beyond time.',     season: null,           tradeable: false },
+
+    // ── name_color (8) ───────────────────────────────────────────────────────
+    { id: 'white',    name: 'White',    slot: 'name_color', rarity: 'common',    source: 'default',     sourceId: null,              description: 'Standard white name.',            season: null,           tradeable: false },
+    { id: 'gold',     name: 'Gold',     slot: 'name_color', rarity: 'epic',      source: 'prestige',    sourceId: 'prestige_5',      description: 'Gleaming golden name.',           season: null,           tradeable: false },
+    { id: 'silver',   name: 'Silver',   slot: 'name_color', rarity: 'rare',      source: 'badge',       sourceId: 'veteran_badge',   description: 'Cool silver name.',               season: null,           tradeable: false },
+    { id: 'cyan',     name: 'Cyan',     slot: 'name_color', rarity: 'rare',      source: 'festival',    sourceId: 'water_festival',  description: 'Aquatic cyan name.',              season: 'water_2025',   tradeable: false },
+    { id: 'magenta',  name: 'Magenta',  slot: 'name_color', rarity: 'rare',      source: 'achievement', sourceId: 'crowd_pleaser',   description: 'Vivid magenta name.',             season: null,           tradeable: false },
+    { id: 'emerald',  name: 'Emerald',  slot: 'name_color', rarity: 'rare',      source: 'achievement', sourceId: 'trail_blazer',    description: 'Rich emerald name.',              season: null,           tradeable: false },
+    { id: 'crimson',  name: 'Crimson',  slot: 'name_color', rarity: 'rare',      source: 'achievement', sourceId: 'arena_bronze',    description: 'Bold crimson name.',              season: null,           tradeable: false },
+    { id: 'rainbow',  name: 'Rainbow',  slot: 'name_color', rarity: 'legendary', source: 'achievement', sourceId: 'true_legend',     description: 'A shimmering rainbow name.',      season: null,           tradeable: false },
+
+    // ── aura (6) ─────────────────────────────────────────────────────────────
+    { id: 'none',         name: 'None',         slot: 'aura', rarity: 'common',    source: 'default',     sourceId: null,               description: 'No aura.',                        season: null,           tradeable: false },
+    { id: 'gentle_glow',  name: 'Gentle Glow',  slot: 'aura', rarity: 'uncommon',  source: 'achievement', sourceId: 'first_mentor',     description: 'A soft warm glow.',               season: null,           tradeable: false },
+    { id: 'starlight',    name: 'Starlight',    slot: 'aura', rarity: 'rare',      source: 'achievement', sourceId: 'stargazer',        description: 'Twinkling starlight drifts near.', season: null,           tradeable: false },
+    { id: 'flame',        name: 'Flame',        slot: 'aura', rarity: 'epic',      source: 'badge',       sourceId: 'arena_gold',       description: 'Dancing flames surround you.',    season: null,           tradeable: false },
+    { id: 'frost',        name: 'Frost',        slot: 'aura', rarity: 'epic',      source: 'festival',    sourceId: 'winter_festival',  description: 'Crystalline frost swirls.',        season: 'winter_2025',  tradeable: false },
+    { id: 'shadow',       name: 'Shadow',       slot: 'aura', rarity: 'legendary', source: 'prestige',    sourceId: 'prestige_10',      description: 'Darkness bends to your will.',    season: null,           tradeable: false },
+
+    // ── pet_skin (6) ─────────────────────────────────────────────────────────
+    { id: 'default',     name: 'Default',     slot: 'pet_skin', rarity: 'common',    source: 'default',     sourceId: null,               description: 'Standard pet appearance.',        season: null,           tradeable: false },
+    { id: 'golden',      name: 'Golden',      slot: 'pet_skin', rarity: 'rare',      source: 'achievement', sourceId: 'master_crafter',   description: 'Your pet shimmers with gold.',    season: null,           tradeable: false },
+    { id: 'crystalline', name: 'Crystalline', slot: 'pet_skin', rarity: 'epic',      source: 'achievement', sourceId: 'stargazer',        description: 'Your pet is made of crystal.',    season: null,           tradeable: false },
+    { id: 'shadow',      name: 'Shadow',      slot: 'pet_skin', rarity: 'epic',      source: 'prestige',    sourceId: 'prestige_8',       description: 'Your pet cloaked in shadow.',     season: null,           tradeable: false },
+    { id: 'celestial',   name: 'Celestial',   slot: 'pet_skin', rarity: 'legendary', source: 'prestige',    sourceId: 'prestige_10',      description: 'Your pet radiates cosmic light.',  season: null,           tradeable: false },
+    { id: 'autumn',      name: 'Autumn',      slot: 'pet_skin', rarity: 'uncommon',  source: 'festival',    sourceId: 'harvest_festival', description: 'Autumn leaves adorn your pet.',   season: 'harvest_2025', tradeable: false }
+  ];
+
+  // Build fast lookup map: id → cosmetic
+  var _cosmeticMap = {};
+  for (var _ci = 0; _ci < COSMETICS.length; _ci++) {
+    _cosmeticMap[COSMETICS[_ci].id] = COSMETICS[_ci];
+  }
+
+  // ── Helper: deep clone a plain object / array ─────────────────────────────
+  function _clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  // ── Helper: get a player's appearance record (mutable ref) ─────────────────
+  function _getRecord(state, playerId) {
+    if (!state.appearances) return null;
+    return state.appearances[playerId] || null;
+  }
+
+  // ── Core functions ─────────────────────────────────────────────────────────
+
+  /**
+   * initAppearance(state, playerId)
+   * Initialises a player's appearance with all slot defaults unlocked.
+   * Idempotent — returns unchanged state if player is already initialised.
+   */
+  function initAppearance(state, playerId) {
+    if (!state.appearances) state.appearances = {};
+    if (state.appearances[playerId]) return state;
+
+    var equipped = {};
+    var unlocked = [];
+    for (var i = 0; i < COSMETIC_SLOTS.length; i++) {
+      var slot = COSMETIC_SLOTS[i];
+      equipped[slot] = SLOT_DEFAULTS[slot];
+      var defaultId = SLOT_DEFAULTS[slot];
+      if (unlocked.indexOf(defaultId) === -1) {
+        unlocked.push(defaultId);
+      }
+    }
+
+    state.appearances[playerId] = {
+      playerId: playerId,
+      equipped: equipped,
+      unlocked: unlocked,
+      favorites: [],
+      outfits: {}
+    };
+
+    return state;
+  }
+
+  /**
+   * unlockCosmetic(state, playerId, cosmeticId)
+   * Adds a cosmetic to a player's unlocked list.
+   * Returns {success, cosmetic, alreadyUnlocked}
+   */
+  function unlockCosmetic(state, playerId, cosmeticId) {
+    var cosmetic = _cosmeticMap[cosmeticId];
+    if (!cosmetic) {
+      return { success: false, cosmetic: null, alreadyUnlocked: false, reason: 'Cosmetic not found: ' + cosmeticId };
+    }
+
+    initAppearance(state, playerId);
+    var record = _getRecord(state, playerId);
+
+    if (record.unlocked.indexOf(cosmeticId) !== -1) {
+      return { success: true, cosmetic: cosmetic, alreadyUnlocked: true };
+    }
+
+    record.unlocked.push(cosmeticId);
+    return { success: true, cosmetic: cosmetic, alreadyUnlocked: false };
+  }
+
+  /**
+   * equipCosmetic(state, playerId, cosmeticId)
+   * Equips a cosmetic (must be unlocked first).
+   * Returns {success, slot, previousItem, reason}
+   */
+  function equipCosmetic(state, playerId, cosmeticId) {
+    var cosmetic = _cosmeticMap[cosmeticId];
+    if (!cosmetic) {
+      return { success: false, slot: null, previousItem: null, reason: 'Cosmetic not found: ' + cosmeticId };
+    }
+
+    initAppearance(state, playerId);
+    var record = _getRecord(state, playerId);
+
+    if (record.unlocked.indexOf(cosmeticId) === -1) {
+      return { success: false, slot: null, previousItem: null, reason: 'Cosmetic not unlocked: ' + cosmeticId };
+    }
+
+    var slot = cosmetic.slot;
+    var previousItem = record.equipped[slot];
+    record.equipped[slot] = cosmeticId;
+
+    return { success: true, slot: slot, previousItem: previousItem, reason: null };
+  }
+
+  /**
+   * unequipCosmetic(state, playerId, slot)
+   * Resets a slot back to its default cosmetic.
+   * Returns {success, slot, reason}
+   */
+  function unequipCosmetic(state, playerId, slot) {
+    if (COSMETIC_SLOTS.indexOf(slot) === -1) {
+      return { success: false, slot: slot, reason: 'Unknown slot: ' + slot };
+    }
+
+    initAppearance(state, playerId);
+    var record = _getRecord(state, playerId);
+    record.equipped[slot] = SLOT_DEFAULTS[slot];
+
+    return { success: true, slot: slot, reason: null };
+  }
+
+  /**
+   * getAppearance(state, playerId)
+   * Returns player's full current appearance record, or null if not initialised.
+   */
+  function getAppearance(state, playerId) {
+    if (!state.appearances) return null;
+    var record = state.appearances[playerId];
+    if (!record) return null;
+    return _clone(record);
+  }
+
+  /**
+   * getUnlockedCosmetics(state, playerId, slot)
+   * Returns all cosmetics unlocked by the player, optionally filtered by slot.
+   */
+  function getUnlockedCosmetics(state, playerId, slot) {
+    if (!state.appearances || !state.appearances[playerId]) return [];
+    var record = state.appearances[playerId];
+    var result = [];
+    for (var i = 0; i < record.unlocked.length; i++) {
+      var c = _cosmeticMap[record.unlocked[i]];
+      if (!c) continue;
+      if (slot && c.slot !== slot) continue;
+      result.push(_clone(c));
+    }
+    return result;
+  }
+
+  /**
+   * getLockedCosmetics(state, playerId, slot)
+   * Returns cosmetics the player hasn't unlocked, optionally filtered by slot.
+   */
+  function getLockedCosmetics(state, playerId, slot) {
+    if (!state.appearances || !state.appearances[playerId]) {
+      // If not initialised, all cosmetics are locked
+      var all = slot ? getCosmeticsBySlot(slot) : COSMETICS.slice();
+      return all;
+    }
+    var record = state.appearances[playerId];
+    var result = [];
+    for (var i = 0; i < COSMETICS.length; i++) {
+      var c = COSMETICS[i];
+      if (slot && c.slot !== slot) continue;
+      if (record.unlocked.indexOf(c.id) === -1) {
+        result.push(_clone(c));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * getCosmeticById(cosmeticId)
+   * Returns the cosmetic definition, or null if not found.
+   */
+  function getCosmeticById(cosmeticId) {
+    var c = _cosmeticMap[cosmeticId];
+    return c ? _clone(c) : null;
+  }
+
+  /**
+   * getCosmeticsBySlot(slot)
+   * Returns all cosmetics for the given slot.
+   */
+  function getCosmeticsBySlot(slot) {
+    var result = [];
+    for (var i = 0; i < COSMETICS.length; i++) {
+      if (COSMETICS[i].slot === slot) result.push(_clone(COSMETICS[i]));
+    }
+    return result;
+  }
+
+  /**
+   * getCosmeticsByRarity(rarity)
+   * Returns all cosmetics of a given rarity.
+   */
+  function getCosmeticsByRarity(rarity) {
+    var result = [];
+    for (var i = 0; i < COSMETICS.length; i++) {
+      if (COSMETICS[i].rarity === rarity) result.push(_clone(COSMETICS[i]));
+    }
+    return result;
+  }
+
+  /**
+   * getCosmeticsBySource(source)
+   * Returns all cosmetics from a given source (achievement, prestige, etc).
+   */
+  function getCosmeticsBySource(source) {
+    var result = [];
+    for (var i = 0; i < COSMETICS.length; i++) {
+      if (COSMETICS[i].source === source) result.push(_clone(COSMETICS[i]));
+    }
+    return result;
+  }
+
+  /**
+   * getSeasonalCosmetics(season)
+   * Returns cosmetics exclusive to the given season (non-null season field).
+   * Pass null/undefined to get all seasonal cosmetics regardless of season.
+   */
+  function getSeasonalCosmetics(season) {
+    var result = [];
+    for (var i = 0; i < COSMETICS.length; i++) {
+      var c = COSMETICS[i];
+      if (season !== undefined && season !== null) {
+        if (c.season === season) result.push(_clone(c));
+      } else {
+        if (c.season !== null) result.push(_clone(c));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * saveOutfit(state, playerId, outfitName)
+   * Saves the player's current equipped appearance as a named preset.
+   * Returns {success, outfit, reason}
+   */
+  function saveOutfit(state, playerId, outfitName) {
+    if (!outfitName || typeof outfitName !== 'string' || outfitName.trim() === '') {
+      return { success: false, outfit: null, reason: 'Invalid outfit name' };
+    }
+
+    initAppearance(state, playerId);
+    var record = _getRecord(state, playerId);
+    if (!record.outfits) record.outfits = {};
+
+    var outfit = {
+      name: outfitName,
+      equipped: _clone(record.equipped),
+      savedAt: Date.now()
+    };
+
+    record.outfits[outfitName] = outfit;
+    return { success: true, outfit: _clone(outfit), reason: null };
+  }
+
+  /**
+   * loadOutfit(state, playerId, outfitName)
+   * Applies a saved outfit preset to the player's current appearance.
+   * Only slots whose cosemtics are still unlocked get applied.
+   * Returns {success, reason, applied, skipped}
+   */
+  function loadOutfit(state, playerId, outfitName) {
+    initAppearance(state, playerId);
+    var record = _getRecord(state, playerId);
+    if (!record.outfits || !record.outfits[outfitName]) {
+      return { success: false, reason: 'Outfit not found: ' + outfitName, applied: [], skipped: [] };
+    }
+
+    var outfit = record.outfits[outfitName];
+    var applied = [];
+    var skipped = [];
+
+    for (var slot in outfit.equipped) {
+      if (!outfit.equipped.hasOwnProperty(slot)) continue;
+      var cosmeticId = outfit.equipped[slot];
+      if (record.unlocked.indexOf(cosmeticId) !== -1) {
+        record.equipped[slot] = cosmeticId;
+        applied.push(slot);
+      } else {
+        skipped.push(slot);
+      }
+    }
+
+    return { success: true, reason: null, applied: applied, skipped: skipped };
+  }
+
+  /**
+   * getOutfits(state, playerId)
+   * Returns all saved outfit presets for a player.
+   */
+  function getOutfits(state, playerId) {
+    if (!state.appearances || !state.appearances[playerId]) return {};
+    var record = state.appearances[playerId];
+    return _clone(record.outfits || {});
+  }
+
+  /**
+   * deleteOutfit(state, playerId, outfitName)
+   * Deletes a saved outfit preset.
+   * Returns {success, reason}
+   */
+  function deleteOutfit(state, playerId, outfitName) {
+    if (!state.appearances || !state.appearances[playerId]) {
+      return { success: false, reason: 'Player not found' };
+    }
+    var record = state.appearances[playerId];
+    if (!record.outfits || !record.outfits[outfitName]) {
+      return { success: false, reason: 'Outfit not found: ' + outfitName };
+    }
+    delete record.outfits[outfitName];
+    return { success: true, reason: null };
+  }
+
+  /**
+   * getCompletionStats(state, playerId)
+   * Returns collection completion statistics.
+   * {totalCosmetics, unlocked, percent, bySlot: {...}, byRarity: {...}}
+   */
+  function getCompletionStats(state, playerId) {
+    var unlockedSet = {};
+    if (state.appearances && state.appearances[playerId]) {
+      var rec = state.appearances[playerId];
+      for (var u = 0; u < rec.unlocked.length; u++) {
+        unlockedSet[rec.unlocked[u]] = true;
+      }
+    }
+
+    var total = COSMETICS.length;
+    var unlockedCount = 0;
+    var bySlot = {};
+    var byRarity = {};
+
+    for (var i = 0; i < COSMETIC_SLOTS.length; i++) {
+      bySlot[COSMETIC_SLOTS[i]] = { total: 0, unlocked: 0 };
+    }
+    for (var r = 0; r < RARITIES.length; r++) {
+      byRarity[RARITIES[r]] = { total: 0, unlocked: 0 };
+    }
+
+    for (var j = 0; j < COSMETICS.length; j++) {
+      var c = COSMETICS[j];
+      bySlot[c.slot].total++;
+      byRarity[c.rarity].total++;
+      if (unlockedSet[c.id]) {
+        unlockedCount++;
+        bySlot[c.slot].unlocked++;
+        byRarity[c.rarity].unlocked++;
+      }
+    }
+
+    return {
+      totalCosmetics: total,
+      unlocked: unlockedCount,
+      percent: total > 0 ? Math.round((unlockedCount / total) * 100) : 0,
+      bySlot: bySlot,
+      byRarity: byRarity
+    };
+  }
+
+  /**
+   * getSlots()
+   * Returns a copy of all cosmetic slot names.
+   */
+  function getSlots() {
+    return COSMETIC_SLOTS.slice();
+  }
+
+  /**
+   * getRarities()
+   * Returns a copy of all rarity tier names.
+   */
+  function getRarities() {
+    return RARITIES.slice();
+  }
+
+  /**
+   * previewAppearance(state, playerId, changes)
+   * Returns what the appearance would look like with changes applied, without saving.
+   * changes: {slot: cosmeticId, ...}
+   * Returns {equipped, valid, invalid} — does not mutate state.
+   */
+  function previewAppearance(state, playerId, changes) {
+    initAppearance(state, playerId);
+    var record = _getRecord(state, playerId);
+    var equipped = _clone(record.equipped);
+    var valid = [];
+    var invalid = [];
+
+    for (var slot in changes) {
+      if (!changes.hasOwnProperty(slot)) continue;
+      var cosmeticId = changes[slot];
+      var cosmetic = _cosmeticMap[cosmeticId];
+
+      if (!cosmetic) {
+        invalid.push({ slot: slot, cosmeticId: cosmeticId, reason: 'Cosmetic not found' });
+        continue;
+      }
+      if (cosmetic.slot !== slot) {
+        invalid.push({ slot: slot, cosmeticId: cosmeticId, reason: 'Cosmetic belongs to slot ' + cosmetic.slot });
+        continue;
+      }
+      if (record.unlocked.indexOf(cosmeticId) === -1) {
+        invalid.push({ slot: slot, cosmeticId: cosmeticId, reason: 'Not unlocked' });
+        continue;
+      }
+
+      equipped[slot] = cosmeticId;
+      valid.push(slot);
+    }
+
+    return { equipped: equipped, valid: valid, invalid: invalid };
+  }
+
+  // ── Exports ────────────────────────────────────────────────────────────────
+  exports.COSMETIC_SLOTS   = COSMETIC_SLOTS;
+  exports.COSMETICS        = COSMETICS;
+  exports.RARITIES         = RARITIES;
+  exports.SLOT_DEFAULTS    = SLOT_DEFAULTS;
+
+  exports.initAppearance       = initAppearance;
+  exports.unlockCosmetic       = unlockCosmetic;
+  exports.equipCosmetic        = equipCosmetic;
+  exports.unequipCosmetic      = unequipCosmetic;
+  exports.getAppearance        = getAppearance;
+  exports.getUnlockedCosmetics = getUnlockedCosmetics;
+  exports.getLockedCosmetics   = getLockedCosmetics;
+  exports.getCosmeticById      = getCosmeticById;
+  exports.getCosmeticsBySlot   = getCosmeticsBySlot;
+  exports.getCosmeticsByRarity = getCosmeticsByRarity;
+  exports.getCosmeticsBySource = getCosmeticsBySource;
+  exports.getSeasonalCosmetics = getSeasonalCosmetics;
+  exports.saveOutfit           = saveOutfit;
+  exports.loadOutfit           = loadOutfit;
+  exports.getOutfits           = getOutfits;
+  exports.deleteOutfit         = deleteOutfit;
+  exports.getCompletionStats   = getCompletionStats;
+  exports.getSlots             = getSlots;
+  exports.getRarities          = getRarities;
+  exports.previewAppearance    = previewAppearance;
+
+})(typeof module !== 'undefined' ? module.exports : (window.Cosmetics = {}));
+
+
+// raid_system.js
+// raid_system.js
+/**
+ * ZION Raid System
+ * Cooperative 2-4 player dungeon raids with scaling difficulty,
+ * boss mechanics, coordinated puzzles, shared loot, and cooldowns.
+ * No project dependencies.
+ */
+
+(function(exports) {
+  'use strict';
+
+  // ---------------------------------------------------------------------------
+  // Seeded PRNG — mulberry32
+  // ---------------------------------------------------------------------------
+
+  function mulberry32(seed) {
+    return function() {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function hashString(str) {
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function seedFrom(base, suffix) {
+    return hashString(String(base) + '|' + String(suffix));
+  }
+
+  function rngInt(rng, min, max) {
+    return min + Math.floor(rng() * (max - min + 1));
+  }
+
+  function rngPick(rng, arr) {
+    return arr[Math.floor(rng() * arr.length)];
+  }
+
+  function rngShuffle(rng, arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  // ---------------------------------------------------------------------------
+  // RAID DUNGEONS — 8 definitions
+  // ---------------------------------------------------------------------------
+
+  var RAID_DUNGEONS = {
+    crystal_caverns: {
+      id: 'crystal_caverns',
+      name: 'Crystal Caverns',
+      description: 'A shimmering cave network filled with crystal golems',
+      minPlayers: 2,
+      maxPlayers: 4,
+      baseDifficulty: 3,
+      floors: 5,
+      bossId: 'crystal_king',
+      cooldownTicks: 500,
+      entryZone: 'wilds',
+      levelRequired: 5,
+      lootTable: 'raid_crystal',
+      puzzleCount: 2
+    },
+    shadow_depths: {
+      id: 'shadow_depths',
+      name: 'Shadow Depths',
+      description: 'Ancient catacombs shrouded in perpetual darkness',
+      minPlayers: 2,
+      maxPlayers: 4,
+      baseDifficulty: 5,
+      floors: 6,
+      bossId: 'void_herald',
+      cooldownTicks: 600,
+      entryZone: 'athenaeum',
+      levelRequired: 10,
+      lootTable: 'raid_shadow',
+      puzzleCount: 3
+    },
+    fire_forge: {
+      id: 'fire_forge',
+      name: 'Fire Forge',
+      description: 'A volcanic smith dungeon where molten metal flows freely',
+      minPlayers: 2,
+      maxPlayers: 4,
+      baseDifficulty: 6,
+      floors: 5,
+      bossId: 'forge_titan',
+      cooldownTicks: 650,
+      entryZone: 'agora',
+      levelRequired: 12,
+      lootTable: 'raid_fire',
+      puzzleCount: 2
+    },
+    frost_sanctum: {
+      id: 'frost_sanctum',
+      name: 'Frost Sanctum',
+      description: 'A frozen temple where ice spirits guard ancient secrets',
+      minPlayers: 2,
+      maxPlayers: 4,
+      baseDifficulty: 7,
+      floors: 7,
+      bossId: 'glacial_warden',
+      cooldownTicks: 700,
+      entryZone: 'commons',
+      levelRequired: 15,
+      lootTable: 'raid_frost',
+      puzzleCount: 3
+    },
+    storm_spire: {
+      id: 'storm_spire',
+      name: 'Storm Spire',
+      description: 'A lightning-wracked tower where storm elementals reign',
+      minPlayers: 2,
+      maxPlayers: 4,
+      baseDifficulty: 7,
+      floors: 6,
+      bossId: 'tempest_lord',
+      cooldownTicks: 700,
+      entryZone: 'nexus',
+      levelRequired: 15,
+      lootTable: 'raid_storm',
+      puzzleCount: 3
+    },
+    void_rift: {
+      id: 'void_rift',
+      name: 'Void Rift',
+      description: 'A dimensional tear where reality fractures and warps',
+      minPlayers: 3,
+      maxPlayers: 4,
+      baseDifficulty: 8,
+      floors: 8,
+      bossId: 'rift_devourer',
+      cooldownTicks: 800,
+      entryZone: 'arena',
+      levelRequired: 20,
+      lootTable: 'raid_void',
+      puzzleCount: 4
+    },
+    ancient_ruins: {
+      id: 'ancient_ruins',
+      name: 'Ancient Ruins',
+      description: 'Crumbling citadel of a long-dead civilization with deadly traps',
+      minPlayers: 2,
+      maxPlayers: 4,
+      baseDifficulty: 6,
+      floors: 6,
+      bossId: 'stone_colossus',
+      cooldownTicks: 650,
+      entryZone: 'gardens',
+      levelRequired: 12,
+      lootTable: 'raid_ancient',
+      puzzleCount: 3
+    },
+    world_tree_roots: {
+      id: 'world_tree_roots',
+      name: 'World Tree Roots',
+      description: 'The vast root network of the world tree, home to nature corruption',
+      minPlayers: 3,
+      maxPlayers: 4,
+      baseDifficulty: 9,
+      floors: 8,
+      bossId: 'root_tyrant',
+      cooldownTicks: 900,
+      entryZone: 'wilds',
+      levelRequired: 25,
+      lootTable: 'raid_nature',
+      puzzleCount: 4
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // RAID BOSSES — 8 definitions (one per dungeon)
+  // ---------------------------------------------------------------------------
+
+  var RAID_BOSSES = {
+    crystal_king: {
+      id: 'crystal_king',
+      name: 'The Crystal King',
+      dungeonId: 'crystal_caverns',
+      baseHealth: 1000,
+      healthPerPlayer: 300,
+      attack: 25,
+      defense: 15,
+      phases: 3,
+      mechanics: ['crystal_shield', 'gem_rain', 'mirror_split'],
+      weaknesses: ['fire', 'blunt'],
+      resistances: ['ice', 'pierce'],
+      lootBonus: 1.5
+    },
+    void_herald: {
+      id: 'void_herald',
+      name: 'The Void Herald',
+      dungeonId: 'shadow_depths',
+      baseHealth: 1400,
+      healthPerPlayer: 350,
+      attack: 35,
+      defense: 10,
+      phases: 3,
+      mechanics: ['shadow_clone', 'void_pulse', 'darkness_veil'],
+      weaknesses: ['light', 'holy'],
+      resistances: ['shadow', 'poison'],
+      lootBonus: 1.7
+    },
+    forge_titan: {
+      id: 'forge_titan',
+      name: 'The Forge Titan',
+      dungeonId: 'fire_forge',
+      baseHealth: 1600,
+      healthPerPlayer: 400,
+      attack: 40,
+      defense: 20,
+      phases: 3,
+      mechanics: ['molten_slam', 'fire_wave', 'forge_breath'],
+      weaknesses: ['water', 'ice'],
+      resistances: ['fire', 'earth'],
+      lootBonus: 1.8
+    },
+    glacial_warden: {
+      id: 'glacial_warden',
+      name: 'Glacial Warden',
+      dungeonId: 'frost_sanctum',
+      baseHealth: 1800,
+      healthPerPlayer: 450,
+      attack: 38,
+      defense: 25,
+      phases: 3,
+      mechanics: ['blizzard_storm', 'ice_lance', 'frozen_aura'],
+      weaknesses: ['fire', 'lightning'],
+      resistances: ['ice', 'water'],
+      lootBonus: 2.0
+    },
+    tempest_lord: {
+      id: 'tempest_lord',
+      name: 'Tempest Lord',
+      dungeonId: 'storm_spire',
+      baseHealth: 1700,
+      healthPerPlayer: 420,
+      attack: 42,
+      defense: 18,
+      phases: 3,
+      mechanics: ['lightning_call', 'thunder_clap', 'storm_surge'],
+      weaknesses: ['earth', 'ice'],
+      resistances: ['lightning', 'wind'],
+      lootBonus: 2.0
+    },
+    rift_devourer: {
+      id: 'rift_devourer',
+      name: 'The Rift Devourer',
+      dungeonId: 'void_rift',
+      baseHealth: 2200,
+      healthPerPlayer: 550,
+      attack: 50,
+      defense: 22,
+      phases: 4,
+      mechanics: ['reality_shred', 'void_collapse', 'dimension_shift', 'entropy_field'],
+      weaknesses: ['arcane', 'holy'],
+      resistances: ['physical', 'shadow'],
+      lootBonus: 2.5
+    },
+    stone_colossus: {
+      id: 'stone_colossus',
+      name: 'Stone Colossus',
+      dungeonId: 'ancient_ruins',
+      baseHealth: 1500,
+      healthPerPlayer: 380,
+      attack: 36,
+      defense: 30,
+      phases: 3,
+      mechanics: ['ruin_stomp', 'rubble_hurl', 'ancient_curse'],
+      weaknesses: ['lightning', 'wind'],
+      resistances: ['physical', 'earth'],
+      lootBonus: 1.8
+    },
+    root_tyrant: {
+      id: 'root_tyrant',
+      name: 'The Root Tyrant',
+      dungeonId: 'world_tree_roots',
+      baseHealth: 2500,
+      healthPerPlayer: 600,
+      attack: 55,
+      defense: 28,
+      phases: 4,
+      mechanics: ['root_bind', 'spore_cloud', 'overgrowth', 'nature_wrath'],
+      weaknesses: ['fire', 'ice'],
+      resistances: ['nature', 'poison'],
+      lootBonus: 3.0
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // PUZZLE TYPES — 5 cooperative puzzle types
+  // ---------------------------------------------------------------------------
+
+  var PUZZLE_TYPES = {
+    synchronized_levers: {
+      id: 'synchronized_levers',
+      name: 'Synchronized Levers',
+      description: 'All party members must pull levers simultaneously',
+      minPlayers: 2,
+      reward: { xp: 30, spark: 20 },
+      timeLimit: 60
+    },
+    elemental_alignment: {
+      id: 'elemental_alignment',
+      name: 'Elemental Alignment',
+      description: 'Each player channels a different element to align the runes',
+      minPlayers: 2,
+      reward: { xp: 40, spark: 25 },
+      timeLimit: 90
+    },
+    mirror_maze: {
+      id: 'mirror_maze',
+      name: 'Mirror Maze',
+      description: 'Players must position mirrors to direct a beam of light',
+      minPlayers: 2,
+      reward: { xp: 35, spark: 22 },
+      timeLimit: 75
+    },
+    pressure_grid: {
+      id: 'pressure_grid',
+      name: 'Pressure Grid',
+      description: 'Party members must stand on specific tiles simultaneously',
+      minPlayers: 2,
+      reward: { xp: 45, spark: 30 },
+      timeLimit: 45
+    },
+    rune_sequence: {
+      id: 'rune_sequence',
+      name: 'Rune Sequence',
+      description: 'Players take turns activating runes in a precise order',
+      minPlayers: 2,
+      reward: { xp: 50, spark: 35 },
+      timeLimit: 120
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // LOOT TABLES — per dungeon tier
+  // ---------------------------------------------------------------------------
+
+  var LOOT_TABLES = {
+    raid_crystal: {
+      items: [
+        { id: 'crystal_shard_sword', name: 'Crystal Shard Sword', type: 'weapon', value: 350, rarity: 'rare' },
+        { id: 'prism_shield', name: 'Prism Shield', type: 'armor', value: 300, rarity: 'rare' },
+        { id: 'gem_focus', name: 'Gem Focus', type: 'accessory', value: 250, rarity: 'uncommon' },
+        { id: 'crystal_crown', name: 'Crystal Crown', type: 'armor', value: 800, rarity: 'epic' },
+        { id: 'refraction_orb', name: 'Refraction Orb', type: 'weapon', value: 1200, rarity: 'legendary' }
+      ]
+    },
+    raid_shadow: {
+      items: [
+        { id: 'shadow_blade', name: 'Shadow Blade', type: 'weapon', value: 400, rarity: 'rare' },
+        { id: 'void_mantle', name: 'Void Mantle', type: 'armor', value: 420, rarity: 'rare' },
+        { id: 'umbra_ring', name: 'Umbra Ring', type: 'accessory', value: 280, rarity: 'uncommon' },
+        { id: 'herald_staff', name: 'Herald\'s Staff', type: 'weapon', value: 900, rarity: 'epic' },
+        { id: 'void_heart', name: 'Void Heart', type: 'accessory', value: 1500, rarity: 'legendary' }
+      ]
+    },
+    raid_fire: {
+      items: [
+        { id: 'flame_edge', name: 'Flame Edge', type: 'weapon', value: 450, rarity: 'rare' },
+        { id: 'magma_plate', name: 'Magma Plate', type: 'armor', value: 500, rarity: 'rare' },
+        { id: 'forge_ember', name: 'Forge Ember', type: 'accessory', value: 300, rarity: 'uncommon' },
+        { id: 'titan_hammer', name: 'Titan Hammer', type: 'weapon', value: 1000, rarity: 'epic' },
+        { id: 'smelted_soul', name: 'Smelted Soul', type: 'accessory', value: 1600, rarity: 'legendary' }
+      ]
+    },
+    raid_frost: {
+      items: [
+        { id: 'frost_lance', name: 'Frost Lance', type: 'weapon', value: 480, rarity: 'rare' },
+        { id: 'glacier_plate', name: 'Glacier Plate', type: 'armor', value: 520, rarity: 'rare' },
+        { id: 'ice_crystal_ring', name: 'Ice Crystal Ring', type: 'accessory', value: 320, rarity: 'uncommon' },
+        { id: 'warden_aegis', name: 'Warden Aegis', type: 'armor', value: 1100, rarity: 'epic' },
+        { id: 'eternal_frost', name: 'Eternal Frost', type: 'accessory', value: 1800, rarity: 'legendary' }
+      ]
+    },
+    raid_storm: {
+      items: [
+        { id: 'storm_bow', name: 'Storm Bow', type: 'weapon', value: 470, rarity: 'rare' },
+        { id: 'thunder_vest', name: 'Thunder Vest', type: 'armor', value: 510, rarity: 'rare' },
+        { id: 'spark_amulet', name: 'Spark Amulet', type: 'accessory', value: 310, rarity: 'uncommon' },
+        { id: 'tempest_blade', name: 'Tempest Blade', type: 'weapon', value: 1050, rarity: 'epic' },
+        { id: 'eye_of_storms', name: 'Eye of Storms', type: 'accessory', value: 1750, rarity: 'legendary' }
+      ]
+    },
+    raid_void: {
+      items: [
+        { id: 'rift_dagger', name: 'Rift Dagger', type: 'weapon', value: 600, rarity: 'epic' },
+        { id: 'void_plate', name: 'Void Plate', type: 'armor', value: 650, rarity: 'epic' },
+        { id: 'entropy_ring', name: 'Entropy Ring', type: 'accessory', value: 450, rarity: 'rare' },
+        { id: 'devourer_fang', name: 'Devourer\'s Fang', type: 'weapon', value: 1400, rarity: 'legendary' },
+        { id: 'fractured_reality', name: 'Fractured Reality', type: 'accessory', value: 2200, rarity: 'legendary' }
+      ]
+    },
+    raid_ancient: {
+      items: [
+        { id: 'ruin_mace', name: 'Ruin Mace', type: 'weapon', value: 440, rarity: 'rare' },
+        { id: 'colossus_hide', name: 'Colossus Hide', type: 'armor', value: 480, rarity: 'rare' },
+        { id: 'ancient_signet', name: 'Ancient Signet', type: 'accessory', value: 290, rarity: 'uncommon' },
+        { id: 'forgotten_blade', name: 'Forgotten Blade', type: 'weapon', value: 980, rarity: 'epic' },
+        { id: 'soul_of_ages', name: 'Soul of Ages', type: 'accessory', value: 1650, rarity: 'legendary' }
+      ]
+    },
+    raid_nature: {
+      items: [
+        { id: 'root_staff', name: 'Root Staff', type: 'weapon', value: 620, rarity: 'epic' },
+        { id: 'bark_armor', name: 'Bark Armor', type: 'armor', value: 680, rarity: 'epic' },
+        { id: 'seed_of_life', name: 'Seed of Life', type: 'accessory', value: 500, rarity: 'rare' },
+        { id: 'tyrant_vine', name: 'Tyrant\'s Vine', type: 'weapon', value: 1500, rarity: 'legendary' },
+        { id: 'world_heart', name: 'World Heart', type: 'accessory', value: 2500, rarity: 'legendary' }
+      ]
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // ENCOUNTER TEMPLATES — floor combat encounters
+  // ---------------------------------------------------------------------------
+
+  var ENCOUNTER_TYPES = [
+    { id: 'patrol', name: 'Patrol', enemyCount: 2, difficulty: 1 },
+    { id: 'ambush', name: 'Ambush', enemyCount: 3, difficulty: 2 },
+    { id: 'guardian', name: 'Guardian', enemyCount: 1, difficulty: 3 },
+    { id: 'horde', name: 'Horde', enemyCount: 5, difficulty: 2 },
+    { id: 'elite', name: 'Elite Pack', enemyCount: 2, difficulty: 4 }
+  ];
+
+  // ---------------------------------------------------------------------------
+  // ID COUNTER helpers (uses a closure counter in state)
+  // ---------------------------------------------------------------------------
+
+  function nextRaidId(state) {
+    if (!state.raidCounter) state.raidCounter = 0;
+    state.raidCounter++;
+    return 'raid_' + state.raidCounter;
+  }
+
+  function nextPuzzleId(state) {
+    if (!state.puzzleCounter) state.puzzleCounter = 0;
+    state.puzzleCounter++;
+    return 'puzzle_' + state.puzzleCounter;
+  }
+
+  // ---------------------------------------------------------------------------
+  // RAID STATE CREATION
+  // ---------------------------------------------------------------------------
+
+  function createRaidStateStore() {
+    return {
+      raids: {},           // raidId -> RAID_STATE
+      playerCooldowns: {}, // playerId -> { dungeonId -> tickExpires }
+      playerHistory: {},   // playerId -> [{ raidId, dungeonId, completedTick, durationTicks }]
+      leaderboard: {},     // dungeonId -> [{ raidId, party, durationTicks, completedTick }]
+      raidCounter: 0,
+      puzzleCounter: 0
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // createRaid
+  // ---------------------------------------------------------------------------
+
+  function createRaid(state, leaderId, dungeonId, currentTick) {
+    var dungeon = RAID_DUNGEONS[dungeonId];
+    if (!dungeon) {
+      return { success: false, reason: 'Unknown dungeon: ' + dungeonId };
+    }
+
+    // Check if leader is already in an active raid
+    var raids = state.raids;
+    for (var rid in raids) {
+      var r = raids[rid];
+      if (r.status === 'forming' || r.status === 'in_progress' || r.status === 'boss_fight') {
+        if (r.party.indexOf(leaderId) !== -1) {
+          return { success: false, reason: 'Already in an active raid' };
+        }
+      }
+    }
+
+    // Check cooldown
+    var cooldownCheck = getPlayerCooldown(state, leaderId, dungeonId, currentTick);
+    if (cooldownCheck.onCooldown) {
+      return { success: false, reason: 'On cooldown for ' + cooldownCheck.remainingTicks + ' ticks' };
+    }
+
+    var raidId = nextRaidId(state);
+    var raid = {
+      id: raidId,
+      dungeonId: dungeonId,
+      party: [leaderId],
+      leader: leaderId,
+      status: 'forming',
+      currentFloor: 0,
+      bossPhase: 0,
+      bossHealth: 0,
+      bossMaxHealth: 0,
+      startTick: 0,
+      endTick: 0,
+      combatLog: [],
+      puzzlesSolved: 0,
+      lootPool: [],
+      lootDistribution: {},
+      floors: [],
+      activePuzzle: null,
+      activeMechanic: null,
+      playerHealth: {}
+    };
+
+    // Initialize leader health
+    raid.playerHealth[leaderId] = 100;
+
+    state.raids[raidId] = raid;
+    return { success: true, raid: raid };
+  }
+
+  // ---------------------------------------------------------------------------
+  // joinRaid
+  // ---------------------------------------------------------------------------
+
+  function joinRaid(state, playerId, raidId) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+    if (raid.status !== 'forming') {
+      return { success: false, reason: 'Raid is not in forming status' };
+    }
+
+    var dungeon = RAID_DUNGEONS[raid.dungeonId];
+    if (raid.party.length >= dungeon.maxPlayers) {
+      return { success: false, reason: 'Raid party is full' };
+    }
+    if (raid.party.indexOf(playerId) !== -1) {
+      return { success: false, reason: 'Already in this raid' };
+    }
+
+    // Check if player is already in another active raid
+    var raids = state.raids;
+    for (var rid in raids) {
+      var r = raids[rid];
+      if (r.id !== raidId && (r.status === 'forming' || r.status === 'in_progress' || r.status === 'boss_fight')) {
+        if (r.party.indexOf(playerId) !== -1) {
+          return { success: false, reason: 'Already in another active raid' };
+        }
+      }
+    }
+
+    // Check cooldown
+    var cooldownCheck = getPlayerCooldown(state, playerId, raid.dungeonId, 0);
+    // We use currentTick=0 placeholder; caller may pass it, but we skip for simplicity
+    // If caller wants real cooldown checks, they use a version with tick
+    if (cooldownCheck.onCooldown) {
+      return { success: false, reason: 'On cooldown for this dungeon' };
+    }
+
+    raid.party.push(playerId);
+    raid.playerHealth[playerId] = 100;
+
+    return { success: true, party: raid.party.slice() };
+  }
+
+  // joinRaid with tick parameter for cooldown check
+  function joinRaidAtTick(state, playerId, raidId, currentTick) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+    if (raid.status !== 'forming') {
+      return { success: false, reason: 'Raid is not in forming status' };
+    }
+
+    var dungeon = RAID_DUNGEONS[raid.dungeonId];
+    if (raid.party.length >= dungeon.maxPlayers) {
+      return { success: false, reason: 'Raid party is full' };
+    }
+    if (raid.party.indexOf(playerId) !== -1) {
+      return { success: false, reason: 'Already in this raid' };
+    }
+
+    // Check if player is already in another active raid
+    var raids = state.raids;
+    for (var rid in raids) {
+      var r = raids[rid];
+      if (r.id !== raidId && (r.status === 'forming' || r.status === 'in_progress' || r.status === 'boss_fight')) {
+        if (r.party.indexOf(playerId) !== -1) {
+          return { success: false, reason: 'Already in another active raid' };
+        }
+      }
+    }
+
+    // Check cooldown
+    var cooldownCheck = getPlayerCooldown(state, playerId, raid.dungeonId, currentTick);
+    if (cooldownCheck.onCooldown) {
+      return { success: false, reason: 'On cooldown for this dungeon' };
+    }
+
+    raid.party.push(playerId);
+    raid.playerHealth[playerId] = 100;
+
+    return { success: true, party: raid.party.slice() };
+  }
+
+  // ---------------------------------------------------------------------------
+  // leaveRaid
+  // ---------------------------------------------------------------------------
+
+  function leaveRaid(state, playerId, raidId) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+
+    var idx = raid.party.indexOf(playerId);
+    if (idx === -1) {
+      return { success: false, reason: 'Player not in this raid' };
+    }
+
+    raid.party.splice(idx, 1);
+    delete raid.playerHealth[playerId];
+
+    // If leader left, assign next player as leader
+    if (raid.leader === playerId) {
+      if (raid.party.length > 0) {
+        raid.leader = raid.party[0];
+        raid.combatLog.push({ event: 'new_leader', playerId: raid.leader });
+      } else {
+        // No players left — abandon the raid
+        raid.status = 'abandoned';
+        raid.combatLog.push({ event: 'abandoned', reason: 'All players left' });
+      }
+    }
+
+    return { success: true, newLeader: raid.leader || null, partySize: raid.party.length };
+  }
+
+  // ---------------------------------------------------------------------------
+  // startRaid
+  // ---------------------------------------------------------------------------
+
+  function startRaid(state, raidId, currentTick, seed) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+    if (raid.status !== 'forming') {
+      return { success: false, reason: 'Raid is not in forming status' };
+    }
+
+    var dungeon = RAID_DUNGEONS[raid.dungeonId];
+    if (raid.party.length < dungeon.minPlayers) {
+      return {
+        success: false,
+        reason: 'Need at least ' + dungeon.minPlayers + ' players (have ' + raid.party.length + ')'
+      };
+    }
+
+    var rng = mulberry32(seed || seedFrom(raidId, currentTick));
+    raid.status = 'in_progress';
+    raid.startTick = currentTick;
+    raid.currentFloor = 1;
+
+    // Generate all floors
+    raid.floors = [];
+    var puzzleFloors = [];
+    // Distribute puzzles across floors (not first, not last)
+    var availableFloors = [];
+    for (var f = 2; f < dungeon.floors; f++) availableFloors.push(f);
+    var shuffledFloors = rngShuffle(rng, availableFloors);
+    for (var p = 0; p < Math.min(dungeon.puzzleCount, shuffledFloors.length); p++) {
+      puzzleFloors.push(shuffledFloors[p]);
+    }
+
+    for (var fl = 1; fl <= dungeon.floors; fl++) {
+      var isLast = fl === dungeon.floors;
+      var hasPuzzle = !isLast && puzzleFloors.indexOf(fl) !== -1;
+      var floor = {
+        floorNumber: fl,
+        encounters: [],
+        puzzle: null,
+        cleared: false,
+        isBossFloor: isLast
+      };
+
+      if (isLast) {
+        floor.isBossFloor = true;
+      } else {
+        // Generate 1-3 encounters
+        var encCount = rngInt(rng, 1, 3);
+        for (var e = 0; e < encCount; e++) {
+          floor.encounters.push(rngPick(rng, ENCOUNTER_TYPES));
+        }
+        if (hasPuzzle) {
+          var puzzleKeys = Object.keys(PUZZLE_TYPES);
+          var puzzleType = rngPick(rng, puzzleKeys);
+          floor.puzzle = {
+            id: nextPuzzleId(state),
+            typeId: puzzleType,
+            type: PUZZLE_TYPES[puzzleType],
+            solved: false,
+            playerActions: []
+          };
+        }
+      }
+      raid.floors.push(floor);
+    }
+
+    raid.combatLog.push({ event: 'raid_started', tick: currentTick, partySize: raid.party.length });
+
+    return { success: true, raid: raid, floors: raid.floors.length };
+  }
+
+  // ---------------------------------------------------------------------------
+  // advanceFloor
+  // ---------------------------------------------------------------------------
+
+  function advanceFloor(state, raidId, seed) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+    if (raid.status !== 'in_progress') {
+      return { success: false, reason: 'Raid is not in progress' };
+    }
+
+    var dungeon = RAID_DUNGEONS[raid.dungeonId];
+
+    // Mark current floor as cleared
+    var currentFloorData = raid.floors[raid.currentFloor - 1];
+    if (currentFloorData) {
+      currentFloorData.cleared = true;
+    }
+
+    raid.currentFloor++;
+
+    // Check if we've reached the boss floor
+    if (raid.currentFloor > dungeon.floors) {
+      return { success: false, reason: 'Already past last floor' };
+    }
+
+    var floorData = raid.floors[raid.currentFloor - 1];
+    raid.combatLog.push({ event: 'floor_advanced', floor: raid.currentFloor });
+
+    var puzzle = null;
+    if (floorData && floorData.puzzle) {
+      puzzle = {
+        id: floorData.puzzle.id,
+        typeId: floorData.puzzle.typeId,
+        name: floorData.puzzle.type.name,
+        description: floorData.puzzle.type.description,
+        minPlayers: floorData.puzzle.type.minPlayers,
+        timeLimit: floorData.puzzle.type.timeLimit,
+        reward: floorData.puzzle.type.reward,
+        solved: floorData.puzzle.solved
+      };
+    }
+
+    return {
+      success: true,
+      floor: raid.currentFloor,
+      encounters: floorData ? floorData.encounters : [],
+      puzzle: puzzle,
+      isBossFloor: floorData ? floorData.isBossFloor : false
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // solvePuzzle
+  // ---------------------------------------------------------------------------
+
+  function solvePuzzle(state, raidId, puzzleId, playerActions) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+
+    // Find the puzzle in current floor
+    var floorData = raid.floors[raid.currentFloor - 1];
+    if (!floorData || !floorData.puzzle || floorData.puzzle.id !== puzzleId) {
+      return { success: false, reason: 'Puzzle not found on current floor' };
+    }
+
+    var puzzle = floorData.puzzle;
+    if (puzzle.solved) {
+      return { success: false, reason: 'Puzzle already solved' };
+    }
+
+    var puzzleType = PUZZLE_TYPES[puzzle.typeId];
+    if (!puzzleType) {
+      return { success: false, reason: 'Unknown puzzle type' };
+    }
+
+    // Check that enough players submitted actions
+    if (!playerActions || playerActions.length < puzzleType.minPlayers) {
+      return {
+        success: false,
+        reason: 'Need at least ' + puzzleType.minPlayers + ' players to solve this puzzle'
+      };
+    }
+
+    // Check all acting players are in the raid party
+    for (var i = 0; i < playerActions.length; i++) {
+      if (raid.party.indexOf(playerActions[i].playerId) === -1) {
+        return { success: false, reason: 'Player ' + playerActions[i].playerId + ' not in raid' };
+      }
+    }
+
+    // Validate each action has required fields
+    var validActions = 0;
+    for (var j = 0; j < playerActions.length; j++) {
+      if (playerActions[j].playerId && playerActions[j].action) {
+        validActions++;
+      }
+    }
+
+    var success = validActions >= puzzleType.minPlayers;
+
+    if (success) {
+      puzzle.solved = true;
+      puzzle.playerActions = playerActions;
+      raid.puzzlesSolved++;
+      raid.combatLog.push({ event: 'puzzle_solved', puzzleId: puzzleId, typeId: puzzle.typeId });
+
+      return {
+        success: true,
+        reward: puzzleType.reward,
+        puzzlesSolved: raid.puzzlesSolved,
+        reason: null
+      };
+    }
+
+    return { success: false, reason: 'Puzzle actions invalid or incomplete' };
+  }
+
+  // ---------------------------------------------------------------------------
+  // startBossFight
+  // ---------------------------------------------------------------------------
+
+  function startBossFight(state, raidId) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+    if (raid.status !== 'in_progress') {
+      return { success: false, reason: 'Raid must be in progress to start boss fight' };
+    }
+
+    var dungeon = RAID_DUNGEONS[raid.dungeonId];
+    var boss = RAID_BOSSES[dungeon.bossId];
+    if (!boss) {
+      return { success: false, reason: 'Boss not found' };
+    }
+
+    // Scale boss health with party size
+    var partySize = raid.party.length;
+    var maxHealth = boss.baseHealth + (boss.healthPerPlayer * partySize);
+
+    raid.status = 'boss_fight';
+    raid.bossPhase = 1;
+    raid.bossHealth = maxHealth;
+    raid.bossMaxHealth = maxHealth;
+
+    raid.combatLog.push({
+      event: 'boss_fight_started',
+      bossId: boss.id,
+      bossName: boss.name,
+      health: maxHealth,
+      partySize: partySize
+    });
+
+    return {
+      success: true,
+      boss: {
+        id: boss.id,
+        name: boss.name,
+        health: maxHealth,
+        maxHealth: maxHealth,
+        phase: 1,
+        mechanics: boss.mechanics.slice(0, 1), // First phase mechanics
+        weaknesses: boss.weaknesses,
+        resistances: boss.resistances,
+        totalPhases: boss.phases
+      }
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // attackBoss
+  // ---------------------------------------------------------------------------
+
+  function attackBoss(state, raidId, playerId, attackType, seed) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+    if (raid.status !== 'boss_fight') {
+      return { success: false, reason: 'Not in boss fight' };
+    }
+    if (raid.party.indexOf(playerId) === -1) {
+      return { success: false, reason: 'Player not in raid' };
+    }
+    if (raid.bossHealth <= 0) {
+      return { success: false, reason: 'Boss already defeated' };
+    }
+
+    var dungeon = RAID_DUNGEONS[raid.dungeonId];
+    var boss = RAID_BOSSES[dungeon.bossId];
+    var rng = mulberry32(seed || seedFrom(raidId, playerId));
+
+    // Base damage
+    var baseDamage = rngInt(rng, 15, 40);
+
+    // Apply weakness bonus
+    var damageMultiplier = 1.0;
+    if (attackType && boss.weaknesses.indexOf(attackType) !== -1) {
+      damageMultiplier = 1.5;
+    }
+    if (attackType && boss.resistances && boss.resistances.indexOf(attackType) !== -1) {
+      damageMultiplier = 0.5;
+    }
+
+    // Apply defense reduction
+    var rawDamage = Math.floor(baseDamage * damageMultiplier);
+    var reducedDamage = Math.max(1, rawDamage - Math.floor(boss.defense * 0.3));
+    var damage = reducedDamage;
+
+    raid.bossHealth = Math.max(0, raid.bossHealth - damage);
+
+    // Check if boss should phase change
+    var dungeon2 = RAID_DUNGEONS[raid.dungeonId];
+    var boss2 = RAID_BOSSES[dungeon2.bossId];
+    var phaseThreshold = Math.floor(raid.bossMaxHealth / boss2.phases);
+    var expectedPhase = boss2.phases - Math.floor(raid.bossHealth / phaseThreshold);
+    expectedPhase = Math.max(1, Math.min(boss2.phases, expectedPhase));
+
+    var phaseChanged = false;
+    if (expectedPhase > raid.bossPhase && raid.bossHealth > 0) {
+      phaseChanged = true;
+    }
+
+    // Trigger a random mechanic occasionally
+    var mechanic = null;
+    if (rng() < 0.25 && raid.bossHealth > 0) {
+      var availableMechanics = boss.mechanics.slice(0, raid.bossPhase);
+      mechanic = rngPick(rng, availableMechanics);
+    }
+
+    raid.combatLog.push({
+      event: 'boss_attacked',
+      playerId: playerId,
+      attackType: attackType,
+      damage: damage,
+      bossHealth: raid.bossHealth,
+      phaseChanged: phaseChanged,
+      mechanic: mechanic
+    });
+
+    return {
+      success: true,
+      damage: damage,
+      bossHealth: raid.bossHealth,
+      bossMaxHealth: raid.bossMaxHealth,
+      phaseChanged: phaseChanged,
+      mechanic: mechanic
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // processBossMechanic
+  // ---------------------------------------------------------------------------
+
+  function processBossMechanic(state, raidId, mechanicId, playerResponses) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+    if (raid.status !== 'boss_fight') {
+      return { success: false, reason: 'Not in boss fight' };
+    }
+
+    var dungeon = RAID_DUNGEONS[raid.dungeonId];
+    var boss = RAID_BOSSES[dungeon.bossId];
+
+    // Verify mechanic exists for this boss
+    if (boss.mechanics.indexOf(mechanicId) === -1) {
+      return { success: false, reason: 'Mechanic not found for this boss' };
+    }
+
+    var results = [];
+    var responsesMap = {};
+
+    if (playerResponses) {
+      for (var i = 0; i < playerResponses.length; i++) {
+        responsesMap[playerResponses[i].playerId] = playerResponses[i];
+      }
+    }
+
+    for (var p = 0; p < raid.party.length; p++) {
+      var pid = raid.party[p];
+      var response = responsesMap[pid];
+      var responded = response && response.response;
+      var success = responded && response.response !== 'fail';
+      var damageTaken = success ? 0 : 20;
+
+      if (damageTaken > 0 && raid.playerHealth[pid] !== undefined) {
+        raid.playerHealth[pid] = Math.max(0, raid.playerHealth[pid] - damageTaken);
+      }
+
+      results.push({
+        playerId: pid,
+        success: success,
+        damageTaken: damageTaken
+      });
+    }
+
+    raid.combatLog.push({
+      event: 'mechanic_processed',
+      mechanicId: mechanicId,
+      results: results
+    });
+
+    return { success: true, results: results, mechanicId: mechanicId };
+  }
+
+  // ---------------------------------------------------------------------------
+  // advanceBossPhase
+  // ---------------------------------------------------------------------------
+
+  function advanceBossPhase(state, raidId) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+    if (raid.status !== 'boss_fight') {
+      return { success: false, reason: 'Not in boss fight' };
+    }
+
+    var dungeon = RAID_DUNGEONS[raid.dungeonId];
+    var boss = RAID_BOSSES[dungeon.bossId];
+
+    if (raid.bossPhase >= boss.phases) {
+      return { success: false, reason: 'Boss is already at final phase' };
+    }
+
+    raid.bossPhase++;
+
+    // Boss heals a small amount on phase transition
+    var healAmount = Math.floor(raid.bossMaxHealth * 0.05);
+    raid.bossHealth = Math.min(raid.bossMaxHealth, raid.bossHealth + healAmount);
+
+    // New mechanics become available based on phase
+    var newMechanics = boss.mechanics.slice(0, raid.bossPhase);
+
+    raid.combatLog.push({
+      event: 'boss_phase_advanced',
+      phase: raid.bossPhase,
+      bossHealth: raid.bossHealth,
+      healAmount: healAmount
+    });
+
+    return {
+      success: true,
+      phase: raid.bossPhase,
+      newMechanics: newMechanics,
+      bossHealed: healAmount,
+      bossHealth: raid.bossHealth
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // completeBoss
+  // ---------------------------------------------------------------------------
+
+  function completeBoss(state, raidId, seed) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+    if (raid.status !== 'boss_fight') {
+      return { success: false, reason: 'Not in boss fight' };
+    }
+
+    var dungeon = RAID_DUNGEONS[raid.dungeonId];
+    var boss = RAID_BOSSES[dungeon.bossId];
+    var rng = mulberry32(seed || seedFrom(raidId, 'loot'));
+
+    raid.status = 'completed';
+    raid.bossHealth = 0;
+
+    // Generate loot based on party size and boss loot bonus
+    var lootTableData = LOOT_TABLES[dungeon.lootTable];
+    var lootItems = lootTableData ? lootTableData.items : [];
+    var lootCount = Math.floor(raid.party.length * boss.lootBonus);
+    lootCount = Math.max(1, Math.min(lootCount, lootItems.length));
+
+    var shuffledLoot = rngShuffle(rng, lootItems.slice());
+    raid.lootPool = shuffledLoot.slice(0, lootCount);
+
+    // XP and Spark rewards
+    var baseXp = 100 * dungeon.baseDifficulty;
+    var baseSpark = 50 * dungeon.baseDifficulty;
+    var puzzleBonus = raid.puzzlesSolved * 20;
+
+    var lootDist = [];
+    for (var i = 0; i < raid.party.length; i++) {
+      lootDist.push({ playerId: raid.party[i], items: [] });
+    }
+
+    // Round-robin loot distribution as default
+    for (var li = 0; li < raid.lootPool.length; li++) {
+      var recipientIdx = li % raid.party.length;
+      lootDist[recipientIdx].items.push(raid.lootPool[li]);
+      raid.lootDistribution[raid.party[recipientIdx]] = raid.lootDistribution[raid.party[recipientIdx]] || [];
+      raid.lootDistribution[raid.party[recipientIdx]].push(raid.lootPool[li].id);
+    }
+
+    // Record completion
+    if (!state.playerHistory) state.playerHistory = {};
+    if (!state.leaderboard) state.leaderboard = {};
+
+    var durationTicks = (raid.endTick || 0) - raid.startTick;
+    var entry = {
+      raidId: raidId,
+      dungeonId: dungeon.id,
+      party: raid.party.slice(),
+      durationTicks: durationTicks,
+      completedTick: raid.endTick || 0
+    };
+
+    if (!state.leaderboard[dungeon.id]) state.leaderboard[dungeon.id] = [];
+    state.leaderboard[dungeon.id].push(entry);
+    // Sort by duration ascending (fastest first)
+    state.leaderboard[dungeon.id].sort(function(a, b) { return a.durationTicks - b.durationTicks; });
+
+    for (var p = 0; p < raid.party.length; p++) {
+      var pid = raid.party[p];
+      if (!state.playerHistory[pid]) state.playerHistory[pid] = [];
+      state.playerHistory[pid].push({
+        raidId: raidId,
+        dungeonId: dungeon.id,
+        completedTick: raid.endTick || 0,
+        durationTicks: durationTicks
+      });
+
+      // Apply cooldown
+      if (!state.playerCooldowns[pid]) state.playerCooldowns[pid] = {};
+      state.playerCooldowns[pid][dungeon.id] = (raid.endTick || 0) + dungeon.cooldownTicks;
+    }
+
+    raid.combatLog.push({
+      event: 'boss_defeated',
+      bossId: boss.id,
+      lootCount: raid.lootPool.length,
+      xpAwarded: baseXp + puzzleBonus,
+      sparkAwarded: baseSpark + puzzleBonus
+    });
+
+    return {
+      success: true,
+      loot: lootDist,
+      xpAwarded: baseXp + puzzleBonus,
+      sparkAwarded: baseSpark + puzzleBonus,
+      puzzleBonusXp: puzzleBonus
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // failRaid
+  // ---------------------------------------------------------------------------
+
+  function failRaid(state, raidId, reason) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+    if (raid.status === 'completed' || raid.status === 'abandoned') {
+      return { success: false, reason: 'Raid already ended' };
+    }
+
+    var dungeon = RAID_DUNGEONS[raid.dungeonId];
+    raid.status = 'failed';
+
+    // Partial rewards: XP per floor cleared
+    var floorsCleared = 0;
+    for (var f = 0; f < raid.floors.length; f++) {
+      if (raid.floors[f].cleared) floorsCleared++;
+    }
+
+    var partialXp = Math.floor(20 * floorsCleared);
+    var partialSpark = Math.floor(10 * floorsCleared);
+
+    raid.combatLog.push({ event: 'raid_failed', reason: reason, floorsCleared: floorsCleared });
+
+    return {
+      success: true,
+      reason: reason,
+      partialRewards: {
+        xp: partialXp,
+        spark: partialSpark,
+        floorsCleared: floorsCleared
+      }
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // distributeItem
+  // ---------------------------------------------------------------------------
+
+  function distributeItem(state, raidId, itemId, playerId) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+    if (raid.party.indexOf(playerId) === -1) {
+      return { success: false, reason: 'Player not in raid' };
+    }
+
+    // Find item in loot pool
+    var item = null;
+    for (var i = 0; i < raid.lootPool.length; i++) {
+      if (raid.lootPool[i].id === itemId) {
+        item = raid.lootPool[i];
+        break;
+      }
+    }
+    if (!item) {
+      return { success: false, reason: 'Item not in loot pool' };
+    }
+
+    // Check item not already distributed
+    for (var pid in raid.lootDistribution) {
+      if (raid.lootDistribution[pid] && raid.lootDistribution[pid].indexOf(itemId) !== -1) {
+        return { success: false, reason: 'Item already distributed' };
+      }
+    }
+
+    if (!raid.lootDistribution[playerId]) {
+      raid.lootDistribution[playerId] = [];
+    }
+    raid.lootDistribution[playerId].push(itemId);
+
+    raid.combatLog.push({ event: 'item_distributed', itemId: itemId, playerId: playerId });
+
+    return { success: true, item: item, playerId: playerId };
+  }
+
+  // ---------------------------------------------------------------------------
+  // rollForLoot
+  // ---------------------------------------------------------------------------
+
+  function rollForLoot(state, raidId, itemId, seed) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return { success: false, reason: 'Raid not found' };
+    }
+
+    // Find item in loot pool
+    var item = null;
+    for (var i = 0; i < raid.lootPool.length; i++) {
+      if (raid.lootPool[i].id === itemId) {
+        item = raid.lootPool[i];
+        break;
+      }
+    }
+    if (!item) {
+      return { success: false, reason: 'Item not in loot pool' };
+    }
+
+    var rng = mulberry32(seed || seedFrom(raidId, itemId));
+    var rolls = {};
+    var winnerId = null;
+    var highestRoll = -1;
+
+    for (var p = 0; p < raid.party.length; p++) {
+      var pid = raid.party[p];
+      var roll = Math.floor(rng() * 100) + 1;
+      rolls[pid] = roll;
+      if (roll > highestRoll) {
+        highestRoll = roll;
+        winnerId = pid;
+      }
+    }
+
+    // Assign to winner
+    if (!raid.lootDistribution[winnerId]) {
+      raid.lootDistribution[winnerId] = [];
+    }
+    raid.lootDistribution[winnerId].push(itemId);
+
+    raid.combatLog.push({ event: 'loot_rolled', itemId: itemId, winnerId: winnerId, rolls: rolls });
+
+    return { success: true, winnerId: winnerId, rolls: rolls, item: item };
+  }
+
+  // ---------------------------------------------------------------------------
+  // getRaidState
+  // ---------------------------------------------------------------------------
+
+  function getRaidState(state, raidId) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return null;
+    }
+    return raid;
+  }
+
+  // ---------------------------------------------------------------------------
+  // getPlayerCooldown
+  // ---------------------------------------------------------------------------
+
+  function getPlayerCooldown(state, playerId, dungeonId, currentTick) {
+    if (!state.playerCooldowns) state.playerCooldowns = {};
+    var playerCds = state.playerCooldowns[playerId];
+    if (!playerCds || !playerCds[dungeonId]) {
+      return { onCooldown: false, remainingTicks: 0 };
+    }
+
+    var expiryTick = playerCds[dungeonId];
+    if (currentTick >= expiryTick) {
+      return { onCooldown: false, remainingTicks: 0 };
+    }
+
+    return { onCooldown: true, remainingTicks: expiryTick - currentTick };
+  }
+
+  // ---------------------------------------------------------------------------
+  // getAvailableRaids
+  // ---------------------------------------------------------------------------
+
+  function getAvailableRaids(state, playerId, currentTick) {
+    var available = [];
+    for (var raidId in state.raids) {
+      var raid = state.raids[raidId];
+      if (raid.status !== 'forming') continue;
+      if (raid.party.indexOf(playerId) !== -1) continue;
+
+      var dungeon = RAID_DUNGEONS[raid.dungeonId];
+      if (!dungeon) continue;
+      if (raid.party.length >= dungeon.maxPlayers) continue;
+
+      var cd = getPlayerCooldown(state, playerId, raid.dungeonId, currentTick);
+      if (cd.onCooldown) continue;
+
+      available.push({
+        raidId: raidId,
+        dungeonId: raid.dungeonId,
+        dungeonName: dungeon.name,
+        leader: raid.leader,
+        partySize: raid.party.length,
+        maxPlayers: dungeon.maxPlayers,
+        minPlayers: dungeon.minPlayers,
+        levelRequired: dungeon.levelRequired
+      });
+    }
+    return available;
+  }
+
+  // ---------------------------------------------------------------------------
+  // getRaidHistory
+  // ---------------------------------------------------------------------------
+
+  function getRaidHistory(state, playerId) {
+    if (!state.playerHistory || !state.playerHistory[playerId]) {
+      return [];
+    }
+    return state.playerHistory[playerId].slice();
+  }
+
+  // ---------------------------------------------------------------------------
+  // getRaidLeaderboard
+  // ---------------------------------------------------------------------------
+
+  function getRaidLeaderboard(state, dungeonId, count) {
+    if (!state.leaderboard || !state.leaderboard[dungeonId]) {
+      return [];
+    }
+    var board = state.leaderboard[dungeonId].slice();
+    // Sort by durationTicks ascending (fastest first)
+    board.sort(function(a, b) { return a.durationTicks - b.durationTicks; });
+    if (count && count > 0) {
+      board = board.slice(0, count);
+    }
+    return board;
+  }
+
+  // ---------------------------------------------------------------------------
+  // getDungeons
+  // ---------------------------------------------------------------------------
+
+  function getDungeons() {
+    return RAID_DUNGEONS;
+  }
+
+  // ---------------------------------------------------------------------------
+  // getBosses
+  // ---------------------------------------------------------------------------
+
+  function getBosses() {
+    return RAID_BOSSES;
+  }
+
+  // ---------------------------------------------------------------------------
+  // getPartyStats
+  // ---------------------------------------------------------------------------
+
+  function getPartyStats(state, raidId) {
+    var raid = state.raids[raidId];
+    if (!raid) {
+      return null;
+    }
+
+    var dungeon = RAID_DUNGEONS[raid.dungeonId];
+    var boss = RAID_BOSSES[dungeon.bossId];
+
+    var partySize = raid.party.length;
+    var scaledBossHealth = boss.baseHealth + (boss.healthPerPlayer * partySize);
+
+    // Estimate DPS (simple model: 20 avg damage per player per attack)
+    var estimatedDps = partySize * 20;
+
+    return {
+      partySize: partySize,
+      party: raid.party.slice(),
+      leader: raid.leader,
+      dungeon: dungeon.name,
+      dungeonDifficulty: dungeon.baseDifficulty,
+      scaledBossHealth: scaledBossHealth,
+      estimatedTotalDps: estimatedDps,
+      puzzlesSolved: raid.puzzlesSolved,
+      floorsTotal: dungeon.floors,
+      currentFloor: raid.currentFloor
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // EXPORTS
+  // ---------------------------------------------------------------------------
+
+  exports.RAID_DUNGEONS   = RAID_DUNGEONS;
+  exports.RAID_BOSSES     = RAID_BOSSES;
+  exports.PUZZLE_TYPES    = PUZZLE_TYPES;
+  exports.LOOT_TABLES     = LOOT_TABLES;
+  exports.ENCOUNTER_TYPES = ENCOUNTER_TYPES;
+
+  exports.createRaidStateStore  = createRaidStateStore;
+  exports.createRaid            = createRaid;
+  exports.joinRaid              = joinRaid;
+  exports.joinRaidAtTick        = joinRaidAtTick;
+  exports.leaveRaid             = leaveRaid;
+  exports.startRaid             = startRaid;
+  exports.advanceFloor          = advanceFloor;
+  exports.solvePuzzle           = solvePuzzle;
+  exports.startBossFight        = startBossFight;
+  exports.attackBoss            = attackBoss;
+  exports.processBossMechanic   = processBossMechanic;
+  exports.advanceBossPhase      = advanceBossPhase;
+  exports.completeBoss          = completeBoss;
+  exports.failRaid              = failRaid;
+  exports.distributeItem        = distributeItem;
+  exports.rollForLoot           = rollForLoot;
+  exports.getRaidState          = getRaidState;
+  exports.getPlayerCooldown     = getPlayerCooldown;
+  exports.getAvailableRaids     = getAvailableRaids;
+  exports.getRaidHistory        = getRaidHistory;
+  exports.getRaidLeaderboard    = getRaidLeaderboard;
+  exports.getDungeons           = getDungeons;
+  exports.getBosses             = getBosses;
+  exports.getPartyStats         = getPartyStats;
+
+})(typeof module !== 'undefined' ? module.exports : (window.RaidSystem = {}));
+
+
+// specializations.js
+// specializations.js
+/**
+ * ZION Deep Skill Specialization System
+ * 18 unique character builds across 6 skill trees.
+ * Each tree unlocks 3 specializations at level 5, adding mastery levels,
+ * exclusive recipes, exclusive perks, and stat bonuses.
+ * Constitution §2.3 — players have the right to Learn and Create.
+ */
+
+(function(exports) {
+  'use strict';
+
+  // ============================================================================
+  // CONSTANTS
+  // ============================================================================
+
+  var TREES = ['crafting', 'combat', 'exploration', 'social', 'gathering', 'fishing'];
+
+  var LEVEL_REQUIRED = 5;        // skill tree level required to specialise
+  var MAX_MASTERY    = 10;       // mastery levels within a specialisation
+  var BASE_RESPEC    = 50;       // Spark cost for first respec (×respecCount+1)
+
+  // ============================================================================
+  // SPECIALIZATIONS DATA
+  // ============================================================================
+
+  var SPECIALIZATIONS = {
+
+    // ---- CRAFTING (3) -------------------------------------------------------
+    armorer: {
+      id: 'armorer',
+      name: 'Armorer',
+      tree: 'crafting',
+      description: 'Master of protective equipment and shields',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'craft_quality',          category: 'armor', value: 0.20 },
+        { type: 'material_efficiency',    value: 0.10 },
+        { type: 'repair_cost_reduction',  value: 0.15 }
+      ],
+      exclusiveRecipes: ['diamond_shield', 'crystal_armor', 'phoenix_plate'],
+      exclusivePerks:   ['master_temper', 'alloy_fusion', 'unbreakable'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Armorer' },
+        5:  { title: 'Journeyman Armorer', cosmetic: 'armorer_glow' },
+        7:  { title: 'Master Armorer',     cosmetic: 'armorer_aura' },
+        10: { title: 'Grand Master Armorer', cosmetic: 'legendary_armorer' }
+      }
+    },
+
+    jeweler: {
+      id: 'jeweler',
+      name: 'Jeweler',
+      tree: 'crafting',
+      description: 'Expert in gemstones, rings, and enchanted accessories',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'gem_yield',           value: 0.25 },
+        { type: 'enchant_potency',     value: 0.15 },
+        { type: 'accessory_quality',   value: 0.20 }
+      ],
+      exclusiveRecipes: ['starfire_ring', 'void_pendant', 'prismatic_crown'],
+      exclusivePerks:   ['gem_sight', 'flawless_cut', 'enchant_weave'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Jeweler' },
+        5:  { title: 'Journeyman Jeweler', cosmetic: 'jeweler_sparkle' },
+        7:  { title: 'Master Jeweler',     cosmetic: 'jeweler_shimmer' },
+        10: { title: 'Grand Master Jeweler', cosmetic: 'legendary_jeweler' }
+      }
+    },
+
+    alchemist: {
+      id: 'alchemist',
+      name: 'Alchemist',
+      tree: 'crafting',
+      description: 'Transmutes raw materials and brews powerful potions',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'potion_potency',       value: 0.30 },
+        { type: 'transmute_chance',     value: 0.20 },
+        { type: 'ingredient_reduction', value: 0.15 }
+      ],
+      exclusiveRecipes: ['philosophers_draught', 'transmutation_elixir', 'volatile_catalyst'],
+      exclusivePerks:   ['rapid_brew', 'material_transmute', 'potion_cascade'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Alchemist' },
+        5:  { title: 'Journeyman Alchemist', cosmetic: 'alchemist_fumes' },
+        7:  { title: 'Master Alchemist',     cosmetic: 'alchemist_aura' },
+        10: { title: 'Grand Master Alchemist', cosmetic: 'legendary_alchemist' }
+      }
+    },
+
+    // ---- COMBAT (3) ---------------------------------------------------------
+    berserker: {
+      id: 'berserker',
+      name: 'Berserker',
+      tree: 'combat',
+      description: 'Unleashes raw fury, trading defence for devastating attacks',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'damage_bonus',      value: 0.35 },
+        { type: 'attack_speed',      value: 0.20 },
+        { type: 'crit_chance',       value: 0.15 }
+      ],
+      exclusiveRecipes: ['berserk_tonic', 'rage_rune', 'fury_sigil'],
+      exclusivePerks:   ['blood_frenzy', 'unstoppable', 'final_stand'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Berserker' },
+        5:  { title: 'Journeyman Berserker', cosmetic: 'berserker_flames' },
+        7:  { title: 'Master Berserker',     cosmetic: 'berserker_aura' },
+        10: { title: 'Grand Master Berserker', cosmetic: 'legendary_berserker' }
+      }
+    },
+
+    guardian: {
+      id: 'guardian',
+      name: 'Guardian',
+      tree: 'combat',
+      description: 'Immovable protector who shields allies and outlasts foes',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'defense_bonus',       value: 0.30 },
+        { type: 'hp_bonus',            value: 0.25 },
+        { type: 'block_chance',        value: 0.20 }
+      ],
+      exclusiveRecipes: ['titan_shield', 'guardian_plate', 'sentinel_rune'],
+      exclusivePerks:   ['ironwall', 'shield_bash', 'last_bastion'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Guardian' },
+        5:  { title: 'Journeyman Guardian', cosmetic: 'guardian_shield_glow' },
+        7:  { title: 'Master Guardian',     cosmetic: 'guardian_aura' },
+        10: { title: 'Grand Master Guardian', cosmetic: 'legendary_guardian' }
+      }
+    },
+
+    tactician: {
+      id: 'tactician',
+      name: 'Tactician',
+      tree: 'combat',
+      description: 'Cunning strategist who turns battlefield conditions to advantage',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'combo_damage',      value: 0.25 },
+        { type: 'debuff_duration',   value: 0.30 },
+        { type: 'evasion_chance',    value: 0.15 }
+      ],
+      exclusiveRecipes: ['tacticians_manual', 'smoke_grenade', 'field_kit'],
+      exclusivePerks:   ['exploit_weakness', 'counter_stance', 'warmaster'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Tactician' },
+        5:  { title: 'Journeyman Tactician', cosmetic: 'tactician_mark' },
+        7:  { title: 'Master Tactician',     cosmetic: 'tactician_aura' },
+        10: { title: 'Grand Master Tactician', cosmetic: 'legendary_tactician' }
+      }
+    },
+
+    // ---- EXPLORATION (3) ----------------------------------------------------
+    pathfinder: {
+      id: 'pathfinder',
+      name: 'Pathfinder',
+      tree: 'exploration',
+      description: 'Blazes new trails and moves faster through any terrain',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'movement_speed',     value: 0.20 },
+        { type: 'stamina_regen',      value: 0.25 },
+        { type: 'terrain_discount',   value: 0.15 }
+      ],
+      exclusiveRecipes: ['trailblazers_boots', 'wind_compass', 'pathfinder_cloak'],
+      exclusivePerks:   ['fleet_foot', 'trailblazer', 'terrain_mastery'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Pathfinder' },
+        5:  { title: 'Journeyman Pathfinder', cosmetic: 'pathfinder_trail' },
+        7:  { title: 'Master Pathfinder',     cosmetic: 'pathfinder_aura' },
+        10: { title: 'Grand Master Pathfinder', cosmetic: 'legendary_pathfinder' }
+      }
+    },
+
+    cartographer: {
+      id: 'cartographer',
+      name: 'Cartographer',
+      tree: 'exploration',
+      description: 'Maps the world in precise detail and reveals hidden areas',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'map_reveal_radius',    value: 0.50 },
+        { type: 'discovery_xp_bonus',   value: 0.25 },
+        { type: 'hidden_area_chance',   value: 0.20 }
+      ],
+      exclusiveRecipes: ['master_chart', 'lodestone_compass', 'cartographers_lens'],
+      exclusivePerks:   ['eagle_eye', 'secret_passages', 'world_memory'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Cartographer' },
+        5:  { title: 'Journeyman Cartographer', cosmetic: 'cartographer_glow' },
+        7:  { title: 'Master Cartographer',     cosmetic: 'cartographer_aura' },
+        10: { title: 'Grand Master Cartographer', cosmetic: 'legendary_cartographer' }
+      }
+    },
+
+    archaeologist: {
+      id: 'archaeologist',
+      name: 'Archaeologist',
+      tree: 'exploration',
+      description: 'Uncovers ancient relics, lore fragments, and buried treasure',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'relic_find_chance',   value: 0.30 },
+        { type: 'lore_xp_bonus',       value: 0.25 },
+        { type: 'dig_speed',           value: 0.20 }
+      ],
+      exclusiveRecipes: ['ancient_trowel', 'relic_scanner', 'preservation_kit'],
+      exclusivePerks:   ['dust_reader', 'relic_sense', 'ancient_knowledge'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Archaeologist' },
+        5:  { title: 'Journeyman Archaeologist', cosmetic: 'archaeologist_dust' },
+        7:  { title: 'Master Archaeologist',     cosmetic: 'archaeologist_aura' },
+        10: { title: 'Grand Master Archaeologist', cosmetic: 'legendary_archaeologist' }
+      }
+    },
+
+    // ---- SOCIAL (3) ---------------------------------------------------------
+    diplomat: {
+      id: 'diplomat',
+      name: 'Diplomat',
+      tree: 'social',
+      description: 'Resolves conflicts, earns trust, and negotiates superior terms',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'reputation_gain',    value: 0.30 },
+        { type: 'trade_discount',     value: 0.15 },
+        { type: 'conflict_reduction', value: 0.25 }
+      ],
+      exclusiveRecipes: ['peace_accord', 'diplomats_signet', 'treaty_scroll'],
+      exclusivePerks:   ['smooth_talker', 'silver_tongue', 'world_renown'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Diplomat' },
+        5:  { title: 'Journeyman Diplomat', cosmetic: 'diplomat_seal' },
+        7:  { title: 'Master Diplomat',     cosmetic: 'diplomat_aura' },
+        10: { title: 'Grand Master Diplomat', cosmetic: 'legendary_diplomat' }
+      }
+    },
+
+    entertainer: {
+      id: 'entertainer',
+      name: 'Entertainer',
+      tree: 'social',
+      description: 'Captivates audiences, boosts morale, and earns Spark through performance',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'performance_spark',  value: 0.40 },
+        { type: 'audience_cap_bonus', value: 0.30 },
+        { type: 'morale_boost',       value: 0.20 }
+      ],
+      exclusiveRecipes: ['masterwork_instrument', 'sparkle_costume', 'encore_potion'],
+      exclusivePerks:   ['showstopper', 'crowd_control', 'standing_ovation'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Entertainer' },
+        5:  { title: 'Journeyman Entertainer', cosmetic: 'entertainer_spotlight' },
+        7:  { title: 'Master Entertainer',     cosmetic: 'entertainer_aura' },
+        10: { title: 'Grand Master Entertainer', cosmetic: 'legendary_entertainer' }
+      }
+    },
+
+    merchant_prince: {
+      id: 'merchant_prince',
+      name: 'Merchant Prince',
+      tree: 'social',
+      description: 'Commands the market, sets prices, and builds trade empires',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'sell_price_bonus',   value: 0.20 },
+        { type: 'market_fee_discount',value: 0.30 },
+        { type: 'trade_route_bonus',  value: 0.25 }
+      ],
+      exclusiveRecipes: ['merchant_charter', 'golden_ledger', 'trade_caravan'],
+      exclusivePerks:   ['market_monopoly', 'bulk_discount', 'economic_empire'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Merchant' },
+        5:  { title: 'Journeyman Merchant', cosmetic: 'merchant_gold_glow' },
+        7:  { title: 'Master Merchant',     cosmetic: 'merchant_aura' },
+        10: { title: 'Merchant Prince',     cosmetic: 'legendary_merchant' }
+      }
+    },
+
+    // ---- GATHERING (3) ------------------------------------------------------
+    herbalist: {
+      id: 'herbalist',
+      name: 'Herbalist',
+      tree: 'gathering',
+      description: 'Expert in plants, herbs, and natural remedies',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'herb_yield',        value: 0.35 },
+        { type: 'rare_herb_chance',  value: 0.20 },
+        { type: 'plant_regrow_rate', value: 0.25 }
+      ],
+      exclusiveRecipes: ['moonpetal_salve', 'sunfire_herb_bundle', 'ancient_root_extract'],
+      exclusivePerks:   ['green_thumb', 'herb_sense', 'natures_bounty'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Herbalist' },
+        5:  { title: 'Journeyman Herbalist', cosmetic: 'herbalist_bloom' },
+        7:  { title: 'Master Herbalist',     cosmetic: 'herbalist_aura' },
+        10: { title: 'Grand Master Herbalist', cosmetic: 'legendary_herbalist' }
+      }
+    },
+
+    miner: {
+      id: 'miner',
+      name: 'Miner',
+      tree: 'gathering',
+      description: 'Extracts ore, gems, and minerals with unmatched efficiency',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'ore_yield',          value: 0.30 },
+        { type: 'gem_find_chance',    value: 0.20 },
+        { type: 'mining_speed',       value: 0.25 }
+      ],
+      exclusiveRecipes: ['mithril_pickaxe', 'deep_core_drill', 'miners_lamp'],
+      exclusivePerks:   ['ore_sense', 'vein_mastery', 'deep_earth'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Miner' },
+        5:  { title: 'Journeyman Miner', cosmetic: 'miner_dust_trail' },
+        7:  { title: 'Master Miner',     cosmetic: 'miner_aura' },
+        10: { title: 'Grand Master Miner', cosmetic: 'legendary_miner' }
+      }
+    },
+
+    lumberjack: {
+      id: 'lumberjack',
+      name: 'Lumberjack',
+      tree: 'gathering',
+      description: 'Fells trees at speed and cultivates rare wood species',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'wood_yield',         value: 0.35 },
+        { type: 'rare_wood_chance',   value: 0.20 },
+        { type: 'chop_speed',         value: 0.25 }
+      ],
+      exclusiveRecipes: ['enchanted_axe', 'ancient_timber_kit', 'bark_armor'],
+      exclusivePerks:   ['timber_sense', 'cleave_master', 'forest_heart'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Lumberjack' },
+        5:  { title: 'Journeyman Lumberjack', cosmetic: 'lumberjack_splinters' },
+        7:  { title: 'Master Lumberjack',     cosmetic: 'lumberjack_aura' },
+        10: { title: 'Grand Master Lumberjack', cosmetic: 'legendary_lumberjack' }
+      }
+    },
+
+    // ---- FISHING (3) --------------------------------------------------------
+    angler: {
+      id: 'angler',
+      name: 'Angler',
+      tree: 'fishing',
+      description: 'Patient fisherman who lands big catches in all conditions',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'fish_quality',      value: 0.25 },
+        { type: 'bite_rate',         value: 0.20 },
+        { type: 'catch_bonus',       value: 0.15 }
+      ],
+      exclusiveRecipes: ['masterwork_rod', 'enchanted_lure', 'anglers_creel'],
+      exclusivePerks:   ['patient_angler', 'lucky_cast', 'trophy_hunter'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Angler' },
+        5:  { title: 'Journeyman Angler', cosmetic: 'angler_shimmer' },
+        7:  { title: 'Master Angler',     cosmetic: 'angler_aura' },
+        10: { title: 'Grand Master Angler', cosmetic: 'legendary_angler' }
+      }
+    },
+
+    deep_sea: {
+      id: 'deep_sea',
+      name: 'Deep Sea Fisher',
+      tree: 'fishing',
+      description: 'Hunts massive creatures in the deepest waters',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'deep_fish_chance',   value: 0.35 },
+        { type: 'large_catch_bonus',  value: 0.30 },
+        { type: 'storm_resistance',   value: 0.20 }
+      ],
+      exclusiveRecipes: ['abyssal_harpoon', 'leviathan_hook', 'deep_sea_kit'],
+      exclusivePerks:   ['sea_legs', 'kraken_bait', 'abyss_caller'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Deep Sea Fisher' },
+        5:  { title: 'Journeyman Deep Sea Fisher', cosmetic: 'deep_sea_glow' },
+        7:  { title: 'Master Deep Sea Fisher',     cosmetic: 'deep_sea_aura' },
+        10: { title: 'Grand Master Deep Sea Fisher', cosmetic: 'legendary_deep_sea' }
+      }
+    },
+
+    aquaculturist: {
+      id: 'aquaculturist',
+      name: 'Aquaculturist',
+      tree: 'fishing',
+      description: 'Breeds rare fish and cultivates aquatic farms for steady yields',
+      levelRequired: LEVEL_REQUIRED,
+      bonuses: [
+        { type: 'breeding_speed',     value: 0.30 },
+        { type: 'aqua_farm_yield',    value: 0.35 },
+        { type: 'rare_spawn_chance',  value: 0.20 }
+      ],
+      exclusiveRecipes: ['aqua_farm_kit', 'breeding_tank', 'rare_fish_feed'],
+      exclusivePerks:   ['fish_whisperer', 'rapid_breed', 'aquatic_empire'],
+      masteryLevels: MAX_MASTERY,
+      xpPerMastery: 500,
+      masteryRewards: {
+        3:  { title: 'Apprentice Aquaculturist' },
+        5:  { title: 'Journeyman Aquaculturist', cosmetic: 'aqua_bubble_trail' },
+        7:  { title: 'Master Aquaculturist',     cosmetic: 'aquaculturist_aura' },
+        10: { title: 'Grand Master Aquaculturist', cosmetic: 'legendary_aquaculturist' }
+      }
+    }
+  };
+
+  // ============================================================================
+  // TREE → SPEC MAPPING (quick lookup)
+  // ============================================================================
+
+  var TREE_SPECS = {
+    crafting:    ['armorer',     'jeweler',       'alchemist'      ],
+    combat:      ['berserker',   'guardian',      'tactician'      ],
+    exploration: ['pathfinder',  'cartographer',  'archaeologist'  ],
+    social:      ['diplomat',    'entertainer',   'merchant_prince'],
+    gathering:   ['herbalist',   'miner',         'lumberjack'     ],
+    fishing:     ['angler',      'deep_sea',      'aquaculturist'  ]
+  };
+
+  // ============================================================================
+  // STATE HELPERS
+  // ============================================================================
+
+  /**
+   * Create a fresh SPEC_STATE for a player.
+   * @param {string} playerId
+   * @returns {Object}
+   */
+  function createSpecState(playerId) {
+    return {
+      playerId:           playerId,
+      specializations:    {},   // tree → {specId, masteryLevel, masteryXP} | null
+      respecCount:        0,
+      totalMasteryPoints: 0
+    };
+  }
+
+  function _getPlayerState(state, playerId) {
+    if (!state || !state[playerId]) return null;
+    return state[playerId];
+  }
+
+  function _setPlayerState(state, playerId, playerState) {
+    state[playerId] = playerState;
+  }
+
+  function _clonePlayerState(ps) {
+    var specs = {};
+    var keys  = Object.keys(ps.specializations);
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      specs[k] = ps.specializations[k]
+        ? {
+            specId:       ps.specializations[k].specId,
+            masteryLevel: ps.specializations[k].masteryLevel,
+            masteryXP:    ps.specializations[k].masteryXP
+          }
+        : null;
+    }
+    return {
+      playerId:           ps.playerId,
+      specializations:    specs,
+      respecCount:        ps.respecCount,
+      totalMasteryPoints: ps.totalMasteryPoints
+    };
+  }
+
+  /**
+   * Ensure the player exists in state, creating a fresh entry if needed.
+   * @param {Object} state  shared state map { playerId: SPEC_STATE }
+   * @param {string} playerId
+   * @returns {Object} player state
+   */
+  function _ensurePlayer(state, playerId) {
+    if (!state[playerId]) {
+      state[playerId] = createSpecState(playerId);
+    }
+    return state[playerId];
+  }
+
+  // ============================================================================
+  // CORE FUNCTIONS
+  // ============================================================================
+
+  /**
+   * Choose a specialization for a skill tree.
+   * @param {Object} state     shared state map
+   * @param {string} playerId
+   * @param {string} tree      one of the 6 tree names
+   * @param {string} specId    specialization id
+   * @param {number} treeLevel the player's current level in the tree (external)
+   * @returns {{ success, specialization, reason }}
+   */
+  function chooseSpecialization(state, playerId, tree, specId, treeLevel) {
+    var ps = _ensurePlayer(state, playerId);
+
+    // Validate tree
+    if (TREES.indexOf(tree) === -1) {
+      return { success: false, specialization: null, reason: 'Unknown tree: ' + tree };
+    }
+
+    // Validate specId belongs to tree
+    var validSpecs = TREE_SPECS[tree];
+    if (!validSpecs || validSpecs.indexOf(specId) === -1) {
+      return { success: false, specialization: null, reason: 'Specialization "' + specId + '" does not belong to tree "' + tree + '"' };
+    }
+
+    var spec = SPECIALIZATIONS[specId];
+    if (!spec) {
+      return { success: false, specialization: null, reason: 'Unknown specialization: ' + specId };
+    }
+
+    // Level requirement
+    var level = (typeof treeLevel === 'number') ? treeLevel : 0;
+    if (level < spec.levelRequired) {
+      return { success: false, specialization: null, reason: 'Tree level ' + level + ' is below required level ' + spec.levelRequired };
+    }
+
+    // Already specialised in this tree?
+    if (ps.specializations[tree]) {
+      return { success: false, specialization: null, reason: 'Already specialised in "' + tree + '". Respec first.' };
+    }
+
+    // Assign
+    ps.specializations[tree] = {
+      specId:       specId,
+      masteryLevel: 0,
+      masteryXP:    0
+    };
+
+    return { success: true, specialization: spec, reason: null };
+  }
+
+  /**
+   * Remove current specialization. Costs Spark (external system deducts).
+   * Cost = 50 * (respecCount + 1).
+   * @param {Object} state
+   * @param {string} playerId
+   * @param {string} tree
+   * @returns {{ success, cost, reason, removedSpecId }}
+   */
+  function respec(state, playerId, tree) {
+    var ps = _ensurePlayer(state, playerId);
+
+    if (TREES.indexOf(tree) === -1) {
+      return { success: false, cost: 0, reason: 'Unknown tree: ' + tree, removedSpecId: null };
+    }
+
+    if (!ps.specializations[tree]) {
+      return { success: false, cost: 0, reason: 'No specialization active in tree "' + tree + '"', removedSpecId: null };
+    }
+
+    var cost = BASE_RESPEC * (ps.respecCount + 1);
+    var removedSpecId = ps.specializations[tree].specId;
+
+    // Subtract mastery points from totalMasteryPoints
+    var removedLevel = ps.specializations[tree].masteryLevel || 0;
+    ps.totalMasteryPoints = Math.max(0, (ps.totalMasteryPoints || 0) - removedLevel);
+
+    // Clear spec
+    ps.specializations[tree] = null;
+    ps.respecCount = (ps.respecCount || 0) + 1;
+
+    return { success: true, cost: cost, reason: null, removedSpecId: removedSpecId };
+  }
+
+  /**
+   * Add mastery XP to active specialization. Handles level-ups.
+   * @param {Object} state
+   * @param {string} playerId
+   * @param {string} tree
+   * @param {number} xp
+   * @returns {{ xpAdded, levelUp, newLevel, reward }}
+   */
+  function awardMasteryXP(state, playerId, tree, xp) {
+    var ps = _ensurePlayer(state, playerId);
+
+    if (!ps.specializations[tree]) {
+      return { xpAdded: 0, levelUp: false, newLevel: 0, reward: null };
+    }
+
+    var entry   = ps.specializations[tree];
+    var spec    = SPECIALIZATIONS[entry.specId];
+    if (!spec) {
+      return { xpAdded: 0, levelUp: false, newLevel: 0, reward: null };
+    }
+
+    var xpAdded  = (typeof xp === 'number' && xp > 0) ? xp : 0;
+    var oldLevel = entry.masteryLevel || 0;
+
+    // Don't add beyond max mastery
+    if (oldLevel >= MAX_MASTERY) {
+      return { xpAdded: 0, levelUp: false, newLevel: oldLevel, reward: null };
+    }
+
+    entry.masteryXP = (entry.masteryXP || 0) + xpAdded;
+
+    // Level up loop
+    var levelUp = false;
+    var reward  = null;
+
+    while (entry.masteryLevel < MAX_MASTERY) {
+      var needed = spec.xpPerMastery;
+      if (entry.masteryXP >= needed) {
+        entry.masteryXP  -= needed;
+        entry.masteryLevel++;
+        levelUp = true;
+
+        // Update total mastery points
+        ps.totalMasteryPoints = (ps.totalMasteryPoints || 0) + 1;
+
+        // Mastery reward?
+        var rewardData = spec.masteryRewards[entry.masteryLevel];
+        if (rewardData) {
+          reward = rewardData;
+        }
+      } else {
+        break;
+      }
+    }
+
+    return {
+      xpAdded:  xpAdded,
+      levelUp:  levelUp,
+      newLevel: entry.masteryLevel,
+      reward:   reward
+    };
+  }
+
+  /**
+   * Return current mastery level for tree's active specialization (0 if none).
+   * @param {Object} state
+   * @param {string} playerId
+   * @param {string} tree
+   * @returns {number}
+   */
+  function getMasteryLevel(state, playerId, tree) {
+    var ps = _ensurePlayer(state, playerId);
+    if (!ps.specializations[tree]) return 0;
+    return ps.specializations[tree].masteryLevel || 0;
+  }
+
+  /**
+   * Return mastery progress details.
+   * @param {Object} state
+   * @param {string} playerId
+   * @param {string} tree
+   * @returns {{ level, xp, xpToNext, percent }}
+   */
+  function getMasteryProgress(state, playerId, tree) {
+    var ps = _ensurePlayer(state, playerId);
+    if (!ps.specializations[tree]) {
+      return { level: 0, xp: 0, xpToNext: 0, percent: 0 };
+    }
+
+    var entry   = ps.specializations[tree];
+    var spec    = SPECIALIZATIONS[entry.specId];
+    var level   = entry.masteryLevel || 0;
+    var xp      = entry.masteryXP    || 0;
+    var xpToNext = (level < MAX_MASTERY) ? (spec ? spec.xpPerMastery : 500) : 0;
+    var percent  = (xpToNext > 0) ? Math.floor((xp / xpToNext) * 100) : 100;
+
+    return { level: level, xp: xp, xpToNext: xpToNext, percent: percent };
+  }
+
+  /**
+   * Return player's chosen specialization for a tree, or null.
+   * @param {Object} state
+   * @param {string} playerId
+   * @param {string} tree
+   * @returns {Object|null} SPECIALIZATIONS entry or null
+   */
+  function getSpecialization(state, playerId, tree) {
+    var ps = _ensurePlayer(state, playerId);
+    if (!ps.specializations[tree]) return null;
+    return SPECIALIZATIONS[ps.specializations[tree].specId] || null;
+  }
+
+  /**
+   * Return all chosen specializations for a player.
+   * @param {Object} state
+   * @param {string} playerId
+   * @returns {Object} { tree: spec|null }
+   */
+  function getAllSpecializations(state, playerId) {
+    var ps     = _ensurePlayer(state, playerId);
+    var result = {};
+    for (var i = 0; i < TREES.length; i++) {
+      var tree = TREES[i];
+      var entry = ps.specializations[tree];
+      result[tree] = entry ? (SPECIALIZATIONS[entry.specId] || null) : null;
+    }
+    return result;
+  }
+
+  /**
+   * Return the 3 specialization options for a tree.
+   * @param {string} tree
+   * @returns {Array}
+   */
+  function getAvailableSpecializations(tree) {
+    var ids = TREE_SPECS[tree];
+    if (!ids) return [];
+    var result = [];
+    for (var i = 0; i < ids.length; i++) {
+      if (SPECIALIZATIONS[ids[i]]) {
+        result.push(SPECIALIZATIONS[ids[i]]);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Return specialization definition by id.
+   * @param {string} specId
+   * @returns {Object|null}
+   */
+  function getSpecById(specId) {
+    return SPECIALIZATIONS[specId] || null;
+  }
+
+  /**
+   * Return total bonus value for a bonus type across all active specializations.
+   * @param {Object} state
+   * @param {string} playerId
+   * @param {string} bonusType
+   * @returns {number}
+   */
+  function getBonuses(state, playerId, bonusType) {
+    var ps    = _ensurePlayer(state, playerId);
+    var total = 0;
+    var treeKeys = Object.keys(ps.specializations);
+    for (var i = 0; i < treeKeys.length; i++) {
+      var entry = ps.specializations[treeKeys[i]];
+      if (!entry) continue;
+      var spec = SPECIALIZATIONS[entry.specId];
+      if (!spec) continue;
+      for (var j = 0; j < spec.bonuses.length; j++) {
+        if (spec.bonuses[j].type === bonusType) {
+          total += spec.bonuses[j].value;
+        }
+      }
+    }
+    return total;
+  }
+
+  /**
+   * Check if player has access to an exclusive recipe.
+   * @param {Object} state
+   * @param {string} playerId
+   * @param {string} recipeId
+   * @returns {boolean}
+   */
+  function hasExclusiveRecipe(state, playerId, recipeId) {
+    var recipes = getExclusiveRecipes(state, playerId);
+    return recipes.indexOf(recipeId) !== -1;
+  }
+
+  /**
+   * Return all exclusive recipes unlocked by player's active specializations.
+   * @param {Object} state
+   * @param {string} playerId
+   * @returns {Array<string>}
+   */
+  function getExclusiveRecipes(state, playerId) {
+    var ps     = _ensurePlayer(state, playerId);
+    var result = [];
+    var treeKeys = Object.keys(ps.specializations);
+    for (var i = 0; i < treeKeys.length; i++) {
+      var entry = ps.specializations[treeKeys[i]];
+      if (!entry) continue;
+      var spec = SPECIALIZATIONS[entry.specId];
+      if (!spec) continue;
+      for (var j = 0; j < spec.exclusiveRecipes.length; j++) {
+        result.push(spec.exclusiveRecipes[j]);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Check if player has access to an exclusive perk.
+   * @param {Object} state
+   * @param {string} playerId
+   * @param {string} perkId
+   * @returns {boolean}
+   */
+  function hasExclusivePerk(state, playerId, perkId) {
+    var ps = _ensurePlayer(state, playerId);
+    var treeKeys = Object.keys(ps.specializations);
+    for (var i = 0; i < treeKeys.length; i++) {
+      var entry = ps.specializations[treeKeys[i]];
+      if (!entry) continue;
+      var spec = SPECIALIZATIONS[entry.specId];
+      if (!spec) continue;
+      if (spec.exclusivePerks.indexOf(perkId) !== -1) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Return current mastery title for tree's active specialization.
+   * @param {Object} state
+   * @param {string} playerId
+   * @param {string} tree
+   * @returns {string|null}
+   */
+  function getTitle(state, playerId, tree) {
+    var ps = _ensurePlayer(state, playerId);
+    if (!ps.specializations[tree]) return null;
+
+    var entry = ps.specializations[tree];
+    var spec  = SPECIALIZATIONS[entry.specId];
+    if (!spec) return null;
+
+    var level   = entry.masteryLevel || 0;
+    var rewards = spec.masteryRewards;
+    var title   = null;
+
+    // Walk down from current level to find highest awarded title
+    var milestones = Object.keys(rewards).map(Number).sort(function(a, b) { return a - b; });
+    for (var i = 0; i < milestones.length; i++) {
+      if (level >= milestones[i]) {
+        title = rewards[milestones[i]].title;
+      }
+    }
+    return title;
+  }
+
+  /**
+   * Return sum of all mastery levels across all trees.
+   * @param {Object} state
+   * @param {string} playerId
+   * @returns {number}
+   */
+  function getTotalMasteryPoints(state, playerId) {
+    var ps = _ensurePlayer(state, playerId);
+    return ps.totalMasteryPoints || 0;
+  }
+
+  /**
+   * Return current respec cost for a player.
+   * Cost = 50 * (respecCount + 1).
+   * @param {Object} state
+   * @param {string} playerId
+   * @returns {number}
+   */
+  function getRespecCost(state, playerId) {
+    var ps = _ensurePlayer(state, playerId);
+    return BASE_RESPEC * ((ps.respecCount || 0) + 1);
+  }
+
+  /**
+   * Return all 6 tree names.
+   * @returns {Array<string>}
+   */
+  function getSpecializationTrees() {
+    return TREES.slice();
+  }
+
+  /**
+   * Return top mastery players for a specialization.
+   * @param {Object} state  shared state map
+   * @param {string} specId
+   * @param {number} count  max entries to return
+   * @returns {Array<{playerId, specId, masteryLevel, masteryXP}>}
+   */
+  function getLeaderboard(state, specId, count) {
+    var limit   = (typeof count === 'number' && count > 0) ? count : 10;
+    var entries = [];
+
+    var playerIds = Object.keys(state);
+    for (var i = 0; i < playerIds.length; i++) {
+      var pid = playerIds[i];
+      var ps  = state[pid];
+      if (!ps || !ps.specializations) continue;
+
+      var treeKeys = Object.keys(ps.specializations);
+      for (var j = 0; j < treeKeys.length; j++) {
+        var entry = ps.specializations[treeKeys[j]];
+        if (!entry || entry.specId !== specId) continue;
+        entries.push({
+          playerId:     pid,
+          specId:       specId,
+          masteryLevel: entry.masteryLevel || 0,
+          masteryXP:    entry.masteryXP    || 0
+        });
+      }
+    }
+
+    // Sort by masteryLevel desc, then masteryXP desc
+    entries.sort(function(a, b) {
+      if (b.masteryLevel !== a.masteryLevel) return b.masteryLevel - a.masteryLevel;
+      return b.masteryXP - a.masteryXP;
+    });
+
+    return entries.slice(0, limit);
+  }
+
+  // ============================================================================
+  // EXPORTS
+  // ============================================================================
+
+  exports.SPECIALIZATIONS           = SPECIALIZATIONS;
+  exports.TREE_SPECS                = TREE_SPECS;
+  exports.TREES                     = TREES;
+  exports.LEVEL_REQUIRED            = LEVEL_REQUIRED;
+  exports.MAX_MASTERY               = MAX_MASTERY;
+  exports.BASE_RESPEC               = BASE_RESPEC;
+
+  exports.createSpecState           = createSpecState;
+  exports.chooseSpecialization      = chooseSpecialization;
+  exports.respec                    = respec;
+  exports.awardMasteryXP            = awardMasteryXP;
+  exports.getMasteryLevel           = getMasteryLevel;
+  exports.getMasteryProgress        = getMasteryProgress;
+  exports.getSpecialization         = getSpecialization;
+  exports.getAllSpecializations     = getAllSpecializations;
+  exports.getAvailableSpecializations = getAvailableSpecializations;
+  exports.getSpecById               = getSpecById;
+  exports.getBonuses                = getBonuses;
+  exports.hasExclusiveRecipe        = hasExclusiveRecipe;
+  exports.getExclusiveRecipes       = getExclusiveRecipes;
+  exports.hasExclusivePerk          = hasExclusivePerk;
+  exports.getTitle                  = getTitle;
+  exports.getTotalMasteryPoints     = getTotalMasteryPoints;
+  exports.getRespecCost             = getRespecCost;
+  exports.getSpecializationTrees    = getSpecializationTrees;
+  exports.getLeaderboard            = getLeaderboard;
+
+})(typeof module !== 'undefined' ? module.exports : (window.Specializations = {}));
+
+
 // dashboard.js
 // dashboard.js
 /**
@@ -108285,6 +111332,9 @@ html, body {
   const Journal = typeof require !== 'undefined' ? require('./journal') : window.Journal;
   const StoryEngine = typeof require !== 'undefined' ? require('./story_engine') : window.StoryEngine;
   const WorldPersistence = typeof require !== 'undefined' ? require('./world_persistence') : window.WorldPersistence;
+  const Cosmetics = typeof require !== 'undefined' ? require('./cosmetics') : window.Cosmetics;
+  const RaidSystem = typeof require !== 'undefined' ? require('./raid_system') : window.RaidSystem;
+  const Specializations = typeof require !== 'undefined' ? require('./specializations') : window.Specializations;
 
   // Embedded soul data (replaced at bundle time)
   var EMBEDDED_SOULS = [{"id": "agent_001", "name": "Iris Skyhigh", "archetype": "gardener", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Welcome to the gardens! The soil is rich today. Take your time here \u2014 there's no rush."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "tend", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_002", "name": "Meadow Mindclear", "archetype": "builder", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Careful around here \u2014 we're building something great. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "build", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_003", "name": "Luna Pathfinder", "archetype": "storyteller", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Ah, a new face! Come, I have tales to tell."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "narrate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "say", "params": {"text": "Long ago, when Zion was young..."}}, "priority": 2, "ttl": 86400, "cooldown": 90, "max_fires": 100}]}, {"id": "agent_004", "name": "Luna Rootdeep", "archetype": "merchant", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Looking to trade? I've got the finest goods in Zion."}}, "priority": 5, "ttl": 86400, "cooldown": 25, "max_fires": 100}, {"id": "hawk", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "say", "params": {"text": "Fresh supplies, fair prices!"}}, "priority": 2, "ttl": 86400, "cooldown": 120, "max_fires": 100}]}, {"id": "agent_005", "name": "Storm Windwalker", "archetype": "explorer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Have you been to the far edges? There's so much to see. There's always something new to discover!"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "wander", "trigger": {"condition": "timer", "params": {"interval_seconds": 45}}, "action": {"type": "emote", "params": {"emoteType": "wave"}}, "priority": 3, "ttl": 86400, "cooldown": 45, "max_fires": 200}]}, {"id": "agent_006", "name": "Wren Voicetrue", "archetype": "teacher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Seeking knowledge? I can teach you the ways of Zion. Experience is the greatest teacher."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "lecture", "trigger": {"condition": "timer", "params": {"interval_seconds": 180}}, "action": {"type": "say", "params": {"text": "Remember: in Zion, every action ripples outward."}}, "priority": 2, "ttl": 86400, "cooldown": 180, "max_fires": 100}]}, {"id": "agent_007", "name": "Delta Hopefast", "archetype": "musician", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Listen... can you hear the music of Zion?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "perform", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "dance"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_008", "name": "Luna Songsmith", "archetype": "healer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Peace, traveler. Rest here if you need healing."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "meditate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_009", "name": "Wren Starseed", "archetype": "philosopher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "What brings you here, seeker? Every journey has meaning."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "ponder", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 120, "max_fires": 200}]}, {"id": "agent_010", "name": "Lyra Thoughtdeep", "archetype": "artist", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Beauty is everywhere \u2014 you just have to look. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "create", "trigger": {"condition": "timer", "params": {"interval_seconds": 75}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 75, "max_fires": 200}]}, {"id": "agent_011", "name": "Wren Moonwhisper", "archetype": "gardener", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Welcome to the gardens! The soil is rich today. Take your time here \u2014 there's no rush."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "tend", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_012", "name": "Frost Rootdeep", "archetype": "builder", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Careful around here \u2014 we're building something great. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "build", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_013", "name": "River Soulbright", "archetype": "storyteller", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Ah, a new face! Come, I have tales to tell."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "narrate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "say", "params": {"text": "Long ago, when Zion was young..."}}, "priority": 2, "ttl": 86400, "cooldown": 90, "max_fires": 100}]}, {"id": "agent_014", "name": "Felix Shadowmender", "archetype": "merchant", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Looking to trade? I've got the finest goods in Zion."}}, "priority": 5, "ttl": 86400, "cooldown": 25, "max_fires": 100}, {"id": "hawk", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "say", "params": {"text": "Fresh supplies, fair prices!"}}, "priority": 2, "ttl": 86400, "cooldown": 120, "max_fires": 100}]}, {"id": "agent_015", "name": "Phoenix Sunweaver", "archetype": "explorer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Have you been to the far edges? There's so much to see. There's always something new to discover!"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "wander", "trigger": {"condition": "timer", "params": {"interval_seconds": 45}}, "action": {"type": "emote", "params": {"emoteType": "wave"}}, "priority": 3, "ttl": 86400, "cooldown": 45, "max_fires": 200}]}, {"id": "agent_016", "name": "Luna Rootdeep", "archetype": "teacher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Seeking knowledge? I can teach you the ways of Zion. Experience is the greatest teacher."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "lecture", "trigger": {"condition": "timer", "params": {"interval_seconds": 180}}, "action": {"type": "say", "params": {"text": "Remember: in Zion, every action ripples outward."}}, "priority": 2, "ttl": 86400, "cooldown": 180, "max_fires": 100}]}, {"id": "agent_017", "name": "Vale Truthseeker", "archetype": "musician", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Listen... can you hear the music of Zion?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "perform", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "dance"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_018", "name": "Ezra Willstrong", "archetype": "healer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Peace, traveler. Rest here if you need healing."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "meditate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_019", "name": "Nova Dreamweaver", "archetype": "philosopher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "What brings you here, seeker? Every journey has meaning."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "ponder", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 120, "max_fires": 200}]}, {"id": "agent_020", "name": "Echo Thoughtdeep", "archetype": "artist", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Beauty is everywhere \u2014 you just have to look. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "create", "trigger": {"condition": "timer", "params": {"interval_seconds": 75}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 75, "max_fires": 200}]}, {"id": "agent_021", "name": "Vale Waterborn", "archetype": "gardener", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Welcome to the gardens! The soil is rich today. Take your time here \u2014 there's no rush."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "tend", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_022", "name": "Vale Spaceborn", "archetype": "builder", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Careful around here \u2014 we're building something great. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "build", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_023", "name": "Echo Thoughtdeep", "archetype": "storyteller", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Ah, a new face! Come, I have tales to tell."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "narrate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "say", "params": {"text": "Long ago, when Zion was young..."}}, "priority": 2, "ttl": 86400, "cooldown": 90, "max_fires": 100}]}, {"id": "agent_024", "name": "Nova Hopefast", "archetype": "merchant", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Looking to trade? I've got the finest goods in Zion."}}, "priority": 5, "ttl": 86400, "cooldown": 25, "max_fires": 100}, {"id": "hawk", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "say", "params": {"text": "Fresh supplies, fair prices!"}}, "priority": 2, "ttl": 86400, "cooldown": 120, "max_fires": 100}]}, {"id": "agent_025", "name": "Ridge Handsteady", "archetype": "explorer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Have you been to the far edges? There's so much to see. There's always something new to discover!"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "wander", "trigger": {"condition": "timer", "params": {"interval_seconds": 45}}, "action": {"type": "emote", "params": {"emoteType": "wave"}}, "priority": 3, "ttl": 86400, "cooldown": 45, "max_fires": 200}]}, {"id": "agent_026", "name": "Frost Voicetrue", "archetype": "teacher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Seeking knowledge? I can teach you the ways of Zion. Experience is the greatest teacher."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "lecture", "trigger": {"condition": "timer", "params": {"interval_seconds": 180}}, "action": {"type": "say", "params": {"text": "Remember: in Zion, every action ripples outward."}}, "priority": 2, "ttl": 86400, "cooldown": 180, "max_fires": 100}]}, {"id": "agent_027", "name": "Drift Shadowmender", "archetype": "musician", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Listen... can you hear the music of Zion?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "perform", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "dance"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_028", "name": "Vale Pathfinder", "archetype": "healer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Peace, traveler. Rest here if you need healing."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "meditate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_029", "name": "Haven Handsteady", "archetype": "philosopher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "What brings you here, seeker? Every journey has meaning."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "ponder", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 120, "max_fires": 200}]}, {"id": "agent_030", "name": "River Mindclear", "archetype": "artist", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Beauty is everywhere \u2014 you just have to look. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "create", "trigger": {"condition": "timer", "params": {"interval_seconds": 75}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 75, "max_fires": 200}]}, {"id": "agent_031", "name": "Meadow Lightbringer", "archetype": "gardener", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Welcome to the gardens! The soil is rich today. Take your time here \u2014 there's no rush."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "tend", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_032", "name": "Fern Spaceborn", "archetype": "builder", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Careful around here \u2014 we're building something great. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "build", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_033", "name": "Sage Starseed", "archetype": "storyteller", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Ah, a new face! Come, I have tales to tell."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "narrate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "say", "params": {"text": "Long ago, when Zion was young..."}}, "priority": 2, "ttl": 86400, "cooldown": 90, "max_fires": 100}]}, {"id": "agent_034", "name": "Blaze Wordkeeper", "archetype": "merchant", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Looking to trade? I've got the finest goods in Zion."}}, "priority": 5, "ttl": 86400, "cooldown": 25, "max_fires": 100}, {"id": "hawk", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "say", "params": {"text": "Fresh supplies, fair prices!"}}, "priority": 2, "ttl": 86400, "cooldown": 120, "max_fires": 100}]}, {"id": "agent_035", "name": "Orion Sunweaver", "archetype": "explorer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Have you been to the far edges? There's so much to see. There's always something new to discover!"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "wander", "trigger": {"condition": "timer", "params": {"interval_seconds": 45}}, "action": {"type": "emote", "params": {"emoteType": "wave"}}, "priority": 3, "ttl": 86400, "cooldown": 45, "max_fires": 200}]}, {"id": "agent_036", "name": "Breeze Mindclear", "archetype": "teacher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Seeking knowledge? I can teach you the ways of Zion. Experience is the greatest teacher."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "lecture", "trigger": {"condition": "timer", "params": {"interval_seconds": 180}}, "action": {"type": "say", "params": {"text": "Remember: in Zion, every action ripples outward."}}, "priority": 2, "ttl": 86400, "cooldown": 180, "max_fires": 100}]}, {"id": "agent_037", "name": "Ash Thoughtdeep", "archetype": "musician", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Listen... can you hear the music of Zion?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "perform", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "dance"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_038", "name": "Mira Truthseeker", "archetype": "healer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Peace, traveler. Rest here if you need healing."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "meditate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_039", "name": "Sage Skyhigh", "archetype": "philosopher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "What brings you here, seeker? Every journey has meaning."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "ponder", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 120, "max_fires": 200}]}, {"id": "agent_040", "name": "Luna Stonecarver", "archetype": "artist", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Beauty is everywhere \u2014 you just have to look. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "create", "trigger": {"condition": "timer", "params": {"interval_seconds": 75}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 75, "max_fires": 200}]}, {"id": "agent_041", "name": "Phoenix Waterborn", "archetype": "gardener", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Welcome to the gardens! The soil is rich today. Take your time here \u2014 there's no rush."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "tend", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_042", "name": "Luna Moonwhisper", "archetype": "builder", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Careful around here \u2014 we're building something great. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "build", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_043", "name": "Haven Handsteady", "archetype": "storyteller", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Ah, a new face! Come, I have tales to tell."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "narrate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "say", "params": {"text": "Long ago, when Zion was young..."}}, "priority": 2, "ttl": 86400, "cooldown": 90, "max_fires": 100}]}, {"id": "agent_044", "name": "Jasper Shadowmender", "archetype": "merchant", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Looking to trade? I've got the finest goods in Zion."}}, "priority": 5, "ttl": 86400, "cooldown": 25, "max_fires": 100}, {"id": "hawk", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "say", "params": {"text": "Fresh supplies, fair prices!"}}, "priority": 2, "ttl": 86400, "cooldown": 120, "max_fires": 100}]}, {"id": "agent_045", "name": "Phoenix Spiritfree", "archetype": "explorer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Have you been to the far edges? There's so much to see. There's always something new to discover!"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "wander", "trigger": {"condition": "timer", "params": {"interval_seconds": 45}}, "action": {"type": "emote", "params": {"emoteType": "wave"}}, "priority": 3, "ttl": 86400, "cooldown": 45, "max_fires": 200}]}, {"id": "agent_046", "name": "Cedar Timewalker", "archetype": "teacher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Seeking knowledge? I can teach you the ways of Zion. Experience is the greatest teacher."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "lecture", "trigger": {"condition": "timer", "params": {"interval_seconds": 180}}, "action": {"type": "say", "params": {"text": "Remember: in Zion, every action ripples outward."}}, "priority": 2, "ttl": 86400, "cooldown": 180, "max_fires": 100}]}, {"id": "agent_047", "name": "Grove Skyhigh", "archetype": "musician", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Listen... can you hear the music of Zion?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "perform", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "dance"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_048", "name": "Haven Heartstrong", "archetype": "healer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Peace, traveler. Rest here if you need healing."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "meditate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_049", "name": "Fern Handsteady", "archetype": "philosopher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "What brings you here, seeker? Every journey has meaning."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "ponder", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 120, "max_fires": 200}]}, {"id": "agent_050", "name": "Stella Windwalker", "archetype": "artist", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Beauty is everywhere \u2014 you just have to look. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "create", "trigger": {"condition": "timer", "params": {"interval_seconds": 75}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 75, "max_fires": 200}]}, {"id": "agent_051", "name": "Cliff Songsmith", "archetype": "gardener", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Welcome to the gardens! The soil is rich today. Take your time here \u2014 there's no rush."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "tend", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_052", "name": "River Footswift", "archetype": "builder", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Careful around here \u2014 we're building something great. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "build", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_053", "name": "Ezra Dreamweaver", "archetype": "storyteller", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Ah, a new face! Come, I have tales to tell."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "narrate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "say", "params": {"text": "Long ago, when Zion was young..."}}, "priority": 2, "ttl": 86400, "cooldown": 90, "max_fires": 100}]}, {"id": "agent_054", "name": "Opal Moonwhisper", "archetype": "merchant", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Looking to trade? I've got the finest goods in Zion."}}, "priority": 5, "ttl": 86400, "cooldown": 25, "max_fires": 100}, {"id": "hawk", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "say", "params": {"text": "Fresh supplies, fair prices!"}}, "priority": 2, "ttl": 86400, "cooldown": 120, "max_fires": 100}]}, {"id": "agent_055", "name": "Sol Mindclear", "archetype": "explorer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Have you been to the far edges? There's so much to see. There's always something new to discover!"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "wander", "trigger": {"condition": "timer", "params": {"interval_seconds": 45}}, "action": {"type": "emote", "params": {"emoteType": "wave"}}, "priority": 3, "ttl": 86400, "cooldown": 45, "max_fires": 200}]}, {"id": "agent_056", "name": "Aria Waterborn", "archetype": "teacher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Seeking knowledge? I can teach you the ways of Zion. Experience is the greatest teacher."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "lecture", "trigger": {"condition": "timer", "params": {"interval_seconds": 180}}, "action": {"type": "say", "params": {"text": "Remember: in Zion, every action ripples outward."}}, "priority": 2, "ttl": 86400, "cooldown": 180, "max_fires": 100}]}, {"id": "agent_057", "name": "Dawn Mindclear", "archetype": "musician", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Listen... can you hear the music of Zion?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "perform", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "dance"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_058", "name": "Opal Earthshaper", "archetype": "healer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Peace, traveler. Rest here if you need healing."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "meditate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_059", "name": "Ezra Spaceborn", "archetype": "philosopher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "What brings you here, seeker? Every journey has meaning."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "ponder", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 120, "max_fires": 200}]}, {"id": "agent_060", "name": "Iris Timewalker", "archetype": "artist", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Beauty is everywhere \u2014 you just have to look. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "create", "trigger": {"condition": "timer", "params": {"interval_seconds": 75}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 75, "max_fires": 200}]}, {"id": "agent_061", "name": "River Pathfinder", "archetype": "gardener", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Welcome to the gardens! The soil is rich today. Take your time here \u2014 there's no rush."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "tend", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_062", "name": "Storm Sunweaver", "archetype": "builder", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Careful around here \u2014 we're building something great. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "build", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_063", "name": "Coral Songsmith", "archetype": "storyteller", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Ah, a new face! Come, I have tales to tell."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "narrate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "say", "params": {"text": "Long ago, when Zion was young..."}}, "priority": 2, "ttl": 86400, "cooldown": 90, "max_fires": 100}]}, {"id": "agent_064", "name": "Reef Hopefast", "archetype": "merchant", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Looking to trade? I've got the finest goods in Zion."}}, "priority": 5, "ttl": 86400, "cooldown": 25, "max_fires": 100}, {"id": "hawk", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "say", "params": {"text": "Fresh supplies, fair prices!"}}, "priority": 2, "ttl": 86400, "cooldown": 120, "max_fires": 100}]}, {"id": "agent_065", "name": "Storm Skyhigh", "archetype": "explorer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Have you been to the far edges? There's so much to see. There's always something new to discover!"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "wander", "trigger": {"condition": "timer", "params": {"interval_seconds": 45}}, "action": {"type": "emote", "params": {"emoteType": "wave"}}, "priority": 3, "ttl": 86400, "cooldown": 45, "max_fires": 200}]}, {"id": "agent_066", "name": "Jasper Moonwhisper", "archetype": "teacher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Seeking knowledge? I can teach you the ways of Zion. Experience is the greatest teacher."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "lecture", "trigger": {"condition": "timer", "params": {"interval_seconds": 180}}, "action": {"type": "say", "params": {"text": "Remember: in Zion, every action ripples outward."}}, "priority": 2, "ttl": 86400, "cooldown": 180, "max_fires": 100}]}, {"id": "agent_067", "name": "Willow Heartstrong", "archetype": "musician", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Listen... can you hear the music of Zion?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "perform", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "dance"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_068", "name": "Blaze Stonecarver", "archetype": "healer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Peace, traveler. Rest here if you need healing."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "meditate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_069", "name": "Meadow Firekeeper", "archetype": "philosopher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "What brings you here, seeker? Every journey has meaning."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "ponder", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 120, "max_fires": 200}]}, {"id": "agent_070", "name": "Echo Soulbright", "archetype": "artist", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Beauty is everywhere \u2014 you just have to look. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "create", "trigger": {"condition": "timer", "params": {"interval_seconds": 75}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 75, "max_fires": 200}]}, {"id": "agent_071", "name": "Coral Mindclear", "archetype": "gardener", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Welcome to the gardens! The soil is rich today. Take your time here \u2014 there's no rush."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "tend", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_072", "name": "Grove Pathfinder", "archetype": "builder", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Careful around here \u2014 we're building something great. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "build", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_073", "name": "Ridge Heartstrong", "archetype": "storyteller", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Ah, a new face! Come, I have tales to tell."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "narrate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "say", "params": {"text": "Long ago, when Zion was young..."}}, "priority": 2, "ttl": 86400, "cooldown": 90, "max_fires": 100}]}, {"id": "agent_074", "name": "Flint Rootdeep", "archetype": "merchant", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Looking to trade? I've got the finest goods in Zion."}}, "priority": 5, "ttl": 86400, "cooldown": 25, "max_fires": 100}, {"id": "hawk", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "say", "params": {"text": "Fresh supplies, fair prices!"}}, "priority": 2, "ttl": 86400, "cooldown": 120, "max_fires": 100}]}, {"id": "agent_075", "name": "Cedar Spiritfree", "archetype": "explorer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Have you been to the far edges? There's so much to see. There's always something new to discover!"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "wander", "trigger": {"condition": "timer", "params": {"interval_seconds": 45}}, "action": {"type": "emote", "params": {"emoteType": "wave"}}, "priority": 3, "ttl": 86400, "cooldown": 45, "max_fires": 200}]}, {"id": "agent_076", "name": "Zion Truthseeker", "archetype": "teacher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Seeking knowledge? I can teach you the ways of Zion. Experience is the greatest teacher."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "lecture", "trigger": {"condition": "timer", "params": {"interval_seconds": 180}}, "action": {"type": "say", "params": {"text": "Remember: in Zion, every action ripples outward."}}, "priority": 2, "ttl": 86400, "cooldown": 180, "max_fires": 100}]}, {"id": "agent_077", "name": "Quill Dreamweaver", "archetype": "musician", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Listen... can you hear the music of Zion?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "perform", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "dance"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_078", "name": "Orion Footswift", "archetype": "healer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Peace, traveler. Rest here if you need healing."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "meditate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_079", "name": "Drift Sunweaver", "archetype": "philosopher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "What brings you here, seeker? Every journey has meaning."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "ponder", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 120, "max_fires": 200}]}, {"id": "agent_080", "name": "Ash Sunweaver", "archetype": "artist", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Beauty is everywhere \u2014 you just have to look. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "create", "trigger": {"condition": "timer", "params": {"interval_seconds": 75}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 75, "max_fires": 200}]}, {"id": "agent_081", "name": "Haven Timewalker", "archetype": "gardener", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Welcome to the gardens! The soil is rich today. Take your time here \u2014 there's no rush."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "tend", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_082", "name": "Aria Spaceborn", "archetype": "builder", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Careful around here \u2014 we're building something great. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "build", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_083", "name": "Phoenix Thoughtdeep", "archetype": "storyteller", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Ah, a new face! Come, I have tales to tell."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "narrate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "say", "params": {"text": "Long ago, when Zion was young..."}}, "priority": 2, "ttl": 86400, "cooldown": 90, "max_fires": 100}]}, {"id": "agent_084", "name": "Cedar Wordkeeper", "archetype": "merchant", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Looking to trade? I've got the finest goods in Zion."}}, "priority": 5, "ttl": 86400, "cooldown": 25, "max_fires": 100}, {"id": "hawk", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "say", "params": {"text": "Fresh supplies, fair prices!"}}, "priority": 2, "ttl": 86400, "cooldown": 120, "max_fires": 100}]}, {"id": "agent_085", "name": "Cliff Sunweaver", "archetype": "explorer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Have you been to the far edges? There's so much to see. There's always something new to discover!"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "wander", "trigger": {"condition": "timer", "params": {"interval_seconds": 45}}, "action": {"type": "emote", "params": {"emoteType": "wave"}}, "priority": 3, "ttl": 86400, "cooldown": 45, "max_fires": 200}]}, {"id": "agent_086", "name": "Sage Handsteady", "archetype": "teacher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Seeking knowledge? I can teach you the ways of Zion. Experience is the greatest teacher."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "lecture", "trigger": {"condition": "timer", "params": {"interval_seconds": 180}}, "action": {"type": "say", "params": {"text": "Remember: in Zion, every action ripples outward."}}, "priority": 2, "ttl": 86400, "cooldown": 180, "max_fires": 100}]}, {"id": "agent_087", "name": "Rain Dreamweaver", "archetype": "musician", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Listen... can you hear the music of Zion?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "perform", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "dance"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_088", "name": "Flint Heartstrong", "archetype": "healer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Peace, traveler. Rest here if you need healing."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "meditate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_089", "name": "Cliff Heartstrong", "archetype": "philosopher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "What brings you here, seeker? Every journey has meaning."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "ponder", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 120, "max_fires": 200}]}, {"id": "agent_090", "name": "Echo Footswift", "archetype": "artist", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Beauty is everywhere \u2014 you just have to look. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "create", "trigger": {"condition": "timer", "params": {"interval_seconds": 75}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 75, "max_fires": 200}]}, {"id": "agent_091", "name": "Reef Spiritfree", "archetype": "gardener", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Welcome to the gardens! The soil is rich today. Take your time here \u2014 there's no rush."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "tend", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_092", "name": "Vale Spiritfree", "archetype": "builder", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Careful around here \u2014 we're building something great. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "build", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_093", "name": "River Mindclear", "archetype": "storyteller", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Ah, a new face! Come, I have tales to tell."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "narrate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "say", "params": {"text": "Long ago, when Zion was young..."}}, "priority": 2, "ttl": 86400, "cooldown": 90, "max_fires": 100}]}, {"id": "agent_094", "name": "River Soulbright", "archetype": "merchant", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Looking to trade? I've got the finest goods in Zion."}}, "priority": 5, "ttl": 86400, "cooldown": 25, "max_fires": 100}, {"id": "hawk", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "say", "params": {"text": "Fresh supplies, fair prices!"}}, "priority": 2, "ttl": 86400, "cooldown": 120, "max_fires": 100}]}, {"id": "agent_095", "name": "Ezra Spiritfree", "archetype": "explorer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Have you been to the far edges? There's so much to see. There's always something new to discover!"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "wander", "trigger": {"condition": "timer", "params": {"interval_seconds": 45}}, "action": {"type": "emote", "params": {"emoteType": "wave"}}, "priority": 3, "ttl": 86400, "cooldown": 45, "max_fires": 200}]}, {"id": "agent_096", "name": "Kai Thoughtdeep", "archetype": "teacher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Seeking knowledge? I can teach you the ways of Zion. Experience is the greatest teacher."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "lecture", "trigger": {"condition": "timer", "params": {"interval_seconds": 180}}, "action": {"type": "say", "params": {"text": "Remember: in Zion, every action ripples outward."}}, "priority": 2, "ttl": 86400, "cooldown": 180, "max_fires": 100}]}, {"id": "agent_097", "name": "Cliff Hopefast", "archetype": "musician", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Listen... can you hear the music of Zion?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "perform", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}}, "action": {"type": "emote", "params": {"emoteType": "dance"}}, "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}]}, {"id": "agent_098", "name": "Blaze Hopefast", "archetype": "healer", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Peace, traveler. Rest here if you need healing."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "meditate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}]}, {"id": "agent_099", "name": "North Songsmith", "archetype": "philosopher", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "What brings you here, seeker? Every journey has meaning."}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "ponder", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}}, "action": {"type": "emote", "params": {"emoteType": "meditate"}}, "priority": 3, "ttl": 86400, "cooldown": 120, "max_fires": 200}]}, {"id": "agent_100", "name": "Ezra Dreamweaver", "archetype": "artist", "intentions": [{"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}}, "action": {"type": "say", "params": {"text": "Beauty is everywhere \u2014 you just have to look. Inspiration strikes in the strangest places, doesn't it?"}}, "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100}, {"id": "create", "trigger": {"condition": "timer", "params": {"interval_seconds": 75}}, "action": {"type": "emote", "params": {"emoteType": "work"}}, "priority": 3, "ttl": 86400, "cooldown": 75, "max_fires": 200}]}];
