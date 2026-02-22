@@ -1704,6 +1704,11 @@
 
             // Track zone visit achievement
             trackAchievement('zone_visit', { zone: currentZone });
+
+            // Cross-system dispatch: zone change
+            if (Wiring && Wiring.onZoneChange) {
+              Wiring.onZoneChange(gameState, localPlayer.id, oldZone, currentZone);
+            }
           }
         }
 
@@ -3010,6 +3015,11 @@
         // Track trade achievement
         trackAchievement('trade', { with: msg.from });
 
+        // Cross-system dispatch: trade
+        if (Wiring && Wiring.onTrade) {
+          Wiring.onTrade(gameState, localPlayer.id, msg.from, null, 0);
+        }
+
         if (Mentoring) {
           var xpResult = Mentoring.addSkillXP(localPlayer.id, 'trading', 15);
           if (xpResult.leveledUp && HUD) {
@@ -3401,6 +3411,11 @@
       // Track harvest achievement
       trackAchievement('harvest', { item: itemId, zone: currentZone });
 
+      // Cross-system dispatch: harvest
+      if (Wiring && Wiring.onHarvest) {
+        Wiring.onHarvest(gameState, localPlayer.id, itemId, currentZone, 1);
+      }
+
       if (Audio) Audio.playSound('harvest');
 
       // Track activity
@@ -3448,6 +3463,11 @@
 
       // Track craft achievement
       trackAchievement('craft', { item: result.output.itemId, recipe: recipeId });
+
+      // Cross-system dispatch: craft
+      if (Wiring && Wiring.onCraft) {
+        Wiring.onCraft(gameState, localPlayer.id, recipeId, result);
+      }
 
       // Emit craft success particles (orange/white sparkle at player position)
       if (World && World.emitParticles && localPlayer && localPlayer.position) {
@@ -3833,6 +3853,11 @@
 
           // Track build achievement
           trackAchievement('build', { type: result.type, zone: currentZone });
+
+          // Cross-system dispatch: build
+          if (Wiring && Wiring.onBuild) {
+            Wiring.onBuild(gameState, localPlayer.id, result.type, currentZone);
+          }
 
           // Save structure to state
           if (gameState) {
@@ -4220,6 +4245,10 @@
                   // Add quest completion screen effects
                   triggerCameraShake(0.2, 0.3);
                   triggerScreenFlash('#DAA520', 0.4);
+                  // Cross-system dispatch: quest complete
+                  if (Wiring && Wiring.onQuestComplete) {
+                    Wiring.onQuestComplete(gameState, localPlayer.id, questInfo.quest.id, result.rewards);
+                  }
                 }
               }
 
@@ -4230,6 +4259,10 @@
             if (Audio) Audio.playSound('chat');
             // Track NPC interaction achievement
             trackAchievement('npc_talk', { npcId: npcResponse.id, npcName: npcResponse.name });
+            // Cross-system dispatch: NPC interaction
+            if (Wiring && Wiring.onNpcInteraction) {
+              Wiring.onNpcInteraction(gameState, localPlayer.id, npcResponse.id, 'talk', { name: npcResponse.name });
+            }
             // Track activity
             addRecentActivity('Talked to ' + npcResponse.name);
             // Broadcast player interaction to other NPCs
@@ -4968,6 +5001,10 @@
           HUD.showFishCaughtNotification(result.fish.name, sparkAmount);
         }
         trackAchievement('harvest', { type: 'fishing', fish: result.fish.id });
+        // Cross-system dispatch: fish caught
+        if (Wiring && Wiring.onFishCaught) {
+          Wiring.onFishCaught(gameState, localPlayer.id, result.fish.id, currentZone, result.fish.rarity || 1);
+        }
         // Award gardening XP for fishing (falls under nature skills)
         if (Mentoring) {
           var fishXP = Mentoring.addSkillXP(localPlayer.id, 'gardening', 8);
