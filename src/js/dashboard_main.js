@@ -747,7 +747,10 @@
       return { success: false, error: 'Not enough ' + itemId + ' in inventory' };
     }
 
-    var salePrice = 8; // stub price per item
+    // Dynamic pricing: look up item value from catalog, fallback to 5 Spark
+    var invMod = _getDashboardInventory();
+    var itemData = invMod && invMod.getItemData ? invMod.getItemData(itemId) : null;
+    var salePrice = (itemData && itemData.value) ? itemData.value : 5;
 
     // Credit sale proceeds directly on game state
     state.player.spark = (state.player.spark || 0) + salePrice * quantity;

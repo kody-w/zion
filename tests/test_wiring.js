@@ -1,199 +1,169 @@
 /**
  * tests/test_wiring.js
- * Comprehensive tests for the Wiring cross-system dispatch hub
- * 140+ tests covering all 16 dispatch functions, graceful degradation,
- * generic dispatcher, stats, and introspection utilities.
+ * Comprehensive tests for the Wiring cross-system dispatch hub.
+ * 80+ tests covering all 16 dispatch functions, graceful degradation,
+ * generic dispatcher, stats, introspection utilities, and edge cases.
  */
 
-var passed = 0;
-var failed = 0;
-var _suiteLabel = '';
+'use strict';
 
-function assert(condition, msg) {
-  if (condition) {
-    passed++;
-  } else {
-    failed++;
-    console.log('FAIL [' + _suiteLabel + ']: ' + msg);
-  }
-}
+// Wiring.js resolves modules through window/global globals; stub window first
+global.window = {};
 
-function suite(label, fn) {
-  _suiteLabel = label;
-  fn();
-}
+const { test, suite, report, assert } = require('./test_runner');
+const Wiring = require('../src/js/wiring');
 
-// ---------------------------------------------------------------------------
-// Load module
-// ---------------------------------------------------------------------------
-
-var Wiring = require('../src/js/wiring');
-
-// ---------------------------------------------------------------------------
-// Mock module factories
-// ---------------------------------------------------------------------------
+// ============================================================================
+// MOCK FACTORIES
+// ============================================================================
 
 function makeMockProgression() {
   var calls = [];
-  var mod = {
+  return {
     _calls: calls,
     awardXP: function(state, playerId, skill, amount) {
       calls.push({ fn: 'awardXP', skill: skill, amount: amount });
       return { xp: amount, skill: skill };
     }
   };
-  return mod;
 }
 
 function makeMockDailyChallenges() {
   var calls = [];
-  var mod = {
+  return {
     _calls: calls,
     updateProgress: function(state, playerId, type, data) {
       calls.push({ fn: 'updateProgress', type: type, data: data });
       return { updated: true };
     }
   };
-  return mod;
 }
 
 function makeMockNpcMemory() {
   var calls = [];
-  var mod = {
+  return {
     _calls: calls,
     recordInteraction: function(state, playerId, npcId, type, data) {
       calls.push({ fn: 'recordInteraction', npcId: npcId, type: type, data: data });
       return { recorded: true };
     }
   };
-  return mod;
 }
 
 function makeMockFastTravel() {
   var calls = [];
-  var mod = {
+  return {
     _calls: calls,
     unlockLocation: function(state, playerId, zone) {
       calls.push({ fn: 'unlockLocation', zone: zone });
       return { unlocked: zone };
     }
   };
-  return mod;
 }
 
 function makeMockLoot() {
   var calls = [];
-  var mod = {
+  return {
     _calls: calls,
     rollLoot: function(state, tableKey, playerId) {
       calls.push({ fn: 'rollLoot', tableKey: tableKey });
       return [{ item: 'wood', qty: 1 }];
     }
   };
-  return mod;
 }
 
 function makeMockNpcReputation() {
   var calls = [];
-  var mod = {
+  return {
     _calls: calls,
     applyAction: function(state, playerId, npcId, action, amount) {
       calls.push({ fn: 'applyAction', npcId: npcId, action: action, amount: amount });
       return { applied: true };
     }
   };
-  return mod;
 }
 
 function makeMockGuildProgression() {
   var calls = [];
-  var mod = {
+  return {
     _calls: calls,
     trackMetric: function(state, playerId, metric, amount) {
       calls.push({ fn: 'trackMetric', metric: metric, amount: amount });
       return { tracked: true };
     }
   };
-  return mod;
 }
 
 function makeMockPrestige() {
   var calls = [];
-  var mod = {
+  return {
     _calls: calls,
     checkEligibility: function(state, playerId) {
       calls.push({ fn: 'checkEligibility' });
       return { eligible: false };
     }
   };
-  return mod;
 }
 
 function makeMockEventVoting() {
   var calls = [];
-  var mod = {
+  return {
     _calls: calls,
     castVote: function(state, playerId, eventId, optionId) {
       calls.push({ fn: 'castVote', eventId: eventId, optionId: optionId });
       return { cast: true };
     }
   };
-  return mod;
 }
 
 function makeMockHousingSocial() {
   var calls = [];
-  var mod = {
+  return {
     _calls: calls,
     recordVisit: function(state, playerId, ownerId, houseId) {
       calls.push({ fn: 'recordVisit', ownerId: ownerId, houseId: houseId });
       return { visited: true };
     }
   };
-  return mod;
 }
 
 function makeMockApprenticeship() {
   var calls = [];
-  var mod = {
+  return {
     _calls: calls,
     advanceLesson: function(state, playerId, teacherId, subject) {
       calls.push({ fn: 'advanceLesson', teacherId: teacherId, subject: subject });
       return { advanced: true };
     }
   };
-  return mod;
 }
 
 function makeMockMentorshipMarket() {
   var calls = [];
-  var mod = {
+  return {
     _calls: calls,
     completeSession: function(state, playerId, teacherId, subject) {
       calls.push({ fn: 'completeSession', teacherId: teacherId, subject: subject });
       return { completed: true };
     }
   };
-  return mod;
 }
 
-// Install all mocks into window globals
 function installAllMocks() {
-  global.Progression        = makeMockProgression();
-  global.DailyChallenges    = makeMockDailyChallenges();
-  global.NpcMemory          = makeMockNpcMemory();
-  global.FastTravel         = makeMockFastTravel();
-  global.Loot               = makeMockLoot();
-  global.NpcReputation      = makeMockNpcReputation();
-  global.GuildProgression   = makeMockGuildProgression();
-  global.Prestige           = makeMockPrestige();
-  global.EventVoting        = makeMockEventVoting();
-  global.HousingSocial      = makeMockHousingSocial();
-  global.Apprenticeship     = makeMockApprenticeship();
-  global.MentorshipMarket   = makeMockMentorshipMarket();
+  global.Progression      = makeMockProgression();
+  global.DailyChallenges  = makeMockDailyChallenges();
+  global.NpcMemory        = makeMockNpcMemory();
+  global.FastTravel       = makeMockFastTravel();
+  global.Loot             = makeMockLoot();
+  global.NpcReputation    = makeMockNpcReputation();
+  global.GuildProgression = makeMockGuildProgression();
+  global.Prestige         = makeMockPrestige();
+  global.EventVoting      = makeMockEventVoting();
+  global.HousingSocial    = makeMockHousingSocial();
+  global.Apprenticeship   = makeMockApprenticeship();
+  global.MentorshipMarket = makeMockMentorshipMarket();
 }
 
-// Remove all mocks from window globals
 function removeAllMocks() {
   delete global.Progression;
   delete global.DailyChallenges;
@@ -209,1183 +179,1636 @@ function removeAllMocks() {
   delete global.MentorshipMarket;
 }
 
-var DUMMY_STATE  = { players: {}, economy: {} };
-var DUMMY_PLAYER = 'player_test';
+var STATE  = { players: {}, economy: {} };
+var PLAYER = 'player_test';
 
-// ---------------------------------------------------------------------------
-// SUITE 1: Module Exports
-// ---------------------------------------------------------------------------
+// ============================================================================
+// SUITE 1: Export verification
+// ============================================================================
 
-suite('Module Exports', function() {
-  assert(typeof Wiring === 'object', 'Wiring should be an object');
-  assert(typeof Wiring.init === 'function', 'init should be exported');
-  assert(typeof Wiring.dispatch === 'function', 'dispatch should be exported');
-  assert(typeof Wiring.getRegisteredEvents === 'function', 'getRegisteredEvents should be exported');
-  assert(typeof Wiring.getEventHandlers === 'function', 'getEventHandlers should be exported');
-  assert(typeof Wiring.getStats === 'function', 'getStats should be exported');
-  assert(typeof Wiring.resetStats === 'function', 'resetStats should be exported');
-  assert(typeof Wiring.onZoneChange === 'function', 'onZoneChange should be exported');
-  assert(typeof Wiring.onHarvest === 'function', 'onHarvest should be exported');
-  assert(typeof Wiring.onCraft === 'function', 'onCraft should be exported');
-  assert(typeof Wiring.onFishCaught === 'function', 'onFishCaught should be exported');
-  assert(typeof Wiring.onDungeonClear === 'function', 'onDungeonClear should be exported');
-  assert(typeof Wiring.onNpcInteraction === 'function', 'onNpcInteraction should be exported');
-  assert(typeof Wiring.onQuestComplete === 'function', 'onQuestComplete should be exported');
-  assert(typeof Wiring.onCardGameWin === 'function', 'onCardGameWin should be exported');
-  assert(typeof Wiring.onConstellationFound === 'function', 'onConstellationFound should be exported');
-  assert(typeof Wiring.onTimeCapsuleBuried === 'function', 'onTimeCapsuleBuried should be exported');
-  assert(typeof Wiring.onTimeCapsuleFound === 'function', 'onTimeCapsuleFound should be exported');
-  assert(typeof Wiring.onTrade === 'function', 'onTrade should be exported');
-  assert(typeof Wiring.onBuild === 'function', 'onBuild should be exported');
-  assert(typeof Wiring.onVoteCast === 'function', 'onVoteCast should be exported');
-  assert(typeof Wiring.onHousingVisit === 'function', 'onHousingVisit should be exported');
-  assert(typeof Wiring.onMentorSession === 'function', 'onMentorSession should be exported');
-  assert(Array.isArray(Wiring.MODULE_NAMES), 'MODULE_NAMES should be an array');
-  assert(Wiring.MODULE_NAMES.length >= 8, 'MODULE_NAMES should list at least 8 modules');
+suite('Export verification', function() {
+  test('Wiring is an object', function() {
+    assert.ok(Wiring && typeof Wiring === 'object');
+  });
+  test('MODULE_NAMES is an array', function() {
+    assert.ok(Array.isArray(Wiring.MODULE_NAMES));
+  });
+  test('init is a function', function() {
+    assert.strictEqual(typeof Wiring.init, 'function');
+  });
+  test('dispatch is a function', function() {
+    assert.strictEqual(typeof Wiring.dispatch, 'function');
+  });
+  test('getRegisteredEvents is a function', function() {
+    assert.strictEqual(typeof Wiring.getRegisteredEvents, 'function');
+  });
+  test('getEventHandlers is a function', function() {
+    assert.strictEqual(typeof Wiring.getEventHandlers, 'function');
+  });
+  test('getStats is a function', function() {
+    assert.strictEqual(typeof Wiring.getStats, 'function');
+  });
+  test('resetStats is a function', function() {
+    assert.strictEqual(typeof Wiring.resetStats, 'function');
+  });
+  test('_getModule is a function', function() {
+    assert.strictEqual(typeof Wiring._getModule, 'function');
+  });
+  test('_safeCall is a function', function() {
+    assert.strictEqual(typeof Wiring._safeCall, 'function');
+  });
+  // 16 dispatch function exports
+  test('onZoneChange is a function', function() {
+    assert.strictEqual(typeof Wiring.onZoneChange, 'function');
+  });
+  test('onHarvest is a function', function() {
+    assert.strictEqual(typeof Wiring.onHarvest, 'function');
+  });
+  test('onCraft is a function', function() {
+    assert.strictEqual(typeof Wiring.onCraft, 'function');
+  });
+  test('onFishCaught is a function', function() {
+    assert.strictEqual(typeof Wiring.onFishCaught, 'function');
+  });
+  test('onDungeonClear is a function', function() {
+    assert.strictEqual(typeof Wiring.onDungeonClear, 'function');
+  });
+  test('onNpcInteraction is a function', function() {
+    assert.strictEqual(typeof Wiring.onNpcInteraction, 'function');
+  });
+  test('onQuestComplete is a function', function() {
+    assert.strictEqual(typeof Wiring.onQuestComplete, 'function');
+  });
+  test('onCardGameWin is a function', function() {
+    assert.strictEqual(typeof Wiring.onCardGameWin, 'function');
+  });
+  test('onConstellationFound is a function', function() {
+    assert.strictEqual(typeof Wiring.onConstellationFound, 'function');
+  });
+  test('onTimeCapsuleBuried is a function', function() {
+    assert.strictEqual(typeof Wiring.onTimeCapsuleBuried, 'function');
+  });
+  test('onTimeCapsuleFound is a function', function() {
+    assert.strictEqual(typeof Wiring.onTimeCapsuleFound, 'function');
+  });
+  test('onTrade is a function', function() {
+    assert.strictEqual(typeof Wiring.onTrade, 'function');
+  });
+  test('onBuild is a function', function() {
+    assert.strictEqual(typeof Wiring.onBuild, 'function');
+  });
+  test('onVoteCast is a function', function() {
+    assert.strictEqual(typeof Wiring.onVoteCast, 'function');
+  });
+  test('onHousingVisit is a function', function() {
+    assert.strictEqual(typeof Wiring.onHousingVisit, 'function');
+  });
+  test('onMentorSession is a function', function() {
+    assert.strictEqual(typeof Wiring.onMentorSession, 'function');
+  });
 });
 
-// ---------------------------------------------------------------------------
-// SUITE 2: init() and getRegisteredEvents()
-// ---------------------------------------------------------------------------
-
-suite('init and getRegisteredEvents', function() {
-  Wiring.init();
-  var events = Wiring.getRegisteredEvents();
-
-  assert(Array.isArray(events), 'getRegisteredEvents returns an array');
-  assert(events.indexOf('onZoneChange') !== -1, 'onZoneChange is registered');
-  assert(events.indexOf('onHarvest') !== -1, 'onHarvest is registered');
-  assert(events.indexOf('onCraft') !== -1, 'onCraft is registered');
-  assert(events.indexOf('onFishCaught') !== -1, 'onFishCaught is registered');
-  assert(events.indexOf('onDungeonClear') !== -1, 'onDungeonClear is registered');
-  assert(events.indexOf('onNpcInteraction') !== -1, 'onNpcInteraction is registered');
-  assert(events.indexOf('onQuestComplete') !== -1, 'onQuestComplete is registered');
-  assert(events.indexOf('onCardGameWin') !== -1, 'onCardGameWin is registered');
-  assert(events.indexOf('onConstellationFound') !== -1, 'onConstellationFound is registered');
-  assert(events.indexOf('onTimeCapsuleBuried') !== -1, 'onTimeCapsuleBuried is registered');
-  assert(events.indexOf('onTimeCapsuleFound') !== -1, 'onTimeCapsuleFound is registered');
-  assert(events.indexOf('onTrade') !== -1, 'onTrade is registered');
-  assert(events.indexOf('onBuild') !== -1, 'onBuild is registered');
-  assert(events.indexOf('onVoteCast') !== -1, 'onVoteCast is registered');
-  assert(events.indexOf('onHousingVisit') !== -1, 'onHousingVisit is registered');
-  assert(events.indexOf('onMentorSession') !== -1, 'onMentorSession is registered');
-  assert(events.length >= 16, 'at least 16 events registered');
-
-  var handlers = Wiring.getEventHandlers('onZoneChange');
-  assert(Array.isArray(handlers), 'getEventHandlers returns array');
-  assert(handlers.length >= 1, 'onZoneChange has at least one handler description');
-  assert(typeof handlers[0] === 'string', 'handler descriptions are strings');
-
-  var unknownHandlers = Wiring.getEventHandlers('doesNotExist');
-  assert(Array.isArray(unknownHandlers), 'getEventHandlers returns array for unknown event');
-  assert(unknownHandlers.length === 0, 'unknown event has no handlers');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 3: onZoneChange — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onZoneChange with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onZoneChange(DUMMY_STATE, DUMMY_PLAYER, 'nexus', 'gardens');
-
-  assert(typeof result === 'object', 'returns an object');
-  assert(result.xpAwarded === 5, 'awards 5 exploration XP');
-  assert(result.toZone === 'gardens', 'toZone is correct');
-  assert(result.fromZone === 'nexus', 'fromZone is correct');
-  assert(Array.isArray(result.lootResults), 'lootResults is an array');
-  assert(typeof result.challengesUpdated === 'number', 'challengesUpdated is a number');
-
-  assert(global.Progression._calls.length >= 1, 'Progression.awardXP was called');
-  assert(global.Progression._calls[0].skill === 'exploration', 'awardXP called with exploration skill');
-  assert(global.Progression._calls[0].amount === 5, 'awardXP called with amount 5');
-
-  assert(global.DailyChallenges._calls.length >= 1, 'DailyChallenges.updateProgress was called');
-  assert(global.DailyChallenges._calls[0].type === 'zone_visit', 'updateProgress type is zone_visit');
-  assert(global.DailyChallenges._calls[0].data.zone === 'gardens', 'updateProgress data has toZone');
-
-  assert(global.NpcMemory._calls.length >= 1, 'NpcMemory.recordInteraction was called');
-  assert(global.NpcMemory._calls[0].type === 'zone_visit', 'recordInteraction type is zone_visit');
-
-  assert(global.FastTravel._calls.length >= 1, 'FastTravel.unlockLocation was called');
-  assert(global.FastTravel._calls[0].zone === 'gardens', 'unlockLocation called with toZone');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 4: onZoneChange — no modules available
-// ---------------------------------------------------------------------------
-
-suite('onZoneChange with no mocks', function() {
-  removeAllMocks();
-  Wiring.resetStats();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onZoneChange(DUMMY_STATE, DUMMY_PLAYER, 'nexus', 'gardens');
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onZoneChange does not throw when modules are missing');
-  assert(typeof result === 'object', 'returns an object even with no modules');
-  assert(result.xpAwarded === 0, 'xpAwarded is 0 when Progression unavailable');
-  assert(result.challengesUpdated === 0, 'challengesUpdated is 0 when DailyChallenges unavailable');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 5: onHarvest — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onHarvest with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onHarvest(DUMMY_STATE, DUMMY_PLAYER, 'herbs', 'gardens', 3);
-
-  assert(typeof result === 'object', 'returns an object');
-  assert(result.xpAwarded === 8, 'awards 8 gathering XP');
-  assert(result.itemId === 'herbs', 'itemId correct');
-  assert(result.zone === 'gardens', 'zone correct');
-  assert(result.quantity === 3, 'quantity correct');
-  assert(result.lootResults.length >= 1, 'has loot results');
-
-  assert(global.Progression._calls[0].skill === 'gathering', 'awardXP called with gathering');
-  assert(global.Progression._calls[0].amount === 8, 'awardXP called with 8');
-  assert(global.DailyChallenges._calls[0].type === 'harvest', 'updateProgress type is harvest');
-  assert(global.DailyChallenges._calls[0].data.item === 'herbs', 'updateProgress data item correct');
-  assert(global.DailyChallenges._calls[0].data.qty === 3, 'updateProgress data qty correct');
-  assert(global.Loot._calls[0].tableKey === 'harvest_gardens', 'Loot rolled for harvest_gardens');
-  assert(global.NpcReputation._calls[0].action === 'harvest', 'NpcReputation action is harvest');
-  assert(global.GuildProgression._calls[0].metric === 'harvests', 'GuildProgression tracks harvests');
-  assert(global.GuildProgression._calls[0].amount === 3, 'GuildProgression tracks quantity');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 6: onHarvest — no modules
-// ---------------------------------------------------------------------------
-
-suite('onHarvest with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onHarvest(DUMMY_STATE, DUMMY_PLAYER, 'wood', 'wilds', 5);
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onHarvest does not throw when modules missing');
-  assert(result.xpAwarded === 0, 'xpAwarded 0 with no Progression');
-  assert(result.lootResults.length === 0, 'no loot without Loot module');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 7: onCraft — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onCraft with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onCraft(DUMMY_STATE, DUMMY_PLAYER, 'iron_sword', { name: 'Iron Sword' });
-
-  assert(result.xpAwarded === 10, 'awards 10 crafting XP');
-  assert(result.recipeId === 'iron_sword', 'recipeId correct');
-  assert(global.Progression._calls[0].skill === 'crafting', 'awardXP crafting skill');
-  assert(global.Progression._calls[0].amount === 10, 'awardXP 10');
-  assert(global.DailyChallenges._calls[0].type === 'craft', 'updateProgress type craft');
-  assert(global.DailyChallenges._calls[0].data.recipe === 'iron_sword', 'updateProgress recipe correct');
-  assert(global.GuildProgression._calls[0].metric === 'crafts', 'GuildProgression crafts metric');
-  assert(global.NpcReputation._calls[0].action === 'craft', 'NpcReputation craft action');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 8: onCraft — no modules
-// ---------------------------------------------------------------------------
-
-suite('onCraft with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onCraft(DUMMY_STATE, DUMMY_PLAYER, 'potion', null);
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onCraft does not throw when modules missing');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 9: onFishCaught — XP formula and mocks
-// ---------------------------------------------------------------------------
-
-suite('onFishCaught with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onFishCaught(DUMMY_STATE, DUMMY_PLAYER, 'bass', 'commons', 2);
-
-  assert(result.xpAwarded === 14, 'awards 6 + 2*4 = 14 XP for rarity 2');
-  assert(result.fishId === 'bass', 'fishId correct');
-  assert(result.zone === 'commons', 'zone correct');
-  assert(result.rarity === 2, 'rarity correct');
-  assert(global.Progression._calls[0].skill === 'fishing', 'awardXP fishing skill');
-  assert(global.DailyChallenges._calls[0].type === 'fish', 'updateProgress type fish');
-  assert(global.DailyChallenges._calls[0].data.fish === 'bass', 'data fish correct');
-  assert(global.DailyChallenges._calls[0].data.rarity === 2, 'data rarity correct');
-  assert(global.Loot._calls[0].tableKey === 'fishing_2', 'Loot table is fishing_2');
-  assert(global.NpcReputation._calls[0].action === 'fish', 'NpcReputation fish action');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 10: onFishCaught XP formulas per rarity level
-// ---------------------------------------------------------------------------
-
-suite('onFishCaught XP formulas', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  // rarity 0 → 6 + 0*4 = 6
-  var r0 = Wiring.onFishCaught(DUMMY_STATE, DUMMY_PLAYER, 'minnow', 'nexus', 0);
-  assert(r0.xpAwarded === 6, 'rarity 0 yields 6 XP');
-
-  // rarity 1 → 6 + 1*4 = 10
-  installAllMocks();
-  var r1 = Wiring.onFishCaught(DUMMY_STATE, DUMMY_PLAYER, 'trout', 'nexus', 1);
-  assert(r1.xpAwarded === 10, 'rarity 1 yields 10 XP');
-
-  // rarity 3 → 6 + 3*4 = 18
-  installAllMocks();
-  var r3 = Wiring.onFishCaught(DUMMY_STATE, DUMMY_PLAYER, 'dragon_fish', 'wilds', 3);
-  assert(r3.xpAwarded === 18, 'rarity 3 yields 18 XP');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 11: onFishCaught — no modules
-// ---------------------------------------------------------------------------
-
-suite('onFishCaught with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onFishCaught(DUMMY_STATE, DUMMY_PLAYER, 'carp', 'wilds', 1);
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onFishCaught does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-  assert(result.lootResults.length === 0, 'no loot');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 12: onDungeonClear — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onDungeonClear with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onDungeonClear(DUMMY_STATE, DUMMY_PLAYER, 'crypt', 3, 120000);
-
-  assert(result.xpAwarded === 30, 'awards 15 + 3*5 = 30 XP for floor 3');
-  assert(result.dungeonId === 'crypt', 'dungeonId correct');
-  assert(result.floor === 3, 'floor correct');
-  assert(result.timeMs === 120000, 'timeMs correct');
-  assert(global.Progression._calls[0].skill === 'combat', 'awardXP combat skill');
-  assert(global.DailyChallenges._calls[0].type === 'dungeon', 'updateProgress dungeon');
-  assert(global.Loot._calls[0].tableKey === 'dungeon_crypt', 'Loot table dungeon_crypt');
-  assert(global.GuildProgression._calls[0].metric === 'dungeon_clears', 'GuildProgression dungeon_clears');
-  assert(global.Prestige._calls.length >= 1, 'Prestige.checkEligibility called');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 13: onDungeonClear XP formula per floor
-// ---------------------------------------------------------------------------
-
-suite('onDungeonClear XP formulas', function() {
-  installAllMocks();
-
-  var f1 = Wiring.onDungeonClear(DUMMY_STATE, DUMMY_PLAYER, 'd1', 1, 0);
-  assert(f1.xpAwarded === 20, 'floor 1 yields 15+5=20 XP');
-
-  installAllMocks();
-  var f5 = Wiring.onDungeonClear(DUMMY_STATE, DUMMY_PLAYER, 'd1', 5, 0);
-  assert(f5.xpAwarded === 40, 'floor 5 yields 15+25=40 XP');
-
-  installAllMocks();
-  var f0 = Wiring.onDungeonClear(DUMMY_STATE, DUMMY_PLAYER, 'd1', 0, 0);
-  assert(f0.xpAwarded === 15, 'floor 0 yields 15+0=15 XP');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 14: onDungeonClear — no modules
-// ---------------------------------------------------------------------------
-
-suite('onDungeonClear with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onDungeonClear(DUMMY_STATE, DUMMY_PLAYER, 'ruins', 2, 60000);
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onDungeonClear does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 15: onNpcInteraction — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onNpcInteraction with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onNpcInteraction(DUMMY_STATE, DUMMY_PLAYER, 'npc_elder', 'greet', { greeting: 'hello' });
-
-  assert(result.xpAwarded === 3, 'awards 3 social XP');
-  assert(result.npcId === 'npc_elder', 'npcId correct');
-  assert(result.interactionType === 'greet', 'interactionType correct');
-  assert(global.NpcMemory._calls.length >= 1, 'NpcMemory.recordInteraction called');
-  assert(global.NpcMemory._calls[0].npcId === 'npc_elder', 'recordInteraction npcId correct');
-  assert(global.NpcMemory._calls[0].type === 'greet', 'recordInteraction type correct');
-  assert(global.NpcReputation._calls.length >= 1, 'NpcReputation.applyAction called');
-  assert(global.NpcReputation._calls[0].npcId === 'npc_elder', 'applyAction npcId correct');
-  assert(global.NpcReputation._calls[0].action === 'greet', 'applyAction action correct');
-  assert(global.DailyChallenges._calls[0].type === 'npc_talk', 'updateProgress npc_talk');
-  assert(global.DailyChallenges._calls[0].data.npc === 'npc_elder', 'updateProgress npc correct');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 16: onNpcInteraction — no modules
-// ---------------------------------------------------------------------------
-
-suite('onNpcInteraction with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onNpcInteraction(DUMMY_STATE, DUMMY_PLAYER, 'npc_guard', 'trade', {});
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onNpcInteraction does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 17: onQuestComplete — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onQuestComplete with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onQuestComplete(DUMMY_STATE, DUMMY_PLAYER, 'quest_rescue', { spark: 50 });
-
-  assert(result.xpAwarded === 20, 'awards 20 questing XP');
-  assert(result.questId === 'quest_rescue', 'questId correct');
-  assert(global.Progression._calls[0].skill === 'questing', 'awardXP questing skill');
-  assert(global.DailyChallenges._calls[0].type === 'quest', 'updateProgress quest');
-  assert(global.Prestige._calls.length >= 1, 'Prestige.checkEligibility called');
-  assert(global.GuildProgression._calls[0].metric === 'quests', 'GuildProgression quests');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 18: onQuestComplete — no modules
-// ---------------------------------------------------------------------------
-
-suite('onQuestComplete with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onQuestComplete(DUMMY_STATE, DUMMY_PLAYER, 'quest_explore', null);
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onQuestComplete does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 19: onCardGameWin — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onCardGameWin with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onCardGameWin(DUMMY_STATE, DUMMY_PLAYER, 'player_opponent', 'aggro');
-
-  assert(result.xpAwarded === 8, 'awards 8 social XP');
-  assert(result.opponentId === 'player_opponent', 'opponentId correct');
-  assert(result.deckType === 'aggro', 'deckType correct');
-  assert(global.Progression._calls[0].skill === 'social', 'awardXP social skill');
-  assert(global.DailyChallenges._calls[0].type === 'card_game', 'updateProgress card_game');
-  assert(global.DailyChallenges._calls[0].data.opponent === 'player_opponent', 'opponent in data');
-  assert(global.Loot._calls[0].tableKey === 'card_game_win', 'Loot table card_game_win');
-  assert(result.lootResults.length >= 1, 'has loot results');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 20: onCardGameWin — no modules
-// ---------------------------------------------------------------------------
-
-suite('onCardGameWin with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onCardGameWin(DUMMY_STATE, DUMMY_PLAYER, 'opp', 'control');
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onCardGameWin does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 21: onConstellationFound — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onConstellationFound with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onConstellationFound(DUMMY_STATE, DUMMY_PLAYER, 'orion');
-
-  assert(result.xpAwarded === 12, 'awards 12 exploration XP');
-  assert(result.constellationId === 'orion', 'constellationId correct');
-  assert(global.Progression._calls[0].skill === 'exploration', 'awardXP exploration skill');
-  assert(global.DailyChallenges._calls[0].type === 'stargazing', 'updateProgress stargazing');
-  assert(global.DailyChallenges._calls[0].data.constellation === 'orion', 'constellation in data');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 22: onConstellationFound — no modules
-// ---------------------------------------------------------------------------
-
-suite('onConstellationFound with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onConstellationFound(DUMMY_STATE, DUMMY_PLAYER, 'cassiopeia');
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onConstellationFound does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 23: onTimeCapsuleBuried — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onTimeCapsuleBuried with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onTimeCapsuleBuried(DUMMY_STATE, DUMMY_PLAYER, 'capsule_001', 'wilds');
-
-  assert(result.xpAwarded === 7, 'awards 7 exploration XP');
-  assert(result.capsuleId === 'capsule_001', 'capsuleId correct');
-  assert(result.zone === 'wilds', 'zone correct');
-  assert(global.Progression._calls[0].skill === 'exploration', 'awardXP exploration');
-  assert(global.NpcMemory._calls.length >= 1, 'NpcMemory.recordInteraction called');
-  assert(global.NpcMemory._calls[0].type === 'time_capsule', 'recordInteraction type time_capsule');
-  assert(global.NpcMemory._calls[0].data.capsule === 'capsule_001', 'capsule id in data');
-  assert(global.NpcMemory._calls[0].data.zone === 'wilds', 'zone in data');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 24: onTimeCapsuleBuried — no modules
-// ---------------------------------------------------------------------------
-
-suite('onTimeCapsuleBuried with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onTimeCapsuleBuried(DUMMY_STATE, DUMMY_PLAYER, 'cap_x', 'arena');
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onTimeCapsuleBuried does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 25: onTimeCapsuleFound — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onTimeCapsuleFound with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onTimeCapsuleFound(DUMMY_STATE, DUMMY_PLAYER, 'capsule_002');
-
-  assert(result.xpAwarded === 15, 'awards 15 exploration XP');
-  assert(result.capsuleId === 'capsule_002', 'capsuleId correct');
-  assert(global.Progression._calls[0].skill === 'exploration', 'awardXP exploration');
-  assert(global.Loot._calls[0].tableKey === 'time_capsule', 'Loot table time_capsule');
-  assert(result.lootResults.length >= 1, 'has loot results');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 26: onTimeCapsuleFound — no modules
-// ---------------------------------------------------------------------------
-
-suite('onTimeCapsuleFound with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onTimeCapsuleFound(DUMMY_STATE, DUMMY_PLAYER, 'cap_y');
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onTimeCapsuleFound does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-  assert(result.lootResults.length === 0, 'no loot');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 27: onTrade — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onTrade with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onTrade(DUMMY_STATE, DUMMY_PLAYER, 'player_b', ['wood'], 100);
-
-  assert(result.xpAwarded === 5, 'awards 5 trading XP');
-  assert(result.otherPlayerId === 'player_b', 'otherPlayerId correct');
-  assert(result.spark === 100, 'spark correct');
-  assert(global.Progression._calls[0].skill === 'trading', 'awardXP trading skill');
-  assert(global.DailyChallenges._calls[0].type === 'trade', 'updateProgress trade');
-  assert(global.DailyChallenges._calls[0].data.partner === 'player_b', 'partner in data');
-  assert(global.GuildProgression._calls[0].metric === 'trades', 'GuildProgression trades');
-  assert(global.NpcReputation._calls[0].action === 'trade', 'NpcReputation trade action');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 28: onTrade — no modules
-// ---------------------------------------------------------------------------
-
-suite('onTrade with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onTrade(DUMMY_STATE, DUMMY_PLAYER, 'player_c', [], 0);
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onTrade does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 29: onBuild — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onBuild with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onBuild(DUMMY_STATE, DUMMY_PLAYER, 'watchtower', 'wilds');
-
-  assert(result.xpAwarded === 12, 'awards 12 building XP');
-  assert(result.structureType === 'watchtower', 'structureType correct');
-  assert(result.zone === 'wilds', 'zone correct');
-  assert(global.Progression._calls[0].skill === 'building', 'awardXP building skill');
-  assert(global.DailyChallenges._calls[0].type === 'build', 'updateProgress build');
-  assert(global.DailyChallenges._calls[0].data.structure === 'watchtower', 'structure in data');
-  assert(global.GuildProgression._calls[0].metric === 'builds', 'GuildProgression builds');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 30: onBuild — no modules
-// ---------------------------------------------------------------------------
-
-suite('onBuild with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onBuild(DUMMY_STATE, DUMMY_PLAYER, 'house', 'nexus');
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onBuild does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 31: onVoteCast — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onVoteCast with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onVoteCast(DUMMY_STATE, DUMMY_PLAYER, 'harvest_festival', 'feast');
-
-  assert(result.xpAwarded === 3, 'awards 3 social XP');
-  assert(result.eventId === 'harvest_festival', 'eventId correct');
-  assert(result.optionId === 'feast', 'optionId correct');
-  assert(global.EventVoting._calls.length >= 1, 'EventVoting.castVote called');
-  assert(global.EventVoting._calls[0].eventId === 'harvest_festival', 'castVote eventId correct');
-  assert(global.EventVoting._calls[0].optionId === 'feast', 'castVote optionId correct');
-  assert(global.Progression._calls[0].skill === 'social', 'awardXP social');
-  assert(global.DailyChallenges._calls[0].type === 'vote', 'updateProgress vote');
-  assert(global.DailyChallenges._calls[0].data.event === 'harvest_festival', 'event in data');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 32: onVoteCast — no modules
-// ---------------------------------------------------------------------------
-
-suite('onVoteCast with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onVoteCast(DUMMY_STATE, DUMMY_PLAYER, 'storm_event', 'shelter');
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onVoteCast does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 33: onHousingVisit — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onHousingVisit with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onHousingVisit(DUMMY_STATE, DUMMY_PLAYER, 'owner_alice', 'house_001');
-
-  assert(result.xpAwarded === 2, 'awards 2 social XP');
-  assert(result.ownerId === 'owner_alice', 'ownerId correct');
-  assert(result.houseId === 'house_001', 'houseId correct');
-  assert(global.HousingSocial._calls.length >= 1, 'HousingSocial.recordVisit called');
-  assert(global.HousingSocial._calls[0].ownerId === 'owner_alice', 'recordVisit ownerId correct');
-  assert(global.HousingSocial._calls[0].houseId === 'house_001', 'recordVisit houseId correct');
-  assert(global.Progression._calls[0].skill === 'social', 'awardXP social');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 34: onHousingVisit — no modules
-// ---------------------------------------------------------------------------
-
-suite('onHousingVisit with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onHousingVisit(DUMMY_STATE, DUMMY_PLAYER, 'owner_bob', 'house_002');
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onHousingVisit does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 35: onMentorSession — with all mocks
-// ---------------------------------------------------------------------------
-
-suite('onMentorSession with all mocks', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.onMentorSession(DUMMY_STATE, DUMMY_PLAYER, 'teacher_guild', 'smithing');
-
-  assert(result.xpAwarded === 10, 'awards 10 learning XP');
-  assert(result.teacherId === 'teacher_guild', 'teacherId correct');
-  assert(result.subject === 'smithing', 'subject correct');
-  assert(global.Apprenticeship._calls.length >= 1, 'Apprenticeship.advanceLesson called');
-  assert(global.Apprenticeship._calls[0].teacherId === 'teacher_guild', 'advanceLesson teacherId');
-  assert(global.Apprenticeship._calls[0].subject === 'smithing', 'advanceLesson subject');
-  assert(global.MentorshipMarket._calls.length >= 1, 'MentorshipMarket.completeSession called');
-  assert(global.MentorshipMarket._calls[0].teacherId === 'teacher_guild', 'completeSession teacherId');
-  assert(global.MentorshipMarket._calls[0].subject === 'smithing', 'completeSession subject');
-  assert(global.Progression._calls[0].skill === 'learning', 'awardXP learning skill');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 36: onMentorSession — no modules
-// ---------------------------------------------------------------------------
-
-suite('onMentorSession with no mocks', function() {
-  removeAllMocks();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onMentorSession(DUMMY_STATE, DUMMY_PLAYER, 'teacher_x', 'fishing');
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onMentorSession does not throw');
-  assert(result.xpAwarded === 0, 'xpAwarded 0');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 37: dispatch() generic dispatcher
-// ---------------------------------------------------------------------------
-
-suite('dispatch generic dispatcher', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var result = Wiring.dispatch('onZoneChange', DUMMY_STATE, DUMMY_PLAYER, 'nexus', 'studio');
-  assert(typeof result === 'object', 'dispatch returns object');
-  assert(result.xpAwarded === 5, 'dispatch onZoneChange returns correct XP');
-  assert(result.toZone === 'studio', 'dispatch passes args correctly');
-
-  var result2 = Wiring.dispatch('onHarvest', DUMMY_STATE, DUMMY_PLAYER, 'herbs', 'gardens', 2);
-  assert(result2.xpAwarded === 8, 'dispatch onHarvest returns correct XP');
-
-  var result3 = Wiring.dispatch('onCraft', DUMMY_STATE, DUMMY_PLAYER, 'bread', null);
-  assert(result3.xpAwarded === 10, 'dispatch onCraft returns correct XP');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 38: dispatch() with unknown event
-// ---------------------------------------------------------------------------
-
-suite('dispatch with unknown event', function() {
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.dispatch('onSomeUnknownEvent', DUMMY_STATE, DUMMY_PLAYER);
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'dispatch with unknown event does not throw');
-  assert(result === null, 'dispatch returns null for unknown event');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 39: getStats() tracks dispatch counts
-// ---------------------------------------------------------------------------
-
-suite('getStats tracks dispatch counts', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  Wiring.onZoneChange(DUMMY_STATE, DUMMY_PLAYER, 'nexus', 'gardens');
-  Wiring.onZoneChange(DUMMY_STATE, DUMMY_PLAYER, 'gardens', 'wilds');
-  Wiring.onHarvest(DUMMY_STATE, DUMMY_PLAYER, 'wood', 'wilds', 1);
-
-  var stats = Wiring.getStats();
-  assert(typeof stats === 'object', 'getStats returns object');
-  assert(stats.onZoneChange === 2, 'onZoneChange counted 2 dispatches');
-  assert(stats.onHarvest === 1, 'onHarvest counted 1 dispatch');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 40: resetStats() zeroes counters
-// ---------------------------------------------------------------------------
-
-suite('resetStats zeroes counters', function() {
-  installAllMocks();
-
-  Wiring.onZoneChange(DUMMY_STATE, DUMMY_PLAYER, 'nexus', 'gardens');
-  Wiring.onHarvest(DUMMY_STATE, DUMMY_PLAYER, 'wood', 'wilds', 1);
-  Wiring.resetStats();
-
-  var stats = Wiring.getStats();
-  assert(Object.keys(stats).length === 0, 'stats is empty after reset');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 41: stats accumulate across multiple dispatches
-// ---------------------------------------------------------------------------
-
-suite('stats accumulate correctly', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  for (var i = 0; i < 5; i++) {
-    Wiring.onCraft(DUMMY_STATE, DUMMY_PLAYER, 'recipe_x', null);
-    installAllMocks(); // reset mocks between calls
-  }
-  installAllMocks();
-
-  var stats = Wiring.getStats();
-  assert(stats.onCraft === 5, 'onCraft counted 5 dispatches');
-
-  Wiring.onQuestComplete(DUMMY_STATE, DUMMY_PLAYER, 'q1', null);
-  installAllMocks();
-  Wiring.onQuestComplete(DUMMY_STATE, DUMMY_PLAYER, 'q2', null);
-
-  stats = Wiring.getStats();
-  assert(stats.onQuestComplete === 2, 'onQuestComplete counted 2 dispatches');
-  assert(stats.onCraft === 5, 'onCraft still 5 after quest dispatches');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 42: partial modules — only Progression available
-// ---------------------------------------------------------------------------
-
-suite('partial mocks — only Progression', function() {
-  removeAllMocks();
-  global.Progression = makeMockProgression();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onHarvest(DUMMY_STATE, DUMMY_PLAYER, 'herbs', 'gardens', 2);
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onHarvest does not throw with partial mocks');
-  assert(result.xpAwarded === 8, 'xpAwarded 8 with Progression only');
-  assert(result.lootResults.length === 0, 'no loot without Loot module');
-  assert(result.challengesUpdated === 0, 'no challenges without DailyChallenges');
-
-  delete global.Progression;
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 43: partial mocks — only Loot available
-// ---------------------------------------------------------------------------
-
-suite('partial mocks — only Loot', function() {
-  removeAllMocks();
-  global.Loot = makeMockLoot();
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onFishCaught(DUMMY_STATE, DUMMY_PLAYER, 'trout', 'nexus', 1);
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'onFishCaught does not throw with only Loot');
-  assert(result.xpAwarded === 0, 'xpAwarded 0 without Progression');
-  assert(result.lootResults.length >= 1, 'has loot when Loot available');
-
-  delete global.Loot;
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 44: throwing module does not crash dispatch
-// ---------------------------------------------------------------------------
-
-suite('throwing module does not crash dispatch', function() {
-  removeAllMocks();
-  global.Progression = {
-    awardXP: function() { throw new Error('Simulated module failure'); }
-  };
-
-  var threw = false;
-  var result;
-  try {
-    result = Wiring.onZoneChange(DUMMY_STATE, DUMMY_PLAYER, 'nexus', 'gardens');
-  } catch (e) {
-    threw = true;
-  }
-
-  assert(!threw, 'dispatch does not propagate module errors');
-  assert(typeof result === 'object', 'result is still returned despite error');
-  assert(result.xpAwarded === 0, 'xpAwarded 0 when module throws');
-
-  delete global.Progression;
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 45: _getModule returns null when module absent
-// ---------------------------------------------------------------------------
-
-suite('_getModule returns null when absent', function() {
-  removeAllMocks();
-
-  var mod = Wiring._getModule('SomeMissingModule');
-  assert(mod === null, '_getModule returns null for missing module');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 46: _getModule returns module when present
-// ---------------------------------------------------------------------------
-
-suite('_getModule returns module when present', function() {
-  var fake = { test: true };
-  global.FakeTestModule = fake;
-
-  var mod = Wiring._getModule('FakeTestModule');
-  assert(mod !== null, '_getModule returns module object');
-  assert(mod.test === true, '_getModule returns the correct module');
-
-  delete global.FakeTestModule;
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 47: _safeCall returns null when module missing
-// ---------------------------------------------------------------------------
-
-suite('_safeCall returns null when module missing', function() {
-  removeAllMocks();
-
-  var result = Wiring._safeCall('MissingMod', 'someFunc', []);
-  assert(result === null, '_safeCall returns null for missing module');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 48: _safeCall returns null when function missing on module
-// ---------------------------------------------------------------------------
-
-suite('_safeCall returns null when function missing on module', function() {
-  global.PartialMod = { someOtherFn: function() { return 1; } };
-
-  var result = Wiring._safeCall('PartialMod', 'nonExistentFn', []);
-  assert(result === null, '_safeCall returns null for missing function');
-
-  delete global.PartialMod;
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 49: result objects have correct shape per event
-// ---------------------------------------------------------------------------
-
-suite('result object shapes', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var zc = Wiring.onZoneChange(DUMMY_STATE, DUMMY_PLAYER, 'a', 'b');
-  assert('xpAwarded' in zc, 'onZoneChange result has xpAwarded');
-  assert('lootResults' in zc, 'onZoneChange result has lootResults');
-  assert('challengesUpdated' in zc, 'onZoneChange result has challengesUpdated');
-  assert('fromZone' in zc, 'onZoneChange result has fromZone');
-  assert('toZone' in zc, 'onZoneChange result has toZone');
-
-  installAllMocks();
-  var hv = Wiring.onHarvest(DUMMY_STATE, DUMMY_PLAYER, 'item', 'zone', 1);
-  assert('itemId' in hv, 'onHarvest result has itemId');
-  assert('zone' in hv, 'onHarvest result has zone');
-  assert('quantity' in hv, 'onHarvest result has quantity');
-
-  installAllMocks();
-  var dc = Wiring.onDungeonClear(DUMMY_STATE, DUMMY_PLAYER, 'dng', 2, 0);
-  assert('dungeonId' in dc, 'onDungeonClear result has dungeonId');
-  assert('floor' in dc, 'onDungeonClear result has floor');
-  assert('timeMs' in dc, 'onDungeonClear result has timeMs');
-
-  installAllMocks();
-  var tc = Wiring.onTimeCapsuleBuried(DUMMY_STATE, DUMMY_PLAYER, 'cap', 'nexus');
-  assert('capsuleId' in tc, 'onTimeCapsuleBuried result has capsuleId');
-  assert('zone' in tc, 'onTimeCapsuleBuried result has zone');
-
-  installAllMocks();
-  var ms = Wiring.onMentorSession(DUMMY_STATE, DUMMY_PLAYER, 'teacher', 'topic');
-  assert('teacherId' in ms, 'onMentorSession result has teacherId');
-  assert('subject' in ms, 'onMentorSession result has subject');
-
-  removeAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 50: dispatch passes state correctly
-// ---------------------------------------------------------------------------
-
-suite('state passed correctly through dispatch', function() {
-  var capturedState = null;
-  global.Progression = {
-    awardXP: function(state, playerId, skill, amount) {
-      capturedState = state;
-      return { xp: amount };
-    }
-  };
-
-  var customState = { players: { alice: {} }, economy: { spark: 99 } };
-  Wiring.onZoneChange(customState, 'alice', 'nexus', 'gardens');
-
-  assert(capturedState === customState, 'state reference passed through to module calls');
-
-  delete global.Progression;
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 51: init() returns Wiring ref
-// ---------------------------------------------------------------------------
-
-suite('init returns Wiring reference', function() {
-  var result = Wiring.init();
-  assert(result === Wiring, 'init() returns the Wiring exports object');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 52: MODULE_NAMES completeness
-// ---------------------------------------------------------------------------
-
-suite('MODULE_NAMES completeness', function() {
-  var names = Wiring.MODULE_NAMES;
-  assert(names.indexOf('Progression') !== -1, 'MODULE_NAMES includes Progression');
-  assert(names.indexOf('DailyChallenges') !== -1, 'MODULE_NAMES includes DailyChallenges');
-  assert(names.indexOf('NpcMemory') !== -1, 'MODULE_NAMES includes NpcMemory');
-  assert(names.indexOf('FastTravel') !== -1, 'MODULE_NAMES includes FastTravel');
-  assert(names.indexOf('Loot') !== -1, 'MODULE_NAMES includes Loot');
-  assert(names.indexOf('NpcReputation') !== -1, 'MODULE_NAMES includes NpcReputation');
-  assert(names.indexOf('GuildProgression') !== -1, 'MODULE_NAMES includes GuildProgression');
-  assert(names.indexOf('Prestige') !== -1, 'MODULE_NAMES includes Prestige');
-  assert(names.indexOf('EventVoting') !== -1, 'MODULE_NAMES includes EventVoting');
-  assert(names.indexOf('HousingSocial') !== -1, 'MODULE_NAMES includes HousingSocial');
-  assert(names.indexOf('Apprenticeship') !== -1, 'MODULE_NAMES includes Apprenticeship');
-  assert(names.indexOf('MentorshipMarket') !== -1, 'MODULE_NAMES includes MentorshipMarket');
-});
-
-// ---------------------------------------------------------------------------
-// SUITE 53: getEventHandlers descriptions are strings
-// ---------------------------------------------------------------------------
-
-suite('getEventHandlers descriptions are strings', function() {
-  Wiring.init();
-  var allEvents = Wiring.getRegisteredEvents();
-  allEvents.forEach(function(eventName) {
-    var handlers = Wiring.getEventHandlers(eventName);
-    handlers.forEach(function(desc) {
-      assert(typeof desc === 'string', 'handler description for ' + eventName + ' is a string');
-      assert(desc.length > 0, 'handler description for ' + eventName + ' is not empty');
+// ============================================================================
+// SUITE 2: MODULE_NAMES array
+// ============================================================================
+
+suite('MODULE_NAMES array', function() {
+  test('has at least 12 entries', function() {
+    assert.ok(Wiring.MODULE_NAMES.length >= 12);
+  });
+  test('contains Progression', function() {
+    assert.ok(Wiring.MODULE_NAMES.indexOf('Progression') !== -1);
+  });
+  test('contains DailyChallenges', function() {
+    assert.ok(Wiring.MODULE_NAMES.indexOf('DailyChallenges') !== -1);
+  });
+  test('contains NpcMemory', function() {
+    assert.ok(Wiring.MODULE_NAMES.indexOf('NpcMemory') !== -1);
+  });
+  test('contains FastTravel', function() {
+    assert.ok(Wiring.MODULE_NAMES.indexOf('FastTravel') !== -1);
+  });
+  test('contains Loot', function() {
+    assert.ok(Wiring.MODULE_NAMES.indexOf('Loot') !== -1);
+  });
+  test('contains NpcReputation', function() {
+    assert.ok(Wiring.MODULE_NAMES.indexOf('NpcReputation') !== -1);
+  });
+  test('contains GuildProgression', function() {
+    assert.ok(Wiring.MODULE_NAMES.indexOf('GuildProgression') !== -1);
+  });
+  test('contains Prestige', function() {
+    assert.ok(Wiring.MODULE_NAMES.indexOf('Prestige') !== -1);
+  });
+  test('contains EventVoting', function() {
+    assert.ok(Wiring.MODULE_NAMES.indexOf('EventVoting') !== -1);
+  });
+  test('contains HousingSocial', function() {
+    assert.ok(Wiring.MODULE_NAMES.indexOf('HousingSocial') !== -1);
+  });
+  test('contains Apprenticeship', function() {
+    assert.ok(Wiring.MODULE_NAMES.indexOf('Apprenticeship') !== -1);
+  });
+  test('contains MentorshipMarket', function() {
+    assert.ok(Wiring.MODULE_NAMES.indexOf('MentorshipMarket') !== -1);
+  });
+  test('all entries are non-empty strings', function() {
+    Wiring.MODULE_NAMES.forEach(function(name) {
+      assert.strictEqual(typeof name, 'string');
+      assert.ok(name.length > 0);
     });
   });
 });
 
-// ---------------------------------------------------------------------------
-// SUITE 54: No mutation of state between calls
-// ---------------------------------------------------------------------------
+// ============================================================================
+// SUITE 3: init and getRegisteredEvents
+// ============================================================================
 
-suite('state not mutated across calls', function() {
-  installAllMocks();
-  var state = { players: {}, economy: {}, _marker: 'original' };
-
-  Wiring.onZoneChange(state, DUMMY_PLAYER, 'nexus', 'gardens');
-  installAllMocks();
-  Wiring.onHarvest(state, DUMMY_PLAYER, 'wood', 'wilds', 1);
-  installAllMocks();
-  Wiring.onCraft(state, DUMMY_PLAYER, 'recipe_1', null);
-
-  assert(state._marker === 'original', 'state._marker not modified by dispatch calls');
-  assert(Object.keys(state).length === 3, 'no extra keys added to state');
-
-  removeAllMocks();
+suite('init and getRegisteredEvents', function() {
+  test('init does not throw', function() {
+    assert.doesNotThrow(function() { Wiring.init(); });
+  });
+  test('init returns the Wiring exports object', function() {
+    var ret = Wiring.init();
+    assert.strictEqual(ret, Wiring);
+  });
+  test('getRegisteredEvents returns an array', function() {
+    assert.ok(Array.isArray(Wiring.getRegisteredEvents()));
+  });
+  test('getRegisteredEvents lists at least 16 events', function() {
+    assert.ok(Wiring.getRegisteredEvents().length >= 16);
+  });
+  test('onZoneChange is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onZoneChange') !== -1);
+  });
+  test('onHarvest is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onHarvest') !== -1);
+  });
+  test('onCraft is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onCraft') !== -1);
+  });
+  test('onFishCaught is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onFishCaught') !== -1);
+  });
+  test('onDungeonClear is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onDungeonClear') !== -1);
+  });
+  test('onNpcInteraction is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onNpcInteraction') !== -1);
+  });
+  test('onQuestComplete is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onQuestComplete') !== -1);
+  });
+  test('onCardGameWin is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onCardGameWin') !== -1);
+  });
+  test('onConstellationFound is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onConstellationFound') !== -1);
+  });
+  test('onTimeCapsuleBuried is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onTimeCapsuleBuried') !== -1);
+  });
+  test('onTimeCapsuleFound is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onTimeCapsuleFound') !== -1);
+  });
+  test('onTrade is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onTrade') !== -1);
+  });
+  test('onBuild is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onBuild') !== -1);
+  });
+  test('onVoteCast is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onVoteCast') !== -1);
+  });
+  test('onHousingVisit is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onHousingVisit') !== -1);
+  });
+  test('onMentorSession is registered', function() {
+    assert.ok(Wiring.getRegisteredEvents().indexOf('onMentorSession') !== -1);
+  });
 });
 
-// ---------------------------------------------------------------------------
-// SUITE 55: Multiple players on same state
-// ---------------------------------------------------------------------------
+// ============================================================================
+// SUITE 4: getEventHandlers
+// ============================================================================
 
-suite('multiple players dispatched independently', function() {
-  installAllMocks();
-  Wiring.resetStats();
-
-  var r1 = Wiring.onZoneChange(DUMMY_STATE, 'player_alice', 'nexus', 'gardens');
-  installAllMocks();
-  var r2 = Wiring.onZoneChange(DUMMY_STATE, 'player_bob', 'nexus', 'arena');
-
-  assert(r1.xpAwarded === 5, 'alice gets 5 XP');
-  assert(r2.xpAwarded === 5, 'bob gets 5 XP');
-  assert(r1.toZone === 'gardens', 'alice toZone gardens');
-  assert(r2.toZone === 'arena', 'bob toZone arena');
-
-  removeAllMocks();
+suite('getEventHandlers', function() {
+  test('returns array for known event', function() {
+    Wiring.init();
+    assert.ok(Array.isArray(Wiring.getEventHandlers('onZoneChange')));
+  });
+  test('returns non-empty array for known event', function() {
+    assert.ok(Wiring.getEventHandlers('onHarvest').length >= 1);
+  });
+  test('all descriptions are non-empty strings', function() {
+    var events = Wiring.getRegisteredEvents();
+    events.forEach(function(evName) {
+      var descs = Wiring.getEventHandlers(evName);
+      descs.forEach(function(d) {
+        assert.strictEqual(typeof d, 'string');
+        assert.ok(d.length > 0);
+      });
+    });
+  });
+  test('returns empty array for unknown event', function() {
+    var arr = Wiring.getEventHandlers('nonExistentEvent');
+    assert.ok(Array.isArray(arr));
+    assert.strictEqual(arr.length, 0);
+  });
+  test('onZoneChange description mentions XP', function() {
+    var descs = Wiring.getEventHandlers('onZoneChange');
+    assert.ok(descs[0].toLowerCase().indexOf('xp') !== -1);
+  });
 });
 
-// ---------------------------------------------------------------------------
+// ============================================================================
+// SUITE 5: onZoneChange
+// ============================================================================
+
+suite('onZoneChange — with mocks', function() {
+  test('returns an object', function() {
+    installAllMocks();
+    Wiring.resetStats();
+    var r = Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.ok(r && typeof r === 'object');
+    removeAllMocks();
+  });
+  test('xpAwarded is 5', function() {
+    installAllMocks();
+    var r = Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.strictEqual(r.xpAwarded, 5);
+    removeAllMocks();
+  });
+  test('fromZone is preserved in result', function() {
+    installAllMocks();
+    var r = Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.strictEqual(r.fromZone, 'nexus');
+    removeAllMocks();
+  });
+  test('toZone is preserved in result', function() {
+    installAllMocks();
+    var r = Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.strictEqual(r.toZone, 'gardens');
+    removeAllMocks();
+  });
+  test('lootResults is an array', function() {
+    installAllMocks();
+    var r = Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.ok(Array.isArray(r.lootResults));
+    removeAllMocks();
+  });
+  test('Progression.awardXP called with exploration skill', function() {
+    installAllMocks();
+    Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.strictEqual(global.Progression._calls[0].skill, 'exploration');
+    removeAllMocks();
+  });
+  test('Progression.awardXP called with amount 5', function() {
+    installAllMocks();
+    Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.strictEqual(global.Progression._calls[0].amount, 5);
+    removeAllMocks();
+  });
+  test('DailyChallenges.updateProgress called with zone_visit', function() {
+    installAllMocks();
+    Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.strictEqual(global.DailyChallenges._calls[0].type, 'zone_visit');
+    removeAllMocks();
+  });
+  test('DailyChallenges data includes toZone', function() {
+    installAllMocks();
+    Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.strictEqual(global.DailyChallenges._calls[0].data.zone, 'gardens');
+    removeAllMocks();
+  });
+  test('NpcMemory.recordInteraction called with zone_visit type', function() {
+    installAllMocks();
+    Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.strictEqual(global.NpcMemory._calls[0].type, 'zone_visit');
+    removeAllMocks();
+  });
+  test('FastTravel.unlockLocation called with toZone', function() {
+    installAllMocks();
+    Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.strictEqual(global.FastTravel._calls[0].zone, 'gardens');
+    removeAllMocks();
+  });
+});
+
+suite('onZoneChange — no mocks', function() {
+  test('does not throw when modules missing', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+  test('challengesUpdated is 0 without DailyChallenges', function() {
+    removeAllMocks();
+    var r = Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.strictEqual(r.challengesUpdated, 0);
+  });
+  test('result still has correct zone fields', function() {
+    removeAllMocks();
+    var r = Wiring.onZoneChange(STATE, PLAYER, 'arena', 'wilds');
+    assert.strictEqual(r.fromZone, 'arena');
+    assert.strictEqual(r.toZone, 'wilds');
+  });
+});
+
+// ============================================================================
+// SUITE 6: onHarvest
+// ============================================================================
+
+suite('onHarvest — with mocks', function() {
+  test('xpAwarded is 8', function() {
+    installAllMocks();
+    var r = Wiring.onHarvest(STATE, PLAYER, 'herbs', 'gardens', 3);
+    assert.strictEqual(r.xpAwarded, 8);
+    removeAllMocks();
+  });
+  test('itemId and zone and quantity preserved', function() {
+    installAllMocks();
+    var r = Wiring.onHarvest(STATE, PLAYER, 'herbs', 'gardens', 3);
+    assert.strictEqual(r.itemId, 'herbs');
+    assert.strictEqual(r.zone, 'gardens');
+    assert.strictEqual(r.quantity, 3);
+    removeAllMocks();
+  });
+  test('Progression called with gathering skill and amount 8', function() {
+    installAllMocks();
+    Wiring.onHarvest(STATE, PLAYER, 'herbs', 'gardens', 3);
+    assert.strictEqual(global.Progression._calls[0].skill, 'gathering');
+    assert.strictEqual(global.Progression._calls[0].amount, 8);
+    removeAllMocks();
+  });
+  test('DailyChallenges called with harvest type and item data', function() {
+    installAllMocks();
+    Wiring.onHarvest(STATE, PLAYER, 'herbs', 'gardens', 3);
+    assert.strictEqual(global.DailyChallenges._calls[0].type, 'harvest');
+    assert.strictEqual(global.DailyChallenges._calls[0].data.item, 'herbs');
+    assert.strictEqual(global.DailyChallenges._calls[0].data.qty, 3);
+    removeAllMocks();
+  });
+  test('Loot rolled for harvest_<zone>', function() {
+    installAllMocks();
+    Wiring.onHarvest(STATE, PLAYER, 'herbs', 'gardens', 3);
+    assert.strictEqual(global.Loot._calls[0].tableKey, 'harvest_gardens');
+    removeAllMocks();
+  });
+  test('NpcReputation.applyAction called with harvest action', function() {
+    installAllMocks();
+    Wiring.onHarvest(STATE, PLAYER, 'herbs', 'gardens', 3);
+    assert.strictEqual(global.NpcReputation._calls[0].action, 'harvest');
+    removeAllMocks();
+  });
+  test('GuildProgression tracks harvests with quantity', function() {
+    installAllMocks();
+    Wiring.onHarvest(STATE, PLAYER, 'herbs', 'gardens', 3);
+    assert.strictEqual(global.GuildProgression._calls[0].metric, 'harvests');
+    assert.strictEqual(global.GuildProgression._calls[0].amount, 3);
+    removeAllMocks();
+  });
+  test('lootResults has at least one entry', function() {
+    installAllMocks();
+    var r = Wiring.onHarvest(STATE, PLAYER, 'herbs', 'gardens', 3);
+    assert.ok(r.lootResults.length >= 1);
+    removeAllMocks();
+  });
+});
+
+suite('onHarvest — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onHarvest(STATE, PLAYER, 'wood', 'wilds', 5);
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onHarvest(STATE, PLAYER, 'wood', 'wilds', 5);
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+  test('lootResults is empty without Loot', function() {
+    removeAllMocks();
+    var r = Wiring.onHarvest(STATE, PLAYER, 'wood', 'wilds', 5);
+    assert.strictEqual(r.lootResults.length, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 7: onCraft
+// ============================================================================
+
+suite('onCraft — with mocks', function() {
+  test('xpAwarded is 10', function() {
+    installAllMocks();
+    var r = Wiring.onCraft(STATE, PLAYER, 'iron_sword', {});
+    assert.strictEqual(r.xpAwarded, 10);
+    removeAllMocks();
+  });
+  test('recipeId preserved in result', function() {
+    installAllMocks();
+    var r = Wiring.onCraft(STATE, PLAYER, 'iron_sword', {});
+    assert.strictEqual(r.recipeId, 'iron_sword');
+    removeAllMocks();
+  });
+  test('Progression called with crafting skill', function() {
+    installAllMocks();
+    Wiring.onCraft(STATE, PLAYER, 'iron_sword', {});
+    assert.strictEqual(global.Progression._calls[0].skill, 'crafting');
+    assert.strictEqual(global.Progression._calls[0].amount, 10);
+    removeAllMocks();
+  });
+  test('DailyChallenges called with craft type and recipe', function() {
+    installAllMocks();
+    Wiring.onCraft(STATE, PLAYER, 'iron_sword', {});
+    assert.strictEqual(global.DailyChallenges._calls[0].type, 'craft');
+    assert.strictEqual(global.DailyChallenges._calls[0].data.recipe, 'iron_sword');
+    removeAllMocks();
+  });
+  test('GuildProgression tracks crafts metric', function() {
+    installAllMocks();
+    Wiring.onCraft(STATE, PLAYER, 'iron_sword', {});
+    assert.strictEqual(global.GuildProgression._calls[0].metric, 'crafts');
+    removeAllMocks();
+  });
+  test('NpcReputation.applyAction called with craft action', function() {
+    installAllMocks();
+    Wiring.onCraft(STATE, PLAYER, 'iron_sword', {});
+    assert.strictEqual(global.NpcReputation._calls[0].action, 'craft');
+    removeAllMocks();
+  });
+});
+
+suite('onCraft — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onCraft(STATE, PLAYER, 'potion', null);
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onCraft(STATE, PLAYER, 'potion', null);
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 8: onFishCaught — XP formula and mocks
+// ============================================================================
+
+suite('onFishCaught — XP formula', function() {
+  test('rarity 0 yields 6 XP', function() {
+    installAllMocks();
+    var r = Wiring.onFishCaught(STATE, PLAYER, 'minnow', 'nexus', 0);
+    assert.strictEqual(r.xpAwarded, 6);
+    removeAllMocks();
+  });
+  test('rarity 1 yields 10 XP', function() {
+    installAllMocks();
+    var r = Wiring.onFishCaught(STATE, PLAYER, 'trout', 'nexus', 1);
+    assert.strictEqual(r.xpAwarded, 10);
+    removeAllMocks();
+  });
+  test('rarity 2 yields 14 XP', function() {
+    installAllMocks();
+    var r = Wiring.onFishCaught(STATE, PLAYER, 'bass', 'commons', 2);
+    assert.strictEqual(r.xpAwarded, 14);
+    removeAllMocks();
+  });
+  test('rarity 3 yields 18 XP', function() {
+    installAllMocks();
+    var r = Wiring.onFishCaught(STATE, PLAYER, 'dragon_fish', 'wilds', 3);
+    assert.strictEqual(r.xpAwarded, 18);
+    removeAllMocks();
+  });
+});
+
+suite('onFishCaught — with mocks', function() {
+  test('fishId and zone and rarity preserved', function() {
+    installAllMocks();
+    var r = Wiring.onFishCaught(STATE, PLAYER, 'bass', 'commons', 2);
+    assert.strictEqual(r.fishId, 'bass');
+    assert.strictEqual(r.zone, 'commons');
+    assert.strictEqual(r.rarity, 2);
+    removeAllMocks();
+  });
+  test('Progression called with fishing skill', function() {
+    installAllMocks();
+    Wiring.onFishCaught(STATE, PLAYER, 'bass', 'commons', 2);
+    assert.strictEqual(global.Progression._calls[0].skill, 'fishing');
+    removeAllMocks();
+  });
+  test('DailyChallenges called with fish type', function() {
+    installAllMocks();
+    Wiring.onFishCaught(STATE, PLAYER, 'bass', 'commons', 2);
+    assert.strictEqual(global.DailyChallenges._calls[0].type, 'fish');
+    assert.strictEqual(global.DailyChallenges._calls[0].data.rarity, 2);
+    removeAllMocks();
+  });
+  test('Loot rolled for fishing_<rarity>', function() {
+    installAllMocks();
+    Wiring.onFishCaught(STATE, PLAYER, 'bass', 'commons', 2);
+    assert.strictEqual(global.Loot._calls[0].tableKey, 'fishing_2');
+    removeAllMocks();
+  });
+  test('NpcReputation action is fish', function() {
+    installAllMocks();
+    Wiring.onFishCaught(STATE, PLAYER, 'bass', 'commons', 2);
+    assert.strictEqual(global.NpcReputation._calls[0].action, 'fish');
+    removeAllMocks();
+  });
+});
+
+suite('onFishCaught — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onFishCaught(STATE, PLAYER, 'carp', 'wilds', 1);
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onFishCaught(STATE, PLAYER, 'carp', 'wilds', 1);
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+  test('lootResults is empty without Loot', function() {
+    removeAllMocks();
+    var r = Wiring.onFishCaught(STATE, PLAYER, 'carp', 'wilds', 1);
+    assert.strictEqual(r.lootResults.length, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 9: onDungeonClear
+// ============================================================================
+
+suite('onDungeonClear — XP formula', function() {
+  test('floor 0 yields 15 XP', function() {
+    installAllMocks();
+    var r = Wiring.onDungeonClear(STATE, PLAYER, 'd1', 0, 0);
+    assert.strictEqual(r.xpAwarded, 15);
+    removeAllMocks();
+  });
+  test('floor 1 yields 20 XP', function() {
+    installAllMocks();
+    var r = Wiring.onDungeonClear(STATE, PLAYER, 'd1', 1, 0);
+    assert.strictEqual(r.xpAwarded, 20);
+    removeAllMocks();
+  });
+  test('floor 3 yields 30 XP', function() {
+    installAllMocks();
+    var r = Wiring.onDungeonClear(STATE, PLAYER, 'crypt', 3, 120000);
+    assert.strictEqual(r.xpAwarded, 30);
+    removeAllMocks();
+  });
+  test('floor 5 yields 40 XP', function() {
+    installAllMocks();
+    var r = Wiring.onDungeonClear(STATE, PLAYER, 'd1', 5, 0);
+    assert.strictEqual(r.xpAwarded, 40);
+    removeAllMocks();
+  });
+});
+
+suite('onDungeonClear — with mocks', function() {
+  test('dungeonId and floor and timeMs preserved', function() {
+    installAllMocks();
+    var r = Wiring.onDungeonClear(STATE, PLAYER, 'crypt', 3, 120000);
+    assert.strictEqual(r.dungeonId, 'crypt');
+    assert.strictEqual(r.floor, 3);
+    assert.strictEqual(r.timeMs, 120000);
+    removeAllMocks();
+  });
+  test('Progression called with combat skill', function() {
+    installAllMocks();
+    Wiring.onDungeonClear(STATE, PLAYER, 'crypt', 3, 120000);
+    assert.strictEqual(global.Progression._calls[0].skill, 'combat');
+    removeAllMocks();
+  });
+  test('DailyChallenges called with dungeon type', function() {
+    installAllMocks();
+    Wiring.onDungeonClear(STATE, PLAYER, 'crypt', 3, 120000);
+    assert.strictEqual(global.DailyChallenges._calls[0].type, 'dungeon');
+    removeAllMocks();
+  });
+  test('Loot rolled for dungeon_<dungeonId>', function() {
+    installAllMocks();
+    Wiring.onDungeonClear(STATE, PLAYER, 'crypt', 3, 120000);
+    assert.strictEqual(global.Loot._calls[0].tableKey, 'dungeon_crypt');
+    removeAllMocks();
+  });
+  test('GuildProgression tracks dungeon_clears', function() {
+    installAllMocks();
+    Wiring.onDungeonClear(STATE, PLAYER, 'crypt', 3, 120000);
+    assert.strictEqual(global.GuildProgression._calls[0].metric, 'dungeon_clears');
+    removeAllMocks();
+  });
+  test('Prestige.checkEligibility called', function() {
+    installAllMocks();
+    Wiring.onDungeonClear(STATE, PLAYER, 'crypt', 3, 120000);
+    assert.ok(global.Prestige._calls.length >= 1);
+    removeAllMocks();
+  });
+});
+
+suite('onDungeonClear — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onDungeonClear(STATE, PLAYER, 'ruins', 2, 60000);
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onDungeonClear(STATE, PLAYER, 'ruins', 2, 60000);
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 10: onNpcInteraction
+// ============================================================================
+
+suite('onNpcInteraction — with mocks', function() {
+  test('xpAwarded is 3', function() {
+    installAllMocks();
+    var r = Wiring.onNpcInteraction(STATE, PLAYER, 'npc_elder', 'greet', {});
+    assert.strictEqual(r.xpAwarded, 3);
+    removeAllMocks();
+  });
+  test('npcId and interactionType preserved', function() {
+    installAllMocks();
+    var r = Wiring.onNpcInteraction(STATE, PLAYER, 'npc_elder', 'greet', {});
+    assert.strictEqual(r.npcId, 'npc_elder');
+    assert.strictEqual(r.interactionType, 'greet');
+    removeAllMocks();
+  });
+  test('NpcMemory.recordInteraction called with correct npcId and type', function() {
+    installAllMocks();
+    Wiring.onNpcInteraction(STATE, PLAYER, 'npc_elder', 'greet', {});
+    assert.strictEqual(global.NpcMemory._calls[0].npcId, 'npc_elder');
+    assert.strictEqual(global.NpcMemory._calls[0].type, 'greet');
+    removeAllMocks();
+  });
+  test('NpcReputation.applyAction called with correct npcId and action', function() {
+    installAllMocks();
+    Wiring.onNpcInteraction(STATE, PLAYER, 'npc_elder', 'greet', {});
+    assert.strictEqual(global.NpcReputation._calls[0].npcId, 'npc_elder');
+    assert.strictEqual(global.NpcReputation._calls[0].action, 'greet');
+    removeAllMocks();
+  });
+  test('Progression called with social skill', function() {
+    installAllMocks();
+    Wiring.onNpcInteraction(STATE, PLAYER, 'npc_elder', 'greet', {});
+    assert.strictEqual(global.Progression._calls[0].skill, 'social');
+    removeAllMocks();
+  });
+  test('DailyChallenges called with npc_talk type', function() {
+    installAllMocks();
+    Wiring.onNpcInteraction(STATE, PLAYER, 'npc_elder', 'greet', {});
+    assert.strictEqual(global.DailyChallenges._calls[0].type, 'npc_talk');
+    assert.strictEqual(global.DailyChallenges._calls[0].data.npc, 'npc_elder');
+    removeAllMocks();
+  });
+});
+
+suite('onNpcInteraction — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onNpcInteraction(STATE, PLAYER, 'npc_guard', 'trade', {});
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onNpcInteraction(STATE, PLAYER, 'npc_guard', 'trade', {});
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 11: onQuestComplete
+// ============================================================================
+
+suite('onQuestComplete — with mocks', function() {
+  test('xpAwarded is 20', function() {
+    installAllMocks();
+    var r = Wiring.onQuestComplete(STATE, PLAYER, 'quest_rescue', {});
+    assert.strictEqual(r.xpAwarded, 20);
+    removeAllMocks();
+  });
+  test('questId preserved', function() {
+    installAllMocks();
+    var r = Wiring.onQuestComplete(STATE, PLAYER, 'quest_rescue', {});
+    assert.strictEqual(r.questId, 'quest_rescue');
+    removeAllMocks();
+  });
+  test('Progression called with questing skill', function() {
+    installAllMocks();
+    Wiring.onQuestComplete(STATE, PLAYER, 'quest_rescue', {});
+    assert.strictEqual(global.Progression._calls[0].skill, 'questing');
+    removeAllMocks();
+  });
+  test('DailyChallenges called with quest type', function() {
+    installAllMocks();
+    Wiring.onQuestComplete(STATE, PLAYER, 'quest_rescue', {});
+    assert.strictEqual(global.DailyChallenges._calls[0].type, 'quest');
+    removeAllMocks();
+  });
+  test('Prestige.checkEligibility called', function() {
+    installAllMocks();
+    Wiring.onQuestComplete(STATE, PLAYER, 'quest_rescue', {});
+    assert.ok(global.Prestige._calls.length >= 1);
+    removeAllMocks();
+  });
+  test('GuildProgression tracks quests metric', function() {
+    installAllMocks();
+    Wiring.onQuestComplete(STATE, PLAYER, 'quest_rescue', {});
+    assert.strictEqual(global.GuildProgression._calls[0].metric, 'quests');
+    removeAllMocks();
+  });
+});
+
+suite('onQuestComplete — no mocks', function() {
+  test('does not throw with null rewards', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onQuestComplete(STATE, PLAYER, 'quest_explore', null);
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onQuestComplete(STATE, PLAYER, 'quest_explore', null);
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 12: onCardGameWin
+// ============================================================================
+
+suite('onCardGameWin — with mocks', function() {
+  test('xpAwarded is 8', function() {
+    installAllMocks();
+    var r = Wiring.onCardGameWin(STATE, PLAYER, 'opp1', 'aggro');
+    assert.strictEqual(r.xpAwarded, 8);
+    removeAllMocks();
+  });
+  test('opponentId and deckType preserved', function() {
+    installAllMocks();
+    var r = Wiring.onCardGameWin(STATE, PLAYER, 'opp1', 'aggro');
+    assert.strictEqual(r.opponentId, 'opp1');
+    assert.strictEqual(r.deckType, 'aggro');
+    removeAllMocks();
+  });
+  test('Progression called with social skill', function() {
+    installAllMocks();
+    Wiring.onCardGameWin(STATE, PLAYER, 'opp1', 'aggro');
+    assert.strictEqual(global.Progression._calls[0].skill, 'social');
+    removeAllMocks();
+  });
+  test('DailyChallenges called with card_game type', function() {
+    installAllMocks();
+    Wiring.onCardGameWin(STATE, PLAYER, 'opp1', 'aggro');
+    assert.strictEqual(global.DailyChallenges._calls[0].type, 'card_game');
+    assert.strictEqual(global.DailyChallenges._calls[0].data.opponent, 'opp1');
+    removeAllMocks();
+  });
+  test('Loot rolled for card_game_win table', function() {
+    installAllMocks();
+    Wiring.onCardGameWin(STATE, PLAYER, 'opp1', 'aggro');
+    assert.strictEqual(global.Loot._calls[0].tableKey, 'card_game_win');
+    removeAllMocks();
+  });
+  test('lootResults has entries', function() {
+    installAllMocks();
+    var r = Wiring.onCardGameWin(STATE, PLAYER, 'opp1', 'aggro');
+    assert.ok(r.lootResults.length >= 1);
+    removeAllMocks();
+  });
+});
+
+suite('onCardGameWin — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onCardGameWin(STATE, PLAYER, 'opp', 'control');
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onCardGameWin(STATE, PLAYER, 'opp', 'control');
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 13: onConstellationFound
+// ============================================================================
+
+suite('onConstellationFound — with mocks', function() {
+  test('xpAwarded is 12', function() {
+    installAllMocks();
+    var r = Wiring.onConstellationFound(STATE, PLAYER, 'orion');
+    assert.strictEqual(r.xpAwarded, 12);
+    removeAllMocks();
+  });
+  test('constellationId preserved', function() {
+    installAllMocks();
+    var r = Wiring.onConstellationFound(STATE, PLAYER, 'orion');
+    assert.strictEqual(r.constellationId, 'orion');
+    removeAllMocks();
+  });
+  test('Progression called with exploration skill', function() {
+    installAllMocks();
+    Wiring.onConstellationFound(STATE, PLAYER, 'orion');
+    assert.strictEqual(global.Progression._calls[0].skill, 'exploration');
+    removeAllMocks();
+  });
+  test('DailyChallenges called with stargazing type and constellation', function() {
+    installAllMocks();
+    Wiring.onConstellationFound(STATE, PLAYER, 'orion');
+    assert.strictEqual(global.DailyChallenges._calls[0].type, 'stargazing');
+    assert.strictEqual(global.DailyChallenges._calls[0].data.constellation, 'orion');
+    removeAllMocks();
+  });
+});
+
+suite('onConstellationFound — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onConstellationFound(STATE, PLAYER, 'cassiopeia');
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onConstellationFound(STATE, PLAYER, 'cassiopeia');
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 14: onTimeCapsuleBuried
+// ============================================================================
+
+suite('onTimeCapsuleBuried — with mocks', function() {
+  test('xpAwarded is 7', function() {
+    installAllMocks();
+    var r = Wiring.onTimeCapsuleBuried(STATE, PLAYER, 'cap_001', 'wilds');
+    assert.strictEqual(r.xpAwarded, 7);
+    removeAllMocks();
+  });
+  test('capsuleId and zone preserved', function() {
+    installAllMocks();
+    var r = Wiring.onTimeCapsuleBuried(STATE, PLAYER, 'cap_001', 'wilds');
+    assert.strictEqual(r.capsuleId, 'cap_001');
+    assert.strictEqual(r.zone, 'wilds');
+    removeAllMocks();
+  });
+  test('Progression called with exploration skill', function() {
+    installAllMocks();
+    Wiring.onTimeCapsuleBuried(STATE, PLAYER, 'cap_001', 'wilds');
+    assert.strictEqual(global.Progression._calls[0].skill, 'exploration');
+    removeAllMocks();
+  });
+  test('NpcMemory.recordInteraction called with time_capsule type', function() {
+    installAllMocks();
+    Wiring.onTimeCapsuleBuried(STATE, PLAYER, 'cap_001', 'wilds');
+    assert.strictEqual(global.NpcMemory._calls[0].type, 'time_capsule');
+    removeAllMocks();
+  });
+  test('NpcMemory data contains capsule id and zone', function() {
+    installAllMocks();
+    Wiring.onTimeCapsuleBuried(STATE, PLAYER, 'cap_001', 'wilds');
+    assert.strictEqual(global.NpcMemory._calls[0].data.capsule, 'cap_001');
+    assert.strictEqual(global.NpcMemory._calls[0].data.zone, 'wilds');
+    removeAllMocks();
+  });
+});
+
+suite('onTimeCapsuleBuried — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onTimeCapsuleBuried(STATE, PLAYER, 'cap_x', 'arena');
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onTimeCapsuleBuried(STATE, PLAYER, 'cap_x', 'arena');
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 15: onTimeCapsuleFound
+// ============================================================================
+
+suite('onTimeCapsuleFound — with mocks', function() {
+  test('xpAwarded is 15', function() {
+    installAllMocks();
+    var r = Wiring.onTimeCapsuleFound(STATE, PLAYER, 'cap_002');
+    assert.strictEqual(r.xpAwarded, 15);
+    removeAllMocks();
+  });
+  test('capsuleId preserved', function() {
+    installAllMocks();
+    var r = Wiring.onTimeCapsuleFound(STATE, PLAYER, 'cap_002');
+    assert.strictEqual(r.capsuleId, 'cap_002');
+    removeAllMocks();
+  });
+  test('Progression called with exploration skill', function() {
+    installAllMocks();
+    Wiring.onTimeCapsuleFound(STATE, PLAYER, 'cap_002');
+    assert.strictEqual(global.Progression._calls[0].skill, 'exploration');
+    removeAllMocks();
+  });
+  test('Loot rolled for time_capsule table', function() {
+    installAllMocks();
+    Wiring.onTimeCapsuleFound(STATE, PLAYER, 'cap_002');
+    assert.strictEqual(global.Loot._calls[0].tableKey, 'time_capsule');
+    removeAllMocks();
+  });
+  test('lootResults has entries', function() {
+    installAllMocks();
+    var r = Wiring.onTimeCapsuleFound(STATE, PLAYER, 'cap_002');
+    assert.ok(r.lootResults.length >= 1);
+    removeAllMocks();
+  });
+});
+
+suite('onTimeCapsuleFound — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onTimeCapsuleFound(STATE, PLAYER, 'cap_y');
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onTimeCapsuleFound(STATE, PLAYER, 'cap_y');
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+  test('lootResults is empty without Loot', function() {
+    removeAllMocks();
+    var r = Wiring.onTimeCapsuleFound(STATE, PLAYER, 'cap_y');
+    assert.strictEqual(r.lootResults.length, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 16: onTrade
+// ============================================================================
+
+suite('onTrade — with mocks', function() {
+  test('xpAwarded is 5', function() {
+    installAllMocks();
+    var r = Wiring.onTrade(STATE, PLAYER, 'player_b', ['wood'], 100);
+    assert.strictEqual(r.xpAwarded, 5);
+    removeAllMocks();
+  });
+  test('otherPlayerId and spark preserved', function() {
+    installAllMocks();
+    var r = Wiring.onTrade(STATE, PLAYER, 'player_b', ['wood'], 100);
+    assert.strictEqual(r.otherPlayerId, 'player_b');
+    assert.strictEqual(r.spark, 100);
+    removeAllMocks();
+  });
+  test('Progression called with trading skill', function() {
+    installAllMocks();
+    Wiring.onTrade(STATE, PLAYER, 'player_b', ['wood'], 100);
+    assert.strictEqual(global.Progression._calls[0].skill, 'trading');
+    removeAllMocks();
+  });
+  test('DailyChallenges called with trade type and partner', function() {
+    installAllMocks();
+    Wiring.onTrade(STATE, PLAYER, 'player_b', ['wood'], 100);
+    assert.strictEqual(global.DailyChallenges._calls[0].type, 'trade');
+    assert.strictEqual(global.DailyChallenges._calls[0].data.partner, 'player_b');
+    removeAllMocks();
+  });
+  test('GuildProgression tracks trades metric', function() {
+    installAllMocks();
+    Wiring.onTrade(STATE, PLAYER, 'player_b', ['wood'], 100);
+    assert.strictEqual(global.GuildProgression._calls[0].metric, 'trades');
+    removeAllMocks();
+  });
+  test('NpcReputation action is trade', function() {
+    installAllMocks();
+    Wiring.onTrade(STATE, PLAYER, 'player_b', ['wood'], 100);
+    assert.strictEqual(global.NpcReputation._calls[0].action, 'trade');
+    removeAllMocks();
+  });
+});
+
+suite('onTrade — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onTrade(STATE, PLAYER, 'player_c', [], 0);
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onTrade(STATE, PLAYER, 'player_c', [], 0);
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 17: onBuild
+// ============================================================================
+
+suite('onBuild — with mocks', function() {
+  test('xpAwarded is 12', function() {
+    installAllMocks();
+    var r = Wiring.onBuild(STATE, PLAYER, 'watchtower', 'wilds');
+    assert.strictEqual(r.xpAwarded, 12);
+    removeAllMocks();
+  });
+  test('structureType and zone preserved', function() {
+    installAllMocks();
+    var r = Wiring.onBuild(STATE, PLAYER, 'watchtower', 'wilds');
+    assert.strictEqual(r.structureType, 'watchtower');
+    assert.strictEqual(r.zone, 'wilds');
+    removeAllMocks();
+  });
+  test('Progression called with building skill', function() {
+    installAllMocks();
+    Wiring.onBuild(STATE, PLAYER, 'watchtower', 'wilds');
+    assert.strictEqual(global.Progression._calls[0].skill, 'building');
+    removeAllMocks();
+  });
+  test('DailyChallenges called with build type and structure', function() {
+    installAllMocks();
+    Wiring.onBuild(STATE, PLAYER, 'watchtower', 'wilds');
+    assert.strictEqual(global.DailyChallenges._calls[0].type, 'build');
+    assert.strictEqual(global.DailyChallenges._calls[0].data.structure, 'watchtower');
+    removeAllMocks();
+  });
+  test('GuildProgression tracks builds metric', function() {
+    installAllMocks();
+    Wiring.onBuild(STATE, PLAYER, 'watchtower', 'wilds');
+    assert.strictEqual(global.GuildProgression._calls[0].metric, 'builds');
+    removeAllMocks();
+  });
+});
+
+suite('onBuild — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onBuild(STATE, PLAYER, 'house', 'nexus');
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onBuild(STATE, PLAYER, 'house', 'nexus');
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 18: onVoteCast
+// ============================================================================
+
+suite('onVoteCast — with mocks', function() {
+  test('xpAwarded is 3', function() {
+    installAllMocks();
+    var r = Wiring.onVoteCast(STATE, PLAYER, 'harvest_festival', 'feast');
+    assert.strictEqual(r.xpAwarded, 3);
+    removeAllMocks();
+  });
+  test('eventId and optionId preserved', function() {
+    installAllMocks();
+    var r = Wiring.onVoteCast(STATE, PLAYER, 'harvest_festival', 'feast');
+    assert.strictEqual(r.eventId, 'harvest_festival');
+    assert.strictEqual(r.optionId, 'feast');
+    removeAllMocks();
+  });
+  test('EventVoting.castVote called with eventId and optionId', function() {
+    installAllMocks();
+    Wiring.onVoteCast(STATE, PLAYER, 'harvest_festival', 'feast');
+    assert.strictEqual(global.EventVoting._calls[0].eventId, 'harvest_festival');
+    assert.strictEqual(global.EventVoting._calls[0].optionId, 'feast');
+    removeAllMocks();
+  });
+  test('Progression called with social skill', function() {
+    installAllMocks();
+    Wiring.onVoteCast(STATE, PLAYER, 'harvest_festival', 'feast');
+    assert.strictEqual(global.Progression._calls[0].skill, 'social');
+    removeAllMocks();
+  });
+  test('DailyChallenges called with vote type', function() {
+    installAllMocks();
+    Wiring.onVoteCast(STATE, PLAYER, 'harvest_festival', 'feast');
+    assert.strictEqual(global.DailyChallenges._calls[0].type, 'vote');
+    assert.strictEqual(global.DailyChallenges._calls[0].data.event, 'harvest_festival');
+    removeAllMocks();
+  });
+});
+
+suite('onVoteCast — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onVoteCast(STATE, PLAYER, 'storm_event', 'shelter');
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onVoteCast(STATE, PLAYER, 'storm_event', 'shelter');
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 19: onHousingVisit
+// ============================================================================
+
+suite('onHousingVisit — with mocks', function() {
+  test('xpAwarded is 2', function() {
+    installAllMocks();
+    var r = Wiring.onHousingVisit(STATE, PLAYER, 'owner_alice', 'house_001');
+    assert.strictEqual(r.xpAwarded, 2);
+    removeAllMocks();
+  });
+  test('ownerId and houseId preserved', function() {
+    installAllMocks();
+    var r = Wiring.onHousingVisit(STATE, PLAYER, 'owner_alice', 'house_001');
+    assert.strictEqual(r.ownerId, 'owner_alice');
+    assert.strictEqual(r.houseId, 'house_001');
+    removeAllMocks();
+  });
+  test('HousingSocial.recordVisit called with ownerId and houseId', function() {
+    installAllMocks();
+    Wiring.onHousingVisit(STATE, PLAYER, 'owner_alice', 'house_001');
+    assert.strictEqual(global.HousingSocial._calls[0].ownerId, 'owner_alice');
+    assert.strictEqual(global.HousingSocial._calls[0].houseId, 'house_001');
+    removeAllMocks();
+  });
+  test('Progression called with social skill', function() {
+    installAllMocks();
+    Wiring.onHousingVisit(STATE, PLAYER, 'owner_alice', 'house_001');
+    assert.strictEqual(global.Progression._calls[0].skill, 'social');
+    removeAllMocks();
+  });
+});
+
+suite('onHousingVisit — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onHousingVisit(STATE, PLAYER, 'owner_bob', 'house_002');
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onHousingVisit(STATE, PLAYER, 'owner_bob', 'house_002');
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 20: onMentorSession
+// ============================================================================
+
+suite('onMentorSession — with mocks', function() {
+  test('xpAwarded is 10', function() {
+    installAllMocks();
+    var r = Wiring.onMentorSession(STATE, PLAYER, 'teacher_guild', 'smithing');
+    assert.strictEqual(r.xpAwarded, 10);
+    removeAllMocks();
+  });
+  test('teacherId and subject preserved', function() {
+    installAllMocks();
+    var r = Wiring.onMentorSession(STATE, PLAYER, 'teacher_guild', 'smithing');
+    assert.strictEqual(r.teacherId, 'teacher_guild');
+    assert.strictEqual(r.subject, 'smithing');
+    removeAllMocks();
+  });
+  test('Apprenticeship.advanceLesson called with teacherId and subject', function() {
+    installAllMocks();
+    Wiring.onMentorSession(STATE, PLAYER, 'teacher_guild', 'smithing');
+    assert.strictEqual(global.Apprenticeship._calls[0].teacherId, 'teacher_guild');
+    assert.strictEqual(global.Apprenticeship._calls[0].subject, 'smithing');
+    removeAllMocks();
+  });
+  test('MentorshipMarket.completeSession called with teacherId and subject', function() {
+    installAllMocks();
+    Wiring.onMentorSession(STATE, PLAYER, 'teacher_guild', 'smithing');
+    assert.strictEqual(global.MentorshipMarket._calls[0].teacherId, 'teacher_guild');
+    assert.strictEqual(global.MentorshipMarket._calls[0].subject, 'smithing');
+    removeAllMocks();
+  });
+  test('Progression called with learning skill', function() {
+    installAllMocks();
+    Wiring.onMentorSession(STATE, PLAYER, 'teacher_guild', 'smithing');
+    assert.strictEqual(global.Progression._calls[0].skill, 'learning');
+    removeAllMocks();
+  });
+});
+
+suite('onMentorSession — no mocks', function() {
+  test('does not throw', function() {
+    removeAllMocks();
+    assert.doesNotThrow(function() {
+      Wiring.onMentorSession(STATE, PLAYER, 'teacher_x', 'fishing');
+    });
+  });
+  test('xpAwarded is 0 without Progression', function() {
+    removeAllMocks();
+    var r = Wiring.onMentorSession(STATE, PLAYER, 'teacher_x', 'fishing');
+    assert.strictEqual(r.xpAwarded, 0);
+  });
+});
+
+// ============================================================================
+// SUITE 21: dispatch generic dispatcher
+// ============================================================================
+
+suite('dispatch — known events', function() {
+  test('dispatch onZoneChange returns correct XP', function() {
+    installAllMocks();
+    var r = Wiring.dispatch('onZoneChange', STATE, PLAYER, 'nexus', 'studio');
+    assert.strictEqual(r.xpAwarded, 5);
+    removeAllMocks();
+  });
+  test('dispatch passes toZone correctly', function() {
+    installAllMocks();
+    var r = Wiring.dispatch('onZoneChange', STATE, PLAYER, 'nexus', 'studio');
+    assert.strictEqual(r.toZone, 'studio');
+    removeAllMocks();
+  });
+  test('dispatch onHarvest returns correct XP', function() {
+    installAllMocks();
+    var r = Wiring.dispatch('onHarvest', STATE, PLAYER, 'herbs', 'gardens', 2);
+    assert.strictEqual(r.xpAwarded, 8);
+    removeAllMocks();
+  });
+  test('dispatch onCraft returns correct XP', function() {
+    installAllMocks();
+    var r = Wiring.dispatch('onCraft', STATE, PLAYER, 'bread', null);
+    assert.strictEqual(r.xpAwarded, 10);
+    removeAllMocks();
+  });
+  test('dispatch onQuestComplete returns correct XP', function() {
+    installAllMocks();
+    var r = Wiring.dispatch('onQuestComplete', STATE, PLAYER, 'q1', null);
+    assert.strictEqual(r.xpAwarded, 20);
+    removeAllMocks();
+  });
+  test('dispatch returns object for valid event', function() {
+    installAllMocks();
+    var r = Wiring.dispatch('onBuild', STATE, PLAYER, 'tower', 'wilds');
+    assert.ok(r && typeof r === 'object');
+    removeAllMocks();
+  });
+});
+
+suite('dispatch — unknown event', function() {
+  test('does not throw for unknown event', function() {
+    assert.doesNotThrow(function() {
+      Wiring.dispatch('onSomeUnknownEvent', STATE, PLAYER);
+    });
+  });
+  test('returns null for unknown event', function() {
+    var r = Wiring.dispatch('onSomeUnknownEvent', STATE, PLAYER);
+    assert.strictEqual(r, null);
+  });
+  test('returns null for empty string event name', function() {
+    var r = Wiring.dispatch('', STATE, PLAYER);
+    assert.strictEqual(r, null);
+  });
+});
+
+// ============================================================================
+// SUITE 22: getStats and resetStats
+// ============================================================================
+
+suite('getStats', function() {
+  test('getStats returns an object', function() {
+    var s = Wiring.getStats();
+    assert.ok(s && typeof s === 'object');
+  });
+  test('getStats tracks onZoneChange count', function() {
+    installAllMocks();
+    Wiring.resetStats();
+    Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    Wiring.onZoneChange(STATE, PLAYER, 'gardens', 'wilds');
+    var s = Wiring.getStats();
+    assert.strictEqual(s.onZoneChange, 2);
+    removeAllMocks();
+  });
+  test('getStats tracks onHarvest count', function() {
+    installAllMocks();
+    Wiring.resetStats();
+    Wiring.onHarvest(STATE, PLAYER, 'wood', 'wilds', 1);
+    var s = Wiring.getStats();
+    assert.strictEqual(s.onHarvest, 1);
+    removeAllMocks();
+  });
+  test('getStats accumulates across multiple event types', function() {
+    installAllMocks();
+    Wiring.resetStats();
+    Wiring.onZoneChange(STATE, PLAYER, 'a', 'b');
+    installAllMocks();
+    Wiring.onCraft(STATE, PLAYER, 'sword', null);
+    installAllMocks();
+    Wiring.onCraft(STATE, PLAYER, 'shield', null);
+    var s = Wiring.getStats();
+    assert.strictEqual(s.onZoneChange, 1);
+    assert.strictEqual(s.onCraft, 2);
+    removeAllMocks();
+  });
+  test('getStats returns a copy, not the internal object', function() {
+    installAllMocks();
+    Wiring.resetStats();
+    Wiring.onBuild(STATE, PLAYER, 'tower', 'nexus');
+    var s1 = Wiring.getStats();
+    s1.onBuild = 999;
+    var s2 = Wiring.getStats();
+    assert.strictEqual(s2.onBuild, 1);
+    removeAllMocks();
+  });
+  test('stat counts survive repeated calls to same dispatcher', function() {
+    installAllMocks();
+    Wiring.resetStats();
+    for (var i = 0; i < 5; i++) {
+      Wiring.onConstellationFound(STATE, PLAYER, 'orion');
+      installAllMocks();
+    }
+    var s = Wiring.getStats();
+    assert.strictEqual(s.onConstellationFound, 5);
+    removeAllMocks();
+  });
+});
+
+suite('resetStats', function() {
+  test('resetStats empties the stats object', function() {
+    installAllMocks();
+    Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    Wiring.resetStats();
+    var s = Wiring.getStats();
+    assert.strictEqual(Object.keys(s).length, 0);
+    removeAllMocks();
+  });
+  test('resetStats allows counts to restart from zero', function() {
+    installAllMocks();
+    Wiring.onHarvest(STATE, PLAYER, 'wood', 'wilds', 1);
+    Wiring.resetStats();
+    installAllMocks();
+    Wiring.onHarvest(STATE, PLAYER, 'wood', 'wilds', 1);
+    var s = Wiring.getStats();
+    assert.strictEqual(s.onHarvest, 1);
+    removeAllMocks();
+  });
+});
+
+// ============================================================================
+// SUITE 23: _getModule
+// ============================================================================
+
+suite('_getModule', function() {
+  test('returns null when module absent from global', function() {
+    removeAllMocks();
+    var m = Wiring._getModule('SomeMissingModule');
+    assert.strictEqual(m, null);
+  });
+  test('returns module when present in global', function() {
+    var fake = { isTest: true };
+    global.FakeTestModule = fake;
+    var m = Wiring._getModule('FakeTestModule');
+    assert.ok(m !== null);
+    assert.strictEqual(m.isTest, true);
+    delete global.FakeTestModule;
+  });
+  test('returns correct module reference', function() {
+    var obj = { id: 42 };
+    global.SpecificMod = obj;
+    var m = Wiring._getModule('SpecificMod');
+    assert.strictEqual(m, obj);
+    delete global.SpecificMod;
+  });
+  test('returns null for empty string name', function() {
+    var m = Wiring._getModule('');
+    assert.strictEqual(m, null);
+  });
+});
+
+// ============================================================================
+// SUITE 24: _safeCall
+// ============================================================================
+
+suite('_safeCall', function() {
+  test('returns null when module is absent', function() {
+    removeAllMocks();
+    var r = Wiring._safeCall('MissingMod', 'someFunc', []);
+    assert.strictEqual(r, null);
+  });
+  test('returns null when function is missing on module', function() {
+    global.PartialMod = { otherFn: function() { return 1; } };
+    var r = Wiring._safeCall('PartialMod', 'nonExistentFn', []);
+    assert.strictEqual(r, null);
+    delete global.PartialMod;
+  });
+  test('returns function result when module and function exist', function() {
+    global.WorkingMod = { fn: function() { return 99; } };
+    var r = Wiring._safeCall('WorkingMod', 'fn', []);
+    assert.strictEqual(r, 99);
+    delete global.WorkingMod;
+  });
+  test('passes args to module function', function() {
+    var received = null;
+    global.ArgMod = { fn: function(a, b) { received = [a, b]; return 1; } };
+    Wiring._safeCall('ArgMod', 'fn', ['hello', 42]);
+    assert.strictEqual(received[0], 'hello');
+    assert.strictEqual(received[1], 42);
+    delete global.ArgMod;
+  });
+  test('returns null (not throw) when module function throws', function() {
+    global.ThrowMod = { fn: function() { throw new Error('boom'); } };
+    assert.doesNotThrow(function() {
+      var r = Wiring._safeCall('ThrowMod', 'fn', []);
+      assert.strictEqual(r, null);
+    });
+    delete global.ThrowMod;
+  });
+  test('module property that is not a function returns null', function() {
+    global.NotFnMod = { fn: 'not a function' };
+    var r = Wiring._safeCall('NotFnMod', 'fn', []);
+    assert.strictEqual(r, null);
+    delete global.NotFnMod;
+  });
+});
+
+// ============================================================================
+// SUITE 25: Graceful degradation — partial modules
+// ============================================================================
+
+suite('Graceful degradation', function() {
+  test('only Progression: onHarvest awards XP but no loot', function() {
+    removeAllMocks();
+    global.Progression = makeMockProgression();
+    var r = Wiring.onHarvest(STATE, PLAYER, 'herbs', 'gardens', 2);
+    assert.strictEqual(r.xpAwarded, 8);
+    assert.strictEqual(r.lootResults.length, 0);
+    assert.strictEqual(r.challengesUpdated, 0);
+    delete global.Progression;
+  });
+  test('only Loot: onFishCaught has loot but no XP', function() {
+    removeAllMocks();
+    global.Loot = makeMockLoot();
+    var r = Wiring.onFishCaught(STATE, PLAYER, 'trout', 'nexus', 1);
+    assert.strictEqual(r.xpAwarded, 0);
+    assert.ok(r.lootResults.length >= 1);
+    delete global.Loot;
+  });
+  test('throwing Progression module does not crash dispatch', function() {
+    removeAllMocks();
+    global.Progression = { awardXP: function() { throw new Error('module failure'); } };
+    assert.doesNotThrow(function() {
+      Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    });
+    delete global.Progression;
+  });
+  test('throwing module yields xpAwarded 0', function() {
+    removeAllMocks();
+    global.Progression = { awardXP: function() { throw new Error('module failure'); } };
+    var r = Wiring.onZoneChange(STATE, PLAYER, 'nexus', 'gardens');
+    assert.strictEqual(r.xpAwarded, 0);
+    delete global.Progression;
+  });
+  test('module with wrong function signature still does not throw', function() {
+    removeAllMocks();
+    global.DailyChallenges = { updateProgress: 'not_a_function' };
+    assert.doesNotThrow(function() {
+      Wiring.onCraft(STATE, PLAYER, 'potion', null);
+    });
+    delete global.DailyChallenges;
+  });
+});
+
+// ============================================================================
+// SUITE 26: Result object shapes
+// ============================================================================
+
+suite('Result object shapes', function() {
+  test('onZoneChange result has all expected keys', function() {
+    removeAllMocks();
+    var r = Wiring.onZoneChange(STATE, PLAYER, 'a', 'b');
+    assert.ok('xpAwarded' in r);
+    assert.ok('lootResults' in r);
+    assert.ok('challengesUpdated' in r);
+    assert.ok('fromZone' in r);
+    assert.ok('toZone' in r);
+  });
+  test('onHarvest result has itemId, zone, quantity keys', function() {
+    removeAllMocks();
+    var r = Wiring.onHarvest(STATE, PLAYER, 'item', 'zone', 1);
+    assert.ok('itemId' in r);
+    assert.ok('zone' in r);
+    assert.ok('quantity' in r);
+  });
+  test('onDungeonClear result has dungeonId, floor, timeMs keys', function() {
+    removeAllMocks();
+    var r = Wiring.onDungeonClear(STATE, PLAYER, 'dng', 2, 0);
+    assert.ok('dungeonId' in r);
+    assert.ok('floor' in r);
+    assert.ok('timeMs' in r);
+  });
+  test('onTimeCapsuleBuried result has capsuleId and zone keys', function() {
+    removeAllMocks();
+    var r = Wiring.onTimeCapsuleBuried(STATE, PLAYER, 'cap', 'nexus');
+    assert.ok('capsuleId' in r);
+    assert.ok('zone' in r);
+  });
+  test('onTimeCapsuleFound result has capsuleId key', function() {
+    removeAllMocks();
+    var r = Wiring.onTimeCapsuleFound(STATE, PLAYER, 'cap');
+    assert.ok('capsuleId' in r);
+  });
+  test('onMentorSession result has teacherId and subject keys', function() {
+    removeAllMocks();
+    var r = Wiring.onMentorSession(STATE, PLAYER, 'teacher', 'topic');
+    assert.ok('teacherId' in r);
+    assert.ok('subject' in r);
+  });
+  test('onTrade result has otherPlayerId and spark keys', function() {
+    removeAllMocks();
+    var r = Wiring.onTrade(STATE, PLAYER, 'p2', [], 50);
+    assert.ok('otherPlayerId' in r);
+    assert.ok('spark' in r);
+  });
+  test('onCardGameWin result has opponentId and deckType keys', function() {
+    removeAllMocks();
+    var r = Wiring.onCardGameWin(STATE, PLAYER, 'opp', 'control');
+    assert.ok('opponentId' in r);
+    assert.ok('deckType' in r);
+  });
+  test('onVoteCast result has eventId and optionId keys', function() {
+    removeAllMocks();
+    var r = Wiring.onVoteCast(STATE, PLAYER, 'ev1', 'opt_a');
+    assert.ok('eventId' in r);
+    assert.ok('optionId' in r);
+  });
+  test('onHousingVisit result has ownerId and houseId keys', function() {
+    removeAllMocks();
+    var r = Wiring.onHousingVisit(STATE, PLAYER, 'owner', 'house');
+    assert.ok('ownerId' in r);
+    assert.ok('houseId' in r);
+  });
+});
+
+// ============================================================================
+// SUITE 27: State not mutated, multiple players
+// ============================================================================
+
+suite('State and player isolation', function() {
+  test('state is not mutated by dispatch calls', function() {
+    installAllMocks();
+    var state = { players: {}, economy: {}, _marker: 'original' };
+    Wiring.onZoneChange(state, PLAYER, 'nexus', 'gardens');
+    installAllMocks();
+    Wiring.onHarvest(state, PLAYER, 'wood', 'wilds', 1);
+    assert.strictEqual(state._marker, 'original');
+    assert.strictEqual(Object.keys(state).length, 3);
+    removeAllMocks();
+  });
+  test('state reference is passed through to module calls', function() {
+    var capturedState = null;
+    global.Progression = {
+      awardXP: function(s) { capturedState = s; return { xp: 5 }; }
+    };
+    var customState = { players: { alice: {} }, economy: { spark: 99 } };
+    Wiring.onZoneChange(customState, 'alice', 'nexus', 'gardens');
+    assert.strictEqual(capturedState, customState);
+    delete global.Progression;
+  });
+  test('two players receive independent results', function() {
+    installAllMocks();
+    Wiring.resetStats();
+    var r1 = Wiring.onZoneChange(STATE, 'alice', 'nexus', 'gardens');
+    installAllMocks();
+    var r2 = Wiring.onZoneChange(STATE, 'bob', 'nexus', 'arena');
+    assert.strictEqual(r1.xpAwarded, 5);
+    assert.strictEqual(r2.xpAwarded, 5);
+    assert.strictEqual(r1.toZone, 'gardens');
+    assert.strictEqual(r2.toZone, 'arena');
+    removeAllMocks();
+  });
+});
+
+// ============================================================================
 // FINAL REPORT
-// ---------------------------------------------------------------------------
+// ============================================================================
 
-console.log('\n--- test_wiring.js ---');
-console.log(passed + ' passed, ' + failed + ' failed');
-if (failed > 0) {
-  process.exit(1);
-}
+var success = report();
+process.exit(success ? 0 : 1);

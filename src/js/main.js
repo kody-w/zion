@@ -2130,9 +2130,7 @@
             trackAchievement('zone_visit', { zone: currentZone });
 
             // Cross-system dispatch: zone change
-            if (Wiring && Wiring.onZoneChange) {
-              Wiring.onZoneChange(gameState, localPlayer.id, oldZone, currentZone);
-            }
+            safeDispatch('onZoneChange', gameState, localPlayer.id, oldZone, currentZone);
 
             // Award XP for exploring new zones
             if (Progression && Progression.awardXP && playerProgression) {
@@ -3732,9 +3730,7 @@
         trackAchievement('trade', { with: msg.from });
 
         // Cross-system dispatch: trade
-        if (Wiring && Wiring.onTrade) {
-          Wiring.onTrade(gameState, localPlayer.id, msg.from, null, 0);
-        }
+        safeDispatch('onTrade', gameState, localPlayer.id, msg.from, null, 0);
 
         // Award XP for trading
         if (Progression && Progression.awardXP && playerProgression) {
@@ -4197,9 +4193,7 @@
       trackAchievement('harvest', { item: itemId, zone: currentZone });
 
       // Cross-system dispatch: harvest
-      if (Wiring && Wiring.onHarvest) {
-        Wiring.onHarvest(gameState, localPlayer.id, itemId, currentZone, 1);
-      }
+      safeDispatch('onHarvest', gameState, localPlayer.id, itemId, currentZone, 1);
 
       // Award XP for gathering
       if (Progression && Progression.awardXP && playerProgression) {
@@ -4324,9 +4318,7 @@
       trackAchievement('craft', { item: result.output.itemId, recipe: recipeId });
 
       // Cross-system dispatch: craft
-      if (Wiring && Wiring.onCraft) {
-        Wiring.onCraft(gameState, localPlayer.id, recipeId, result);
-      }
+      safeDispatch('onCraft', gameState, localPlayer.id, recipeId, result);
 
       // Award XP for crafting
       if (Progression && Progression.awardXP && playerProgression) {
@@ -4637,9 +4629,7 @@
           }
 
           // Cross-system dispatch: vote cast
-          if (Wiring && Wiring.onVoteCast) {
-            Wiring.onVoteCast(gameState, localPlayer.id, electionId, candidateId);
-          }
+          safeDispatch('onVoteCast', gameState, localPlayer.id, electionId, candidateId);
 
           // AchievementEngine: track votes
           if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
@@ -4804,9 +4794,7 @@
           trackAchievement('build', { type: result.type, zone: currentZone });
 
           // Cross-system dispatch: build
-          if (Wiring && Wiring.onBuild) {
-            Wiring.onBuild(gameState, localPlayer.id, result.type, currentZone);
-          }
+          safeDispatch('onBuild', gameState, localPlayer.id, result.type, currentZone);
 
           // Track achievement stat: buildings_placed
           if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
@@ -5243,9 +5231,7 @@
                   triggerCameraShake(0.2, 0.3);
                   triggerScreenFlash('#DAA520', 0.4);
                   // Cross-system dispatch: quest complete
-                  if (Wiring && Wiring.onQuestComplete) {
-                    Wiring.onQuestComplete(gameState, localPlayer.id, questInfo.quest.id, result.rewards);
-                  }
+                  safeDispatch('onQuestComplete', gameState, localPlayer.id, questInfo.quest.id, result.rewards);
 
                   // Award XP for quest completion
                   if (Progression && Progression.awardXP && playerProgression) {
@@ -5331,9 +5317,7 @@
             // Track NPC interaction achievement
             trackAchievement('npc_talk', { npcId: npcResponse.id, npcName: npcResponse.name });
             // Cross-system dispatch: NPC interaction
-            if (Wiring && Wiring.onNpcInteraction) {
-              Wiring.onNpcInteraction(gameState, localPlayer.id, npcResponse.id, 'talk', { name: npcResponse.name });
-            }
+            safeDispatch('onNpcInteraction', gameState, localPlayer.id, npcResponse.id, 'talk', { name: npcResponse.name });
 
             // Award XP for social interaction
             if (Progression && Progression.awardXP && playerProgression) {
@@ -5796,6 +5780,21 @@
   }
 
   /**
+   * Safe cross-system dispatch via Wiring module.
+   * Wraps call in try-catch to prevent one subsystem's error from
+   * crashing the entire event chain.
+   */
+  function safeDispatch(eventName) {
+    if (!Wiring || !Wiring[eventName]) return;
+    var args = Array.prototype.slice.call(arguments, 1);
+    try {
+      Wiring[eventName].apply(Wiring, args);
+    } catch (e) {
+      console.warn('[Wiring] ' + eventName + ' dispatch error:', e.message || e);
+    }
+  }
+
+  /**
    * Add recent activity
    */
   function addRecentActivity(activity) {
@@ -6190,9 +6189,7 @@
         }
         trackAchievement('harvest', { type: 'fishing', fish: result.fish.id });
         // Cross-system dispatch: fish caught
-        if (Wiring && Wiring.onFishCaught) {
-          Wiring.onFishCaught(gameState, localPlayer.id, result.fish.id, currentZone, result.fish.rarity || 1);
-        }
+        safeDispatch('onFishCaught', gameState, localPlayer.id, result.fish.id, currentZone, result.fish.rarity || 1);
 
         // Award XP for fishing
         if (Progression && Progression.awardXP && playerProgression) {
