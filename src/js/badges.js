@@ -1,3 +1,4 @@
+// badges.js
 /**
  * ZION Achievement Badges & Cosmetics System
  * Visual rewards for achievement unlocks — badges, nameplates, auras, trails

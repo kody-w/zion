@@ -1,3 +1,4 @@
+// npc_dialogue.js
 /**
  * npc_dialogue.js — LLM-Powered NPC Dialogue System for ZION
  *

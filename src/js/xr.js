@@ -1,3 +1,4 @@
+// xr.js
 (function(exports) {
   // WebXR integration for VR/AR
   let xrSession = null;

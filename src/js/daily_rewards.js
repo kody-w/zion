@@ -1,3 +1,4 @@
+// daily_rewards.js
 /**
  * ZION Daily Login Rewards System
  * Tracks consecutive login streaks and awards escalating rewards

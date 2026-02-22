@@ -1,3 +1,4 @@
+// chat.js
 /**
  * ZION MMO - Chat Channel Module
  *

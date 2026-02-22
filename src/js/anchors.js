@@ -1,3 +1,4 @@
+// anchors.js
 /**
  * ZION AR Anchor Geolocation System
  * Implements Constitution Article V §5.2 (Anchoring), §5.3 (Healthy Play), §8.6 (Physical Realm Safety)

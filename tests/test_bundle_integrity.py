@@ -15,22 +15,34 @@ BUNDLE_PATH = os.path.join(PROJECT_DIR, 'docs', 'index.html')
 
 # Expected modules in dependency order (must match bundle_helper.py)
 MODULE_ORDER = [
-    'protocol', 'zones', 'economy', 'inventory', 'trading',
-    'state', 'intentions', 'social', 'creation', 'quests',
-    'competition', 'exploration', 'physical', 'guilds', 'mentoring',
-    'models', 'auth', 'network', 'api_bridge', 'sim_crm', 'world', 'input',
-    'hud', 'xr', 'audio', 'npc_ai', 'npcs',
-    'seasons', 'pets', 'main'
+    'protocol', 'zones', 'economy', 'economy_viz',
+    'inventory', 'trading', 'state', 'replay',
+    'yaml_dash', 'intentions', 'social', 'creation',
+    'quests', 'competition', 'exploration', 'anchors',
+    'physical', 'guilds', 'mentoring', 'gardens',
+    'chat', 'elections', 'leaderboards', 'notifications',
+    'badges', 'daily_rewards', 'profiles', 'models',
+    'auth', 'network', 'federation', 'rift_portal',
+    'api_bridge', 'sim_crm', 'sim_forge_browser', 'world',
+    'worldmap', 'timelapse', 'input', 'hud',
+    'xr', 'audio', 'npc_dialogue', 'npc_ai',
+    'npcs', 'seasons', 'pets', 'main'
 ]
 
 # Window name for each module (UMD closure targets)
 WINDOW_NAMES = [
-    'Protocol', 'Zones', 'Economy', 'Inventory', 'Trading',
-    'State', 'Intentions', 'Social', 'Creation', 'Quests',
-    'Competition', 'Exploration', 'Physical', 'Guilds', 'Mentoring',
-    'Models', 'Auth', 'Network', 'ApiBridge', 'SimCRM', 'World', 'Input',
-    'HUD', 'XR', 'Audio', 'NpcAI', 'NPCs',
-    'Seasons', 'Pets', 'Main'
+    'Protocol', 'Zones', 'Economy', 'EconomyViz',
+    'Inventory', 'Trading', 'State', 'Replay',
+    'YamlDash', 'Intentions', 'Social', 'Creation',
+    'Quests', 'Competition', 'Exploration', 'Anchors',
+    'Physical', 'Guilds', 'Mentoring', 'Gardens',
+    'Chat', 'Elections', 'Leaderboards', 'Notifications',
+    'Badges', 'DailyRewards', 'Profiles', 'Models',
+    'Auth', 'Network', 'Federation', 'RiftPortal',
+    'ApiBridge', 'SimCRM', 'SimForge', 'World',
+    'WorldMap', 'Timelapse', 'Input', 'HUD',
+    'XR', 'Audio', 'NpcDialogue', 'NpcAI',
+    'NPCs', 'Seasons', 'Pets', 'Main'
 ]
 
 

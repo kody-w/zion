@@ -1,3 +1,4 @@
+// timelapse.js
 /**
  * ZION Civilization Timelapse Renderer
  * Processes civilization_sim.py output into frame-by-frame playback,

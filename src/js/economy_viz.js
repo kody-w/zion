@@ -1,3 +1,4 @@
+// economy_viz.js
 /**
  * ZION Economy Visualizer — EconomyViz
  * 2D canvas Sankey-style flow diagram + analytics for the Spark economy.

@@ -1,3 +1,4 @@
+// yaml_dash.js
 /**
  * yaml_dash.js — Live YAML Dashboard for ZION
  *

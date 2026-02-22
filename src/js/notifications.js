@@ -1,3 +1,4 @@
+// notifications.js
 /**
  * ZION Notification / Toast System
  * Manages in-game alerts, toasts, and notification history.
