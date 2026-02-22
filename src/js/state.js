@@ -143,15 +143,37 @@
    * @returns {Object} New state
    */
   function applyMessage(state, message) {
-    // Deep clone state for immutability
-    var newState = JSON.parse(JSON.stringify(state));
+    // Shallow clone state — deep copy only the sub-trees we modify
+    var newState = Object.assign({}, state);
+    newState.players = Object.assign({}, state.players);
+    newState.chat = (state.chat || []).slice();
+    newState.actions = (state.actions || []).slice();
+    newState.structures = Object.assign({}, state.structures || {});
+    newState.gardens = Object.assign({}, state.gardens || {});
+    newState.economy = Object.assign({}, state.economy || {});
+    newState.economy.balances = Object.assign({}, (state.economy && state.economy.balances) || {});
+    newState.economy.listings = ((state.economy && state.economy.listings) || []).slice();
+    newState.economy.transactions = ((state.economy && state.economy.transactions) || []).slice();
+    newState.competitions = Object.assign({}, state.competitions || {});
+    newState.discoveries = Object.assign({}, state.discoveries || {});
+    newState.anchors = Object.assign({}, state.anchors || {});
+    newState.federation = Object.assign({}, state.federation || {});
+    newState.federation.federations = ((state.federation && state.federation.federations) || []).slice();
+    newState.changes = (state.changes || []).slice();
 
-    var { type, from, payload } = message;
+    var type = message.type;
+    var from = message.from;
+    var payload = message.payload || {};
     var timestamp = message.ts || Date.now();
+
+    // Clone the player being modified so we don't mutate the original
+    if (from && newState.players[from]) {
+      newState.players[from] = Object.assign({}, newState.players[from]);
+    }
 
     switch (type) {
       case 'join':
-        newState.players[from] = {
+        var joinData = {
           id: from,
           name: payload.name || from,
           position: payload.position || { x: 0, y: 0, z: 0 },
@@ -160,9 +182,13 @@
           last_seen: timestamp,
           idle: false,
           inventory: [],
-          intentions: [],
-          ...payload
+          intentions: []
         };
+        var payloadKeys = Object.keys(payload);
+        for (var _pk = 0; _pk < payloadKeys.length; _pk++) {
+          joinData[payloadKeys[_pk]] = payload[payloadKeys[_pk]];
+        }
+        newState.players[from] = joinData;
         break;
 
       case 'leave':
@@ -207,9 +233,9 @@
       case 'whisper':
       case 'emote':
         newState.chat.push({
-          id: `chat_${timestamp}_${from}`,
-          type,
-          from,
+          id: 'chat_' + timestamp + '_' + from,
+          type: type,
+          from: from,
           to: payload.to,
           text: payload.text || payload.message || '',
           ts: timestamp
@@ -218,7 +244,7 @@
 
       case 'build':
         if (payload.structure) {
-          var structureId = `struct_${timestamp}_${from}`;
+          var structureId = 'struct_' + timestamp + '_' + from;
           newState.structures[structureId] = {
             id: structureId,
             builder: from,
@@ -232,7 +258,7 @@
 
       case 'plant':
         if (payload.plant) {
-          var gardenId = `garden_${timestamp}_${from}`;
+          var gardenId = 'garden_' + timestamp + '_' + from;
           newState.gardens[gardenId] = {
             id: gardenId,
             gardener: from,
@@ -276,7 +302,7 @@
 
       case 'compose':
         if (payload.art) {
-          var artId = `art_${timestamp}_${from}`;
+          var artId = 'art_' + timestamp + '_' + from;
           newState.structures[artId] = {
             id: artId,
             artist: from,
@@ -291,9 +317,9 @@
 
       case 'trade_offer':
         newState.actions.push({
-          id: `trade_${timestamp}_${from}`,
+          id: 'trade_' + timestamp + '_' + from,
           type: 'trade_offer',
-          from,
+          from: from,
           to: payload.to,
           offered: payload.offered || [],
           requested: payload.requested || [],
@@ -422,9 +448,9 @@
       case 'gift':
         if (payload.to && payload.item) {
           newState.actions.push({
-            id: `gift_${timestamp}_${from}`,
+            id: 'gift_' + timestamp + '_' + from,
             type: 'gift',
-            from,
+            from: from,
             to: payload.to,
             item: payload.item,
             ts: timestamp
@@ -445,7 +471,7 @@
 
       case 'teach':
         newState.actions.push({
-          id: `teach_${timestamp}_${from}`,
+          id: 'teach_' + timestamp + '_' + from,
           type: 'teach',
           teacher: from,
           student: payload.to,
@@ -456,7 +482,7 @@
 
       case 'learn':
         newState.actions.push({
-          id: `learn_${timestamp}_${from}`,
+          id: 'learn_' + timestamp + '_' + from,
           type: 'learn',
           learner: from,
           skill: payload.skill,
@@ -467,7 +493,7 @@
 
       case 'mentor_offer':
         newState.actions.push({
-          id: `mentor_${timestamp}_${from}`,
+          id: 'mentor_' + timestamp + '_' + from,
           type: 'mentor_offer',
           mentor: from,
           mentee: payload.to,
@@ -487,7 +513,7 @@
         break;
 
       case 'challenge':
-        var challengeId = `challenge_${timestamp}_${from}`;
+        var challengeId = 'challenge_' + timestamp + '_' + from;
         newState.competitions[challengeId] = {
           id: challengeId,
           challenger: from,
@@ -525,7 +551,7 @@
 
       case 'discover':
         if (payload.discovery) {
-          var discoveryId = `discovery_${timestamp}_${from}`;
+          var discoveryId = 'discovery_' + timestamp + '_' + from;
           newState.discoveries[discoveryId] = {
             id: discoveryId,
             discoverer: from,
@@ -539,7 +565,7 @@
 
       case 'anchor_place':
         if (payload.anchor) {
-          var anchorId = `anchor_${timestamp}_${from}`;
+          var anchorId = 'anchor_' + timestamp + '_' + from;
           newState.anchors[anchorId] = {
             id: anchorId,
             owner: from,
@@ -596,7 +622,7 @@
       case 'federation_announce':
         if (payload.federation) {
           newState.federation.federations.push({
-            id: `fed_${timestamp}_${from}`,
+            id: 'fed_' + timestamp + '_' + from,
             announced_by: from,
             name: payload.federation.name,
             endpoint: payload.federation.endpoint,
@@ -810,8 +836,8 @@
 
     // Record state change
     newState.changes.push({
-      type,
-      from,
+      type: type,
+      from: from,
       ts: timestamp
     });
 
@@ -829,18 +855,17 @@
     var merged = JSON.parse(JSON.stringify(stateA));
 
     // Merge changes arrays and sort by timestamp
-    var allChanges = [
-      ...(stateA.changes || []),
-      ...(stateB.changes || [])
-    ].sort(function(a, b) { return a.ts - b.ts; });
+    var allChanges = (stateA.changes || []).concat(stateB.changes || [])
+      .sort(function(a, b) { return a.ts - b.ts; });
 
     // Remove duplicates
     var uniqueChanges = [];
-    var seen = new Set();
-    for (var change of allChanges) {
-      var key = `${change.type}_${change.from}_${change.ts}`;
-      if (!seen.has(key)) {
-        seen.add(key);
+    var seen = {};
+    for (var _ci = 0; _ci < allChanges.length; _ci++) {
+      var change = allChanges[_ci];
+      var key = change.type + '_' + change.from + '_' + change.ts;
+      if (!seen[key]) {
+        seen[key] = true;
         uniqueChanges.push(change);
       }
     }
@@ -848,8 +873,11 @@
     merged.changes = uniqueChanges;
 
     // Merge players (last-writer-wins based on last_seen)
-    merged.players = { ...stateA.players };
-    for (var [playerId, playerB] of Object.entries(stateB.players || {})) {
+    merged.players = Object.assign({}, stateA.players);
+    var bPlayerEntries = Object.entries(stateB.players || {});
+    for (var _bpi = 0; _bpi < bPlayerEntries.length; _bpi++) {
+      var playerId = bPlayerEntries[_bpi][0];
+      var playerB = bPlayerEntries[_bpi][1];
       var playerA = merged.players[playerId];
       if (!playerA || (playerB.last_seen || 0) > (playerA.last_seen || 0)) {
         merged.players[playerId] = playerB;
@@ -858,8 +886,11 @@
 
     // Merge collections (combine and deduplicate by ID)
     var mergeById = function(collectionA, collectionB) {
-      var result = { ...collectionA };
-      for (var [id, item] of Object.entries(collectionB || {})) {
+      var result = Object.assign({}, collectionA);
+      var bEntries = Object.entries(collectionB || {});
+      for (var _mi = 0; _mi < bEntries.length; _mi++) {
+        var id = bEntries[_mi][0];
+        var item = bEntries[_mi][1];
         if (!result[id] || (item.ts || 0) > (result[id].ts || 0)) {
           result[id] = item;
         }
@@ -874,49 +905,40 @@
     merged.competitions = mergeById(stateA.competitions || {}, stateB.competitions || {});
 
     // Merge chat (combine and sort by timestamp)
-    merged.chat = [
-      ...(stateA.chat || []),
-      ...(stateB.chat || [])
-    ].sort(function(a, b) { return a.ts - b.ts; });
+    merged.chat = (stateA.chat || []).concat(stateB.chat || [])
+      .sort(function(a, b) { return a.ts - b.ts; });
 
     // Merge actions (combine and deduplicate)
-    merged.actions = [
-      ...(stateA.actions || []),
-      ...(stateB.actions || [])
-    ];
-    var actionIds = new Set();
+    merged.actions = (stateA.actions || []).concat(stateB.actions || []);
+    var actionIdsSeen = {};
     merged.actions = merged.actions.filter(function(action) {
-      if (actionIds.has(action.id)) {
+      if (actionIdsSeen[action.id]) {
         return false;
       }
-      actionIds.add(action.id);
+      actionIdsSeen[action.id] = true;
       return true;
     });
 
     // Merge economy (combine transactions and listings)
+    var aEcon = stateA.economy || {};
+    var bEcon = stateB.economy || {};
     merged.economy = {
-      balances: { ...(stateA.economy?.balances || {}), ...(stateB.economy?.balances || {}) },
-      transactions: [
-        ...(stateA.economy?.transactions || []),
-        ...(stateB.economy?.transactions || [])
-      ].sort(function(a, b) { return a.ts - b.ts; }),
-      listings: [
-        ...(stateA.economy?.listings || []),
-        ...(stateB.economy?.listings || [])
-      ]
+      balances: Object.assign({}, aEcon.balances || {}, bEcon.balances || {}),
+      transactions: (aEcon.transactions || []).concat(bEcon.transactions || [])
+        .sort(function(a, b) { return a.ts - b.ts; }),
+      listings: (aEcon.listings || []).concat(bEcon.listings || [])
     };
 
     // Merge federation
+    var aFed = stateA.federation || {};
+    var bFed = stateB.federation || {};
     merged.federation = {
-      federations: [
-        ...(stateA.federation?.federations || []),
-        ...(stateB.federation?.federations || [])
-      ]
+      federations: (aFed.federations || []).concat(bFed.federations || [])
     };
 
     // World state - use most recent
-    var worldATime = stateA.world?.time || 0;
-    var worldBTime = stateB.world?.time || 0;
+    var worldATime = (stateA.world && stateA.world.time) || 0;
+    var worldBTime = (stateB.world && stateB.world.time) || 0;
     merged.world = worldBTime > worldATime ? stateB.world : stateA.world;
 
     return merged;

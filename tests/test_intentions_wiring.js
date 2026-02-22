@@ -71,9 +71,9 @@ function freshTimerIntention(overrides) {
   return base;
 }
 
-function mockWorldState(playerMap) {
+function mockWorldState(playerObj) {
   return {
-    players: playerMap || new Map(),
+    players: playerObj || {},
     recentChats: [],
     world: { dayPhase: 'day', weather: 'clear' },
     gardens: [],
@@ -144,9 +144,9 @@ suite('evaluateTriggers — timer fires actions', function() {
   var playerId = 'player_timer_test';
   Intentions.clearIntentions(playerId);
 
-  var playerMap = new Map();
-  playerMap.set(playerId, { position: { x: 0, y: 0, z: 0, zone: 'nexus' } });
-  var ws = mockWorldState(playerMap);
+  var playerObj = {};
+  playerObj[playerId] = { position: { x: 0, y: 0, z: 0, zone: 'nexus' } };
+  var ws = mockWorldState(playerObj);
 
   var intention = freshTimerIntention();
   Intentions.registerIntention(playerId, intention);
@@ -173,9 +173,9 @@ suite('evaluateTriggers — fireCount increments', function() {
   var playerId = 'player_firecount';
   Intentions.clearIntentions(playerId);
 
-  var playerMap = new Map();
-  playerMap.set(playerId, { position: { x: 0, y: 0, z: 0, zone: 'nexus' } });
-  var ws = mockWorldState(playerMap);
+  var playerObj = {};
+  playerObj[playerId] = { position: { x: 0, y: 0, z: 0, zone: 'nexus' } };
+  var ws = mockWorldState(playerObj);
 
   // Cooldown = 0 so it can fire multiple times immediately
   var intention = freshTimerIntention({ cooldown: 0, max_fires: 10 });
@@ -206,9 +206,9 @@ suite('evaluateTriggers — cooldown blocks re-fire', function() {
   var playerId = 'player_cooldown';
   Intentions.clearIntentions(playerId);
 
-  var playerMap = new Map();
-  playerMap.set(playerId, { position: { x: 0, y: 0, z: 0, zone: 'nexus' } });
-  var ws = mockWorldState(playerMap);
+  var playerObj = {};
+  playerObj[playerId] = { position: { x: 0, y: 0, z: 0, zone: 'nexus' } };
+  var ws = mockWorldState(playerObj);
 
   // High cooldown (9999 seconds) — should only fire once
   var intention = freshTimerIntention({ cooldown: 9999, max_fires: 10 });
@@ -233,9 +233,9 @@ suite('evaluateTriggers — max_fires limit respected', function() {
   var playerId = 'player_maxfires';
   Intentions.clearIntentions(playerId);
 
-  var playerMap = new Map();
-  playerMap.set(playerId, { position: { x: 0, y: 0, z: 0, zone: 'nexus' } });
-  var ws = mockWorldState(playerMap);
+  var playerObj = {};
+  playerObj[playerId] = { position: { x: 0, y: 0, z: 0, zone: 'nexus' } };
+  var ws = mockWorldState(playerObj);
 
   // max_fires = 1, cooldown = 0, interval = 0
   var intention = freshTimerIntention({ cooldown: 0, max_fires: 1 });
@@ -260,9 +260,9 @@ suite('evaluateTriggers — TTL expiry skips intention', function() {
   var playerId = 'player_ttl';
   Intentions.clearIntentions(playerId);
 
-  var playerMap = new Map();
-  playerMap.set(playerId, { position: { x: 0, y: 0, z: 0, zone: 'nexus' } });
-  var ws = mockWorldState(playerMap);
+  var playerObj = {};
+  playerObj[playerId] = { position: { x: 0, y: 0, z: 0, zone: 'nexus' } };
+  var ws = mockWorldState(playerObj);
 
   // Register with very short TTL (0 seconds = already expired instantly)
   var intention = freshTimerIntention({ ttl: 0, cooldown: 0, max_fires: 10 });

@@ -71,7 +71,10 @@
 
     if (!position || !state.players) return nearby;
 
-    for (var [playerId, player] of state.players.entries()) {
+    var playerIds = Object.keys(state.players);
+    for (var _pi = 0; _pi < playerIds.length; _pi++) {
+      var playerId = playerIds[_pi];
+      var player = state.players[playerId];
       if (!player.position) continue;
 
       // Must be in same zone
@@ -137,7 +140,7 @@
       return { recipients: [] };
     }
 
-    var sender = state.players.get(msg.from);
+    var sender = state.players[msg.from];
     if (!sender || !sender.position) {
       return { recipients: [] };
     }
@@ -161,7 +164,7 @@
       return { recipients: [] };
     }
 
-    var sender = state.players.get(msg.from);
+    var sender = state.players[msg.from];
     if (!sender || !sender.position) {
       return { recipients: [] };
     }
@@ -169,7 +172,10 @@
     var recipients = [];
     var senderZone = sender.position.zone;
 
-    for (var [playerId, player] of state.players.entries()) {
+    var playerIds2 = Object.keys(state.players);
+    for (var _pi2 = 0; _pi2 < playerIds2.length; _pi2++) {
+      var playerId = playerIds2[_pi2];
+      var player = state.players[playerId];
       if (playerId === msg.from) continue;
       if (!player.position) continue;
 
@@ -178,7 +184,7 @@
       }
     }
 
-    return { recipients };
+    return { recipients: recipients };
   }
 
   /**
@@ -211,7 +217,7 @@
       return { recipients: [] };
     }
 
-    var sender = state.players.get(msg.from);
+    var sender = state.players[msg.from];
     if (!sender || !sender.position) {
       return { recipients: [] };
     }

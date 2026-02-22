@@ -12,6 +12,12 @@
   var federationPanel = null;
   var lastChatMessageCount = -1; // Dirty tracking for chat rebuild
 
+  // Escape HTML to prevent XSS from network-sourced data
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return String(str);
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   /**
    * Initialize HUD
    * @param {HTMLElement} container - Parent container for HUD
@@ -194,11 +200,10 @@
         minute: '2-digit'
       });
 
-      msgEl.innerHTML = `
-        <span style="color: #888; font-size: 11px;">${time}</span>
-        <span style="color: #4af; font-weight: bold;">${msg.user}:</span>
-        <span>${msg.text}</span>
-      `;
+      msgEl.innerHTML =
+        '<span style="color: #888; font-size: 11px;">' + escapeHtml(time) + '</span> ' +
+        '<span style="color: #4af; font-weight: bold;">' + escapeHtml(msg.user) + ':</span> ' +
+        '<span>' + escapeHtml(msg.text) + '</span>';
 
       chatPanel.appendChild(msgEl);
     });
@@ -221,9 +226,9 @@
     var time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     msgEl.innerHTML =
-      '<span style="color:#888;font-size:11px;">' + time + '</span> ' +
-      '<span style="color:#4af;font-weight:bold;">' + (user || 'Unknown') + ':</span> ' +
-      '<span>' + (text || '') + '</span>';
+      '<span style="color:#888;font-size:11px;">' + escapeHtml(time) + '</span> ' +
+      '<span style="color:#4af;font-weight:bold;">' + escapeHtml(user || 'Unknown') + ':</span> ' +
+      '<span>' + escapeHtml(text || '') + '</span>';
 
     chatPanel.appendChild(msgEl);
     chatPanel.scrollTop = chatPanel.scrollHeight;
@@ -241,18 +246,11 @@
   function updatePlayerInfo(player) {
     if (!playerInfoPanel) return;
 
-    playerInfoPanel.innerHTML = `
-      <div style="font-weight: bold; font-size: 16px; margin-bottom: 8px;">${player.name || 'Unknown'}</div>
-      <div style="margin-bottom: 3px;">
-        <span style="color: #ffa500;">Spark:</span> ${player.spark || 0}
-      </div>
-      <div style="margin-bottom: 3px;">
-        <span style="color: #4af;">Zone:</span> ${player.zone || 'Unknown'}
-      </div>
-      <div style="margin-bottom: 3px;">
-        <span style="color: #ff6347;">Warmth:</span> ${Math.round(player.warmth || 0)}%
-      </div>
-    `;
+    playerInfoPanel.innerHTML =
+      '<div style="font-weight: bold; font-size: 16px; margin-bottom: 8px;">' + escapeHtml(player.name || 'Unknown') + '</div>' +
+      '<div style="margin-bottom: 3px;"><span style="color: #ffa500;">Spark:</span> ' + escapeHtml(player.spark || 0) + '</div>' +
+      '<div style="margin-bottom: 3px;"><span style="color: #4af;">Zone:</span> ' + escapeHtml(player.zone || 'Unknown') + '</div>' +
+      '<div style="margin-bottom: 3px;"><span style="color: #ff6347;">Warmth:</span> ' + Math.round(player.warmth || 0) + '%</div>';
   }
 
   /**

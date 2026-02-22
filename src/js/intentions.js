@@ -149,13 +149,13 @@
      * Check if a player is nearby
      */
     player_nearby: function(params, worldState, ownerId) {
-      var owner = worldState.players.get(ownerId);
+      var owner = worldState.players[ownerId];
       if (!owner || !owner.position) return false;
 
       var distanceLimit = params.distance_lt || 10;
       var onlyUnknown = params.known === false;
 
-      var entries = Array.from(worldState.players.entries());
+      var entries = Object.entries(worldState.players);
       for (var i = 0; i < entries.length; i++) {
         var playerId = entries[i][0];
         var player = entries[i][1];
@@ -184,7 +184,7 @@
      * Check if a player said a keyword nearby
      */
     player_say: function(params, worldState, ownerId) {
-      var owner = worldState.players.get(ownerId);
+      var owner = worldState.players[ownerId];
       if (!owner || !owner.position) return false;
 
       var keyword = params.keyword;
@@ -196,7 +196,7 @@
         var chat = recentChats[i];
         if (chat.from === ownerId) continue;
 
-        var speaker = worldState.players.get(chat.from);
+        var speaker = worldState.players[chat.from];
         if (!speaker || !speaker.position) continue;
 
         var distance = getDistance(owner.position, speaker.position);
@@ -229,7 +229,7 @@
      * Zone enter trigger
      */
     zone_enter: function(params, worldState, ownerId) {
-      var owner = worldState.players.get(ownerId);
+      var owner = worldState.players[ownerId];
       if (!owner || !owner.position) return false;
 
       return owner.position.zone === params.zone_id;
@@ -239,7 +239,7 @@
      * Garden needs attention trigger
      */
     garden_needs: function(params, worldState, ownerId) {
-      var owner = worldState.players.get(ownerId);
+      var owner = worldState.players[ownerId];
       if (!owner || !owner.position) return false;
 
       var distanceLimit = params.distance_lt || 10;
@@ -265,7 +265,7 @@
      * Resource ready for harvest trigger
      */
     resource_ready: function(params, worldState, ownerId) {
-      var owner = worldState.players.get(ownerId);
+      var owner = worldState.players[ownerId];
       if (!owner || !owner.position) return false;
 
       var distanceLimit = params.distance_lt || 10;
@@ -291,7 +291,7 @@
      * The liveState player object stores warmth as a 0-100 value.
      */
     health_below: function(params, worldState, ownerId) {
-      var owner = worldState.players.get(ownerId);
+      var owner = worldState.players[ownerId];
       if (!owner) return false;
 
       var threshold = typeof params.threshold === 'number' ? params.threshold : 50;
@@ -306,7 +306,7 @@
      * Checks if a specific item type exists near the player in worldState resources or structures.
      */
     item_nearby: function(params, worldState, ownerId) {
-      var owner = worldState.players.get(ownerId);
+      var owner = worldState.players[ownerId];
       if (!owner || !owner.position) return false;
 
       var distanceLimit = params.distance_lt || 10;
@@ -420,13 +420,13 @@
      * Players must have a guildId or groupId field matching params.group_id.
      */
     ally_nearby: function(params, worldState, ownerId) {
-      var owner = worldState.players.get(ownerId);
+      var owner = worldState.players[ownerId];
       if (!owner || !owner.position) return false;
 
       var distanceLimit = params.distance_lt || 20;
       var groupId = params.group_id || null;
 
-      var entries = Array.from(worldState.players.entries());
+      var entries = Object.entries(worldState.players);
       for (var i = 0; i < entries.length; i++) {
         var playerId = entries[i][0];
         var player = entries[i][1];
@@ -471,7 +471,7 @@
    */
   function generateActionMessage(intention, playerId, worldState) {
     var action = intention.action;
-    var player = worldState.players.get(playerId);
+    var player = worldState.players[playerId];
 
     if (!player) return null;
 

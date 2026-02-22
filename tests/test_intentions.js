@@ -264,7 +264,7 @@ suite('Intention System Tests', () => {
   test('Trigger player_nearby fires when player within distance', () => {
     // This test would require a more complex world state setup
     // For now, we'll verify the evaluateTriggers function exists and returns an array
-    const actions = Intentions.evaluateTriggers('player1', { players: new Map() }, 0);
+    const actions = Intentions.evaluateTriggers('player1', { players: {} }, 0);
     assert(Array.isArray(actions), 'evaluateTriggers should return an array');
   });
 
@@ -272,9 +272,9 @@ suite('Intention System Tests', () => {
     // This is tested implicitly through evaluateTriggers
     // We verify the function exists and runs without error
     const worldState = {
-      players: new Map([
-        ['player1', { id: 'player1', position: { x: 0, y: 0, z: 0, zone: 'nexus' } }]
-      ])
+      players: {
+        player1: { id: 'player1', position: { x: 0, y: 0, z: 0, zone: 'nexus' } }
+      }
     };
     const actions = Intentions.evaluateTriggers('player1', worldState, 0);
     assert(Array.isArray(actions), 'evaluateTriggers should return an array');
@@ -361,10 +361,10 @@ suite('Intention System Tests', () => {
     });
     // World state with NPC and player close together
     var worldState = {
-      players: new Map([
-        ['npc_test_1', { id: 'npc_test_1', position: { x: 10, y: 0, z: 10 } }],
-        ['human_player', { id: 'human_player', position: { x: 12, y: 0, z: 12 } }]
-      ])
+      players: {
+        npc_test_1: { id: 'npc_test_1', position: { x: 10, y: 0, z: 10 } },
+        human_player: { id: 'human_player', position: { x: 12, y: 0, z: 12 } }
+      }
     };
     var actions = Intentions.evaluateTriggers('npc_test_1', worldState, 0.016);
     assert(actions.length > 0, 'Should produce at least one action when player is nearby');
@@ -380,10 +380,10 @@ suite('Intention System Tests', () => {
       priority: 5, ttl: 86400, cooldown: 5, max_fires: 100
     });
     var worldState = {
-      players: new Map([
-        ['npc_test_2', { id: 'npc_test_2', position: { x: 10, y: 0, z: 10 } }],
-        ['human_player', { id: 'human_player', position: { x: 500, y: 0, z: 500 } }]
-      ])
+      players: {
+        npc_test_2: { id: 'npc_test_2', position: { x: 10, y: 0, z: 10 } },
+        human_player: { id: 'human_player', position: { x: 500, y: 0, z: 500 } }
+      }
     };
     var actions = Intentions.evaluateTriggers('npc_test_2', worldState, 0.016);
     assert(actions.length === 0, 'Should produce NO actions when player is far away');

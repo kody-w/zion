@@ -18,6 +18,7 @@ The CONSTITUTION.md is the supreme law. If code and constitution disagree, the c
 3. **Zero npm** — vanilla JS only, Three.js and PeerJS from CDN
 4. **Python stdlib only** — no pip dependencies
 5. **JSON state** — all world state is readable, auditable JSON
+6. **Modern browser target** — ES2017+ (async/await, template literals, Object.entries, etc.) are fine. Three.js r128 constraint: no ShaderMaterial, no CapsuleGeometry, no MeshPhysicalMaterial. Use `var` declarations and UMD module pattern for consistency.
 
 ## Build
 ```bash

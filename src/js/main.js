@@ -118,6 +118,7 @@
   var MAX_MESSAGE_QUEUE = 500; // Drop oldest if queue grows beyond this
   var isRunning = false;
   var lastTimestamp = 0;
+  var _tooltipVec = null; // Reusable Vector3 for tooltip projection
   var worldTime = 0; // Minutes in 24-hour cycle (0-1440)
   var currentZone = 'nexus';
   var currentWeather = 'clear';
@@ -653,16 +654,17 @@
 
     // Project 3D position to screen space
     if (!window.THREE) return;
-    var pos = new window.THREE.Vector3(
+    if (!_tooltipVec) _tooltipVec = new window.THREE.Vector3();
+    _tooltipVec.set(
       currentInteractionTarget.position.x,
       currentInteractionTarget.position.y + 3, // Offset above object
       currentInteractionTarget.position.z
     );
-    pos.project(sceneContext.camera);
+    _tooltipVec.project(sceneContext.camera);
 
     // Convert to screen coordinates
-    var x = (pos.x * 0.5 + 0.5) * sceneContext.renderer.domElement.clientWidth;
-    var y = (-pos.y * 0.5 + 0.5) * sceneContext.renderer.domElement.clientHeight;
+    var x = (_tooltipVec.x * 0.5 + 0.5) * sceneContext.renderer.domElement.clientWidth;
+    var y = (-_tooltipVec.y * 0.5 + 0.5) * sceneContext.renderer.domElement.clientHeight;
 
     // Position tooltip
     tooltipEl.style.left = x + 'px';
@@ -2040,6 +2042,13 @@
   function gameLoop(timestamp) {
     if (!isRunning) return;
 
+    // Always schedule next frame FIRST so errors don't freeze the game
+    if (typeof window !== 'undefined' && window.requestAnimationFrame) {
+      window.requestAnimationFrame(gameLoop);
+    }
+
+    try {
+
     var deltaTime = (timestamp - lastTimestamp) / 1000; // seconds
     lastTimestamp = timestamp;
 
@@ -3201,9 +3210,8 @@
       localPlayer.canAscend = Prestige.canAscend(prestigeState);
     }
 
-    // Request next frame
-    if (typeof window !== 'undefined' && window.requestAnimationFrame) {
-      window.requestAnimationFrame(gameLoop);
+    } catch (err) {
+      console.error('Game loop error:', err);
     }
   }
 

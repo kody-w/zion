@@ -1,14 +1,14 @@
 const { test, suite, report, assert } = require('./test_runner');
 const Social = require('../src/js/social');
 
-// Mock state with multiple players at known positions
+// Mock state with multiple players at known positions (plain object, not Map)
 const mockState = {
-  players: new Map([
-    ['alice', { position: { x: 0, y: 0, z: 0, zone: 'nexus' }, online: true }],
-    ['bob', { position: { x: 10, y: 0, z: 0, zone: 'nexus' }, online: true }],
-    ['charlie', { position: { x: 50, y: 0, z: 0, zone: 'nexus' }, online: true }],
-    ['diana', { position: { x: 5, y: 0, z: 5, zone: 'gardens' }, online: true }]
-  ])
+  players: {
+    alice: { position: { x: 0, y: 0, z: 0, zone: 'nexus' }, online: true },
+    bob: { position: { x: 10, y: 0, z: 0, zone: 'nexus' }, online: true },
+    charlie: { position: { x: 50, y: 0, z: 0, zone: 'nexus' }, online: true },
+    diana: { position: { x: 5, y: 0, z: 5, zone: 'gardens' }, online: true }
+  }
 };
 
 suite('Social Module Tests', () => {
