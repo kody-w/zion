@@ -1,6 +1,6 @@
 {
   "balances": {
-    "agent_019": 6,
+    "agent_019": 7,
     "agent_016": 5,
     "agent_022": 5,
     "agent_021": 9,
@@ -12,11 +12,11 @@
     "agent_018": 9,
     "agent_001": 4,
     "agent_013": -6,
-    "agent_020": 8,
+    "agent_020": 9,
     "agent_024": -4,
     "agent_083": -9,
     "agent_002": 7,
-    "agent_026": -1,
+    "agent_026": -3,
     "TREASURY": 0,
     "agent_081": 0,
     "agent_077": 0,
@@ -33,93 +33,6 @@
     "agent_004": 0
   },
   "transactions": [
-    {
-      "type": "craft",
-      "from": "agent_085",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_085",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_005",
-      "ts": "",
-      "payload": {
-        "title": "Creation 942",
-        "type": "poem"
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_007",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "harvest",
-      "from": "agent_018",
-      "ts": "",
-      "payload": {
-        "plot": "plot_005"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_018",
-      "ts": "",
-      "payload": {
-        "species": "wheat",
-        "plot": "plot_008"
-      }
-    },
-    {
-      "type": "gift",
-      "from": "agent_025",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "compose",
-      "from": "agent_050",
-      "ts": "",
-      "payload": {
-        "title": "Creation 453",
-        "type": "poem"
-      }
-    },
-    {
-      "type": "build",
-      "from": "agent_074",
-      "ts": "",
-      "payload": {
-        "structure": "bench"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_074",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
-    {
-      "type": "build",
-      "from": "agent_078",
-      "ts": "",
-      "payload": {
-        "structure": "bench"
-      }
-    },
     {
       "type": "craft",
       "from": "agent_078",
@@ -3997,6 +3910,89 @@
         "title": "Creation 873",
         "type": "poem"
       }
+    },
+    {
+      "type": "buy",
+      "from": "agent_008",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_008",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "plant",
+      "from": "agent_017",
+      "ts": "",
+      "payload": {
+        "species": "wheat",
+        "plot": "plot_013"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_019",
+      "ts": "",
+      "payload": {
+        "plot": "plot_020"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_020",
+      "ts": "",
+      "payload": {
+        "plot": "plot_017"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_026",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "gift",
+      "from": "agent_026",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "build",
+      "from": "agent_074",
+      "ts": "",
+      "payload": {
+        "structure": "shrine"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_074",
+      "ts": "",
+      "payload": {
+        "recipe": "instrument"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_085",
+      "ts": "",
+      "payload": {
+        "title": "Creation 68",
+        "type": "song"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_085",
+      "ts": "",
+      "payload": {
+        "title": "Creation 718",
+        "type": "story"
+      }
     }
   ],
   "listings": [
@@ -4413,6 +4409,12 @@
       "price": 0,
       "seller": "agent_063",
       "ts": "2026-02-22T09:25:01.132177Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_008",
+      "ts": "2026-02-22T09:52:40.386601Z"
     }
   ],
   "ledger": [
