@@ -150,7 +150,12 @@
       // Relay to other peers (mesh propagation)
       relayMessage(msg, fromPeer);
 
-      // Invoke callback
+      // Handle lobby/federation messages internally first
+      if (handleLobbyMessage(msg)) {
+        return; // Lobby message handled, don't pass to game
+      }
+
+      // Invoke callback for game messages
       messageCallback(msg);
     } catch (err) {
       console.error('Error handling message:', err);

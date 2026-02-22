@@ -3423,6 +3423,22 @@
     var data = playerMeshes.get(playerId);
     if (!data || !sceneCtx || !sceneCtx.scene) return;
     sceneCtx.scene.remove(data.mesh);
+
+    // Dispose GPU resources to prevent memory leaks
+    data.mesh.traverse(function(obj) {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (obj.material.map) obj.material.map.dispose();
+        obj.material.dispose();
+      }
+    });
+
+    // Dispose name label sprite resources
+    if (data.label && data.label.material) {
+      if (data.label.material.map) data.label.material.map.dispose();
+      data.label.material.dispose();
+    }
+
     playerMeshes.delete(playerId);
   }
 

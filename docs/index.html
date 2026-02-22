@@ -25561,7 +25561,12 @@ html, body {
       // Relay to other peers (mesh propagation)
       relayMessage(msg, fromPeer);
 
-      // Invoke callback
+      // Handle lobby/federation messages internally first
+      if (handleLobbyMessage(msg)) {
+        return; // Lobby message handled, don't pass to game
+      }
+
+      // Invoke callback for game messages
       messageCallback(msg);
     } catch (err) {
       console.error('Error handling message:', err);
@@ -32948,6 +32953,22 @@ html, body {
     var data = playerMeshes.get(playerId);
     if (!data || !sceneCtx || !sceneCtx.scene) return;
     sceneCtx.scene.remove(data.mesh);
+
+    // Dispose GPU resources to prevent memory leaks
+    data.mesh.traverse(function(obj) {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (obj.material.map) obj.material.map.dispose();
+        obj.material.dispose();
+      }
+    });
+
+    // Dispose name label sprite resources
+    if (data.label && data.label.material) {
+      if (data.label.material.map) data.label.material.map.dispose();
+      data.label.material.dispose();
+    }
+
     playerMeshes.delete(playerId);
   }
 
@@ -40468,6 +40489,48 @@ html, body {
           if (callbacks.onAction) {
             callbacks.onAction('toggleHelp', {});
           }
+          e.preventDefault();
+        }
+        break;
+
+      case ';':
+        if (!chatMode) {
+          if (callbacks.onAction) callbacks.onAction('toggleLeaderboard', {});
+          e.preventDefault();
+        }
+        break;
+
+      case '[':
+        if (!chatMode) {
+          if (callbacks.onAction) callbacks.onAction('toggleEconomyViz', {});
+          e.preventDefault();
+        }
+        break;
+
+      case ']':
+        if (!chatMode) {
+          if (callbacks.onAction) callbacks.onAction('toggleAmendments', {});
+          e.preventDefault();
+        }
+        break;
+
+      case '\\':
+        if (!chatMode) {
+          if (callbacks.onAction) callbacks.onAction('toggleReplay', {});
+          e.preventDefault();
+        }
+        break;
+
+      case '-':
+        if (!chatMode && !buildMode) {
+          if (callbacks.onAction) callbacks.onAction('toggleYamlInspector', {});
+          e.preventDefault();
+        }
+        break;
+
+      case '=':
+        if (!chatMode) {
+          if (callbacks.onAction) callbacks.onAction('toggleNearbyAnchors', {});
           e.preventDefault();
         }
         break;
@@ -50949,6 +51012,12 @@ html, body {
       ['Z', 'Fast Travel'],
       ['R', 'Radio'],
       ['F3', 'FPS Counter'],
+      [';', 'Leaderboard'],
+      ['[', 'Economy Viz'],
+      [']', 'Amendments'],
+      ['\\', 'Replay'],
+      ['-', 'YAML Inspector'],
+      ['=', 'Nearby Anchors'],
       ['Enter', 'Open Chat'],
       ['Esc', 'Close Panel / Exit Build'],
       ['F1 / ?', 'This Help']
@@ -89388,6 +89457,34 @@ html, body {
   }
 
   // ==========================================================================
+  // PROGRESSION STATE HELPER
+  // ==========================================================================
+
+  /**
+   * Extract or create player progression state from world state.
+   * Progression.awardXP expects (progressionState, source, amount), not world state.
+   */
+  function _getPlayerProgression(state, playerId) {
+    // Check if state already IS a progression object (has totalXP)
+    if (state && typeof state.totalXP === 'number') return state;
+    // Try to find it nested in world state
+    if (state && state.progression && state.progression[playerId]) {
+      return state.progression[playerId];
+    }
+    // Create a fresh one and attach it to state for future calls
+    var Prog = _getModule('Progression');
+    if (Prog && Prog.createPlayerProgression) {
+      var ps = Prog.createPlayerProgression(playerId);
+      if (state) {
+        if (!state.progression) state.progression = {};
+        state.progression[playerId] = ps;
+      }
+      return ps;
+    }
+    return null;
+  }
+
+  // ==========================================================================
   // DISPATCH FUNCTIONS (16 events)
   // ==========================================================================
 
@@ -89407,7 +89504,7 @@ html, body {
     var challengesUpdated = 0;
 
     // Award exploration XP
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'exploration', 5]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'exploration', 5]);
     if (xpResult !== null) xpAwarded += 5;
 
     // Update daily challenge progress
@@ -89445,7 +89542,7 @@ html, body {
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'gathering', 8]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'gathering', 8]);
     if (xpResult !== null) xpAwarded += 8;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'harvest', { item: itemId, qty: quantity }]);
@@ -89483,7 +89580,7 @@ html, body {
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'crafting', 10]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'crafting', 10]);
     if (xpResult !== null) xpAwarded += 10;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'craft', { recipe: recipeId }]);
@@ -89518,7 +89615,7 @@ html, body {
     var challengesUpdated = 0;
     var xpAmount = 6 + rarity * 4;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'fishing', xpAmount]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'fishing', xpAmount]);
     if (xpResult !== null) xpAwarded += xpAmount;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'fish', { fish: fishId, rarity: rarity }]);
@@ -89556,7 +89653,7 @@ html, body {
     var challengesUpdated = 0;
     var xpAmount = 15 + floor * 5;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'combat', xpAmount]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'combat', xpAmount]);
     if (xpResult !== null) xpAwarded += xpAmount;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'dungeon', { dungeon: dungeonId, floor: floor }]);
@@ -89599,7 +89696,7 @@ html, body {
 
     _safeCall('NpcReputation', 'applyAction', [state, playerId, npcId, interactionType, 1]);
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'social', 3]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'social', 3]);
     if (xpResult !== null) xpAwarded += 3;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'npc_talk', { npc: npcId }]);
@@ -89629,7 +89726,7 @@ html, body {
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'questing', 20]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'questing', 20]);
     if (xpResult !== null) xpAwarded += 20;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'quest', { quest: questId }]);
@@ -89662,7 +89759,7 @@ html, body {
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'social', 8]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'social', 8]);
     if (xpResult !== null) xpAwarded += 8;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'card_game', { opponent: opponentId }]);
@@ -89694,7 +89791,7 @@ html, body {
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'exploration', 12]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'exploration', 12]);
     if (xpResult !== null) xpAwarded += 12;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'stargazing', { constellation: constellationId }]);
@@ -89722,7 +89819,7 @@ html, body {
     var xpAwarded = 0;
     var lootResults = [];
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'exploration', 7]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'exploration', 7]);
     if (xpResult !== null) xpAwarded += 7;
 
     _safeCall('NpcMemory', 'recordInteraction', [state, playerId, null, 'time_capsule', { capsule: capsuleId, zone: zone }]);
@@ -89748,7 +89845,7 @@ html, body {
     var xpAwarded = 0;
     var lootResults = [];
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'exploration', 15]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'exploration', 15]);
     if (xpResult !== null) xpAwarded += 15;
 
     var loot = _safeCall('Loot', 'rollLoot', [state, 'time_capsule', playerId]);
@@ -89777,7 +89874,7 @@ html, body {
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'trading', 5]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'trading', 5]);
     if (xpResult !== null) xpAwarded += 5;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'trade', { partner: otherPlayerId }]);
@@ -89811,7 +89908,7 @@ html, body {
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'building', 12]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'building', 12]);
     if (xpResult !== null) xpAwarded += 12;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'build', { structure: structureType }]);
@@ -89845,7 +89942,7 @@ html, body {
 
     _safeCall('EventVoting', 'castVote', [state, playerId, eventId, optionId]);
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'social', 3]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'social', 3]);
     if (xpResult !== null) xpAwarded += 3;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'vote', { event: eventId }]);
@@ -89876,7 +89973,7 @@ html, body {
 
     _safeCall('HousingSocial', 'recordVisit', [state, playerId, ownerId, houseId]);
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'social', 2]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'social', 2]);
     if (xpResult !== null) xpAwarded += 2;
 
     return {
@@ -89905,7 +90002,7 @@ html, body {
 
     _safeCall('MentorshipMarket', 'completeSession', [state, playerId, teacherId, subject]);
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'learning', 10]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'learning', 10]);
     if (xpResult !== null) xpAwarded += 10;
 
     return {
@@ -169993,7 +170090,6 @@ html, body {
               }
             }
           }
-          State.setLiveState(live);
           console.log('[Canonical] Loaded %d citizens, %d chat messages from state/',
             Object.keys((world && world.citizens) || {}).length,
             (chat && chat.messages || []).length);
@@ -171121,8 +171217,8 @@ html, body {
 
       // Update water bodies (animated waves, weather-reactive)
       if (World.updateWater) {
-        var currentWeather = World.getCurrentWeather ? World.getCurrentWeather() : 'clear';
-        World.updateWater(deltaTime, currentWeather, localPlayer ? localPlayer.position : null);
+        var waterWeather = World.getCurrentWeather ? World.getCurrentWeather() : currentWeather;
+        World.updateWater(deltaTime, waterWeather, localPlayer ? localPlayer.position : null);
       }
 
       // Update skybox (sun/moon orbit, star visibility)
@@ -171605,6 +171701,65 @@ html, body {
     if (MentorGuilds && MentorGuilds.getMentorGuilds && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0003) {
       // Expose mentor guilds for UI
       if (localPlayer) localPlayer.mentorGuildsAvailable = true;
+    }
+
+    // --- Previously dead systems now ticked ---
+
+    // RaidSystem: check active raids for timeout/completion
+    if (RaidSystem && RaidSystem.getAvailableRaids && raidStateStore && Math.random() < 0.0003) {
+      var activeRaids = RaidSystem.getAvailableRaids(raidStateStore);
+      if (localPlayer) localPlayer.availableRaids = activeRaids;
+    }
+
+    // GuildWars: resolve pending battles and collect territory taxes
+    if (GuildWars && GuildWars.getActiveWars && guildWarsState && Math.random() < 0.0003) {
+      var wars = GuildWars.getActiveWars(guildWarsState);
+      if (wars.length > 0 && GuildWars.resolveBattle) {
+        for (var wi = 0; wi < wars.length; wi++) {
+          if (wars[wi].status === 'battle') {
+            GuildWars.resolveBattle(guildWarsState, wars[wi].id);
+          }
+        }
+      }
+    }
+
+    // Apprenticeship: check active lessons for completion
+    if (Apprenticeship && Apprenticeship.getActiveLessons && apprenticeshipState && Math.random() < 0.0005) {
+      var activeLessons = Apprenticeship.getActiveLessons(apprenticeshipState);
+      if (localPlayer) localPlayer.activeLessons = activeLessons;
+    }
+
+    // MinigameForge: check active play sessions for completion
+    if (MinigameForge && MinigameForge.getPublishedGames && minigameForgeState && Math.random() < 0.0003) {
+      var forgeGames = MinigameForge.getPublishedGames(minigameForgeState);
+      if (localPlayer) localPlayer.availableMinigames = forgeGames.length;
+    }
+
+    // ConstitutionAmendments: close expired voting periods
+    if (ConstitutionAmendments && ConstitutionAmendments.getActiveAmendments && constitutionState && Math.random() < 0.0003) {
+      var activeAmendments = ConstitutionAmendments.getActiveAmendments(constitutionState);
+      for (var ai = 0; ai < activeAmendments.length; ai++) {
+        if (activeAmendments[ai].status === 'voting' && ConstitutionAmendments.closeVoting) {
+          ConstitutionAmendments.closeVoting(constitutionState, activeAmendments[ai].id);
+        }
+      }
+    }
+
+    // EconomySimulator: periodic market health check
+    if (EconomySimulator && EconomySimulator.getMarketHealthScore && economySimState && Math.random() < 0.0003) {
+      var healthScore = EconomySimulator.getMarketHealthScore(economySimState);
+      if (localPlayer) localPlayer.marketHealth = healthScore;
+    }
+
+    // GuildProgression: update weekly challenge progress
+    if (GuildProgression && GuildProgression.getGuildSummary && guildProgressionState && Math.random() < 0.0003) {
+      var guildSummary = GuildProgression.getGuildSummary(guildProgressionState);
+      if (localPlayer) localPlayer.guildLevel = guildSummary.level;
+    }
+
+    // Prestige: check ascension eligibility
+    if (Prestige && Prestige.canAscend && prestigeState && localPlayer && Math.random() < 0.0005) {
+      localPlayer.canAscend = Prestige.canAscend(prestigeState);
     }
 
     // Request next frame
@@ -172183,7 +172338,7 @@ html, body {
     var amount = Math.round(baseAmount * bonus);
 
     if (Economy) {
-      Economy.earnSpark(gameState, msg.from, amount);
+      Economy.earnSpark(economyLedger, msg.from, 'harvest', { complexity: amount / 50 });
     }
 
     if (Audio) {
@@ -173592,8 +173747,8 @@ html, body {
         break;
 
       case 'fastTravel':
-        if (localPlayer && World && data && data.zone) {
-          var targetZone = data.zone;
+        if (localPlayer && World && payload && payload.zone) {
+          var targetZone = payload.zone;
           var Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
           var zoneInfo = Zones && Zones.ZONES ? Zones.ZONES[targetZone] : null;
           if (!zoneInfo) break;
@@ -173636,6 +173791,11 @@ html, body {
               if (sceneContext && sceneContext.camera) {
                 sceneContext.camera.position.set(tx, ty + 5, tz + 12);
                 sceneContext.camera.lookAt(tx, ty + 1.5, tz);
+              }
+
+              // Load terrain chunks at destination
+              if (World.updateChunks) {
+                World.updateChunks(sceneContext, tx, tz);
               }
             });
           }
@@ -173695,6 +173855,48 @@ html, body {
       case 'toggleHelp':
         if (HUD && HUD.toggleHelpPanel) {
           HUD.toggleHelpPanel();
+        }
+        break;
+
+      case 'toggleLeaderboard':
+        if (HUD && HUD.showLeaderboardPanel) {
+          HUD.showLeaderboardPanel({
+            economy: economyLedger,
+            guilds: gameState && gameState.subsystems ? gameState.subsystems.guilds : null,
+            reputation: gameState && gameState.subsystems ? gameState.subsystems.reputation : null
+          });
+        }
+        break;
+
+      case 'toggleEconomyViz':
+        if (HUD && HUD.showEconomyVizPanel) {
+          HUD.showEconomyVizPanel(gameState);
+        }
+        break;
+
+      case 'toggleAmendments':
+        if (HUD && HUD.showAmendmentPanel) {
+          var amendments = constitutionState && ConstitutionAmendments && ConstitutionAmendments.getActiveAmendments
+            ? ConstitutionAmendments.getActiveAmendments(constitutionState) : [];
+          HUD.showAmendmentPanel(amendments, localPlayer ? localPlayer.id : '');
+        }
+        break;
+
+      case 'toggleReplay':
+        if (HUD && HUD.showReplayPanel) {
+          HUD.showReplayPanel();
+        }
+        break;
+
+      case 'toggleYamlInspector':
+        if (HUD && HUD.showYamlInspectorPanel) {
+          HUD.showYamlInspectorPanel();
+        }
+        break;
+
+      case 'toggleNearbyAnchors':
+        if (HUD && HUD.showNearbyAnchorsPanel) {
+          HUD.showNearbyAnchorsPanel();
         }
         break;
 
@@ -174221,7 +174423,7 @@ html, body {
               Inventory.removeItem(playerInventory, slotItem.itemId, 1);
               if (HUD) HUD.showNotification('Ate ' + slotItem.icon + ' ' + slotItem.name);
               // Award small Spark for eating
-              if (Economy) Economy.earnSpark(localPlayer.id, 'daily_login', {});
+              if (Economy) Economy.earnSpark(economyLedger, localPlayer.id, 'daily_login', {});
               if (HUD && HUD.updateInventoryDisplay) {
                 HUD.updateInventoryDisplay(playerInventory);
                 HUD.updateQuickBar(playerInventory);
@@ -174828,7 +175030,7 @@ html, body {
         var fishZoneBonus = getZoneBonus('fish');
         sparkAmount = Math.round(sparkAmount * seasonBonus * fishZoneBonus);
         if (economyLedger && Economy) {
-          Economy.earnSpark(economyLedger, localPlayer.id, sparkAmount, 'fishing');
+          Economy.earnSpark(economyLedger, localPlayer.id, 'fishing', { complexity: sparkAmount / 50 });
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           showSparkPopup(sparkAmount);
         }

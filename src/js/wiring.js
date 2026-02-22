@@ -95,6 +95,34 @@
   }
 
   // ==========================================================================
+  // PROGRESSION STATE HELPER
+  // ==========================================================================
+
+  /**
+   * Extract or create player progression state from world state.
+   * Progression.awardXP expects (progressionState, source, amount), not world state.
+   */
+  function _getPlayerProgression(state, playerId) {
+    // Check if state already IS a progression object (has totalXP)
+    if (state && typeof state.totalXP === 'number') return state;
+    // Try to find it nested in world state
+    if (state && state.progression && state.progression[playerId]) {
+      return state.progression[playerId];
+    }
+    // Create a fresh one and attach it to state for future calls
+    var Prog = _getModule('Progression');
+    if (Prog && Prog.createPlayerProgression) {
+      var ps = Prog.createPlayerProgression(playerId);
+      if (state) {
+        if (!state.progression) state.progression = {};
+        state.progression[playerId] = ps;
+      }
+      return ps;
+    }
+    return null;
+  }
+
+  // ==========================================================================
   // DISPATCH FUNCTIONS (16 events)
   // ==========================================================================
 
@@ -114,7 +142,7 @@
     var challengesUpdated = 0;
 
     // Award exploration XP
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'exploration', 5]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'exploration', 5]);
     if (xpResult !== null) xpAwarded += 5;
 
     // Update daily challenge progress
@@ -152,7 +180,7 @@
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'gathering', 8]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'gathering', 8]);
     if (xpResult !== null) xpAwarded += 8;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'harvest', { item: itemId, qty: quantity }]);
@@ -190,7 +218,7 @@
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'crafting', 10]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'crafting', 10]);
     if (xpResult !== null) xpAwarded += 10;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'craft', { recipe: recipeId }]);
@@ -225,7 +253,7 @@
     var challengesUpdated = 0;
     var xpAmount = 6 + rarity * 4;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'fishing', xpAmount]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'fishing', xpAmount]);
     if (xpResult !== null) xpAwarded += xpAmount;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'fish', { fish: fishId, rarity: rarity }]);
@@ -263,7 +291,7 @@
     var challengesUpdated = 0;
     var xpAmount = 15 + floor * 5;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'combat', xpAmount]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'combat', xpAmount]);
     if (xpResult !== null) xpAwarded += xpAmount;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'dungeon', { dungeon: dungeonId, floor: floor }]);
@@ -306,7 +334,7 @@
 
     _safeCall('NpcReputation', 'applyAction', [state, playerId, npcId, interactionType, 1]);
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'social', 3]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'social', 3]);
     if (xpResult !== null) xpAwarded += 3;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'npc_talk', { npc: npcId }]);
@@ -336,7 +364,7 @@
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'questing', 20]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'questing', 20]);
     if (xpResult !== null) xpAwarded += 20;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'quest', { quest: questId }]);
@@ -369,7 +397,7 @@
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'social', 8]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'social', 8]);
     if (xpResult !== null) xpAwarded += 8;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'card_game', { opponent: opponentId }]);
@@ -401,7 +429,7 @@
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'exploration', 12]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'exploration', 12]);
     if (xpResult !== null) xpAwarded += 12;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'stargazing', { constellation: constellationId }]);
@@ -429,7 +457,7 @@
     var xpAwarded = 0;
     var lootResults = [];
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'exploration', 7]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'exploration', 7]);
     if (xpResult !== null) xpAwarded += 7;
 
     _safeCall('NpcMemory', 'recordInteraction', [state, playerId, null, 'time_capsule', { capsule: capsuleId, zone: zone }]);
@@ -455,7 +483,7 @@
     var xpAwarded = 0;
     var lootResults = [];
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'exploration', 15]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'exploration', 15]);
     if (xpResult !== null) xpAwarded += 15;
 
     var loot = _safeCall('Loot', 'rollLoot', [state, 'time_capsule', playerId]);
@@ -484,7 +512,7 @@
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'trading', 5]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'trading', 5]);
     if (xpResult !== null) xpAwarded += 5;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'trade', { partner: otherPlayerId }]);
@@ -518,7 +546,7 @@
     var lootResults = [];
     var challengesUpdated = 0;
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'building', 12]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'building', 12]);
     if (xpResult !== null) xpAwarded += 12;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'build', { structure: structureType }]);
@@ -552,7 +580,7 @@
 
     _safeCall('EventVoting', 'castVote', [state, playerId, eventId, optionId]);
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'social', 3]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'social', 3]);
     if (xpResult !== null) xpAwarded += 3;
 
     var dcResult = _safeCall('DailyChallenges', 'updateProgress', [state, playerId, 'vote', { event: eventId }]);
@@ -583,7 +611,7 @@
 
     _safeCall('HousingSocial', 'recordVisit', [state, playerId, ownerId, houseId]);
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'social', 2]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'social', 2]);
     if (xpResult !== null) xpAwarded += 2;
 
     return {
@@ -612,7 +640,7 @@
 
     _safeCall('MentorshipMarket', 'completeSession', [state, playerId, teacherId, subject]);
 
-    var xpResult = _safeCall('Progression', 'awardXP', [state, playerId, 'learning', 10]);
+    var xpResult = _safeCall('Progression', 'awardXP', [_getPlayerProgression(state, playerId), 'learning', 10]);
     if (xpResult !== null) xpAwarded += 10;
 
     return {

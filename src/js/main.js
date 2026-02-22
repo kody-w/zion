@@ -1505,7 +1505,6 @@
               }
             }
           }
-          State.setLiveState(live);
           console.log('[Canonical] Loaded %d citizens, %d chat messages from state/',
             Object.keys((world && world.citizens) || {}).length,
             (chat && chat.messages || []).length);
@@ -2633,8 +2632,8 @@
 
       // Update water bodies (animated waves, weather-reactive)
       if (World.updateWater) {
-        var currentWeather = World.getCurrentWeather ? World.getCurrentWeather() : 'clear';
-        World.updateWater(deltaTime, currentWeather, localPlayer ? localPlayer.position : null);
+        var waterWeather = World.getCurrentWeather ? World.getCurrentWeather() : currentWeather;
+        World.updateWater(deltaTime, waterWeather, localPlayer ? localPlayer.position : null);
       }
 
       // Update skybox (sun/moon orbit, star visibility)
@@ -3117,6 +3116,65 @@
     if (MentorGuilds && MentorGuilds.getMentorGuilds && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0003) {
       // Expose mentor guilds for UI
       if (localPlayer) localPlayer.mentorGuildsAvailable = true;
+    }
+
+    // --- Previously dead systems now ticked ---
+
+    // RaidSystem: check active raids for timeout/completion
+    if (RaidSystem && RaidSystem.getAvailableRaids && raidStateStore && Math.random() < 0.0003) {
+      var activeRaids = RaidSystem.getAvailableRaids(raidStateStore);
+      if (localPlayer) localPlayer.availableRaids = activeRaids;
+    }
+
+    // GuildWars: resolve pending battles and collect territory taxes
+    if (GuildWars && GuildWars.getActiveWars && guildWarsState && Math.random() < 0.0003) {
+      var wars = GuildWars.getActiveWars(guildWarsState);
+      if (wars.length > 0 && GuildWars.resolveBattle) {
+        for (var wi = 0; wi < wars.length; wi++) {
+          if (wars[wi].status === 'battle') {
+            GuildWars.resolveBattle(guildWarsState, wars[wi].id);
+          }
+        }
+      }
+    }
+
+    // Apprenticeship: check active lessons for completion
+    if (Apprenticeship && Apprenticeship.getActiveLessons && apprenticeshipState && Math.random() < 0.0005) {
+      var activeLessons = Apprenticeship.getActiveLessons(apprenticeshipState);
+      if (localPlayer) localPlayer.activeLessons = activeLessons;
+    }
+
+    // MinigameForge: check active play sessions for completion
+    if (MinigameForge && MinigameForge.getPublishedGames && minigameForgeState && Math.random() < 0.0003) {
+      var forgeGames = MinigameForge.getPublishedGames(minigameForgeState);
+      if (localPlayer) localPlayer.availableMinigames = forgeGames.length;
+    }
+
+    // ConstitutionAmendments: close expired voting periods
+    if (ConstitutionAmendments && ConstitutionAmendments.getActiveAmendments && constitutionState && Math.random() < 0.0003) {
+      var activeAmendments = ConstitutionAmendments.getActiveAmendments(constitutionState);
+      for (var ai = 0; ai < activeAmendments.length; ai++) {
+        if (activeAmendments[ai].status === 'voting' && ConstitutionAmendments.closeVoting) {
+          ConstitutionAmendments.closeVoting(constitutionState, activeAmendments[ai].id);
+        }
+      }
+    }
+
+    // EconomySimulator: periodic market health check
+    if (EconomySimulator && EconomySimulator.getMarketHealthScore && economySimState && Math.random() < 0.0003) {
+      var healthScore = EconomySimulator.getMarketHealthScore(economySimState);
+      if (localPlayer) localPlayer.marketHealth = healthScore;
+    }
+
+    // GuildProgression: update weekly challenge progress
+    if (GuildProgression && GuildProgression.getGuildSummary && guildProgressionState && Math.random() < 0.0003) {
+      var guildSummary = GuildProgression.getGuildSummary(guildProgressionState);
+      if (localPlayer) localPlayer.guildLevel = guildSummary.level;
+    }
+
+    // Prestige: check ascension eligibility
+    if (Prestige && Prestige.canAscend && prestigeState && localPlayer && Math.random() < 0.0005) {
+      localPlayer.canAscend = Prestige.canAscend(prestigeState);
     }
 
     // Request next frame
@@ -3695,7 +3753,7 @@
     var amount = Math.round(baseAmount * bonus);
 
     if (Economy) {
-      Economy.earnSpark(gameState, msg.from, amount);
+      Economy.earnSpark(economyLedger, msg.from, 'harvest', { complexity: amount / 50 });
     }
 
     if (Audio) {
@@ -5104,8 +5162,8 @@
         break;
 
       case 'fastTravel':
-        if (localPlayer && World && data && data.zone) {
-          var targetZone = data.zone;
+        if (localPlayer && World && payload && payload.zone) {
+          var targetZone = payload.zone;
           var Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
           var zoneInfo = Zones && Zones.ZONES ? Zones.ZONES[targetZone] : null;
           if (!zoneInfo) break;
@@ -5148,6 +5206,11 @@
               if (sceneContext && sceneContext.camera) {
                 sceneContext.camera.position.set(tx, ty + 5, tz + 12);
                 sceneContext.camera.lookAt(tx, ty + 1.5, tz);
+              }
+
+              // Load terrain chunks at destination
+              if (World.updateChunks) {
+                World.updateChunks(sceneContext, tx, tz);
               }
             });
           }
@@ -5207,6 +5270,48 @@
       case 'toggleHelp':
         if (HUD && HUD.toggleHelpPanel) {
           HUD.toggleHelpPanel();
+        }
+        break;
+
+      case 'toggleLeaderboard':
+        if (HUD && HUD.showLeaderboardPanel) {
+          HUD.showLeaderboardPanel({
+            economy: economyLedger,
+            guilds: gameState && gameState.subsystems ? gameState.subsystems.guilds : null,
+            reputation: gameState && gameState.subsystems ? gameState.subsystems.reputation : null
+          });
+        }
+        break;
+
+      case 'toggleEconomyViz':
+        if (HUD && HUD.showEconomyVizPanel) {
+          HUD.showEconomyVizPanel(gameState);
+        }
+        break;
+
+      case 'toggleAmendments':
+        if (HUD && HUD.showAmendmentPanel) {
+          var amendments = constitutionState && ConstitutionAmendments && ConstitutionAmendments.getActiveAmendments
+            ? ConstitutionAmendments.getActiveAmendments(constitutionState) : [];
+          HUD.showAmendmentPanel(amendments, localPlayer ? localPlayer.id : '');
+        }
+        break;
+
+      case 'toggleReplay':
+        if (HUD && HUD.showReplayPanel) {
+          HUD.showReplayPanel();
+        }
+        break;
+
+      case 'toggleYamlInspector':
+        if (HUD && HUD.showYamlInspectorPanel) {
+          HUD.showYamlInspectorPanel();
+        }
+        break;
+
+      case 'toggleNearbyAnchors':
+        if (HUD && HUD.showNearbyAnchorsPanel) {
+          HUD.showNearbyAnchorsPanel();
         }
         break;
 
@@ -5733,7 +5838,7 @@
               Inventory.removeItem(playerInventory, slotItem.itemId, 1);
               if (HUD) HUD.showNotification('Ate ' + slotItem.icon + ' ' + slotItem.name);
               // Award small Spark for eating
-              if (Economy) Economy.earnSpark(localPlayer.id, 'daily_login', {});
+              if (Economy) Economy.earnSpark(economyLedger, localPlayer.id, 'daily_login', {});
               if (HUD && HUD.updateInventoryDisplay) {
                 HUD.updateInventoryDisplay(playerInventory);
                 HUD.updateQuickBar(playerInventory);
@@ -6340,7 +6445,7 @@
         var fishZoneBonus = getZoneBonus('fish');
         sparkAmount = Math.round(sparkAmount * seasonBonus * fishZoneBonus);
         if (economyLedger && Economy) {
-          Economy.earnSpark(economyLedger, localPlayer.id, sparkAmount, 'fishing');
+          Economy.earnSpark(economyLedger, localPlayer.id, 'fishing', { complexity: sparkAmount / 50 });
           localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
           showSparkPopup(sparkAmount);
         }

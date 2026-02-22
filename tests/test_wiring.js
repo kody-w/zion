@@ -21,9 +21,12 @@ function makeMockProgression() {
   var calls = [];
   return {
     _calls: calls,
-    awardXP: function(state, playerId, skill, amount) {
-      calls.push({ fn: 'awardXP', skill: skill, amount: amount });
-      return { xp: amount, skill: skill };
+    awardXP: function(state, source, amount) {
+      calls.push({ fn: 'awardXP', state: state, skill: source, amount: amount });
+      return { state: state, xp: amount, skill: source };
+    },
+    createPlayerProgression: function(playerId) {
+      return { playerId: playerId, totalXP: 0, level: 1, skillPoints: 0, skills: {}, xpHistory: [], perks: [] };
     }
   };
 }
@@ -1772,24 +1775,31 @@ suite('Result object shapes', function() {
 // ============================================================================
 
 suite('State and player isolation', function() {
-  test('state is not mutated by dispatch calls', function() {
+  test('state is not mutated by dispatch calls (except progression)', function() {
     installAllMocks();
     var state = { players: {}, economy: {}, _marker: 'original' };
     Wiring.onZoneChange(state, PLAYER, 'nexus', 'gardens');
     installAllMocks();
     Wiring.onHarvest(state, PLAYER, 'wood', 'wilds', 1);
     assert.strictEqual(state._marker, 'original');
-    assert.strictEqual(Object.keys(state).length, 3);
+    // _getPlayerProgression may add a progression key to state
+    assert.ok(Object.keys(state).length >= 3, 'state has at least original keys');
     removeAllMocks();
   });
   test('state reference is passed through to module calls', function() {
     var capturedState = null;
     global.Progression = {
-      awardXP: function(s) { capturedState = s; return { xp: 5 }; }
+      awardXP: function(s) { capturedState = s; return { xp: 5 }; },
+      createPlayerProgression: function(id) {
+        return { playerId: id, totalXP: 0, level: 1, skillPoints: 0, skills: {}, xpHistory: [], perks: [] };
+      }
     };
     var customState = { players: { alice: {} }, economy: { spark: 99 } };
     Wiring.onZoneChange(customState, 'alice', 'nexus', 'gardens');
-    assert.strictEqual(capturedState, customState);
+    // _getPlayerProgression creates a progression state from the world state
+    // so capturedState is the player's progression object, not the world state
+    assert.ok(capturedState !== null, 'progression state was passed to awardXP');
+    assert.strictEqual(capturedState.playerId, 'alice');
     delete global.Progression;
   });
   test('two players receive independent results', function() {

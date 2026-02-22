@@ -9993,6 +9993,12 @@
       ['Z', 'Fast Travel'],
       ['R', 'Radio'],
       ['F3', 'FPS Counter'],
+      [';', 'Leaderboard'],
+      ['[', 'Economy Viz'],
+      [']', 'Amendments'],
+      ['\\', 'Replay'],
+      ['-', 'YAML Inspector'],
+      ['=', 'Nearby Anchors'],
       ['Enter', 'Open Chat'],
       ['Esc', 'Close Panel / Exit Build'],
       ['F1 / ?', 'This Help']

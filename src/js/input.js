@@ -377,6 +377,48 @@
           e.preventDefault();
         }
         break;
+
+      case ';':
+        if (!chatMode) {
+          if (callbacks.onAction) callbacks.onAction('toggleLeaderboard', {});
+          e.preventDefault();
+        }
+        break;
+
+      case '[':
+        if (!chatMode) {
+          if (callbacks.onAction) callbacks.onAction('toggleEconomyViz', {});
+          e.preventDefault();
+        }
+        break;
+
+      case ']':
+        if (!chatMode) {
+          if (callbacks.onAction) callbacks.onAction('toggleAmendments', {});
+          e.preventDefault();
+        }
+        break;
+
+      case '\\':
+        if (!chatMode) {
+          if (callbacks.onAction) callbacks.onAction('toggleReplay', {});
+          e.preventDefault();
+        }
+        break;
+
+      case '-':
+        if (!chatMode && !buildMode) {
+          if (callbacks.onAction) callbacks.onAction('toggleYamlInspector', {});
+          e.preventDefault();
+        }
+        break;
+
+      case '=':
+        if (!chatMode) {
+          if (callbacks.onAction) callbacks.onAction('toggleNearbyAnchors', {});
+          e.preventDefault();
+        }
+        break;
     }
 
     // Emote hotkeys: F+Number
