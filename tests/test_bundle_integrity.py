@@ -30,6 +30,10 @@ MODULE_ORDER = [
     'fast_travel', 'music_composer', 'world_events',
     'housing', 'fishing', 'weather_fx', 'npc_memory',
     'constellations', 'dungeons', 'card_game', 'time_capsules',
+    'dashboard', 'dashboard_css', 'dashboard_zones',
+    'dashboard_npcs', 'dashboard_inventory', 'dashboard_economy',
+    'dashboard_quests', 'dashboard_social', 'dashboard_games',
+    'dashboard_world', 'dashboard_main',
     'main'
 ]
 
@@ -50,6 +54,10 @@ WINDOW_NAMES = [
     'FastTravel', 'MusicComposer', 'WorldEvents',
     'Housing', 'Fishing', 'WeatherFX', 'NpcMemory',
     'Constellations', 'Dungeons', 'CardGame', 'TimeCapsules',
+    'Dashboard', 'DashboardCSS', 'DashboardZones',
+    'DashboardNPCs', 'DashboardInventory', 'DashboardEconomy',
+    'DashboardQuests', 'DashboardSocial', 'DashboardGames',
+    'DashboardWorld', 'DashboardMain',
     'Main'
 ]
 

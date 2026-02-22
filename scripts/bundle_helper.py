@@ -73,6 +73,17 @@ JS_FILES = [
     'dungeons.js',
     'card_game.js',
     'time_capsules.js',
+    'dashboard.js',
+    'dashboard_css.js',
+    'dashboard_zones.js',
+    'dashboard_npcs.js',
+    'dashboard_inventory.js',
+    'dashboard_economy.js',
+    'dashboard_quests.js',
+    'dashboard_social.js',
+    'dashboard_games.js',
+    'dashboard_world.js',
+    'dashboard_main.js',
     'main.js'
 ]
 
