@@ -16,6 +16,7 @@
   const Physical = typeof require !== 'undefined' ? require('./physical') : window.Physical;
   const Auth = typeof require !== 'undefined' ? require('./auth') : window.Auth;
   const Network = typeof require !== 'undefined' ? require('./network') : window.Network;
+  const Models = typeof require !== 'undefined' ? require('./models') : window.Models;
   const World = typeof require !== 'undefined' ? require('./world') : window.World;
   const Input = typeof require !== 'undefined' ? require('./input') : window.Input;
   const HUD = typeof require !== 'undefined' ? require('./hud') : window.HUD;
