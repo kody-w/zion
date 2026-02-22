@@ -1,3 +1,4 @@
+// dashboard_quests.js
 /**
  * dashboard_quests.js - Quest and Achievement panel for ZION dashboard mode
  *

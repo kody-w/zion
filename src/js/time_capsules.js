@@ -1,3 +1,4 @@
+// time_capsules.js
 /**
  * ZION Time Capsule System
  * Players bury messages and items for future players to discover.

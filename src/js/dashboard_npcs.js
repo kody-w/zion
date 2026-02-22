@@ -1,3 +1,4 @@
+// dashboard_npcs.js
 /**
  * ZION Dashboard NPC Interaction System
  * Provides NPC panel for dashboard (UI-only) mode: talk, shop, quests, relationships

@@ -1,3 +1,4 @@
+// weather_fx.js
 (function(exports) {
   // Weather Effects System — particle configs, lighting, wind, lightning, transitions
 

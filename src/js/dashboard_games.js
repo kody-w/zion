@@ -1,3 +1,4 @@
+// dashboard_games.js
 /**
  * ZION Dashboard Games Module
  * Mini-games panel for UI-only (dashboard) mode.

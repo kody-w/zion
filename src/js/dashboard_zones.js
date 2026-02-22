@@ -1,3 +1,4 @@
+// dashboard_zones.js
 /**
  * dashboard_zones.js — Zone Navigator panel for ZION dashboard (UI-only) mode
  * Provides zone browsing, details, and simulated travel without 3D rendering.

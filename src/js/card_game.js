@@ -1,3 +1,4 @@
+// card_game.js
 /**
  * ZION Trading Card Game System
  * Collectible cards, deck building, PvP battle mechanics

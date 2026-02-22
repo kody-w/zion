@@ -1,3 +1,4 @@
+// dashboard_social.js
 /**
  * dashboard_social.js - Social Hub panel for ZION dashboard mode
  *

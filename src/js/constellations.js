@@ -1,3 +1,4 @@
+// constellations.js
 /**
  * ZION Constellations & Stargazing System
  * Night sky with lore, celestial events, astrology bonuses

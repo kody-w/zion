@@ -1,3 +1,4 @@
+// dashboard_economy.js
 /**
  * ZION Dashboard Economy Module
  * Economy & Trading panel for UI-only (dashboard) mode.

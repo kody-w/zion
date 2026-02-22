@@ -1,3 +1,4 @@
+// dashboard.js
 /**
  * dashboard.js - UI-only dashboard mode for ZION
  *

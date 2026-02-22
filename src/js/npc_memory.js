@@ -1,3 +1,4 @@
+// npc_memory.js
 /**
  * npc_memory.js - NPC Relationship Memory System
  *

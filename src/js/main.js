@@ -28,6 +28,8 @@
   const Seasons = typeof require !== 'undefined' ? require('./seasons') : window.Seasons;
   const Pets = typeof require !== 'undefined' ? require('./pets') : window.Pets;
   const ApiBridge = typeof require !== 'undefined' ? require('./api_bridge') : window.ApiBridge;
+  const FastTravel = typeof require !== 'undefined' ? require('./fast_travel') : window.FastTravel;
+  const WeatherFX = typeof require !== 'undefined' ? require('./weather_fx') : window.WeatherFX;
 
   // Embedded soul data (replaced at bundle time)
   var EMBEDDED_SOULS = SOULS_PLACEHOLDER;
@@ -1879,8 +1881,15 @@
 
       // Weather cycling — changes every 4 in-game hours (every 4 real minutes)
       var weatherCycleMinute = Math.floor(worldTime / 240); // 0-5
-      var weatherTypes = ['clear', 'cloudy', 'rain', 'clear', 'storm', 'snow'];
-      var nextWeather = weatherTypes[weatherCycleMinute % weatherTypes.length];
+      var nextWeather;
+      if (typeof WeatherFX !== 'undefined' && WeatherFX.rollWeather) {
+        var season = (Seasons && Seasons.getCurrentSeason) ? Seasons.getCurrentSeason() : null;
+        var seasonId = season ? season.id : 'summer';
+        nextWeather = WeatherFX.rollWeather(weatherCycleMinute, seasonId);
+      } else {
+        var weatherTypes = ['clear', 'cloudy', 'rain', 'clear', 'storm', 'snow'];
+        nextWeather = weatherTypes[weatherCycleMinute % weatherTypes.length];
+      }
       if (nextWeather !== currentWeather) {
         var prevWeather = currentWeather;
         currentWeather = nextWeather;
@@ -1895,13 +1904,21 @@
         if (Audio && Audio.updateAmbientWeather) {
           Audio.updateAmbientWeather(currentWeather);
         }
-        // Update vignette intensity based on weather
-        if (currentWeather === 'storm') {
+        // Update vignette intensity based on weather (use WeatherFX visibility if available)
+        if (typeof WeatherFX !== 'undefined' && WeatherFX.getVisibilityRange) {
+          var vis = WeatherFX.getVisibilityRange(currentWeather);
+          setVignetteIntensity(vis < 100 ? 0.7 : vis < 300 ? 0.5 : 0.3);
+        } else if (currentWeather === 'storm') {
           setVignetteIntensity(0.7);
         } else if (currentWeather === 'rain' || currentWeather === 'snow') {
           setVignetteIntensity(0.5);
         } else {
           setVignetteIntensity(0.3);
+        }
+        // Apply weather gameplay modifiers
+        if (typeof WeatherFX !== 'undefined' && WeatherFX.getAmbientModifiers) {
+          var mods = WeatherFX.getAmbientModifiers(currentWeather);
+          if (localPlayer) localPlayer.weatherModifiers = mods;
         }
       }
 
@@ -3926,6 +3943,26 @@
           var Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
           var zoneInfo = Zones && Zones.ZONES ? Zones.ZONES[targetZone] : null;
           if (!zoneInfo) break;
+
+          // Use FastTravel for cost calculation if available
+          if (typeof FastTravel !== 'undefined' && FastTravel.calculateTravelCost && economyLedger) {
+            var cost = FastTravel.calculateTravelCost(
+              localPlayer.position,
+              { x: zoneInfo.cx, z: zoneInfo.cz }
+            );
+            if (cost > 0 && economyLedger.balances[localPlayer.id] < cost) {
+              if (HUD) HUD.showNotification('Not enough Spark to travel (need ' + cost + ')', 'error');
+              break;
+            }
+            if (cost > 0) economyLedger.balances[localPlayer.id] -= cost;
+          }
+          // Track as recent location
+          if (typeof FastTravel !== 'undefined' && FastTravel.addRecentLocation) {
+            FastTravel.addRecentLocation(localPlayer.id, {
+              id: targetZone, name: targetZone, category: 'zone',
+              x: localPlayer.position.x, z: localPlayer.position.z
+            });
+          }
 
           var oldZone = currentZone;
           currentZone = targetZone;

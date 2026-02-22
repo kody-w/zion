@@ -19,7 +19,15 @@ var EXPECTED_MODULES = [
   'api_bridge.js', 'sim_crm.js', 'sim_forge_browser.js', 'world.js',
   'worldmap.js', 'timelapse.js', 'input.js', 'hud.js',
   'xr.js', 'audio.js', 'npc_dialogue.js', 'npc_ai.js',
-  'npcs.js', 'seasons.js', 'pets.js', 'main.js'
+  'npcs.js', 'seasons.js', 'pets.js',
+  'fast_travel.js', 'music_composer.js', 'world_events.js',
+  'housing.js', 'fishing.js', 'weather_fx.js', 'npc_memory.js',
+  'constellations.js', 'dungeons.js', 'card_game.js', 'time_capsules.js',
+  'dashboard.js', 'dashboard_css.js', 'dashboard_zones.js',
+  'dashboard_npcs.js', 'dashboard_inventory.js', 'dashboard_economy.js',
+  'dashboard_quests.js', 'dashboard_social.js', 'dashboard_games.js',
+  'dashboard_world.js', 'dashboard_main.js',
+  'main.js'
 ];
 
 suite('Syntax Validation', function() {

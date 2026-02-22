@@ -1,3 +1,4 @@
+// dashboard_main.js
 /**
  * dashboard_main.js - Integration module for ZION dashboard mode
  *

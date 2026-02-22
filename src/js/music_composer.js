@@ -1,3 +1,4 @@
+// music_composer.js
 /**
  * ZION Music Composer — procedural sequencer / piano-roll
  * Vanilla JS, UMD pattern, var only (ES5-compatible)

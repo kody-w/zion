@@ -1,3 +1,4 @@
+// housing.js
 /**
  * ZION Player Housing System
  * Claim land, build rooms, place furniture, invite visitors.

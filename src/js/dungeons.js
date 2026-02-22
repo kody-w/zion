@@ -1,3 +1,4 @@
+// dungeons.js
 /**
  * ZION Procedural Dungeon Generator
  * Seeded room graphs with puzzles, enemies, loot.
