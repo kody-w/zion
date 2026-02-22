@@ -1,3 +1,4 @@
+// npc_reputation.js
 /**
  * ZION NPC Reputation System
  * Reputation-based NPC relationships with dynamic dialogue unlocks.

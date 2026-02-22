@@ -1,3 +1,4 @@
+// daily_challenges.js
 /**
  * ZION Daily & Weekly Challenge System
  * Streaks, escalating rewards, and seasonal themed challenges

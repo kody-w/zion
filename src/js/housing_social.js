@@ -1,3 +1,4 @@
+// housing_social.js
 /**
  * ZION Housing Social System
  * Visitor system, guestbook, house ratings, and NPC visits.

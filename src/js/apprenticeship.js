@@ -1,3 +1,4 @@
+// apprenticeship.js
 /**
  * ZION Apprenticeship & Teaching System
  * Players mentor NPC citizens; AI agents learn from player behavior.

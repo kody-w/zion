@@ -30,6 +30,16 @@
   const ApiBridge = typeof require !== 'undefined' ? require('./api_bridge') : window.ApiBridge;
   const FastTravel = typeof require !== 'undefined' ? require('./fast_travel') : window.FastTravel;
   const WeatherFX = typeof require !== 'undefined' ? require('./weather_fx') : window.WeatherFX;
+  const Progression = typeof require !== 'undefined' ? require('./progression') : window.Progression;
+  const NpcReputation = typeof require !== 'undefined' ? require('./npc_reputation') : window.NpcReputation;
+  const Loot = typeof require !== 'undefined' ? require('./loot') : window.Loot;
+  const GuildProgression = typeof require !== 'undefined' ? require('./guild_progression') : window.GuildProgression;
+  const DailyChallenges = typeof require !== 'undefined' ? require('./daily_challenges') : window.DailyChallenges;
+  const Apprenticeship = typeof require !== 'undefined' ? require('./apprenticeship') : window.Apprenticeship;
+  const EventVoting = typeof require !== 'undefined' ? require('./event_voting') : window.EventVoting;
+  const HousingSocial = typeof require !== 'undefined' ? require('./housing_social') : window.HousingSocial;
+  const Prestige = typeof require !== 'undefined' ? require('./prestige') : window.Prestige;
+  const MentorshipMarket = typeof require !== 'undefined' ? require('./mentorship_market') : window.MentorshipMarket;
 
   // Embedded soul data (replaced at bundle time)
   var EMBEDDED_SOULS = SOULS_PLACEHOLDER;

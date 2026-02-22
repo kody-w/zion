@@ -1,3 +1,4 @@
+// guild_progression.js
 (function(exports) {
   'use strict';
 

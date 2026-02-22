@@ -1,3 +1,4 @@
+// loot.js
 /**
  * ZION Cross-System Loot & Reward Engine
  * Unified item reward pipeline for dungeons, fishing, card games, events, quests.
