@@ -139097,8 +139097,10 @@
       lootHistory = Loot.createLootHistory(username);
     }
 
-    if (BattlePass && BattlePass.initPlayerPass) {
-      battlePassState = BattlePass.initPlayerPass(username);
+    if (BattlePass && BattlePass.initSeason && BattlePass.initPlayerPass) {
+      battlePassState = { battlePass: { seasons: {}, players: {} } };
+      BattlePass.initSeason(battlePassState, 'season_1_spring');
+      BattlePass.initPlayerPass(battlePassState, username, 'season_1_spring');
     }
 
     if (Cosmetics && Cosmetics.initAppearance) {
@@ -140133,7 +140135,7 @@
 
             if (BattlePass && BattlePass.addXP && battlePassState) {
               var exploreXP = Math.round(6 * getZoneBonus('explore'));
-              BattlePass.addXP(battlePassState, exploreXP, 'exploring');
+              BattlePass.addXP(battlePassState, localPlayer.id, exploreXP, 'exploring');
             }
 
             if (HUD && ZONE_BONUSES[currentZone]) {
@@ -141575,7 +141577,7 @@
         }
 
         if (BattlePass && BattlePass.addXP && battlePassState) {
-          BattlePass.addXP(battlePassState, 10, 'trading');
+          BattlePass.addXP(battlePassState, localPlayer.id, 10, 'trading');
         }
 
         if (MarketDynamics && MarketDynamics.recordTransaction && marketDynamicsState) {
@@ -142006,7 +142008,7 @@
       }
 
       if (BattlePass && BattlePass.addXP && battlePassState) {
-        BattlePass.addXP(battlePassState, 3, 'gathering');
+        BattlePass.addXP(battlePassState, localPlayer.id, 3, 'gathering');
       }
 
       if (SkillMastery && SkillMastery.addXP && skillMasteryState) {
@@ -142111,7 +142113,7 @@
       }
 
       if (BattlePass && BattlePass.addXP && battlePassState) {
-        BattlePass.addXP(battlePassState, 8, 'crafting');
+        BattlePass.addXP(battlePassState, localPlayer.id, 8, 'crafting');
       }
 
       if (Specializations && Specializations.awardMasteryXP && specState) {
@@ -142534,7 +142536,7 @@
           }
 
           if (BattlePass && BattlePass.addXP && battlePassState) {
-            BattlePass.addXP(battlePassState, 12, 'building');
+            BattlePass.addXP(battlePassState, localPlayer.id, 12, 'building');
           }
 
           if (SkillMastery && SkillMastery.addXP && skillMasteryState) {
@@ -142993,7 +142995,7 @@
                   }
 
                   if (BattlePass && BattlePass.addXP && battlePassState) {
-                    BattlePass.addXP(battlePassState, 20, 'quest');
+                    BattlePass.addXP(battlePassState, localPlayer.id, 20, 'quest');
                   }
 
                   if (Specializations && Specializations.awardMasteryXP && specState) {
@@ -143089,7 +143091,7 @@
             }
 
             if (BattlePass && BattlePass.addXP && battlePassState) {
-              BattlePass.addXP(battlePassState, 5, 'social');
+              BattlePass.addXP(battlePassState, localPlayer.id, 5, 'social');
             }
 
             if (NarrativeThreads && NarrativeThreads.addBeat && narrativeThreadsState) {
@@ -143852,7 +143854,7 @@
         }
 
         if (BattlePass && BattlePass.addXP && battlePassState) {
-          BattlePass.addXP(battlePassState, 6, 'fishing');
+          BattlePass.addXP(battlePassState, localPlayer.id, 6, 'fishing');
         }
 
         if (Specializations && Specializations.awardMasteryXP && specState) {

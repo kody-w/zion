@@ -1096,8 +1096,10 @@
     }
 
     // Initialize battle pass
-    if (BattlePass && BattlePass.initPlayerPass) {
-      battlePassState = BattlePass.initPlayerPass(username);
+    if (BattlePass && BattlePass.initSeason && BattlePass.initPlayerPass) {
+      battlePassState = { battlePass: { seasons: {}, players: {} } };
+      BattlePass.initSeason(battlePassState, 'season_1_spring');
+      BattlePass.initPlayerPass(battlePassState, username, 'season_1_spring');
     }
 
     // Initialize cosmetics (player appearance)
@@ -2306,7 +2308,7 @@
             // BattlePass XP for exploration (zone bonus applies)
             if (BattlePass && BattlePass.addXP && battlePassState) {
               var exploreXP = Math.round(6 * getZoneBonus('explore'));
-              BattlePass.addXP(battlePassState, exploreXP, 'exploring');
+              BattlePass.addXP(battlePassState, localPlayer.id, exploreXP, 'exploring');
             }
 
             // Show zone bonus on entry
@@ -4015,7 +4017,7 @@
 
         // BattlePass XP for trading
         if (BattlePass && BattlePass.addXP && battlePassState) {
-          BattlePass.addXP(battlePassState, 10, 'trading');
+          BattlePass.addXP(battlePassState, localPlayer.id, 10, 'trading');
         }
 
         // MarketDynamics: record trade transaction
@@ -4490,7 +4492,7 @@
 
       // BattlePass XP for gathering
       if (BattlePass && BattlePass.addXP && battlePassState) {
-        BattlePass.addXP(battlePassState, 3, 'gathering');
+        BattlePass.addXP(battlePassState, localPlayer.id, 3, 'gathering');
       }
 
       // SkillMastery: gathering XP
@@ -4609,7 +4611,7 @@
 
       // BattlePass XP for crafting
       if (BattlePass && BattlePass.addXP && battlePassState) {
-        BattlePass.addXP(battlePassState, 8, 'crafting');
+        BattlePass.addXP(battlePassState, localPlayer.id, 8, 'crafting');
       }
 
       // Specialization mastery XP for crafting
@@ -5078,7 +5080,7 @@
 
           // BattlePass XP for building
           if (BattlePass && BattlePass.addXP && battlePassState) {
-            BattlePass.addXP(battlePassState, 12, 'building');
+            BattlePass.addXP(battlePassState, localPlayer.id, 12, 'building');
           }
 
           // SkillMastery: building XP
@@ -5584,7 +5586,7 @@
 
                   // BattlePass XP for quest completion
                   if (BattlePass && BattlePass.addXP && battlePassState) {
-                    BattlePass.addXP(battlePassState, 20, 'quest');
+                    BattlePass.addXP(battlePassState, localPlayer.id, 20, 'quest');
                   }
 
                   // Specialization mastery XP for quest completion
@@ -5698,7 +5700,7 @@
 
             // BattlePass XP for social interaction
             if (BattlePass && BattlePass.addXP && battlePassState) {
-              BattlePass.addXP(battlePassState, 5, 'social');
+              BattlePass.addXP(battlePassState, localPlayer.id, 5, 'social');
             }
 
             // NarrativeThreads: NPC conversation may spawn story beat
@@ -6591,7 +6593,7 @@
 
         // BattlePass XP for fishing
         if (BattlePass && BattlePass.addXP && battlePassState) {
-          BattlePass.addXP(battlePassState, 6, 'fishing');
+          BattlePass.addXP(battlePassState, localPlayer.id, 6, 'fishing');
         }
 
         // Specialization mastery XP for fishing
