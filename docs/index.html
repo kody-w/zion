@@ -144254,6 +144254,35 @@ html, body {
     // Initialize game systems with loading progress
     await initGameSystems(username);
 
+    // PlayerOnboarding: init onboarding for new players, record return for existing
+    if (PlayerOnboarding && playerOnboardingState) {
+      if (PlayerOnboarding.initOnboarding && !PlayerOnboarding.isOnboardingComplete(playerOnboardingState, username)) {
+        PlayerOnboarding.initOnboarding(playerOnboardingState, username, worldTime);
+      }
+      if (PlayerOnboarding.recordReturn) {
+        PlayerOnboarding.recordReturn(playerOnboardingState, username, worldTime);
+      }
+    }
+
+    // MultiverseReputation: init player in reputation system
+    if (MultiverseReputation && MultiverseReputation.initPlayer && multiverseRepState) {
+      MultiverseReputation.initPlayer(multiverseRepState, username, 'zion');
+    }
+
+    // WarmthSystem: record daily login
+    if (WarmthSystem && WarmthSystem.recordDailyLogin && warmthState) {
+      WarmthSystem.recordDailyLogin(warmthState, username, worldTime);
+    }
+
+    // RecoverySystem: check if player needs recovery assistance
+    if (RecoverySystem && RecoverySystem.checkCondition && recoveryState && economyLedger) {
+      var playerBalance = Economy && Economy.getBalance ? Economy.getBalance(economyLedger, username) : 0;
+      var condition = RecoverySystem.checkCondition(recoveryState, username, { spark: playerBalance });
+      if (condition && condition.needsRecovery && RecoverySystem.enterRecovery) {
+        RecoverySystem.enterRecovery(recoveryState, username, condition.conditionId, worldTime);
+      }
+    }
+
     // Hide loading screen with fade
     if (typeof document !== 'undefined') {
       var loadEl = document.getElementById('loading-overlay');
@@ -145739,6 +145768,42 @@ html, body {
             if (BattlePass && BattlePass.addXP && battlePassState) {
               BattlePass.addXP(battlePassState, 6, 'exploring');
             }
+
+            // PlayerOnboarding: complete zone visit step
+            if (PlayerOnboarding && PlayerOnboarding.completeStep && playerOnboardingState) {
+              PlayerOnboarding.completeStep(playerOnboardingState, localPlayer.id, 'visit_zone', worldTime);
+            }
+
+            // NarrativeThreads: create thread from zone exploration
+            if (NarrativeThreads && NarrativeThreads.createThread && narrativeThreadsState && Math.random() < 0.15) {
+              NarrativeThreads.createThread(narrativeThreadsState, localPlayer.id, 'explore', currentZone, { zone: currentZone }, worldTime);
+            }
+
+            // MultiverseReputation: earn rep for visiting zones
+            if (MultiverseReputation && MultiverseReputation.earnReputation && multiverseRepState) {
+              MultiverseReputation.earnReputation(multiverseRepState, localPlayer.id, 'zion', 2, 'zone_visit');
+            }
+
+            // ConsequenceBranching: check zone gates
+            if (ConsequenceBranching && ConsequenceBranching.canAccessZone && consequenceBranchingState) {
+              var canAccess = ConsequenceBranching.canAccessZone(consequenceBranchingState, localPlayer.id, currentZone);
+              if (canAccess === false && HUD) {
+                HUD.showNotification('This area requires a different path alignment to fully explore', 'info');
+              }
+            }
+
+            // WorldShaper: update zone aesthetic from visit
+            if (WorldShaper && WorldShaper.updateAesthetic && worldShaperState) {
+              WorldShaper.updateAesthetic(worldShaperState, currentZone, worldTime);
+            }
+
+            // EventConsequences: check active zone effects
+            if (EventConsequences && EventConsequences.getActiveEffects && eventConsequencesState) {
+              var zoneEffects = EventConsequences.getActiveEffects(eventConsequencesState, currentZone, worldTime);
+              if (zoneEffects && zoneEffects.length > 0 && localPlayer) {
+                localPlayer.zoneEffects = zoneEffects;
+              }
+            }
           }
         }
 
@@ -146436,6 +146501,84 @@ html, body {
     // BountyBoard: expire old bounties (~every 60 seconds)
     if (BountyBoard && BountyBoard.tick && bountyBoardState && Math.random() < 0.0003) {
       BountyBoard.tick(bountyBoardState, worldTime);
+    }
+
+    // NpcDelegation: check for completed delegations (~every 30 seconds)
+    if (NpcDelegation && NpcDelegation.checkCompletion && npcDelegationState && Math.random() < 0.0005) {
+      var delegationResults = NpcDelegation.checkCompletion(npcDelegationState, worldTime);
+      if (delegationResults && delegationResults.length > 0 && HUD && localPlayer) {
+        delegationResults.forEach(function(r) {
+          if (r.playerId === localPlayer.id) {
+            HUD.showNotification('NPC task complete: ' + (r.taskType || 'delegation'), 'success');
+          }
+        });
+      }
+    }
+
+    // EventConsequences: expire active effects (~every 60 seconds)
+    if (EventConsequences && EventConsequences.expireEffects && eventConsequencesState && Math.random() < 0.0003) {
+      EventConsequences.expireEffects(eventConsequencesState, worldTime);
+    }
+
+    // WorldShaper: regenerate zone resources (~every 60 seconds)
+    if (WorldShaper && WorldShaper.regenerateResources && worldShaperState && Math.random() < 0.0003) {
+      WorldShaper.regenerateResources(worldShaperState, worldTime);
+    }
+
+    // RecoverySystem: advance recovery phases (~every 30 seconds)
+    if (RecoverySystem && RecoverySystem.advanceRecovery && recoveryState && localPlayer && Math.random() < 0.0005) {
+      RecoverySystem.advanceRecovery(recoveryState, localPlayer.id, worldTime);
+    }
+
+    // DiplomaticSystem: expire aged treaties (~every 60 seconds)
+    if (DiplomaticSystem && DiplomaticSystem.expireTreaties && diplomaticState && Math.random() < 0.0003) {
+      DiplomaticSystem.expireTreaties(diplomaticState, worldTime);
+    }
+
+    // MerchantGuilds: process arrived cargo shipments (~every 30 seconds)
+    if (MerchantGuilds && MerchantGuilds.checkCargo && merchantGuildsState && Math.random() < 0.0005) {
+      MerchantGuilds.checkCargo(merchantGuildsState, worldTime);
+    }
+
+    // Contracts: expire overdue contracts (~every 60 seconds)
+    if (Contracts && Contracts.expireContracts && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0003) {
+      Contracts.expireContracts(gameState.subsystems, worldTime);
+    }
+
+    // MarketSpeculation: settle expired positions and check liquidations (~every 30 seconds)
+    if (MarketSpeculation && MarketSpeculation.settleExpired && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0005) {
+      MarketSpeculation.settleExpired(gameState.subsystems, worldTime, function(itemId) {
+        return MarketDynamics && MarketDynamics.getPrice ? MarketDynamics.getPrice(marketDynamicsState, itemId) : 10;
+      });
+    }
+
+    // RadioStation: award listener Spark (~every 10 seconds)
+    if (RadioStation && RadioStation.updateListenerRewards && radioStationState && Math.random() < 0.0015) {
+      var zones = ['nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'];
+      zones.forEach(function(z) {
+        RadioStation.updateListenerRewards(radioStationState, z, worldTime);
+      });
+    }
+
+    // SocialSpaces: clean expired bulletins (~every 60 seconds)
+    if (SocialSpaces && socialSpacesState && Math.random() < 0.0003) {
+      if (SocialSpaces.cleanExpiredBulletins) {
+        SocialSpaces.cleanExpiredBulletins(socialSpacesState, worldTime);
+      }
+    }
+
+    // AsyncCollab: check project phase completion (~every 60 seconds)
+    if (AsyncCollab && AsyncCollab.getActiveProjects && asyncCollabState && Math.random() < 0.0003) {
+      var activeProjects = AsyncCollab.getActiveProjects(asyncCollabState);
+      if (activeProjects && activeProjects.length > 0 && localPlayer) {
+        localPlayer.activeProjects = activeProjects.length;
+      }
+    }
+
+    // MentorGuilds: check cohort graduation (~every 60 seconds)
+    if (MentorGuilds && MentorGuilds.getMentorGuilds && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0003) {
+      // Expose mentor guilds for UI
+      if (localPlayer) localPlayer.mentorGuildsAvailable = true;
     }
 
     // Request next frame
@@ -147202,6 +147345,26 @@ html, body {
           MarketDynamics.recordTransaction(marketDynamicsState, { buyer: localPlayer.id, seller: msg.from, zone: currentZone, tick: worldTime });
         }
 
+        // SkillMastery: trading XP
+        if (SkillMastery && SkillMastery.addXP && skillMasteryState) {
+          SkillMastery.addXP(skillMasteryState, 'trading', 10);
+        }
+
+        // MultiverseReputation: earn rep from trade
+        if (MultiverseReputation && MultiverseReputation.earnReputation && multiverseRepState) {
+          MultiverseReputation.earnReputation(multiverseRepState, localPlayer.id, 'zion', 3, 'trade');
+        }
+
+        // PlayerOnboarding: complete trade step
+        if (PlayerOnboarding && PlayerOnboarding.completeStep && playerOnboardingState) {
+          PlayerOnboarding.completeStep(playerOnboardingState, localPlayer.id, 'complete_trade', worldTime);
+        }
+
+        // EconomySimulator: snapshot for trend analysis
+        if (EconomySimulator && EconomySimulator.createSnapshot && economySimState && marketDynamicsState) {
+          economySimState.lastSnapshot = EconomySimulator.createSnapshot(marketDynamicsState);
+        }
+
         if (Mentoring) {
           var xpResult = Mentoring.addSkillXP(localPlayer.id, 'trading', 15);
           if (xpResult.leveledUp && HUD) {
@@ -147659,6 +147822,19 @@ html, body {
         SkillMastery.addXP(skillMasteryState, 'gathering', 5);
       }
 
+      // AsyncCollab: contribute gathering effort to active projects
+      if (AsyncCollab && AsyncCollab.contribute && asyncCollabState && localPlayer) {
+        var myProjects = AsyncCollab.getPlayerProjects ? AsyncCollab.getPlayerProjects(asyncCollabState, localPlayer.id) : [];
+        if (myProjects.length > 0) {
+          AsyncCollab.contribute(asyncCollabState, localPlayer.id, myProjects[0].id, 1, 'Gathered ' + itemId, worldTime);
+        }
+      }
+
+      // PlayerOnboarding: complete harvest step
+      if (PlayerOnboarding && PlayerOnboarding.completeStep && playerOnboardingState) {
+        PlayerOnboarding.completeStep(playerOnboardingState, localPlayer.id, 'harvest_item', worldTime);
+      }
+
       if (Audio) Audio.playSound('harvest');
 
       // Track activity
@@ -147764,6 +147940,19 @@ html, body {
       // SkillMastery: crafting XP
       if (SkillMastery && SkillMastery.addXP && skillMasteryState) {
         SkillMastery.addXP(skillMasteryState, 'crafting', 8);
+      }
+
+      // AsyncCollab: contribute crafting effort to active projects
+      if (AsyncCollab && AsyncCollab.contribute && asyncCollabState && localPlayer) {
+        var craftProjects = AsyncCollab.getPlayerProjects ? AsyncCollab.getPlayerProjects(asyncCollabState, localPlayer.id) : [];
+        if (craftProjects.length > 0) {
+          AsyncCollab.contribute(asyncCollabState, localPlayer.id, craftProjects[0].id, 2, 'Crafted ' + recipeId, worldTime);
+        }
+      }
+
+      // PlayerOnboarding: complete craft step
+      if (PlayerOnboarding && PlayerOnboarding.completeStep && playerOnboardingState) {
+        PlayerOnboarding.completeStep(playerOnboardingState, localPlayer.id, 'craft_item', worldTime);
       }
 
       // Advanced Crafting: track crafting history and apply skill bonus
@@ -148204,6 +148393,29 @@ html, body {
             BattlePass.addXP(battlePassState, 12, 'building');
           }
 
+          // SkillMastery: building XP
+          if (SkillMastery && SkillMastery.addXP && skillMasteryState) {
+            SkillMastery.addXP(skillMasteryState, 'building', 10);
+          }
+
+          // WorldShaper: update zone aesthetic from new build
+          if (WorldShaper && WorldShaper.updateAesthetic && worldShaperState) {
+            WorldShaper.updateAesthetic(worldShaperState, currentZone, worldTime);
+          }
+
+          // AsyncCollab: building effort contributes to projects
+          if (AsyncCollab && AsyncCollab.contribute && asyncCollabState && localPlayer) {
+            var buildProjects = AsyncCollab.getPlayerProjects ? AsyncCollab.getPlayerProjects(asyncCollabState, localPlayer.id) : [];
+            if (buildProjects.length > 0) {
+              AsyncCollab.contribute(asyncCollabState, localPlayer.id, buildProjects[0].id, 3, 'Built ' + result.type, worldTime);
+            }
+          }
+
+          // PlayerOnboarding: complete build step
+          if (PlayerOnboarding && PlayerOnboarding.completeStep && playerOnboardingState) {
+            PlayerOnboarding.completeStep(playerOnboardingState, localPlayer.id, 'place_building', worldTime);
+          }
+
           // Save structure to state
           if (gameState) {
             if (!gameState.structures) gameState.structures = [];
@@ -148631,6 +148843,32 @@ html, body {
                     Specializations.awardMasteryXP(specState, 'questing', 10);
                   }
 
+                  // SkillMastery: questing XP
+                  if (SkillMastery && SkillMastery.addXP && skillMasteryState) {
+                    SkillMastery.addXP(skillMasteryState, 'questing', 15);
+                  }
+
+                  // MentorGuilds: quest completion counts as lesson progress
+                  if (MentorGuilds && MentorGuilds.completeLesson && typeof gameState !== 'undefined' && gameState && gameState.subsystems) {
+                    MentorGuilds.completeLesson(gameState.subsystems, localPlayer.id, questInfo.quest.id, worldTime);
+                  }
+
+                  // ConsequenceBranching: quest choices may define path
+                  if (ConsequenceBranching && ConsequenceBranching.makeDecision && consequenceBranchingState) {
+                    var questDecisionId = 'quest_' + questInfo.quest.id;
+                    ConsequenceBranching.makeDecision(consequenceBranchingState, localPlayer.id, questDecisionId, 'complete', worldTime);
+                  }
+
+                  // MultiverseReputation: earn rep from quest completion
+                  if (MultiverseReputation && MultiverseReputation.earnReputation && multiverseRepState) {
+                    MultiverseReputation.earnReputation(multiverseRepState, localPlayer.id, 'zion', 5, 'quest_complete');
+                  }
+
+                  // PlayerOnboarding: complete quest step
+                  if (PlayerOnboarding && PlayerOnboarding.completeStep && playerOnboardingState) {
+                    PlayerOnboarding.completeStep(playerOnboardingState, localPlayer.id, 'complete_quest', worldTime);
+                  }
+
                   // Loot: roll quest completion bonus loot
                   if (Loot && Loot.rollLoot && lootHistory) {
                     var questLoot = Loot.rollLoot('quest', { zone: currentZone, rarity: 2 });
@@ -148714,6 +148952,29 @@ html, body {
             // BattlePass XP for social interaction
             if (BattlePass && BattlePass.addXP && battlePassState) {
               BattlePass.addXP(battlePassState, 5, 'social');
+            }
+
+            // NarrativeThreads: NPC conversation may spawn story beat
+            if (NarrativeThreads && NarrativeThreads.addBeat && narrativeThreadsState) {
+              var playerThreads = NarrativeThreads.getActiveThreads ? NarrativeThreads.getActiveThreads(narrativeThreadsState) : [];
+              if (playerThreads.length > 0) {
+                NarrativeThreads.addBeat(narrativeThreadsState, localPlayer.id, playerThreads[0].id, npcResponse.name + ' shared wisdom', 'npc_talk', currentZone, worldTime);
+              }
+            }
+
+            // PlayerOnboarding: complete talk_npc step
+            if (PlayerOnboarding && PlayerOnboarding.completeStep && playerOnboardingState) {
+              PlayerOnboarding.completeStep(playerOnboardingState, localPlayer.id, 'talk_npc', worldTime);
+            }
+
+            // MultiverseReputation: earn rep from NPC interaction
+            if (MultiverseReputation && MultiverseReputation.earnReputation && multiverseRepState) {
+              MultiverseReputation.earnReputation(multiverseRepState, localPlayer.id, 'zion', 1, 'npc_interaction');
+            }
+
+            // GriefRecovery: talking to NPCs may help with recovery
+            if (GriefRecovery && GriefRecovery.callHotline && griefRecoveryState && npcResponse.archetype === 'healer') {
+              GriefRecovery.callHotline(griefRecoveryState, localPlayer.id, worldTime);
             }
 
             // Track activity
@@ -149552,6 +149813,19 @@ html, body {
         // SkillMastery: fishing XP
         if (SkillMastery && SkillMastery.addXP && skillMasteryState) {
           SkillMastery.addXP(skillMasteryState, 'fishing', 6);
+        }
+
+        // AsyncCollab: fishing effort contributes to projects
+        if (AsyncCollab && AsyncCollab.contribute && asyncCollabState && localPlayer) {
+          var fishProjects = AsyncCollab.getPlayerProjects ? AsyncCollab.getPlayerProjects(asyncCollabState, localPlayer.id) : [];
+          if (fishProjects.length > 0) {
+            AsyncCollab.contribute(asyncCollabState, localPlayer.id, fishProjects[0].id, 1, 'Caught fish', worldTime);
+          }
+        }
+
+        // PlayerOnboarding: complete fishing step
+        if (PlayerOnboarding && PlayerOnboarding.completeStep && playerOnboardingState) {
+          PlayerOnboarding.completeStep(playerOnboardingState, localPlayer.id, 'catch_fish', worldTime);
         }
 
         // Award gardening XP for fishing (falls under nature skills)
