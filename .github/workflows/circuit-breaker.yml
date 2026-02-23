@@ -73,6 +73,7 @@ jobs:
       - name: Record result
         id: record
         run: |
+          mkdir -p /tmp/cb
           LOGS_ARG=""
           if [ -f "/tmp/cb/run_logs.txt" ]; then
             LOGS_ARG="--logs /tmp/cb/run_logs.txt"
@@ -211,11 +212,15 @@ jobs:
           git pull --rebase || true
           git config user.name "ZION Circuit Breaker"
           git config user.email "zion-engine@users.noreply.github.com"
-          git add state/logs/circuit_breaker.json
-          git diff --staged --quiet || git commit -m "circuit-breaker: track ${{ steps.trigger.outputs.name }} (${{ steps.trigger.outputs.conclusion }})"
-          for i in 1 2 3; do
-            git pull --rebase || true
-            git push && break
-            echo "Push attempt $i failed, retrying..."
-            sleep 2
-          done
+          if [ -f state/logs/circuit_breaker.json ]; then
+            git add state/logs/circuit_breaker.json
+            git diff --staged --quiet || git commit -m "circuit-breaker: track ${{ steps.trigger.outputs.name }} (${{ steps.trigger.outputs.conclusion }})"
+            for i in 1 2 3; do
+              git pull --rebase || true
+              git push && break
+              echo "Push attempt $i failed, retrying..."
+              sleep 2
+            done
+          else
+            echo "No circuit breaker state file to commit"
+          fi

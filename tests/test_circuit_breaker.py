@@ -524,6 +524,65 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual(loaded['workflows']['Game Tick']['consecutive_failures'], 3)
         self.assertTrue(loaded['workflows']['Game Tick']['tripped'])
 
+    def test_record_success_produces_valid_json_output(self):
+        """Regression: record must produce valid data even for successes.
+
+        The CI workflow redirects record output to a file and then parses it.
+        If record fails or produces invalid data, the entire workflow crashes.
+        """
+        state = load_state(self.base_dir)
+        state, just_tripped = record_result(state, 'Sync State', 'success', run_id='12345')
+        save_state(self.base_dir, state)
+
+        # Verify the state contains the expected data
+        self.assertFalse(just_tripped)
+        wf = state['workflows']['Sync State']
+        self.assertEqual(wf['consecutive_failures'], 0)
+        self.assertFalse(wf['tripped'])
+        self.assertEqual(wf['last_run_id'], '12345')
+
+        # Verify state file is valid JSON
+        cb_path = os.path.join(self.base_dir, 'state', 'logs', 'circuit_breaker.json')
+        with open(cb_path) as f:
+            loaded = json.load(f)
+        self.assertIn('Sync State', loaded['workflows'])
+
+    def test_record_failure_produces_valid_json_output(self):
+        """Record produces valid state for failure results too."""
+        state = load_state(self.base_dir)
+        state, just_tripped = record_result(state, 'Game Tick', 'failure', run_id='99999')
+        save_state(self.base_dir, state)
+
+        wf = state['workflows']['Game Tick']
+        self.assertEqual(wf['consecutive_failures'], 1)
+        self.assertEqual(wf['last_run_id'], '99999')
+
+        # Verify state file is valid JSON
+        cb_path = os.path.join(self.base_dir, 'state', 'logs', 'circuit_breaker.json')
+        with open(cb_path) as f:
+            loaded = json.load(f)
+        self.assertEqual(loaded['workflows']['Game Tick']['consecutive_failures'], 1)
+
+    def test_record_creates_state_file(self):
+        """Regression: recording a result must create state/logs/circuit_breaker.json.
+
+        The CI workflow does 'git add state/logs/circuit_breaker.json' after
+        recording. If the file doesn't exist, the commit step fails.
+        """
+        cb_path = os.path.join(self.base_dir, 'state', 'logs', 'circuit_breaker.json')
+        # Remove any existing state file
+        if os.path.exists(cb_path):
+            os.remove(cb_path)
+        self.assertFalse(os.path.exists(cb_path))
+
+        # Use the Python API with our temp base_dir
+        state = load_state(self.base_dir)
+        state, _ = record_result(state, 'Sync State', 'success', run_id='12345')
+        save_state(self.base_dir, state)
+
+        self.assertTrue(os.path.exists(cb_path),
+                        'circuit_breaker.json must be created by record + save')
+
 
 if __name__ == '__main__':
     unittest.main()

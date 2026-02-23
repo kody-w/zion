@@ -706,6 +706,68 @@ class TestActualStateFiles(unittest.TestCase):
         except (TypeError, ValueError) as e:
             self.fail('Snapshot is not JSON-serializable: {}'.format(e))
 
+    def test_first_run_bootstrap_no_previous_snapshot(self):
+        """Regression: first run with no previous snapshot must not crash.
+
+        The World News workflow rotates latest->previous, then takes a new
+        snapshot. On the very first run, previous.json doesn't exist. The
+        workflow skips the diff and creates an empty feed instead.
+        This test verifies the scripts handle that path correctly.
+        """
+        tmpdir = tempfile.mkdtemp()
+        try:
+            # Create a minimal state directory
+            state_dir = os.path.join(tmpdir, 'state')
+            os.makedirs(state_dir)
+            with open(os.path.join(state_dir, 'world.json'), 'w') as f:
+                json.dump({'worldTime': 100, 'dayPhase': 'day'}, f)
+
+            # Take a snapshot (first run — no previous exists)
+            snap = snapshot_state(state_dir=state_dir)
+            snap_path = os.path.join(tmpdir, 'latest.json')
+            save_snapshot(snap, snap_path)
+
+            self.assertTrue(os.path.exists(snap_path))
+            with open(snap_path) as f:
+                loaded = json.load(f)
+            self.assertIn('world', loaded)
+            self.assertEqual(loaded['world']['worldTime'], 100)
+        finally:
+            shutil.rmtree(tmpdir)
+
+    def test_update_feed_creates_feed_from_scratch(self):
+        """Regression: update_feed must work when feed file doesn't exist yet."""
+        tmpdir = tempfile.mkdtemp()
+        try:
+            # Create before/after snapshots with a real change
+            before = {'world': {'worldTime': 0, 'dayPhase': 'dawn'},
+                      '_snapshot_ts': '2026-01-01T00:00:00+00:00',
+                      '_snapshot_files': ['world.json']}
+            after = {'world': {'worldTime': 300, 'dayPhase': 'day'},
+                     '_snapshot_ts': '2026-01-01T00:30:00+00:00',
+                     '_snapshot_files': ['world.json']}
+
+            before_path = os.path.join(tmpdir, 'before.json')
+            after_path = os.path.join(tmpdir, 'after.json')
+            feed_path = os.path.join(tmpdir, 'feeds', 'news.xml')
+
+            with open(before_path, 'w') as f:
+                json.dump(before, f)
+            with open(after_path, 'w') as f:
+                json.dump(after, f)
+
+            # Feed directory doesn't exist yet — update_feed must create it
+            result = update_feed(before_path, after_path, feed_path)
+            # Should either add an item or return False (no changes detected)
+            # Either way, it must not crash
+            if result:
+                self.assertTrue(os.path.exists(feed_path))
+                tree = ET.parse(feed_path)
+                root = tree.getroot()
+                self.assertEqual(root.tag, 'rss')
+        finally:
+            shutil.rmtree(tmpdir)
+
 
 if __name__ == '__main__':
     unittest.main()

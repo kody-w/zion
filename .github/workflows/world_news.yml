@@ -3,6 +3,16 @@ on:
   schedule:
     - cron: '*/30 * * * *'
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'state/world.json'
+      - 'state/economy.json'
+      - 'state/gardens.json'
+      - 'state/chat.json'
+      - 'scripts/world_news.py'
+      - 'scripts/world_diff.py'
+      - 'scripts/snapshot_state.py'
   workflow_run:
     workflows: ["Game Tick"]
     types:
