@@ -33194,6 +33194,37 @@
     }, 3000);
   }
 
+  function showAchievementBanner(achievement) {
+    if (!notificationContainer) return;
+    if (typeof document === 'undefined') return;
+
+    var banner = document.createElement('div');
+    banner.style.cssText = 'background:linear-gradient(135deg,rgba(128,0,128,0.92),rgba(75,0,130,0.92));' +
+      'border:2px solid #d4af37;border-radius:10px;padding:18px 24px;margin-bottom:12px;' +
+      'animation:slideIn 0.4s ease-out;pointer-events:auto;box-shadow:0 6px 20px rgba(128,0,128,0.5);' +
+      'text-align:center;';
+
+    var title = 'ACHIEVEMENT UNLOCKED';
+    var name = achievement && achievement.name ? escapeHtml(achievement.name) : 'Unknown';
+    var desc = achievement && achievement.description ? escapeHtml(achievement.description) : '';
+
+    var html = '<div style="font-size:11px;letter-spacing:3px;color:#d4af37;margin-bottom:6px;">' + title + '</div>' +
+      '<div style="font-size:18px;font-weight:bold;color:#fff;margin-bottom:4px;">' + name + '</div>';
+    if (desc) {
+      html += '<div style="font-size:12px;color:rgba(255,255,255,0.8);">' + desc + '</div>';
+    }
+
+    banner.innerHTML = html;
+    notificationContainer.appendChild(banner);
+
+    setTimeout(function() {
+      banner.style.animation = 'slideOut 0.4s ease-in';
+      setTimeout(function() {
+        banner.remove();
+      }, 400);
+    }, 5000);
+  }
+
   function acceptQuestFromOffer(playerId, questId) {
     if (window.Quests) {
       var result = window.Quests.acceptQuest(playerId, questId);
@@ -38964,6 +38995,7 @@
   exports.hideQuestOffer = hideQuestOffer;
   exports.showQuestComplete = showQuestComplete;
   exports.showQuestProgress = showQuestProgress;
+  exports.showAchievementBanner = showAchievementBanner;
   exports.acceptQuestFromOffer = acceptQuestFromOffer;
   exports.updateFederationStatus = updateFederationStatus;
   exports.showFederationPortalUI = showFederationPortalUI;
@@ -46086,6 +46118,12 @@
       notes: [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50],
       noteSpacing: 0.08,
       noteDuration: 0.4,
+      volume: 0.06
+    },
+    level_up: {
+      notes: [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50],
+      noteSpacing: 0.1,
+      noteDuration: 0.6,
       volume: 0.06
     }
   };
@@ -53539,6 +53577,7 @@
   function getNPCPositions() {
     return npcAgents.map(function(agent) {
       return {
+        id: agent.id,
         x: agent.position.x,
         z: agent.position.z,
         name: agent.name,
@@ -93682,6 +93721,11 @@
     return _stepById[stepId] || null;
   }
 
+  function createState() {
+    return { players: {} };
+  }
+
+  exports.createState = createState;
   exports.ONBOARDING_STEPS = ONBOARDING_STEPS;
   exports.initOnboarding = initOnboarding;
   exports.completeStep = completeStep;
@@ -138265,6 +138309,8 @@
   var wellnessState = null;
   var wellnessSessionId = null;
   var footstepTimer = 0;
+  var greetedNPCIds = {};
+  var npcGreetCooldown = 0;
   var currentTimePeriod = 'morning';  // tracks dawn/morning/midday/afternoon/evening/night
   var cameraYaw = 0;       // horizontal camera orbit angle (radians)
   var cameraPitch = 0.35;  // vertical tilt (0 = flat, higher = more top-down)
@@ -138653,9 +138699,9 @@
   function emitLevelUpParticles() {
     if (World && World.emitParticles && localPlayer && localPlayer.position) {
       var levelUpPos = { x: localPlayer.position.x, y: localPlayer.position.y + 2, z: localPlayer.position.z };
-      World.emitParticles('sparkle', levelUpPos, 25);
+      World.emitParticles('sparkle', levelUpPos, 40);
     }
-    triggerScreenFlash('#DAA520', 0.3);
+    triggerScreenFlash('#DAA520', 0.5);
   }
 
   function detectNearestInteractable() {
@@ -138823,6 +138869,30 @@
     if (HUD && HUD.initOnboarding) {
       setTimeout(function() { HUD.initOnboarding(); }, 2000);
     }
+
+    if (Quests && Quests.initPlayerQuests) {
+      Quests.initPlayerQuests(username);
+      var activeQuests = Quests.getActiveQuests ? Quests.getActiveQuests(username) : [];
+      if (!activeQuests || activeQuests.length === 0) {
+        if (Quests.acceptQuest) {
+          Quests.acceptQuest(username, 'quest_nexus_001');
+        }
+        setTimeout(function() {
+          if (HUD && HUD.showNotification) {
+            HUD.showNotification('New Quest: Welcome to ZION', 'success');
+          }
+          if (Audio && Audio.playPianoAccent) {
+            Audio.playPianoAccent('quest_complete');
+          }
+        }, 3000);
+      }
+    }
+
+    setTimeout(function() {
+      if (HUD && HUD.showNotification) {
+        HUD.showNotification('Press Enter to chat with other players!', 'info');
+      }
+    }, 60000);
 
     startGameLoop();
   }
@@ -139210,7 +139280,10 @@
     }
 
     if (PlayerOnboarding && PlayerOnboarding.createState) {
-      playerOnboardingState = PlayerOnboarding.createState(username);
+      playerOnboardingState = PlayerOnboarding.createState();
+      if (PlayerOnboarding.initOnboarding) {
+        PlayerOnboarding.initOnboarding(playerOnboardingState, username, worldTime);
+      }
     }
 
     if (SkillMastery && SkillMastery.createState) {
@@ -140093,7 +140166,7 @@
               AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'zone_' + currentZone + '_visits', 1);
               if (achResult.newAchievements.length > 0) {
                 achResult.newAchievements.forEach(function(a) {
-                  if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+                  if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
                 });
               }
             }
@@ -140535,6 +140608,28 @@
         }
 
         updateTooltip();
+
+        if (npcGreetCooldown > 0) {
+          npcGreetCooldown -= deltaTime;
+        } else if (currentInteractionTarget && currentInteractionTarget.type === 'npc' &&
+                   currentInteractionTarget.distance < 8 && !greetedNPCIds[currentInteractionTarget.name]) {
+          greetedNPCIds[currentInteractionTarget.name] = true;
+          npcGreetCooldown = 5;
+          var npcGreetings = [
+            'Hello there, traveler!',
+            'Welcome! Press E to chat.',
+            'Good to see a new face around here!',
+            'Greetings, citizen!',
+            'Hey! Looking for adventure?'
+          ];
+          var greeting = npcGreetings[Math.floor(Math.random() * npcGreetings.length)];
+          if (HUD && HUD.showNotification) {
+            HUD.showNotification(currentInteractionTarget.name + ': ' + greeting, 'info');
+          }
+          if (Audio && Audio.playSound) {
+            Audio.playSound('chat');
+          }
+        }
       }
 
       if (World.updateWildlife) {
@@ -141780,7 +141875,7 @@
           achievementState = achResult.state; syncSubsystem('achievements', achievementState);
           if (achResult.newAchievements.length > 0) {
             achResult.newAchievements.forEach(function(a) {
-              if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+              if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
             });
           }
         }
@@ -142236,7 +142331,7 @@
         achievementState = achResult.state; syncSubsystem('achievements', achievementState);
         if (achResult.newAchievements.length > 0) {
           achResult.newAchievements.forEach(function(a) {
-            if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+            if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
           });
         }
       }
@@ -142352,7 +142447,7 @@
         achievementState = achResult.state; syncSubsystem('achievements', achievementState);
         if (achResult.newAchievements.length > 0) {
           achResult.newAchievements.forEach(function(a) {
-            if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+            if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
           });
         }
       }
@@ -142783,7 +142878,7 @@
             achievementState = achResult.state; syncSubsystem('achievements', achievementState);
             if (achResult.newAchievements.length > 0) {
               achResult.newAchievements.forEach(function(a) {
-                if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+                if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
               });
             }
           }
@@ -143246,7 +143341,7 @@
                     achievementState = achResult.state; syncSubsystem('achievements', achievementState);
                     if (achResult.newAchievements.length > 0) {
                       achResult.newAchievements.forEach(function(a) {
-                        if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+                        if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
                       });
                     }
                   }
@@ -143318,7 +143413,7 @@
               achievementState = achResult.state; syncSubsystem('achievements', achievementState);
               if (achResult.newAchievements.length > 0) {
                 achResult.newAchievements.forEach(function(a) {
-                  if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+                  if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
                 });
               }
             }
@@ -143840,10 +143935,10 @@
       if (earned && earned.length > 0) {
         earned.forEach(function(achievement) {
           if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('achievement');
-          if (HUD && HUD.showAchievementToast) {
+          if (HUD && HUD.showAchievementBanner) {
+            HUD.showAchievementBanner(achievement);
+          } else if (HUD && HUD.showAchievementToast) {
             HUD.showAchievementToast(achievement);
-          } else if (HUD) {
-            HUD.showNotification('Achievement unlocked: ' + achievement.name, 'success');
           }
           if (economyLedger && Economy) {
             var bonus = achievement.tier === 'gold' ? 50 : achievement.tier === 'silver' ? 25 : 10;
@@ -143870,7 +143965,7 @@
         achievementState = achResult.state; syncSubsystem('achievements', achievementState);
         if (achResult.newAchievements.length > 0) {
           achResult.newAchievements.forEach(function(a) {
-            if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+            if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
             if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('achievement');
           });
         }
@@ -144163,7 +144258,7 @@
           }
           if (achResult.newAchievements.length > 0) {
             achResult.newAchievements.forEach(function(a) {
-              if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+              if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
             });
           }
         }

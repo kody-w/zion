@@ -130,6 +130,8 @@
   var wellnessState = null;
   var wellnessSessionId = null;
   var footstepTimer = 0;
+  var greetedNPCIds = {};
+  var npcGreetCooldown = 0;
   var currentTimePeriod = 'morning';  // tracks dawn/morning/midday/afternoon/evening/night
   var cameraYaw = 0;       // horizontal camera orbit angle (radians)
   var cameraPitch = 0.35;  // vertical tilt (0 = flat, higher = more top-down)
@@ -571,10 +573,10 @@
   function emitLevelUpParticles() {
     if (World && World.emitParticles && localPlayer && localPlayer.position) {
       var levelUpPos = { x: localPlayer.position.x, y: localPlayer.position.y + 2, z: localPlayer.position.z };
-      World.emitParticles('sparkle', levelUpPos, 25);
+      World.emitParticles('sparkle', levelUpPos, 40);
     }
     // Add golden flash effect for level up
-    triggerScreenFlash('#DAA520', 0.3);
+    triggerScreenFlash('#DAA520', 0.5);
   }
 
   /**
@@ -777,6 +779,32 @@
     if (HUD && HUD.initOnboarding) {
       setTimeout(function() { HUD.initOnboarding(); }, 2000);
     }
+
+    // Auto-accept starter quest for new players with no active quests
+    if (Quests && Quests.initPlayerQuests) {
+      Quests.initPlayerQuests(username);
+      var activeQuests = Quests.getActiveQuests ? Quests.getActiveQuests(username) : [];
+      if (!activeQuests || activeQuests.length === 0) {
+        if (Quests.acceptQuest) {
+          Quests.acceptQuest(username, 'quest_nexus_001');
+        }
+        setTimeout(function() {
+          if (HUD && HUD.showNotification) {
+            HUD.showNotification('New Quest: Welcome to ZION', 'success');
+          }
+          if (Audio && Audio.playPianoAccent) {
+            Audio.playPianoAccent('quest_complete');
+          }
+        }, 3000);
+      }
+    }
+
+    // Chat hint for new players — show after 60 seconds
+    setTimeout(function() {
+      if (HUD && HUD.showNotification) {
+        HUD.showNotification('Press Enter to chat with other players!', 'info');
+      }
+    }, 60000);
 
     // Start game loop
     startGameLoop();
@@ -1237,7 +1265,10 @@
 
     // Initialize player onboarding
     if (PlayerOnboarding && PlayerOnboarding.createState) {
-      playerOnboardingState = PlayerOnboarding.createState(username);
+      playerOnboardingState = PlayerOnboarding.createState();
+      if (PlayerOnboarding.initOnboarding) {
+        PlayerOnboarding.initOnboarding(playerOnboardingState, username, worldTime);
+      }
     }
 
     // Initialize skill mastery
@@ -2259,7 +2290,7 @@
               AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'zone_' + currentZone + '_visits', 1);
               if (achResult.newAchievements.length > 0) {
                 achResult.newAchievements.forEach(function(a) {
-                  if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+                  if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
                 });
               }
             }
@@ -2775,6 +2806,29 @@
 
         // Update tooltip position
         updateTooltip();
+
+        // NPC proximity greeting — first-time speech bubble per session
+        if (npcGreetCooldown > 0) {
+          npcGreetCooldown -= deltaTime;
+        } else if (currentInteractionTarget && currentInteractionTarget.type === 'npc' &&
+                   currentInteractionTarget.distance < 8 && !greetedNPCIds[currentInteractionTarget.name]) {
+          greetedNPCIds[currentInteractionTarget.name] = true;
+          npcGreetCooldown = 5;
+          var npcGreetings = [
+            'Hello there, traveler!',
+            'Welcome! Press E to chat.',
+            'Good to see a new face around here!',
+            'Greetings, citizen!',
+            'Hey! Looking for adventure?'
+          ];
+          var greeting = npcGreetings[Math.floor(Math.random() * npcGreetings.length)];
+          if (HUD && HUD.showNotification) {
+            HUD.showNotification(currentInteractionTarget.name + ': ' + greeting, 'info');
+          }
+          if (Audio && Audio.playSound) {
+            Audio.playSound('chat');
+          }
+        }
       }
 
       // Update ambient wildlife (butterflies, fireflies, birds, fish)
@@ -4238,7 +4292,7 @@
           achievementState = achResult.state; syncSubsystem('achievements', achievementState);
           if (achResult.newAchievements.length > 0) {
             achResult.newAchievements.forEach(function(a) {
-              if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+              if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
             });
           }
         }
@@ -4741,7 +4795,7 @@
         achievementState = achResult.state; syncSubsystem('achievements', achievementState);
         if (achResult.newAchievements.length > 0) {
           achResult.newAchievements.forEach(function(a) {
-            if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+            if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
           });
         }
       }
@@ -4872,7 +4926,7 @@
         achievementState = achResult.state; syncSubsystem('achievements', achievementState);
         if (achResult.newAchievements.length > 0) {
           achResult.newAchievements.forEach(function(a) {
-            if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+            if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
           });
         }
       }
@@ -5350,7 +5404,7 @@
             achievementState = achResult.state; syncSubsystem('achievements', achievementState);
             if (achResult.newAchievements.length > 0) {
               achResult.newAchievements.forEach(function(a) {
-                if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+                if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
               });
             }
           }
@@ -5860,7 +5914,7 @@
                     achievementState = achResult.state; syncSubsystem('achievements', achievementState);
                     if (achResult.newAchievements.length > 0) {
                       achResult.newAchievements.forEach(function(a) {
-                        if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+                        if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
                       });
                     }
                   }
@@ -5946,7 +6000,7 @@
               achievementState = achResult.state; syncSubsystem('achievements', achievementState);
               if (achResult.newAchievements.length > 0) {
                 achResult.newAchievements.forEach(function(a) {
-                  if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+                  if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
                 });
               }
             }
@@ -6545,11 +6599,11 @@
         earned.forEach(function(achievement) {
           // Piano accent for achievement unlock
           if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('achievement');
-          // Show toast notification
-          if (HUD && HUD.showAchievementToast) {
+          // Show achievement banner
+          if (HUD && HUD.showAchievementBanner) {
+            HUD.showAchievementBanner(achievement);
+          } else if (HUD && HUD.showAchievementToast) {
             HUD.showAchievementToast(achievement);
-          } else if (HUD) {
-            HUD.showNotification('Achievement unlocked: ' + achievement.name, 'success');
           }
           // Award bonus spark for achievements
           if (economyLedger && Economy) {
@@ -6578,7 +6632,7 @@
         achievementState = achResult.state; syncSubsystem('achievements', achievementState);
         if (achResult.newAchievements.length > 0) {
           achResult.newAchievements.forEach(function(a) {
-            if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+            if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
             if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('achievement');
           });
         }
@@ -6930,7 +6984,7 @@
           }
           if (achResult.newAchievements.length > 0) {
             achResult.newAchievements.forEach(function(a) {
-              if (HUD) HUD.showNotification('Achievement: ' + a.name, 'success');
+              if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
             });
           }
         }

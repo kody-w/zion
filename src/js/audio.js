@@ -4684,6 +4684,13 @@
       noteSpacing: 0.08,
       noteDuration: 0.4,
       volume: 0.06
+    },
+    level_up: {
+      // Triumphant ascending arpeggio — C major across two octaves
+      notes: [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50],
+      noteSpacing: 0.1,
+      noteDuration: 0.6,
+      volume: 0.06
     }
   };
 

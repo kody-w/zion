@@ -1253,6 +1253,41 @@
   }
 
   /**
+   * Show a large achievement banner (distinct from normal toasts)
+   * @param {object} achievement - { name, description }
+   */
+  function showAchievementBanner(achievement) {
+    if (!notificationContainer) return;
+    if (typeof document === 'undefined') return;
+
+    var banner = document.createElement('div');
+    banner.style.cssText = 'background:linear-gradient(135deg,rgba(128,0,128,0.92),rgba(75,0,130,0.92));' +
+      'border:2px solid #d4af37;border-radius:10px;padding:18px 24px;margin-bottom:12px;' +
+      'animation:slideIn 0.4s ease-out;pointer-events:auto;box-shadow:0 6px 20px rgba(128,0,128,0.5);' +
+      'text-align:center;';
+
+    var title = 'ACHIEVEMENT UNLOCKED';
+    var name = achievement && achievement.name ? escapeHtml(achievement.name) : 'Unknown';
+    var desc = achievement && achievement.description ? escapeHtml(achievement.description) : '';
+
+    var html = '<div style="font-size:11px;letter-spacing:3px;color:#d4af37;margin-bottom:6px;">' + title + '</div>' +
+      '<div style="font-size:18px;font-weight:bold;color:#fff;margin-bottom:4px;">' + name + '</div>';
+    if (desc) {
+      html += '<div style="font-size:12px;color:rgba(255,255,255,0.8);">' + desc + '</div>';
+    }
+
+    banner.innerHTML = html;
+    notificationContainer.appendChild(banner);
+
+    setTimeout(function() {
+      banner.style.animation = 'slideOut 0.4s ease-in';
+      setTimeout(function() {
+        banner.remove();
+      }, 400);
+    }, 5000);
+  }
+
+  /**
    * Accept quest from offer dialog (called by inline onclick)
    */
   function acceptQuestFromOffer(playerId, questId) {
@@ -7374,6 +7409,7 @@
   exports.hideQuestOffer = hideQuestOffer;
   exports.showQuestComplete = showQuestComplete;
   exports.showQuestProgress = showQuestProgress;
+  exports.showAchievementBanner = showAchievementBanner;
   exports.acceptQuestFromOffer = acceptQuestFromOffer;
   exports.updateFederationStatus = updateFederationStatus;
   exports.showFederationPortalUI = showFederationPortalUI;

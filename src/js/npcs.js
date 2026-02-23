@@ -3462,6 +3462,7 @@
   function getNPCPositions() {
     return npcAgents.map(function(agent) {
       return {
+        id: agent.id,
         x: agent.position.x,
         z: agent.position.z,
         name: agent.name,

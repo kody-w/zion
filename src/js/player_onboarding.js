@@ -786,8 +786,16 @@
   }
 
   // ---------------------------------------------------------------------------
+  // createState() — Initialize a fresh onboarding state container
+  // ---------------------------------------------------------------------------
+  function createState() {
+    return { players: {} };
+  }
+
+  // ---------------------------------------------------------------------------
   // Exports
   // ---------------------------------------------------------------------------
+  exports.createState = createState;
   exports.ONBOARDING_STEPS = ONBOARDING_STEPS;
   exports.initOnboarding = initOnboarding;
   exports.completeStep = completeStep;
