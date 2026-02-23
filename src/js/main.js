@@ -197,6 +197,7 @@
   var spectatorState = null;
   var warmthState = null;
   var zoneStewardsState = null;
+  var archivalState = null;
   var raycaster = null;
   var simCrmState = null;
   var lastSimCrmTick = 0;
@@ -1121,6 +1122,11 @@
     // Initialize story/lore discovery state
     storyState = {};
 
+    // Initialize archival system state (relics, excavation, research)
+    if (Archival && Archival.excavate) {
+      archivalState = { archival: { sites: {}, playerArchives: {}, activeResearch: {}, amendments: {} } };
+    }
+
     // Initialize market dynamics price tracking
     marketDynamicsState = { prices: {}, transactions: [] };
 
@@ -1158,8 +1164,8 @@
     }
 
     // Initialize mentorship market
-    if (MentorshipMarket && MentorshipMarket.createListingState) {
-      mentorshipMarketState = MentorshipMarket.createListingState();
+    if (MentorshipMarket && MentorshipMarket.createMarketState) {
+      mentorshipMarketState = MentorshipMarket.createMarketState();
     }
 
     // Initialize arena schedule
@@ -1377,7 +1383,8 @@
         loreDiscovery: loreDiscoveryState,
         spectator: spectatorState,
         warmth: warmthState,
-        zoneStewards: zoneStewardsState
+        zoneStewards: zoneStewardsState,
+        archival: archivalState
       };
     }
 
@@ -2276,10 +2283,21 @@
             }
 
             // StoryEngine: discover lore when entering a new zone
-            if (StoryEngine && StoryEngine.discoverLore && storyState) {
-              var loreResult = StoryEngine.discoverLore(storyState, localPlayer.id, currentZone);
-              if (loreResult && loreResult.entry) {
-                if (HUD) HUD.showNotification('Lore discovered: ' + (loreResult.entry.title || currentZone + ' history'), 'info');
+            if (StoryEngine && storyState) {
+              var zoneSeasonObj = (Seasons && Seasons.getCurrentSeason) ? Seasons.getCurrentSeason() : null;
+              var zoneSeasonId = zoneSeasonObj ? zoneSeasonObj.id : 'summer';
+              var availableLore = StoryEngine.getAvailableLore
+                ? StoryEngine.getAvailableLore(storyState, localPlayer.id, 'exploration', currentZone, zoneSeasonId)
+                : [];
+              if (availableLore.length > 0 && Math.random() < 0.3) {
+                var lore = availableLore[Math.floor(Math.random() * availableLore.length)];
+                var loreResult = StoryEngine.discoverLore(storyState, localPlayer.id, lore.id, 'exploration');
+                if (loreResult && loreResult.success) {
+                  if (HUD) HUD.showNotification('Lore: ' + (loreResult.loreEntry ? loreResult.loreEntry.title : lore.title), 'info');
+                  if (loreResult.arcCompleted && HUD) {
+                    HUD.showNotification('Story arc complete! ' + (loreResult.reward ? '+' + loreResult.reward.spark + ' Spark' : ''), 'success');
+                  }
+                }
               }
             }
 
@@ -2306,6 +2324,16 @@
                   World.clearAnchors(sceneContext, currentZone);
                   World.renderAnchors(sceneContext, currentZone, zoneAnchors);
                 }
+              }
+            }
+
+            // SocialSpaces: auto-join active gathering in new zone
+            if (SocialSpaces && SocialSpaces.getActiveGatherings && socialSpacesState) {
+              var zoneGatherings = SocialSpaces.getActiveGatherings(socialSpacesState, currentZone);
+              if (zoneGatherings && zoneGatherings.length > 0) {
+                var gath = zoneGatherings[0];
+                SocialSpaces.joinGathering(socialSpacesState, localPlayer.id, gath.id);
+                if (HUD) HUD.showNotification('Joined ' + (gath.title || gath.type) + ' (' + gath.type + ')', 'info');
               }
             }
 
@@ -3158,6 +3186,30 @@
       });
     }
 
+    // MarketSpeculation: NPC traders open speculative positions (~every 2 minutes)
+    if (MarketSpeculation && MarketSpeculation.openPosition && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0002) {
+      var msCommodities = MarketSpeculation.getCommodities ? MarketSpeculation.getCommodities() : [];
+      if (msCommodities.length > 0) {
+        var msComm = msCommodities[Math.floor(Math.random() * msCommodities.length)];
+        var msDir = Math.random() < 0.5 ? 'long' : 'short';
+        var msNpcTrader = 'npc_trader_' + Math.floor(Math.random() * 50);
+        if (MarketSpeculation.depositMargin) {
+          MarketSpeculation.depositMargin(gameState.subsystems, msNpcTrader, 500);
+        }
+        MarketSpeculation.openPosition(gameState.subsystems, msNpcTrader, msComm.id, msDir,
+          1 + Math.floor(Math.random() * 5), msComm.basePrice || 10, worldTime);
+      }
+    }
+
+    // MarketSpeculation: show market health (~every 3 minutes)
+    if (MarketSpeculation && MarketSpeculation.getMarketHealth && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.00005) {
+      var msHealth = MarketSpeculation.getMarketHealth(gameState.subsystems);
+      if (msHealth && msHealth.activePositions > 0 && HUD) {
+        HUD.showNotification('Market: ' + msHealth.activePositions + ' positions open, volatility ' +
+          (msHealth.volatilityIndex ? msHealth.volatilityIndex.toFixed(1) : '0') + '%', 'info');
+      }
+    }
+
     // RadioStation: award listener Spark (~every 10 seconds)
     if (RadioStation && RadioStation.updateListenerRewards && radioStationState && Math.random() < 0.0015) {
       var zones = ['nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'];
@@ -3170,6 +3222,36 @@
     if (SocialSpaces && socialSpacesState && Math.random() < 0.0003) {
       if (SocialSpaces.cleanExpiredBulletins) {
         SocialSpaces.cleanExpiredBulletins(socialSpacesState, worldTime);
+      }
+    }
+
+    // SocialSpaces: NPC auto-starts gatherings (~every 2 minutes)
+    if (SocialSpaces && SocialSpaces.createGathering && socialSpacesState && Math.random() < 0.0002) {
+      var gTypes = SocialSpaces.getGatheringTypes ? SocialSpaces.getGatheringTypes() : [];
+      // Filter to types allowed in current zone
+      var zoneGTypes = gTypes.filter(function(gt) {
+        return gt.allowedZones && gt.allowedZones.indexOf(currentZone) !== -1;
+      });
+      if (zoneGTypes.length > 0) {
+        var gType = zoneGTypes[Math.floor(Math.random() * zoneGTypes.length)];
+        var gResult = SocialSpaces.createGathering(socialSpacesState, 'npc_host_' + Math.floor(Math.random() * 100),
+          gType.id, currentZone, gType.name + ' gathering', '', worldTime, 300);
+        if (gResult && gResult.success && gResult.gathering) {
+          SocialSpaces.startGathering(socialSpacesState, gResult.gathering.id, worldTime);
+          if (HUD) HUD.showNotification('A ' + gType.name + ' is happening nearby!', 'info');
+        }
+      }
+    }
+
+    // SocialSpaces: end expired gatherings
+    if (SocialSpaces && SocialSpaces.getActiveGatherings && socialSpacesState && Math.random() < 0.001) {
+      var activeGatherings = SocialSpaces.getActiveGatherings(socialSpacesState, null);
+      if (activeGatherings && activeGatherings.length > 0) {
+        activeGatherings.forEach(function(g) {
+          if (g.endTick && worldTime > g.endTick) {
+            SocialSpaces.endGathering(socialSpacesState, g.id, worldTime);
+          }
+        });
       }
     }
 
@@ -3239,6 +3321,47 @@
     if (GuildProgression && GuildProgression.getGuildSummary && guildProgressionState && Math.random() < 0.0003) {
       var guildSummary = GuildProgression.getGuildSummary(guildProgressionState);
       if (localPlayer) localPlayer.guildLevel = guildSummary.level;
+    }
+
+    // StoryEngine: periodic lore completion check (~every 5 minutes)
+    if (StoryEngine && StoryEngine.getCompletionPercent && storyState && localPlayer && Math.random() < 0.00005) {
+      var lorePct = StoryEngine.getCompletionPercent(storyState, localPlayer.id);
+      if (lorePct > 0 && HUD) HUD.showNotification('Lore collection: ' + lorePct + '% complete', 'info');
+    }
+
+    // Archival: auto-start/advance research projects (~every 90 seconds)
+    if (Archival && Archival.getActiveResearch && archivalState && Math.random() < 0.0002) {
+      var activeRes = Archival.getActiveResearch(archivalState, 'default_guild');
+      if (activeRes && activeRes.length === 0 && Archival.startResearchProject && Archival.getResearchProjects) {
+        var resProjects = Archival.getResearchProjects();
+        if (resProjects && resProjects.length > 0) {
+          var proj = resProjects[Math.floor(Math.random() * resProjects.length)];
+          Archival.startResearchProject(archivalState, 'default_guild', proj.id, worldTime);
+        }
+      } else if (activeRes && activeRes.length > 0 && Archival.contributeToResearch && localPlayer) {
+        var res = activeRes[0];
+        Archival.contributeToResearch(archivalState, localPlayer.id, res.projectId || res.id, 1, null);
+        if (HUD && Math.random() < 0.1) {
+          HUD.showNotification('Research progressing: ' + (res.name || 'project'), 'info');
+        }
+      }
+    }
+
+    // MentorshipMarket: NPCs auto-create teaching listings (~every 3 minutes)
+    if (MentorshipMarket && MentorshipMarket.createListing && mentorshipMarketState && Math.random() < 0.00015) {
+      var mmSubjects = MentorshipMarket.getSubjects ? MentorshipMarket.getSubjects() : {};
+      var mmSubjectKeys = Object.keys(mmSubjects);
+      if (mmSubjectKeys.length > 0) {
+        var mmSubjectId = mmSubjectKeys[Math.floor(Math.random() * mmSubjectKeys.length)];
+        var mmSub = mmSubjects[mmSubjectId];
+        var npcTeacher = 'npc_teacher_' + Math.floor(Math.random() * 100);
+        var mmListResult = MentorshipMarket.createListing(mentorshipMarketState,
+          npcTeacher, mmSubjectId, mmSub.basePrice || 10, 3, worldTime + 300, 5);
+        if (mmListResult && mmListResult.success) {
+          mentorshipMarketState = mmListResult.state;
+          syncSubsystem('mentorshipMarket', mentorshipMarketState);
+        }
+      }
     }
 
     // Prestige: check ascension eligibility
@@ -3486,10 +3609,24 @@
         trackAchievement('discover', { type: result.discovery.type, rarity: result.discovery.rarity });
 
         // Archival: chance to discover a relic during exploration
-        if (Archival && Archival.excavate) {
-          var excavateResult = Archival.excavate(localPlayer.id, currentZone, { rarity: result.discovery.rarity || 1 });
-          if (excavateResult && excavateResult.relic) {
-            if (HUD) HUD.showNotification('Relic discovered: ' + (excavateResult.relic.name || 'ancient artifact'), 'success');
+        if (Archival && Archival.excavate && archivalState) {
+          var excSites = Archival.getExcavationSites ? Archival.getExcavationSites(archivalState, currentZone) : [];
+          var availableSite = null;
+          for (var si = 0; si < excSites.length; si++) {
+            if (!excSites[si].depleted) { availableSite = excSites[si]; break; }
+          }
+          if (availableSite) {
+            var excavateResult = Archival.excavate(archivalState, localPlayer.id, availableSite.siteId || availableSite.id, Math.random() * 99999, worldTime);
+            if (excavateResult && excavateResult.success && excavateResult.relic) {
+              if (HUD) HUD.showNotification('Relic discovered: ' + excavateResult.relic.name + ' (+' + (excavateResult.spark || 0) + ' Spark)', 'success');
+              // Show archivist rank
+              if (Archival.getArchivistRank) {
+                var rank = Archival.getArchivistRank(archivalState, localPlayer.id);
+                if (rank && rank.title) {
+                  if (HUD) HUD.showNotification('Archivist rank: ' + rank.title, 'info');
+                }
+              }
+            }
           }
         }
 
@@ -4042,6 +4179,21 @@
         // PlayerOnboarding: complete trade step
         if (PlayerOnboarding && PlayerOnboarding.completeStep && playerOnboardingState) {
           PlayerOnboarding.completeStep(playerOnboardingState, localPlayer.id, 'complete_trade', worldTime);
+        }
+
+        // MarketSpeculation: player auto-opens speculative position after trade
+        if (MarketSpeculation && MarketSpeculation.openPosition && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.15) {
+          if (MarketSpeculation.depositMargin) {
+            MarketSpeculation.depositMargin(gameState.subsystems, localPlayer.id, 100);
+          }
+          var tCommodities = MarketSpeculation.getCommodities ? MarketSpeculation.getCommodities() : [];
+          if (tCommodities.length > 0) {
+            var tComm = tCommodities[Math.floor(Math.random() * tCommodities.length)];
+            var tPosResult = MarketSpeculation.openPosition(gameState.subsystems, localPlayer.id, tComm.id, 'long', 1, tComm.basePrice || 10, worldTime);
+            if (tPosResult && tPosResult.success && HUD) {
+              HUD.showNotification('Futures position opened: ' + tComm.name + ' (margin: ' + (tPosResult.marginRequired || 0) + ')', 'info');
+            }
+          }
         }
 
         // EconomySimulator: snapshot for trend analysis
@@ -5728,6 +5880,47 @@
             // GriefRecovery: talking to NPCs may help with recovery
             if (GriefRecovery && GriefRecovery.callHotline && griefRecoveryState && npcResponse.archetype === 'healer') {
               GriefRecovery.callHotline(griefRecoveryState, localPlayer.id, worldTime);
+            }
+
+            // SocialSpaces: NPC occasionally posts a bulletin after conversation
+            if (SocialSpaces && SocialSpaces.postBulletin && socialSpacesState && Math.random() < 0.1) {
+              SocialSpaces.postBulletin(socialSpacesState, npcResponse.id, currentZone,
+                npcResponse.name + ' shares a thought', (npcResponse.message || '').substring(0, 100), 'lore', 600);
+            }
+
+            // MentorshipMarket: check if NPC has a teaching listing, auto-book session
+            if (MentorshipMarket && MentorshipMarket.getListings && mentorshipMarketState && Math.random() < 0.3) {
+              var npcListings = MentorshipMarket.getListings(mentorshipMarketState, { teacherId: npcResponse.id });
+              if (npcListings && npcListings.length > 0) {
+                var mmListing = npcListings[0];
+                var mmBookResult = MentorshipMarket.bookSession(mentorshipMarketState, mmListing.id, localPlayer.id);
+                if (mmBookResult && mmBookResult.success) {
+                  mentorshipMarketState = mmBookResult.state;
+                  var mmStartR = MentorshipMarket.startSession(mentorshipMarketState, mmBookResult.session.id, worldTime);
+                  if (mmStartR && mmStartR.success) mentorshipMarketState = mmStartR.state;
+                  var mmCompleteR = MentorshipMarket.completeSession(mentorshipMarketState, mmBookResult.session.id, worldTime);
+                  if (mmCompleteR && mmCompleteR.success) {
+                    mentorshipMarketState = mmCompleteR.state;
+                    syncSubsystem('mentorshipMarket', mentorshipMarketState);
+                    if (HUD) HUD.showNotification('Lesson complete: ' + (mmListing.subject ? mmListing.subject.name : mmListing.subjectId) +
+                      ' (+' + (mmCompleteR.studentReward ? mmCompleteR.studentReward.spark : 0) + ' Spark)', 'success');
+                  }
+                }
+              }
+            }
+
+            // StoryEngine: NPC interaction triggers lore discovery
+            if (StoryEngine && StoryEngine.getNpcStory && storyState) {
+              var npcArch = npcResponse.archetype || 'storyteller';
+              var npcSeasonObj = (Seasons && Seasons.getCurrentSeason) ? Seasons.getCurrentSeason() : null;
+              var npcSeasonId = npcSeasonObj ? npcSeasonObj.id : 'summer';
+              var npcLore = StoryEngine.getNpcStory(storyState, localPlayer.id, npcArch, currentZone, npcSeasonId);
+              if (npcLore && Math.random() < 0.2) {
+                var npcLoreResult = StoryEngine.discoverLore(storyState, localPlayer.id, npcLore.id, 'npc_talk');
+                if (npcLoreResult && npcLoreResult.success && HUD) {
+                  HUD.showNotification('Lore: ' + (npcLoreResult.loreEntry ? npcLoreResult.loreEntry.title : npcLore.title), 'info');
+                }
+              }
             }
 
             // Track activity
