@@ -1154,8 +1154,10 @@
     }
 
     // Initialize housing social
-    if (HousingSocial && HousingSocial.createHousingState) {
-      housingSocialState = HousingSocial.createHousingState(username);
+    if (HousingSocial && HousingSocial.createHouseState) {
+      housingSocialState = HousingSocial.createHouseState(username, 'cottage', 'nexus');
+      if (HousingSocial.addRoom) HousingSocial.addRoom(housingSocialState, 'bedroom');
+      if (HousingSocial.placeFurniture) HousingSocial.placeFurniture(housingSocialState, 'basic_bed', 0);
     }
 
     // Initialize prestige
@@ -1216,9 +1218,7 @@
     }
 
     // Initialize NPC delegation
-    if (NpcDelegation && NpcDelegation.createState) {
-      npcDelegationState = NpcDelegation.createState();
-    }
+    npcDelegationState = { delegations: [], receipts: [], npcCompletedCount: {} };
 
     // Initialize radio station
     if (RadioStation && RadioStation.createState) {
@@ -2314,6 +2314,14 @@
               WarmthSystem.recordMovement(warmthState, localPlayer.id, { zone: currentZone }, worldTime);
             }
 
+            // CommunityBoard: show board activity on zone entry
+            if (CommunityBoard && CommunityBoard.getBoardPosts && communityBoardState) {
+              var boardPosts = CommunityBoard.getBoardPosts(communityBoardState, currentZone, 1, 3);
+              if (boardPosts && boardPosts.posts && boardPosts.posts.length > 0 && HUD) {
+                HUD.showNotification(currentZone + ' board: ' + boardPosts.total + ' posts', 'info');
+              }
+            }
+
             // AnchorManagement: check for nearby anchors in new zone and render in 3D
             if (AnchorManagement && AnchorManagement.getAnchorsInZone && anchorManagementState) {
               var zoneAnchors = AnchorManagement.getAnchorsInZone(anchorManagementState, currentZone);
@@ -3128,19 +3136,123 @@
     }
 
     // BountyBoard: expire old bounties (~every 60 seconds)
-    if (BountyBoard && BountyBoard.tick && bountyBoardState && Math.random() < 0.0003) {
-      BountyBoard.tick(bountyBoardState, worldTime);
+    if (BountyBoard && BountyBoard.expireBounties && bountyBoardState && Math.random() < 0.0003) {
+      BountyBoard.expireBounties(bountyBoardState, worldTime);
+    }
+
+    // BountyBoard: NPC auto-posts bounties (~every 3 minutes)
+    if (BountyBoard && BountyBoard.postBounty && bountyBoardState && Math.random() < 0.00015) {
+      var bTypes = ['locate_item', 'investigation', 'challenge'];
+      var bType = bTypes[Math.floor(Math.random() * bTypes.length)];
+      var bResult = BountyBoard.postBounty(bountyBoardState, 'npc_poster_' + Math.floor(Math.random() * 50),
+        'npc_target_' + Math.floor(Math.random() * 50), bType,
+        'Bounty: ' + bType.replace(/_/g, ' '), 100 + Math.floor(Math.random() * 200), worldTime);
+      if (bResult && bResult.success && HUD) {
+        HUD.showNotification('New bounty posted: ' + bType.replace(/_/g, ' '), 'info');
+      }
+    }
+
+    // BountyBoard: show bounty board stats (~every 5 minutes)
+    if (BountyBoard && BountyBoard.getBountyBoardStats && bountyBoardState && Math.random() < 0.00005) {
+      var bStats = BountyBoard.getBountyBoardStats(bountyBoardState);
+      if (bStats && bStats.active > 0 && HUD) {
+        HUD.showNotification('Bounty Board: ' + bStats.active + ' active bounties, ' + bStats.resolved + ' resolved', 'info');
+      }
+    }
+
+    // TrustBonds: bond decay (~every 2 minutes)
+    if (TrustBonds && TrustBonds.applyDecay && trustBondsState && Math.random() < 0.0002) {
+      TrustBonds.applyDecay(trustBondsState, worldTime);
+    }
+
+    // TrustBonds: show bond stats (~every 5 minutes)
+    if (TrustBonds && TrustBonds.getPlayerBondStats && trustBondsState && localPlayer && Math.random() < 0.00005) {
+      var bondStats = TrustBonds.getPlayerBondStats(trustBondsState, localPlayer.id);
+      if (bondStats && bondStats.totalBonds > 0 && HUD) {
+        HUD.showNotification('Bonds: ' + bondStats.totalBonds + ' NPCs, strongest: ' + (bondStats.topNpc || 'none'), 'info');
+      }
+    }
+
+    // Contracts: NPC guilds auto-propose contracts (~every 3 minutes)
+    if (Contracts && Contracts.proposeContract && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.00015) {
+      var cTypes = Contracts.getContractTypes ? Contracts.getContractTypes() : [];
+      if (cTypes.length > 0) {
+        var cType = cTypes[Math.floor(Math.random() * cTypes.length)];
+        var guildA = 'guild_' + Math.floor(Math.random() * 5);
+        var guildB = 'guild_' + (5 + Math.floor(Math.random() * 5));
+        var terms = { itemId: 'wood', quantity: 10, pricePerUnit: 5, deliveryInterval: 100, duration: 500 };
+        var cResult = Contracts.proposeContract(gameState.subsystems, guildA, guildB, cType.id, terms, worldTime);
+        if (cResult && cResult.success && HUD) {
+          HUD.showNotification('Trade contract proposed: ' + cType.id.replace(/_/g, ' '), 'info');
+        }
+      }
+    }
+
+    // Contracts: auto-vote and activate pending contracts (~every 60 seconds)
+    if (Contracts && Contracts.getPendingVotes && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0003) {
+      var pendingVotes = Contracts.getPendingVotes(gameState.subsystems, 'guild_0');
+      if (pendingVotes && pendingVotes.length > 0) {
+        var pc = pendingVotes[0];
+        Contracts.voteOnContract(gameState.subsystems, 'npc_voter_' + Math.floor(Math.random() * 10), pc.id, pc.proposerGuildId, true);
+        if (Contracts.activateContract && pc.status === 'approved') {
+          Contracts.activateContract(gameState.subsystems, pc.id, worldTime);
+        }
+      }
+    }
+
+    // CommunityBoard: NPC auto-creates posts (~every 2 minutes)
+    if (CommunityBoard && CommunityBoard.createNpcPost && communityBoardState && Math.random() < 0.0002) {
+      var postTypes = ['announcement', 'event', 'trade_listing'];
+      var postType = postTypes[Math.floor(Math.random() * postTypes.length)];
+      var npcPoster = 'npc_' + Math.floor(Math.random() * 100);
+      var cbResult = CommunityBoard.createNpcPost(communityBoardState, npcPoster, currentZone,
+        postType, 'NPC ' + postType.replace(/_/g, ' '), 'Check the board for details', worldTime);
+      if (cbResult && cbResult.success && HUD && Math.random() < 0.3) {
+        HUD.showNotification('New post on ' + currentZone + ' board: ' + postType.replace(/_/g, ' '), 'info');
+      }
+    }
+
+    // HousingSocial: NPC visits player house (~every 3 minutes)
+    if (HousingSocial && HousingSocial.visitHouse && housingSocialState && Math.random() < 0.00015) {
+      var visitorNpc = 'npc_visitor_' + Math.floor(Math.random() * 100);
+      var visitResult = HousingSocial.visitHouse(housingSocialState, visitorNpc, worldTime);
+      if (visitResult && HUD) {
+        HUD.showNotification('An NPC visited your home! ' + (visitResult.message || ''), 'info');
+      }
+      if (HousingSocial.leaveGuestbookEntry && Math.random() < 0.5) {
+        var guestMessages = ['What a cozy place!', 'Love the decor!', 'Great vibes here.', 'I feel at home.'];
+        HousingSocial.leaveGuestbookEntry(housingSocialState, visitorNpc, guestMessages[Math.floor(Math.random() * guestMessages.length)], worldTime);
+      }
+    }
+
+    // HousingSocial: show comfort bonus + stats (~every 5 minutes)
+    if (HousingSocial && HousingSocial.getVisitorCount && housingSocialState && Math.random() < 0.00005) {
+      var hVisitors = HousingSocial.getVisitorCount(housingSocialState);
+      var hComfort = HousingSocial.calculateComfort ? HousingSocial.calculateComfort(housingSocialState) : 0;
+      if (hVisitors > 0 && HUD) {
+        HUD.showNotification('Home: ' + hVisitors + ' visitors, comfort ' + hComfort, 'info');
+      }
     }
 
     // NpcDelegation: check for completed delegations (~every 30 seconds)
     if (NpcDelegation && NpcDelegation.checkCompletion && npcDelegationState && Math.random() < 0.0005) {
       var delegationResults = NpcDelegation.checkCompletion(npcDelegationState, worldTime);
-      if (delegationResults && delegationResults.length > 0 && HUD && localPlayer) {
-        delegationResults.forEach(function(r) {
-          if (r.playerId === localPlayer.id) {
-            HUD.showNotification('NPC task complete: ' + (r.taskType || 'delegation'), 'success');
+      var completedDels = delegationResults && delegationResults.completed ? delegationResults.completed : (Array.isArray(delegationResults) ? delegationResults : []);
+      if (completedDels.length > 0 && HUD && localPlayer) {
+        completedDels.forEach(function(r) {
+          if (r.receipt && HUD) {
+            HUD.showNotification('Task complete: ' + (r.receipt.task || 'delegation').replace(/_/g, ' ') +
+              ' (' + (r.receipt.outcome || 'done') + ')', 'success');
           }
         });
+      }
+    }
+
+    // NpcDelegation: show delegation stats (~every 5 minutes)
+    if (NpcDelegation && NpcDelegation.getDelegationStats && npcDelegationState && localPlayer && Math.random() < 0.00005) {
+      var delStats = NpcDelegation.getDelegationStats(npcDelegationState, localPlayer.id);
+      if (delStats && delStats.totalDelegated > 0 && HUD) {
+        HUD.showNotification('Delegations: ' + delStats.completed + '/' + delStats.totalDelegated + ' complete', 'info');
       }
     }
 
@@ -4194,6 +4306,24 @@
               HUD.showNotification('Futures position opened: ' + tComm.name + ' (margin: ' + (tPosResult.marginRequired || 0) + ')', 'info');
             }
           }
+        }
+
+        // Contracts: fulfill delivery on active contracts after trade (20% chance)
+        if (Contracts && Contracts.getActiveContracts && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.2) {
+          var activeContracts = Contracts.getActiveContracts(gameState.subsystems, null);
+          if (activeContracts && activeContracts.length > 0) {
+            var ac = activeContracts[0];
+            var delivResult = Contracts.fulfillDelivery(gameState.subsystems, ac.id, worldTime);
+            if (delivResult && delivResult.success && HUD) {
+              HUD.showNotification('Contract delivery: ' + delivResult.deliveriesMade + '/' + delivResult.totalDeliveries, 'info');
+            }
+          }
+        }
+
+        // CommunityBoard: player auto-posts after trade (10% chance)
+        if (CommunityBoard && CommunityBoard.createPost && communityBoardState && Math.random() < 0.1) {
+          CommunityBoard.createPost(communityBoardState, localPlayer.id, currentZone, 'general',
+            'Activity update', localPlayer.name + ' completed a trade in ' + currentZone, worldTime);
         }
 
         // EconomySimulator: snapshot for trend analysis
@@ -5845,8 +5975,21 @@
             }
 
             // TrustBonds: strengthen bond from interaction
-            if (TrustBonds && TrustBonds.recordInteraction && trustBondsState) {
-              TrustBonds.recordInteraction(trustBondsState, localPlayer.id, npcResponse.id, 'conversation', worldTime);
+            if (TrustBonds && TrustBonds.interact && trustBondsState) {
+              var bondResult = TrustBonds.interact(trustBondsState, localPlayer.id, npcResponse.id, 'conversation', worldTime);
+              if (bondResult && bondResult.levelChanged && HUD) {
+                HUD.showNotification('Bond with ' + npcResponse.name + ': ' + bondResult.newLevel, 'success');
+              }
+            }
+
+            // TrustBonds: gift giving on NPC interaction (15% chance)
+            if (TrustBonds && TrustBonds.giveGift && trustBondsState && Math.random() < 0.15) {
+              var gifts = ['wildflower_bouquet', 'rare_seed_packet', 'handwritten_poem'];
+              var gift = gifts[Math.floor(Math.random() * gifts.length)];
+              var giftResult = TrustBonds.giveGift(trustBondsState, localPlayer.id, npcResponse.id, gift, worldTime, npcResponse.archetype);
+              if (giftResult && giftResult.success && HUD) {
+                HUD.showNotification(npcResponse.name + ' ' + (giftResult.reaction || 'appreciated the gift') + ' (+' + giftResult.points + ')', 'info');
+              }
             }
 
             // SkillMastery: social interaction XP
@@ -5920,6 +6063,31 @@
                 if (npcLoreResult && npcLoreResult.success && HUD) {
                   HUD.showNotification('Lore: ' + (npcLoreResult.loreEntry ? npcLoreResult.loreEntry.title : npcLore.title), 'info');
                 }
+              }
+            }
+
+            // BountyBoard: player accepts bounty from explorer/merchant NPCs (20% chance)
+            if (BountyBoard && BountyBoard.getActiveBounties && bountyBoardState &&
+                (npcResponse.archetype === 'explorer' || npcResponse.archetype === 'merchant') && Math.random() < 0.2) {
+              var activeBounties = BountyBoard.getActiveBounties(bountyBoardState);
+              var unclaimed = activeBounties.filter(function(b) { return !b.hunterId; });
+              if (unclaimed.length > 0) {
+                var bounty = unclaimed[0];
+                var acceptResult = BountyBoard.acceptBounty(bountyBoardState, bounty.id, localPlayer.id, worldTime);
+                if (acceptResult && acceptResult.success && HUD) {
+                  HUD.showNotification('Bounty accepted: ' + bounty.description, 'info');
+                }
+              }
+            }
+
+            // NpcDelegation: delegate task matching NPC archetype (20% chance)
+            if (NpcDelegation && NpcDelegation.delegate && npcDelegationState && Math.random() < 0.2) {
+              var archTaskMap = { gardener: 'water_garden', merchant: 'trade_goods', explorer: 'scout_dungeon',
+                musician: 'compose_song', healer: 'gather_herbs', builder: 'craft_basic', teacher: 'teach_skill' };
+              var taskId = archTaskMap[npcResponse.archetype] || 'gather_herbs';
+              var delResult = NpcDelegation.delegate(npcDelegationState, localPlayer.id, taskId, npcResponse.id, worldTime);
+              if (delResult && delResult.success && HUD) {
+                HUD.showNotification('Delegated "' + taskId.replace(/_/g, ' ') + '" to ' + npcResponse.name + ' (cost: ' + delResult.cost + ' Spark)', 'info');
               }
             }
 
