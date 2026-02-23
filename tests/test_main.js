@@ -232,11 +232,11 @@ if (Main) {
 
   // ── 4c. Export shape ────────────────────────────────────────────────────────
 
-  suite('Export verification — all 8 exports present', function() {
+  suite('Export verification — all 10 exports present', function() {
     var EXPECTED_EXPORTS = [
       'init', 'joinWorld', 'leaveWorld', 'handleLocalAction',
       'triggerCameraShake', 'triggerScreenFlash', 'setVignetteIntensity',
-      'getSimCrmState'
+      'getSimCrmState', 'getSimProjectManagerState', 'getSimTodoState'
     ];
 
     EXPECTED_EXPORTS.forEach(function(name) {
@@ -250,7 +250,7 @@ if (Main) {
       });
     });
 
-    test('no unexpected extra exports beyond the 8 known ones', function() {
+    test('no unexpected extra exports beyond the 10 known ones', function() {
       // All keys must be from the known set
       var keys = Object.keys(Main);
       keys.forEach(function(k) {

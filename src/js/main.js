@@ -202,6 +202,8 @@
   var archivalState = null;
   var raycaster = null;
   var simCrmState = null;
+  var simProjectManagerState = null;
+  var simTodoState = null;
   var lastSimCrmTick = 0;
   var SIM_CRM_TICK_INTERVAL = 45000; // 45 seconds between CRM ticks
   var npcUpdateFrame = 0;
@@ -1584,6 +1586,18 @@
     if (typeof SimCRM !== 'undefined' && SimCRM.initState) {
       simCrmState = SimCRM.initState();
       console.log('[SimCRM] Initialized');
+    }
+
+    // Initialize Project Manager simulation
+    if (typeof SimProjectManager !== 'undefined' && SimProjectManager.initState) {
+      simProjectManagerState = SimProjectManager.initState();
+      console.log('[SimProjectManager] Initialized');
+    }
+
+    // Initialize Todo simulation
+    if (typeof SimTodo !== 'undefined' && SimTodo.initState) {
+      simTodoState = SimTodo.initState();
+      console.log('[SimTodo] Initialized');
     }
 
     // Initialize 3D scene
@@ -4145,6 +4159,16 @@
     if (msg.payload && msg.payload.sim === 'crm' && typeof SimCRM !== 'undefined' && simCrmState) {
       simCrmState = SimCRM.applyAction(simCrmState, msg);
       console.log('[SimCRM] Applied action:', msg.payload.action);
+      return;
+    }
+    if (msg.payload && msg.payload.sim === 'project_manager' && typeof SimProjectManager !== 'undefined' && simProjectManagerState) {
+      simProjectManagerState = SimProjectManager.applyAction(simProjectManagerState, msg);
+      console.log('[SimProjectManager] Applied action:', msg.payload.action);
+      return;
+    }
+    if (msg.payload && msg.payload.sim === 'todo' && typeof SimTodo !== 'undefined' && simTodoState) {
+      simTodoState = SimTodo.applyAction(simTodoState, msg);
+      console.log('[SimTodo] Applied action:', msg.payload.action);
       return;
     }
 
@@ -7510,5 +7534,7 @@
   exports.triggerScreenFlash = triggerScreenFlash;
   exports.setVignetteIntensity = setVignetteIntensity;
   exports.getSimCrmState = function() { return simCrmState; };
+  exports.getSimProjectManagerState = function() { return simProjectManagerState; };
+  exports.getSimTodoState = function() { return simTodoState; };
 
 })(typeof module !== 'undefined' ? module.exports : (window.Main = {}));

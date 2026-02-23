@@ -154,6 +154,8 @@ JS_FILES = [
     'world_chronicle.js',
     'crafting_chains.js',
     'living_calendar.js',
+    'sim_project_manager.js',
+    'sim_todo.js',
     'dashboard.js',
     'dashboard_css.js',
     'dashboard_zones.js',
