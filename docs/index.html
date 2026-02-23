@@ -140410,7 +140410,7 @@
       }
 
       if (Prestige && Prestige.getSparkBonus && prestigeState) {
-        localPlayer.prestigeSparkBonus = Prestige.getSparkBonus(prestigeState);
+        localPlayer.prestigeSparkBonus = Prestige.getSparkBonus(prestigeState.level || 0);
       }
 
       if (HousingSocial && HousingSocial.calculateComfort && housingSocialState) {

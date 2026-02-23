@@ -2623,7 +2623,7 @@
 
       // Apply prestige bonus to player stats
       if (Prestige && Prestige.getSparkBonus && prestigeState) {
-        localPlayer.prestigeSparkBonus = Prestige.getSparkBonus(prestigeState);
+        localPlayer.prestigeSparkBonus = Prestige.getSparkBonus(prestigeState.level || 0);
       }
 
       // HousingSocial: calculate comfort bonus from housing
