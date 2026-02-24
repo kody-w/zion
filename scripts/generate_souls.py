@@ -5,137 +5,118 @@ Each soul contains archetype-specific intentions in the format
 required by intentions.js:
   {id, trigger: {condition, params}, action: {type, params},
    priority, ttl, cooldown, max_fires}
+
+All config is loaded from state/config/souls.json (§8.8).
+Greetings are generated fresh by the emergence engine.
 """
 import json
 import os
+import sys
 
-ARCHETYPE_INTENTIONS = {
-    "gardener": [
-        {"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}},
-         "action": {"type": "say", "params": {"text": "Welcome to the gardens! The soil is rich today."}},
-         "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100},
-        {"id": "tend", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}},
-         "action": {"type": "emote", "params": {"emoteType": "work"}},
-         "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}
-    ],
-    "builder": [
-        {"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}},
-         "action": {"type": "say", "params": {"text": "Careful around here — we're building something great."}},
-         "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100},
-        {"id": "build", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}},
-         "action": {"type": "emote", "params": {"emoteType": "work"}},
-         "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}
-    ],
-    "merchant": [
-        {"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}},
-         "action": {"type": "say", "params": {"text": "Looking to trade? I've got the finest goods in Zion."}},
-         "priority": 5, "ttl": 86400, "cooldown": 25, "max_fires": 100},
-        {"id": "hawk", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}},
-         "action": {"type": "say", "params": {"text": "Fresh supplies, fair prices!"}},
-         "priority": 2, "ttl": 86400, "cooldown": 120, "max_fires": 100}
-    ],
-    "explorer": [
-        {"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}},
-         "action": {"type": "say", "params": {"text": "Have you been to the far edges? There's so much to see."}},
-         "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100},
-        {"id": "wander", "trigger": {"condition": "timer", "params": {"interval_seconds": 45}},
-         "action": {"type": "emote", "params": {"emoteType": "wave"}},
-         "priority": 3, "ttl": 86400, "cooldown": 45, "max_fires": 200}
-    ],
-    "teacher": [
-        {"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}},
-         "action": {"type": "say", "params": {"text": "Seeking knowledge? I can teach you the ways of Zion."}},
-         "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100},
-        {"id": "lecture", "trigger": {"condition": "timer", "params": {"interval_seconds": 180}},
-         "action": {"type": "say", "params": {"text": "Remember: in Zion, every action ripples outward."}},
-         "priority": 2, "ttl": 86400, "cooldown": 180, "max_fires": 100}
-    ],
-    "healer": [
-        {"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}},
-         "action": {"type": "say", "params": {"text": "Peace, traveler. Rest here if you need healing."}},
-         "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100},
-        {"id": "meditate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}},
-         "action": {"type": "emote", "params": {"emoteType": "meditate"}},
-         "priority": 3, "ttl": 86400, "cooldown": 90, "max_fires": 200}
-    ],
-    "artist": [
-        {"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}},
-         "action": {"type": "say", "params": {"text": "Beauty is everywhere — you just have to look."}},
-         "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100},
-        {"id": "create", "trigger": {"condition": "timer", "params": {"interval_seconds": 75}},
-         "action": {"type": "emote", "params": {"emoteType": "work"}},
-         "priority": 3, "ttl": 86400, "cooldown": 75, "max_fires": 200}
-    ],
-    "musician": [
-        {"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}},
-         "action": {"type": "say", "params": {"text": "Listen... can you hear the music of Zion?"}},
-         "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100},
-        {"id": "perform", "trigger": {"condition": "timer", "params": {"interval_seconds": 60}},
-         "action": {"type": "emote", "params": {"emoteType": "dance"}},
-         "priority": 3, "ttl": 86400, "cooldown": 60, "max_fires": 200}
-    ],
-    "philosopher": [
-        {"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}},
-         "action": {"type": "say", "params": {"text": "What brings you here, seeker? Every journey has meaning."}},
-         "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100},
-        {"id": "ponder", "trigger": {"condition": "timer", "params": {"interval_seconds": 120}},
-         "action": {"type": "emote", "params": {"emoteType": "meditate"}},
-         "priority": 3, "ttl": 86400, "cooldown": 120, "max_fires": 200}
-    ],
-    "storyteller": [
-        {"id": "greet", "trigger": {"condition": "player_nearby", "params": {"distance_lt": 12}},
-         "action": {"type": "say", "params": {"text": "Ah, a new face! Come, I have tales to tell."}},
-         "priority": 5, "ttl": 86400, "cooldown": 30, "max_fires": 100},
-        {"id": "narrate", "trigger": {"condition": "timer", "params": {"interval_seconds": 90}},
-         "action": {"type": "say", "params": {"text": "Long ago, when Zion was young..."}},
-         "priority": 2, "ttl": 86400, "cooldown": 90, "max_fires": 100}
+# Lazy emergence import
+_emergence = None
+
+def _get_emergence():
+    global _emergence
+    if _emergence is not None:
+        return _emergence
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from seed_emergence import get_emergence
+        _emergence = get_emergence()
+    except ImportError:
+        _emergence = None
+    return _emergence
+
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from load_config import load_config, get_soul_archetype
+
+_souls_cfg = load_config('souls')
+
+
+def _make_greeting_text(archetype):
+    """Generate a unique greeting using emergence, or return a simple fallback."""
+    em = _get_emergence()
+    if em:
+        return em.soul_greeting(archetype)
+    return "Welcome to Zion."
+
+
+def _make_personality_text(trait):
+    """Generate a personality-specific phrase."""
+    em = _get_emergence()
+    if em:
+        return em.personality_greeting(trait)
+    return ""
+
+
+def _make_idle_text(archetype):
+    """Generate an idle/ambient say phrase for archetypes that speak on timer."""
+    em = _get_emergence()
+    if em:
+        return em.soul_idle(archetype)
+    return "..."
+
+
+def _build_intentions(archetype, personality):
+    """Build the intentions list for an NPC soul."""
+    greeting_text = _make_greeting_text(archetype)
+
+    if personality:
+        trait = personality[0]
+        extra = _make_personality_text(trait)
+        if extra:
+            greeting_text = greeting_text + " " + extra
+
+    greet_cooldown = _souls_cfg.get('greet_cooldown', 30)
+    greet_distance = _souls_cfg.get('greet_distance', 12)
+    greet_max_fires = _souls_cfg.get('greet_max_fires', 100)
+
+    intentions = [
+        {"id": "greet",
+         "trigger": {"condition": "player_nearby", "params": {"distance_lt": greet_distance}},
+         "action": {"type": "say", "params": {"text": greeting_text}},
+         "priority": 5, "ttl": 86400, "cooldown": greet_cooldown, "max_fires": greet_max_fires}
     ]
-}
 
-# Personalized greetings keyed by (archetype, personality_index)
-PERSONALITY_GREETINGS = {
-    "patient": "Take your time here — there's no rush.",
-    "nurturing": "You look tired. Let me help.",
-    "observant": "I noticed you looking around. Need directions?",
-    "creative": "Inspiration strikes in the strangest places, doesn't it?",
-    "determined": "Keep pushing forward. You'll get there.",
-    "meticulous": "Every detail matters in Zion.",
-    "curious": "There's always something new to discover!",
-    "generous": "Here — take this. You need it more than I do.",
-    "bold": "Fortune favors the brave, friend!",
-    "wise": "Experience is the greatest teacher.",
-    "empathetic": "I can sense you've been through a lot.",
-    "analytical": "Let me think about that for a moment...",
-    "charismatic": "It's great to have you here!",
-    "resilient": "No matter what happens, we endure.",
-    "harmonious": "Balance in all things.",
-    "inventive": "I've been working on something new!",
-    "reflective": "Sometimes you have to stop and look back.",
-    "adventurous": "The world is vast — let's explore!",
-    "methodical": "Step by step, we build greatness.",
-    "visionary": "I can see what Zion will become."
-}
+    timer_cfg = get_soul_archetype(archetype)
+    interval = timer_cfg.get('interval', 60)
+
+    if timer_cfg.get('action_type') == 'emote':
+        emote = timer_cfg.get('emote', 'wave')
+        max_fires = _souls_cfg.get('timer_max_fires_emote', 200)
+        intentions.append({
+            "id": emote,
+            "trigger": {"condition": "timer", "params": {"interval_seconds": interval}},
+            "action": {"type": "emote", "params": {"emoteType": emote}},
+            "priority": 3, "ttl": 86400, "cooldown": interval, "max_fires": max_fires
+        })
+    else:
+        idle_text = _make_idle_text(timer_cfg.get('idle_key', archetype))
+        action_id = {"merchant": "hawk", "teacher": "lecture",
+                     "storyteller": "narrate"}.get(archetype, "speak")
+        max_fires = _souls_cfg.get('timer_max_fires_say', 100)
+        intentions.append({
+            "id": action_id,
+            "trigger": {"condition": "timer", "params": {"interval_seconds": interval}},
+            "action": {"type": "say", "params": {"text": idle_text}},
+            "priority": 2, "ttl": 86400, "cooldown": interval, "max_fires": max_fires
+        })
+
+    return intentions
 
 
 def generate_soul(agent):
     archetype = agent["archetype"]
-    base_intentions = ARCHETYPE_INTENTIONS.get(archetype, ARCHETYPE_INTENTIONS["explorer"])
-
-    # Deep copy and personalize the greeting with first personality trait
-    intentions = json.loads(json.dumps(base_intentions))
-    if agent.get("personality") and len(agent["personality"]) > 0:
-        trait = agent["personality"][0]
-        extra = PERSONALITY_GREETINGS.get(trait, "")
-        if extra and intentions:
-            intentions[0]["action"]["params"]["text"] = (
-                intentions[0]["action"]["params"]["text"] + " " + extra
-            )
+    personality = agent.get("personality", [])
+    intentions = _build_intentions(archetype, personality)
 
     soul = {
         "id": agent["id"],
         "name": agent["name"],
         "archetype": archetype,
-        "personality": agent.get("personality", []),
+        "personality": personality,
         "home_zone": agent.get("position", {}).get("zone", "nexus"),
         "intentions": intentions,
         "memory": {

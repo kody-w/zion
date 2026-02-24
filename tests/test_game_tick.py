@@ -21,40 +21,49 @@ from game_tick import (
 class TestGameTick(unittest.TestCase):
     """Test suite for game tick functions."""
 
-    def test_day_phase_dawn(self):
-        """Dawn phase: 0-360 seconds."""
-        self.assertEqual(calculate_day_phase(0), 'dawn')
-        self.assertEqual(calculate_day_phase(180), 'dawn')
-        self.assertEqual(calculate_day_phase(359), 'dawn')
+    def test_day_phase_night(self):
+        """Night phase: 0-360 and 1200-1440 seconds."""
+        self.assertEqual(calculate_day_phase(0), 'night')
+        self.assertEqual(calculate_day_phase(180), 'night')
+        self.assertEqual(calculate_day_phase(359), 'night')
+        self.assertEqual(calculate_day_phase(1200), 'night2')
+        self.assertEqual(calculate_day_phase(1300), 'night2')
+        self.assertEqual(calculate_day_phase(1439), 'night2')
 
-    def test_day_phase_day(self):
-        """Day phase: 360-1080 seconds."""
-        self.assertEqual(calculate_day_phase(360), 'day')
-        self.assertEqual(calculate_day_phase(500), 'day')
-        self.assertEqual(calculate_day_phase(720), 'day')
-        self.assertEqual(calculate_day_phase(1079), 'day')
+    def test_day_phase_dawn(self):
+        """Dawn phase: 360-480 seconds."""
+        self.assertEqual(calculate_day_phase(360), 'dawn')
+        self.assertEqual(calculate_day_phase(400), 'dawn')
+        self.assertEqual(calculate_day_phase(479), 'dawn')
+
+    def test_day_phase_morning(self):
+        """Morning phase: 480-720 seconds."""
+        self.assertEqual(calculate_day_phase(480), 'morning')
+        self.assertEqual(calculate_day_phase(600), 'morning')
+        self.assertEqual(calculate_day_phase(719), 'morning')
+
+    def test_day_phase_midday(self):
+        """Midday phase: 720-840 seconds."""
+        self.assertEqual(calculate_day_phase(720), 'midday')
+        self.assertEqual(calculate_day_phase(800), 'midday')
+
+    def test_day_phase_afternoon(self):
+        """Afternoon phase: 840-1080 seconds."""
+        self.assertEqual(calculate_day_phase(840), 'afternoon')
+        self.assertEqual(calculate_day_phase(1000), 'afternoon')
+        self.assertEqual(calculate_day_phase(1079), 'afternoon')
 
     def test_day_phase_dusk(self):
-        """Dusk phase: 1080-1260 seconds."""
+        """Dusk phase: 1080-1200 seconds."""
         self.assertEqual(calculate_day_phase(1080), 'dusk')
         self.assertEqual(calculate_day_phase(1100), 'dusk')
-        self.assertEqual(calculate_day_phase(1170), 'dusk')
-        self.assertEqual(calculate_day_phase(1259), 'dusk')
-
-    def test_day_phase_night(self):
-        """Night phase: 1260-1440 seconds."""
-        self.assertEqual(calculate_day_phase(1260), 'night')
-        self.assertEqual(calculate_day_phase(1300), 'night')
-        self.assertEqual(calculate_day_phase(1439), 'night')
+        self.assertEqual(calculate_day_phase(1199), 'dusk')
 
     def test_day_phase_cycles(self):
         """Day phases should cycle every 1440 seconds."""
-        # Second cycle
-        self.assertEqual(calculate_day_phase(1440), 'dawn')
-        self.assertEqual(calculate_day_phase(1440 + 500), 'day')
-
-        # Third cycle
-        self.assertEqual(calculate_day_phase(2880), 'dawn')
+        self.assertEqual(calculate_day_phase(1440), 'night')
+        self.assertEqual(calculate_day_phase(1440 + 400), 'dawn')
+        self.assertEqual(calculate_day_phase(2880), 'night')
 
     def test_weather_generation(self):
         """Weather generation should produce valid weather types."""
@@ -220,7 +229,8 @@ class TestGameTick(unittest.TestCase):
         result_json = tick(state_json)
         result = json.loads(result_json)
 
-        self.assertIn(result['dayPhase'], ['dawn', 'day', 'dusk', 'night'])
+        self.assertIn(result['dayPhase'],
+                      ['night', 'dawn', 'morning', 'midday', 'afternoon', 'dusk', 'night2'])
 
 
 if __name__ == '__main__':

@@ -20,6 +20,9 @@ import sys
 import time as time_mod
 from datetime import datetime, timezone, timedelta
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from load_config import get_valid_zones as _get_valid_zones
+
 
 def load_json(path):
     """Load JSON file safely, return empty dict/list on failure."""
@@ -237,7 +240,7 @@ def get_last_process(state_dir):
     return load_json(os.path.join(state_dir, 'api', 'last_process.json'))
 
 
-VALID_ZONES = {'nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'}
+VALID_ZONES = _get_valid_zones()
 
 
 def analyze_content_quality(state_dir, days=7):

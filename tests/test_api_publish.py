@@ -253,7 +253,7 @@ class TestBuildRSS(unittest.TestCase):
 class TestComputeDayPhase(unittest.TestCase):
     def test_night(self):
         self.assertEqual(api_publish_state.compute_day_phase(0), 'night')
-        self.assertEqual(api_publish_state.compute_day_phase(1200), 'night')
+        self.assertEqual(api_publish_state.compute_day_phase(1200), 'night2')
 
     def test_dawn(self):
         self.assertEqual(api_publish_state.compute_day_phase(400), 'dawn')

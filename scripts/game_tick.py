@@ -14,26 +14,29 @@ from economy_engine import (
     get_ubi_eligible_citizens as _get_ubi_eligible_citizens,
 )
 from reputation_engine import tick_reputation as _tick_reputation
+from load_config import load_config
+
+_world_cfg = load_config('world')
 
 
 def calculate_day_phase(world_time):
     """
-    Calculate day phase based on world time.
-
-    24-minute cycle (1440 seconds):
-    - dawn: 0-360 (0-6 hours)
-    - day: 360-1080 (6-18 hours)
-    - dusk: 1080-1260 (18-21 hours)
-    - night: 1260-1440 (21-24 hours)
+    Calculate day phase based on world time, using config thresholds.
 
     Args:
         world_time: seconds since world epoch
 
     Returns:
-        One of 'dawn', 'day', 'dusk', 'night'
+        One of 'dawn', 'day', 'dusk', 'night', 'morning', 'midday', 'afternoon'
     """
     cycle_position = world_time % 1440
+    day_phases = _world_cfg.get('day_phases', {})
 
+    for phase, bounds in day_phases.items():
+        if bounds[0] <= cycle_position < bounds[1]:
+            return phase
+
+    # Fallback
     if cycle_position < 360:
         return 'dawn'
     elif cycle_position < 1080:
@@ -170,10 +173,11 @@ def respawn_resources(state, delta_seconds):
     return updated_state
 
 
+_economy_cfg = load_config('economy')
 TREASURY_ID = 'TREASURY'
-BASE_UBI_AMOUNT = 5
-WEALTH_TAX_THRESHOLD = 500
-WEALTH_TAX_RATE = 0.02
+BASE_UBI_AMOUNT = _economy_cfg.get('base_ubi_amount', 5)
+WEALTH_TAX_THRESHOLD = _economy_cfg.get('wealth_tax_threshold', 500)
+WEALTH_TAX_RATE = _economy_cfg.get('wealth_tax_rate', 0.02)
 
 
 def _get_ubi_eligible(economy, current_time):
@@ -286,9 +290,9 @@ def decay_pet_states(pets_data, delta_seconds):
     player_pets = updated.get('playerPets', {})
 
     minutes_elapsed = delta_seconds / 60.0
-    hunger_decay = 1.0  # per minute
-    mood_decay = 0.5    # per minute
-    hunger_threshold_content = 60
+    hunger_decay = _world_cfg.get('pet_hunger_decay', 1.0)
+    mood_decay = _world_cfg.get('pet_mood_decay', 0.5)
+    hunger_threshold_content = _world_cfg.get('pet_hunger_threshold_content', 60)
 
     for pid, pet in player_pets.items():
         if not isinstance(pet, dict):

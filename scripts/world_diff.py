@@ -19,20 +19,13 @@ import os
 import sys
 
 # ---------------------------------------------------------------------------
-# Constants
+# Constants — loaded from config (§8.8)
 # ---------------------------------------------------------------------------
 
-ZONE_NAMES = {
-    'nexus': 'the Nexus',
-    'gardens': 'the Gardens',
-    'athenaeum': 'the Athenaeum',
-    'studio': 'the Studio',
-    'wilds': 'the Wilds',
-    'agora': 'the Agora',
-    'commons': 'the Commons',
-    'arena': 'the Arena',
-    'observatory': 'the Observatory',
-}
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from load_config import get_zone_names
+
+ZONE_NAMES = get_zone_names()
 
 # ---------------------------------------------------------------------------
 # Loading helpers
@@ -436,242 +429,172 @@ def _world_id(w):
 # narrate_diff
 # ---------------------------------------------------------------------------
 
-def narrate_diff(diff):
+def narrate_diff(diff, emergence=None):
     """Convert a structured diff dict into a human-readable narrative string.
 
     Parameters
     ----------
     diff : dict
         As returned by diff_states().
+    emergence : Emergence, optional
+        If provided, uses emergence for varied narration.
 
     Returns
     -------
-    str
-        A narrative paragraph (or paragraphs) describing what changed.
+    str or None
+        A narrative paragraph describing what changed, or None if no changes.
     """
+    if emergence is None:
+        try:
+            from seed_emergence import get_emergence
+            emergence = get_emergence()
+        except ImportError:
+            emergence = None
+
+    def _n(key, **kwargs):
+        if emergence:
+            return emergence.narrate(key, **kwargs)
+        return ''
+
     sentences = []
 
     # --- Economy ---
     economy = diff.get('economy', {})
-
     treasury_delta = economy.get('treasury_delta', 0)
     if treasury_delta > 0:
-        sentences.append(
-            'The TREASURY grew by {} Spark.'.format(treasury_delta)
-        )
+        s = _n('treasury_grew', amount=str(treasury_delta))
+        sentences.append(s or 'The TREASURY grew by {} Spark.'.format(treasury_delta))
     elif treasury_delta < 0:
-        sentences.append(
-            'The TREASURY shrank by {} Spark.'.format(abs(treasury_delta))
-        )
+        s = _n('treasury_shrank', amount=str(abs(treasury_delta)))
+        sentences.append(s or 'The TREASURY shrank by {} Spark.'.format(abs(treasury_delta)))
 
-    balance_changes = economy.get('balance_changes', {})
-    for entity, delta in sorted(balance_changes.items()):
+    for entity, delta in sorted(economy.get('balance_changes', {}).items()):
         if entity == 'TREASURY':
             continue
         if delta > 0:
-            sentences.append(
-                '{} earned {} Spark.'.format(entity, delta)
-            )
+            s = _n('earned_spark', entity=entity, amount=str(delta))
+            sentences.append(s or '{} earned {} Spark.'.format(entity, delta))
         else:
-            sentences.append(
-                '{} spent {} Spark.'.format(entity, abs(delta))
-            )
+            s = _n('spent_spark', entity=entity, amount=str(abs(delta)))
+            sentences.append(s or '{} spent {} Spark.'.format(entity, abs(delta)))
 
     new_txs = economy.get('new_transactions', [])
     ubi_txs = [t for t in new_txs if t.get('type') == 'ubi']
     if ubi_txs:
-        sentences.append(
-            'UBI payments were distributed to {} recipients.'.format(len(ubi_txs))
-        )
+        s = _n('ubi_distributed', count=str(len(ubi_txs)))
+        sentences.append(s or 'UBI distributed to {} recipients.'.format(len(ubi_txs)))
 
     craft_txs = [t for t in new_txs if t.get('type') == 'craft']
     if craft_txs:
-        crafted_items = [t.get('payload', {}).get('recipe', 'something') for t in craft_txs]
-        if len(crafted_items) == 1:
-            sentences.append(
-                '{} crafted a {}.'.format(
-                    craft_txs[0].get('from', 'someone'),
-                    crafted_items[0]
-                )
-            )
+        items = [t.get('payload', {}).get('recipe', 'something') for t in craft_txs]
+        if len(items) == 1:
+            s = _n('crafted', who=craft_txs[0].get('from', 'someone'), item=items[0])
+            sentences.append(s or '{} crafted a {}.'.format(craft_txs[0].get('from', 'someone'), items[0]))
         else:
-            sentences.append(
-                'Citizens crafted {} items: {}.'.format(
-                    len(crafted_items),
-                    ', '.join(crafted_items[:3]) + ('...' if len(crafted_items) > 3 else '')
-                )
-            )
+            sentences.append('Citizens crafted {} items: {}.'.format(
+                len(items), ', '.join(items[:3]) + ('...' if len(items) > 3 else '')))
 
     # --- Players ---
-    players = diff.get('players', {})
-
-    for pid in players.get('joined', []):
-        sentences.append(
-            '{} arrived in ZION for the first time.'.format(pid)
-        )
-
-    for pid in players.get('left', []):
-        sentences.append(
-            '{} departed ZION.'.format(pid)
-        )
+    for pid in diff.get('players', {}).get('joined', []):
+        s = _n('player_joined', player=pid)
+        sentences.append(s or '{} arrived in ZION.'.format(pid))
+    for pid in diff.get('players', {}).get('left', []):
+        s = _n('player_left', player=pid)
+        sentences.append(s or '{} departed ZION.'.format(pid))
 
     # --- Movement ---
-    movement = diff.get('movement', {})
-    for t in movement.get('zone_transitions', []):
-        from_z = ZONE_NAMES.get(t['from_zone'], t['from_zone'])
-        to_z = ZONE_NAMES.get(t['to_zone'], t['to_zone'])
-        sentences.append(
-            '{} moved from {} to {}.'.format(t['player'], from_z, to_z)
-        )
+    for t in diff.get('movement', {}).get('zone_transitions', []):
+        fz = ZONE_NAMES.get(t['from_zone'], t['from_zone'])
+        tz = ZONE_NAMES.get(t['to_zone'], t['to_zone'])
+        s = _n('moved_zone', player=t['player'], from_zone=fz, to_zone=tz)
+        sentences.append(s or '{} moved from {} to {}.'.format(t['player'], fz, tz))
 
     # --- Gardens ---
     gardens = diff.get('gardens', {})
-
     for plot_id in gardens.get('new_plots', []):
-        sentences.append(
-            'A new garden plot ({}) was established.'.format(plot_id)
-        )
-
+        s = _n('new_garden_plot', plot=plot_id)
+        sentences.append(s or 'A new garden plot ({}) was established.'.format(plot_id))
     for entry in gardens.get('new_plants', []):
         added = entry.get('added', [])
         plot = entry.get('plot', 'unknown')
         if len(added) == 1:
-            sentences.append(
-                'A {} was planted in {}.'.format(added[0], plot)
-            )
+            s = _n('planted', species=added[0], plot=plot)
+            sentences.append(s or 'A {} was planted in {}.'.format(added[0], plot))
         elif len(added) > 1:
-            sentences.append(
-                '{} plants were added to {}: {}.'.format(
-                    len(added), plot, ', '.join(added)
-                )
-            )
-
+            sentences.append('{} plants added to {}: {}.'.format(len(added), plot, ', '.join(added)))
     for entry in gardens.get('harvests', []):
         removed = entry.get('removed', [])
         plot = entry.get('plot', 'unknown')
         if len(removed) == 1:
-            sentences.append(
-                'A {} was harvested from {}.'.format(removed[0], plot)
-            )
+            s = _n('harvested', species=removed[0], plot=plot)
+            sentences.append(s or 'A {} was harvested from {}.'.format(removed[0], plot))
         elif len(removed) > 1:
-            sentences.append(
-                '{} plants were harvested from {}: {}.'.format(
-                    len(removed), plot, ', '.join(removed)
-                )
-            )
-
+            sentences.append('{} plants harvested from {}: {}.'.format(len(removed), plot, ', '.join(removed)))
     for change in gardens.get('ownership_changes', []):
-        plot = change['plot']
-        to_owner = change['to_owner']
-        from_owner = change['from_owner']
-        if from_owner is None:
-            sentences.append(
-                '{} claimed ownership of {}.'.format(to_owner, plot)
-            )
-        elif to_owner is None:
-            sentences.append(
-                '{} released ownership of {}.'.format(from_owner, plot)
-            )
+        plot, to_o, from_o = change['plot'], change['to_owner'], change['from_owner']
+        if from_o is None:
+            sentences.append('{} claimed ownership of {}.'.format(to_o, plot))
+        elif to_o is None:
+            sentences.append('{} released ownership of {}.'.format(from_o, plot))
         else:
-            sentences.append(
-                'Ownership of {} transferred from {} to {}.'.format(
-                    plot, from_owner, to_owner
-                )
-            )
-
+            sentences.append('Ownership of {} transferred from {} to {}.'.format(plot, from_o, to_o))
     for fc in gardens.get('fertility_changes', []):
-        plot = fc['plot']
-        delta = fc['delta']
+        plot, delta = fc['plot'], fc['delta']
         if delta > 0:
-            sentences.append(
-                'The soil of {} grew more fertile (up {:.0%}).'.format(
-                    plot, delta
-                )
-            )
+            s = _n('fertility_up', plot=plot, delta='{:.0%}'.format(delta))
+            sentences.append(s or 'Soil of {} improved (up {:.0%}).'.format(plot, delta))
         else:
-            sentences.append(
-                'The soil of {} lost some fertility (down {:.0%}).'.format(
-                    plot, abs(delta)
-                )
-            )
+            s = _n('fertility_down', plot=plot, delta='{:.0%}'.format(abs(delta)))
+            sentences.append(s or 'Soil of {} degraded (down {:.0%}).'.format(plot, abs(delta)))
 
     # --- Structures ---
     structures = diff.get('structures', {})
-
     for build in structures.get('new_builds', []):
         zone = ZONE_NAMES.get(build['zone'], build['zone'])
-        sentences.append(
-            'A new {} appeared in {}, built by {}.'.format(
-                build['type'], zone, build['builder']
-            )
-        )
-
+        s = _n('new_structure', stype=build['type'], zone=zone, builder=build['builder'])
+        sentences.append(s or 'A new {} appeared in {}, built by {}.'.format(build['type'], zone, build['builder']))
     for removal in structures.get('removals', []):
         zone = ZONE_NAMES.get(removal['zone'], removal['zone'])
-        sentences.append(
-            'A {} in {} was demolished.'.format(removal['type'], zone)
-        )
-
+        s = _n('structure_demolished', stype=removal['type'], zone=zone)
+        sentences.append(s or 'A {} in {} was demolished.'.format(removal['type'], zone))
     for mod in structures.get('modifications', []):
         zone = ZONE_NAMES.get(mod['zone'], mod['zone'])
-        sentences.append(
-            'The {} in {} was modified.'.format(mod['name'], zone)
-        )
+        s = _n('structure_modified', name=mod['name'], zone=zone)
+        sentences.append(s or 'The {} in {} was modified.'.format(mod['name'], zone))
 
     # --- Chat ---
-    chat = diff.get('chat', {})
-    new_msgs = chat.get('new_messages', [])
+    new_msgs = diff.get('chat', {}).get('new_messages', [])
     if new_msgs:
         speakers = list(dict.fromkeys(m.get('from', 'unknown') for m in new_msgs))
-        if len(new_msgs) == 1:
-            msg = new_msgs[0]
-            text = msg.get('payload', {}).get('text', '')
-            preview = (text[:60] + '...') if len(text) > 60 else text
-            sentences.append(
-                '{} said: "{}".'.format(msg.get('from', 'someone'), preview)
-            )
-        elif len(new_msgs) <= 3:
+        if len(new_msgs) <= 3:
             for msg in new_msgs:
                 text = msg.get('payload', {}).get('text', '')
-                preview = (text[:40] + '...') if len(text) > 40 else text
-                sentences.append(
-                    '{} said: "{}".'.format(msg.get('from', 'someone'), preview)
-                )
+                preview = (text[:60] + '...') if len(text) > 60 else text
+                s = _n('chat_single', speaker=msg.get('from', 'someone'), preview=preview)
+                sentences.append(s or '{} said: "{}".'.format(msg.get('from', 'someone'), preview))
         else:
-            sentences.append(
-                '{} new messages were exchanged among: {}.'.format(
-                    len(new_msgs),
-                    ', '.join(speakers[:3]) + ('...' if len(speakers) > 3 else '')
-                )
-            )
+            sp = ', '.join(speakers[:3]) + ('...' if len(speakers) > 3 else '')
+            s = _n('chat_many', count=str(len(new_msgs)), speakers=sp)
+            sentences.append(s or '{} messages exchanged among: {}.'.format(len(new_msgs), sp))
 
     # --- Federation ---
     federation = diff.get('federation', {})
-
     for fed in federation.get('new_federations', []):
-        sentences.append(
-            'ZION formed a federation with {}.'.format(
-                fed.get('name', 'an unknown world')
-            )
-        )
-
+        s = _n('federation_new', name=fed.get('name', 'an unknown world'))
+        sentences.append(s or 'ZION formed a federation with {}.'.format(fed.get('name', 'an unknown world')))
     for world in federation.get('new_worlds', []):
-        sentences.append(
-            'A new world was discovered: {}.'.format(
-                world.get('worldName', world.get('worldId', 'unknown'))
-            )
-        )
-
+        wname = world.get('worldName', world.get('worldId', 'unknown'))
+        s = _n('world_discovered', name=wname)
+        sentences.append(s or 'A new world was discovered: {}.'.format(wname))
     rate_delta = federation.get('exchange_rate_delta', 0.0)
     if abs(rate_delta) > 0.001:
         direction = 'rose' if rate_delta > 0 else 'fell'
-        sentences.append(
-            'The Spark exchange rate {} by {:.3f}.'.format(direction, abs(rate_delta))
-        )
+        s = _n('exchange_rate', direction=direction, delta='{:.3f}'.format(abs(rate_delta)))
+        sentences.append(s or 'The exchange rate {} by {:.3f}.'.format(direction, abs(rate_delta)))
 
     # --- Final assembly ---
     if not sentences:
-        return 'No notable changes occurred in ZION.'
+        return None
 
     return ' '.join(sentences)
 
@@ -720,7 +643,7 @@ def main():
         sys.exit(1)
 
     narrative = narrate_diff(diff)
-    print(narrative)
+    print(narrative or 'No notable changes occurred.')
 
     # Optionally print the raw diff if --json flag is given
     if '--json' in sys.argv:

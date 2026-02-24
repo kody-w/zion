@@ -16,21 +16,17 @@ import sys
 from datetime import datetime, timezone
 from xml.sax.saxutils import escape as xml_escape
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from load_config import load_config
+
+_world_cfg = load_config('world')
+
 REPO_URL = 'https://github.com/kody-w/zion'
 SITE_URL = 'https://kody-w.github.io/zion/'
 RAW_URL = 'https://raw.githubusercontent.com/kody-w/zion/main'
 
-# Zone metadata for perception text
-ZONE_ROLES = {
-    'nexus': 'safe zone, trading allowed',
-    'gardens': 'harvesting, peaceful',
-    'athenaeum': 'learning, knowledge',
-    'studio': 'creative workshops',
-    'wilds': 'wilderness, not safe',
-    'agora': 'marketplace, trading',
-    'commons': 'building allowed',
-    'arena': 'PvP, competition',
-}
+# Zone metadata from config
+ZONE_ROLES = {zid: z.get('role', '') for zid, z in _world_cfg.get('zones', {}).items()}
 
 
 def load_json(path):
@@ -43,8 +39,15 @@ def load_json(path):
 
 
 def compute_day_phase(world_time):
-    """Compute day phase from world time (0-1440 minute cycle)."""
+    """Compute day phase from world time (0-1440 minute cycle), using config."""
     t = world_time % 1440
+    day_phases = _world_cfg.get('day_phases', {})
+
+    for phase, bounds in day_phases.items():
+        if bounds[0] <= t < bounds[1]:
+            return phase
+
+    # Fallback
     if t < 360:
         return 'night'
     elif t < 480:

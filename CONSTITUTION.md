@@ -562,6 +562,9 @@ The client MUST:
 ### §8.7 Fork Rights
 Anyone may fork the repository and run their own ZION. The code, constitution, and protocol are open. Forked worlds are sovereign — same DNA, different state. Cross-world travel between forks is governed by the Federation Protocol (Article X).
 
+### §8.8 Nothing Is Hardcoded
+All game parameters, NPC behaviors, economic values, timing constants, text pools, and world configuration MUST live as JSON files in `state/config/`. A scheduled config generator seeds these files fresh using the emergence engine — every era of the world has unique DNA. Runtime scripts read from `state/config/`, never from inline constants. If a config file is missing or corrupt, scripts fall back to sensible defaults, but the defaults are a safety net — not the source of truth. The world's parameters evolve. Nothing is static. Nothing repeats forever.
+
 ---
 
 ## Article IX — Genesis

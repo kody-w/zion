@@ -87,7 +87,9 @@ class TestContentQuality(unittest.TestCase):
     def test_zones_missing_reported(self):
         state_dir = make_state_dir()
         quality = daily_health.analyze_content_quality(state_dir)
-        self.assertEqual(len(quality['zones_missing']), 5)
+        # 3 zones seen out of total valid zones
+        total_zones = len(daily_health.VALID_ZONES)
+        self.assertEqual(len(quality['zones_missing']), total_zones - 3)
 
     def test_action_diversity_from_actions(self):
         state_dir = make_state_dir()

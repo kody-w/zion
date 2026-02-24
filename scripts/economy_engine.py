@@ -1,74 +1,40 @@
 #!/usr/bin/env python3
 """Economy processing: earnings, transactions, ledger integrity."""
 import json
+import os
 import sys
 import time
 
-# Spark earnings for different activities
-EARN_TABLE = {
-    'join': 1,
-    'move': 0,
-    'say': 1,
-    'shout': 2,
-    'whisper': 1,
-    'emote': 1,
-    'build': 10,
-    'plant': 5,
-    'craft': 8,
-    'compose': 15,
-    'harvest': 3,
-    'trade_offer': 0,
-    'trade_accept': 0,
-    'buy': 0,
-    'sell': 0,
-    'gift': 5,
-    'teach': 10,
-    'learn': 5,
-    'mentor_offer': 0,
-    'mentor_accept': 0,
-    'challenge': 0,
-    'accept_challenge': 0,
-    'forfeit': 0,
-    'score': 10,
-    'discover': 20,
-    'anchor_place': 25,
-    'inspect': 1,
-    'intention_set': 2,
-    'intention_clear': 0,
-    'warp': 0,
-    'warp_fork': 50,
-    'return_home': 0,
-    'heartbeat': 0,
-    'idle': 0,
-    'leave': 0,
-    'federation_announce': 100,
-    'federation_handshake': 50
-}
+# Load config from state/config/economy.json (falls back to defaults)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from load_config import load_config
 
-# Progressive tax brackets (§6.4)
-_TAX_BRACKETS = [
-    (0,   19,  0.00),
-    (20,  49,  0.05),
-    (50,  99,  0.10),
-    (100, 249, 0.15),
-    (250, 499, 0.25),
-    (500, float('inf'), 0.40),
-]
+_economy_cfg = load_config('economy')
+
+# Spark earnings for different activities — loaded from config
+EARN_TABLE = _economy_cfg.get('earn_table', {})
+
+# Progressive tax brackets (§6.4) — loaded from config
+_raw_brackets = _economy_cfg.get('tax_brackets', [])
+_TAX_BRACKETS = []
+for _b in _raw_brackets:
+    _lo, _hi, _rate = _b[0], _b[1], _b[2]
+    _TAX_BRACKETS.append((_lo, float('inf') if _hi is None else _hi, _rate))
 
 TREASURY_ID = 'TREASURY'
 SYSTEM_ID = 'SYSTEM'
 
-# UBI constants (§6.4.4)
-BASE_UBI_AMOUNT = 5          # Max Spark per citizen per game day
+# UBI constants (§6.4.4) — loaded from config
+BASE_UBI_AMOUNT = _economy_cfg.get('base_ubi_amount', 5)
 
-# Wealth tax constants (§6.4.6)
-WEALTH_TAX_THRESHOLD = 500
-WEALTH_TAX_RATE = 0.02
+# Wealth tax constants (§6.4.6) — loaded from config
+WEALTH_TAX_THRESHOLD = _economy_cfg.get('wealth_tax_threshold', 500)
+WEALTH_TAX_RATE = _economy_cfg.get('wealth_tax_rate', 0.02)
 
-# Spark Sink constants (§6.5)
-MAINTENANCE_COST = 1         # Spark per structure per game day (§6.5.1)
-LISTING_FEE_RATE = 0.05      # 5% of asking price (§6.5.2)
-LISTING_FEE_MIN = 1          # Minimum listing fee in Spark
+# Spark Sink constants (§6.5) — loaded from config
+MAINTENANCE_COST = _economy_cfg.get('maintenance_cost', 1)
+LISTING_FEE_RATE = _economy_cfg.get('listing_fee_rate', 0.05)
+LISTING_FEE_MIN = _economy_cfg.get('listing_fee_min', 1)
 
 
 def _get_tax_rate(balance):

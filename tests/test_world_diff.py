@@ -485,13 +485,12 @@ class TestNarrateDiff(unittest.TestCase):
     def test_narrative_is_string(self):
         diff = diff_states(make_state(), make_state())
         narrative = narrate_diff(diff)
-        self.assertIsInstance(narrative, str)
+        self.assertIsNone(narrative)
 
     def test_narrative_no_changes(self):
         diff = diff_states(make_state(), make_state())
         narrative = narrate_diff(diff)
-        # Should mention "no changes" or similar quiet message
-        self.assertIn('no', narrative.lower())
+        self.assertIsNone(narrative)
 
     def test_narrative_balance_increase(self):
         before = make_state(economy=make_economy({'alice': 10}))
@@ -679,8 +678,9 @@ class TestActualStateFiles(unittest.TestCase):
         state_dir = self.STATE_DIR
         diff = diff_files(state_dir, state_dir)
         narrative = narrate_diff(diff)
-        self.assertIsInstance(narrative, str)
-        self.assertGreater(len(narrative), 0)
+        if narrative is not None:
+            self.assertIsInstance(narrative, str)
+            self.assertGreater(len(narrative), 0)
 
 
 if __name__ == '__main__':

@@ -66,8 +66,8 @@ def generate_news_item(before_state, after_state, timestamp=None):
     diff = diff_states(before_state, after_state)
     narrative = narrate_diff(diff)
 
-    # No changes produces the quiet "No notable changes" message
-    if narrative.strip().lower().startswith('no notable changes'):
+    # No changes detected
+    if narrative is None:
         return None
 
     # Title: first sentence of narrative, capped at 120 chars

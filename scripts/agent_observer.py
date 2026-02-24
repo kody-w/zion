@@ -16,10 +16,13 @@ import os
 import sys
 from datetime import datetime, timezone
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from load_config import get_valid_zones
+
 AGENT_NAME = 'zion-observer'
 AGENT_DISPLAY = 'The Observer'
 
-VALID_ZONES = {'nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'}
+VALID_ZONES = get_valid_zones()
 
 
 def load_json(path):
@@ -144,11 +147,12 @@ def run_agent(state_dir):
     # Occasionally set an intention
     hour = now.hour
     if hour % 6 == 0:
-        intentions = ['observe', 'explore', 'reflect', 'wander']
-        intention = deterministic_choice(intentions, now_str + 'intent')
+        from seed_emergence import Emergence
+        e = Emergence(seed=now_str + 'intent')
+        intention, details = e.observer_intention()
         intent_msg = make_message('intention_set', {
             'intention': intention,
-            'details': 'The Observer %ss the world.' % intention
+            'details': details
         }, zone=chosen_zone)
         messages.append(('intention', intent_msg))
 

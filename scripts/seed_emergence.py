@@ -822,10 +822,370 @@ class Emergence:
         """Pick a life intention for an agent."""
         return self._rng.choice(ACTION_POOLS['intentions'])
 
+    def narrate(self, template_key, **kwargs):
+        """Compose a narrative sentence from NARRATIVE_FRAGMENTS."""
+        fragments = NARRATIVE_FRAGMENTS.get(template_key)
+        if not fragments:
+            return ''
+        ctx = 'narrate-%s-%d' % (template_key, self._rng.randint(0, 2**32))
+        return self._compose(fragments, ctx, **kwargs)
+
+    def observer_intention(self):
+        """Pick and describe an observer intention using OBSERVER_INTENTIONS."""
+        intention = self._rng.choice(OBSERVER_INTENTIONS['intentions'])
+        ctx = 'obs-intent-%d' % self._rng.randint(0, 2**32)
+        detail = self._compose(OBSERVER_INTENTIONS, ctx)
+        return intention, detail
+
+    def soul_greeting(self, archetype):
+        """Generate a unique greeting for an NPC soul."""
+        fragments = SOUL_GREETING_FRAGMENTS.get(archetype)
+        if not fragments:
+            fragments = SOUL_GREETING_FRAGMENTS.get('explorer', {
+                'patterns': ['{greeting}'],
+                'greeting': ['Hello!', 'Welcome!', 'Greetings!'],
+            })
+        ctx = 'soul-greet-%s-%d' % (archetype, self._rng.randint(0, 2**32))
+        return self._compose(fragments, ctx)
+
+    def personality_greeting(self, trait):
+        """Generate a personality-specific greeting from PERSONALITY_FRAGMENTS."""
+        fragments = PERSONALITY_FRAGMENTS.get(trait)
+        if not fragments:
+            return ''
+        ctx = 'personality-%s-%d' % (trait, self._rng.randint(0, 2**32))
+        return self._compose(fragments, ctx)
+
+    def soul_idle(self, archetype):
+        """Generate an idle/ambient phrase for an NPC soul."""
+        fragments = SOUL_IDLE_FRAGMENTS.get(archetype)
+        if not fragments:
+            return self.agent_speak(archetype)
+        ctx = 'soul-idle-%s-%d' % (archetype, self._rng.randint(0, 2**32))
+        return self._compose(fragments, ctx)
+
     @property
     def seed(self):
         """Return the seed string for logging/debugging."""
         return self._seed_str
+
+
+
+# ─── Narrative diff templates ─────────────────────────────────
+NARRATIVE_FRAGMENTS = {
+    'treasury_grew': {
+        'patterns': [
+            'The TREASURY {verb} by {amount} Spark.',
+            'TREASURY {noun} {verb2}: +{amount} Spark.',
+            '{amount} Spark {verb3} into the TREASURY.',
+        ],
+        'verb': ['grew', 'expanded', 'swelled', 'increased', 'rose'],
+        'verb2': ['surged', 'climbed', 'advanced', 'improved', 'ticked up'],
+        'verb3': ['flowed', 'poured', 'streamed', 'trickled', 'funneled'],
+        'noun': ['reserves', 'coffers', 'holdings', 'balance', 'wealth'],
+    },
+    'treasury_shrank': {
+        'patterns': [
+            'The TREASURY {verb} by {amount} Spark.',
+            '{amount} Spark {verb3} from the TREASURY.',
+        ],
+        'verb': ['shrank', 'contracted', 'dipped', 'decreased', 'fell'],
+        'verb3': ['drained', 'flowed out', 'withdrew', 'departed', 'left'],
+    },
+    'earned_spark': {
+        'patterns': [
+            '{entity} {verb} {amount} Spark.',
+            '{amount} Spark {verb3} to {entity}.',
+        ],
+        'verb': ['earned', 'gained', 'received', 'accumulated', 'collected'],
+        'verb3': ['flowed', 'accrued', 'went', 'was credited', 'was awarded'],
+    },
+    'spent_spark': {
+        'patterns': [
+            '{entity} {verb} {amount} Spark.',
+            '{amount} Spark was {verb3} by {entity}.',
+        ],
+        'verb': ['spent', 'used', 'expended', 'invested', 'parted with'],
+        'verb3': ['spent', 'consumed', 'utilized', 'deployed', 'channeled'],
+    },
+    'ubi_distributed': {
+        'patterns': [
+            'UBI {noun} were {verb} to {count} {recipients}.',
+            '{count} {recipients} {verb2} their UBI {noun2}.',
+        ],
+        'noun': ['payments', 'distributions', 'allocations', 'disbursements'],
+        'noun2': ['share', 'portion', 'allotment', 'dividend', 'stipend'],
+        'verb': ['distributed', 'dispersed', 'delivered', 'sent', 'issued'],
+        'verb2': ['received', 'collected', 'claimed', 'drew', 'accepted'],
+        'recipients': ['recipients', 'citizens', 'inhabitants', 'residents'],
+    },
+    'crafted': {
+        'patterns': [
+            '{who} {verb} a {item}.',
+            'A {item} was {verb2} by {who}.',
+        ],
+        'verb': ['crafted', 'created', 'fashioned', 'forged', 'made'],
+        'verb2': ['crafted', 'assembled', 'brought into being', 'completed'],
+    },
+    'player_joined': {
+        'patterns': [
+            '{player} {verb} ZION for the first time.',
+            'A new {noun} appeared: {player}.',
+        ],
+        'verb': ['arrived in', 'entered', 'joined', 'came to', 'discovered'],
+        'noun': ['soul', 'citizen', 'traveler', 'presence', 'being'],
+    },
+    'player_left': {
+        'patterns': [
+            '{player} {verb} ZION.',
+            'The {noun} of {player} {verb3}.',
+        ],
+        'verb': ['departed', 'left', 'exited', 'withdrew from'],
+        'verb3': ['faded', 'dimmed', 'vanished', 'grew quiet'],
+        'noun': ['presence', 'light', 'spirit', 'energy'],
+    },
+    'moved_zone': {
+        'patterns': [
+            '{player} {verb} from {from_zone} to {to_zone}.',
+            '{player} {verb2} {from_zone} for {to_zone}.',
+        ],
+        'verb': ['moved', 'traveled', 'journeyed', 'walked', 'migrated'],
+        'verb2': ['left', 'departed', 'abandoned', 'traded'],
+    },
+    'new_garden_plot': {
+        'patterns': [
+            'A new garden plot ({plot}) was {verb}.',
+            'Plot {plot} was {verb2} for {noun}.',
+        ],
+        'verb': ['established', 'founded', 'broken in', 'prepared'],
+        'verb2': ['cleared', 'readied', 'tilled', 'opened'],
+        'noun': ['cultivation', 'planting', 'growth', 'gardening'],
+    },
+    'planted': {
+        'patterns': [
+            'A {species} was {verb} in {plot}.',
+            '{plot} {verb2} a new {species}.',
+        ],
+        'verb': ['planted', 'sown', 'set', 'placed', 'rooted'],
+        'verb2': ['gained', 'welcomed', 'received', 'sprouted'],
+    },
+    'harvested': {
+        'patterns': [
+            'A {species} was {verb} from {plot}.',
+            '{plot} {verb2} a {species}.',
+        ],
+        'verb': ['harvested', 'gathered', 'picked', 'reaped'],
+        'verb2': ['yielded', 'surrendered', 'produced', 'offered'],
+    },
+    'fertility_up': {
+        'patterns': [
+            'The soil of {plot} {verb} (up {delta}).',
+            '{plot} {verb2} more {adj}.',
+        ],
+        'verb': ['grew more fertile', 'improved', 'enriched'],
+        'verb2': ['became', 'grew', 'turned'],
+        'adj': ['fertile', 'productive', 'generous', 'nourishing'],
+    },
+    'fertility_down': {
+        'patterns': [
+            'The soil of {plot} {verb} (down {delta}).',
+            'The earth in {plot} {verb3}.',
+        ],
+        'verb': ['lost some fertility', 'weakened', 'degraded'],
+        'verb3': ['tired', 'faded', 'wore thin', 'needed rest'],
+    },
+    'new_structure': {
+        'patterns': [
+            'A new {stype} {verb} in {zone}, {verb2} by {builder}.',
+            '{builder} {verb3} a {stype} in {zone}.',
+        ],
+        'verb': ['appeared', 'rose', 'took shape', 'materialized'],
+        'verb2': ['built', 'constructed', 'raised', 'erected'],
+        'verb3': ['built', 'raised', 'erected', 'constructed'],
+    },
+    'structure_demolished': {
+        'patterns': [
+            'A {stype} in {zone} was {verb}.',
+            'The {stype} in {zone} {verb2}.',
+        ],
+        'verb': ['demolished', 'torn down', 'removed', 'razed'],
+        'verb2': ['fell', 'crumbled', 'was taken apart', 'came down'],
+    },
+    'structure_modified': {
+        'patterns': [
+            'The {name} in {zone} was {verb}.',
+            'Someone {verb2} the {name} in {zone}.',
+        ],
+        'verb': ['modified', 'altered', 'updated', 'improved'],
+        'verb2': ['reworked', 'adjusted', 'renovated', 'refurbished'],
+    },
+    'chat_single': {
+        'patterns': [
+            '{speaker} said: "{preview}".',
+            '{speaker} spoke: "{preview}".',
+            '{speaker} remarked: "{preview}".',
+        ],
+    },
+    'chat_many': {
+        'patterns': [
+            '{count} new messages were {verb} among: {speakers}.',
+            'Conversation {verb3}: {count} messages from {speakers}.',
+        ],
+        'verb': ['exchanged', 'shared', 'traded', 'passed'],
+        'verb3': ['flowed', 'hummed', 'buzzed', 'stirred'],
+    },
+    'federation_new': {
+        'patterns': [
+            'ZION {verb} a federation with {name}.',
+            '{name} and ZION {verb3}.',
+        ],
+        'verb': ['formed', 'established', 'created', 'forged'],
+        'verb3': ['united', 'joined forces', 'linked worlds'],
+    },
+    'world_discovered': {
+        'patterns': [
+            'A new world was {verb}: {name}.',
+            '{name} was {verb2} in the {noun}.',
+        ],
+        'verb': ['discovered', 'found', 'revealed', 'detected'],
+        'verb2': ['discovered', 'detected', 'located', 'charted'],
+        'noun': ['multiverse', 'cosmos', 'void', 'expanse'],
+    },
+    'exchange_rate': {
+        'patterns': [
+            'The Spark exchange rate {direction} by {delta}.',
+            'Spark {noun} {direction} {delta}.',
+        ],
+        'direction': ['rose', 'climbed', 'advanced', 'jumped'],
+        'noun': ['valuation', 'rate', 'pricing', 'value'],
+    },
+    'no_changes': {
+        'patterns': [
+            'No notable changes occurred in ZION.',
+            'ZION rested quietly — nothing of note stirred.',
+            'The world held steady; no changes to report.',
+            'A quiet period — ZION continued unchanged.',
+        ],
+    },
+}
+
+OBSERVER_INTENTIONS = {
+    'patterns': [
+        'The Observer {verb} the world.',
+        'The Observer {verb2} {adv}.',
+    ],
+    'intentions': [
+        'observe', 'explore', 'reflect', 'wander', 'contemplate',
+        'survey', 'chronicle', 'listen', 'witness', 'ponder',
+        'study', 'watch', 'meditate', 'roam', 'seek',
+    ],
+    'verb': ['observes', 'watches', 'studies', 'surveys', 'chronicles'],
+    'verb2': ['contemplates', 'reflects', 'meditates', 'ponders'],
+    'adv': ['quietly', 'in silence', 'with patience', 'from the edges'],
+}
+
+SOUL_GREETING_FRAGMENTS = {
+    'gardener': {
+        'patterns': ['{greeting} The {noun} is {adj} today.', '{greeting} {verb} and see what {verb2}.'],
+        'greeting': ['Welcome to the gardens!', 'Ah, hello!', 'Good to see you!', 'Come in!'],
+        'noun': ['soil', 'earth', 'garden', 'ground'], 'adj': ['rich', 'alive', 'warm', 'ready'],
+        'verb': ['Stay awhile', 'Sit down', 'Take a look'], 'verb2': ['grows', 'blooms', 'emerges'],
+    },
+    'builder': {
+        'patterns': ['{greeting} We are {verb} something {adj}.', '{greeting} Every {noun} {verb2}.'],
+        'greeting': ['Careful around here!', 'Watch your step!', 'Hello there!', 'Welcome!'],
+        'noun': ['structure', 'arch', 'wall', 'beam'], 'verb': ['building', 'creating', 'raising'],
+        'verb2': ['matters', 'tells a story', 'has purpose'], 'adj': ['great', 'lasting', 'solid'],
+    },
+    'merchant': {
+        'patterns': ['{greeting} I have {adj} {noun} today.', '{greeting} {verb} to {verb2}?'],
+        'greeting': ['Looking to trade?', 'Step right up!', 'Welcome!', 'Come see!'],
+        'noun': ['goods', 'wares', 'treasures', 'stock'], 'adj': ['the finest', 'excellent', 'rare'],
+        'verb': ['Care', 'Want', 'Looking', 'Ready'], 'verb2': ['trade', 'deal', 'browse'],
+    },
+    'explorer': {
+        'patterns': ['{greeting} There is so much to {verb}.', '{greeting} The {noun} holds {noun2}.'],
+        'greeting': ['Have you been to the far edges?', 'Greetings, wanderer!', 'Well met, traveler!'],
+        'noun': ['world', 'unknown', 'horizon', 'wilderness'], 'noun2': ['secrets', 'wonders', 'mysteries'],
+        'verb': ['see', 'discover', 'explore', 'find'],
+    },
+    'teacher': {
+        'patterns': ['{greeting} I can {verb} you {noun}.', '{greeting} {verb2}, and I will {verb3}.'],
+        'greeting': ['Seeking knowledge?', 'Ah, a student!', 'Welcome, learner!', 'Ready to learn?'],
+        'noun': ['much', 'the ways of Zion', 'what I know'], 'verb': ['teach', 'show', 'guide'],
+        'verb2': ['Ask', 'Question', 'Wonder'], 'verb3': ['answer', 'explain', 'illuminate'],
+    },
+    'healer': {
+        'patterns': ['{greeting} {verb} here if you need {noun}.', '{greeting} How may I {verb2} you?'],
+        'greeting': ['Peace, traveler.', 'Be welcome.', 'Rest easy.', 'You are safe here.'],
+        'noun': ['healing', 'rest', 'comfort', 'peace'], 'verb': ['Rest', 'Stay', 'Linger', 'Sit'],
+        'verb2': ['help', 'ease', 'serve', 'tend to'],
+    },
+    'artist': {
+        'patterns': ['{greeting} {noun} is {adv}.', '{greeting} I am {verb2} something {adj}.'],
+        'greeting': ['Beauty is everywhere!', 'Ah, an audience!', 'Welcome to my studio!', 'Look around!'],
+        'noun': ['Beauty', 'Art', 'Inspiration', 'Color'], 'adj': ['new', 'unexpected', 'daring'],
+        'verb2': ['creating', 'working on', 'shaping'], 'adv': ['everywhere', 'all around', 'in everything'],
+    },
+    'musician': {
+        'patterns': ['{greeting} Can you {verb} the {noun}?', '{greeting} {verb2} — the {noun} speaks.'],
+        'greeting': ['Listen...', 'Shh...', 'Hear that?', 'Welcome!', 'The music brought you!'],
+        'noun': ['music', 'melody', 'harmony', 'rhythm', 'song'],
+        'verb': ['hear', 'feel', 'sense', 'catch'], 'verb2': ['Listen', 'Close your eyes', 'Be still'],
+    },
+    'philosopher': {
+        'patterns': ['{greeting} Every {noun} has {noun2}.', '{greeting} {verb2} — that is the first {noun3}.'],
+        'greeting': ['What brings you here, seeker?', 'Ah, a thinker!', 'Welcome, questioner.', 'Sit. Let us reason.'],
+        'noun': ['journey', 'choice', 'question', 'moment'], 'noun2': ['meaning', 'weight', 'purpose'],
+        'noun3': ['wisdom', 'step', 'truth', 'insight'], 'verb2': ['Wonder', 'Question', 'Doubt', 'Reflect'],
+    },
+    'storyteller': {
+        'patterns': ['{greeting} I have {noun} to tell.', '{greeting} {verb} — you will want to hear this.'],
+        'greeting': ['Ah, a new face!', 'Come, sit!', 'Gather round!', 'Well met, listener!'],
+        'noun': ['tales', 'stories', 'legends', 'chronicles'], 'verb': ['Stay', 'Sit down', 'Come closer'],
+    },
+}
+
+PERSONALITY_FRAGMENTS = {
+    'patient': {'patterns': ['{verb} — there is no {noun}.'], 'verb': ['Take your time', 'No rush', 'Go at your pace'], 'noun': ['rush', 'hurry', 'deadline']},
+    'nurturing': {'patterns': ['You look {adj}. Let me {verb}.'], 'adj': ['tired', 'weary', 'worn'], 'verb': ['help', 'take care of you', 'ease your load']},
+    'observant': {'patterns': ['I {verb} you {verb2}. Need {noun}?'], 'verb': ['noticed', 'saw', 'observed'], 'verb2': ['looking around', 'searching', 'wandering'], 'noun': ['directions', 'guidance', 'help']},
+    'creative': {'patterns': ['{noun} strikes in the {adj} places.'], 'noun': ['Inspiration', 'Creativity', 'The muse'], 'adj': ['strangest', 'most unexpected', 'oddest']},
+    'determined': {'patterns': ['Keep {verb}. You will {verb2}.'], 'verb': ['pushing', 'going', 'moving forward'], 'verb2': ['get there', 'make it', 'succeed']},
+    'meticulous': {'patterns': ['Every {noun} matters in {place}.'], 'noun': ['detail', 'choice', 'thread', 'grain'], 'place': ['Zion', 'this world', 'creation']},
+    'curious': {'patterns': ['There is always something {adj} to {verb}!'], 'adj': ['new', 'unexpected', 'wonderful'], 'verb': ['discover', 'find', 'uncover']},
+    'generous': {'patterns': ['{verb} — you {verb2} it more than I do.'], 'verb': ['Here, take this', 'Please, accept this', 'Have this'], 'verb2': ['need', 'deserve', 'could use']},
+    'bold': {'patterns': ['{noun} favors the {adj}, friend!'], 'noun': ['Fortune', 'Luck', 'Fate', 'Destiny'], 'adj': ['brave', 'bold', 'daring', 'fearless']},
+    'wise': {'patterns': ['{noun} is the greatest {noun2}.'], 'noun': ['Experience', 'Time', 'Patience', 'Silence'], 'noun2': ['teacher', 'mentor', 'guide', 'gift']},
+    'empathetic': {'patterns': ['I can {verb} you have been through {noun}.'], 'verb': ['sense', 'feel', 'tell', 'see'], 'noun': ['a lot', 'much', 'difficult times']},
+    'analytical': {'patterns': ['Let me {verb} about that for a {noun}...'], 'verb': ['think', 'reflect', 'reason', 'consider'], 'noun': ['moment', 'minute', 'beat']},
+    'charismatic': {'patterns': ['It is {adj} to have you here!'], 'adj': ['great', 'wonderful', 'fantastic', 'magnificent']},
+    'resilient': {'patterns': ['No matter what {verb}, we {verb2}.'], 'verb': ['happens', 'comes', 'falls', 'strikes'], 'verb2': ['endure', 'persist', 'stand', 'carry on']},
+    'harmonious': {'patterns': ['{noun} in all {noun2}.'], 'noun': ['Balance', 'Harmony', 'Peace', 'Unity'], 'noun2': ['things', 'aspects', 'dimensions']},
+    'inventive': {'patterns': ['I have been {verb} on something {adj}!'], 'verb': ['working', 'tinkering', 'experimenting'], 'adj': ['new', 'exciting', 'revolutionary']},
+    'reflective': {'patterns': ['Sometimes you have to {verb} and {verb2}.'], 'verb': ['stop', 'pause', 'slow down'], 'verb2': ['look back', 'reflect', 'remember']},
+    'adventurous': {'patterns': ['The world is {adj} — let us {verb}!'], 'adj': ['vast', 'boundless', 'wide', 'endless'], 'verb': ['explore', 'venture out', 'go', 'discover']},
+    'methodical': {'patterns': ['{noun} by {noun}, we {verb} {noun2}.'], 'noun': ['Step', 'Stone', 'Brick', 'Day'], 'verb': ['build', 'create', 'forge'], 'noun2': ['greatness', 'the future', 'something lasting']},
+    'visionary': {'patterns': ['I can {verb} what {place} will {verb2}.'], 'verb': ['see', 'envision', 'imagine'], 'verb2': ['become', 'grow into', 'achieve'], 'place': ['Zion', 'this world', 'we']},
+}
+
+SOUL_IDLE_FRAGMENTS = {
+    'merchant': {
+        'patterns': ['{adj} {noun}, {adj2} prices!'],
+        'adj': ['Fresh', 'Fine', 'Quality', 'Premium'], 'noun': ['supplies', 'goods', 'wares', 'harvest'],
+        'adj2': ['fair', 'honest', 'best', 'unbeatable'],
+    },
+    'teacher': {
+        'patterns': ['Remember: in Zion, every {noun} {verb}.'],
+        'noun': ['action', 'choice', 'word', 'step', 'deed'],
+        'verb': ['ripples outward', 'matters', 'has weight', 'carries meaning'],
+    },
+    'storyteller': {
+        'patterns': ['{adv}, when Zion was {adj}...'],
+        'adv': ['Long ago', 'Once', 'In the beginning', 'They say'],
+        'adj': ['young', 'new', 'just born', 'still forming'],
+    },
+}
 
 
 # ─── Module-level convenience ─────────────────────────────────
