@@ -213,6 +213,13 @@ def _distribute_ubi(state):
     if TREASURY_ID not in economy['balances']:
         economy['balances'][TREASURY_ID] = 0
 
+    # Bootstrap all citizens into economy (§6.4.4): ensure every citizen
+    # has a balance entry so they can receive UBI
+    citizens = state.get('citizens', {})
+    for cid in citizens:
+        if cid not in economy['balances']:
+            economy['balances'][cid] = 0
+
     # Check game-day boundary: distribute UBI once per game day (1440 worldTime units)
     current_day = int(state.get('worldTime', 0) / 1440)
     last_ubi_day = state.get('_lastUbiDay', -1)

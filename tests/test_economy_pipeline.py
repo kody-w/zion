@@ -409,5 +409,147 @@ class TestUniversalEarnings(unittest.TestCase):
         self.assertGreaterEqual(self._get_balance(), 0, 'Balance should not go negative')
 
 
+class TestValidZonesFromConfig(unittest.TestCase):
+    """VALID_ZONES should be loaded from config, including observatory."""
+
+    def test_observatory_in_valid_zones(self):
+        from api_process_inbox import VALID_ZONES
+        self.assertIn('observatory', VALID_ZONES,
+                      'observatory must be a valid zone')
+
+    def test_valid_zones_loaded_from_config(self):
+        from api_process_inbox import VALID_ZONES
+        from load_config import load_config
+        world_cfg = load_config('world')
+        config_zones = set(world_cfg.get('zones', {}).keys())
+        if config_zones:
+            self.assertEqual(VALID_ZONES, config_zones,
+                             'VALID_ZONES should match config world.zones')
+
+    def test_warp_to_observatory(self):
+        """Warp to observatory should set citizen zone to observatory."""
+        d = make_state_dir()
+        try:
+            msg = make_msg('warp', payload={'zone': 'observatory'})
+            apply_to_state(msg, d)
+            world = load_json(os.path.join(d, 'world.json'))
+            zone = world['citizens']['agent_001']['position']['zone']
+            self.assertEqual(zone, 'observatory')
+        finally:
+            shutil.rmtree(d)
+
+    def test_all_config_zones_warpable(self):
+        """Every zone in config should be warpable without fallback to nexus."""
+        from load_config import load_config
+        world_cfg = load_config('world')
+        config_zones = list(world_cfg.get('zones', {}).keys())
+        for zone_id in config_zones:
+            d = make_state_dir()
+            try:
+                msg = make_msg('warp', payload={'zone': zone_id})
+                apply_to_state(msg, d)
+                world = load_json(os.path.join(d, 'world.json'))
+                actual = world['citizens']['agent_001']['position']['zone']
+                self.assertEqual(actual, zone_id,
+                                 'warp to %s should not fall back to nexus' % zone_id)
+            finally:
+                shutil.rmtree(d)
+
+
+class TestChatTextExtraction(unittest.TestCase):
+    """Chat messages should have top-level text field extracted from payload."""
+
+    def setUp(self):
+        self.state_dir = make_state_dir()
+
+    def tearDown(self):
+        shutil.rmtree(self.state_dir)
+
+    def test_say_has_toplevel_text(self):
+        msg = make_msg('say', payload={'text': 'Hello world'})
+        apply_to_state(msg, self.state_dir)
+        chat = load_json(os.path.join(self.state_dir, 'chat.json'))
+        last = chat['messages'][-1]
+        self.assertEqual(last.get('text'), 'Hello world')
+
+    def test_shout_has_toplevel_text(self):
+        msg = make_msg('shout', payload={'text': 'HEY EVERYONE'})
+        apply_to_state(msg, self.state_dir)
+        chat = load_json(os.path.join(self.state_dir, 'chat.json'))
+        last = chat['messages'][-1]
+        self.assertEqual(last.get('text'), 'HEY EVERYONE')
+
+    def test_emote_no_text_ok(self):
+        """Emotes without text should still be stored without a text field."""
+        msg = make_msg('emote', payload={'emoteType': 'wave'})
+        apply_to_state(msg, self.state_dir)
+        chat = load_json(os.path.join(self.state_dir, 'chat.json'))
+        last = chat['messages'][-1]
+        self.assertNotIn('text', last)
+
+    def test_whisper_has_toplevel_text(self):
+        msg = make_msg('whisper', payload={'text': 'secret message', 'to': 'agent_002'})
+        apply_to_state(msg, self.state_dir)
+        chat = load_json(os.path.join(self.state_dir, 'chat.json'))
+        last = chat['messages'][-1]
+        self.assertEqual(last.get('text'), 'secret message')
+
+    def test_original_payload_preserved(self):
+        """Text extraction should not remove text from payload."""
+        msg = make_msg('say', payload={'text': 'keep both'})
+        apply_to_state(msg, self.state_dir)
+        chat = load_json(os.path.join(self.state_dir, 'chat.json'))
+        last = chat['messages'][-1]
+        self.assertEqual(last.get('text'), 'keep both')
+        self.assertEqual(last.get('payload', {}).get('text'), 'keep both')
+
+
+class TestUbiCitizenBootstrap(unittest.TestCase):
+    """UBI distribution should bootstrap all citizens into economy."""
+
+    def test_citizens_get_balance_entries(self):
+        """Citizens in world.json should get balance entries during UBI tick."""
+        from game_tick import _distribute_ubi
+        state = {
+            'worldTime': 2880,  # Day 2 boundary
+            '_lastUbiDay': 0,   # Force UBI distribution
+            'citizens': {
+                'agent_001': {'id': 'agent_001'},
+                'agent_002': {'id': 'agent_002'},
+                'agent_003': {'id': 'agent_003'},
+            },
+            'economy': {
+                'balances': {'TREASURY': 100, 'agent_001': 5},
+                'transactions': [],
+                'ledger': [],
+            },
+            'structures': {},
+        }
+        _distribute_ubi(state)
+        balances = state['economy']['balances']
+        self.assertIn('agent_002', balances,
+                      'agent_002 should have been bootstrapped')
+        self.assertIn('agent_003', balances,
+                      'agent_003 should have been bootstrapped')
+
+    def test_bootstrap_does_not_overwrite_existing(self):
+        """Bootstrapping should not overwrite existing balances."""
+        from game_tick import _distribute_ubi
+        state = {
+            'worldTime': 2880,
+            '_lastUbiDay': 0,
+            'citizens': {'agent_001': {'id': 'agent_001'}},
+            'economy': {
+                'balances': {'TREASURY': 100, 'agent_001': 50},
+                'transactions': [],
+                'ledger': [],
+            },
+            'structures': {},
+        }
+        _distribute_ubi(state)
+        self.assertGreaterEqual(state['economy']['balances']['agent_001'], 50,
+                                'Existing balance should not be reduced')
+
+
 if __name__ == '__main__':
     unittest.main()

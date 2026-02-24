@@ -225,7 +225,11 @@ def _record_economy_txn(state_dir, txn_type, sender, payload, to=''):
     save_json(econ_path, econ)
 
 
-VALID_ZONES = {'nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'}
+# Load valid zones from config (emergence-driven, §2.1)
+_world_cfg = load_config('world')
+VALID_ZONES = set(_world_cfg.get('zones', {}).keys()) or {
+    'nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena', 'observatory'
+}
 
 # Load economy config for earn table and tax brackets
 _econ_cfg = load_config('economy')
@@ -263,11 +267,14 @@ def apply_to_state(msg, state_dir):
     sender = msg['from']
 
     if msg_type in ('say', 'shout', 'whisper', 'emote'):
-        # Append to chat
+        # Append to chat — extract payload.text to top-level for canonical readability
         chat_path = os.path.join(state_dir, 'chat.json')
         chat = load_json(chat_path)
         messages = chat.get('messages', [])
-        messages.append(msg)
+        chat_msg = dict(msg)
+        if 'text' not in chat_msg and payload.get('text'):
+            chat_msg['text'] = payload['text']
+        messages.append(chat_msg)
         # Keep last 200 messages
         chat['messages'] = messages[-200:]
         save_json(chat_path, chat)
