@@ -42110,7 +42110,7 @@
       lfog.gain.value = 0.01;
       pg.gain.value = 0.02;
       lfo.connect(lfog); lfog.connect(pg.gain);
-      [261.63, 329.63, 392.00].forEach(function(f) {
+      [130.81, 164.81, 196.00].forEach(function(f) {
         var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
         o.connect(pg); o.start(); s.nodes.push(o);
       });
@@ -42119,7 +42119,7 @@
 
       function chime() {
         if (!ctx || !masterGain) return;
-        var freqs = [523.25, 659.25, 783.99, 1046.5, 1318.51];
+        var freqs = [130.81, 164.81, 196.00, 261.63, 329.63];
         var f = freqs[Math.floor(Math.random() * freqs.length)];
         var o = ctx.createOscillator(), g = ctx.createGain();
         var del = ctx.createDelay(), dg2 = ctx.createGain();
@@ -42161,7 +42161,7 @@
         if (!ctx || !masterGain) return;
         var o = ctx.createOscillator(), g = ctx.createGain();
         o.type = 'sine';
-        var f0 = 1200 + Math.random() * 1800;
+        var f0 = 200 + Math.random() * 200;
         o.frequency.setValueAtTime(f0, ctx.currentTime);
         o.frequency.linearRampToValueAtTime(f0 * (0.8 + Math.random() * 0.5), ctx.currentTime + 0.08);
         var dur = 0.1 + Math.random() * 0.2;
@@ -42175,7 +42175,7 @@
 
       var cric = ctx.createOscillator(), cam = ctx.createOscillator();
       var camg = ctx.createGain(), cg = ctx.createGain();
-      cric.type = 'sine'; cric.frequency.value = 4500;
+      cric.type = 'sine'; cric.frequency.value = 60;
       cam.type = 'sine'; cam.frequency.value = 20; camg.gain.value = 0.015; cg.gain.value = 0.015;
       cam.connect(camg); camg.connect(cg.gain);
       cric.connect(cg); cg.connect(masterGain); cric.start(); cam.start();
@@ -42186,7 +42186,7 @@
         var n = whiteNoise(0.3);
         if (n) {
           var rf = ctx.createBiquadFilter(), rg = ctx.createGain();
-          rf.type = 'bandpass'; rf.frequency.value = 2000; rf.Q.value = 2;
+          rf.type = 'lowpass'; rf.frequency.value = 400;
           rg.gain.value = 0.035; rg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
           n.connect(rf); rf.connect(rg); rg.connect(masterGain);
         }
@@ -42209,7 +42209,7 @@
       s.intervals.push(setInterval(function() {
         if (!ctx || !masterGain) return;
         var o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'sine'; o.frequency.value = 850;
+        o.type = 'sine'; o.frequency.value = 180;
         g.gain.value = 0.018; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.022);
         o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.022);
       }, 1000));
@@ -42218,7 +42218,7 @@
         var n = whiteNoise(0.12);
         if (n) {
           var pf = ctx.createBiquadFilter(), pg = ctx.createGain();
-          pf.type = 'highpass'; pf.frequency.value = 2000;
+          pf.type = 'lowpass'; pf.frequency.value = 300;
           pg.gain.value = 0.025; pg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
           n.connect(pf); pf.connect(pg); pg.connect(masterGain);
         }
@@ -42251,7 +42251,7 @@
       function chime() {
         if (!ctx || !masterGain) return;
         var o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'triangle'; o.frequency.value = 500 + Math.random() * 700;
+        o.type = 'triangle'; o.frequency.value = 130 + Math.random() * 200;
         g.gain.value = 0.035; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
         o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 1.2);
         s.timeouts.push(setTimeout(chime, 3000 + Math.random() * 5000));
@@ -42268,7 +42268,7 @@
       s.timeouts.push(setTimeout(tap, 500));
       function phrase() {
         if (!ctx || !masterGain) return;
-        var scale = [261.63, 293.66, 329.63, 392.00, 440.00];
+        var scale = [130.81, 146.83, 164.81, 196.00, 220.00];
         var n = 3 + Math.floor(Math.random() * 3);
         for (var i = 0; i < n; i++) {
           tone(scale[Math.floor(Math.random() * scale.length)], 'sine', 0.025, 0.35, i * 0.2);
@@ -42303,8 +42303,8 @@
         g.gain.value = 0.04; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.5);
         vib.connect(vibg); vibg.connect(o.frequency);
         o.connect(g); g.connect(masterGain); o.start(); vib.start();
-        o.frequency.linearRampToValueAtTime(600, ctx.currentTime + 1);
-        o.frequency.linearRampToValueAtTime(400, ctx.currentTime + 2);
+        o.frequency.linearRampToValueAtTime(300, ctx.currentTime + 1);
+        o.frequency.linearRampToValueAtTime(200, ctx.currentTime + 2);
         o.stop(ctx.currentTime + 2.5); vib.stop(ctx.currentTime + 2.5);
         s.timeouts.push(setTimeout(howl, 20000 + Math.random() * 20000));
       }
@@ -42329,7 +42329,7 @@
         var n = whiteNoise(0.35);
         if (n) {
           var rf = ctx.createBiquadFilter(), rg = ctx.createGain();
-          rf.type = 'bandpass'; rf.frequency.value = 1000; rf.Q.value = 2;
+          rf.type = 'lowpass'; rf.frequency.value = 400;
           rg.gain.value = 0.05; rg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
           n.connect(rf); rf.connect(rg); rg.connect(masterGain);
         }
@@ -42355,7 +42355,7 @@
       }
       function call() {
         if (!ctx || !masterGain) return;
-        var scale = [220, 247, 262, 294, 330, 349, 392, 440];
+        var scale = [110, 123, 131, 147, 165, 175, 196, 220];
         var n = 2 + Math.floor(Math.random() * 2);
         for (var i = 0; i < n; i++) {
           tone(scale[Math.floor(Math.random() * scale.length)], 'sine', 0.035, 0.22, i * 0.15);
@@ -42366,7 +42366,7 @@
       function coin() {
         if (!ctx || !masterGain) return;
         var o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'triangle'; o.frequency.value = 2000 + Math.random() * 1000;
+        o.type = 'sine'; o.frequency.value = 200 + Math.random() * 100;
         g.gain.value = 0.025; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
         o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.15);
         s.timeouts.push(setTimeout(coin, 3000 + Math.random() * 5000));
@@ -42392,7 +42392,7 @@
         var n = whiteNoise(0.12);
         if (n) {
           var ff = ctx.createBiquadFilter(), fg = ctx.createGain();
-          ff.type = 'bandpass'; ff.frequency.value = 1500 + Math.random() * 1500; ff.Q.value = 3;
+          ff.type = 'lowpass'; ff.frequency.value = 300 + Math.random() * 100;
           fg.gain.value = 0.015 + Math.random() * 0.02;
           fg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
           n.connect(ff); ff.connect(fg); fg.connect(masterGain);
@@ -42404,7 +42404,7 @@
       function hammer() {
         if (!ctx || !masterGain || !hammerOn) return;
         var o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'square'; o.frequency.value = 80;
+        o.type = 'sine'; o.frequency.value = 80;
         g.gain.value = 0.055; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
         o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.1);
         s.timeouts.push(setTimeout(hammer, 800 + Math.random() * 400));
@@ -42424,7 +42424,7 @@
       var crowd = createWhiteNoise();
       if (crowd) {
         var cf = ctx.createBiquadFilter(), cg = ctx.createGain();
-        cf.type = 'bandpass'; cf.frequency.value = 600; cf.Q.value = 0.8; cg.gain.value = 0.035;
+        cf.type = 'lowpass'; cf.frequency.value = 400; cg.gain.value = 0.035;
         crowd.connect(cf); cf.connect(cg); cg.connect(masterGain);
         s.nodes.push(crowd, cf, cg);
         s.intervals.push(setInterval(function() {
@@ -42444,7 +42444,7 @@
         var n = whiteNoise(0.22);
         if (n) {
           var mf = ctx.createBiquadFilter(), mg = ctx.createGain();
-          mf.type = 'bandpass'; mf.frequency.value = 3000; mf.Q.value = 3;
+          mf.type = 'lowpass'; mf.frequency.value = 300;
           mg.gain.value = 0.06; mg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
           n.connect(mf); mf.connect(mg); mg.connect(masterGain);
         }
@@ -42454,7 +42454,7 @@
       function horn() {
         if (!ctx || !masterGain) return;
         var o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'sawtooth'; o.frequency.value = 220;
+        o.type = 'triangle'; o.frequency.value = 130;
         g.gain.setValueAtTime(0, ctx.currentTime);
         g.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 0.2);
         g.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 0.8);
@@ -42476,8 +42476,8 @@
       if (!ctx || !masterGain) return;
       var o = ctx.createOscillator(), g = ctx.createGain();
       var del = ctx.createDelay(), dg = ctx.createGain();
-      o.type = 'sawtooth';
-      o.frequency.setValueAtTime(800, ctx.currentTime);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(300, ctx.currentTime);
       o.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.5);
       g.gain.value = 0.06; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
       del.delayTime.value = 0.15; dg.gain.value = 0.08;
@@ -42485,12 +42485,12 @@
       o.start(); o.stop(ctx.currentTime + 0.5);
     },
     harvest: function() {
-      tone(330, 'triangle', 0.06, 0.3);
-      tone(660, 'triangle', 0.03, 0.3);
+      tone(165, 'triangle', 0.06, 0.3);
+      tone(220, 'triangle', 0.03, 0.3);
     },
     build: function() {
-      tone(80, 'square', 0.06, 0.15);
-      tone(2000, 'sine', 0.04, 0.02);
+      tone(80, 'sine', 0.06, 0.15);
+      tone(160, 'sine', 0.04, 0.02);
     },
     trade: function() {
       if (!ctx || !masterGain) return;
@@ -42498,34 +42498,34 @@
       wob.type = 'sine'; wob.frequency.value = 5; wobg.gain.value = 3;
       cg.gain.value = 0.05; cg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
       wob.connect(wobg);
-      [1200, 1500].forEach(function(f) {
+      [220, 330].forEach(function(f) {
         var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
         wobg.connect(o.frequency); o.connect(cg); o.start(); o.stop(ctx.currentTime + 0.3);
       });
       cg.connect(masterGain); wob.start(); wob.stop(ctx.currentTime + 0.3);
     },
-    trade_request: function() { tone(700, 'sine', 0.04, 0.5); },
-    discover: function() { arp([523.25, 659.25, 783.99, 1046.50], 0.08, 'sine', 0.05, 0.2); },
+    trade_request: function() { tone(220, 'sine', 0.04, 0.5); },
+    discover: function() { arp([130.81, 164.81, 196.00, 261.63], 0.08, 'sine', 0.05, 0.2); },
     challenge: function() {
       if (!ctx || !masterGain) return;
       var now = ctx.currentTime;
       [220, 330].forEach(function(f) {
         var o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'sawtooth'; o.frequency.value = f;
+        o.type = 'sine'; o.frequency.value = f;
         g.gain.setValueAtTime(0, now);
         g.gain.linearRampToValueAtTime(0.055, now + 0.1);
         g.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
         o.connect(g); g.connect(masterGain); o.start(now); o.stop(now + 0.55);
       });
     },
-    levelup: function() { arp([261.63, 329.63, 392.00, 523.25], 0.1, 'sine', 0.05, 0.7); },
-    error: function() { tone(100, 'square', 0.04, 0.2); },
-    notification: function() { tone(800, 'sine', 0.05, 0.4); },
+    levelup: function() { arp([130.81, 164.81, 196.00, 261.63], 0.1, 'sine', 0.05, 0.7); },
+    error: function() { tone(80, 'sine', 0.04, 0.2); },
+    notification: function() { tone(220, 'sine', 0.05, 0.4); },
     craft_complete: function() {
-      tone(120, 'square', 0.06, 0.2);
-      arp([1800, 2200, 2600], 0.05, 'sine', 0.035, 0.4, 0.1);
+      tone(120, 'sine', 0.06, 0.2);
+      arp([165, 196, 220], 0.05, 'sine', 0.035, 0.4, 0.1);
     },
-    quest_accept: function() { arp([392.00, 493.88, 587.33], 0.08, 'sine', 0.05, 0.25); },
+    quest_accept: function() { arp([130.81, 164.81, 196.00], 0.08, 'sine', 0.05, 0.25); },
     quest_complete: function() {
       if (!ctx || !masterGain) return;
       var now = ctx.currentTime;
@@ -42548,7 +42548,7 @@
         n.connect(f); f.connect(g); g.connect(masterGain);
       }
     },
-    npc_greet: function() { tone(440, 'sine', 0.04, 0.35); },
+    npc_greet: function() { tone(165, 'sine', 0.04, 0.35); },
     portal_enter: function() {
       if (!ctx || !masterGain) return;
       var n = whiteNoise(0.8);
@@ -42556,18 +42556,18 @@
         var f = ctx.createBiquadFilter(), g = ctx.createGain();
         f.type = 'bandpass';
         f.frequency.setValueAtTime(200, ctx.currentTime);
-        f.frequency.exponentialRampToValueAtTime(4000, ctx.currentTime + 0.8);
-        f.Q.value = 5; g.gain.value = 0.06; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+        f.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.8);
+        f.Q.value = 2; g.gain.value = 0.06; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
         n.connect(f); f.connect(g); g.connect(masterGain);
       }
       var o = ctx.createOscillator(), og = ctx.createGain();
       o.type = 'sine';
-      o.frequency.setValueAtTime(800, ctx.currentTime);
+      o.frequency.setValueAtTime(300, ctx.currentTime);
       o.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.8);
       og.gain.value = 0.03; og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
       o.connect(og); og.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.8);
     },
-    build_place: function() { tone(60, 'square', 0.06, 0.12); },
+    build_place: function() { tone(60, 'sine', 0.06, 0.12); },
     footstep: function() {
       if (!ctx || !masterGain) return;
       var n = whiteNoise(0.05);
@@ -42602,7 +42602,7 @@
         var n = whiteNoise(0.006);
         if (n) {
           var hp = ctx.createBiquadFilter(), g = ctx.createGain();
-          hp.type = 'highpass'; hp.frequency.value = 3000; g.gain.value = 0.04;
+          hp.type = 'lowpass'; hp.frequency.value = 300; g.gain.value = 0.04;
           n.connect(hp); hp.connect(g); g.connect(masterGain);
         }
       });
@@ -42632,7 +42632,7 @@
         n.connect(f); f.connect(g); g.connect(masterGain);
       }
     },
-    stone: function() { tone(200, 'sine', 0.04, 0.05); tone(3000, 'sine', 0.05, 0.02); },
+    stone: function() { tone(120, 'sine', 0.04, 0.05); tone(200, 'sine', 0.05, 0.02); },
     sand: function() {
       var n = whiteNoise(0.12);
       if (n) {
@@ -42646,7 +42646,7 @@
       var n = whiteNoise(0.15);
       if (n) {
         var f = ctx.createBiquadFilter(), g = ctx.createGain();
-        f.type = 'bandpass'; f.frequency.value = 800; f.Q.value = 2;
+        f.type = 'lowpass'; f.frequency.value = 400;
         g.gain.value = 0.04; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
         n.connect(f); f.connect(g); g.connect(masterGain);
       }
@@ -42748,7 +42748,7 @@
       var n = createWhiteNoise(2);
       if (n) {
         var f = ctx.createBiquadFilter(), g = ctx.createGain();
-        f.type = 'bandpass'; f.frequency.value = 1800 + Math.random() * 400; f.Q.value = 2;
+        f.type = 'lowpass'; f.frequency.value = 300 + Math.random() * 100;
         g.gain.value = vol; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
         n.connect(f); f.connect(g); g.connect(masterGain);
       }
@@ -42761,17 +42761,17 @@
     dawn: function() {
       var s = makeState();
       windLayer(s, 0.018);
-      chirpLayer(s, 2, 800, 1800, 800, 2000, 0.04);
+      chirpLayer(s, 2, 200, 380, 800, 2000, 0.04);
       return s;
     },
     morning: function() {
       var s = makeState();
       windLayer(s, 0.022);
-      chirpLayer(s, 3, 700, 1900, 400, 2500, 0.048);
+      chirpLayer(s, 3, 200, 380, 400, 2500, 0.048);
       function buzz() {
         if (!ctx || !masterGain) return;
         var o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'sawtooth'; o.frequency.value = 250 + Math.random() * 100;
+        o.type = 'sine'; o.frequency.value = 250 + Math.random() * 100;
         g.gain.value = 0.018; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
         o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.3);
         s.timeouts.push(setTimeout(buzz, 8000 + Math.random() * 12000));
@@ -42783,13 +42783,13 @@
       var s = makeState();
       windLayer(s, 0.027);
       cricketAM(s, 3500 + Math.random() * 500, 15 + Math.random() * 10, 0.035);
-      chirpLayer(s, 1, 600, 1400, 3000, 5000, 0.028);
+      chirpLayer(s, 1, 200, 380, 3000, 5000, 0.028);
       return s;
     },
     afternoon: function() {
       var s = makeState();
       windLayer(s, 0.022);
-      chirpLayer(s, 2, 500, 1400, 1500, 4000, 0.038);
+      chirpLayer(s, 2, 200, 380, 1500, 4000, 0.038);
       rustleLayer(s, 2500, 3500, 0.028);
       return s;
     },
@@ -42842,7 +42842,7 @@
         var rain = createWhiteNoise();
         if (rain) {
           var rf = ctx.createBiquadFilter(), rg = ctx.createGain();
-          rf.type = 'bandpass'; rf.frequency.value = 4000; rf.Q.value = 0.5; rg.gain.value = 0.05;
+          rf.type = 'lowpass'; rf.frequency.value = 400; rg.gain.value = 0.05;
           rain.connect(rf); rf.connect(rg); rg.connect(masterGain);
           s.nodes.push(rain, rf, rg);
         }
@@ -42872,8 +42872,8 @@
       var s = makeState();
       var o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
       var lfo = ctx.createOscillator(), lfog = ctx.createGain(), lg = ctx.createGain();
-      o1.type = 'sine'; o1.frequency.value = 523;
-      o2.type = 'sine'; o2.frequency.value = 659;
+      o1.type = 'sine'; o1.frequency.value = 130;
+      o2.type = 'sine'; o2.frequency.value = 165;
       lfo.type = 'sine'; lfo.frequency.value = 0.12; lfog.gain.value = 8; lg.gain.value = 0.01;
       lfo.connect(lfog); lfog.connect(o1.frequency); lfog.connect(o2.frequency);
       o1.connect(lg); o2.connect(lg); lg.connect(masterGain);
@@ -42887,7 +42887,7 @@
       if (w) {
         var f = ctx.createBiquadFilter(), lfo = ctx.createOscillator();
         var lfog = ctx.createGain(), g = ctx.createGain();
-        f.type = 'highpass'; f.frequency.value = 2000;
+        f.type = 'lowpass'; f.frequency.value = 300;
         lfo.type = 'sine'; lfo.frequency.value = 0.8; lfog.gain.value = 50; g.gain.value = 0.025;
         lfo.connect(lfog); lfog.connect(f.frequency);
         w.connect(f); f.connect(g); g.connect(masterGain); lfo.start();
@@ -42927,7 +42927,7 @@
       var w = createWhiteNoise();
       if (w) {
         var f = ctx.createBiquadFilter(), g = ctx.createGain();
-        f.type = 'bandpass'; f.frequency.value = 800; f.Q.value = 1; g.gain.value = 0.035;
+        f.type = 'lowpass'; f.frequency.value = 300; g.gain.value = 0.035;
         w.connect(f); f.connect(g); g.connect(masterGain);
         s.nodes.push(w, f, g);
       }
@@ -42949,7 +42949,7 @@
       function chime() {
         if (!ctx || !masterGain) return;
         var o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'sine'; o.frequency.value = 800 + Math.random() * 600;
+        o.type = 'sine'; o.frequency.value = 150 + Math.random() * 100;
         g.gain.value = 0.028; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
         o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 1.5);
         s.timeouts.push(setTimeout(chime, 5000 + Math.random() * 8000));
@@ -42963,7 +42963,7 @@
       if (e) {
         var ef = ctx.createBiquadFilter(), ed = ctx.createDelay();
         var edg = ctx.createGain(), eg = ctx.createGain();
-        ef.type = 'bandpass'; ef.frequency.value = 700; ef.Q.value = 0.8;
+        ef.type = 'lowpass'; ef.frequency.value = 300;
         ed.delayTime.value = 0.3; edg.gain.value = 0.25; eg.gain.value = 0.018;
         e.connect(ef); ef.connect(eg); eg.connect(masterGain);
         eg.connect(ed); ed.connect(edg); edg.connect(masterGain);
@@ -42981,8 +42981,8 @@
   }
 
   var NPC_SOUNDS = {
-    hammer: function() { tone(90, 'square', 0.075, 0.2); tone(2500, 'sine', 0.035, 0.3); },
-    music: function() { arp([392.00, 440.00, 493.88], 0.15, 'sine', 0.045, 0.25); },
+    hammer: function() { tone(90, 'sine', 0.075, 0.2); tone(160, 'sine', 0.035, 0.3); },
+    music: function() { arp([196.00, 220.00, 246.94], 0.15, 'sine', 0.045, 0.25); },
     garden: function() {
       var n = whiteNoise(0.32);
       if (n) {
@@ -42994,7 +42994,7 @@
     },
     trade: function() {
       var o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'triangle'; o.frequency.value = 1800 + Math.random() * 500;
+      o.type = 'sine'; o.frequency.value = 180 + Math.random() * 60;
       g.gain.value = 0.055; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
       o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.2);
     },
@@ -43029,14 +43029,14 @@
   };
 
   var SCALES = {
-    nexus:     [256.87, 288.33, 323.63, 384.91, 432.00, 513.74, 576.65, 647.25],
-    gardens:   [288.33, 323.63, 363.27, 432.00, 484.90, 576.65, 647.25, 726.53],
-    athenaeum: [242.45, 272.18, 323.63, 363.27, 407.75, 484.90, 544.36, 647.25],
-    studio:    [323.63, 363.27, 407.75, 484.90, 544.36, 647.25, 726.53, 815.51],
-    wilds:     [216.00, 256.87, 288.33, 323.63, 384.91, 432.00, 513.74, 576.65],
-    agora:     [342.88, 384.91, 432.00, 513.74, 576.65, 685.76, 769.82, 864.00],
-    commons:   [288.33, 342.88, 384.91, 432.00, 513.74, 576.65, 685.76, 769.82],
-    arena:     [192.43, 228.84, 256.87, 288.33, 342.88, 384.91, 457.69, 513.74]
+    nexus:     [64.22, 72.08, 80.91, 96.23, 108.00, 128.44, 144.16, 161.81],
+    gardens:   [72.08, 80.91, 90.82, 108.00, 121.23, 144.16, 161.81, 181.63],
+    athenaeum: [60.61, 68.05, 80.91, 90.82, 101.94, 121.23, 136.09, 161.81],
+    studio:    [80.91, 90.82, 101.94, 121.23, 136.09, 161.81, 181.63, 203.88],
+    wilds:     [54.00, 64.22, 72.08, 80.91, 96.23, 108.00, 128.44, 144.16],
+    agora:     [85.72, 96.23, 108.00, 128.44, 144.16, 171.44, 192.46, 216.00],
+    commons:   [72.08, 85.72, 96.23, 108.00, 128.44, 144.16, 171.44, 192.46],
+    arena:     [96.22, 114.42, 128.44, 144.16, 171.44, 192.46, 228.85, 256.87]
   };
 
   var CHORD_PROGRESSIONS = {
@@ -43158,7 +43158,7 @@
         mo.type = (style.type === 'nature' || style.type === 'pastoral') ? 'sine' :
                   (Math.random() < 0.5 ? 'sine' : 'triangle');
         mo.frequency.value = freq;
-        melFilter.type = 'lowpass'; melFilter.frequency.value = 700;
+        melFilter.type = 'lowpass'; melFilter.frequency.value = 400;
         var vol = style.melodyVolume * tmod.volM * musicState.volume;
         var dur = beatDur * (0.5 + Math.random() * 1.5);
         var t = ctx.currentTime;
@@ -43224,14 +43224,14 @@
   function isMusicPlaying() { return musicState.playing; }
 
   var PIANO_ACCENTS = {
-    dawn:          { notes: [261.63, 329.63, 392.00, 523.25, 659.25],                              noteSpacing: 0.12, noteDuration: 0.6, volume: 0.05 },
-    morning:       { notes: [392.00, 493.88, 587.33, 783.99, 987.77, 783.99],                      noteSpacing: 0.10, noteDuration: 0.5, volume: 0.04 },
-    dusk:          { notes: [880.00, 659.25, 523.25, 440.00, 329.63],                              noteSpacing: 0.15, noteDuration: 0.7, volume: 0.04 },
-    night:         { notes: [146.83, 174.61, 220.00, 196.00, 146.83],                              noteSpacing: 0.22, noteDuration: 0.9, volume: 0.04 },
-    zone_discovery:{ notes: [392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 659.25, 783.99],      noteSpacing: 0.09, noteDuration: 0.45, volume: 0.06 },
-    quest_complete:{ notes: [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50, 1318.51],           noteSpacing: 0.10, noteDuration: 0.5, volume: 0.06 },
-    achievement:   { notes: [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50],                     noteSpacing: 0.08, noteDuration: 0.4, volume: 0.06 },
-    level_up:      { notes: [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50],             noteSpacing: 0.10, noteDuration: 0.6, volume: 0.06 }
+    dawn:          { notes: [65.41, 82.41, 98.00, 130.81, 164.81],                                 noteSpacing: 0.18, noteDuration: 1.2, volume: 0.05 },
+    morning:       { notes: [98.00, 123.47, 146.83, 196.00, 246.94, 196.00],                       noteSpacing: 0.15, noteDuration: 1.0, volume: 0.04 },
+    dusk:          { notes: [220.00, 164.81, 130.81, 110.00, 82.41],                               noteSpacing: 0.20, noteDuration: 1.4, volume: 0.04 },
+    night:         { notes: [73.42, 87.31, 110.00, 98.00, 73.42],                                  noteSpacing: 0.30, noteDuration: 1.8, volume: 0.04 },
+    zone_discovery:{ notes: [98.00, 110.00, 130.81, 146.83, 164.81, 196.00, 164.81, 196.00],       noteSpacing: 0.12, noteDuration: 0.9, volume: 0.06 },
+    quest_complete:{ notes: [130.81, 164.81, 196.00, 261.63, 196.00, 261.63, 329.63],              noteSpacing: 0.14, noteDuration: 1.0, volume: 0.06 },
+    achievement:   { notes: [130.81, 146.83, 164.81, 196.00, 220.00, 261.63],                      noteSpacing: 0.12, noteDuration: 0.8, volume: 0.06 },
+    level_up:      { notes: [65.41, 82.41, 98.00, 130.81, 164.81, 196.00, 261.63],                 noteSpacing: 0.14, noteDuration: 1.2, volume: 0.06 }
   };
 
   function playPianoAccent(type) {
@@ -43251,7 +43251,7 @@
         g1.gain.exponentialRampToValueAtTime(0.001, t + a.noteDuration);
         o1.connect(g1); g1.connect(masterGain); o1.start(t); o1.stop(t + a.noteDuration + 0.05);
         var o2 = ctx.createOscillator(), g2 = ctx.createGain();
-        o2.type = 'triangle'; o2.frequency.value = freq * 2;
+        o2.type = 'triangle'; o2.frequency.value = freq * 1.5;
         g2.gain.setValueAtTime(0, t);
         g2.gain.linearRampToValueAtTime(baseVol * 0.3, t + 0.01);
         g2.gain.exponentialRampToValueAtTime(0.001, t + a.noteDuration * 0.5);

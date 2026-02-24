@@ -225,12 +225,12 @@ test('noise generator uses brown noise algorithm (integrated random walk)', func
   assert(fnBody.includes('1.02'), 'Should use leak factor to prevent DC drift');
 });
 
-test('scales use 432Hz tuning (A4 = 432)', function() {
+test('scales use 432Hz tuning (A3 = 108 in octave 2 register)', function() {
   var scaleStart = src.indexOf('var SCALES');
   var scaleEnd = src.indexOf('};', scaleStart) + 2;
   var scaleBlock = src.substring(scaleStart, scaleEnd);
-  // A4 should be 432 not 440
-  assert(scaleBlock.includes('432.00'), 'A4 should be 432Hz, not 440Hz');
+  // A3 in 432Hz tuning = 108.00 (two octaves below A4=432)
+  assert(scaleBlock.includes('108.00'), 'A3 should be 108Hz (432Hz tuning, octave 2)');
   assert(!scaleBlock.includes('440.00'), 'Should not contain 440Hz (standard tuning)');
 });
 
