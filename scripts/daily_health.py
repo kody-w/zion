@@ -216,14 +216,14 @@ def analyze_workflow_failures(state_dir):
     """Check for recent workflow failures by scanning changes for gaps."""
     changes = load_json(os.path.join(state_dir, 'changes.json'))
     entries = changes.get('changes', [])
-    # Look for gaps > 20 min between changes (suggests workflow failures)
+    # Look for gaps > 45 min between changes (suggests workflow failures)
     gaps = []
     prev_ts = None
     for entry in entries:
         ts_str = entry.get('ts', '')
         try:
             ts = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
-            if prev_ts and (ts - prev_ts).total_seconds() > 1200:
+            if prev_ts and (ts - prev_ts).total_seconds() > 2700:
                 gaps.append({
                     'start': prev_ts.strftime('%H:%M'),
                     'end': ts.strftime('%H:%M'),
@@ -270,8 +270,10 @@ def analyze_content_quality(state_dir, days=7):
     # 10+ types = 100%, scale linearly
     action_diversity = min(len(action_types) / 10.0, 1.0) * 100
 
-    # Agent diversity: how many unique agents active?
+    # Agent diversity: how many unique agents active? (scan changes + actions)
     agents_seen = set()
+    for ch in change_list:
+        agents_seen.add(ch.get('from', ''))
     for act in action_list:
         agents_seen.add(act.get('from', ''))
     agents_seen.discard('')
@@ -625,7 +627,7 @@ def generate_report(state_dir, yesterday=None):
     if gaps:
         lines.append('## Pipeline Gaps')
         lines.append('')
-        lines.append('Activity gaps >20 minutes (possible workflow failures):')
+        lines.append('Activity gaps >45 minutes (possible workflow failures):')
         lines.append('')
         for gap in gaps:
             lines.append('- %s → %s (%d min gap)' % (gap['start'], gap['end'], gap['minutes']))

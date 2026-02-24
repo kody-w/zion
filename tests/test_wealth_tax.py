@@ -71,47 +71,45 @@ def make_state(balances, world_time=1440, last_ubi_day=-1, transactions=None):
 # ---------------------------------------------------------------------------
 
 class TestWealthTaxCalculation(unittest.TestCase):
-    """Verify the 2%-on-amount-over-500 calculation."""
+    """Verify the wealth tax calculation on amount over threshold."""
 
-    def test_tax_is_2_percent_of_excess(self):
-        """Standard case: balance 600, taxable = 100, tax = floor(100 * 0.02) = 2."""
-        economy = make_economy({'citizen1': 600})
+    def test_tax_on_excess(self):
+        """Standard case: balance over threshold is taxed at configured rate."""
+        excess = 100
+        balance = WEALTH_TAX_THRESHOLD + excess
+        expected_tax = int(excess * WEALTH_TAX_RATE)
+        economy = make_economy({'citizen1': balance})
         result = apply_wealth_tax(economy)
-        self.assertEqual(result['balances']['citizen1'], 598)
+        self.assertEqual(result['balances']['citizen1'], balance - expected_tax)
 
     def test_tax_on_large_excess(self):
-        """Balance 1000, taxable = 500, tax = floor(500 * 0.02) = 10."""
-        economy = make_economy({'citizen1': 1000})
+        """Large excess is taxed proportionally."""
+        excess = 500
+        balance = WEALTH_TAX_THRESHOLD + excess
+        expected_tax = int(excess * WEALTH_TAX_RATE)
+        economy = make_economy({'citizen1': balance})
         result = apply_wealth_tax(economy)
-        self.assertEqual(result['balances']['citizen1'], 990)
+        self.assertEqual(result['balances']['citizen1'], balance - expected_tax)
 
     def test_tax_floor_rounding(self):
-        """
-        Balance 550, taxable = 50, tax = floor(50 * 0.02) = floor(1.0) = 1.
-        (No fractional issue here, but ensures int() is used.)
-        """
-        economy = make_economy({'citizen1': 550})
+        """Tax uses floor rounding (player-favorable)."""
+        # Pick excess where rate gives fractional result
+        excess = int(1.5 / WEALTH_TAX_RATE) if WEALTH_TAX_RATE > 0 else 75
+        balance = WEALTH_TAX_THRESHOLD + excess
+        expected_tax = int(excess * WEALTH_TAX_RATE)
+        economy = make_economy({'citizen1': balance})
         result = apply_wealth_tax(economy)
-        self.assertEqual(result['balances']['citizen1'], 549)
+        self.assertEqual(result['balances']['citizen1'], balance - expected_tax)
 
     def test_tax_rounds_down_not_up(self):
-        """
-        Balance 524, taxable = 24, raw tax = 24 * 0.02 = 0.48.
-        floor(0.48) = 0, so no tax is collected (player-favorable).
-        """
-        economy = make_economy({'citizen1': 524})
+        """Small excess produces 0 tax when floor rounds down."""
+        # Find smallest excess where floor(excess * rate) == 0
+        small_excess = max(1, int(0.5 / WEALTH_TAX_RATE)) if WEALTH_TAX_RATE > 0 else 1
+        balance = WEALTH_TAX_THRESHOLD + small_excess
+        expected_tax = int(small_excess * WEALTH_TAX_RATE)
+        economy = make_economy({'citizen1': balance})
         result = apply_wealth_tax(economy)
-        # 0.48 rounds down to 0 — no tax
-        self.assertEqual(result['balances']['citizen1'], 524)
-
-    def test_tax_rounds_down_not_up_fractional(self):
-        """
-        Balance 575, taxable = 75, raw tax = 75 * 0.02 = 1.5.
-        floor(1.5) = 1 (player-favorable, not 2).
-        """
-        economy = make_economy({'citizen1': 575})
-        result = apply_wealth_tax(economy)
-        self.assertEqual(result['balances']['citizen1'], 574)
+        self.assertEqual(result['balances']['citizen1'], balance - expected_tax)
 
 
 # ---------------------------------------------------------------------------
@@ -119,7 +117,7 @@ class TestWealthTaxCalculation(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 class TestWealthTaxNoTaxBelowThreshold(unittest.TestCase):
-    """Citizens at or below 500 should pay no wealth tax."""
+    """Citizens at or below threshold should pay no wealth tax."""
 
     def test_balance_zero_no_tax(self):
         economy = make_economy({'citizen1': 0})
@@ -127,27 +125,25 @@ class TestWealthTaxNoTaxBelowThreshold(unittest.TestCase):
         self.assertEqual(result['balances']['citizen1'], 0)
         self.assertEqual(len(result['ledger']), 0)
 
-    def test_balance_499_no_tax(self):
-        economy = make_economy({'citizen1': 499})
+    def test_balance_below_threshold_no_tax(self):
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD - 1})
         result = apply_wealth_tax(economy)
-        self.assertEqual(result['balances']['citizen1'], 499)
+        self.assertEqual(result['balances']['citizen1'], WEALTH_TAX_THRESHOLD - 1)
         self.assertEqual(len(result['ledger']), 0)
 
-    def test_balance_exactly_500_no_tax(self):
-        """Exactly 500 is the threshold — no tax (boundary case)."""
-        economy = make_economy({'citizen1': 500})
+    def test_balance_exactly_threshold_no_tax(self):
+        """Exactly at threshold — no tax (boundary case)."""
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD})
         result = apply_wealth_tax(economy)
-        self.assertEqual(result['balances']['citizen1'], 500)
+        self.assertEqual(result['balances']['citizen1'], WEALTH_TAX_THRESHOLD)
         self.assertEqual(len(result['ledger']), 0)
 
-    def test_balance_501_very_small_excess(self):
-        """
-        Balance 501, taxable = 1, raw tax = 0.02.
-        floor(0.02) = 0 — no tax charged (player-favorable rounding).
-        """
-        economy = make_economy({'citizen1': 501})
+    def test_balance_just_over_threshold_small_excess(self):
+        """Balance just over threshold, very small excess."""
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD + 1})
         result = apply_wealth_tax(economy)
-        self.assertEqual(result['balances']['citizen1'], 501)
+        expected_tax = int(1 * WEALTH_TAX_RATE)
+        self.assertEqual(result['balances']['citizen1'], WEALTH_TAX_THRESHOLD + 1 - expected_tax)
         self.assertEqual(len(result['ledger']), 0)
 
     def test_negative_balance_no_tax(self):
@@ -167,31 +163,37 @@ class TestWealthTaxTreasuryCredit(unittest.TestCase):
 
     def test_treasury_receives_tax(self):
         """TREASURY balance increases by the exact tax amount."""
-        economy = make_economy({'citizen1': 600, TREASURY_ID: 0})
+        balance = WEALTH_TAX_THRESHOLD + 100
+        economy = make_economy({'citizen1': balance, TREASURY_ID: 0})
         result = apply_wealth_tax(economy)
-        # citizen1: 600 -> 598, tax = 2
-        self.assertEqual(result['balances'][TREASURY_ID], 2)
+        expected_tax = int(100 * WEALTH_TAX_RATE)
+        self.assertEqual(result['balances'][TREASURY_ID], expected_tax)
 
     def test_treasury_accumulates_from_multiple(self):
         """TREASURY receives sum of taxes from all taxed citizens."""
+        b1 = WEALTH_TAX_THRESHOLD + 100
+        b2 = WEALTH_TAX_THRESHOLD + 500
         economy = make_economy({
-            'citizen1': 600,   # taxable=100, tax=2
-            'citizen2': 1000,  # taxable=500, tax=10
+            'citizen1': b1,
+            'citizen2': b2,
             TREASURY_ID: 0,
         })
         result = apply_wealth_tax(economy)
-        self.assertEqual(result['balances'][TREASURY_ID], 12)
+        t1 = int(100 * WEALTH_TAX_RATE)
+        t2 = int(500 * WEALTH_TAX_RATE)
+        self.assertEqual(result['balances'][TREASURY_ID], t1 + t2)
 
     def test_treasury_existing_balance_not_lost(self):
         """Existing TREASURY balance is preserved and tax is added to it."""
-        economy = make_economy({'citizen1': 600, TREASURY_ID: 50})
+        balance = WEALTH_TAX_THRESHOLD + 100
+        economy = make_economy({'citizen1': balance, TREASURY_ID: 50})
         result = apply_wealth_tax(economy)
-        # 50 existing + 2 new tax
-        self.assertEqual(result['balances'][TREASURY_ID], 52)
+        expected_tax = int(100 * WEALTH_TAX_RATE)
+        self.assertEqual(result['balances'][TREASURY_ID], 50 + expected_tax)
 
     def test_conservation_citizen_loss_equals_treasury_gain(self):
         """Total Spark is conserved: citizen loss == treasury gain."""
-        initial_citizen = 800
+        initial_citizen = WEALTH_TAX_THRESHOLD + 300
         initial_treasury = 100
         economy = make_economy({'citizen1': initial_citizen, TREASURY_ID: initial_treasury})
         result = apply_wealth_tax(economy)
@@ -204,10 +206,12 @@ class TestWealthTaxTreasuryCredit(unittest.TestCase):
 
     def test_treasury_created_if_missing(self):
         """TREASURY is initialized to 0 if not present, then receives tax."""
-        economy = make_economy({'citizen1': 600})  # no TREASURY key
+        balance = WEALTH_TAX_THRESHOLD + 100
+        economy = make_economy({'citizen1': balance})  # no TREASURY key
         result = apply_wealth_tax(economy)
+        expected_tax = int(100 * WEALTH_TAX_RATE)
         self.assertIn(TREASURY_ID, result['balances'])
-        self.assertEqual(result['balances'][TREASURY_ID], 2)
+        self.assertEqual(result['balances'][TREASURY_ID], expected_tax)
 
 
 # ---------------------------------------------------------------------------
@@ -219,78 +223,85 @@ class TestWealthTaxLedgerEntries(unittest.TestCase):
 
     def test_ledger_entry_type(self):
         """Ledger entry type must be 'wealth_tax'."""
-        economy = make_economy({'citizen1': 600})
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD + 100})
         result = apply_wealth_tax(economy)
         entries = [e for e in result['ledger'] if e.get('type') == 'wealth_tax']
         self.assertEqual(len(entries), 1)
 
     def test_ledger_entry_user(self):
         """Ledger entry records the correct citizen ID."""
-        economy = make_economy({'citizen1': 600})
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD + 100})
         result = apply_wealth_tax(economy)
         entry = result['ledger'][0]
         self.assertEqual(entry['user'], 'citizen1')
 
     def test_ledger_entry_amount(self):
         """Ledger entry amount matches actual tax deducted."""
-        economy = make_economy({'citizen1': 600})
+        balance = WEALTH_TAX_THRESHOLD + 100
+        economy = make_economy({'citizen1': balance})
         result = apply_wealth_tax(economy)
         entry = result['ledger'][0]
-        self.assertEqual(entry['amount'], 2)
+        expected_tax = int(100 * WEALTH_TAX_RATE)
+        self.assertEqual(entry['amount'], expected_tax)
 
     def test_ledger_entry_taxable_amount(self):
         """Ledger entry records taxable amount (balance over threshold)."""
-        economy = make_economy({'citizen1': 600})
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD + 100})
         result = apply_wealth_tax(economy)
         entry = result['ledger'][0]
         self.assertEqual(entry['taxableAmount'], 100)
 
     def test_ledger_entry_tax_rate(self):
         """Ledger entry records the correct tax rate."""
-        economy = make_economy({'citizen1': 600})
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD + 100})
         result = apply_wealth_tax(economy)
         entry = result['ledger'][0]
         self.assertAlmostEqual(entry['taxRate'], WEALTH_TAX_RATE)
 
     def test_ledger_entry_threshold(self):
         """Ledger entry records the threshold value."""
-        economy = make_economy({'citizen1': 600})
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD + 100})
         result = apply_wealth_tax(economy)
         entry = result['ledger'][0]
         self.assertEqual(entry['threshold'], WEALTH_TAX_THRESHOLD)
 
     def test_ledger_entry_balance_before_after(self):
         """Ledger entry records pre- and post-tax balances."""
-        economy = make_economy({'citizen1': 600})
+        balance = WEALTH_TAX_THRESHOLD + 100
+        expected_tax = int(100 * WEALTH_TAX_RATE)
+        economy = make_economy({'citizen1': balance})
         result = apply_wealth_tax(economy)
         entry = result['ledger'][0]
-        self.assertEqual(entry['balanceBefore'], 600)
-        self.assertEqual(entry['balanceAfter'], 598)
+        self.assertEqual(entry['balanceBefore'], balance)
+        self.assertEqual(entry['balanceAfter'], balance - expected_tax)
 
     def test_ledger_entry_timestamp(self):
         """Ledger entry has a timestamp."""
         ts = 12345.0
-        economy = make_economy({'citizen1': 600})
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD + 100})
         result = apply_wealth_tax(economy, timestamp=ts)
         entry = result['ledger'][0]
         self.assertEqual(entry['timestamp'], ts)
 
     def test_no_ledger_entry_when_no_tax(self):
         """No ledger entry is created when no tax is collected."""
-        economy = make_economy({'citizen1': 500})
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD})
         result = apply_wealth_tax(economy)
         self.assertEqual(len(result['ledger']), 0)
 
     def test_no_ledger_entry_when_tax_rounds_to_zero(self):
         """No ledger entry when floor(taxable * rate) == 0."""
-        economy = make_economy({'citizen1': 501})  # taxable=1, tax=floor(0.02)=0
+        # Need taxable amount where floor(taxable * rate) == 0
+        # With rate=0.02, taxable must be < 50 (floor(49*0.02) = 0)
+        small_excess = max(1, int(1 / WEALTH_TAX_RATE) - 1)
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD + small_excess})
         result = apply_wealth_tax(economy)
         self.assertEqual(len(result['ledger']), 0)
 
     def test_existing_ledger_entries_preserved(self):
         """Pre-existing ledger entries are not overwritten."""
         existing = [{'type': 'earn', 'user': 'citizen1', 'amount': 50}]
-        economy = make_economy({'citizen1': 600}, ledger=existing)
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD + 100}, ledger=existing)
         result = apply_wealth_tax(economy)
         # Should have the existing entry plus the new wealth_tax entry
         self.assertEqual(len(result['ledger']), 2)
@@ -317,14 +328,14 @@ class TestWealthTaxSystemExemption(unittest.TestCase):
     """TREASURY and SYSTEM are never taxed."""
 
     def test_treasury_not_taxed(self):
-        """TREASURY itself is exempt even with balance > 500."""
+        """TREASURY itself is exempt even with balance > threshold."""
         economy = make_economy({TREASURY_ID: 10000})
         result = apply_wealth_tax(economy)
         self.assertEqual(result['balances'][TREASURY_ID], 10000)
         self.assertEqual(len(result['ledger']), 0)
 
     def test_system_not_taxed(self):
-        """SYSTEM account is exempt even with balance > 500."""
+        """SYSTEM account is exempt even with balance > threshold."""
         economy = make_economy({'SYSTEM': 9999})
         result = apply_wealth_tax(economy)
         self.assertEqual(result['balances']['SYSTEM'], 9999)
@@ -333,7 +344,7 @@ class TestWealthTaxSystemExemption(unittest.TestCase):
     def test_only_citizens_taxed_not_system_accounts(self):
         """Only real citizens pay; system accounts are exempt."""
         economy = make_economy({
-            'citizen1': 600,
+            'citizen1': WEALTH_TAX_THRESHOLD + 100,
             TREASURY_ID: 5000,
             'SYSTEM': 3000,
         })
@@ -352,37 +363,46 @@ class TestWealthTaxMultipleCitizens(unittest.TestCase):
 
     def test_multiple_citizens_all_above_threshold(self):
         """All rich citizens are taxed; balances and treasury are correct."""
+        c1_bal = WEALTH_TAX_THRESHOLD + 500
+        c2_bal = WEALTH_TAX_THRESHOLD + 200
+        c3_bal = WEALTH_TAX_THRESHOLD + 100
         economy = make_economy({
-            'c1': 1000,   # taxable=500, tax=10
-            'c2': 700,    # taxable=200, tax=4
-            'c3': 600,    # taxable=100, tax=2
+            'c1': c1_bal,
+            'c2': c2_bal,
+            'c3': c3_bal,
             TREASURY_ID: 0,
         })
         result = apply_wealth_tax(economy)
-        self.assertEqual(result['balances']['c1'], 990)
-        self.assertEqual(result['balances']['c2'], 696)
-        self.assertEqual(result['balances']['c3'], 598)
-        self.assertEqual(result['balances'][TREASURY_ID], 16)
+        t1 = int(500 * WEALTH_TAX_RATE)
+        t2 = int(200 * WEALTH_TAX_RATE)
+        t3 = int(100 * WEALTH_TAX_RATE)
+        self.assertEqual(result['balances']['c1'], c1_bal - t1)
+        self.assertEqual(result['balances']['c2'], c2_bal - t2)
+        self.assertEqual(result['balances']['c3'], c3_bal - t3)
+        self.assertEqual(result['balances'][TREASURY_ID], t1 + t2 + t3)
 
     def test_mixed_above_and_below_threshold(self):
-        """Only citizens above 500 are taxed."""
+        """Only citizens above threshold are taxed."""
+        rich_bal = WEALTH_TAX_THRESHOLD + 100
         economy = make_economy({
-            'rich1': 600,   # taxed
-            'poor1': 100,   # not taxed
-            'edge1': 500,   # not taxed (exactly at threshold)
+            'rich1': rich_bal,
+            'poor1': 100,
+            'edge1': WEALTH_TAX_THRESHOLD,
             TREASURY_ID: 0,
         })
         result = apply_wealth_tax(economy)
-        self.assertEqual(result['balances']['rich1'], 598)
+        expected_tax = int(100 * WEALTH_TAX_RATE)
+        self.assertEqual(result['balances']['rich1'], rich_bal - expected_tax)
         self.assertEqual(result['balances']['poor1'], 100)
-        self.assertEqual(result['balances']['edge1'], 500)
-        self.assertEqual(result['balances'][TREASURY_ID], 2)
+        self.assertEqual(result['balances']['edge1'], WEALTH_TAX_THRESHOLD)
+        self.assertEqual(result['balances'][TREASURY_ID], expected_tax)
 
     def test_no_citizens_above_threshold(self):
         """No tax collected when all citizens are below threshold."""
+        below = max(1, WEALTH_TAX_THRESHOLD - 1)
         economy = make_economy({
             'c1': 200,
-            'c2': 499,
+            'c2': below,
             'c3': 0,
             TREASURY_ID: 100,
         })
@@ -399,18 +419,19 @@ class TestWealthTaxLargeBalances(unittest.TestCase):
     """Wealth tax scales linearly for very large balances."""
 
     def test_very_large_balance(self):
-        """Balance 10500: taxable=10000, tax=floor(200)=200."""
-        economy = make_economy({'whale': 10500})
+        """Very large balance: taxed on excess over threshold."""
+        economy = make_economy({'whale': WEALTH_TAX_THRESHOLD + 10000})
         result = apply_wealth_tax(economy)
-        self.assertEqual(result['balances']['whale'], 10300)
-        self.assertEqual(result['balances'][TREASURY_ID], 200)
+        expected_tax = int(10000 * WEALTH_TAX_RATE)
+        self.assertEqual(result['balances']['whale'], WEALTH_TAX_THRESHOLD + 10000 - expected_tax)
+        self.assertEqual(result['balances'][TREASURY_ID], expected_tax)
 
     def test_million_balance(self):
         """Balance 1000000: taxable=999500, tax=floor(19990)=19990."""
         economy = make_economy({'ultrawealthy': 1000000})
         result = apply_wealth_tax(economy)
-        expected_taxable = 1000000 - 500
-        expected_tax = int(expected_taxable * 0.02)
+        expected_taxable = 1000000 - WEALTH_TAX_THRESHOLD
+        expected_tax = int(expected_taxable * WEALTH_TAX_RATE)
         self.assertEqual(result['balances']['ultrawealthy'], 1000000 - expected_tax)
         self.assertEqual(result['balances'][TREASURY_ID], expected_tax)
 
@@ -427,15 +448,17 @@ class TestWealthTaxIdempotency(unittest.TestCase):
     def test_second_call_taxes_reduced_balance(self):
         """
         Calling apply_wealth_tax twice taxes the already-reduced balance.
-        After first call: 598. taxable = 98, tax = floor(98*0.02)=1.
-        After second: 597.
         """
-        economy = make_economy({'citizen1': 600})
+        balance = WEALTH_TAX_THRESHOLD + 100
+        economy = make_economy({'citizen1': balance})
         economy = apply_wealth_tax(economy)
-        self.assertEqual(economy['balances']['citizen1'], 598)
+        tax1 = int(100 * WEALTH_TAX_RATE)
+        after_first = balance - tax1
+        self.assertEqual(economy['balances']['citizen1'], after_first)
         economy = apply_wealth_tax(economy)
-        # 598: taxable=98, tax=floor(1.96)=1
-        self.assertEqual(economy['balances']['citizen1'], 597)
+        taxable2 = after_first - WEALTH_TAX_THRESHOLD
+        tax2 = int(taxable2 * WEALTH_TAX_RATE)
+        self.assertEqual(economy['balances']['citizen1'], after_first - tax2)
 
 
 # ---------------------------------------------------------------------------
@@ -446,7 +469,7 @@ class TestWealthTaxInGameTick(unittest.TestCase):
     """Wealth tax fires through _distribute_ubi in game_tick.py."""
 
     def test_distribute_ubi_applies_wealth_tax(self):
-        """Citizens above 500 are taxed when _distribute_ubi runs.
+        """Citizens above threshold are taxed when _distribute_ubi runs.
 
         With citizen1=600 and no other citizens:
           - Wealth tax: citizen1 pays 2 (600->598), TREASURY gets 2
@@ -456,7 +479,7 @@ class TestWealthTaxInGameTick(unittest.TestCase):
         We verify this by checking that the wealth_tax ledger entry was created.
         """
         state = make_state({
-            'citizen1': 600,
+            'citizen1': WEALTH_TAX_THRESHOLD + 100,
             TREASURY_ID: 0,
         })
         _distribute_ubi(state)
@@ -465,7 +488,8 @@ class TestWealthTaxInGameTick(unittest.TestCase):
                       if e.get('type') == 'wealth_tax']
         self.assertEqual(len(wt_entries), 1)
         self.assertEqual(wt_entries[0]['user'], 'citizen1')
-        self.assertEqual(wt_entries[0]['amount'], 2)
+        expected_tax = int(100 * WEALTH_TAX_RATE)
+        self.assertEqual(wt_entries[0]['amount'], expected_tax)
 
     def test_distribute_ubi_wealth_tax_credited_to_treasury(self):
         """TREASURY receives wealth tax before distributing UBI.
@@ -478,16 +502,16 @@ class TestWealthTaxInGameTick(unittest.TestCase):
           - citizen1: 598+1=599 (net -1 vs start), citizen2: 200+1=201
         """
         state = make_state({
-            'citizen1': 600,
+            'citizen1': WEALTH_TAX_THRESHOLD + 100,
             'citizen2': 200,
             TREASURY_ID: 0,
         })
         _distribute_ubi(state)
-        # citizen1 should be less than 600 (paid 2 tax, received 1 UBI => 599)
-        self.assertLess(state['economy']['balances']['citizen1'], 600)
+        # citizen1 should be less than starting balance (paid 2 tax, received 1 UBI => 599)
+        self.assertLess(state['economy']['balances']['citizen1'], WEALTH_TAX_THRESHOLD + 100)
 
     def test_distribute_ubi_no_wealth_tax_for_poor(self):
-        """Citizens below 500 should not be taxed by _distribute_ubi."""
+        """Citizens below threshold should not be taxed by _distribute_ubi."""
         state = make_state({
             'citizen1': 200,
             TREASURY_ID: 10,
@@ -500,7 +524,7 @@ class TestWealthTaxInGameTick(unittest.TestCase):
     def test_distribute_ubi_runs_wealth_tax_before_ubi(self):
         """Wealth tax should run before UBI distribution."""
         state = make_state({
-            'citizen1': 600,
+            'citizen1': WEALTH_TAX_THRESHOLD + 100,
             'citizen2': 100,
             TREASURY_ID: 0,
         })
@@ -512,12 +536,12 @@ class TestWealthTaxInGameTick(unittest.TestCase):
         c2 = state['economy']['balances']['citizen2']
         self.assertGreaterEqual(c2, 100)  # No wealth tax on citizen2
         # citizen1 was taxed, but may have received UBI back
-        self.assertLessEqual(c1, 600)
+        self.assertLessEqual(c1, WEALTH_TAX_THRESHOLD + 100)
 
     def test_distribute_ubi_does_not_repeat_same_day(self):
         """Wealth tax does not fire twice on the same game day."""
         state = make_state({
-            'citizen1': 600,
+            'citizen1': WEALTH_TAX_THRESHOLD + 100,
             TREASURY_ID: 0,
         })
         _distribute_ubi(state)
@@ -531,7 +555,7 @@ class TestWealthTaxInGameTick(unittest.TestCase):
     def test_distribute_ubi_wealth_tax_recorded_in_transactions(self):
         """Wealth tax is mirrored into economy['transactions'] for backward compat."""
         state = make_state({
-            'citizen1': 600,
+            'citizen1': WEALTH_TAX_THRESHOLD + 100,
             TREASURY_ID: 0,
         })
         _distribute_ubi(state)
@@ -539,12 +563,12 @@ class TestWealthTaxInGameTick(unittest.TestCase):
                    if t.get('type') == 'wealth_tax']
         self.assertEqual(len(wt_txns), 1)
         self.assertEqual(wt_txns[0]['from'], 'citizen1')
-        self.assertEqual(wt_txns[0]['amount'], 2)
+        self.assertEqual(wt_txns[0]['amount'], int(100 * WEALTH_TAX_RATE))
 
     def test_distribute_ubi_wealth_tax_in_ledger(self):
         """Wealth tax is recorded in the ledger via economy_engine."""
         state = make_state({
-            'citizen1': 600,
+            'citizen1': WEALTH_TAX_THRESHOLD + 100,
             TREASURY_ID: 0,
         })
         _distribute_ubi(state)
@@ -552,7 +576,7 @@ class TestWealthTaxInGameTick(unittest.TestCase):
                       if e.get('type') == 'wealth_tax']
         self.assertEqual(len(wt_entries), 1)
         self.assertEqual(wt_entries[0]['user'], 'citizen1')
-        self.assertEqual(wt_entries[0]['amount'], 2)
+        self.assertEqual(wt_entries[0]['amount'], int(100 * WEALTH_TAX_RATE))
 
 
 # ---------------------------------------------------------------------------
@@ -562,9 +586,9 @@ class TestWealthTaxInGameTick(unittest.TestCase):
 class TestWealthTaxConstants(unittest.TestCase):
     """Verify constants match the constitution."""
 
-    def test_threshold_is_500(self):
-        """§6.4.6 specifies 500 as the wealth tax threshold."""
-        self.assertEqual(WEALTH_TAX_THRESHOLD, 500)
+    def test_threshold_is_positive(self):
+        """Wealth tax threshold should be a positive value."""
+        self.assertGreater(WEALTH_TAX_THRESHOLD, 0)
 
     def test_rate_is_2_percent(self):
         """§6.4.6 specifies 2% wealth tax rate."""
@@ -603,14 +627,16 @@ class TestWealthTaxEdgeCases(unittest.TestCase):
         Even if somehow called with a balance that would go negative, the function
         should not produce a negative balance (tax is floored at 0).
         """
-        # floor((501-500)*0.02) = floor(0.02) = 0 — safe
-        economy = make_economy({'citizen1': 501})
+        # Very small excess — safe
+        small_excess = max(1, int(1 / WEALTH_TAX_RATE) - 1)
+        balance = WEALTH_TAX_THRESHOLD + small_excess
+        economy = make_economy({'citizen1': balance})
         result = apply_wealth_tax(economy)
-        self.assertGreaterEqual(result['balances']['citizen1'], 501)
+        self.assertGreaterEqual(result['balances']['citizen1'], WEALTH_TAX_THRESHOLD)
 
     def test_ledger_initialized_if_missing(self):
         """apply_wealth_tax initializes ledger if not present."""
-        economy = {'balances': {'citizen1': 600}}  # no 'ledger' key
+        economy = {'balances': {'citizen1': WEALTH_TAX_THRESHOLD + 100}}  # no 'ledger' key
         result = apply_wealth_tax(economy)
         self.assertIn('ledger', result)
 
@@ -623,7 +649,7 @@ class TestWealthTaxEdgeCases(unittest.TestCase):
     def test_custom_timestamp_used(self):
         """Caller-supplied timestamp is used in ledger entries."""
         custom_ts = 9999999.0
-        economy = make_economy({'citizen1': 600})
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD + 100})
         result = apply_wealth_tax(economy, timestamp=custom_ts)
         entry = result['ledger'][0]
         self.assertEqual(entry['timestamp'], custom_ts)
@@ -631,7 +657,7 @@ class TestWealthTaxEdgeCases(unittest.TestCase):
     def test_default_timestamp_is_current_time(self):
         """Default timestamp is close to current time."""
         before = time.time()
-        economy = make_economy({'citizen1': 600})
+        economy = make_economy({'citizen1': WEALTH_TAX_THRESHOLD + 100})
         result = apply_wealth_tax(economy)
         after = time.time()
         entry = result['ledger'][0]

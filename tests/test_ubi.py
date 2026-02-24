@@ -161,12 +161,15 @@ class TestUBICalculationFromTaxPool(unittest.TestCase):
 
     def test_uses_total_tax_revenue_in_treasury(self):
         """UBI draws from the TREASURY (which accumulates progressive tax)."""
-        # First earn some Spark with taxable balance — taxes go to TREASURY
-        eco = {'balances': {'rich_user': 500}, 'ledger': []}
-        actions = [{'type': 'discover', 'from': 'rich_user', 'ts': '2026-01-01'}]
+        # Use a very high balance so tax rate produces non-zero tax
+        from economy_engine import EARN_TABLE
+        # Pick the highest-earning action
+        top_action = max(EARN_TABLE, key=EARN_TABLE.get)
+        eco = {'balances': {'rich_user': 5000}, 'ledger': []}
+        actions = [{'type': top_action, 'from': 'rich_user', 'ts': '2026-01-01'}]
         eco = process_earnings(eco, actions)
-        # discover earns 20 at 40% -> 8 tax to treasury
-        self.assertGreater(eco['balances'].get(TREASURY_ID, 0), 0)
+        self.assertGreater(eco['balances'].get(TREASURY_ID, 0), 0,
+                           'High balance + high earn should produce tax revenue')
         treasury_before = eco['balances'][TREASURY_ID]
 
         # Now distribute UBI
@@ -210,7 +213,7 @@ class TestEqualDistribution(unittest.TestCase):
         eco = _economy(balances=citizens)
         distribute_ubi(eco, game_day=1)
         for i in range(5):
-            self.assertEqual(eco['balances'][f'c{i}'], 5)
+            self.assertEqual(eco['balances'][f'c{i}'], BASE_UBI_AMOUNT)
 
     def test_single_citizen_gets_min_of_5_and_treasury(self):
         """Single citizen gets min(5, treasury) — no splitting needed."""
@@ -250,7 +253,7 @@ class TestLedgerEntries(unittest.TestCase):
         eco = _economy(balances={TREASURY_ID: 20, 'diana': 0})
         distribute_ubi(eco, game_day=1)
         entry = next(e for e in eco['ledger'] if e['type'] == 'ubi_distribution')
-        self.assertEqual(entry['amount'], 5)
+        self.assertEqual(entry['amount'], BASE_UBI_AMOUNT)
 
     def test_ledger_entry_has_game_day(self):
         eco = _economy(balances={TREASURY_ID: 20, 'earl': 0})
@@ -313,8 +316,9 @@ class TestTreasuryTracking(unittest.TestCase):
     def test_treasury_decreases_by_total_distributed(self):
         eco = _economy(balances={TREASURY_ID: 50, 'j1': 0, 'j2': 0, 'j3': 0})
         distribute_ubi(eco, game_day=1)
-        # 3 citizens * 5 Spark = 15 distributed
-        self.assertEqual(eco['balances'][TREASURY_ID], 50 - 15)
+        # 3 citizens * BASE_UBI_AMOUNT distributed
+        per_citizen = min(BASE_UBI_AMOUNT, 50 // 3)
+        self.assertEqual(eco['balances'][TREASURY_ID], 50 - 3 * per_citizen)
 
     def test_treasury_never_goes_negative(self):
         """TREASURY balance must be >= 0 after distribution."""
@@ -327,7 +331,7 @@ class TestTreasuryTracking(unittest.TestCase):
         """If TREASURY starts at 0, no distribution occurs."""
         eco = _economy(balances={TREASURY_ID: 0, 'l': 5})
         distribute_ubi(eco, game_day=1)
-        self.assertEqual(eco['balances']['l'], 5)
+        self.assertEqual(eco['balances']['l'], 5)  # unchanged
         self.assertEqual(eco['balances'][TREASURY_ID], 0)
 
     def test_treasury_initialized_if_missing(self):
@@ -392,7 +396,7 @@ class TestUBIIdempotency(unittest.TestCase):
             last_ubi_day=5,  # Already distributed through day 5
         )
         distribute_ubi(eco, game_day=3)  # Day 3 <= 5: skip
-        self.assertEqual(eco['balances']['r'], 5)
+        self.assertEqual(eco['balances']['r'], 5)  # unchanged
 
     def test_distributes_on_new_day(self):
         eco = _economy(
@@ -424,7 +428,7 @@ class TestUBIIdempotency(unittest.TestCase):
         for _ in range(10):
             distribute_ubi(eco, game_day=1)
         # Should have received only one UBI payment
-        self.assertEqual(eco['balances']['v'], 5)
+        self.assertEqual(eco['balances']['v'], BASE_UBI_AMOUNT)
 
 
 # ---------------------------------------------------------------------------
@@ -449,9 +453,9 @@ class TestUBIEdgeCases(unittest.TestCase):
         self.assertEqual(eco['balances'][TREASURY_ID], 100)
 
     def test_single_citizen_exact_amount(self):
-        eco = _economy(balances={TREASURY_ID: 5, 'solo': 0})
+        eco = _economy(balances={TREASURY_ID: BASE_UBI_AMOUNT, 'solo': 0})
         distribute_ubi(eco, game_day=1)
-        self.assertEqual(eco['balances']['solo'], 5)
+        self.assertEqual(eco['balances']['solo'], BASE_UBI_AMOUNT)
         self.assertEqual(eco['balances'][TREASURY_ID], 0)
 
     def test_per_citizen_less_than_one_spark_no_distribution(self):
@@ -476,11 +480,11 @@ class TestUBIEdgeCases(unittest.TestCase):
         balances[TREASURY_ID] = 1000
         eco = _economy(balances=balances)
         distribute_ubi(eco, game_day=1)
-        # floor(1000/100) = 10, but capped at BASE_UBI_AMOUNT (5)
+        # floor(1000/100) = 10, but capped at BASE_UBI_AMOUNT
         for i in range(n):
             self.assertEqual(eco['balances'][f'agent_{i:03d}'], BASE_UBI_AMOUNT)
-        # Treasury distributed 100 * 5 = 500
-        self.assertEqual(eco['balances'][TREASURY_ID], 500)
+        # Treasury distributed 100 * BASE_UBI_AMOUNT
+        self.assertEqual(eco['balances'][TREASURY_ID], 1000 - n * BASE_UBI_AMOUNT)
 
     def test_ledger_initialized_if_missing(self):
         """If 'ledger' key is absent, distribute_ubi initializes it."""
@@ -491,32 +495,22 @@ class TestUBIEdgeCases(unittest.TestCase):
 
     def test_distribute_after_tax_cycle(self):
         """Tax collected by process_earnings flows into TREASURY, then UBI redistributes."""
-        # Give high_earner a balance that puts them in the 25% tax bracket
-        # so they pay significant tax on build (10 Spark * 25% = 2 tax)
-        eco = {'balances': {'high_earner': 250, 'low_earner': 0}, 'ledger': []}
-        # Earn multiple activities to accumulate a meaningful TREASURY balance
+        from economy_engine import EARN_TABLE
+        # Use high balance in top bracket + high-earning action to guarantee tax
+        top_action = max(EARN_TABLE, key=EARN_TABLE.get)
+        eco = {'balances': {'high_earner': 5000, 'low_earner': 0}, 'ledger': []}
         actions = [
-            {'type': 'build', 'from': 'high_earner', 'ts': '2026-01-01'},
-            {'type': 'discover', 'from': 'high_earner', 'ts': '2026-01-01'},
+            {'type': top_action, 'from': 'high_earner', 'ts': '2026-01-01'},
         ]
         eco = process_earnings(eco, actions)
         treasury = eco['balances'].get(TREASURY_ID, 0)
         self.assertGreater(treasury, 0, "Tax should flow to TREASURY")
 
-        # Treasury should be large enough to distribute >=1 Spark per citizen
-        # With treasury > 0 and 2 eligible citizens, distribution happens when
-        # floor(treasury / 2) >= 1, i.e., treasury >= 2
+        distribute_ubi(eco, game_day=1)
         if treasury >= 2:
-            distribute_ubi(eco, game_day=1)
             ubi_entries = [e for e in eco['ledger'] if e['type'] == 'ubi_distribution']
             self.assertGreater(len(ubi_entries), 0,
-                               "UBI distribution should create ledger entries when treasury >= 2")
-        else:
-            # Treasury too small to split between 2 citizens: still verify it works
-            distribute_ubi(eco, game_day=1)
-            # No entries expected — per_citizen would be 0
-            ubi_entries = [e for e in eco['ledger'] if e['type'] == 'ubi_distribution']
-            self.assertEqual(len(ubi_entries), 0)
+                               "UBI distribution should create ledger entries")
 
 
 # ---------------------------------------------------------------------------
@@ -531,14 +525,14 @@ class TestGameTickUBIIntegration(unittest.TestCase):
         state = _state(
             world_time=1440,
             economy=_economy(
-                balances={TREASURY_ID: 20, 'citizen_a': 0, 'citizen_b': 0}
+                balances={TREASURY_ID: 200, 'citizen_a': 0, 'citizen_b': 0}
             ),
             last_ubi_day=-1,
         )
         game_tick_distribute_ubi(state)
         eco = state['economy']
-        self.assertEqual(eco['balances']['citizen_a'], 5)
-        self.assertEqual(eco['balances']['citizen_b'], 5)
+        self.assertEqual(eco['balances']['citizen_a'], BASE_UBI_AMOUNT)
+        self.assertEqual(eco['balances']['citizen_b'], BASE_UBI_AMOUNT)
 
     def test_game_tick_creates_ubi_distribution_ledger_entries(self):
         """After game_tick._distribute_ubi, ledger must have 'ubi_distribution' entries."""
@@ -620,7 +614,7 @@ class TestGameTickUBIIntegration(unittest.TestCase):
         )
         game_tick_distribute_ubi(state)
         # Day 0 > _lastUbiDay (-1), so distribution occurs
-        self.assertEqual(state['economy']['balances']['hh'], 5)
+        self.assertEqual(state['economy']['balances']['hh'], BASE_UBI_AMOUNT)
 
 
 # ---------------------------------------------------------------------------

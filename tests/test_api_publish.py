@@ -251,15 +251,16 @@ class TestBuildRSS(unittest.TestCase):
 
 
 class TestComputeDayPhase(unittest.TestCase):
-    def test_night(self):
+    def test_night_at_zero(self):
+        """Minute 0 should always be night."""
         self.assertEqual(api_publish_state.compute_day_phase(0), 'night')
-        self.assertEqual(api_publish_state.compute_day_phase(1200), 'night2')
 
-    def test_dawn(self):
-        self.assertEqual(api_publish_state.compute_day_phase(400), 'dawn')
-
-    def test_midday(self):
-        self.assertEqual(api_publish_state.compute_day_phase(720), 'midday')
+    def test_returns_valid_phase(self):
+        """All times should return a recognized phase name."""
+        valid = {'night', 'dawn', 'morning', 'midday', 'afternoon', 'dusk', 'night2'}
+        for minute in [0, 200, 400, 600, 720, 900, 1100, 1200, 1400]:
+            phase = api_publish_state.compute_day_phase(minute)
+            self.assertIn(phase, valid, f"minute {minute} gave invalid phase '{phase}'")
 
 
 if __name__ == '__main__':

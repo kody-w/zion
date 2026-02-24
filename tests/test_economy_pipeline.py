@@ -266,8 +266,8 @@ class TestAgentAutonomyJoin(unittest.TestCase):
         messages = generate_agent_intentions(agent, 2, inject_join=True)
         self.assertEqual(messages[0]['type'], 'join')
         self.assertEqual(messages[0]['from'], 'agent_test_99')
-        # Subsequent messages are normal intentions
-        self.assertIn(messages[1]['type'], ['plant', 'harvest'])
+        # Subsequent messages are normal intentions (including injected say/warp)
+        self.assertIn(messages[1]['type'], ['plant', 'harvest', 'say', 'warp'])
 
 
 class TestTransactionCap(unittest.TestCase):

@@ -42,22 +42,29 @@ def _vary_float(rng, base, min_val, max_val, decimals=2):
 
 # Base values and their allowed ranges: (base, min, max)
 EARN_RANGES = {
-    'join': (1, 1, 3), 'say': (1, 1, 3), 'emote': (1, 1, 2),
-    'move': (0, 0, 1), 'warp': (0, 0, 1),
+    'join': (1, 1, 3), 'say': (1, 1, 3), 'shout': (2, 1, 4), 'whisper': (1, 1, 2),
+    'emote': (1, 1, 2), 'move': (0, 0, 1), 'warp': (0, 0, 1),
+    'warp_fork': (50, 25, 80), 'return_home': (0, 0, 1),
     'build': (10, 5, 18), 'build_upgrade': (5, 3, 10), 'demolish': (0, 0, 2),
-    'plant': (5, 3, 10), 'water': (2, 1, 5), 'harvest': (8, 4, 14),
+    'plant': (5, 3, 10), 'water': (2, 1, 5), 'harvest': (3, 2, 8),
     'fertilize': (3, 1, 6),
-    'craft': (8, 4, 14), 'compose': (15, 8, 25), 'teach': (12, 6, 20),
-    'mentor': (10, 5, 18),
-    'quest_complete': (20, 10, 35), 'inspect': (2, 1, 5), 'discover': (25, 12, 40),
-    'trade_offer': (3, 1, 6), 'trade_accept': (5, 2, 10),
+    'craft': (8, 4, 14), 'compose': (15, 8, 25), 'teach': (10, 6, 20),
+    'learn': (5, 2, 10), 'mentor': (10, 5, 18),
+    'mentor_offer': (0, 0, 1), 'mentor_accept': (0, 0, 1),
+    'quest_complete': (20, 10, 35), 'inspect': (1, 1, 5), 'discover': (20, 12, 40),
+    'trade_offer': (0, 0, 2), 'trade_accept': (0, 0, 2),
+    'buy': (0, 0, 1), 'sell': (0, 0, 1), 'gift': (5, 2, 10),
+    'challenge': (0, 0, 1), 'accept_challenge': (0, 0, 1),
+    'forfeit': (0, 0, 0), 'score': (10, 5, 18),
     'petition': (2, 1, 5), 'vote': (3, 1, 6), 'amendment_propose': (10, 5, 18),
     'guild_create': (15, 8, 25), 'guild_join': (5, 2, 10),
-    'anchor_place': (20, 10, 35), 'competition_create': (10, 5, 18),
+    'anchor_place': (25, 10, 40), 'competition_create': (10, 5, 18),
     'competition_join': (5, 2, 10), 'competition_score': (8, 4, 14),
     'sim_create': (5, 2, 10), 'sim_step': (1, 1, 3), 'sim_query': (1, 1, 3),
     'reputation_give': (3, 1, 6),
-    'federation_announce': (100, 50, 200),
+    'intention_set': (2, 1, 4), 'intention_clear': (0, 0, 0),
+    'heartbeat': (0, 0, 0), 'idle': (0, 0, 0), 'leave': (0, 0, 0),
+    'federation_announce': (100, 50, 200), 'federation_handshake': (50, 25, 80),
 }
 
 # Tax bracket ranges: each bracket is (min_bal, max_bal, base_rate, min_rate, max_rate)

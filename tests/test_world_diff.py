@@ -532,7 +532,11 @@ class TestNarrateDiff(unittest.TestCase):
         diff = diff_states(before, after)
         narrative = narrate_diff(diff)
         self.assertIn('bench', narrative.lower())
-        self.assertIn('commons', narrative.lower())
+        # Zone may appear as display name (e.g. "the Gathering") or raw key
+        self.assertTrue(
+            'commons' in narrative.lower() or 'gathering' in narrative.lower(),
+            f"Expected commons/gathering in: {narrative}"
+        )
 
     def test_narrative_plant_added(self):
         before = make_state(gardens=make_gardens({

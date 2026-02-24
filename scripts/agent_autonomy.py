@@ -18,6 +18,16 @@ def _get_emergence():
     return _emergence
 
 
+def _get_valid_zones():
+    """Get valid zone IDs from config."""
+    try:
+        from load_config import get_valid_zones
+        return sorted(get_valid_zones())
+    except Exception:
+        return ['nexus', 'gardens', 'athenaeum', 'studio', 'wilds',
+                'agora', 'commons', 'arena', 'observatory']
+
+
 def generate_agent_intentions(agent, count=2, inject_join=False):
     """
     Generate intention messages for an agent based on their archetype.
@@ -32,6 +42,11 @@ def generate_agent_intentions(agent, count=2, inject_join=False):
     """
     messages = []
     intention_types = agent.get('intentions', ['say', 'move', 'inspect'])
+    # Ensure every agent can speak and travel occasionally
+    if 'say' not in intention_types:
+        intention_types = intention_types + ['say']
+    if 'warp' not in intention_types:
+        intention_types = intention_types + ['warp']
 
     if inject_join:
         join_msg = {
@@ -89,6 +104,14 @@ def generate_agent_intentions(agent, count=2, inject_join=False):
                 'z': current_pos.get('z', 0) + random.uniform(-5, 5),
                 'zone': current_pos.get('zone', 'nexus')
             }
+
+        elif intention_type == 'warp':
+            zones = _get_valid_zones()
+            current_zone = agent.get('position', {}).get('zone', 'nexus')
+            other_zones = [z for z in zones if z != current_zone]
+            dest = random.choice(other_zones) if other_zones else current_zone
+            message['payload']['destination'] = dest
+            message['position']['zone'] = dest
 
         elif intention_type == 'plant':
             e = _get_emergence()

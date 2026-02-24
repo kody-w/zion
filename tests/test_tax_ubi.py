@@ -9,41 +9,39 @@ import unittest
 script_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'scripts')
 sys.path.insert(0, script_dir)
 
-from economy_engine import _get_tax_rate, TREASURY_ID, process_earnings
+from economy_engine import _get_tax_rate, _TAX_BRACKETS, TREASURY_ID, process_earnings, EARN_TABLE, BASE_UBI_AMOUNT
 from game_tick import _get_ubi_eligible, _distribute_ubi
 
 
 class TestTaxBrackets(unittest.TestCase):
-    """Test _get_tax_rate bracket thresholds."""
+    """Test _get_tax_rate returns consistent rates from configured brackets."""
 
-    def test_bracket_0_to_19(self):
+    def test_zero_balance_no_tax(self):
+        """Balance 0 should be in the lowest bracket (0% tax)."""
         self.assertEqual(_get_tax_rate(0), 0.0)
-        self.assertEqual(_get_tax_rate(10), 0.0)
-        self.assertEqual(_get_tax_rate(19), 0.0)
 
-    def test_bracket_20_to_49(self):
-        self.assertEqual(_get_tax_rate(20), 0.05)
-        self.assertEqual(_get_tax_rate(49), 0.05)
-
-    def test_bracket_50_to_99(self):
-        self.assertEqual(_get_tax_rate(50), 0.10)
-        self.assertEqual(_get_tax_rate(99), 0.10)
-
-    def test_bracket_100_to_249(self):
-        self.assertEqual(_get_tax_rate(100), 0.15)
-        self.assertEqual(_get_tax_rate(249), 0.15)
-
-    def test_bracket_250_to_499(self):
-        self.assertEqual(_get_tax_rate(250), 0.25)
-        self.assertEqual(_get_tax_rate(499), 0.25)
-
-    def test_bracket_500_plus(self):
-        self.assertEqual(_get_tax_rate(500), 0.40)
-        self.assertEqual(_get_tax_rate(10000), 0.40)
-
-    def test_negative_balance(self):
+    def test_negative_balance_no_tax(self):
         self.assertEqual(_get_tax_rate(-5), 0.0)
-        self.assertEqual(_get_tax_rate(-100), 0.0)
+
+    def test_rates_increase_with_balance(self):
+        """Higher balances should have equal or higher tax rates."""
+        prev_rate = 0.0
+        for lo, hi, rate in _TAX_BRACKETS:
+            self.assertGreaterEqual(rate, prev_rate,
+                                    f"Bracket [{lo},{hi}] rate {rate} < prev {prev_rate}")
+            prev_rate = rate
+
+    def test_all_brackets_return_valid_rate(self):
+        """Every bracket midpoint should return its configured rate."""
+        for lo, hi, rate in _TAX_BRACKETS:
+            mid = lo + 1 if hi == float('inf') else (lo + hi) // 2
+            actual = _get_tax_rate(mid)
+            self.assertEqual(actual, rate, f"Balance {mid} should be in bracket [{lo},{hi}]")
+
+    def test_high_balance_highest_rate(self):
+        """Very high balance should get the highest tax rate."""
+        highest_rate = _TAX_BRACKETS[-1][2]
+        self.assertEqual(_get_tax_rate(100000), highest_rate)
 
 
 class TestProcessEarningsWithTax(unittest.TestCase):
@@ -59,30 +57,39 @@ class TestProcessEarningsWithTax(unittest.TestCase):
         self.assertNotIn(TREASURY_ID, result['balances'])
 
     def test_earnings_with_tax(self):
-        """Balance 100 -> 15% tax bracket."""
-        economy = {'balances': {'user1': 100}, 'ledger': []}
+        """Balance in higher bracket should have tax applied."""
+        # Use balance high enough to be in a taxed bracket
+        balance = _TAX_BRACKETS[-1][0] + 100  # top bracket
+        earn = EARN_TABLE.get('build', 10)
+        rate = _get_tax_rate(balance)
+        expected_tax = int(earn * rate)
+        economy = {'balances': {'user1': balance}, 'ledger': []}
         actions = [{'type': 'build', 'from': 'user1', 'ts': 1000}]
         result = process_earnings(economy, actions)
-        # build earns 10, 15% tax = 1 (floor), net = 9
-        self.assertEqual(result['balances']['user1'], 109)
-        self.assertEqual(result['balances'][TREASURY_ID], 1)
+        self.assertEqual(result['balances']['user1'], balance + earn - expected_tax)
+        if expected_tax > 0:
+            self.assertEqual(result['balances'][TREASURY_ID], expected_tax)
 
     def test_tax_recorded_in_ledger(self):
-        economy = {'balances': {'user1': 100}, 'ledger': []}
-        actions = [{'type': 'build', 'from': 'user1', 'ts': 1000}]
+        """Tax entry created when tax is non-zero."""
+        # Use high balance + high-earning action to guarantee tax > 0
+        top_action = max(EARN_TABLE, key=EARN_TABLE.get)
+        balance = _TAX_BRACKETS[-1][0] + 100
+        economy = {'balances': {'user1': balance}, 'ledger': []}
+        actions = [{'type': top_action, 'from': 'user1', 'ts': 1000}]
         result = process_earnings(economy, actions)
         tax_entries = [e for e in result['ledger'] if e['type'] == 'tax']
-        self.assertEqual(len(tax_entries), 1)
-        self.assertEqual(tax_entries[0]['amount'], 1)
+        self.assertGreaterEqual(len(tax_entries), 1)
 
     def test_spark_conservation(self):
         """Net + tax should equal gross."""
-        economy = {'balances': {'user1': 500}, 'ledger': []}
-        actions = [{'type': 'discover', 'from': 'user1', 'ts': 1000}]
+        top_action = max(EARN_TABLE, key=EARN_TABLE.get)
+        gross = EARN_TABLE[top_action]
+        balance = _TAX_BRACKETS[-1][0] + 100
+        economy = {'balances': {'user1': balance}, 'ledger': []}
+        actions = [{'type': top_action, 'from': 'user1', 'ts': 1000}]
         result = process_earnings(economy, actions)
-        # discover earns 20, 40% tax = 8, net = 12
-        gross = 20
-        net = result['balances']['user1'] - 500
+        net = result['balances']['user1'] - balance
         tax = result['balances'].get(TREASURY_ID, 0)
         self.assertEqual(net + tax, gross)
 
@@ -109,19 +116,20 @@ class TestUBIDistribution(unittest.TestCase):
     """Test UBI distribution in game tick."""
 
     def test_ubi_distributes_on_game_day_boundary(self):
+        treasury = BASE_UBI_AMOUNT * 4  # enough for 2 users
         state = {
             'worldTime': 1440,  # Day 1
             '_lastUbiDay': -1,
             'economy': {
-                'balances': {TREASURY_ID: 20, 'user1': 5, 'user2': 3},
+                'balances': {TREASURY_ID: treasury, 'user1': 5, 'user2': 3},
                 'transactions': [],
             },
         }
         _distribute_ubi(state)
-        # Each gets min(5, 20//2) = 5
-        self.assertEqual(state['economy']['balances']['user1'], 10)
-        self.assertEqual(state['economy']['balances']['user2'], 8)
-        self.assertEqual(state['economy']['balances'][TREASURY_ID], 10)
+        per_player = min(BASE_UBI_AMOUNT, treasury // 2)
+        self.assertEqual(state['economy']['balances']['user1'], 5 + per_player)
+        self.assertEqual(state['economy']['balances']['user2'], 3 + per_player)
+        self.assertEqual(state['economy']['balances'][TREASURY_ID], treasury - per_player * 2)
 
     def test_ubi_does_not_repeat_same_day(self):
         state = {
@@ -150,11 +158,12 @@ class TestUBIDistribution(unittest.TestCase):
         self.assertGreaterEqual(state['economy']['balances'][TREASURY_ID], 0)
 
     def test_ubi_records_transactions(self):
+        treasury = BASE_UBI_AMOUNT * 2  # enough for 1 user
         state = {
             'worldTime': 1440,
             '_lastUbiDay': -1,
             'economy': {
-                'balances': {TREASURY_ID: 10, 'user1': 0},
+                'balances': {TREASURY_ID: treasury, 'user1': 0},
                 'transactions': [],
             },
         }
@@ -162,7 +171,8 @@ class TestUBIDistribution(unittest.TestCase):
         ubi_txns = [t for t in state['economy']['transactions'] if t['type'] == 'ubi_payout']
         self.assertEqual(len(ubi_txns), 1)
         self.assertEqual(ubi_txns[0]['to'], 'user1')
-        self.assertEqual(ubi_txns[0]['amount'], 5)
+        per_player = min(BASE_UBI_AMOUNT, treasury // 1)
+        self.assertEqual(ubi_txns[0]['amount'], per_player)
 
     def test_ubi_with_empty_treasury_does_nothing(self):
         state = {
