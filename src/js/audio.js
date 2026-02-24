@@ -241,32 +241,6 @@
         breeze.connect(bf); bf.connect(bg); bg.connect(masterGain);
         s.nodes.push(breeze, bf, bg);
       }
-      // Birds with frequency glide for realism
-      function bird() {
-        if (!ctx || !masterGain) return;
-        var o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'sine';
-        var f0 = 200 + Math.random() * 200;
-        o.frequency.setValueAtTime(f0, ctx.currentTime);
-        o.frequency.linearRampToValueAtTime(f0 * (0.8 + Math.random() * 0.5), ctx.currentTime + 0.08);
-        var dur = 0.1 + Math.random() * 0.2;
-        g.gain.setValueAtTime(0, ctx.currentTime);
-        g.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-        o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + dur);
-        s.timeouts.push(setTimeout(bird, 400 + Math.random() * 3000));
-      }
-      for (var i = 0; i < 3; i++) s.timeouts.push(setTimeout(bird, Math.random() * 2000));
-
-      // Crickets: AM sine
-      var cric = ctx.createOscillator(), cam = ctx.createOscillator();
-      var camg = ctx.createGain(), cg = ctx.createGain();
-      cric.type = 'sine'; cric.frequency.value = 60;
-      cam.type = 'sine'; cam.frequency.value = 20; camg.gain.value = 0.015; cg.gain.value = 0.015;
-      cam.connect(camg); camg.connect(cg.gain);
-      cric.connect(cg); cg.connect(masterGain); cric.start(); cam.start();
-      s.nodes.push(cric, cam, camg, cg);
-
       // Leaf rustles
       function rustle() {
         if (!ctx || !masterGain) return;
@@ -814,34 +788,6 @@
     s.nodes.push(w, f, g);
   }
 
-  function chirpLayer(s, count, minFreq, maxFreq, minGap, maxGap, vol) {
-    function bird() {
-      if (!ctx || !masterGain) return;
-      var o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'sine';
-      var f0 = minFreq + Math.random() * (maxFreq - minFreq);
-      o.frequency.setValueAtTime(f0, ctx.currentTime);
-      o.frequency.linearRampToValueAtTime(f0 * (0.8 + Math.random() * 0.5), ctx.currentTime + 0.08);
-      var dur = 0.08 + Math.random() * 0.15;
-      g.gain.setValueAtTime(0, ctx.currentTime);
-      g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-      o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + dur);
-      s.timeouts.push(setTimeout(bird, minGap + Math.random() * (maxGap - minGap)));
-    }
-    for (var i = 0; i < count; i++) s.timeouts.push(setTimeout(bird, Math.random() * 2000));
-  }
-
-  function cricketAM(s, freq, modFreq, gainVal) {
-    var o = ctx.createOscillator(), am = ctx.createOscillator();
-    var amg = ctx.createGain(), g = ctx.createGain();
-    o.type = 'sine'; o.frequency.value = freq;
-    am.type = 'sine'; am.frequency.value = modFreq; amg.gain.value = gainVal * 0.8;
-    g.gain.value = gainVal;
-    am.connect(amg); amg.connect(g.gain);
-    o.connect(g); g.connect(masterGain); o.start(); am.start();
-    s.nodes.push(o, am, amg, g);
-  }
 
   function hootLayer(s, freq, minGap, maxGap, vol) {
     function hoot() {
@@ -880,13 +826,11 @@
     dawn: function() {
       var s = makeState();
       windLayer(s, 0.018);
-      chirpLayer(s, 2, 200, 380, 800, 2000, 0.04);
       return s;
     },
     morning: function() {
       var s = makeState();
       windLayer(s, 0.022);
-      chirpLayer(s, 3, 200, 380, 400, 2500, 0.048);
       function buzz() {
         if (!ctx || !masterGain) return;
         var o = ctx.createOscillator(), g = ctx.createGain();
@@ -901,28 +845,23 @@
     midday: function() {
       var s = makeState();
       windLayer(s, 0.027);
-      cricketAM(s, 3500 + Math.random() * 500, 15 + Math.random() * 10, 0.035);
-      chirpLayer(s, 1, 200, 380, 3000, 5000, 0.028);
       return s;
     },
     afternoon: function() {
       var s = makeState();
       windLayer(s, 0.022);
-      chirpLayer(s, 2, 200, 380, 1500, 4000, 0.038);
       rustleLayer(s, 2500, 3500, 0.028);
       return s;
     },
     evening: function() {
       var s = makeState();
       windLayer(s, 0.018);
-      cricketAM(s, 4000 + Math.random() * 500, 18 + Math.random() * 8, 0.025);
       hootLayer(s, 320, 12000, 12000, 0.045);
       return s;
     },
     night: function() {
       var s = makeState();
       windLayer(s, 0.013);
-      cricketAM(s, 3500 + Math.random() * 300, 15 + Math.random() * 5, 0.022);
       hootLayer(s, 280, 18000, 18000, 0.038);
       function howl() {
         if (!ctx || !masterGain) return;

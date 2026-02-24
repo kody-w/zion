@@ -30,15 +30,12 @@ var assert = require('assert');
   console.log('PASS: shutter click parameters');
 })();
 
-(function testCricketParams() {
-  // Crickets are now deep sub-bass hum instead of high-pitched chirp
-  var cricketFreq = 60; // Hz (deep hum)
-  var pulseRate = 20; // Hz (AM modulation)
-  var gain = 0.015;
-
-  assert(cricketFreq < 200, 'Cricket frequency should be sub-bass for warmth');
-  assert(gain < 0.05, 'Crickets should be very quiet');
-  console.log('PASS: cricket ambient parameters');
+(function testCricketRemoved() {
+  // Crickets have been removed entirely — too harsh even at low frequencies
+  var src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'js', 'audio.js'), 'utf8');
+  assert(!src.includes('function cricketAM'), 'cricketAM should not exist');
+  assert(!src.includes('cricketAM('), 'no cricketAM calls should exist');
+  console.log('PASS: crickets fully removed');
 })();
 
 (function testPlaySoundTypes() {
