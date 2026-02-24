@@ -44,19 +44,30 @@ def calculate_day_phase(world_time):
         return 'night'
 
 
-def generate_weather(seed):
+def generate_weather(seed, season=None):
     """
-    Generate weather based on seed for determinism.
+    Generate weather based on seed, with season-varied weights.
 
     Args:
         seed: integer seed for random number generator
+        season: optional season string to vary weather probabilities
 
     Returns:
         One of 'clear', 'cloudy', 'rain', 'storm', 'snow', 'fog'
     """
     rng = random.Random(seed)
     weather_types = ['clear', 'cloudy', 'rain', 'storm', 'snow', 'fog']
-    weights = [40, 30, 15, 5, 5, 5]  # Probabilities (%)
+
+    if season:
+        try:
+            from seed_emergence import Emergence
+            e = Emergence(seed=str(seed))
+            weight_map = e.weather_weights(season)
+            weights = [weight_map.get(w, 10) for w in weather_types]
+        except ImportError:
+            weights = [40, 30, 15, 5, 5, 5]
+    else:
+        weights = [40, 30, 15, 5, 5, 5]
 
     return rng.choices(weather_types, weights=weights)[0]
 
@@ -351,9 +362,9 @@ def tick(state_json):
     # Update phase
     state['dayPhase'] = calculate_day_phase(state['worldTime'])
 
-    # Update weather (use world time as seed for determinism)
+    # Update weather (use world time as seed, season for weight variation)
     weather_seed = int(state['worldTime'] / 300)  # Change every 5 minutes
-    state['weather'] = generate_weather(weather_seed)
+    state['weather'] = generate_weather(weather_seed, season=state.get('season'))
 
     # Update season
     state['season'] = calculate_season(current_time)

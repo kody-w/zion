@@ -39,95 +39,40 @@ def deterministic_choice(items, seed_str):
 
 def generate_observation(zone_id, zone_data, npcs_here, world, now_str):
     """Generate a contextual observation about a zone."""
+    from seed_emergence import Emergence
+
     day_phase = world.get('dayPhase', 'day')
     weather = world.get('weather', 'clear')
     season = world.get('season', 'spring')
     npc_count = len(npcs_here)
     zone_name = zone_data.get('name', zone_id)
 
-    # Seed for deterministic variety
-    seed = now_str + zone_id
+    # Seed from timestamp so every run is unique
+    e = Emergence(seed=now_str + zone_id)
 
-    # Time-based observations
-    time_phrases = {
-        'dawn': [
-            'The first light touches %s as a new day begins.',
-            'Dawn breaks over %s. The world stirs.',
-            'Morning mist rises in %s.',
-        ],
-        'morning': [
-            'The morning sun warms %s.',
-            '%s hums with morning activity.',
-            'A crisp morning in %s.',
-        ],
-        'midday': [
-            'The sun stands high over %s.',
-            'Midday light floods %s.',
-            '%s is alive with energy at noon.',
-        ],
-        'afternoon': [
-            'Afternoon shadows lengthen across %s.',
-            'The afternoon is quiet in %s.',
-            '%s basks in the afternoon glow.',
-        ],
-        'dusk': [
-            'Dusk paints %s in amber and violet.',
-            'The sun sets over %s.',
-            'Evening descends on %s.',
-        ],
-        'night': [
-            'Stars wheel above %s in the darkness.',
-            'Night has claimed %s. The world is still.',
-            'Moonlight silvers %s.',
-        ],
-    }
+    # Time-based observation (composed from fragments, not hardcoded templates)
+    base = e.observe_time(day_phase, zone_name)
 
-    phrases = time_phrases.get(day_phase, time_phrases['morning'])
-    base = deterministic_choice(phrases, seed + 'base') % zone_name
-
-    # Add NPC observation
+    # NPC observation
     npc_part = ''
     if npc_count > 0:
-        npc_templates = [
-            'I see %d citizens going about their day.',
-            '%d souls share this space.',
-            'The presence of %d others fills the air with purpose.',
-        ]
-        npc_part = ' ' + deterministic_choice(npc_templates, seed + 'npc') % npc_count
+        npc_part = ' ' + e.observe_population(npc_count)
 
-        # Mention a specific NPC
         if npcs_here:
-            npc = deterministic_choice(npcs_here, seed + 'specific')
+            npc = deterministic_choice(npcs_here, now_str + 'specific')
             npc_name = npc.get('name', 'someone')
             npc_arch = npc.get('archetype', 'citizen')
-            specific_templates = [
-                ' %s the %s catches my eye.',
-                ' I notice %s, a %s, nearby.',
-                ' %s (%s) is here.',
-            ]
-            npc_part += deterministic_choice(specific_templates, seed + 'spec') % (npc_name, npc_arch)
+            npc_part += ' ' + e.observe_npc(npc_name, npc_arch)
 
     # Weather observation
     weather_part = ''
     if weather != 'clear':
-        weather_templates = {
-            'rain': ' Rain patters softly.',
-            'storm': ' Thunder rumbles in the distance.',
-            'fog': ' Fog drifts through the air.',
-            'snow': ' Snowflakes drift down.',
-        }
-        weather_part = weather_templates.get(weather, '')
+        weather_part = ' ' + e.observe_weather(weather)
 
     # Season flavor
     season_part = ''
-    season_templates = {
-        'spring': [' The world is green with new growth.', ' Spring breathes life into everything.'],
-        'summer': [' Summer warmth radiates from the ground.', ' The air is thick with summer.'],
-        'autumn': [' Autumn leaves drift on the wind.', ' The world wears autumn colors.'],
-        'winter': [' Winter has quieted the land.', ' A cold stillness hangs in the air.'],
-    }
-    if season in season_templates:
-        season_part = deterministic_choice(season_templates[season], seed + 'season')
+    if season:
+        season_part = ' ' + e.observe_season(season)
 
     return base + npc_part + weather_part + season_part
 

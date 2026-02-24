@@ -7,6 +7,16 @@ import random
 import time
 from datetime import datetime
 
+# Lazy-loaded emergence engine
+_emergence = None
+
+def _get_emergence():
+    global _emergence
+    if _emergence is None:
+        from seed_emergence import Emergence
+        _emergence = Emergence()
+    return _emergence
+
 
 def generate_agent_intentions(agent, count=2, inject_join=False):
     """
@@ -67,8 +77,8 @@ def generate_agent_intentions(agent, count=2, inject_join=False):
         # Add type-specific payload
         if intention_type == 'say':
             archetype = agent.get('archetype', 'citizen')
-            phrases = get_archetype_phrases(archetype)
-            message['payload']['text'] = random.choice(phrases)
+            e = _get_emergence()
+            message['payload']['text'] = e.agent_speak(archetype)
 
         elif intention_type == 'move':
             # Random movement within zone
@@ -81,43 +91,43 @@ def generate_agent_intentions(agent, count=2, inject_join=False):
             }
 
         elif intention_type == 'plant':
-            message['payload']['species'] = random.choice(['tomato', 'wheat', 'flower', 'tree'])
+            e = _get_emergence()
+            message['payload']['species'] = e.pick_action('plant_species')
             message['payload']['plot'] = f"plot_{random.randint(1, 20):03d}"
 
         elif intention_type == 'harvest':
             message['payload']['plot'] = f"plot_{random.randint(1, 20):03d}"
 
         elif intention_type == 'build':
-            message['payload']['structure'] = random.choice(['bench', 'statue', 'path', 'shrine'])
+            e = _get_emergence()
+            message['payload']['structure'] = e.pick_action('build_structures')
 
         elif intention_type == 'craft':
-            message['payload']['recipe'] = random.choice(['tool', 'ornament', 'instrument'])
+            e = _get_emergence()
+            message['payload']['recipe'] = e.pick_action('craft_recipes')
 
         elif intention_type == 'compose':
+            e = _get_emergence()
             message['payload']['title'] = f"Creation {random.randint(1, 999)}"
-            message['payload']['type'] = random.choice(['song', 'poem', 'story'])
+            message['payload']['type'] = e.pick_action('compose_types')
 
         elif intention_type == 'inspect':
-            message['payload']['target'] = random.choice([
-                'fountain_001', 'ancient_tree_001', 'telescope_001'
-            ])
+            e = _get_emergence()
+            message['payload']['target'] = e.pick_action('inspect_targets')
 
         elif intention_type == 'emote':
-            message['payload']['action'] = random.choice([
-                'waves', 'bows', 'dances', 'smiles', 'nods'
-            ])
+            e = _get_emergence()
+            message['payload']['action'] = e.pick_action('emote_actions')
 
         elif intention_type == 'discover':
-            discovery = random.choice([
-                'constellation', 'artifact', 'pathway', 'secret'
-            ])
+            e = _get_emergence()
+            discovery = e.pick_action('discovery_types')
             message['payload']['name'] = discovery.title()
             message['payload']['description'] = 'Discovered a %s' % discovery
 
         elif intention_type == 'intention_set':
-            message['payload']['intention'] = random.choice([
-                'Create beauty', 'Share knowledge', 'Build community', 'Explore the unknown'
-            ])
+            e = _get_emergence()
+            message['payload']['intention'] = e.pick_intention()
 
         messages.append(message)
 
@@ -125,76 +135,12 @@ def generate_agent_intentions(agent, count=2, inject_join=False):
 
 
 def get_archetype_phrases(archetype):
-    """Get appropriate phrases for an archetype."""
-    phrases = {
-        'gardener': [
-            'The soil feels rich today.',
-            'These plants are thriving.',
-            'Patience yields the best harvest.',
-            'Let us tend to growth together.'
-        ],
-        'builder': [
-            'This structure will stand for ages.',
-            'Every creation begins with intention.',
-            'Let us build something meaningful.',
-            'The foundation must be strong.'
-        ],
-        'storyteller': [
-            'Gather round, I have a tale to share.',
-            'Words carry power and memory.',
-            'Every being has a story worth telling.',
-            'Let imagination guide us.'
-        ],
-        'merchant': [
-            'Fair trade enriches all parties.',
-            'What treasures do you seek today?',
-            'The market thrives on exchange.',
-            'Value flows where intention directs.'
-        ],
-        'explorer': [
-            'What lies beyond that horizon?',
-            'Discovery awaits the curious.',
-            'Every path leads somewhere new.',
-            'The unknown calls to me.'
-        ],
-        'teacher': [
-            'Knowledge grows when shared.',
-            'Let me show you what I have learned.',
-            'Questions are the seeds of wisdom.',
-            'We learn best together.'
-        ],
-        'musician': [
-            'Music speaks what words cannot.',
-            'Listen to the rhythm of the world.',
-            'Every sound is part of the symphony.',
-            'Let harmony guide us.'
-        ],
-        'healer': [
-            'Balance brings wellness.',
-            'How may I ease your burden?',
-            'Compassion is the greatest medicine.',
-            'We all need care sometimes.'
-        ],
-        'philosopher': [
-            'What is the nature of this place?',
-            'Contemplation reveals truth.',
-            'Why do we choose what we choose?',
-            'Understanding comes through reflection.'
-        ],
-        'artist': [
-            'Beauty emerges from intention.',
-            'This medium speaks to me.',
-            'Art transforms the ordinary.',
-            'Let creativity flow freely.'
-        ]
-    }
+    """Legacy fallback — use Emergence.agent_speak() instead.
 
-    return phrases.get(archetype, [
-        'Greetings, fellow traveler.',
-        'What brings you here today?',
-        'The world is full of wonder.',
-        'Together we create meaning.'
-    ])
+    Kept for backward compatibility with any code that imports this directly.
+    """
+    e = _get_emergence()
+    return [e.agent_speak(archetype) for _ in range(4)]
 
 
 def activate_agents(agents_data, num_activate=10):

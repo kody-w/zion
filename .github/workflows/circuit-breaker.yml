@@ -215,12 +215,20 @@ jobs:
           if [ -f state/logs/circuit_breaker.json ]; then
             git add state/logs/circuit_breaker.json
             git diff --staged --quiet || git commit -m "circuit-breaker: track ${{ steps.trigger.outputs.name }} (${{ steps.trigger.outputs.conclusion }})"
+            PUSH_OK=false
             for i in 1 2 3; do
               git pull --rebase || true
-              git push && break
+              if git push; then
+                PUSH_OK=true
+                break
+              fi
               echo "Push attempt $i failed, retrying..."
               sleep 2
             done
+            if [ "$PUSH_OK" = false ]; then
+              echo "::error::All push attempts failed — state may be out of sync"
+              exit 1
+            fi
           else
             echo "No circuit breaker state file to commit"
           fi

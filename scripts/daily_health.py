@@ -327,6 +327,26 @@ def run_state_hygiene(state_dir):
         os.path.join(state_dir, 'chat.json'), 200, 'messages')
     results['actions'] = rotate_state_file(
         os.path.join(state_dir, 'actions.json'), 200, 'actions')
+    results['ledger'] = rotate_state_file(
+        os.path.join(state_dir, 'economy.json'), 1000, 'ledger')
+    results['transactions'] = rotate_state_file(
+        os.path.join(state_dir, 'economy.json'), 500, 'transactions')
+
+    # Clean processed inbox files older than 7 days
+    processed_dir = os.path.join(state_dir, 'inbox', '_processed')
+    old_inbox = 0
+    if os.path.isdir(processed_dir):
+        cutoff_ts = time_mod.time() - (7 * 86400)
+        for fname in os.listdir(processed_dir):
+            fpath = os.path.join(processed_dir, fname)
+            if os.path.isfile(fpath):
+                try:
+                    if os.path.getmtime(fpath) < cutoff_ts:
+                        os.remove(fpath)
+                        old_inbox += 1
+                except OSError:
+                    pass
+    results['old_inbox'] = old_inbox
 
     # Rotate old log files (keep last 30 days)
     logs_dir = os.path.join(state_dir, 'logs')
