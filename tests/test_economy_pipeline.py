@@ -110,9 +110,15 @@ class TestGiftHandler(unittest.TestCase):
         shutil.rmtree(self.state_dir)
 
     def test_gift_creates_transaction(self):
+        # Give sender enough balance for the gift
+        econ_path = os.path.join(self.state_dir, 'economy.json')
+        econ = load_json(econ_path)
+        econ['balances']['agent_001'] = 100
+        with open(econ_path, 'w') as f:
+            json.dump(econ, f)
         msg = make_msg('gift', payload={'to': 'agent_002', 'item': 'flower', 'amount': 5})
         apply_to_state(msg, self.state_dir)
-        econ = load_json(os.path.join(self.state_dir, 'economy.json'))
+        econ = load_json(econ_path)
         self.assertTrue(len(econ['transactions']) > 0)
         txn = econ['transactions'][-1]
         self.assertEqual(txn['type'], 'gift')

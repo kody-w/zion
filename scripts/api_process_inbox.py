@@ -427,11 +427,13 @@ def apply_to_state(msg, state_dir):
         econ = load_json(econ_path)
         amount = payload.get('amount', 1)
         recipient = payload.get('to', '')
-        econ['balances'][sender] = econ['balances'].get(sender, 0) - amount
-        if recipient:
-            econ['balances'][recipient] = econ['balances'].get(recipient, 0) + amount
-        save_json(econ_path, econ)
-        _record_economy_txn(state_dir, 'gift', sender, payload, to=recipient)
+        sender_balance = econ['balances'].get(sender, 0)
+        if sender_balance >= amount:
+            econ['balances'][sender] = sender_balance - amount
+            if recipient:
+                econ['balances'][recipient] = econ['balances'].get(recipient, 0) + amount
+            save_json(econ_path, econ)
+            _record_economy_txn(state_dir, 'gift', sender, payload, to=recipient)
 
     elif msg_type == 'trade_offer':
         econ_path = os.path.join(state_dir, 'economy.json')
@@ -462,6 +464,9 @@ def apply_to_state(msg, state_dir):
         'from': sender,
         'ts': msg.get('ts', ''),
         'platform': 'api',
+        'zone': msg.get('position', {}).get('zone', ''),
+        'payload': {k: v for k, v in payload.items()
+                    if isinstance(v, (str, int, float, bool))} if payload else {},
     })
     changes['changes'] = changes['changes'][-500:]
     save_json(changes_path, changes)

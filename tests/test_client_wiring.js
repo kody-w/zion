@@ -52,7 +52,7 @@ suite('State.applyMessage handles all protocol types', function() {
 
 suite('chat.json has valid zones', function() {
   test('All chat messages reference valid zones', function() {
-    var validZones = ['nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'];
+    var validZones = ['nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena', 'observatory'];
     var chatPath = path.join(__dirname, '..', 'state', 'chat.json');
     var chat = JSON.parse(fs.readFileSync(chatPath, 'utf8'));
     var messages = chat.messages || [];

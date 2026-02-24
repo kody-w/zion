@@ -110,7 +110,7 @@ def generate_agent_intentions(agent, count=2, inject_join=False):
             current_zone = agent.get('position', {}).get('zone', 'nexus')
             other_zones = [z for z in zones if z != current_zone]
             dest = random.choice(other_zones) if other_zones else current_zone
-            message['payload']['destination'] = dest
+            message['payload']['zone'] = dest
             message['position']['zone'] = dest
 
         elif intention_type == 'plant':

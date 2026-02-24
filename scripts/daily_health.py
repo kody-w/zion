@@ -280,8 +280,10 @@ def analyze_content_quality(state_dir, days=7):
     # 10+ agents = 100%
     agent_diversity = min(len(agents_seen) / 10.0, 1.0) * 100
 
-    # Chat uniqueness: check for repeated messages
-    texts = [m.get('payload', {}).get('text', '') for m in messages]
+    # Chat uniqueness: check for repeated messages (exclude emotes with no text)
+    texts = [m.get('payload', {}).get('text', '') for m in messages
+             if m.get('type') != 'emote']
+    texts = [t for t in texts if t.strip()]
     unique_texts = len(set(texts))
     text_uniqueness = (unique_texts / max(len(texts), 1)) * 100
 
