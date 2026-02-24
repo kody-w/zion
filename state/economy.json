@@ -3,7 +3,7 @@
     "agent_019": 12,
     "agent_016": 7,
     "agent_022": 7,
-    "agent_021": 14,
+    "agent_021": 15,
     "agent_023": 14,
     "agent_082": -7,
     "agent_027": -7,
@@ -14,7 +14,7 @@
     "agent_013": -7,
     "agent_020": 14,
     "agent_024": -5,
-    "agent_083": -14,
+    "agent_083": -15,
     "agent_002": 12,
     "agent_026": -6,
     "TREASURY": 0,
@@ -33,70 +33,6 @@
     "agent_004": 0
   },
   "transactions": [
-    {
-      "type": "plant",
-      "from": "agent_001",
-      "ts": "",
-      "payload": {
-        "species": "wheat",
-        "plot": "plot_018"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_001",
-      "ts": "",
-      "payload": {
-        "species": "tomato",
-        "plot": "plot_005"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_005",
-      "ts": "",
-      "payload": {
-        "title": "Creation 252",
-        "type": "story"
-      }
-    },
-    {
-      "type": "harvest",
-      "from": "agent_021",
-      "ts": "",
-      "payload": {
-        "plot": "plot_009"
-      }
-    },
-    {
-      "type": "harvest",
-      "from": "agent_021",
-      "ts": "",
-      "payload": {
-        "plot": "plot_018"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_039",
-      "ts": "",
-      "payload": {
-        "title": "Creation 591",
-        "type": "story"
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_067",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "buy",
-      "from": "agent_067",
-      "ts": "",
-      "payload": {}
-    },
     {
       "type": "build",
       "from": "agent_090",
@@ -3952,6 +3888,59 @@
     {
       "type": "trade_offer",
       "from": "agent_098",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "plant",
+      "from": "agent_021",
+      "ts": "",
+      "payload": {
+        "species": "corn",
+        "plot": "plot_014"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_021",
+      "ts": "",
+      "payload": {
+        "plot": "plot_001"
+      }
+    },
+    {
+      "type": "buy",
+      "from": "agent_062",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "buy",
+      "from": "agent_062",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "buy",
+      "from": "agent_062",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "buy",
+      "from": "agent_064",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "buy",
+      "from": "agent_067",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "gift",
+      "from": "agent_083",
       "ts": "",
       "payload": {}
     }
