@@ -12,6 +12,11 @@ import sys
 import time
 from datetime import datetime, timezone
 
+# Add scripts dir to path for config imports
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _SCRIPT_DIR)
+from load_config import load_config
+
 PROTOCOL_VERSION = 1
 
 MESSAGE_TYPES = {
@@ -222,15 +227,21 @@ def _record_economy_txn(state_dir, txn_type, sender, payload, to=''):
 
 VALID_ZONES = {'nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'}
 
-# Progressive tax brackets (§6.4)
-_TAX_BRACKETS = [
-    (0,   19,  0.00),
-    (20,  49,  0.05),
-    (50,  99,  0.10),
-    (100, 249, 0.15),
-    (250, 499, 0.25),
-    (500, float('inf'), 0.40),
-]
+# Load economy config for earn table and tax brackets
+_econ_cfg = load_config('economy')
+EARN_TABLE = _econ_cfg.get('earn_table', {})
+
+# Progressive tax brackets from config (§6.4)
+_raw_brackets = _econ_cfg.get('tax_brackets', [
+    [0, 19, 0.0], [20, 49, 0.05], [50, 99, 0.10],
+    [100, 249, 0.15], [250, 499, 0.25], [500, None, 0.40],
+])
+_TAX_BRACKETS = []
+for b in _raw_brackets:
+    low, high, rate = b[0], b[1], b[2]
+    if high is None:
+        high = float('inf')
+    _TAX_BRACKETS.append((low, high, rate))
 
 TREASURY_ID = 'TREASURY'
 
@@ -405,19 +416,7 @@ def apply_to_state(msg, state_dir):
         _record_economy_txn(state_dir, 'craft', sender, payload)
 
     elif msg_type == 'harvest':
-        # Harvesting yields coins — apply progressive tax (§6.4)
         _record_economy_txn(state_dir, 'harvest', sender, payload)
-        econ_path = os.path.join(state_dir, 'economy.json')
-        econ = load_json(econ_path)
-        gross_amount = 1
-        current_balance = econ['balances'].get(sender, 0)
-        tax_rate = _get_tax_rate(current_balance)
-        tax_amount = int(gross_amount * tax_rate)
-        net_amount = gross_amount - tax_amount
-        econ['balances'][sender] = current_balance + net_amount
-        if tax_amount > 0:
-            econ['balances'][TREASURY_ID] = econ['balances'].get(TREASURY_ID, 0) + tax_amount
-        save_json(econ_path, econ)
 
     elif msg_type == 'plant':
         _record_economy_txn(state_dir, 'plant', sender, payload)
@@ -453,6 +452,22 @@ def apply_to_state(msg, state_dir):
     elif msg_type in ('buy', 'sell'):
         _record_economy_txn(state_dir, msg_type, sender, payload,
                             to=payload.get('seller') or payload.get('buyer', ''))
+
+    # Universal earnings — award Spark from EARN_TABLE for every action (§6.3)
+    spark_earned = EARN_TABLE.get(msg_type, 0)
+    if spark_earned > 0:
+        econ_path = os.path.join(state_dir, 'economy.json')
+        econ = load_json(econ_path)
+        if 'balances' not in econ:
+            econ['balances'] = {}
+        current_balance = econ['balances'].get(sender, 0)
+        tax_rate = _get_tax_rate(current_balance)
+        tax_amount = int(spark_earned * tax_rate)
+        net_amount = spark_earned - tax_amount
+        econ['balances'][sender] = current_balance + net_amount
+        if tax_amount > 0:
+            econ['balances'][TREASURY_ID] = econ['balances'].get(TREASURY_ID, 0) + tax_amount
+        save_json(econ_path, econ)
 
     # Always record the action in changes
     changes_path = os.path.join(state_dir, 'changes.json')

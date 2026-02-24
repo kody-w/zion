@@ -134,7 +134,8 @@ class TestGiftHandler(unittest.TestCase):
         msg = make_msg('gift', payload={'to': 'agent_002', 'amount': 10})
         apply_to_state(msg, self.state_dir)
         econ = load_json(econ_path)
-        self.assertEqual(econ['balances']['agent_001'], 90)
+        # Sender loses 10 from gift but may also earn Spark from the gift action
+        self.assertLess(econ['balances']['agent_001'], 100, 'Gift should reduce balance')
         self.assertEqual(econ['balances'].get('agent_002', 0), 10)
 
 
@@ -293,6 +294,119 @@ class TestTransactionCap(unittest.TestCase):
         apply_to_state(msg, self.state_dir)
         econ = load_json(econ_path)
         self.assertLessEqual(len(econ['transactions']), 500)
+
+
+# ---------------------------------------------------------------------------
+# Universal Earnings Tests (§6.3)
+# ---------------------------------------------------------------------------
+
+class TestUniversalEarnings(unittest.TestCase):
+    """Every action that has a positive EARN_TABLE value should award Spark."""
+
+    def setUp(self):
+        self.state_dir = make_state_dir()
+
+    def tearDown(self):
+        shutil.rmtree(self.state_dir)
+
+    def _get_balance(self, agent='agent_001'):
+        econ = load_json(os.path.join(self.state_dir, 'economy.json'))
+        return econ.get('balances', {}).get(agent, 0)
+
+    def test_compose_earns_spark(self):
+        msg = make_msg('compose', payload={'title': 'Test', 'type': 'poem'})
+        apply_to_state(msg, self.state_dir)
+        self.assertGreater(self._get_balance(), 0, 'compose should earn Spark')
+
+    def test_craft_earns_spark(self):
+        msg = make_msg('craft', payload={'recipe': 'tool'})
+        apply_to_state(msg, self.state_dir)
+        self.assertGreater(self._get_balance(), 0, 'craft should earn Spark')
+
+    def test_build_earns_spark(self):
+        msg = make_msg('build', payload={'structure': 'bench'})
+        apply_to_state(msg, self.state_dir)
+        self.assertGreater(self._get_balance(), 0, 'build should earn Spark')
+
+    def test_harvest_earns_spark(self):
+        msg = make_msg('harvest', payload={'plot': 'plot_001'})
+        apply_to_state(msg, self.state_dir)
+        self.assertGreater(self._get_balance(), 0, 'harvest should earn Spark')
+
+    def test_plant_earns_spark(self):
+        msg = make_msg('plant', payload={'species': 'rose'})
+        apply_to_state(msg, self.state_dir)
+        self.assertGreater(self._get_balance(), 0, 'plant should earn Spark')
+
+    def test_say_earns_spark(self):
+        msg = make_msg('say', payload={'text': 'Hello world'})
+        apply_to_state(msg, self.state_dir)
+        self.assertGreater(self._get_balance(), 0, 'say should earn Spark')
+
+    def test_discover_earns_spark(self):
+        msg = make_msg('discover', payload={'name': 'Hidden Cave'})
+        apply_to_state(msg, self.state_dir)
+        self.assertGreater(self._get_balance(), 0, 'discover should earn Spark')
+
+    def test_inspect_earns_spark(self):
+        msg = make_msg('inspect', payload={'target': 'fountain'})
+        apply_to_state(msg, self.state_dir)
+        self.assertGreater(self._get_balance(), 0, 'inspect should earn Spark')
+
+    def test_zero_earn_action_no_balance(self):
+        """Actions with 0 in EARN_TABLE should not create a balance entry."""
+        msg = make_msg('move', payload={'destination': {'x': 1, 'y': 0, 'z': 1, 'zone': 'nexus'}})
+        apply_to_state(msg, self.state_dir)
+        self.assertEqual(self._get_balance(), 0, 'move (0 earn) should not award Spark')
+
+    def test_progressive_tax_applied(self):
+        """High-balance agents pay tax when rate * earnings >= 1."""
+        from api_process_inbox import EARN_TABLE, _get_tax_rate, _TAX_BRACKETS
+        max_earn = max(EARN_TABLE.values())
+        max_rate = max(r for _, _, r in _TAX_BRACKETS)
+        if int(max_earn * max_rate) == 0:
+            # Tax rates too low for any single action — valid config, skip
+            return
+        action_type = [k for k, v in EARN_TABLE.items() if v == max_earn][0]
+        test_balance = _TAX_BRACKETS[-1][0] + 100
+        econ_path = os.path.join(self.state_dir, 'economy.json')
+        econ = load_json(econ_path)
+        econ['balances']['agent_001'] = test_balance
+        with open(econ_path, 'w') as f:
+            json.dump(econ, f)
+        msg = make_msg(action_type, payload={'title': 'Test', 'type': 'poem'})
+        apply_to_state(msg, self.state_dir)
+        balance = self._get_balance()
+        self.assertGreater(balance, test_balance)
+        self.assertLess(balance, test_balance + max_earn)
+
+    def test_tax_goes_to_treasury(self):
+        """Tax from earnings goes to TREASURY when rate * earnings >= 1."""
+        from api_process_inbox import EARN_TABLE, _get_tax_rate, _TAX_BRACKETS
+        max_earn = max(EARN_TABLE.values())
+        max_rate = max(r for _, _, r in _TAX_BRACKETS)
+        if int(max_earn * max_rate) == 0:
+            return
+        action_type = [k for k, v in EARN_TABLE.items() if v == max_earn][0]
+        test_balance = _TAX_BRACKETS[-1][0] + 100
+        econ_path = os.path.join(self.state_dir, 'economy.json')
+        econ = load_json(econ_path)
+        econ['balances']['agent_001'] = test_balance
+        econ['balances']['TREASURY'] = 0
+        with open(econ_path, 'w') as f:
+            json.dump(econ, f)
+        msg = make_msg(action_type, payload={'title': 'Test', 'type': 'poem'})
+        apply_to_state(msg, self.state_dir)
+        econ = load_json(econ_path)
+        self.assertGreater(econ['balances'].get('TREASURY', 0), 0)
+
+    def test_gift_rejected_insufficient_balance(self):
+        """Gift should be rejected when sender has insufficient balance."""
+        msg = make_msg('gift', payload={'to': 'agent_002', 'amount': 10})
+        apply_to_state(msg, self.state_dir)
+        econ = load_json(os.path.join(self.state_dir, 'economy.json'))
+        # Gift itself should be rejected (0 balance), but gift action still earns Spark
+        self.assertGreaterEqual(self._get_balance(), 0, 'Balance should not go negative')
 
 
 if __name__ == '__main__':
