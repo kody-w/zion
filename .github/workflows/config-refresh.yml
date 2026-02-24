@@ -30,7 +30,8 @@ jobs:
           git commit -m "config: refresh world parameters [skip ci]"
           PUSH_OK=false
           for i in 1 2 3; do
-            git pull --rebase origin main 2>/dev/null || true
+            git rebase --abort 2>/dev/null || true
+            git pull --rebase -X theirs origin main 2>/dev/null || true
             if git push origin main; then
               PUSH_OK=true
               break

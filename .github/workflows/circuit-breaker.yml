@@ -209,7 +209,8 @@ jobs:
         if: always()
         run: |
           git checkout main 2>/dev/null || true
-          git pull --rebase || true
+          git rebase --abort 2>/dev/null || true
+          git pull --rebase -X theirs || true
           git config user.name "ZION Circuit Breaker"
           git config user.email "zion-engine@users.noreply.github.com"
           if [ -f state/logs/circuit_breaker.json ]; then
@@ -217,7 +218,8 @@ jobs:
             git diff --staged --quiet || git commit -m "circuit-breaker: track ${{ steps.trigger.outputs.name }} (${{ steps.trigger.outputs.conclusion }})"
             PUSH_OK=false
             for i in 1 2 3; do
-              git pull --rebase || true
+              git rebase --abort 2>/dev/null || true
+              git pull --rebase -X theirs || true
               if git push; then
                 PUSH_OK=true
                 break
