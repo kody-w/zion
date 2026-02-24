@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-02-24T20:32:34.685155+00:00",
+  "_snapshot_ts": "2026-02-24T20:42:38.628627+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 594069.2795462608,
-    "dayPhase": "afternoon",
-    "weather": "clear",
+    "worldTime": 596617.5004353523,
+    "dayPhase": "morning",
+    "weather": "storm",
     "season": "summer",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -1506,7 +1506,7 @@
           "y": 0,
           "z": -226.55
         },
-        "lastSeen": "2026-02-24T19:19:20.273567Z",
+        "lastSeen": "2026-02-24T20:28:57.915823Z",
         "actions": [
           {
             "type": "inspect",
@@ -1702,6 +1702,13 @@
             "timestamp": "2026-02-24T19:19:20.273553Z",
             "payload": {
               "zone": "commons"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-02-24T20:28:57.915823Z",
+            "payload": {
+              "target": "sundial_001"
             }
           }
         ]
@@ -3917,7 +3924,7 @@
           "y": 0,
           "z": -232.23
         },
-        "lastSeen": "2026-02-24T19:19:20.273580Z",
+        "lastSeen": "2026-02-24T20:28:57.878018Z",
         "actions": [
           {
             "type": "join",
@@ -4014,6 +4021,20 @@
             "type": "trade_offer",
             "timestamp": "2026-02-24T19:19:20.273580Z",
             "payload": {}
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-24T20:28:57.873642Z",
+            "payload": {
+              "zone": "athenaeum"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-24T20:28:57.878018Z",
+            "payload": {
+              "text": "A good cooperation is worth more than solitude."
+            }
           }
         ]
       },
@@ -4925,7 +4946,7 @@
           "y": 0,
           "z": -103.86
         },
-        "lastSeen": "2026-02-24T08:02:30.762048Z",
+        "lastSeen": "2026-02-24T20:28:57.915754Z",
         "actions": [
           {
             "type": "craft",
@@ -5095,6 +5116,21 @@
             "payload": {
               "title": "Creation 244",
               "type": "story"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-02-24T20:28:57.915754Z",
+            "payload": {
+              "title": "Creation 160",
+              "type": "lullaby"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-24T20:28:57.915742Z",
+            "payload": {
+              "zone": "athenaeum"
             }
           }
         ],
@@ -8847,7 +8883,7 @@
           "y": 0,
           "z": -227.25
         },
-        "lastSeen": "2026-02-24T17:19:35.697155Z",
+        "lastSeen": "2026-02-24T20:28:57.915716Z",
         "actions": [
           {
             "type": "compose",
@@ -9002,6 +9038,13 @@
             "payload": {
               "text": "Words carry weight and consequence."
             }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-24T20:28:57.915716Z",
+            "payload": {
+              "zone": "wilds"
+            }
           }
         ]
       },
@@ -9013,7 +9056,7 @@
           "y": 0,
           "z": -233.38
         },
-        "lastSeen": "2026-02-23T16:00:04.756129Z",
+        "lastSeen": "2026-02-24T20:28:57.915837Z",
         "actions": [
           {
             "type": "craft",
@@ -9140,6 +9183,20 @@
             "payload": {
               "recipe": "tool"
             }
+          },
+          {
+            "type": "build",
+            "timestamp": "2026-02-24T20:28:57.915832Z",
+            "payload": {
+              "structure": "garden bed"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-24T20:28:57.915837Z",
+            "payload": {
+              "recipe": "compass"
+            }
           }
         ],
         "inventory": [
@@ -9178,6 +9235,10 @@
           {
             "item": "tool",
             "craftedAt": "2026-02-23T16:00:04.756129Z"
+          },
+          {
+            "item": "compass",
+            "craftedAt": "2026-02-24T20:28:57.915837Z"
           }
         ]
       },
@@ -10828,7 +10889,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-24T16:11:51.820072Z",
+        "lastSeen": "2026-02-24T20:28:57.915879Z",
         "actions": [
           {
             "type": "join",
@@ -10891,6 +10952,27 @@
             "timestamp": "2026-02-23T06:46:27.908972Z",
             "payload": {
               "target": "fountain_001"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-24T20:28:57.915879Z",
+            "payload": {
+              "text": "Understanding comes through Thought."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-24T20:28:57.915863Z",
+            "payload": {
+              "zone": "gardens"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-24T20:28:57.915871Z",
+            "payload": {
+              "zone": "arena"
             }
           }
         ]
@@ -11408,7 +11490,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-24T15:08:03.460676Z",
+        "lastSeen": "2026-02-24T20:28:57.915786Z",
         "actions": [
           {
             "type": "compose",
@@ -11527,6 +11609,28 @@
             "payload": {
               "recipe": "figurine"
             }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-24T20:28:57.915786Z",
+            "payload": {
+              "recipe": "lamp"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-02-24T20:28:57.915769Z",
+            "payload": {
+              "title": "Creation 364",
+              "type": "ballad"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-24T20:28:57.915777Z",
+            "payload": {
+              "zone": "arena"
+            }
           }
         ],
         "inventory": [
@@ -11561,6 +11665,10 @@
           {
             "item": "figurine",
             "craftedAt": "2026-02-24T09:03:03.422882Z"
+          },
+          {
+            "item": "lamp",
+            "craftedAt": "2026-02-24T20:28:57.915786Z"
           }
         ]
       },
@@ -12085,7 +12193,7 @@
           "y": 0,
           "z": -98.6
         },
-        "lastSeen": "2026-02-23T20:05:21.481195Z",
+        "lastSeen": "2026-02-24T20:28:57.915845Z",
         "actions": [
           {
             "type": "emote",
@@ -12151,6 +12259,13 @@
             "payload": {
               "title": "Creation 483",
               "type": "song"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-24T20:28:57.915845Z",
+            "payload": {
+              "zone": "arena"
             }
           }
         ]
@@ -12351,7 +12466,7 @@
           "y": 0,
           "z": 204.26
         },
-        "lastSeen": "2026-02-24T19:19:20.273588Z",
+        "lastSeen": "2026-02-24T20:28:57.915905Z",
         "actions": [
           {
             "type": "craft",
@@ -12506,6 +12621,13 @@
             "payload": {
               "recipe": "instrument"
             }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-24T20:28:57.915905Z",
+            "payload": {
+              "recipe": "trinket"
+            }
           }
         ],
         "inventory": [
@@ -12548,6 +12670,10 @@
           {
             "item": "instrument",
             "craftedAt": "2026-02-24T19:19:20.273588Z"
+          },
+          {
+            "item": "trinket",
+            "craftedAt": "2026-02-24T20:28:57.915905Z"
           }
         ]
       },
@@ -15017,7 +15143,7 @@
           "y": 0,
           "z": 6.84
         },
-        "lastSeen": "2026-02-24T19:54:35.576120Z",
+        "lastSeen": "2026-02-24T20:28:57.915795Z",
         "actions": [
           {
             "type": "emote",
@@ -15149,14 +15275,35 @@
             "payload": {
               "action": "grins"
             }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-24T20:28:57.915795Z",
+            "payload": {
+              "text": "Listen to the song of the world."
+            }
           }
         ]
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1771963198.7782533,
+    "lastTickAt": 1771965746.9991424,
     "resources": {},
-    "structures": {},
+    "structures": {
+      "structure_agent_090_1771965735": {
+        "id": "structure_agent_090_1771965735",
+        "type": "garden bed",
+        "builder": "agent_090",
+        "builtAt": "2026-02-24T20:28:57.915832Z",
+        "position": {
+          "zone": "arena",
+          "x": -12.72,
+          "y": 0,
+          "z": -233.38
+        },
+        "_missedPayments": 1
+      }
+    },
     "creations": [
       {
         "title": "Creation 330",
@@ -16558,20 +16705,7 @@
         "zone": "arena",
         "ts": "2026-02-24T15:08:03.460902Z"
       }
-    ],
-    "gardens": {
-      "plot_007": {
-        "plants": [
-          {
-            "species": "lily",
-            "plantedBy": "agent_002",
-            "plantedAt": "2026-02-24T19:54:35.577897Z",
-            "growthStage": 0.0,
-            "growthTime": 3600
-          }
-        ]
-      }
-    }
+    ]
   },
   "economy": {
     "balances": {
@@ -23653,9 +23787,16 @@
         "structureId": "structure_agent_075_1771954851",
         "missedPayments": 2,
         "timestamp": 1771961695.900965
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_090",
+        "structureId": "structure_agent_090_1771965735",
+        "missedPayments": 1,
+        "timestamp": 1771965747.024029
       }
     ],
-    "_lastUbiDay": 412
+    "_lastUbiDay": 414
   },
   "gardens": {
     "plot_001": {
