@@ -10156,6 +10156,38 @@
   exports.getUnlockedLore = getUnlockedLore;
   exports.getLoreCategories = getLoreCategories;
 
+  var footpathCounts = {};
+  var WORN_THRESHOLD = 20;
+
+  function recordStep(x, z) {
+    var tx = Math.floor(x);
+    var tz = Math.floor(z);
+    var key = tx + ',' + tz;
+    footpathCounts[key] = (footpathCounts[key] || 0) + 1;
+  }
+
+  function isWorn(x, z) {
+    var tx = Math.floor(x);
+    var tz = Math.floor(z);
+    var key = tx + ',' + tz;
+    return (footpathCounts[key] || 0) >= WORN_THRESHOLD;
+  }
+
+  function getWornPaths() {
+    var paths = [];
+    for (var key in footpathCounts) {
+      if (footpathCounts[key] >= WORN_THRESHOLD) {
+        var parts = key.split(',');
+        paths.push({ x: parseInt(parts[0], 10), z: parseInt(parts[1], 10) });
+      }
+    }
+    return paths;
+  }
+
+  exports.recordStep   = recordStep;
+  exports.isWorn       = isWorn;
+  exports.getWornPaths = getWornPaths;
+
 })(typeof module !== 'undefined' ? module.exports : (window.Exploration = {}));
 
 
@@ -29677,6 +29709,53 @@
   exports.getWindStrength = getWindStrength;
   exports.initZoneBorderShimmer = initZoneBorderShimmer;
   exports.updateZoneBorderShimmer = updateZoneBorderShimmer;
+
+  var WEATHER_MODIFIERS = {
+    clear:   { yieldMultiplier: 1.0, visibilityPenalty: 0,   movementMultiplier: 1.0 },
+    cloudy:  { yieldMultiplier: 1.0, visibilityPenalty: 0.1, movementMultiplier: 1.0 },
+    rain:    { yieldMultiplier: 1.5, visibilityPenalty: 0.1, movementMultiplier: 0.9 },
+    storm:   { yieldMultiplier: 1.2, visibilityPenalty: 0.5, movementMultiplier: 0.8 },
+    snow:    { yieldMultiplier: 0.5, visibilityPenalty: 0.2, movementMultiplier: 0.75 },
+    fog:     { yieldMultiplier: 1.0, visibilityPenalty: 0.4, movementMultiplier: 0.9 }
+  };
+
+  function getWeatherModifiers(type) {
+    return WEATHER_MODIFIERS[type] || { yieldMultiplier: 1.0, visibilityPenalty: 0, movementMultiplier: 1.0 };
+  }
+
+  function getResourceStage(resource) {
+    if (!resource || !resource.harvested) return 3;
+    var now = Date.now();
+    if (now >= resource.respawnTime) return 3;
+    var elapsed = now - resource.harvestedAt;
+    if (elapsed < 5000)  return 0; // empty — just harvested
+    if (elapsed < 20000) return 1; // sprout — early growth
+    return 2;                       // growing — nearly ready
+  }
+
+  function getWildlifeReaction(entity, playerPos, worldTime) {
+    if (!entity || !entity.type) return 'idle';
+    var dist = Infinity;
+    if (entity.position && playerPos) {
+      var dx = (entity.position.x || 0) - (playerPos.x || 0);
+      var dz = (entity.position.z || 0) - (playerPos.z || 0);
+      dist = Math.sqrt(dx * dx + dz * dz);
+    }
+    switch (entity.type) {
+      case 'butterfly':
+        return dist < 5 ? 'flee' : 'idle';
+      case 'fish':
+        return worldTime === 'dawn' ? 'jump' : 'idle';
+      case 'firefly':
+        return (entity.nearGarden && worldTime === 'night') ? 'cluster' : 'idle';
+      default:
+        return 'idle';
+    }
+  }
+
+  exports.getWeatherModifiers  = getWeatherModifiers;
+  exports.getResourceStage     = getResourceStage;
+  exports.getWildlifeReaction  = getWildlifeReaction;
   exports.weatherCallbacks = weatherCallbacks;
   exports.addStructure = addStructure;
   exports.createPortal = createPortal;
@@ -41859,87 +41938,16 @@
 
 // audio.js
 (function(exports) {
+  'use strict';
 
-  var audioContext = null;
+  var ctx = null;
   var masterGain = null;
-  var isMuted = false;
-  var currentAmbient = null;
-  var volumeLevels = { master: 0.5, music: 0.5, sfx: 0.5 };
-  var activeNoiseSources = []; // Global tracker for all white noise sources
+  var muted = false;
+  var volumes = { master: 0.5, music: 0.5, sfx: 0.5 };
 
-  function initAudio() {
-    if (typeof AudioContext === 'undefined' && typeof webkitAudioContext === 'undefined') {
-      console.warn('Web Audio API not available');
-      return null;
-    }
+  var ambients = { base: null, time: null, weather: null, zone: null };
 
-    var resumeEvents = ['click', 'touchstart', 'keydown'];
-    function createOnGesture() {
-      if (audioContext) return;
-      try {
-        audioContext = new (AudioContext || webkitAudioContext)();
-        masterGain = audioContext.createGain();
-        if (masterGain) {
-          masterGain.connect(audioContext.destination);
-          masterGain.gain.value = 0.15;
-        }
-        if (audioContext.state === 'suspended') {
-          audioContext.resume();
-        }
-        console.log('Audio system initialized (after user gesture)');
-      } catch (err) {
-        console.error('Failed to initialize audio:', err);
-      }
-      resumeEvents.forEach(function(evt) {
-        document.removeEventListener(evt, createOnGesture);
-      });
-    }
-    resumeEvents.forEach(function(evt) {
-      document.addEventListener(evt, createOnGesture, { once: false });
-    });
-
-    console.log('Audio system deferred until user gesture');
-    return true;
-  }
-
-  function createWhiteNoise(maxDurationSec) {
-    if (!audioContext) return null;
-
-    try {
-      var bufferSize = 2 * audioContext.sampleRate;
-      var noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-      var output = noiseBuffer.getChannelData(0);
-
-      var lastOut = 0;
-      for (var i = 0; i < bufferSize; i++) {
-        var white = Math.random() * 2 - 1;
-        lastOut = (lastOut + (0.02 * white)) / 1.02;
-        output[i] = lastOut * 3.5; // normalize amplitude
-      }
-
-      var whiteNoise = audioContext.createBufferSource();
-      whiteNoise.buffer = noiseBuffer;
-      whiteNoise.loop = true;
-      whiteNoise.start();
-
-      activeNoiseSources.push(whiteNoise);
-      whiteNoise.onended = function() {
-        var idx = activeNoiseSources.indexOf(whiteNoise);
-        if (idx !== -1) activeNoiseSources.splice(idx, 1);
-      };
-
-      var safeDur = maxDurationSec || 60;
-      setTimeout(function() {
-        try { whiteNoise.stop(); } catch(e) {}
-        try { whiteNoise.disconnect(); } catch(e) {}
-      }, safeDur * 1000);
-
-      return whiteNoise;
-    } catch (err) {
-      console.error('Error creating white noise:', err);
-      return null;
-    }
-  }
+  var activeNoiseSources = [];
 
   function killAllNoiseSources() {
     for (var i = 0; i < activeNoiseSources.length; i++) {
@@ -41949,4078 +41957,1237 @@
     activeNoiseSources = [];
   }
 
-  function playAmbient(zone) {
-    if (!audioContext || !masterGain) return;
-
-    if (audioContext.state === 'suspended') {
-      audioContext.resume();
-    }
-
-    if (currentAmbient) {
-      stopAmbient();
-    }
-
-    try {
-      switch (zone) {
-        case 'nexus':
-          currentAmbient = playNexusAmbient();
-          break;
-        case 'gardens':
-          currentAmbient = playGardensAmbient();
-          break;
-        case 'athenaeum':
-          currentAmbient = playAthenaeumAmbient();
-          break;
-        case 'studio':
-          currentAmbient = playStudioAmbient();
-          break;
-        case 'wilds':
-          currentAmbient = playWildsAmbient();
-          break;
-        case 'agora':
-          currentAmbient = playAgoraAmbient();
-          break;
-        case 'commons':
-          currentAmbient = playCommonsAmbient();
-          break;
-        case 'arena':
-          currentAmbient = playArenaAmbient();
-          break;
-        default:
-          currentAmbient = null;
-      }
-    } catch (err) {
-      console.error('Error playing ambient:', err);
-    }
-  }
-
-  function stopAmbient() {
-    if (!currentAmbient) return;
-
-    try {
-      if (currentAmbient.oscillators && Array.isArray(currentAmbient.oscillators)) {
-        currentAmbient.oscillators.forEach(function(osc) {
-          if (osc && osc.stop) {
-            try { osc.stop(); } catch (e) {}
-          }
-        });
-      }
-
-      if (currentAmbient.nodes && Array.isArray(currentAmbient.nodes)) {
-        currentAmbient.nodes.forEach(function(node) {
-          if (node) {
-            if (node.stop) {
-              try { node.stop(); } catch (e) {}
-            }
-            if (node.disconnect) {
-              try { node.disconnect(); } catch (e) {}
-            }
-          }
-        });
-      }
-
-      if (currentAmbient.gain && currentAmbient.gain.disconnect) {
-        try { currentAmbient.gain.disconnect(); } catch (e) {}
-      }
-
-      if (currentAmbient.intervals && Array.isArray(currentAmbient.intervals)) {
-        currentAmbient.intervals.forEach(function(id) { clearInterval(id); });
-      }
-
-      if (currentAmbient.timeouts && Array.isArray(currentAmbient.timeouts)) {
-        currentAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
-      }
-
-      if (currentAmbient.cleanup && typeof currentAmbient.cleanup === 'function') {
-        currentAmbient.cleanup();
-      }
-    } catch (err) {
-      console.error('Error stopping ambient:', err);
-    }
-
-    currentAmbient = null;
-    killAllNoiseSources();
-  }
-
-  function playNexusAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var oscillators = [];
-    var timeouts = [];
-
-    try {
-      var drone1 = audioContext.createOscillator();
-      var drone2 = audioContext.createOscillator();
-      var droneGain = audioContext.createGain();
-
-      drone1.type = 'sine';
-      drone1.frequency.value = 65.41; // C2
-      drone2.type = 'sine';
-      drone2.frequency.value = 130.81; // C3
-
-      droneGain.gain.value = 0.03;
-
-      drone1.connect(droneGain);
-      drone2.connect(droneGain);
-      droneGain.connect(masterGain);
-
-      drone1.start();
-      drone2.start();
-
-      oscillators.push(drone1, drone2);
-      nodes.push(droneGain);
-
-      var pad1 = audioContext.createOscillator();
-      var pad2 = audioContext.createOscillator();
-      var pad3 = audioContext.createOscillator();
-      var lfo = audioContext.createOscillator();
-      var lfoGain = audioContext.createGain();
-      var padGain = audioContext.createGain();
-
-      pad1.type = 'sine';
-      pad1.frequency.value = 261.63; // C4
-      pad2.type = 'sine';
-      pad2.frequency.value = 329.63; // E4
-      pad3.type = 'sine';
-      pad3.frequency.value = 392.00; // G4
-
-      lfo.type = 'sine';
-      lfo.frequency.value = 0.2; // Slow modulation
-      lfoGain.gain.value = 0.01; // Subtle volume modulation
-
-      padGain.gain.value = 0.02;
-
-      lfo.connect(lfoGain);
-      lfoGain.connect(padGain.gain);
-
-      pad1.connect(padGain);
-      pad2.connect(padGain);
-      pad3.connect(padGain);
-      padGain.connect(masterGain);
-
-      pad1.start();
-      pad2.start();
-      pad3.start();
-      lfo.start();
-
-      oscillators.push(pad1, pad2, pad3, lfo);
-      nodes.push(lfoGain, padGain);
-
-      function playChime() {
-        if (!audioContext || !masterGain) return;
-
-        var chime = audioContext.createOscillator();
-        var chimeGain = audioContext.createGain();
-        var delay1 = audioContext.createDelay();
-        var delay2 = audioContext.createDelay();
-        var delayGain1 = audioContext.createGain();
-        var delayGain2 = audioContext.createGain();
-
-        chime.type = 'sine';
-        chime.frequency.value = 400 + Math.random() * 400;
-
-        chimeGain.gain.value = 0.015;
-        chimeGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2.5);
-
-        delay1.delayTime.value = 0.4;
-        delay2.delayTime.value = 0.7;
-        delayGain1.gain.value = 0.1;
-        delayGain2.gain.value = 0.06;
-
-        chime.connect(chimeGain);
-        chimeGain.connect(masterGain);
-        chimeGain.connect(delay1);
-        chimeGain.connect(delay2);
-        delay1.connect(delayGain1);
-        delay2.connect(delayGain2);
-        delayGain1.connect(masterGain);
-        delayGain2.connect(masterGain);
-
-        chime.start();
-        chime.stop(audioContext.currentTime + 2.5);
-
-        var nextChime = setTimeout(playChime, 8000 + Math.random() * 12000);
-        timeouts.push(nextChime);
-      }
-
-      var firstChime = setTimeout(playChime, 2000);
-      timeouts.push(firstChime);
-
-      return { oscillators, nodes, timeouts };
-    } catch (err) {
-      console.error('Error in nexus ambient:', err);
+  function initAudio() {
+    if (typeof AudioContext === 'undefined' && typeof webkitAudioContext === 'undefined') {
+      console.warn('Web Audio API not available');
       return null;
     }
+    var events = ['click', 'touchstart', 'keydown'];
+    function boot() {
+      if (ctx) return;
+      try {
+        ctx = new (AudioContext || webkitAudioContext)();
+        masterGain = ctx.createGain();
+        masterGain.gain.value = 0.15;
+        masterGain.connect(ctx.destination);
+        if (ctx.state === 'suspended') ctx.resume();
+        console.log('Audio system initialized');
+      } catch (e) { console.error('Audio init failed:', e); }
+      events.forEach(function(e) { document.removeEventListener(e, boot); });
+    }
+    events.forEach(function(e) { document.addEventListener(e, boot); });
+    return true;
   }
 
-  function playGardensAmbient() {
-    if (!audioContext || !masterGain) return null;
+  function resume() {
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  }
 
-    var nodes = [];
-    var timeouts = [];
-    var intervals = [];
+  function createWhiteNoise(maxDurationSec) {
+    if (!ctx) return null;
+    var safeDur = maxDurationSec || 60;
+    var rate = ctx.sampleRate;
+    var buf = ctx.createBuffer(1, rate * 2, rate);
+    var d = buf.getChannelData(0);
+    var lastOut = 0;
+    for (var i = 0; i < d.length; i++) {
+      var w = Math.random() * 2 - 1;
+      lastOut = (lastOut + 0.02 * w) / 1.02;
+      d[i] = lastOut * 3.5;
+    }
+    var nSrc = ctx.createBufferSource();
+    nSrc.buffer = buf;
+    nSrc.loop = true;
+    nSrc.start();
+    activeNoiseSources.push(nSrc);
+    nSrc.onended = function() {
+      var idx = activeNoiseSources.indexOf(nSrc);
+      if (idx !== -1) activeNoiseSources.splice(idx, 1);
+    };
+    setTimeout(function() {
+      try { nSrc.stop(); } catch(e) {}
+      try { nSrc.disconnect(); } catch(e) {}
+    }, safeDur * 1000);
+    return nSrc;
+  }
 
+  function whiteNoise(dur) {
+    if (!ctx) return null;
+    dur = dur || 0.1;
+    var n = Math.max(1, Math.floor(ctx.sampleRate * dur));
+    var buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.start();
+    src.stop(ctx.currentTime + dur);
+    return src;
+  }
+
+  function tone(freq, oscType, gainVal, dur, startDelay) {
+    if (!ctx || !masterGain) return;
+    var t = ctx.currentTime + (startDelay || 0);
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.type = oscType || 'sine';
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(gainVal, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g);
+    g.connect(masterGain);
+    o.start(t);
+    o.stop(t + dur + 0.05);
+  }
+
+  function arp(notes, spacing, oscType, gainVal, dur, startOffset) {
+    if (!ctx || !masterGain) return;
+    var base = ctx.currentTime + (startOffset || 0);
+    for (var i = 0; i < notes.length; i++) {
+      (function(freq, t) {
+        var o = ctx.createOscillator();
+        var g = ctx.createGain();
+        o.type = oscType || 'sine';
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(gainVal || 0.05, t + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.001, t + (dur || 0.3));
+        o.connect(g);
+        g.connect(masterGain);
+        o.start(t);
+        o.stop(t + (dur || 0.3) + 0.05);
+      })(notes[i], base + i * spacing);
+    }
+  }
+
+  function makeState() {
+    return { nodes: [], timeouts: [], intervals: [] };
+  }
+
+  function stopState(state) {
+    if (!state) return;
+    state.timeouts.forEach(function(id) { clearTimeout(id); });
+    state.intervals.forEach(function(id) { clearInterval(id); });
+    state.nodes.forEach(function(n) {
+      if (!n) return;
+      try { if (n.stop) n.stop(); } catch (e) {}
+      try { if (n.disconnect) n.disconnect(); } catch (e) {}
+    });
+    if (typeof state.cleanup === 'function') state.cleanup();
+  }
+
+  function setAmbient(key, fn) {
+    stopState(ambients[key]);
+    ambients[key] = fn ? fn() : null;
+  }
+
+  function playAmbient(zone) {
+    if (!ctx || !masterGain) return;
+    resume();
+    var fns = {
+      nexus: nexusAmbient, gardens: gardensAmbient, athenaeum: athenaeumAmbient,
+      studio: studioAmbient, wilds: wildsAmbient, agora: agoraAmbient,
+      commons: commonsAmbient, arena: arenaAmbient
+    };
+    setAmbient('base', fns[zone] || null);
+  }
+
+  function nexusAmbient() {
+    var s = makeState();
+    try {
+      var dg = ctx.createGain();
+      dg.gain.value = 0.03;
+      dg.connect(masterGain);
+      [65.41, 130.81].forEach(function(f) {
+        var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+        o.connect(dg); o.start(); s.nodes.push(o);
+      });
+      s.nodes.push(dg);
+
+      var lfo = ctx.createOscillator(), lfog = ctx.createGain(), pg = ctx.createGain();
+      lfo.type = 'sine'; lfo.frequency.value = 0.2;
+      lfog.gain.value = 0.01;
+      pg.gain.value = 0.02;
+      lfo.connect(lfog); lfog.connect(pg.gain);
+      [261.63, 329.63, 392.00].forEach(function(f) {
+        var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+        o.connect(pg); o.start(); s.nodes.push(o);
+      });
+      pg.connect(masterGain); lfo.start();
+      s.nodes.push(lfo, lfog, pg);
+
+      function chime() {
+        if (!ctx || !masterGain) return;
+        var freqs = [523.25, 659.25, 783.99, 1046.5, 1318.51];
+        var f = freqs[Math.floor(Math.random() * freqs.length)];
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        var del = ctx.createDelay(), dg2 = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.014, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.5);
+        del.delayTime.value = 0.45; dg2.gain.value = 0.07;
+        o.connect(g); g.connect(masterGain); g.connect(del); del.connect(dg2); dg2.connect(masterGain);
+        o.start(); o.stop(ctx.currentTime + 2.5);
+        s.timeouts.push(setTimeout(chime, 8000 + Math.random() * 14000));
+      }
+      s.timeouts.push(setTimeout(chime, 2000));
+    } catch (e) {}
+    return s;
+  }
+
+  function gardensAmbient() {
+    var s = makeState();
     try {
       var stream = createWhiteNoise();
       if (stream) {
-        var streamFilter = audioContext.createBiquadFilter();
-        var streamLfo = audioContext.createOscillator();
-        var streamLfoGain = audioContext.createGain();
-        var streamGain = audioContext.createGain();
-
-        streamFilter.type = 'lowpass';
-        streamFilter.frequency.value = 400;
-
-        streamLfo.type = 'sine';
-        streamLfo.frequency.value = 0.5;
-        streamLfoGain.gain.value = 100; // Modulate filter frequency
-
-        streamGain.gain.value = 0.025;
-
-        streamLfo.connect(streamLfoGain);
-        streamLfoGain.connect(streamFilter.frequency);
-
-        stream.connect(streamFilter);
-        streamFilter.connect(streamGain);
-        streamGain.connect(masterGain);
-
-        streamLfo.start();
-
-        nodes.push(stream, streamFilter, streamLfo, streamLfoGain, streamGain);
+        var sf = ctx.createBiquadFilter(), slfo = ctx.createOscillator();
+        var slfog = ctx.createGain(), sg = ctx.createGain();
+        sf.type = 'lowpass'; sf.frequency.value = 400;
+        slfo.type = 'sine'; slfo.frequency.value = 0.5; slfog.gain.value = 100;
+        sg.gain.value = 0.025;
+        slfo.connect(slfog); slfog.connect(sf.frequency);
+        stream.connect(sf); sf.connect(sg); sg.connect(masterGain); slfo.start();
+        s.nodes.push(stream, sf, slfo, slfog, sg);
       }
-
       var breeze = createWhiteNoise();
       if (breeze) {
-        var breezeFilter = audioContext.createBiquadFilter();
-        var breezeGain = audioContext.createGain();
-
-        breezeFilter.type = 'lowpass';
-        breezeFilter.frequency.value = 200;
-        breezeGain.gain.value = 0.012;
-
-        breeze.connect(breezeFilter);
-        breezeFilter.connect(breezeGain);
-        breezeGain.connect(masterGain);
-
-        nodes.push(breeze, breezeFilter, breezeGain);
+        var bf = ctx.createBiquadFilter(), bg = ctx.createGain();
+        bf.type = 'lowpass'; bf.frequency.value = 200; bg.gain.value = 0.012;
+        breeze.connect(bf); bf.connect(bg); bg.connect(masterGain);
+        s.nodes.push(breeze, bf, bg);
       }
-
-      function chirp() {
-        if (!audioContext || !masterGain) return;
-
-        var bird = audioContext.createOscillator();
-        var birdGain = audioContext.createGain();
-
-        bird.type = 'sine';
-        bird.frequency.value = 600 + Math.random() * 1200;
-
-        var duration = 0.1 + Math.random() * 0.2;
-        birdGain.gain.value = 0.06;
-        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
-
-        bird.connect(birdGain);
-        birdGain.connect(masterGain);
-
-        bird.start();
-        bird.stop(audioContext.currentTime + duration);
-
-        var nextChirp = setTimeout(chirp, 500 + Math.random() * 3500);
-        timeouts.push(nextChirp);
+      function bird() {
+        if (!ctx || !masterGain) return;
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine';
+        var f0 = 1200 + Math.random() * 1800;
+        o.frequency.setValueAtTime(f0, ctx.currentTime);
+        o.frequency.linearRampToValueAtTime(f0 * (0.8 + Math.random() * 0.5), ctx.currentTime + 0.08);
+        var dur = 0.1 + Math.random() * 0.2;
+        g.gain.setValueAtTime(0, ctx.currentTime);
+        g.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + dur);
+        s.timeouts.push(setTimeout(bird, 400 + Math.random() * 3000));
       }
+      for (var i = 0; i < 3; i++) s.timeouts.push(setTimeout(bird, Math.random() * 2000));
 
-      for (var i = 0; i < 3; i++) {
-        var firstChirp = setTimeout(chirp, Math.random() * 2000);
-        timeouts.push(firstChirp);
-      }
-
-      var cricket = audioContext.createOscillator();
-      var cricketAm = audioContext.createOscillator();
-      var cricketAmGain = audioContext.createGain();
-      var cricketGain = audioContext.createGain();
-
-      cricket.type = 'sine';
-      cricket.frequency.value = 4500;
-
-      cricketAm.type = 'sine';
-      cricketAm.frequency.value = 20; // 20 Hz modulation
-      cricketAmGain.gain.value = 0.015;
-
-      cricketGain.gain.value = 0.015;
-
-      cricketAm.connect(cricketAmGain);
-      cricketAmGain.connect(cricketGain.gain);
-
-      cricket.connect(cricketGain);
-      cricketGain.connect(masterGain);
-
-      cricket.start();
-      cricketAm.start();
-
-      nodes.push(cricket, cricketAm, cricketAmGain, cricketGain);
+      var cric = ctx.createOscillator(), cam = ctx.createOscillator();
+      var camg = ctx.createGain(), cg = ctx.createGain();
+      cric.type = 'sine'; cric.frequency.value = 4500;
+      cam.type = 'sine'; cam.frequency.value = 20; camg.gain.value = 0.015; cg.gain.value = 0.015;
+      cam.connect(camg); camg.connect(cg.gain);
+      cric.connect(cg); cg.connect(masterGain); cric.start(); cam.start();
+      s.nodes.push(cric, cam, camg, cg);
 
       function rustle() {
-        if (!audioContext || !masterGain) return;
-
-        var noise = createWhiteNoise(2);
-        if (noise) {
-          var rustleFilter = audioContext.createBiquadFilter();
-          var rustleGain = audioContext.createGain();
-
-          rustleFilter.type = 'bandpass';
-          rustleFilter.frequency.value = 2000;
-          rustleFilter.Q.value = 2;
-
-          rustleGain.gain.value = 0.04;
-          rustleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-
-          noise.connect(rustleFilter);
-          rustleFilter.connect(rustleGain);
-          rustleGain.connect(masterGain);
-
-          setTimeout(function() {
-            try {
-              if (noise.stop) noise.stop();
-              if (rustleFilter.disconnect) rustleFilter.disconnect();
-              if (rustleGain.disconnect) rustleGain.disconnect();
-            } catch (e) {}
-          }, 400);
+        if (!ctx || !masterGain) return;
+        var n = whiteNoise(0.3);
+        if (n) {
+          var rf = ctx.createBiquadFilter(), rg = ctx.createGain();
+          rf.type = 'bandpass'; rf.frequency.value = 2000; rf.Q.value = 2;
+          rg.gain.value = 0.035; rg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+          n.connect(rf); rf.connect(rg); rg.connect(masterGain);
         }
-
-        var nextRustle = setTimeout(rustle, 2000 + Math.random() * 3000);
-        timeouts.push(nextRustle);
+        s.timeouts.push(setTimeout(rustle, 2000 + Math.random() * 3000));
       }
-
-      var firstRustle = setTimeout(rustle, 1000);
-      timeouts.push(firstRustle);
-
-      return { nodes, timeouts, intervals };
-    } catch (err) {
-      console.error('Error in gardens ambient:', err);
-      return null;
-    }
+      s.timeouts.push(setTimeout(rustle, 1000));
+    } catch (e) {}
+    return s;
   }
 
-  function playAthenaeumAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-    var intervals = [];
-
+  function athenaeumAmbient() {
+    var s = makeState();
     try {
-      var roomTone = createWhiteNoise();
-      if (roomTone) {
-        var roomGain = audioContext.createGain();
-        roomGain.gain.value = 0.01;
-
-        roomTone.connect(roomGain);
-        roomGain.connect(masterGain);
-
-        nodes.push(roomTone, roomGain);
+      var room = createWhiteNoise();
+      if (room) {
+        var rg = ctx.createGain(); rg.gain.value = 0.008;
+        room.connect(rg); rg.connect(masterGain);
+        s.nodes.push(room, rg);
       }
-
-      function turnPage() {
-        if (!audioContext || !masterGain) return;
-
-        var page = createWhiteNoise(2);
-        if (page) {
-          var pageFilter = audioContext.createBiquadFilter();
-          var pageGain = audioContext.createGain();
-
-          pageFilter.type = 'highpass';
-          pageFilter.frequency.value = 2000;
-
-          pageGain.gain.value = 0.03;
-          pageGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-
-          page.connect(pageFilter);
-          pageFilter.connect(pageGain);
-          pageGain.connect(masterGain);
-
-          setTimeout(function() {
-            try {
-              if (page.stop) page.stop();
-              if (pageFilter.disconnect) pageFilter.disconnect();
-              if (pageGain.disconnect) pageGain.disconnect();
-            } catch (e) {}
-          }, 150);
+      s.intervals.push(setInterval(function() {
+        if (!ctx || !masterGain) return;
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = 850;
+        g.gain.value = 0.018; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.022);
+        o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.022);
+      }, 1000));
+      function page() {
+        if (!ctx || !masterGain) return;
+        var n = whiteNoise(0.12);
+        if (n) {
+          var pf = ctx.createBiquadFilter(), pg = ctx.createGain();
+          pf.type = 'highpass'; pf.frequency.value = 2000;
+          pg.gain.value = 0.025; pg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+          n.connect(pf); pf.connect(pg); pg.connect(masterGain);
         }
-
-        var nextPage = setTimeout(turnPage, 8000 + Math.random() * 7000);
-        timeouts.push(nextPage);
+        s.timeouts.push(setTimeout(page, 8000 + Math.random() * 7000));
       }
-
-      var firstPage = setTimeout(turnPage, 3000);
-      timeouts.push(firstPage);
-
-      function writeQuill() {
-        if (!audioContext || !masterGain) return;
-
-        var quill = createWhiteNoise(2);
-        if (quill) {
-          var quillFilter = audioContext.createBiquadFilter();
-          var quillGain = audioContext.createGain();
-
-          quillFilter.type = 'bandpass';
-          quillFilter.frequency.value = 3000;
-          quillFilter.Q.value = 5;
-
-          quillGain.gain.value = 0.05;
-
-          quill.connect(quillFilter);
-          quillFilter.connect(quillGain);
-          quillGain.connect(masterGain);
-
-          setTimeout(function() {
-            try {
-              if (quill.stop) quill.stop();
-              if (quillFilter.disconnect) quillFilter.disconnect();
-              if (quillGain.disconnect) quillGain.disconnect();
-            } catch (e) {}
-          }, 200 + Math.random() * 500);
-        }
-
-        var nextQuill = setTimeout(writeQuill, 5000 + Math.random() * 10000);
-        timeouts.push(nextQuill);
+      s.timeouts.push(setTimeout(page, 3000));
+      function step() {
+        if (!ctx || !masterGain) return;
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = 65;
+        g.gain.value = 0.025; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+        o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.06);
+        s.timeouts.push(setTimeout(step, 5000 + Math.random() * 5000));
       }
-
-      var firstQuill = setTimeout(writeQuill, 5000);
-      timeouts.push(firstQuill);
-
-      function footstep() {
-        if (!audioContext || !masterGain) return;
-
-        var step = audioContext.createOscillator();
-        var stepGain = audioContext.createGain();
-
-        step.type = 'sine';
-        step.frequency.value = 60;
-
-        stepGain.gain.value = 0.03;
-        stepGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
-
-        step.connect(stepGain);
-        stepGain.connect(masterGain);
-
-        step.start();
-        step.stop(audioContext.currentTime + 0.05);
-
-        var nextStep = setTimeout(footstep, 5000 + Math.random() * 5000);
-        timeouts.push(nextStep);
-      }
-
-      var firstStep = setTimeout(footstep, 2000);
-      timeouts.push(firstStep);
-
-      function tick() {
-        if (!audioContext || !masterGain) return;
-
-        var click = audioContext.createOscillator();
-        var clickGain = audioContext.createGain();
-
-        click.type = 'sine';
-        click.frequency.value = 800;
-
-        clickGain.gain.value = 0.02;
-        clickGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
-
-        click.connect(clickGain);
-        clickGain.connect(masterGain);
-
-        click.start();
-        click.stop(audioContext.currentTime + 0.02);
-      }
-
-      var tickInterval = setInterval(tick, 1000);
-      intervals.push(tickInterval);
-
-      return { nodes, timeouts, intervals };
-    } catch (err) {
-      console.error('Error in athenaeum ambient:', err);
-      return null;
-    }
+      s.timeouts.push(setTimeout(step, 3000));
+    } catch (e) {}
+    return s;
   }
 
-  function playStudioAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var oscillators = [];
-    var timeouts = [];
-    var intervals = [];
-
+  function studioAmbient() {
+    var s = makeState();
     try {
-      var hum = audioContext.createOscillator();
-      var humLfo = audioContext.createOscillator();
-      var humLfoGain = audioContext.createGain();
-      var humGain = audioContext.createGain();
-
-      hum.type = 'sine';
-      hum.frequency.value = 110;
-
-      humLfo.type = 'sine';
-      humLfo.frequency.value = 0.3;
-      humLfoGain.gain.value = 2;
-
-      humGain.gain.value = 0.03;
-
-      humLfo.connect(humLfoGain);
-      humLfoGain.connect(hum.frequency);
-
-      hum.connect(humGain);
-      humGain.connect(masterGain);
-
-      hum.start();
-      humLfo.start();
-
-      oscillators.push(hum, humLfo);
-      nodes.push(humLfoGain, humGain);
-
-      function tap() {
-        if (!audioContext || !masterGain) return;
-
-        var thud = audioContext.createOscillator();
-        var thudGain = audioContext.createGain();
-
-        thud.type = 'sine';
-        thud.frequency.value = 100 + Math.random() * 200;
-
-        thudGain.gain.value = 0.05;
-        thudGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
-
-        thud.connect(thudGain);
-        thudGain.connect(masterGain);
-
-        thud.start();
-        thud.stop(audioContext.currentTime + 0.08);
-
-        var nextTap = setTimeout(tap, 500 + Math.random() * 1500);
-        timeouts.push(nextTap);
-      }
-
-      var firstTap = setTimeout(tap, 500);
-      timeouts.push(firstTap);
-
+      var hum = ctx.createOscillator(), hlfo = ctx.createOscillator();
+      var hlfog = ctx.createGain(), hg = ctx.createGain();
+      hum.type = 'sine'; hum.frequency.value = 110;
+      hlfo.type = 'sine'; hlfo.frequency.value = 0.3; hlfog.gain.value = 2; hg.gain.value = 0.025;
+      hlfo.connect(hlfog); hlfog.connect(hum.frequency);
+      hum.connect(hg); hg.connect(masterGain); hum.start(); hlfo.start();
+      s.nodes.push(hum, hlfo, hlfog, hg);
       function chime() {
-        if (!audioContext || !masterGain) return;
-
-        var bell = audioContext.createOscillator();
-        var bellGain = audioContext.createGain();
-
-        bell.type = 'triangle';
-        bell.frequency.value = 500 + Math.random() * 700;
-
-        bellGain.gain.value = 0.04;
-        bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1.2);
-
-        bell.connect(bellGain);
-        bellGain.connect(masterGain);
-
-        bell.start();
-        bell.stop(audioContext.currentTime + 1.2);
-
-        var nextChime = setTimeout(chime, 3000 + Math.random() * 5000);
-        timeouts.push(nextChime);
+        if (!ctx || !masterGain) return;
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'triangle'; o.frequency.value = 500 + Math.random() * 700;
+        g.gain.value = 0.035; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+        o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 1.2);
+        s.timeouts.push(setTimeout(chime, 3000 + Math.random() * 5000));
       }
-
-      var firstChime = setTimeout(chime, 2000);
-      timeouts.push(firstChime);
-
-      function melody() {
-        if (!audioContext || !masterGain) return;
-
-        var notes = [261.63, 293.66, 329.63, 392.00, 440.00]; // C, D, E, G, A
-        var numNotes = 3 + Math.floor(Math.random() * 3);
-
-        for (var i = 0; i < numNotes; i++) {
-          var note = audioContext.createOscillator();
-          var noteGain = audioContext.createGain();
-
-          note.type = 'sine';
-          note.frequency.value = notes[Math.floor(Math.random() * notes.length)];
-
-          var startTime = audioContext.currentTime + i * 0.2;
-          noteGain.gain.setValueAtTime(0, startTime);
-          noteGain.gain.linearRampToValueAtTime(0.03, startTime + 0.05);
-          noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
-
-          note.connect(noteGain);
-          noteGain.connect(masterGain);
-
-          note.start(startTime);
-          note.stop(startTime + 0.4);
+      s.timeouts.push(setTimeout(chime, 2000));
+      function tap() {
+        if (!ctx || !masterGain) return;
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = 120 + Math.random() * 160;
+        g.gain.value = 0.04; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.08);
+        s.timeouts.push(setTimeout(tap, 600 + Math.random() * 1400));
+      }
+      s.timeouts.push(setTimeout(tap, 500));
+      function phrase() {
+        if (!ctx || !masterGain) return;
+        var scale = [261.63, 293.66, 329.63, 392.00, 440.00];
+        var n = 3 + Math.floor(Math.random() * 3);
+        for (var i = 0; i < n; i++) {
+          tone(scale[Math.floor(Math.random() * scale.length)], 'sine', 0.025, 0.35, i * 0.2);
         }
-
-        var nextMelody = setTimeout(melody, 15000 + Math.random() * 15000);
-        timeouts.push(nextMelody);
+        s.timeouts.push(setTimeout(phrase, 15000 + Math.random() * 15000));
       }
-
-      var firstMelody = setTimeout(melody, 10000);
-      timeouts.push(firstMelody);
-
-      return { oscillators, nodes, timeouts, intervals };
-    } catch (err) {
-      console.error('Error in studio ambient:', err);
-      return null;
-    }
+      s.timeouts.push(setTimeout(phrase, 10000));
+    } catch (e) {}
+    return s;
   }
 
-  function playWildsAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-    var intervals = [];
-
+  function wildsAmbient() {
+    var s = makeState();
     try {
       var wind = createWhiteNoise();
       if (wind) {
-        var windFilter = audioContext.createBiquadFilter();
-        var windGain = audioContext.createGain();
-
-        windFilter.type = 'lowpass';
-        windFilter.frequency.value = 150;
-        windGain.gain.value = 0.05;
-
-        wind.connect(windFilter);
-        windFilter.connect(windGain);
-        windGain.connect(masterGain);
-
-        nodes.push(wind, windFilter, windGain);
-
-        function varyWind() {
-          if (!windGain || !audioContext) return;
-          var target = 0.05 + Math.random() * 0.06;
-          windGain.gain.linearRampToValueAtTime(target, audioContext.currentTime + 3);
-        }
-
-        var windInterval = setInterval(varyWind, 4000);
-        intervals.push(windInterval);
+        var wf = ctx.createBiquadFilter(), wg = ctx.createGain();
+        wf.type = 'lowpass'; wf.frequency.value = 150; wg.gain.value = 0.05;
+        wind.connect(wf); wf.connect(wg); wg.connect(masterGain);
+        s.nodes.push(wind, wf, wg);
+        s.intervals.push(setInterval(function() {
+          if (!wg || !ctx) return;
+          wg.gain.linearRampToValueAtTime(0.05 + Math.random() * 0.06, ctx.currentTime + 3);
+        }, 4000));
       }
-
       function howl() {
-        if (!audioContext || !masterGain) return;
-
-        var wolf = audioContext.createOscillator();
-        var wolfVibrato = audioContext.createOscillator();
-        var wolfVibratoGain = audioContext.createGain();
-        var wolfGain = audioContext.createGain();
-
-        wolf.type = 'sine';
-        wolf.frequency.value = 400;
-
-        wolfVibrato.type = 'sine';
-        wolfVibrato.frequency.value = 5;
-        wolfVibratoGain.gain.value = 15;
-
-        wolfGain.gain.value = 0.04;
-
-        wolfVibrato.connect(wolfVibratoGain);
-        wolfVibratoGain.connect(wolf.frequency);
-
-        wolf.connect(wolfGain);
-        wolfGain.connect(masterGain);
-
-        wolf.start();
-        wolfVibrato.start();
-
-        wolf.frequency.linearRampToValueAtTime(600, audioContext.currentTime + 1);
-        wolf.frequency.linearRampToValueAtTime(400, audioContext.currentTime + 2);
-        wolfGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2.5);
-
-        wolf.stop(audioContext.currentTime + 2.5);
-        wolfVibrato.stop(audioContext.currentTime + 2.5);
-
-        var nextHowl = setTimeout(howl, 20000 + Math.random() * 20000);
-        timeouts.push(nextHowl);
+        if (!ctx || !masterGain) return;
+        var o = ctx.createOscillator(), vib = ctx.createOscillator();
+        var vibg = ctx.createGain(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = 400;
+        vib.type = 'sine'; vib.frequency.value = 5; vibg.gain.value = 15;
+        g.gain.value = 0.04; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.5);
+        vib.connect(vibg); vibg.connect(o.frequency);
+        o.connect(g); g.connect(masterGain); o.start(); vib.start();
+        o.frequency.linearRampToValueAtTime(600, ctx.currentTime + 1);
+        o.frequency.linearRampToValueAtTime(400, ctx.currentTime + 2);
+        o.stop(ctx.currentTime + 2.5); vib.stop(ctx.currentTime + 2.5);
+        s.timeouts.push(setTimeout(howl, 20000 + Math.random() * 20000));
       }
-
-      var firstHowl = setTimeout(howl, 5000);
-      timeouts.push(firstHowl);
-
-      function thunder() {
-        if (!audioContext || !masterGain) return;
-
-        var rumble = createWhiteNoise(2);
-        if (rumble) {
-          var rumbleFilter = audioContext.createBiquadFilter();
-          var rumbleGain = audioContext.createGain();
-
-          rumbleFilter.type = 'lowpass';
-          rumbleFilter.frequency.value = 60;
-
-          rumbleGain.gain.value = 0.04;
-          rumbleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2);
-
-          rumble.connect(rumbleFilter);
-          rumbleFilter.connect(rumbleGain);
-          rumbleGain.connect(masterGain);
-
-          setTimeout(function() {
-            try {
-              if (rumble.stop) rumble.stop();
-              if (rumbleFilter.disconnect) rumbleFilter.disconnect();
-              if (rumbleGain.disconnect) rumbleGain.disconnect();
-            } catch (e) {}
-          }, 2500);
-        }
-
-        var nextThunder = setTimeout(thunder, 30000 + Math.random() * 30000);
-        timeouts.push(nextThunder);
+      s.timeouts.push(setTimeout(howl, 5000));
+      function owl() {
+        if (!ctx || !masterGain) return;
+        var o1 = ctx.createOscillator(), g1 = ctx.createGain();
+        o1.type = 'sine'; o1.frequency.value = 350;
+        g1.gain.value = 0.04; g1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        o1.connect(g1); g1.connect(masterGain); o1.start(); o1.stop(ctx.currentTime + 0.35);
+        var o2 = ctx.createOscillator(), g2 = ctx.createGain();
+        o2.type = 'sine'; o2.frequency.value = 280;
+        g2.gain.setValueAtTime(0, ctx.currentTime + 0.4);
+        g2.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 0.45);
+        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+        o2.connect(g2); g2.connect(masterGain); o2.start(ctx.currentTime + 0.4); o2.stop(ctx.currentTime + 0.8);
+        s.timeouts.push(setTimeout(owl, 15000 + Math.random() * 10000));
       }
-
-      var firstThunder = setTimeout(thunder, 15000);
-      timeouts.push(firstThunder);
-
+      s.timeouts.push(setTimeout(owl, 8000));
       function rustle() {
-        if (!audioContext || !masterGain) return;
-
-        var brush = createWhiteNoise(2);
-        if (brush) {
-          var brushFilter = audioContext.createBiquadFilter();
-          var brushGain = audioContext.createGain();
-
-          brushFilter.type = 'bandpass';
-          brushFilter.frequency.value = 1000;
-          brushFilter.Q.value = 2;
-
-          brushGain.gain.value = 0.05;
-          brushGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-
-          brush.connect(brushFilter);
-          brushFilter.connect(brushGain);
-          brushGain.connect(masterGain);
-
-          setTimeout(function() {
-            try {
-              if (brush.stop) brush.stop();
-              if (brushFilter.disconnect) brushFilter.disconnect();
-              if (brushGain.disconnect) brushGain.disconnect();
-            } catch (e) {}
-          }, 400);
+        if (!ctx || !masterGain) return;
+        var n = whiteNoise(0.35);
+        if (n) {
+          var rf = ctx.createBiquadFilter(), rg = ctx.createGain();
+          rf.type = 'bandpass'; rf.frequency.value = 1000; rf.Q.value = 2;
+          rg.gain.value = 0.05; rg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+          n.connect(rf); rf.connect(rg); rg.connect(masterGain);
         }
-
-        var nextRustle = setTimeout(rustle, 3000 + Math.random() * 4000);
-        timeouts.push(nextRustle);
+        s.timeouts.push(setTimeout(rustle, 3000 + Math.random() * 4000));
       }
-
-      var firstRustle = setTimeout(rustle, 2000);
-      timeouts.push(firstRustle);
-
-      function hoot() {
-        if (!audioContext || !masterGain) return;
-
-        var hoot1 = audioContext.createOscillator();
-        var hoot1Gain = audioContext.createGain();
-
-        hoot1.type = 'sine';
-        hoot1.frequency.value = 350;
-
-        hoot1Gain.gain.value = 0.04;
-        hoot1Gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-
-        hoot1.connect(hoot1Gain);
-        hoot1Gain.connect(masterGain);
-
-        hoot1.start();
-        hoot1.stop(audioContext.currentTime + 0.3);
-
-        var hoot2 = audioContext.createOscillator();
-        var hoot2Gain = audioContext.createGain();
-
-        hoot2.type = 'sine';
-        hoot2.frequency.value = 280;
-
-        hoot2Gain.gain.setValueAtTime(0, audioContext.currentTime + 0.35);
-        hoot2Gain.gain.linearRampToValueAtTime(0.04, audioContext.currentTime + 0.4);
-        hoot2Gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.7);
-
-        hoot2.connect(hoot2Gain);
-        hoot2Gain.connect(masterGain);
-
-        hoot2.start(audioContext.currentTime + 0.35);
-        hoot2.stop(audioContext.currentTime + 0.7);
-
-        var nextHoot = setTimeout(hoot, 15000 + Math.random() * 10000);
-        timeouts.push(nextHoot);
-      }
-
-      var firstHoot = setTimeout(hoot, 8000);
-      timeouts.push(firstHoot);
-
-      return { nodes, timeouts, intervals };
-    } catch (err) {
-      console.error('Error in wilds ambient:', err);
-      return null;
-    }
+      s.timeouts.push(setTimeout(rustle, 2000));
+    } catch (e) {}
+    return s;
   }
 
-  function playAgoraAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-    var intervals = [];
-
+  function agoraAmbient() {
+    var s = makeState();
     try {
       var crowd = createWhiteNoise();
       if (crowd) {
-        var crowdFilter = audioContext.createBiquadFilter();
-        var crowdLfo = audioContext.createOscillator();
-        var crowdLfoGain = audioContext.createGain();
-        var crowdGain = audioContext.createGain();
-
-        crowdFilter.type = 'bandpass';
-        crowdFilter.frequency.value = 500;
-        crowdFilter.Q.value = 1;
-
-        crowdLfo.type = 'sine';
-        crowdLfo.frequency.value = 0.4;
-        crowdLfoGain.gain.value = 0.02;
-
-        crowdGain.gain.value = 0.03;
-
-        crowdLfo.connect(crowdLfoGain);
-        crowdLfoGain.connect(crowdGain.gain);
-
-        crowd.connect(crowdFilter);
-        crowdFilter.connect(crowdGain);
-        crowdGain.connect(masterGain);
-
-        crowdLfo.start();
-
-        nodes.push(crowd, crowdFilter, crowdLfo, crowdLfoGain, crowdGain);
+        var cf = ctx.createBiquadFilter(), clfo = ctx.createOscillator();
+        var clfog = ctx.createGain(), cg = ctx.createGain();
+        cf.type = 'bandpass'; cf.frequency.value = 500; cf.Q.value = 1;
+        clfo.type = 'sine'; clfo.frequency.value = 0.4; clfog.gain.value = 0.02; cg.gain.value = 0.03;
+        clfo.connect(clfog); clfog.connect(cg.gain);
+        crowd.connect(cf); cf.connect(cg); cg.connect(masterGain); clfo.start();
+        s.nodes.push(crowd, cf, clfo, clfog, cg);
       }
-
-      function vendorCall() {
-        if (!audioContext || !masterGain) return;
-
-        var notes = [220, 247, 262, 294, 330, 349, 392, 440, 494];
-        var numNotes = 2 + Math.floor(Math.random() * 2);
-
-        for (var i = 0; i < numNotes; i++) {
-          var call = audioContext.createOscillator();
-          var callGain = audioContext.createGain();
-
-          call.type = 'sine';
-          call.frequency.value = notes[Math.floor(Math.random() * notes.length)];
-
-          var startTime = audioContext.currentTime + i * 0.15;
-          callGain.gain.setValueAtTime(0, startTime);
-          callGain.gain.linearRampToValueAtTime(0.04, startTime + 0.05);
-          callGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
-
-          call.connect(callGain);
-          callGain.connect(masterGain);
-
-          call.start(startTime);
-          call.stop(startTime + 0.25);
+      function call() {
+        if (!ctx || !masterGain) return;
+        var scale = [220, 247, 262, 294, 330, 349, 392, 440];
+        var n = 2 + Math.floor(Math.random() * 2);
+        for (var i = 0; i < n; i++) {
+          tone(scale[Math.floor(Math.random() * scale.length)], 'sine', 0.035, 0.22, i * 0.15);
         }
-
-        var nextCall = setTimeout(vendorCall, 8000 + Math.random() * 7000);
-        timeouts.push(nextCall);
+        s.timeouts.push(setTimeout(call, 8000 + Math.random() * 7000));
       }
-
-      var firstCall = setTimeout(vendorCall, 3000);
-      timeouts.push(firstCall);
-
-      function coinDrop() {
-        if (!audioContext || !masterGain) return;
-
-        var coin = audioContext.createOscillator();
-        var coinGain = audioContext.createGain();
-
-        coin.type = 'triangle';
-        coin.frequency.value = 2000 + Math.random() * 1000;
-
-        coinGain.gain.value = 0.03;
-        coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
-
-        coin.connect(coinGain);
-        coinGain.connect(masterGain);
-
-        coin.start();
-        coin.stop(audioContext.currentTime + 0.15);
-
-        var nextCoin = setTimeout(coinDrop, 3000 + Math.random() * 5000);
-        timeouts.push(nextCoin);
+      s.timeouts.push(setTimeout(call, 3000));
+      function coin() {
+        if (!ctx || !masterGain) return;
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'triangle'; o.frequency.value = 2000 + Math.random() * 1000;
+        g.gain.value = 0.025; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.15);
+        s.timeouts.push(setTimeout(coin, 3000 + Math.random() * 5000));
       }
-
-      var firstCoin = setTimeout(coinDrop, 2000);
-      timeouts.push(firstCoin);
-
-      function cartRumble() {
-        if (!audioContext || !masterGain) return;
-
-        var cart = createWhiteNoise(2);
-        if (cart) {
-          var cartFilter = audioContext.createBiquadFilter();
-          var cartGain = audioContext.createGain();
-
-          cartFilter.type = 'lowpass';
-          cartFilter.frequency.value = 80;
-
-          cartGain.gain.value = 0.04;
-          cartGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2);
-
-          cart.connect(cartFilter);
-          cartFilter.connect(cartGain);
-          cartGain.connect(masterGain);
-
-          setTimeout(function() {
-            try {
-              if (cart.stop) cart.stop();
-              if (cartFilter.disconnect) cartFilter.disconnect();
-              if (cartGain.disconnect) cartGain.disconnect();
-            } catch (e) {}
-          }, 2500);
-        }
-
-        var nextCart = setTimeout(cartRumble, 15000 + Math.random() * 15000);
-        timeouts.push(nextCart);
-      }
-
-      var firstCart = setTimeout(cartRumble, 5000);
-      timeouts.push(firstCart);
-
-      return { nodes, timeouts, intervals };
-    } catch (err) {
-      console.error('Error in agora ambient:', err);
-      return null;
-    }
+      s.timeouts.push(setTimeout(coin, 2000));
+    } catch (e) {}
+    return s;
   }
 
-  function playCommonsAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-    var intervals = [];
-
+  function commonsAmbient() {
+    var s = makeState();
     try {
-      var chatter = createWhiteNoise();
-      if (chatter) {
-        var chatterFilter = audioContext.createBiquadFilter();
-        var chatterGain = audioContext.createGain();
-
-        chatterFilter.type = 'bandpass';
-        chatterFilter.frequency.value = 450;
-        chatterFilter.Q.value = 1.5;
-
-        chatterGain.gain.value = 0.018;
-
-        chatter.connect(chatterFilter);
-        chatterFilter.connect(chatterGain);
-        chatterGain.connect(masterGain);
-
-        nodes.push(chatter, chatterFilter, chatterGain);
+      var chat = createWhiteNoise();
+      if (chat) {
+        var chatf = ctx.createBiquadFilter(), chatg = ctx.createGain();
+        chatf.type = 'bandpass'; chatf.frequency.value = 450; chatf.Q.value = 1.5;
+        chatg.gain.value = 0.015;
+        chat.connect(chatf); chatf.connect(chatg); chatg.connect(masterGain);
+        s.nodes.push(chat, chatf, chatg);
       }
-
       function crackle() {
-        if (!audioContext || !masterGain) return;
-
-        var fire = createWhiteNoise(2);
-        if (fire) {
-          var fireFilter = audioContext.createBiquadFilter();
-          var fireGain = audioContext.createGain();
-
-          fireFilter.type = 'bandpass';
-          fireFilter.frequency.value = 1500 + Math.random() * 1500;
-          fireFilter.Q.value = 3;
-
-          var gain = 0.01 + Math.random() * 0.02;
-          fireGain.gain.value = gain;
-          fireGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-
-          fire.connect(fireFilter);
-          fireFilter.connect(fireGain);
-          fireGain.connect(masterGain);
-
-          setTimeout(function() {
-            try {
-              if (fire.stop) fire.stop();
-              if (fireFilter.disconnect) fireFilter.disconnect();
-              if (fireGain.disconnect) fireGain.disconnect();
-            } catch (e) {}
-          }, 150);
+        if (!ctx || !masterGain) return;
+        var n = whiteNoise(0.12);
+        if (n) {
+          var ff = ctx.createBiquadFilter(), fg = ctx.createGain();
+          ff.type = 'bandpass'; ff.frequency.value = 1500 + Math.random() * 1500; ff.Q.value = 3;
+          fg.gain.value = 0.015 + Math.random() * 0.02;
+          fg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+          n.connect(ff); ff.connect(fg); fg.connect(masterGain);
         }
-
-        var nextCrackle = setTimeout(crackle, 100 + Math.random() * 300);
-        timeouts.push(nextCrackle);
+        s.timeouts.push(setTimeout(crackle, 100 + Math.random() * 300));
       }
-
-      var firstCrackle = setTimeout(crackle, 500);
-      timeouts.push(firstCrackle);
-
-      var hammerActive = true;
+      s.timeouts.push(setTimeout(crackle, 500));
+      var hammerOn = true;
       function hammer() {
-        if (!audioContext || !masterGain || !hammerActive) return;
-
-        var thunk = audioContext.createOscillator();
-        var thunkGain = audioContext.createGain();
-
-        thunk.type = 'square';
-        thunk.frequency.value = 80;
-
-        thunkGain.gain.value = 0.06;
-        thunkGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-
-        thunk.connect(thunkGain);
-        thunkGain.connect(masterGain);
-
-        thunk.start();
-        thunk.stop(audioContext.currentTime + 0.1);
-
-        var nextHammer = setTimeout(hammer, 800 + Math.random() * 400);
-        timeouts.push(nextHammer);
+        if (!ctx || !masterGain || !hammerOn) return;
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'square'; o.frequency.value = 80;
+        g.gain.value = 0.055; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.1);
+        s.timeouts.push(setTimeout(hammer, 800 + Math.random() * 400));
       }
-
-      function toggleHammer() {
-        hammerActive = !hammerActive;
-        if (hammerActive) {
-          hammer();
-        }
-      }
-
-      var firstHammer = setTimeout(hammer, 1000);
-      timeouts.push(firstHammer);
-
-      var hammerToggle = setInterval(toggleHammer, 8000);
-      intervals.push(hammerToggle);
-
-      var sawActive = false;
-      function saw() {
-        if (!audioContext || !masterGain || !sawActive) return;
-
-        var sawNoise = createWhiteNoise(2);
-        if (sawNoise) {
-          var sawFilter = audioContext.createBiquadFilter();
-          var sawGain = audioContext.createGain();
-
-          sawFilter.type = 'bandpass';
-          sawFilter.frequency.value = 400;
-          sawFilter.Q.value = 5;
-
-          sawGain.gain.value = 0.04;
-
-          sawNoise.connect(sawFilter);
-          sawFilter.connect(sawGain);
-          sawGain.connect(masterGain);
-
-          sawFilter.frequency.linearRampToValueAtTime(1000, audioContext.currentTime + 0.5);
-
-          setTimeout(function() {
-            try {
-              if (sawNoise.stop) sawNoise.stop();
-              if (sawFilter.disconnect) sawFilter.disconnect();
-              if (sawGain.disconnect) sawGain.disconnect();
-            } catch (e) {}
-          }, 550);
-        }
-
-        var nextSaw = setTimeout(saw, 1000);
-        timeouts.push(nextSaw);
-      }
-
-      function toggleSaw() {
-        sawActive = !sawActive;
-        if (sawActive) {
-          saw();
-        }
-      }
-
-      var sawToggle = setInterval(toggleSaw, 6000);
-      intervals.push(sawToggle);
-
-      return { nodes, timeouts, intervals };
-    } catch (err) {
-      console.error('Error in commons ambient:', err);
-      return null;
-    }
+      s.timeouts.push(setTimeout(hammer, 1000));
+      s.intervals.push(setInterval(function() {
+        hammerOn = !hammerOn;
+        if (hammerOn) hammer();
+      }, 8000));
+    } catch (e) {}
+    return s;
   }
 
-  function playArenaAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-    var intervals = [];
-
+  function arenaAmbient() {
+    var s = makeState();
     try {
       var crowd = createWhiteNoise();
       if (crowd) {
-        var crowdFilter = audioContext.createBiquadFilter();
-        var crowdGain = audioContext.createGain();
-
-        crowdFilter.type = 'bandpass';
-        crowdFilter.frequency.value = 600;
-        crowdFilter.Q.value = 0.8;
-
-        crowdGain.gain.value = 0.035;
-
-        crowd.connect(crowdFilter);
-        crowdFilter.connect(crowdGain);
-        crowdGain.connect(masterGain);
-
-        nodes.push(crowd, crowdFilter, crowdGain);
-
-        function swell() {
-          if (!crowdGain || !audioContext) return;
-          crowdGain.gain.linearRampToValueAtTime(0.04, audioContext.currentTime + 2);
-          crowdGain.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 4);
-        }
-
-        var swellInterval = setInterval(swell, 12000);
-        intervals.push(swellInterval);
+        var cf = ctx.createBiquadFilter(), cg = ctx.createGain();
+        cf.type = 'bandpass'; cf.frequency.value = 600; cf.Q.value = 0.8; cg.gain.value = 0.035;
+        crowd.connect(cf); cf.connect(cg); cg.connect(masterGain);
+        s.nodes.push(crowd, cf, cg);
+        s.intervals.push(setInterval(function() {
+          if (!cg || !ctx) return;
+          cg.gain.linearRampToValueAtTime(0.035 + Math.random() * 0.025, ctx.currentTime + 2);
+        }, 12000));
       }
-
-      function drumBeat() {
-        if (!audioContext || !masterGain) return;
-
-        var drum = audioContext.createOscillator();
-        var drumGain = audioContext.createGain();
-
-        drum.type = 'sine';
-        drum.frequency.value = 55;
-
-        drumGain.gain.value = 0.08;
-        drumGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
-
-        drum.connect(drumGain);
-        drumGain.connect(masterGain);
-
-        drum.start();
-        drum.stop(audioContext.currentTime + 0.15);
-      }
-
-      var drumInterval = setInterval(drumBeat, 500); // 120 BPM
-      intervals.push(drumInterval);
-
+      s.intervals.push(setInterval(function() {
+        if (!ctx || !masterGain) return;
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = 55;
+        g.gain.value = 0.08; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.15);
+      }, 500));
       function clash() {
-        if (!audioContext || !masterGain) return;
-
-        var metal = createWhiteNoise(2);
-        if (metal) {
-          var metalFilter = audioContext.createBiquadFilter();
-          var metalGain = audioContext.createGain();
-
-          metalFilter.type = 'bandpass';
-          metalFilter.frequency.value = 3000;
-          metalFilter.Q.value = 3;
-
-          metalGain.gain.value = 0.06;
-          metalGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-
-          metal.connect(metalFilter);
-          metalFilter.connect(metalGain);
-          metalGain.connect(masterGain);
-
-          setTimeout(function() {
-            try {
-              if (metal.stop) metal.stop();
-              if (metalFilter.disconnect) metalFilter.disconnect();
-              if (metalGain.disconnect) metalGain.disconnect();
-            } catch (e) {}
-          }, 250);
+        if (!ctx || !masterGain) return;
+        var n = whiteNoise(0.22);
+        if (n) {
+          var mf = ctx.createBiquadFilter(), mg = ctx.createGain();
+          mf.type = 'bandpass'; mf.frequency.value = 3000; mf.Q.value = 3;
+          mg.gain.value = 0.06; mg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+          n.connect(mf); mf.connect(mg); mg.connect(masterGain);
         }
-
-        var nextClash = setTimeout(clash, 5000 + Math.random() * 5000);
-        timeouts.push(nextClash);
+        s.timeouts.push(setTimeout(clash, 5000 + Math.random() * 5000));
       }
-
-      var firstClash = setTimeout(clash, 3000);
-      timeouts.push(firstClash);
-
-      function hornCall() {
-        if (!audioContext || !masterGain) return;
-
-        var horn = audioContext.createOscillator();
-        var hornGain = audioContext.createGain();
-
-        horn.type = 'sawtooth';
-        horn.frequency.value = 220;
-
-        hornGain.gain.setValueAtTime(0, audioContext.currentTime);
-        hornGain.gain.linearRampToValueAtTime(0.05, audioContext.currentTime + 0.2);
-        hornGain.gain.linearRampToValueAtTime(0.05, audioContext.currentTime + 0.8);
-        hornGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1);
-
-        horn.connect(hornGain);
-        hornGain.connect(masterGain);
-
-        horn.start();
-        horn.stop(audioContext.currentTime + 1);
-
-        var nextHorn = setTimeout(hornCall, 20000 + Math.random() * 10000);
-        timeouts.push(nextHorn);
+      s.timeouts.push(setTimeout(clash, 3000));
+      function horn() {
+        if (!ctx || !masterGain) return;
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sawtooth'; o.frequency.value = 220;
+        g.gain.setValueAtTime(0, ctx.currentTime);
+        g.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 0.2);
+        g.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 0.8);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.0);
+        o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 1.1);
+        s.timeouts.push(setTimeout(horn, 20000 + Math.random() * 10000));
       }
-
-      var firstHorn = setTimeout(hornCall, 10000);
-      timeouts.push(firstHorn);
-
-      return { nodes, timeouts, intervals };
-    } catch (err) {
-      console.error('Error in arena ambient:', err);
-      return null;
-    }
+      s.timeouts.push(setTimeout(horn, 10000));
+    } catch (e) {}
+    return s;
   }
+
+  var SFX = {
+    chat: function() {
+      tone(600, 'sine', 0.05, 0.05);
+      tone(900, 'sine', 0.05, 0.05, 0.05);
+    },
+    warp: function() {
+      if (!ctx || !masterGain) return;
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      var del = ctx.createDelay(), dg = ctx.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(800, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.5);
+      g.gain.value = 0.06; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      del.delayTime.value = 0.15; dg.gain.value = 0.08;
+      o.connect(g); g.connect(masterGain); g.connect(del); del.connect(dg); dg.connect(masterGain);
+      o.start(); o.stop(ctx.currentTime + 0.5);
+    },
+    harvest: function() {
+      tone(330, 'triangle', 0.06, 0.3);
+      tone(660, 'triangle', 0.03, 0.3);
+    },
+    build: function() {
+      tone(80, 'square', 0.06, 0.15);
+      tone(2000, 'sine', 0.04, 0.02);
+    },
+    trade: function() {
+      if (!ctx || !masterGain) return;
+      var wob = ctx.createOscillator(), wobg = ctx.createGain(), cg = ctx.createGain();
+      wob.type = 'sine'; wob.frequency.value = 5; wobg.gain.value = 3;
+      cg.gain.value = 0.05; cg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      wob.connect(wobg);
+      [1200, 1500].forEach(function(f) {
+        var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+        wobg.connect(o.frequency); o.connect(cg); o.start(); o.stop(ctx.currentTime + 0.3);
+      });
+      cg.connect(masterGain); wob.start(); wob.stop(ctx.currentTime + 0.3);
+    },
+    trade_request: function() { tone(700, 'sine', 0.04, 0.5); },
+    discover: function() { arp([523.25, 659.25, 783.99, 1046.50], 0.08, 'sine', 0.05, 0.2); },
+    challenge: function() {
+      if (!ctx || !masterGain) return;
+      var now = ctx.currentTime;
+      [220, 330].forEach(function(f) {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sawtooth'; o.frequency.value = f;
+        g.gain.setValueAtTime(0, now);
+        g.gain.linearRampToValueAtTime(0.055, now + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        o.connect(g); g.connect(masterGain); o.start(now); o.stop(now + 0.55);
+      });
+    },
+    levelup: function() { arp([261.63, 329.63, 392.00, 523.25], 0.1, 'sine', 0.05, 0.7); },
+    error: function() { tone(100, 'square', 0.04, 0.2); },
+    notification: function() { tone(800, 'sine', 0.05, 0.4); },
+    craft_complete: function() {
+      tone(120, 'square', 0.06, 0.2);
+      arp([1800, 2200, 2600], 0.05, 'sine', 0.035, 0.4, 0.1);
+    },
+    quest_accept: function() { arp([392.00, 493.88, 587.33], 0.08, 'sine', 0.05, 0.25); },
+    quest_complete: function() {
+      if (!ctx || !masterGain) return;
+      var now = ctx.currentTime;
+      [523.25, 659.25, 783.99].forEach(function(f) {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0, now);
+        g.gain.linearRampToValueAtTime(0.055, now + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        o.connect(g); g.connect(masterGain); o.start(now); o.stop(now + 0.85);
+      });
+    },
+    item_pickup: function() {
+      if (!ctx || !masterGain) return;
+      var n = whiteNoise(0.08);
+      if (n) {
+        var f = ctx.createBiquadFilter(), g = ctx.createGain();
+        f.type = 'bandpass'; f.frequency.value = 1000; f.Q.value = 1;
+        g.gain.value = 0.05; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        n.connect(f); f.connect(g); g.connect(masterGain);
+      }
+    },
+    npc_greet: function() { tone(440, 'sine', 0.04, 0.35); },
+    portal_enter: function() {
+      if (!ctx || !masterGain) return;
+      var n = whiteNoise(0.8);
+      if (n) {
+        var f = ctx.createBiquadFilter(), g = ctx.createGain();
+        f.type = 'bandpass';
+        f.frequency.setValueAtTime(200, ctx.currentTime);
+        f.frequency.exponentialRampToValueAtTime(4000, ctx.currentTime + 0.8);
+        f.Q.value = 5; g.gain.value = 0.06; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+        n.connect(f); f.connect(g); g.connect(masterGain);
+      }
+      var o = ctx.createOscillator(), og = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(800, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.8);
+      og.gain.value = 0.03; og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+      o.connect(og); og.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.8);
+    },
+    build_place: function() { tone(60, 'square', 0.06, 0.12); },
+    footstep: function() {
+      if (!ctx || !masterGain) return;
+      var n = whiteNoise(0.05);
+      if (n) {
+        var f = ctx.createBiquadFilter(), g = ctx.createGain();
+        f.type = 'lowpass'; f.frequency.value = 300 + Math.random() * 200;
+        g.gain.value = 0.05; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+        n.connect(f); f.connect(g); g.connect(masterGain);
+      }
+    },
+    zone_enter: function() {
+      if (!ctx || !masterGain) return;
+      var now = ctx.currentTime;
+      var n = whiteNoise(0.04);
+      if (n) {
+        var bp = ctx.createBiquadFilter(), ng = ctx.createGain();
+        bp.type = 'bandpass'; bp.frequency.value = 400; bp.Q.value = 1;
+        ng.gain.setValueAtTime(0.04, now); ng.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        n.connect(bp); bp.connect(ng); ng.connect(masterGain);
+      }
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(600, now);
+      o.frequency.exponentialRampToValueAtTime(200, now + 0.3);
+      g.gain.setValueAtTime(0.03, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      o.connect(g); g.connect(masterGain); o.start(now); o.stop(now + 0.4);
+    },
+    shutter: function() {
+      if (!ctx || !masterGain) return;
+      var now = ctx.currentTime;
+      [now, now + 0.035].forEach(function(t) {
+        var n = whiteNoise(0.006);
+        if (n) {
+          var hp = ctx.createBiquadFilter(), g = ctx.createGain();
+          hp.type = 'highpass'; hp.frequency.value = 3000; g.gain.value = 0.04;
+          n.connect(hp); hp.connect(g); g.connect(masterGain);
+        }
+      });
+    },
+    coin: function() {
+      tone(880, 'sine', 0.04, 0.04);
+      tone(1320, 'sine', 0.04, 0.06, 0.05);
+    }
+  };
+  SFX.level_up = SFX.levelup;
 
   function playSound(type) {
-    if (!audioContext || !masterGain) return;
-
-    if (audioContext.state === 'suspended') {
-      audioContext.resume();
+    if (!ctx || !masterGain) return;
+    resume();
+    if (SFX[type]) {
+      try { SFX[type](); } catch (e) { console.error('SFX error:', type, e); }
     }
+  }
 
-    try {
-      switch (type) {
-        case 'chat':
-          playChatSound();
-          break;
-        case 'warp':
-          playWarpSound();
-          break;
-        case 'harvest':
-          playHarvestSound();
-          break;
-        case 'build':
-          playBuildSound();
-          break;
-        case 'trade':
-          playTradeSound();
-          break;
-        case 'trade_request':
-          playTradeRequestSound();
-          break;
-        case 'discover':
-          playDiscoverSound();
-          break;
-        case 'challenge':
-          playChallengeSound();
-          break;
-        case 'levelup':
-          playLevelUpSound();
-          break;
-        case 'level_up':
-          playLevelUpSound();
-          break;
-        case 'error':
-          playErrorSound();
-          break;
-        case 'notification':
-          playNotificationSound();
-          break;
-        case 'craft_complete':
-          playCraftCompleteSound();
-          break;
-        case 'quest_accept':
-          playQuestAcceptSound();
-          break;
-        case 'quest_complete':
-          playQuestCompleteSound();
-          break;
-        case 'item_pickup':
-          playItemPickupSound();
-          break;
-        case 'npc_greet':
-          playNPCGreetSound();
-          break;
-        case 'portal_enter':
-          playPortalEnterSound();
-          break;
-        case 'build_place':
-          playBuildPlaceSound();
-          break;
-        case 'footstep':
-          playFootstepSound();
-          break;
-        case 'zone_enter':
-          playZoneEntrySwoosh();
-          break;
-        case 'shutter':
-          playShutterSound();
-          break;
-        case 'coin':
-          playCoinSound();
-          break;
-        default:
-          console.warn('Unknown sound type:', type);
+  var FOOTSTEPS = {
+    grass: function() {
+      var n = whiteNoise(0.1);
+      if (n) {
+        var f = ctx.createBiquadFilter(), g = ctx.createGain();
+        f.type = 'lowpass'; f.frequency.value = 500;
+        g.gain.value = 0.07; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        n.connect(f); f.connect(g); g.connect(masterGain);
       }
-    } catch (err) {
-      console.error('Error playing sound:', err);
-    }
-  }
-
-  function playChatSound() {
-    if (!audioContext || !masterGain) return;
-
-    var blip1 = audioContext.createOscillator();
-    var blip1Gain = audioContext.createGain();
-
-    blip1.type = 'sine';
-    blip1.frequency.value = 600;
-
-    blip1Gain.gain.value = 0.05;
-    blip1Gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
-
-    blip1.connect(blip1Gain);
-    blip1Gain.connect(masterGain);
-
-    blip1.start();
-    blip1.stop(audioContext.currentTime + 0.05);
-
-    var blip2 = audioContext.createOscillator();
-    var blip2Gain = audioContext.createGain();
-
-    blip2.type = 'sine';
-    blip2.frequency.value = 900;
-
-    blip2Gain.gain.setValueAtTime(0, audioContext.currentTime + 0.05);
-    blip2Gain.gain.linearRampToValueAtTime(0.05, audioContext.currentTime + 0.06);
-    blip2Gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-
-    blip2.connect(blip2Gain);
-    blip2Gain.connect(masterGain);
-
-    blip2.start(audioContext.currentTime + 0.05);
-    blip2.stop(audioContext.currentTime + 0.1);
-  }
-
-  function playWarpSound() {
-    if (!audioContext || !masterGain) return;
-
-    var warp = audioContext.createOscillator();
-    var warpGain = audioContext.createGain();
-    var delay1 = audioContext.createDelay();
-    var delay2 = audioContext.createDelay();
-    var delayGain1 = audioContext.createGain();
-    var delayGain2 = audioContext.createGain();
-
-    warp.type = 'sawtooth';
-    warp.frequency.value = 800;
-    warp.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.5);
-
-    warpGain.gain.value = 0.06;
-    warpGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
-
-    delay1.delayTime.value = 0.1;
-    delay2.delayTime.value = 0.2;
-    delayGain1.gain.value = 0.1;
-    delayGain2.gain.value = 0.06;
-
-    warp.connect(warpGain);
-    warpGain.connect(masterGain);
-    warpGain.connect(delay1);
-    warpGain.connect(delay2);
-    delay1.connect(delayGain1);
-    delay2.connect(delayGain2);
-    delayGain1.connect(masterGain);
-    delayGain2.connect(masterGain);
-
-    warp.start();
-    warp.stop(audioContext.currentTime + 0.5);
-  }
-
-  function playHarvestSound() {
-    if (!audioContext || !masterGain) return;
-
-    var pluck = audioContext.createOscillator();
-    var harmonic = audioContext.createOscillator();
-    var pluckGain = audioContext.createGain();
-
-    pluck.type = 'triangle';
-    pluck.frequency.value = 330;
-
-    harmonic.type = 'triangle';
-    harmonic.frequency.value = 660;
-
-    pluckGain.gain.value = 0.06;
-    pluckGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-
-    pluck.connect(pluckGain);
-    harmonic.connect(pluckGain);
-    pluckGain.connect(masterGain);
-
-    pluck.start();
-    harmonic.start();
-    pluck.stop(audioContext.currentTime + 0.3);
-    harmonic.stop(audioContext.currentTime + 0.3);
-  }
-
-  function playBuildSound() {
-    if (!audioContext || !masterGain) return;
-
-    var thump = audioContext.createOscillator();
-    var thumpGain = audioContext.createGain();
-
-    thump.type = 'square';
-    thump.frequency.value = 80;
-
-    thumpGain.gain.value = 0.06;
-    thumpGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
-
-    thump.connect(thumpGain);
-    thumpGain.connect(masterGain);
-
-    thump.start();
-    thump.stop(audioContext.currentTime + 0.15);
-
-    var click = audioContext.createOscillator();
-    var clickGain = audioContext.createGain();
-
-    click.type = 'sine';
-    click.frequency.value = 2000;
-
-    clickGain.gain.value = 0.04;
-    clickGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
-
-    click.connect(clickGain);
-    clickGain.connect(masterGain);
-
-    click.start();
-    click.stop(audioContext.currentTime + 0.02);
-  }
-
-  function playTradeSound() {
-    if (!audioContext || !masterGain) return;
-
-    var coin1 = audioContext.createOscillator();
-    var coin2 = audioContext.createOscillator();
-    var wobble = audioContext.createOscillator();
-    var wobbleGain = audioContext.createGain();
-    var coinGain = audioContext.createGain();
-
-    coin1.type = 'sine';
-    coin1.frequency.value = 1200;
-
-    coin2.type = 'sine';
-    coin2.frequency.value = 1500;
-
-    wobble.type = 'sine';
-    wobble.frequency.value = 5;
-    wobbleGain.gain.value = 3;
-
-    coinGain.gain.value = 0.05;
-    coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-
-    wobble.connect(wobbleGain);
-    wobbleGain.connect(coin1.frequency);
-    wobbleGain.connect(coin2.frequency);
-
-    coin1.connect(coinGain);
-    coin2.connect(coinGain);
-    coinGain.connect(masterGain);
-
-    coin1.start();
-    coin2.start();
-    wobble.start();
-    coin1.stop(audioContext.currentTime + 0.3);
-    coin2.stop(audioContext.currentTime + 0.3);
-    wobble.stop(audioContext.currentTime + 0.3);
-  }
-
-  function playDiscoverSound() {
-    if (!audioContext || !masterGain) return;
-
-    var notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-
-    notes.forEach(function(freq, i) {
-      var note = audioContext.createOscillator();
-      var noteGain = audioContext.createGain();
-
-      note.type = 'sine';
-      note.frequency.value = freq;
-
-      var startTime = audioContext.currentTime + i * 0.08;
-      noteGain.gain.setValueAtTime(0, startTime);
-      noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
-      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
-
-      note.connect(noteGain);
-      noteGain.connect(masterGain);
-
-      note.start(startTime);
-      note.stop(startTime + 0.2);
-    });
-  }
-
-  function playChallengeSound() {
-    if (!audioContext || !masterGain) return;
-
-    var horn1 = audioContext.createOscillator();
-    var horn2 = audioContext.createOscillator();
-    var hornGain = audioContext.createGain();
-
-    horn1.type = 'sawtooth';
-    horn1.frequency.value = 220;
-
-    horn2.type = 'sawtooth';
-    horn2.frequency.value = 330;
-
-    hornGain.gain.setValueAtTime(0, audioContext.currentTime);
-    hornGain.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 0.1);
-    hornGain.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 0.4);
-    hornGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
-
-    horn1.connect(hornGain);
-    horn2.connect(hornGain);
-    hornGain.connect(masterGain);
-
-    horn1.start();
-    horn2.start();
-    horn1.stop(audioContext.currentTime + 0.5);
-    horn2.stop(audioContext.currentTime + 0.5);
-  }
-
-  function playLevelUpSound() {
-    if (!audioContext || !masterGain) return;
-
-    var notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
-
-    notes.forEach(function(freq, i) {
-      var note = audioContext.createOscillator();
-      var noteGain = audioContext.createGain();
-
-      note.type = 'sine';
-      note.frequency.value = freq;
-
-      var startTime = audioContext.currentTime + i * 0.1;
-      noteGain.gain.setValueAtTime(0, startTime);
-      noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.1);
-      noteGain.gain.linearRampToValueAtTime(0.03, startTime + 0.5);
-      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
-
-      note.connect(noteGain);
-      noteGain.connect(masterGain);
-
-      note.start(startTime);
-      note.stop(startTime + 0.8);
-    });
-  }
-
-  function playErrorSound() {
-    if (!audioContext || !masterGain) return;
-
-    var buzz = audioContext.createOscillator();
-    var buzzGain = audioContext.createGain();
-
-    buzz.type = 'square';
-    buzz.frequency.value = 100;
-
-    buzzGain.gain.value = 0.04;
-    buzzGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-
-    buzz.connect(buzzGain);
-    buzzGain.connect(masterGain);
-
-    buzz.start();
-    buzz.stop(audioContext.currentTime + 0.2);
-  }
-
-  function playNotificationSound() {
-    if (!audioContext || !masterGain) return;
-
-    var bell = audioContext.createOscillator();
-    var bellGain = audioContext.createGain();
-
-    bell.type = 'sine';
-    bell.frequency.value = 800;
-
-    bellGain.gain.value = 0.05;
-    bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
-
-    bell.connect(bellGain);
-    bellGain.connect(masterGain);
-
-    bell.start();
-    bell.stop(audioContext.currentTime + 0.4);
-  }
-
-  function playTradeRequestSound() {
-    if (!audioContext || !masterGain) return;
-
-    var bell = audioContext.createOscillator();
-    var bellGain = audioContext.createGain();
-
-    bell.type = 'sine';
-    bell.frequency.value = 700;
-
-    bellGain.gain.value = 0.04;
-    bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
-
-    bell.connect(bellGain);
-    bellGain.connect(masterGain);
-
-    bell.start();
-    bell.stop(audioContext.currentTime + 0.5);
-  }
-
-  function playCraftCompleteSound() {
-    if (!audioContext || !masterGain) return;
-
-    var anvil = audioContext.createOscillator();
-    var anvilGain = audioContext.createGain();
-
-    anvil.type = 'square';
-    anvil.frequency.value = 120;
-
-    anvilGain.gain.value = 0.06;
-    anvilGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-
-    anvil.connect(anvilGain);
-    anvilGain.connect(masterGain);
-
-    anvil.start();
-    anvil.stop(audioContext.currentTime + 0.2);
-
-    var sparkle1 = audioContext.createOscillator();
-    var sparkle2 = audioContext.createOscillator();
-    var sparkle3 = audioContext.createOscillator();
-    var sparkleGain = audioContext.createGain();
-
-    sparkle1.type = 'sine';
-    sparkle1.frequency.value = 1800;
-    sparkle2.type = 'sine';
-    sparkle2.frequency.value = 2200;
-    sparkle3.type = 'sine';
-    sparkle3.frequency.value = 2600;
-
-    var startTime = audioContext.currentTime + 0.1;
-    sparkleGain.gain.setValueAtTime(0, startTime);
-    sparkleGain.gain.linearRampToValueAtTime(0.04, startTime + 0.02);
-    sparkleGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
-
-    sparkle1.connect(sparkleGain);
-    sparkle2.connect(sparkleGain);
-    sparkle3.connect(sparkleGain);
-    sparkleGain.connect(masterGain);
-
-    sparkle1.start(startTime);
-    sparkle2.start(startTime + 0.05);
-    sparkle3.start(startTime + 0.1);
-    sparkle1.stop(startTime + 0.4);
-    sparkle2.stop(startTime + 0.45);
-    sparkle3.stop(startTime + 0.5);
-  }
-
-  function playQuestAcceptSound() {
-    if (!audioContext || !masterGain) return;
-
-    var notes = [392.00, 493.88, 587.33]; // G4, B4, D5
-
-    notes.forEach(function(freq, i) {
-      var note = audioContext.createOscillator();
-      var noteGain = audioContext.createGain();
-
-      note.type = 'sine';
-      note.frequency.value = freq;
-
-      var startTime = audioContext.currentTime + i * 0.08;
-      noteGain.gain.setValueAtTime(0, startTime);
-      noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
-      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
-
-      note.connect(noteGain);
-      noteGain.connect(masterGain);
-
-      note.start(startTime);
-      note.stop(startTime + 0.25);
-    });
-  }
-
-  function playQuestCompleteSound() {
-    if (!audioContext || !masterGain) return;
-
-    var chord1 = audioContext.createOscillator();
-    var chord2 = audioContext.createOscillator();
-    var chord3 = audioContext.createOscillator();
-    var chordGain = audioContext.createGain();
-
-    chord1.type = 'sine';
-    chord1.frequency.value = 523.25; // C5
-    chord2.type = 'sine';
-    chord2.frequency.value = 659.25; // E5
-    chord3.type = 'sine';
-    chord3.frequency.value = 783.99; // G5
-
-    chordGain.gain.setValueAtTime(0, audioContext.currentTime);
-    chordGain.gain.linearRampToValueAtTime(0.06, audioContext.currentTime + 0.1);
-    chordGain.gain.linearRampToValueAtTime(0.04, audioContext.currentTime + 0.5);
-    chordGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
-
-    chord1.connect(chordGain);
-    chord2.connect(chordGain);
-    chord3.connect(chordGain);
-    chordGain.connect(masterGain);
-
-    chord1.start();
-    chord2.start();
-    chord3.start();
-    chord1.stop(audioContext.currentTime + 0.8);
-    chord2.stop(audioContext.currentTime + 0.8);
-    chord3.stop(audioContext.currentTime + 0.8);
-  }
-
-  function playItemPickupSound() {
-    if (!audioContext || !masterGain) return;
-
-    try {
-      var bufferSize = audioContext.sampleRate * 0.05; // 50ms
-      var buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-      var data = buffer.getChannelData(0);
-
-      for (var i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
+    },
+    stone: function() { tone(200, 'sine', 0.04, 0.05); tone(3000, 'sine', 0.05, 0.02); },
+    sand: function() {
+      var n = whiteNoise(0.12);
+      if (n) {
+        var f = ctx.createBiquadFilter(), g = ctx.createGain();
+        f.type = 'lowpass'; f.frequency.value = 300;
+        g.gain.value = 0.065; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        n.connect(f); f.connect(g); g.connect(masterGain);
       }
-
-      var noise = audioContext.createBufferSource();
-      noise.buffer = buffer;
-
-      var filter = audioContext.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.value = 1000;
-      filter.Q.value = 1;
-
-      var noiseGain = audioContext.createGain();
-      noiseGain.gain.value = 0.05;
-      noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
-
-      noise.connect(filter);
-      filter.connect(noiseGain);
-      noiseGain.connect(masterGain);
-
-      noise.start();
-      noise.stop(audioContext.currentTime + 0.08);
-    } catch (err) {
-      console.error('Error in item pickup sound:', err);
-    }
-  }
-
-  function playNPCGreetSound() {
-    if (!audioContext || !masterGain) return;
-
-    var greet = audioContext.createOscillator();
-    var greetGain = audioContext.createGain();
-
-    greet.type = 'sine';
-    greet.frequency.value = 440; // A4
-
-    greetGain.gain.setValueAtTime(0, audioContext.currentTime);
-    greetGain.gain.linearRampToValueAtTime(0.04, audioContext.currentTime + 0.05);
-    greetGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.35);
-
-    greet.connect(greetGain);
-    greetGain.connect(masterGain);
-
-    greet.start();
-    greet.stop(audioContext.currentTime + 0.35);
-  }
-
-  function playPortalEnterSound() {
-    if (!audioContext || !masterGain) return;
-
-    try {
-      var bufferSize = audioContext.sampleRate * 0.8;
-      var buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-      var data = buffer.getChannelData(0);
-
-      for (var i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
+    },
+    water: function() {
+      var n = whiteNoise(0.15);
+      if (n) {
+        var f = ctx.createBiquadFilter(), g = ctx.createGain();
+        f.type = 'bandpass'; f.frequency.value = 800; f.Q.value = 2;
+        g.gain.value = 0.04; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+        n.connect(f); f.connect(g); g.connect(masterGain);
       }
-
-      var noise = audioContext.createBufferSource();
-      noise.buffer = buffer;
-
-      var filter = audioContext.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.value = 200;
-      filter.frequency.exponentialRampToValueAtTime(4000, audioContext.currentTime + 0.8);
-      filter.Q.value = 5;
-
-      var whooshGain = audioContext.createGain();
-      whooshGain.gain.value = 0.06;
-      whooshGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
-
-      noise.connect(filter);
-      filter.connect(whooshGain);
-      whooshGain.connect(masterGain);
-
-      noise.start();
-      noise.stop(audioContext.currentTime + 0.8);
-
-      var tone = audioContext.createOscillator();
-      var toneGain = audioContext.createGain();
-
-      tone.type = 'sine';
-      tone.frequency.value = 800;
-      tone.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.8);
-
-      toneGain.gain.value = 0.03;
-      toneGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
-
-      tone.connect(toneGain);
-      toneGain.connect(masterGain);
-
-      tone.start();
-      tone.stop(audioContext.currentTime + 0.8);
-    } catch (err) {
-      console.error('Error in portal enter sound:', err);
-    }
-  }
-
-  function playBuildPlaceSound() {
-    if (!audioContext || !masterGain) return;
-
-    var thunk = audioContext.createOscillator();
-    var thunkGain = audioContext.createGain();
-
-    thunk.type = 'square';
-    thunk.frequency.value = 60;
-
-    thunkGain.gain.value = 0.06;
-    thunkGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.12);
-
-    thunk.connect(thunkGain);
-    thunkGain.connect(masterGain);
-
-    thunk.start();
-    thunk.stop(audioContext.currentTime + 0.12);
-  }
-
-  function playZoneEntrySwoosh() {
-    if (!audioContext || !masterGain) return;
-    try {
-      var now = audioContext.currentTime;
-      var bufSize = Math.floor(audioContext.sampleRate * 0.04);
-      var buf = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
-      var data = buf.getChannelData(0);
-      for (var i = 0; i < bufSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-      var noise = audioContext.createBufferSource();
-      noise.buffer = buf;
-      var bandpass = audioContext.createBiquadFilter();
-      bandpass.type = 'bandpass';
-      bandpass.frequency.value = 400;
-      bandpass.Q.value = 1.0;
-      var noiseGain = audioContext.createGain();
-      noiseGain.gain.setValueAtTime(0.04, now);
-      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-      noise.connect(bandpass);
-      bandpass.connect(noiseGain);
-      noiseGain.connect(masterGain);
-      noise.start(now);
-      noise.stop(now + 0.04);
-
-      var sweep = audioContext.createOscillator();
-      sweep.type = 'sine';
-      sweep.frequency.setValueAtTime(600, now);
-      sweep.frequency.exponentialRampToValueAtTime(200, now + 0.3);
-      var sweepGain = audioContext.createGain();
-      sweepGain.gain.setValueAtTime(0.03, now);
-      sweepGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-      sweep.connect(sweepGain);
-      sweepGain.connect(masterGain);
-      sweep.start(now);
-      sweep.stop(now + 0.4);
-    } catch (err) {
-      console.error('Error in zone entry swoosh:', err);
-    }
-  }
-
-  function playShutterSound() {
-    if (!audioContext || !masterGain) return;
-    try {
-      var now = audioContext.currentTime;
-      var bufSize = Math.floor(audioContext.sampleRate * 0.005);
-      var buf = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
-      var data = buf.getChannelData(0);
-      for (var i = 0; i < bufSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-      var click1 = audioContext.createBufferSource();
-      click1.buffer = buf;
-      var hp1 = audioContext.createBiquadFilter();
-      hp1.type = 'highpass';
-      hp1.frequency.value = 3000;
-      var g1 = audioContext.createGain();
-      g1.gain.value = 0.04;
-      click1.connect(hp1);
-      hp1.connect(g1);
-      g1.connect(masterGain);
-      click1.start(now);
-      click1.stop(now + 0.005);
-
-      var click2 = audioContext.createBufferSource();
-      click2.buffer = buf;
-      var hp2 = audioContext.createBiquadFilter();
-      hp2.type = 'highpass';
-      hp2.frequency.value = 3000;
-      var g2 = audioContext.createGain();
-      g2.gain.value = 0.04;
-      click2.connect(hp2);
-      hp2.connect(g2);
-      g2.connect(masterGain);
-      click2.start(now + 0.035);
-      click2.stop(now + 0.04);
-    } catch (err) {
-      console.error('Error in shutter sound:', err);
-    }
-  }
-
-  function playCoinSound() {
-    if (!audioContext || !masterGain) return;
-    try {
-      var now = audioContext.currentTime;
-      var osc1 = audioContext.createOscillator();
-      var g1 = audioContext.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.value = 880;
-      g1.gain.setValueAtTime(0.04, now);
-      g1.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-      osc1.connect(g1);
-      g1.connect(masterGain);
-      osc1.start(now);
-      osc1.stop(now + 0.05);
-      var osc2 = audioContext.createOscillator();
-      var g2 = audioContext.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.value = 1320;
-      g2.gain.setValueAtTime(0.04, now + 0.05);
-      g2.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
-      osc2.connect(g2);
-      g2.connect(masterGain);
-      osc2.start(now + 0.05);
-      osc2.stop(now + 0.12);
-    } catch (err) {
-      console.error('Error in coin sound:', err);
-    }
-  }
-
-  function playFootstepSound() {
-    if (!audioContext || !masterGain) return;
-
-    try {
-      var bufferSize = audioContext.sampleRate * 0.03; // 30ms
-      var buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-      var data = buffer.getChannelData(0);
-
-      for (var i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-
-      var noise = audioContext.createBufferSource();
-      noise.buffer = buffer;
-
-      var filter = audioContext.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = 300 + Math.random() * 200; // Vary pitch slightly
-      filter.Q.value = 0.5;
-
-      var stepGain = audioContext.createGain();
-      stepGain.gain.value = 0.05; // Very subtle
-      stepGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
-
-      noise.connect(filter);
-      filter.connect(stepGain);
-      stepGain.connect(masterGain);
-
-      noise.start();
-      noise.stop(audioContext.currentTime + 0.05);
-    } catch (err) {
-      console.error('Error in footstep sound:', err);
-    }
-  }
+      tone(1500 + Math.random() * 700, 'sine', 0.025, 0.05);
+      tone(1500 + Math.random() * 700, 'sine', 0.025, 0.05, 0.05);
+    },
+    wood: function() { tone(150, 'sine', 0.04, 0.06); },
+    'default': function() { tone(100, 'sine', 0.07, 0.07); }
+  };
 
   function playFootstep(terrain) {
-    if (!audioContext || !masterGain) return;
-
-    if (audioContext.state === 'suspended') {
-      audioContext.resume();
-    }
-
-    try {
-      switch (terrain) {
-        case 'grass':
-          playGrassFootstep();
-          break;
-        case 'stone':
-          playStoneFootstep();
-          break;
-        case 'sand':
-          playSandFootstep();
-          break;
-        case 'water':
-          playWaterFootstep();
-          break;
-        case 'wood':
-          playWoodFootstep();
-          break;
-        default:
-          playDefaultFootstep();
-      }
-    } catch (err) {
-      console.error('Error playing footstep:', err);
-    }
-  }
-
-  function playGrassFootstep() {
-    if (!audioContext || !masterGain) return;
-
-    var grass = createWhiteNoise(2);
-    if (grass) {
-      var grassFilter = audioContext.createBiquadFilter();
-      var grassGain = audioContext.createGain();
-
-      grassFilter.type = 'lowpass';
-      grassFilter.frequency.value = 500;
-
-      grassGain.gain.value = 0.08;
-      grassGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
-
-      grass.connect(grassFilter);
-      grassFilter.connect(grassGain);
-      grassGain.connect(masterGain);
-
-      setTimeout(function() {
-        try {
-          if (grass.stop) grass.stop();
-          if (grassFilter.disconnect) grassFilter.disconnect();
-          if (grassGain.disconnect) grassGain.disconnect();
-        } catch (e) {}
-      }, 100);
-    }
-  }
-
-  function playStoneFootstep() {
-    if (!audioContext || !masterGain) return;
-
-    var thud = audioContext.createOscillator();
-    var thudGain = audioContext.createGain();
-
-    thud.type = 'sine';
-    thud.frequency.value = 200;
-
-    thudGain.gain.value = 0.04;
-    thudGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
-
-    thud.connect(thudGain);
-    thudGain.connect(masterGain);
-
-    thud.start();
-    thud.stop(audioContext.currentTime + 0.05);
-
-    var click = audioContext.createOscillator();
-    var clickGain = audioContext.createGain();
-
-    click.type = 'sine';
-    click.frequency.value = 3000;
-
-    clickGain.gain.value = 0.05;
-    clickGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
-
-    click.connect(clickGain);
-    clickGain.connect(masterGain);
-
-    click.start();
-    click.stop(audioContext.currentTime + 0.02);
-  }
-
-  function playSandFootstep() {
-    if (!audioContext || !masterGain) return;
-
-    var sand = createWhiteNoise(2);
-    if (sand) {
-      var sandFilter = audioContext.createBiquadFilter();
-      var sandGain = audioContext.createGain();
-
-      sandFilter.type = 'lowpass';
-      sandFilter.frequency.value = 300;
-
-      sandGain.gain.value = 0.07;
-      sandGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-
-      sand.connect(sandFilter);
-      sandFilter.connect(sandGain);
-      sandGain.connect(masterGain);
-
-      setTimeout(function() {
-        try {
-          if (sand.stop) sand.stop();
-          if (sandFilter.disconnect) sandFilter.disconnect();
-          if (sandGain.disconnect) sandGain.disconnect();
-        } catch (e) {}
-      }, 120);
-    }
-  }
-
-  function playWaterFootstep() {
-    if (!audioContext || !masterGain) return;
-
-    var splash = createWhiteNoise(2);
-    if (splash) {
-      var splashFilter = audioContext.createBiquadFilter();
-      var splashGain = audioContext.createGain();
-
-      splashFilter.type = 'bandpass';
-      splashFilter.frequency.value = 800;
-      splashFilter.Q.value = 2;
-
-      splashGain.gain.value = 0.04;
-      splashGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.12);
-
-      splash.connect(splashFilter);
-      splashFilter.connect(splashGain);
-      splashGain.connect(masterGain);
-
-      setTimeout(function() {
-        try {
-          if (splash.stop) splash.stop();
-          if (splashFilter.disconnect) splashFilter.disconnect();
-          if (splashGain.disconnect) splashGain.disconnect();
-        } catch (e) {}
-      }, 150);
-    }
-
-    for (var i = 0; i < 2; i++) {
-      setTimeout(function() {
-        var bubble = audioContext.createOscillator();
-        var bubbleGain = audioContext.createGain();
-
-        bubble.type = 'sine';
-        bubble.frequency.value = 1500 + Math.random() * 1500;
-
-        bubbleGain.gain.value = 0.03;
-        bubbleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
-
-        bubble.connect(bubbleGain);
-        bubbleGain.connect(masterGain);
-
-        bubble.start();
-        bubble.stop(audioContext.currentTime + 0.05);
-      }, i * 50);
-    }
-  }
-
-  function playWoodFootstep() {
-    if (!audioContext || !masterGain) return;
-
-    var knock = audioContext.createOscillator();
-    var knockGain = audioContext.createGain();
-
-    knock.type = 'sine';
-    knock.frequency.value = 150;
-
-    knockGain.gain.value = 0.04;
-    knockGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.06);
-
-    knock.connect(knockGain);
-    knockGain.connect(masterGain);
-
-    knock.start();
-    knock.stop(audioContext.currentTime + 0.06);
-  }
-
-  function playDefaultFootstep() {
-    if (!audioContext || !masterGain) return;
-
-    var thud = audioContext.createOscillator();
-    var thudGain = audioContext.createGain();
-
-    thud.type = 'sine';
-    thud.frequency.value = 100;
-
-    thudGain.gain.value = 0.08;
-    thudGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.07);
-
-    thud.connect(thudGain);
-    thudGain.connect(masterGain);
-
-    thud.start();
-    thud.stop(audioContext.currentTime + 0.07);
+    if (!ctx || !masterGain) return;
+    resume();
+    var fn = FOOTSTEPS[terrain] || FOOTSTEPS['default'];
+    try { fn(); } catch (e) {}
   }
 
   function setVolume(channel, level) {
-    if (typeof channel === 'number') {
-      level = channel;
-      channel = 'master';
-    }
-    var clampedLevel = Math.max(0, Math.min(1, level));
-    volumeLevels[channel] = clampedLevel;
-    if (channel === 'master' && masterGain) {
-      masterGain.gain.value = clampedLevel;
-    }
-    if (channel === 'music') {
-      setMusicVolume(clampedLevel);
-    }
+    if (typeof channel === 'number') { level = channel; channel = 'master'; }
+    level = Math.max(0, Math.min(1, level));
+    volumes[channel] = level;
+    if (channel === 'master' && masterGain) masterGain.gain.value = level;
+    if (channel === 'music') setMusicVolume(level);
   }
 
-  function mute() {
-    if (!masterGain) return;
+  function mute() { muted = true; if (masterGain) masterGain.gain.value = 0; }
+  function unmute() { muted = false; if (masterGain) masterGain.gain.value = volumes.master || 0.15; }
 
-    isMuted = true;
-    masterGain.gain.value = 0;
-  }
-
-  function unmute() {
-    if (!masterGain) return;
-
-    isMuted = false;
-    masterGain.gain.value = 0.15;
-  }
+  function stopAmbient() { setAmbient('base', null); killAllNoiseSources(); }
+  function stopTimeAmbient() { setAmbient('time', null); killAllNoiseSources(); }
+  function stopWeatherAmbient() { setAmbient('weather', null); killAllNoiseSources(); }
+  function stopZoneAmbient() { setAmbient('zone', null); killAllNoiseSources(); }
 
   function stopAll() {
-    stopAmbient();
-    stopTimeAmbient();
-    stopWeatherAmbient();
-    stopZoneAmbient();
+    ['base', 'time', 'weather', 'zone'].forEach(function(k) { setAmbient(k, null); });
     killAllNoiseSources();
+    stopMusic();
   }
 
-  var currentTimeAmbient = null;
-
-  var cricketLayer = null;
-
-  function playNightCricketLayer() {
-    if (!audioContext || !masterGain) return null;
-    try {
-      var layerGain = audioContext.createGain();
-      layerGain.gain.value = 0.006;
-
-      var cricket1 = audioContext.createOscillator();
-      cricket1.type = 'sine';
-      cricket1.frequency.value = 3200;
-      var lfo1 = audioContext.createOscillator();
-      lfo1.type = 'sine';
-      lfo1.frequency.value = 12;
-      var lfoGain1 = audioContext.createGain();
-      lfoGain1.gain.value = 0.3;
-      lfo1.connect(lfoGain1);
-      var cricket1Gain = audioContext.createGain();
-      cricket1Gain.gain.value = 0.3;
-      lfoGain1.connect(cricket1Gain.gain);
-      cricket1.connect(cricket1Gain);
-      cricket1Gain.connect(layerGain);
-
-      var cricket2 = audioContext.createOscillator();
-      cricket2.type = 'sine';
-      cricket2.frequency.value = 3400;
-      var lfo2 = audioContext.createOscillator();
-      lfo2.type = 'sine';
-      lfo2.frequency.value = 10;
-      var lfoGain2 = audioContext.createGain();
-      lfoGain2.gain.value = 0.3;
-      lfo2.connect(lfoGain2);
-      var cricket2Gain = audioContext.createGain();
-      cricket2Gain.gain.value = 0.3;
-      lfoGain2.connect(cricket2Gain.gain);
-      cricket2.connect(cricket2Gain);
-      cricket2Gain.connect(layerGain);
-
-      layerGain.connect(masterGain);
-      cricket1.start();
-      cricket2.start();
-      lfo1.start();
-      lfo2.start();
-
-      return {
-        oscillators: [cricket1, cricket2, lfo1, lfo2],
-        nodes: [cricket1Gain, cricket2Gain, lfoGain1, lfoGain2, layerGain],
-        gainNode: layerGain
-      };
-    } catch (err) {
-      console.error('Error in cricket layer:', err);
-      return null;
-    }
+  function windLayer(s, gainVal) {
+    var w = createWhiteNoise();
+    if (!w) return;
+    var f = ctx.createBiquadFilter(), g = ctx.createGain();
+    f.type = 'lowpass'; f.frequency.value = 180; g.gain.value = gainVal;
+    w.connect(f); f.connect(g); g.connect(masterGain);
+    s.nodes.push(w, f, g);
   }
 
-  function stopCricketLayer() {
-    if (!cricketLayer) return;
-    try {
-      if (cricketLayer.gainNode) {
-        cricketLayer.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 2);
-      }
-      var cl = cricketLayer;
-      setTimeout(function() {
-        if (cl.oscillators) {
-          cl.oscillators.forEach(function(o) { try { o.stop(); } catch(e) {} });
-        }
-      }, 2100);
-      cricketLayer = null;
-    } catch (err) {
-      console.error('Error stopping crickets:', err);
+  function chirpLayer(s, count, minFreq, maxFreq, minGap, maxGap, vol) {
+    function bird() {
+      if (!ctx || !masterGain) return;
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine';
+      var f0 = minFreq + Math.random() * (maxFreq - minFreq);
+      o.frequency.setValueAtTime(f0, ctx.currentTime);
+      o.frequency.linearRampToValueAtTime(f0 * (0.8 + Math.random() * 0.5), ctx.currentTime + 0.08);
+      var dur = 0.08 + Math.random() * 0.15;
+      g.gain.setValueAtTime(0, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + dur);
+      s.timeouts.push(setTimeout(bird, minGap + Math.random() * (maxGap - minGap)));
     }
+    for (var i = 0; i < count; i++) s.timeouts.push(setTimeout(bird, Math.random() * 2000));
   }
 
-  function updateAmbientForTime(timePeriod) {
-    if (!audioContext || !masterGain) return;
-
-    if (audioContext.state === 'suspended') {
-      audioContext.resume();
-    }
-
-    stopTimeAmbient();
-
-    try {
-      switch (timePeriod) {
-        case 'dawn':
-          currentTimeAmbient = playDawnAmbient();
-          break;
-        case 'morning':
-          currentTimeAmbient = playMorningAmbient();
-          break;
-        case 'midday':
-          currentTimeAmbient = playMiddayAmbient();
-          break;
-        case 'afternoon':
-          currentTimeAmbient = playAfternoonAmbient();
-          break;
-        case 'evening':
-          currentTimeAmbient = playEveningAmbient();
-          break;
-        case 'night':
-          currentTimeAmbient = playNightAmbient();
-          break;
-        default:
-          currentTimeAmbient = null;
-      }
-
-      if (timePeriod === 'night' || timePeriod === 'evening') {
-        if (!cricketLayer) {
-          cricketLayer = playNightCricketLayer();
-        }
-      } else if (timePeriod === 'dawn' || timePeriod === 'morning') {
-        stopCricketLayer();
-      } else {
-        stopCricketLayer();
-      }
-    } catch (err) {
-      console.error('Error updating time ambient:', err);
-    }
+  function cricketAM(s, freq, modFreq, gainVal) {
+    var o = ctx.createOscillator(), am = ctx.createOscillator();
+    var amg = ctx.createGain(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    am.type = 'sine'; am.frequency.value = modFreq; amg.gain.value = gainVal * 0.8;
+    g.gain.value = gainVal;
+    am.connect(amg); amg.connect(g.gain);
+    o.connect(g); g.connect(masterGain); o.start(); am.start();
+    s.nodes.push(o, am, amg, g);
   }
 
-  function stopTimeAmbient() {
-    if (!currentTimeAmbient) return;
-
-    try {
-      if (currentTimeAmbient.oscillators && Array.isArray(currentTimeAmbient.oscillators)) {
-        currentTimeAmbient.oscillators.forEach(function(osc) {
-          if (osc && osc.stop) {
-            try { osc.stop(); } catch (e) {}
-          }
-        });
-      }
-
-      if (currentTimeAmbient.nodes && Array.isArray(currentTimeAmbient.nodes)) {
-        currentTimeAmbient.nodes.forEach(function(node) {
-          if (node) {
-            if (node.stop) {
-              try { node.stop(); } catch (e) {}
-            }
-            if (node.disconnect) {
-              try { node.disconnect(); } catch (e) {}
-            }
-          }
-        });
-      }
-
-      if (currentTimeAmbient.intervals && Array.isArray(currentTimeAmbient.intervals)) {
-        currentTimeAmbient.intervals.forEach(function(id) { clearInterval(id); });
-      }
-
-      if (currentTimeAmbient.timeouts && Array.isArray(currentTimeAmbient.timeouts)) {
-        currentTimeAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
-      }
-
-      if (currentTimeAmbient.cleanup && typeof currentTimeAmbient.cleanup === 'function') {
-        currentTimeAmbient.cleanup();
-      }
-    } catch (err) {
-      console.error('Error stopping time ambient:', err);
+  function hootLayer(s, freq, minGap, maxGap, vol) {
+    function hoot() {
+      if (!ctx || !masterGain) return;
+      var o1 = ctx.createOscillator(), g1 = ctx.createGain();
+      o1.type = 'sine'; o1.frequency.value = freq;
+      g1.gain.value = vol; g1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      o1.connect(g1); g1.connect(masterGain); o1.start(); o1.stop(ctx.currentTime + 0.4);
+      var o2 = ctx.createOscillator(), g2 = ctx.createGain();
+      o2.type = 'sine'; o2.frequency.value = freq * 0.8;
+      g2.gain.setValueAtTime(0, ctx.currentTime + 0.45);
+      g2.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.5);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.75);
+      o2.connect(g2); g2.connect(masterGain); o2.start(ctx.currentTime + 0.45); o2.stop(ctx.currentTime + 0.75);
+      s.timeouts.push(setTimeout(hoot, minGap + Math.random() * maxGap));
     }
-
-    currentTimeAmbient = null;
-    killAllNoiseSources();
+    s.timeouts.push(setTimeout(hoot, 5000 + Math.random() * 5000));
   }
 
-  function playDawnAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-
-    try {
-      var wind = createWhiteNoise();
-      if (wind) {
-        var windFilter = audioContext.createBiquadFilter();
-        var windGain = audioContext.createGain();
-
-        windFilter.type = 'lowpass';
-        windFilter.frequency.value = 180;
-        windGain.gain.value = 0.02;
-
-        wind.connect(windFilter);
-        windFilter.connect(windGain);
-        windGain.connect(masterGain);
-
-        nodes.push(wind, windFilter, windGain);
+  function rustleLayer(s, minGap, maxGap, vol) {
+    function rustle() {
+      if (!ctx || !masterGain) return;
+      var n = createWhiteNoise(2);
+      if (n) {
+        var f = ctx.createBiquadFilter(), g = ctx.createGain();
+        f.type = 'bandpass'; f.frequency.value = 1800 + Math.random() * 400; f.Q.value = 2;
+        g.gain.value = vol; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+        n.connect(f); f.connect(g); g.connect(masterGain);
       }
-
-      function dawnChirp() {
-        if (!audioContext || !masterGain) return;
-
-        var bird = audioContext.createOscillator();
-        var birdGain = audioContext.createGain();
-
-        bird.type = 'sine';
-        bird.frequency.value = 800 + Math.random() * 1000;
-
-        var duration = 0.05 + Math.random() * 0.1;
-        birdGain.gain.value = 0.04;
-        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
-
-        bird.connect(birdGain);
-        birdGain.connect(masterGain);
-
-        bird.start();
-        bird.stop(audioContext.currentTime + duration);
-
-        var nextChirp = setTimeout(dawnChirp, 800 + Math.random() * 2000);
-        timeouts.push(nextChirp);
-      }
-
-      for (var i = 0; i < 2; i++) {
-        var firstChirp = setTimeout(dawnChirp, Math.random() * 1000);
-        timeouts.push(firstChirp);
-      }
-
-      return { nodes, timeouts };
-    } catch (err) {
-      console.error('Error in dawn ambient:', err);
-      return null;
+      s.timeouts.push(setTimeout(rustle, minGap + Math.random() * (maxGap - minGap)));
     }
+    s.timeouts.push(setTimeout(rustle, 1500));
   }
 
-  function playMorningAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-
-    try {
-      var breeze = createWhiteNoise();
-      if (breeze) {
-        var breezeFilter = audioContext.createBiquadFilter();
-        var breezeGain = audioContext.createGain();
-
-        breezeFilter.type = 'lowpass';
-        breezeFilter.frequency.value = 200;
-        breezeGain.gain.value = 0.025;
-
-        breeze.connect(breezeFilter);
-        breezeFilter.connect(breezeGain);
-        breezeGain.connect(masterGain);
-
-        nodes.push(breeze, breezeFilter, breezeGain);
-      }
-
-      function morningChirp() {
-        if (!audioContext || !masterGain) return;
-
-        var bird = audioContext.createOscillator();
-        var birdGain = audioContext.createGain();
-
-        bird.type = 'sine';
-        bird.frequency.value = 700 + Math.random() * 1200;
-
-        var duration = 0.08 + Math.random() * 0.15;
-        birdGain.gain.value = 0.05;
-        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
-
-        bird.connect(birdGain);
-        birdGain.connect(masterGain);
-
-        bird.start();
-        bird.stop(audioContext.currentTime + duration);
-
-        var nextChirp = setTimeout(morningChirp, 400 + Math.random() * 2500);
-        timeouts.push(nextChirp);
-      }
-
-      for (var i = 0; i < 3; i++) {
-        var firstChirp = setTimeout(morningChirp, Math.random() * 1500);
-        timeouts.push(firstChirp);
-      }
-
+  var TOD_AMBIENTS = {
+    dawn: function() {
+      var s = makeState();
+      windLayer(s, 0.018);
+      chirpLayer(s, 2, 800, 1800, 800, 2000, 0.04);
+      return s;
+    },
+    morning: function() {
+      var s = makeState();
+      windLayer(s, 0.022);
+      chirpLayer(s, 3, 700, 1900, 400, 2500, 0.048);
       function buzz() {
-        if (!audioContext || !masterGain) return;
-
-        var insect = audioContext.createOscillator();
-        var insectGain = audioContext.createGain();
-
-        insect.type = 'sawtooth';
-        insect.frequency.value = 250 + Math.random() * 100;
-
-        insectGain.gain.value = 0.02;
-        insectGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-
-        insect.connect(insectGain);
-        insectGain.connect(masterGain);
-
-        insect.start();
-        insect.stop(audioContext.currentTime + 0.3);
-
-        var nextBuzz = setTimeout(buzz, 8000 + Math.random() * 12000);
-        timeouts.push(nextBuzz);
+        if (!ctx || !masterGain) return;
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sawtooth'; o.frequency.value = 250 + Math.random() * 100;
+        g.gain.value = 0.018; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.3);
+        s.timeouts.push(setTimeout(buzz, 8000 + Math.random() * 12000));
       }
-
-      var firstBuzz = setTimeout(buzz, 5000);
-      timeouts.push(firstBuzz);
-
-      return { nodes, timeouts };
-    } catch (err) {
-      console.error('Error in morning ambient:', err);
-      return null;
+      s.timeouts.push(setTimeout(buzz, 5000));
+      return s;
+    },
+    midday: function() {
+      var s = makeState();
+      windLayer(s, 0.027);
+      cricketAM(s, 3500 + Math.random() * 500, 15 + Math.random() * 10, 0.035);
+      chirpLayer(s, 1, 600, 1400, 3000, 5000, 0.028);
+      return s;
+    },
+    afternoon: function() {
+      var s = makeState();
+      windLayer(s, 0.022);
+      chirpLayer(s, 2, 500, 1400, 1500, 4000, 0.038);
+      rustleLayer(s, 2500, 3500, 0.028);
+      return s;
+    },
+    evening: function() {
+      var s = makeState();
+      windLayer(s, 0.018);
+      cricketAM(s, 4000 + Math.random() * 500, 18 + Math.random() * 8, 0.025);
+      hootLayer(s, 320, 12000, 12000, 0.045);
+      return s;
+    },
+    night: function() {
+      var s = makeState();
+      windLayer(s, 0.013);
+      cricketAM(s, 3500 + Math.random() * 300, 15 + Math.random() * 5, 0.022);
+      hootLayer(s, 280, 18000, 18000, 0.038);
+      function howl() {
+        if (!ctx || !masterGain) return;
+        var o = ctx.createOscillator(), vib = ctx.createOscillator();
+        var vibg = ctx.createGain(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = 350;
+        vib.type = 'sine'; vib.frequency.value = 4; vibg.gain.value = 10; g.gain.value = 0.028;
+        vib.connect(vibg); vibg.connect(o.frequency);
+        o.connect(g); g.connect(masterGain); o.start(); vib.start();
+        o.frequency.linearRampToValueAtTime(500, ctx.currentTime + 1.2);
+        o.frequency.linearRampToValueAtTime(350, ctx.currentTime + 2);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.5);
+        o.stop(ctx.currentTime + 2.5); vib.stop(ctx.currentTime + 2.5);
+        s.timeouts.push(setTimeout(howl, 60000 + Math.random() * 60000));
+      }
+      s.timeouts.push(setTimeout(howl, 30000));
+      return s;
     }
+  };
+
+  function updateAmbientForTime(period) {
+    if (!ctx || !masterGain) return;
+    resume();
+    setAmbient('time', TOD_AMBIENTS[period] || null);
   }
-
-  function playMiddayAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var oscillators = [];
-    var timeouts = [];
-
-    try {
-      var breeze = createWhiteNoise();
-      if (breeze) {
-        var breezeFilter = audioContext.createBiquadFilter();
-        var breezeGain = audioContext.createGain();
-
-        breezeFilter.type = 'lowpass';
-        breezeFilter.frequency.value = 220;
-        breezeGain.gain.value = 0.03;
-
-        breeze.connect(breezeFilter);
-        breezeFilter.connect(breezeGain);
-        breezeGain.connect(masterGain);
-
-        nodes.push(breeze, breezeFilter, breezeGain);
-      }
-
-      var cicada = audioContext.createOscillator();
-      var cicadaAm = audioContext.createOscillator();
-      var cicadaAmGain = audioContext.createGain();
-      var cicadaGain = audioContext.createGain();
-
-      cicada.type = 'sine';
-      cicada.frequency.value = 3500 + Math.random() * 500;
-
-      cicadaAm.type = 'sine';
-      cicadaAm.frequency.value = 15 + Math.random() * 10;
-      cicadaAmGain.gain.value = 0.02;
-
-      cicadaGain.gain.value = 0.04;
-
-      cicadaAm.connect(cicadaAmGain);
-      cicadaAmGain.connect(cicadaGain.gain);
-
-      cicada.connect(cicadaGain);
-      cicadaGain.connect(masterGain);
-
-      cicada.start();
-      cicadaAm.start();
-
-      oscillators.push(cicada, cicadaAm);
-      nodes.push(cicadaAmGain, cicadaGain);
-
-      function middayChirp() {
-        if (!audioContext || !masterGain) return;
-
-        var bird = audioContext.createOscillator();
-        var birdGain = audioContext.createGain();
-
-        bird.type = 'sine';
-        bird.frequency.value = 600 + Math.random() * 800;
-
-        var duration = 0.1 + Math.random() * 0.15;
-        birdGain.gain.value = 0.03;
-        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
-
-        bird.connect(birdGain);
-        birdGain.connect(masterGain);
-
-        bird.start();
-        bird.stop(audioContext.currentTime + duration);
-
-        var nextChirp = setTimeout(middayChirp, 3000 + Math.random() * 5000);
-        timeouts.push(nextChirp);
-      }
-
-      var firstChirp = setTimeout(middayChirp, 2000);
-      timeouts.push(firstChirp);
-
-      return { nodes, oscillators, timeouts };
-    } catch (err) {
-      console.error('Error in midday ambient:', err);
-      return null;
-    }
-  }
-
-  function playAfternoonAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-
-    try {
-      var breeze = createWhiteNoise();
-      if (breeze) {
-        var breezeFilter = audioContext.createBiquadFilter();
-        var breezeGain = audioContext.createGain();
-
-        breezeFilter.type = 'lowpass';
-        breezeFilter.frequency.value = 190;
-        breezeGain.gain.value = 0.025;
-
-        breeze.connect(breezeFilter);
-        breezeFilter.connect(breezeGain);
-        breezeGain.connect(masterGain);
-
-        nodes.push(breeze, breezeFilter, breezeGain);
-      }
-
-      function afternoonChirp() {
-        if (!audioContext || !masterGain) return;
-
-        var bird = audioContext.createOscillator();
-        var birdGain = audioContext.createGain();
-
-        bird.type = 'sine';
-        bird.frequency.value = 500 + Math.random() * 900;
-
-        var duration = 0.1 + Math.random() * 0.2;
-        birdGain.gain.value = 0.04;
-        birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
-
-        bird.connect(birdGain);
-        birdGain.connect(masterGain);
-
-        bird.start();
-        bird.stop(audioContext.currentTime + duration);
-
-        var nextChirp = setTimeout(afternoonChirp, 1500 + Math.random() * 4000);
-        timeouts.push(nextChirp);
-      }
-
-      for (var i = 0; i < 2; i++) {
-        var firstChirp = setTimeout(afternoonChirp, Math.random() * 2000);
-        timeouts.push(firstChirp);
-      }
-
-      function rustle() {
-        if (!audioContext || !masterGain) return;
-
-        var noise = createWhiteNoise(2);
-        if (noise) {
-          var rustleFilter = audioContext.createBiquadFilter();
-          var rustleGain = audioContext.createGain();
-
-          rustleFilter.type = 'bandpass';
-          rustleFilter.frequency.value = 1800 + Math.random() * 400;
-          rustleFilter.Q.value = 2;
-
-          rustleGain.gain.value = 0.03;
-          rustleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
-
-          noise.connect(rustleFilter);
-          rustleFilter.connect(rustleGain);
-          rustleGain.connect(masterGain);
-
-          setTimeout(function() {
-            try {
-              if (noise.stop) noise.stop();
-              if (rustleFilter.disconnect) rustleFilter.disconnect();
-              if (rustleGain.disconnect) rustleGain.disconnect();
-            } catch (e) {}
-          }, 450);
-        }
-
-        var nextRustle = setTimeout(rustle, 2500 + Math.random() * 3500);
-        timeouts.push(nextRustle);
-      }
-
-      var firstRustle = setTimeout(rustle, 1500);
-      timeouts.push(firstRustle);
-
-      return { nodes, timeouts };
-    } catch (err) {
-      console.error('Error in afternoon ambient:', err);
-      return null;
-    }
-  }
-
-  function playEveningAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var oscillators = [];
-    var timeouts = [];
-
-    try {
-      var wind = createWhiteNoise();
-      if (wind) {
-        var windFilter = audioContext.createBiquadFilter();
-        var windGain = audioContext.createGain();
-
-        windFilter.type = 'lowpass';
-        windFilter.frequency.value = 170;
-        windGain.gain.value = 0.02;
-
-        wind.connect(windFilter);
-        windFilter.connect(windGain);
-        windGain.connect(masterGain);
-
-        nodes.push(wind, windFilter, windGain);
-      }
-
-      var cricket = audioContext.createOscillator();
-      var cricketAm = audioContext.createOscillator();
-      var cricketAmGain = audioContext.createGain();
-      var cricketGain = audioContext.createGain();
-
-      cricket.type = 'sine';
-      cricket.frequency.value = 4000 + Math.random() * 500;
-
-      cricketAm.type = 'sine';
-      cricketAm.frequency.value = 18 + Math.random() * 8;
-      cricketAmGain.gain.value = 0.025;
-
-      cricketGain.gain.value = 0.03;
-
-      cricketAm.connect(cricketAmGain);
-      cricketAmGain.connect(cricketGain.gain);
-
-      cricket.connect(cricketGain);
-      cricketGain.connect(masterGain);
-
-      cricket.start();
-      cricketAm.start();
-
-      oscillators.push(cricket, cricketAm);
-      nodes.push(cricketAmGain, cricketGain);
-
-      function hoot() {
-        if (!audioContext || !masterGain) return;
-
-        var owl = audioContext.createOscillator();
-        var owlVibrato = audioContext.createOscillator();
-        var owlVibratoGain = audioContext.createGain();
-        var owlGain = audioContext.createGain();
-
-        owl.type = 'sine';
-        owl.frequency.value = 320;
-
-        owlVibrato.type = 'sine';
-        owlVibrato.frequency.value = 4;
-        owlVibratoGain.gain.value = 8;
-
-        owlGain.gain.value = 0.05;
-        owlGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
-
-        owlVibrato.connect(owlVibratoGain);
-        owlVibratoGain.connect(owl.frequency);
-
-        owl.connect(owlGain);
-        owlGain.connect(masterGain);
-
-        owl.start();
-        owlVibrato.start();
-
-        owl.stop(audioContext.currentTime + 0.4);
-        owlVibrato.stop(audioContext.currentTime + 0.4);
-
-        var nextHoot = setTimeout(hoot, 12000 + Math.random() * 12000);
-        timeouts.push(nextHoot);
-      }
-
-      var firstHoot = setTimeout(hoot, 5000);
-      timeouts.push(firstHoot);
-
-      return { nodes, oscillators, timeouts };
-    } catch (err) {
-      console.error('Error in evening ambient:', err);
-      return null;
-    }
-  }
-
-  function playNightAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var oscillators = [];
-    var timeouts = [];
-
-    try {
-      var wind = createWhiteNoise();
-      if (wind) {
-        var windFilter = audioContext.createBiquadFilter();
-        var windGain = audioContext.createGain();
-
-        windFilter.type = 'lowpass';
-        windFilter.frequency.value = 150;
-        windGain.gain.value = 0.015;
-
-        wind.connect(windFilter);
-        windFilter.connect(windGain);
-        windGain.connect(masterGain);
-
-        nodes.push(wind, windFilter, windGain);
-      }
-
-      var cricket = audioContext.createOscillator();
-      var cricketAm = audioContext.createOscillator();
-      var cricketAmGain = audioContext.createGain();
-      var cricketGain = audioContext.createGain();
-
-      cricket.type = 'sine';
-      cricket.frequency.value = 3500 + Math.random() * 300;
-
-      cricketAm.type = 'sine';
-      cricketAm.frequency.value = 15 + Math.random() * 5;
-      cricketAmGain.gain.value = 0.02;
-
-      cricketGain.gain.value = 0.025;
-
-      cricketAm.connect(cricketAmGain);
-      cricketAmGain.connect(cricketGain.gain);
-
-      cricket.connect(cricketGain);
-      cricketGain.connect(masterGain);
-
-      cricket.start();
-      cricketAm.start();
-
-      oscillators.push(cricket, cricketAm);
-      nodes.push(cricketAmGain, cricketGain);
-
-      function nightHoot() {
-        if (!audioContext || !masterGain) return;
-
-        var owl = audioContext.createOscillator();
-        var owlVibrato = audioContext.createOscillator();
-        var owlVibratoGain = audioContext.createGain();
-        var owlGain = audioContext.createGain();
-
-        owl.type = 'sine';
-        owl.frequency.value = 280;
-
-        owlVibrato.type = 'sine';
-        owlVibrato.frequency.value = 4;
-        owlVibratoGain.gain.value = 6;
-
-        owlGain.gain.value = 0.04;
-        owlGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
-
-        owlVibrato.connect(owlVibratoGain);
-        owlVibratoGain.connect(owl.frequency);
-
-        owl.connect(owlGain);
-        owlGain.connect(masterGain);
-
-        owl.start();
-        owlVibrato.start();
-
-        owl.stop(audioContext.currentTime + 0.5);
-        owlVibrato.stop(audioContext.currentTime + 0.5);
-
-        var nextHoot = setTimeout(nightHoot, 18000 + Math.random() * 18000);
-        timeouts.push(nextHoot);
-      }
-
-      var firstHoot = setTimeout(nightHoot, 8000);
-      timeouts.push(firstHoot);
-
-      function distantHowl() {
-        if (!audioContext || !masterGain) return;
-
-        var wolf = audioContext.createOscillator();
-        var wolfVibrato = audioContext.createOscillator();
-        var wolfVibratoGain = audioContext.createGain();
-        var wolfGain = audioContext.createGain();
-
-        wolf.type = 'sine';
-        wolf.frequency.value = 350;
-
-        wolfVibrato.type = 'sine';
-        wolfVibrato.frequency.value = 4;
-        wolfVibratoGain.gain.value = 10;
-
-        wolfGain.gain.value = 0.03;
-
-        wolfVibrato.connect(wolfVibratoGain);
-        wolfVibratoGain.connect(wolf.frequency);
-
-        wolf.connect(wolfGain);
-        wolfGain.connect(masterGain);
-
-        wolf.start();
-        wolfVibrato.start();
-
-        wolf.frequency.linearRampToValueAtTime(500, audioContext.currentTime + 1.2);
-        wolf.frequency.linearRampToValueAtTime(350, audioContext.currentTime + 2);
-        wolfGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2.5);
-
-        wolf.stop(audioContext.currentTime + 2.5);
-        wolfVibrato.stop(audioContext.currentTime + 2.5);
-
-        var nextHowl = setTimeout(distantHowl, 60000 + Math.random() * 60000);
-        timeouts.push(nextHowl);
-      }
-
-      var firstHowl = setTimeout(distantHowl, 30000);
-      timeouts.push(firstHowl);
-
-      return { nodes, oscillators, timeouts };
-    } catch (err) {
-      console.error('Error in night ambient:', err);
-      return null;
-    }
-  }
-
-  var currentWeatherAmbient = null;
 
   function updateAmbientForWeather(weather) {
-    if (!audioContext || !masterGain) return;
-
-    if (audioContext.state === 'suspended') {
-      audioContext.resume();
-    }
-
-    stopWeatherAmbient();
-
-    try {
-      switch (weather) {
-        case 'clear':
-          currentWeatherAmbient = null;
-          break;
-        case 'cloudy':
-          currentWeatherAmbient = playCloudyAmbient();
-          break;
-        case 'rain':
-          currentWeatherAmbient = playRainAmbient();
-          break;
-        case 'snow':
-          currentWeatherAmbient = playSnowAmbient();
-          break;
-        default:
-          currentWeatherAmbient = null;
-      }
-    } catch (err) {
-      console.error('Error updating weather ambient:', err);
-    }
-  }
-
-  function stopWeatherAmbient() {
-    if (!currentWeatherAmbient) return;
-
-    try {
-      if (currentWeatherAmbient.oscillators && Array.isArray(currentWeatherAmbient.oscillators)) {
-        currentWeatherAmbient.oscillators.forEach(function(osc) {
-          if (osc && osc.stop) {
-            try { osc.stop(); } catch (e) {}
-          }
-        });
-      }
-
-      if (currentWeatherAmbient.nodes && Array.isArray(currentWeatherAmbient.nodes)) {
-        currentWeatherAmbient.nodes.forEach(function(node) {
-          if (node) {
-            if (node.stop) {
-              try { node.stop(); } catch (e) {}
-            }
-            if (node.disconnect) {
-              try { node.disconnect(); } catch (e) {}
-            }
-          }
-        });
-      }
-
-      if (currentWeatherAmbient.intervals && Array.isArray(currentWeatherAmbient.intervals)) {
-        currentWeatherAmbient.intervals.forEach(function(id) { clearInterval(id); });
-      }
-
-      if (currentWeatherAmbient.timeouts && Array.isArray(currentWeatherAmbient.timeouts)) {
-        currentWeatherAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
-      }
-
-      if (currentWeatherAmbient.cleanup && typeof currentWeatherAmbient.cleanup === 'function') {
-        currentWeatherAmbient.cleanup();
-      }
-    } catch (err) {
-      console.error('Error stopping weather ambient:', err);
-    }
-
-    currentWeatherAmbient = null;
-    killAllNoiseSources();
-  }
-
-  function playCloudyAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-
-    try {
-      var wind = createWhiteNoise();
-      if (wind) {
-        var windFilter = audioContext.createBiquadFilter();
-        var windGain = audioContext.createGain();
-
-        windFilter.type = 'lowpass';
-        windFilter.frequency.value = 200;
-        windGain.gain.value = 0.03;
-
-        wind.connect(windFilter);
-        windFilter.connect(windGain);
-        windGain.connect(masterGain);
-
-        nodes.push(wind, windFilter, windGain);
-      }
-
-      return { nodes };
-    } catch (err) {
-      console.error('Error in cloudy ambient:', err);
-      return null;
-    }
-  }
-
-  function playRainAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-
-    try {
-      var rain = createWhiteNoise();
-      if (rain) {
-        var rainFilter = audioContext.createBiquadFilter();
-        var rainGain = audioContext.createGain();
-
-        rainFilter.type = 'bandpass';
-        rainFilter.frequency.value = 4000;
-        rainFilter.Q.value = 0.5;
-
-        rainGain.gain.value = 0.05;
-
-        rain.connect(rainFilter);
-        rainFilter.connect(rainGain);
-        rainGain.connect(masterGain);
-
-        nodes.push(rain, rainFilter, rainGain);
-      }
-
-      function thunder() {
-        if (!audioContext || !masterGain) return;
-
-        var rumble = createWhiteNoise(2);
-        if (rumble) {
-          var rumbleFilter = audioContext.createBiquadFilter();
-          var rumbleGain = audioContext.createGain();
-
-          rumbleFilter.type = 'lowpass';
-          rumbleFilter.frequency.value = 80;
-
-          rumbleGain.gain.value = 0.05;
-          rumbleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2.5);
-
-          rumble.connect(rumbleFilter);
-          rumbleFilter.connect(rumbleGain);
-          rumbleGain.connect(masterGain);
-
-          setTimeout(function() {
-            try {
-              if (rumble.stop) rumble.stop();
-              if (rumbleFilter.disconnect) rumbleFilter.disconnect();
-              if (rumbleGain.disconnect) rumbleGain.disconnect();
-            } catch (e) {}
-          }, 3000);
+    if (!ctx || !masterGain) return;
+    resume();
+    var fns = {
+      cloudy: function() {
+        var s = makeState(); windLayer(s, 0.028); return s;
+      },
+      rain: function() {
+        var s = makeState();
+        var rain = createWhiteNoise();
+        if (rain) {
+          var rf = ctx.createBiquadFilter(), rg = ctx.createGain();
+          rf.type = 'bandpass'; rf.frequency.value = 4000; rf.Q.value = 0.5; rg.gain.value = 0.05;
+          rain.connect(rf); rf.connect(rg); rg.connect(masterGain);
+          s.nodes.push(rain, rf, rg);
         }
-
-        var nextThunder = setTimeout(thunder, 25000 + Math.random() * 35000);
-        timeouts.push(nextThunder);
+        function thunder() {
+          if (!ctx || !masterGain) return;
+          var n = whiteNoise(2.5);
+          if (n) {
+            var tf = ctx.createBiquadFilter(), tg = ctx.createGain();
+            tf.type = 'lowpass'; tf.frequency.value = 80;
+            tg.gain.value = 0.05; tg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.5);
+            n.connect(tf); tf.connect(tg); tg.connect(masterGain);
+          }
+          s.timeouts.push(setTimeout(thunder, 25000 + Math.random() * 35000));
+        }
+        s.timeouts.push(setTimeout(thunder, 15000));
+        return s;
+      },
+      snow: function() {
+        var s = makeState(); windLayer(s, 0.013); return s;
       }
-
-      var firstThunder = setTimeout(thunder, 15000);
-      timeouts.push(firstThunder);
-
-      return { nodes, timeouts };
-    } catch (err) {
-      console.error('Error in rain ambient:', err);
-      return null;
-    }
+    };
+    setAmbient('weather', fns[weather] || null);
   }
 
-  function playSnowAmbient() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-
-    try {
-      var wind = createWhiteNoise();
-      if (wind) {
-        var windFilter = audioContext.createBiquadFilter();
-        var windGain = audioContext.createGain();
-
-        windFilter.type = 'lowpass';
-        windFilter.frequency.value = 120;
-        windGain.gain.value = 0.015;
-
-        wind.connect(windFilter);
-        windFilter.connect(windGain);
-        windGain.connect(masterGain);
-
-        nodes.push(wind, windFilter, windGain);
+  var ZONE_LAYERS = {
+    nexus: function() {
+      var s = makeState();
+      var o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
+      var lfo = ctx.createOscillator(), lfog = ctx.createGain(), lg = ctx.createGain();
+      o1.type = 'sine'; o1.frequency.value = 523;
+      o2.type = 'sine'; o2.frequency.value = 659;
+      lfo.type = 'sine'; lfo.frequency.value = 0.12; lfog.gain.value = 8; lg.gain.value = 0.01;
+      lfo.connect(lfog); lfog.connect(o1.frequency); lfog.connect(o2.frequency);
+      o1.connect(lg); o2.connect(lg); lg.connect(masterGain);
+      o1.start(); o2.start(); lfo.start();
+      s.nodes.push(o1, o2, lfo, lfog, lg);
+      return s;
+    },
+    gardens: function() {
+      var s = makeState();
+      var w = createWhiteNoise();
+      if (w) {
+        var f = ctx.createBiquadFilter(), lfo = ctx.createOscillator();
+        var lfog = ctx.createGain(), g = ctx.createGain();
+        f.type = 'highpass'; f.frequency.value = 2000;
+        lfo.type = 'sine'; lfo.frequency.value = 0.8; lfog.gain.value = 50; g.gain.value = 0.025;
+        lfo.connect(lfog); lfog.connect(f.frequency);
+        w.connect(f); f.connect(g); g.connect(masterGain); lfo.start();
+        s.nodes.push(w, f, lfo, lfog, g);
       }
-
-      return { nodes };
-    } catch (err) {
-      console.error('Error in snow ambient:', err);
-      return null;
+      return s;
+    },
+    athenaeum: function() {
+      var s = makeState();
+      function pr() {
+        if (!ctx || !masterGain) return;
+        var n = whiteNoise(0.1);
+        if (n) {
+          var f = ctx.createBiquadFilter(), g = ctx.createGain();
+          f.type = 'highpass'; f.frequency.value = 2500;
+          g.gain.value = 0.018; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+          n.connect(f); f.connect(g); g.connect(masterGain);
+        }
+        s.timeouts.push(setTimeout(pr, 10000 + Math.random() * 10000));
+      }
+      s.timeouts.push(setTimeout(pr, 5000));
+      return s;
+    },
+    studio: function() {
+      var s = makeState();
+      function note() {
+        if (!ctx || !masterGain) return;
+        var scale = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00];
+        tone(scale[Math.floor(Math.random() * scale.length)], 'sine', 0.022, 0.3);
+        s.timeouts.push(setTimeout(note, 8000 + Math.random() * 12000));
+      }
+      s.timeouts.push(setTimeout(note, 4000));
+      return s;
+    },
+    wilds: function() {
+      var s = makeState();
+      var w = createWhiteNoise();
+      if (w) {
+        var f = ctx.createBiquadFilter(), g = ctx.createGain();
+        f.type = 'bandpass'; f.frequency.value = 800; f.Q.value = 1; g.gain.value = 0.035;
+        w.connect(f); f.connect(g); g.connect(masterGain);
+        s.nodes.push(w, f, g);
+      }
+      return s;
+    },
+    agora: function() {
+      var s = makeState();
+      var c = createWhiteNoise();
+      if (c) {
+        var f = ctx.createBiquadFilter(), g = ctx.createGain();
+        f.type = 'bandpass'; f.frequency.value = 450; f.Q.value = 1.2; g.gain.value = 0.022;
+        c.connect(f); f.connect(g); g.connect(masterGain);
+        s.nodes.push(c, f, g);
+      }
+      return s;
+    },
+    commons: function() {
+      var s = makeState();
+      function chime() {
+        if (!ctx || !masterGain) return;
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = 800 + Math.random() * 600;
+        g.gain.value = 0.028; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+        o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 1.5);
+        s.timeouts.push(setTimeout(chime, 5000 + Math.random() * 8000));
+      }
+      s.timeouts.push(setTimeout(chime, 3000));
+      return s;
+    },
+    arena: function() {
+      var s = makeState();
+      var e = createWhiteNoise();
+      if (e) {
+        var ef = ctx.createBiquadFilter(), ed = ctx.createDelay();
+        var edg = ctx.createGain(), eg = ctx.createGain();
+        ef.type = 'bandpass'; ef.frequency.value = 700; ef.Q.value = 0.8;
+        ed.delayTime.value = 0.3; edg.gain.value = 0.25; eg.gain.value = 0.018;
+        e.connect(ef); ef.connect(eg); eg.connect(masterGain);
+        eg.connect(ed); ed.connect(edg); edg.connect(masterGain);
+        s.nodes.push(e, ef, ed, edg, eg);
+      }
+      return s;
     }
-  }
-
-  var currentZoneAmbient = null;
-
-  var crossfadeTimer = null;
+  };
 
   function setZoneAmbient(zone) {
-    if (!audioContext || !masterGain) return;
-
-    if (audioContext.state === 'suspended') {
-      audioContext.resume();
-    }
-
-    if (crossfadeTimer) {
-      clearTimeout(crossfadeTimer);
-      crossfadeTimer = null;
-    }
-
-    var oldAmbient = currentZoneAmbient;
-    if (oldAmbient) {
-      try {
-        if (oldAmbient.gainNode) {
-          oldAmbient.gainNode.gain.setValueAtTime(oldAmbient.gainNode.gain.value, audioContext.currentTime);
-          oldAmbient.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
-        }
-      } catch(e) {}
-
-      try {
-        if (oldAmbient.oscillators && Array.isArray(oldAmbient.oscillators)) {
-          oldAmbient.oscillators.forEach(function(osc) {
-            if (osc && osc.stop) { try { osc.stop(); } catch(e) {} }
-          });
-        }
-        if (oldAmbient.nodes && Array.isArray(oldAmbient.nodes)) {
-          oldAmbient.nodes.forEach(function(node) {
-            if (node) {
-              if (node.stop) { try { node.stop(); } catch(e) {} }
-              if (node.disconnect) { try { node.disconnect(); } catch(e) {} }
-            }
-          });
-        }
-        if (oldAmbient.intervals && Array.isArray(oldAmbient.intervals)) {
-          oldAmbient.intervals.forEach(function(id) { clearInterval(id); });
-        }
-        if (oldAmbient.timeouts && Array.isArray(oldAmbient.timeouts)) {
-          oldAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
-        }
-        if (oldAmbient.cleanup && typeof oldAmbient.cleanup === 'function') {
-          oldAmbient.cleanup();
-        }
-      } catch(err) {}
-
-      killAllNoiseSources();
-      currentZoneAmbient = null;
-    }
-
-    try {
-      switch (zone) {
-        case 'nexus':
-          currentZoneAmbient = playNexusZoneLayer();
-          break;
-        case 'gardens':
-          currentZoneAmbient = playGardensZoneLayer();
-          break;
-        case 'athenaeum':
-          currentZoneAmbient = playAthenaeumZoneLayer();
-          break;
-        case 'studio':
-          currentZoneAmbient = playStudioZoneLayer();
-          break;
-        case 'wilds':
-          currentZoneAmbient = playWildsZoneLayer();
-          break;
-        case 'agora':
-          currentZoneAmbient = playAgoraZoneLayer();
-          break;
-        case 'commons':
-          currentZoneAmbient = playCommonsZoneLayer();
-          break;
-        case 'arena':
-          currentZoneAmbient = playArenaZoneLayer();
-          break;
-        default:
-          currentZoneAmbient = null;
-      }
-
-      if (currentZoneAmbient && currentZoneAmbient.gainNode) {
-        var gain = currentZoneAmbient.gainNode;
-        var targetVal = gain.gain.value || 0.3;
-        gain.gain.setValueAtTime(0, audioContext.currentTime);
-        gain.gain.linearRampToValueAtTime(targetVal, audioContext.currentTime + 3);
-      }
-    } catch (err) {
-      console.error('Error setting zone ambient:', err);
-    }
-  }
-
-  function stopZoneAmbient() {
-    if (!currentZoneAmbient) return;
-
-    try {
-      if (currentZoneAmbient.oscillators && Array.isArray(currentZoneAmbient.oscillators)) {
-        currentZoneAmbient.oscillators.forEach(function(osc) {
-          if (osc && osc.stop) {
-            try { osc.stop(); } catch (e) {}
-          }
-        });
-      }
-
-      if (currentZoneAmbient.nodes && Array.isArray(currentZoneAmbient.nodes)) {
-        currentZoneAmbient.nodes.forEach(function(node) {
-          if (node) {
-            if (node.stop) {
-              try { node.stop(); } catch (e) {}
-            }
-            if (node.disconnect) {
-              try { node.disconnect(); } catch (e) {}
-            }
-          }
-        });
-      }
-
-      if (currentZoneAmbient.intervals && Array.isArray(currentZoneAmbient.intervals)) {
-        currentZoneAmbient.intervals.forEach(function(id) { clearInterval(id); });
-      }
-
-      if (currentZoneAmbient.timeouts && Array.isArray(currentZoneAmbient.timeouts)) {
-        currentZoneAmbient.timeouts.forEach(function(id) { clearTimeout(id); });
-      }
-
-      if (currentZoneAmbient.cleanup && typeof currentZoneAmbient.cleanup === 'function') {
-        currentZoneAmbient.cleanup();
-      }
-    } catch (err) {
-      console.error('Error stopping zone ambient:', err);
-    }
-
-    currentZoneAmbient = null;
+    if (!ctx || !masterGain) return;
+    resume();
     killAllNoiseSources();
+    setAmbient('zone', ZONE_LAYERS[zone] || null);
   }
 
-  function playNexusZoneLayer() {
-    if (!audioContext || !masterGain) return null;
-
-    var oscillators = [];
-    var nodes = [];
-
-    try {
-      var crystal1 = audioContext.createOscillator();
-      var crystal2 = audioContext.createOscillator();
-      var lfo = audioContext.createOscillator();
-      var lfoGain = audioContext.createGain();
-      var layerGain = audioContext.createGain();
-
-      crystal1.type = 'sine';
-      crystal1.frequency.value = 523; // C5 — much gentler than 2000Hz
-
-      crystal2.type = 'sine';
-      crystal2.frequency.value = 659; // E5 — harmonic interval
-
-      lfo.type = 'sine';
-      lfo.frequency.value = 0.12;
-      lfoGain.gain.value = 8; // subtle vibrato
-
-      layerGain.gain.value = 0.012; // very quiet
-
-      lfo.connect(lfoGain);
-      lfoGain.connect(crystal1.frequency);
-      lfoGain.connect(crystal2.frequency);
-
-      crystal1.connect(layerGain);
-      crystal2.connect(layerGain);
-      layerGain.connect(masterGain);
-
-      crystal1.start();
-      crystal2.start();
-      lfo.start();
-
-      oscillators.push(crystal1, crystal2, lfo);
-      nodes.push(lfoGain, layerGain);
-
-      return { oscillators, nodes, gainNode: layerGain };
-    } catch (err) {
-      console.error('Error in nexus zone layer:', err);
-      return null;
-    }
-  }
-
-  function playGardensZoneLayer() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-
-    try {
-      var water = createWhiteNoise();
-      if (water) {
-        var waterFilter = audioContext.createBiquadFilter();
-        var waterLfo = audioContext.createOscillator();
-        var waterLfoGain = audioContext.createGain();
-        var waterGain = audioContext.createGain();
-
-        waterFilter.type = 'highpass';
-        waterFilter.frequency.value = 2000;
-
-        waterLfo.type = 'sine';
-        waterLfo.frequency.value = 0.8;
-        waterLfoGain.gain.value = 50;
-
-        waterGain.gain.value = 0.03;
-
-        waterLfo.connect(waterLfoGain);
-        waterLfoGain.connect(waterFilter.frequency);
-
-        water.connect(waterFilter);
-        waterFilter.connect(waterGain);
-        waterGain.connect(masterGain);
-
-        waterLfo.start();
-
-        nodes.push(water, waterFilter, waterLfo, waterLfoGain, waterGain);
+  var NPC_SOUNDS = {
+    hammer: function() { tone(90, 'square', 0.075, 0.2); tone(2500, 'sine', 0.035, 0.3); },
+    music: function() { arp([392.00, 440.00, 493.88], 0.15, 'sine', 0.045, 0.25); },
+    garden: function() {
+      var n = whiteNoise(0.32);
+      if (n) {
+        var f = ctx.createBiquadFilter(), g = ctx.createGain();
+        f.type = 'bandpass'; f.frequency.value = 1200; f.Q.value = 2;
+        g.gain.value = 0.055; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        n.connect(f); f.connect(g); g.connect(masterGain);
       }
-
-      return { nodes, timeouts, gainNode: nodes.length > 0 ? nodes[nodes.length - 1] : null };
-    } catch (err) {
-      console.error('Error in gardens zone layer:', err);
-      return null;
-    }
-  }
-
-  function playAthenaeumZoneLayer() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-
-    try {
-      function pageRustle() {
-        if (!audioContext || !masterGain) return;
-
-        var page = createWhiteNoise(2);
-        if (page) {
-          var pageFilter = audioContext.createBiquadFilter();
-          var pageGain = audioContext.createGain();
-
-          pageFilter.type = 'highpass';
-          pageFilter.frequency.value = 2500;
-
-          pageGain.gain.value = 0.02;
-          pageGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
-
-          page.connect(pageFilter);
-          pageFilter.connect(pageGain);
-          pageGain.connect(masterGain);
-
-          setTimeout(function() {
-            try {
-              if (page.stop) page.stop();
-              if (pageFilter.disconnect) pageFilter.disconnect();
-              if (pageGain.disconnect) pageGain.disconnect();
-            } catch (e) {}
-          }, 100);
+    },
+    trade: function() {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle'; o.frequency.value = 1800 + Math.random() * 500;
+      g.gain.value = 0.055; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+      o.connect(g); g.connect(masterGain); o.start(); o.stop(ctx.currentTime + 0.2);
+    },
+    teach: function() {
+      tone(80, 'sine', 0.045, 0.1);
+      setTimeout(function() {
+        if (!ctx || !masterGain) return;
+        var n = whiteNoise(0.18);
+        if (n) {
+          var f = ctx.createBiquadFilter(), g = ctx.createGain();
+          f.type = 'highpass'; f.frequency.value = 2200;
+          g.gain.value = 0.035; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+          n.connect(f); f.connect(g); g.connect(masterGain);
         }
-
-        var nextRustle = setTimeout(pageRustle, 10000 + Math.random() * 10000);
-        timeouts.push(nextRustle);
-      }
-
-      var firstRustle = setTimeout(pageRustle, 5000);
-      timeouts.push(firstRustle);
-
-      return { nodes, timeouts, gainNode: null };
-    } catch (err) {
-      console.error('Error in athenaeum zone layer:', err);
-      return null;
-    }
-  }
-
-  function playStudioZoneLayer() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-
-    try {
-      function creativeNote() {
-        if (!audioContext || !masterGain) return;
-
-        var notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00];
-        var note = audioContext.createOscillator();
-        var noteGain = audioContext.createGain();
-
-        note.type = 'sine';
-        note.frequency.value = notes[Math.floor(Math.random() * notes.length)];
-
-        noteGain.gain.value = 0.025;
-        noteGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-
-        note.connect(noteGain);
-        noteGain.connect(masterGain);
-
-        note.start();
-        note.stop(audioContext.currentTime + 0.3);
-
-        var nextNote = setTimeout(creativeNote, 8000 + Math.random() * 12000);
-        timeouts.push(nextNote);
-      }
-
-      var firstNote = setTimeout(creativeNote, 4000);
-      timeouts.push(firstNote);
-
-      return { nodes, timeouts, gainNode: null };
-    } catch (err) {
-      console.error('Error in studio zone layer:', err);
-      return null;
-    }
-  }
-
-  function playWildsZoneLayer() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-
-    try {
-      var water = createWhiteNoise();
-      if (water) {
-        var waterFilter = audioContext.createBiquadFilter();
-        var waterGain = audioContext.createGain();
-
-        waterFilter.type = 'bandpass';
-        waterFilter.frequency.value = 800;
-        waterFilter.Q.value = 1;
-
-        waterGain.gain.value = 0.04;
-
-        water.connect(waterFilter);
-        waterFilter.connect(waterGain);
-        waterGain.connect(masterGain);
-
-        nodes.push(water, waterFilter, waterGain);
-      }
-
-      return { nodes, gainNode: nodes.length > 0 ? nodes[nodes.length - 1] : null };
-    } catch (err) {
-      console.error('Error in wilds zone layer:', err);
-      return null;
-    }
-  }
-
-  function playAgoraZoneLayer() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-
-    try {
-      var crowd = createWhiteNoise();
-      if (crowd) {
-        var crowdFilter = audioContext.createBiquadFilter();
-        var crowdGain = audioContext.createGain();
-
-        crowdFilter.type = 'bandpass';
-        crowdFilter.frequency.value = 450;
-        crowdFilter.Q.value = 1.2;
-
-        crowdGain.gain.value = 0.025;
-
-        crowd.connect(crowdFilter);
-        crowdFilter.connect(crowdGain);
-        crowdGain.connect(masterGain);
-
-        nodes.push(crowd, crowdFilter, crowdGain);
-      }
-
-      return { nodes, timeouts, gainNode: nodes.length > 0 ? nodes[nodes.length - 1] : null };
-    } catch (err) {
-      console.error('Error in agora zone layer:', err);
-      return null;
-    }
-  }
-
-  function playCommonsZoneLayer() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-    var timeouts = [];
-
-    try {
-      function chime() {
-        if (!audioContext || !masterGain) return;
-
-        var bell = audioContext.createOscillator();
-        var bellGain = audioContext.createGain();
-
-        bell.type = 'sine';
-        bell.frequency.value = 800 + Math.random() * 600;
-
-        bellGain.gain.value = 0.03;
-        bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1.5);
-
-        bell.connect(bellGain);
-        bellGain.connect(masterGain);
-
-        bell.start();
-        bell.stop(audioContext.currentTime + 1.5);
-
-        var nextChime = setTimeout(chime, 5000 + Math.random() * 8000);
-        timeouts.push(nextChime);
-      }
-
-      var firstChime = setTimeout(chime, 3000);
-      timeouts.push(firstChime);
-
-      return { nodes, timeouts, gainNode: null };
-    } catch (err) {
-      console.error('Error in commons zone layer:', err);
-      return null;
-    }
-  }
-
-  function playArenaZoneLayer() {
-    if (!audioContext || !masterGain) return null;
-
-    var nodes = [];
-
-    try {
-      var echo = createWhiteNoise(2);
-      if (echo) {
-        var echoFilter = audioContext.createBiquadFilter();
-        var echoDelay = audioContext.createDelay();
-        var echoDelayGain = audioContext.createGain();
-        var echoGain = audioContext.createGain();
-
-        echoFilter.type = 'bandpass';
-        echoFilter.frequency.value = 700;
-        echoFilter.Q.value = 0.8;
-
-        echoDelay.delayTime.value = 0.3;
-        echoDelayGain.gain.value = 0.3;
-
-        echoGain.gain.value = 0.02;
-
-        echo.connect(echoFilter);
-        echoFilter.connect(echoGain);
-        echoGain.connect(masterGain);
-        echoGain.connect(echoDelay);
-        echoDelay.connect(echoDelayGain);
-        echoDelayGain.connect(masterGain);
-
-        nodes.push(echo, echoFilter, echoDelay, echoDelayGain, echoGain);
-      }
-
-      return { nodes, gainNode: nodes.length > 0 ? nodes[nodes.length - 1] : null };
-    } catch (err) {
-      console.error('Error in arena zone layer:', err);
-      return null;
-    }
-  }
+      }, 100);
+    },
+    heal: function() { arp([523.25, 659.25, 783.99], 0.1, 'sine', 0.038, 0.3); }
+  };
 
   function playNPCSound(type) {
-    if (!audioContext || !masterGain) return;
-
-    if (audioContext.state === 'suspended') {
-      audioContext.resume();
+    if (!ctx || !masterGain) return;
+    resume();
+    if (NPC_SOUNDS[type]) {
+      try { NPC_SOUNDS[type](); } catch (e) {}
     }
-
-    try {
-      switch (type) {
-        case 'hammer':
-          playNPCHammerSound();
-          break;
-        case 'music':
-          playNPCMusicSound();
-          break;
-        case 'garden':
-          playNPCGardenSound();
-          break;
-        case 'trade':
-          playNPCTradeSound();
-          break;
-        case 'teach':
-          playNPCTeachSound();
-          break;
-        case 'heal':
-          playNPCHealSound();
-          break;
-        default:
-          console.warn('Unknown NPC sound type:', type);
-      }
-    } catch (err) {
-      console.error('Error playing NPC sound:', err);
-    }
-  }
-
-  function playNPCHammerSound() {
-    if (!audioContext || !masterGain) return;
-
-    var hammer = audioContext.createOscillator();
-    var hammerGain = audioContext.createGain();
-
-    hammer.type = 'square';
-    hammer.frequency.value = 90;
-
-    hammerGain.gain.value = 0.08;
-    hammerGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-
-    hammer.connect(hammerGain);
-    hammerGain.connect(masterGain);
-
-    hammer.start();
-    hammer.stop(audioContext.currentTime + 0.2);
-
-    var ring = audioContext.createOscillator();
-    var ringGain = audioContext.createGain();
-
-    ring.type = 'sine';
-    ring.frequency.value = 2500;
-
-    ringGain.gain.value = 0.04;
-    ringGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-
-    ring.connect(ringGain);
-    ringGain.connect(masterGain);
-
-    ring.start();
-    ring.stop(audioContext.currentTime + 0.3);
-  }
-
-  function playNPCMusicSound() {
-    if (!audioContext || !masterGain) return;
-
-    var notes = [392.00, 440.00, 493.88]; // G4, A4, B4
-
-    notes.forEach(function(freq, i) {
-      var note = audioContext.createOscillator();
-      var noteGain = audioContext.createGain();
-
-      note.type = 'sine';
-      note.frequency.value = freq;
-
-      var startTime = audioContext.currentTime + i * 0.15;
-      noteGain.gain.setValueAtTime(0, startTime);
-      noteGain.gain.linearRampToValueAtTime(0.05, startTime + 0.02);
-      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
-
-      note.connect(noteGain);
-      noteGain.connect(masterGain);
-
-      note.start(startTime);
-      note.stop(startTime + 0.25);
-    });
-  }
-
-  function playNPCGardenSound() {
-    if (!audioContext || !masterGain) return;
-
-    var rustle = createWhiteNoise(2);
-    if (rustle) {
-      var rustleFilter = audioContext.createBiquadFilter();
-      var rustleGain = audioContext.createGain();
-
-      rustleFilter.type = 'bandpass';
-      rustleFilter.frequency.value = 1200;
-      rustleFilter.Q.value = 2;
-
-      rustleGain.gain.value = 0.06;
-      rustleGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-
-      rustle.connect(rustleFilter);
-      rustleFilter.connect(rustleGain);
-      rustleGain.connect(masterGain);
-
-      setTimeout(function() {
-        try {
-          if (rustle.stop) rustle.stop();
-          if (rustleFilter.disconnect) rustleFilter.disconnect();
-          if (rustleGain.disconnect) rustleGain.disconnect();
-        } catch (e) {}
-      }, 350);
-    }
-  }
-
-  function playNPCTradeSound() {
-    if (!audioContext || !masterGain) return;
-
-    var coin = audioContext.createOscillator();
-    var coinGain = audioContext.createGain();
-
-    coin.type = 'triangle';
-    coin.frequency.value = 1800 + Math.random() * 500;
-
-    coinGain.gain.value = 0.06;
-    coinGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-
-    coin.connect(coinGain);
-    coinGain.connect(masterGain);
-
-    coin.start();
-    coin.stop(audioContext.currentTime + 0.2);
-  }
-
-  function playNPCTeachSound() {
-    if (!audioContext || !masterGain) return;
-
-    var thump = audioContext.createOscillator();
-    var thumpGain = audioContext.createGain();
-
-    thump.type = 'sine';
-    thump.frequency.value = 80;
-
-    thumpGain.gain.value = 0.05;
-    thumpGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-
-    thump.connect(thumpGain);
-    thumpGain.connect(masterGain);
-
-    thump.start();
-    thump.stop(audioContext.currentTime + 0.1);
-
-    setTimeout(function() {
-      var page = createWhiteNoise(2);
-      if (page) {
-        var pageFilter = audioContext.createBiquadFilter();
-        var pageGain = audioContext.createGain();
-
-        pageFilter.type = 'highpass';
-        pageFilter.frequency.value = 2200;
-
-        pageGain.gain.value = 0.04;
-        pageGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
-
-        page.connect(pageFilter);
-        pageFilter.connect(pageGain);
-        pageGain.connect(masterGain);
-
-        setTimeout(function() {
-          try {
-            if (page.stop) page.stop();
-            if (pageFilter.disconnect) pageFilter.disconnect();
-            if (pageGain.disconnect) pageGain.disconnect();
-          } catch (e) {}
-        }, 180);
-      }
-    }, 100);
-  }
-
-  function playNPCHealSound() {
-    if (!audioContext || !masterGain) return;
-
-    var notes = [523.25, 659.25, 783.99]; // C5, E5, G5
-
-    notes.forEach(function(freq, i) {
-      var note = audioContext.createOscillator();
-      var noteGain = audioContext.createGain();
-
-      note.type = 'sine';
-      note.frequency.value = freq;
-
-      var startTime = audioContext.currentTime + i * 0.1;
-      noteGain.gain.setValueAtTime(0, startTime);
-      noteGain.gain.linearRampToValueAtTime(0.04, startTime + 0.02);
-      noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
-
-      note.connect(noteGain);
-      noteGain.connect(masterGain);
-
-      note.start(startTime);
-      note.stop(startTime + 0.3);
-    });
   }
 
   var musicState = {
-    playing: false,
-    zone: null,
-    timeOfDay: 'day',
-    volume: 0.12,
-    oscillators: [],
-    gains: [],
-    nextNoteTime: 0,
-    noteIndex: 0,
-    chordIndex: 0,
-    arpIndex: 0,
-    beatTimer: null,
-    padNodes: [],
-    melodyTimeout: null
+    playing: false, zone: null, timeOfDay: 'day', volume: 0.12,
+    padNodes: [], beatTimer: null, melodyTimeout: null,
+    chordIndex: 0, noteIndex: 0
   };
 
   var SCALES = {
-    nexus:     [256.87, 288.33, 323.63, 384.91, 432.00, 513.74, 576.65, 647.25],  // C major pentatonic
-    gardens:   [288.33, 323.63, 363.27, 432.00, 484.90, 576.65, 647.25, 726.53],  // D major pentatonic
-    athenaeum: [242.45, 272.18, 323.63, 363.27, 407.75, 484.90, 544.36, 647.25],  // B minor pentatonic
-    studio:    [323.63, 363.27, 407.75, 484.90, 544.36, 647.25, 726.53, 815.51],  // E major pentatonic
-    wilds:     [216.00, 256.87, 288.33, 323.63, 384.91, 432.00, 513.74, 576.65],  // A minor pentatonic
-    agora:     [342.88, 384.91, 432.00, 513.74, 576.65, 685.76, 769.82, 864.00],  // F major pentatonic
-    commons:   [288.33, 342.88, 384.91, 432.00, 513.74, 576.65, 685.76, 769.82],  // D mixolydian penta
-    arena:     [192.43, 228.84, 256.87, 288.33, 342.88, 384.91, 457.69, 513.74]   // G minor pentatonic
+    nexus:     [256.87, 288.33, 323.63, 384.91, 432.00, 513.74, 576.65, 647.25],
+    gardens:   [288.33, 323.63, 363.27, 432.00, 484.90, 576.65, 647.25, 726.53],
+    athenaeum: [242.45, 272.18, 323.63, 363.27, 407.75, 484.90, 544.36, 647.25],
+    studio:    [323.63, 363.27, 407.75, 484.90, 544.36, 647.25, 726.53, 815.51],
+    wilds:     [216.00, 256.87, 288.33, 323.63, 384.91, 432.00, 513.74, 576.65],
+    agora:     [342.88, 384.91, 432.00, 513.74, 576.65, 685.76, 769.82, 864.00],
+    commons:   [288.33, 342.88, 384.91, 432.00, 513.74, 576.65, 685.76, 769.82],
+    arena:     [192.43, 228.84, 256.87, 288.33, 342.88, 384.91, 457.69, 513.74]
   };
 
   var CHORD_PROGRESSIONS = {
-    nexus:     [[0, 2, 4], [1, 3, 5], [2, 4, 6], [0, 3, 5]],
-    gardens:   [[0, 2, 4], [2, 4, 6], [1, 3, 5], [0, 2, 5]],
-    athenaeum: [[0, 2, 4], [1, 3, 5], [0, 3, 5], [2, 4, 6]],
-    studio:    [[0, 2, 4], [1, 4, 6], [2, 4, 6], [0, 3, 5]],
-    wilds:     [[0, 2, 4], [1, 3, 5], [0, 2, 5], [1, 4, 6]],
-    agora:     [[0, 2, 4], [1, 3, 5], [2, 4, 6], [0, 2, 5]],
-    commons:   [[0, 2, 4], [2, 4, 6], [1, 3, 5], [0, 3, 5]],
-    arena:     [[0, 2, 4], [0, 3, 5], [1, 4, 6], [2, 4, 6]]
+    nexus:     [[0,2,4],[1,3,5],[2,4,6],[0,3,5]],
+    gardens:   [[0,2,4],[2,4,6],[1,3,5],[0,2,5]],
+    athenaeum: [[0,2,4],[1,3,5],[0,3,5],[2,4,6]],
+    studio:    [[0,2,4],[1,4,6],[2,4,6],[0,3,5]],
+    wilds:     [[0,2,4],[1,3,5],[0,2,5],[1,4,6]],
+    agora:     [[0,2,4],[1,3,5],[2,4,6],[0,2,5]],
+    commons:   [[0,2,4],[2,4,6],[1,3,5],[0,3,5]],
+    arena:     [[0,2,4],[0,3,5],[1,4,6],[2,4,6]]
   };
 
   var ZONE_MUSIC_STYLE = {
-    nexus:     { beatDuration: 2.8, padVolume: 0.07, melodyChance: 0.15, melodyVolume: 0.03, type: 'ethereal' },
-    gardens:   { beatDuration: 2.4, padVolume: 0.06, melodyChance: 0.2,  melodyVolume: 0.035, type: 'pastoral' },
+    nexus:     { beatDuration: 2.8, padVolume: 0.07, melodyChance: 0.15, melodyVolume: 0.03,  type: 'ethereal'   },
+    gardens:   { beatDuration: 2.4, padVolume: 0.06, melodyChance: 0.2,  melodyVolume: 0.035, type: 'pastoral'   },
     athenaeum: { beatDuration: 3.2, padVolume: 0.05, melodyChance: 0.1,  melodyVolume: 0.025, type: 'mysterious' },
-    studio:    { beatDuration: 2.0, padVolume: 0.06, melodyChance: 0.25, melodyVolume: 0.04, type: 'creative' },
-    wilds:     { beatDuration: 3.0, padVolume: 0.04, melodyChance: 0.12, melodyVolume: 0.03, type: 'nature' },
-    agora:     { beatDuration: 1.8, padVolume: 0.05, melodyChance: 0.2,  melodyVolume: 0.035, type: 'lively' },
-    commons:   { beatDuration: 2.4, padVolume: 0.06, melodyChance: 0.18, melodyVolume: 0.03, type: 'warm' },
-    arena:     { beatDuration: 2.0, padVolume: 0.07, melodyChance: 0.15, melodyVolume: 0.035, type: 'dramatic' }
+    studio:    { beatDuration: 2.0, padVolume: 0.06, melodyChance: 0.25, melodyVolume: 0.04,  type: 'creative'   },
+    wilds:     { beatDuration: 3.0, padVolume: 0.04, melodyChance: 0.12, melodyVolume: 0.03,  type: 'nature'     },
+    agora:     { beatDuration: 1.8, padVolume: 0.05, melodyChance: 0.2,  melodyVolume: 0.035, type: 'lively'     },
+    commons:   { beatDuration: 2.4, padVolume: 0.06, melodyChance: 0.18, melodyVolume: 0.03,  type: 'warm'       },
+    arena:     { beatDuration: 2.0, padVolume: 0.07, melodyChance: 0.15, melodyVolume: 0.035, type: 'dramatic'   }
   };
 
-  var TIME_MODIFIERS = {
-    dawn:    { tempoMult: 0.8, volumeMult: 0.6, melodyMult: 0.5, octaveShift: 0 },
-    morning: { tempoMult: 0.9, volumeMult: 0.8, melodyMult: 0.8, octaveShift: 0 },
-    midday:  { tempoMult: 1.0, volumeMult: 1.0, melodyMult: 1.0, octaveShift: 0 },
-    afternoon: { tempoMult: 1.0, volumeMult: 0.9, melodyMult: 0.9, octaveShift: 0 },
-    evening: { tempoMult: 0.85, volumeMult: 0.7, melodyMult: 0.6, octaveShift: -1 },
-    night:   { tempoMult: 0.7, volumeMult: 0.4, melodyMult: 0.3, octaveShift: -1 }
+  var TIME_MOD = {
+    dawn:      { tempoM: 0.8,  volM: 0.6, melM: 0.5, octShift:  0 },
+    morning:   { tempoM: 0.9,  volM: 0.8, melM: 0.8, octShift:  0 },
+    midday:    { tempoM: 1.0,  volM: 1.0, melM: 1.0, octShift:  0 },
+    afternoon: { tempoM: 1.0,  volM: 0.9, melM: 0.9, octShift:  0 },
+    evening:   { tempoM: 0.85, volM: 0.7, melM: 0.6, octShift: -1 },
+    night:     { tempoM: 0.7,  volM: 0.4, melM: 0.3, octShift: -1 }
   };
 
   function startMusic(zone, timeOfDay) {
-    if (!audioContext || !masterGain) return;
-    zone = zone || 'nexus';
-    timeOfDay = timeOfDay || 'midday';
-
-    if (musicState.playing) {
-      stopMusic();
-    }
-
-    musicState.zone = zone;
-    musicState.timeOfDay = timeOfDay;
-    musicState.playing = true;
-    musicState.chordIndex = 0;
-    musicState.noteIndex = 0;
-    musicState.arpIndex = 0;
-
+    if (!ctx || !masterGain) return;
+    zone = zone || 'nexus'; timeOfDay = timeOfDay || 'midday';
+    if (musicState.playing) stopMusic();
+    musicState.zone = zone; musicState.timeOfDay = timeOfDay;
+    musicState.playing = true; musicState.chordIndex = 0; musicState.noteIndex = 0;
     playPadChord();
-
     scheduleMelody();
   }
 
   function playPadChord() {
-    if (!audioContext || !masterGain || !musicState.playing) return;
-
+    if (!ctx || !masterGain || !musicState.playing) return;
     var zone = musicState.zone || 'nexus';
     var scale = SCALES[zone] || SCALES.nexus;
-    var progression = CHORD_PROGRESSIONS[zone] || CHORD_PROGRESSIONS.nexus;
+    var prog  = CHORD_PROGRESSIONS[zone] || CHORD_PROGRESSIONS.nexus;
     var style = ZONE_MUSIC_STYLE[zone] || ZONE_MUSIC_STYLE.nexus;
-    var timeMod = TIME_MODIFIERS[musicState.timeOfDay] || TIME_MODIFIERS.midday;
-
-    var chordIndices = progression[musicState.chordIndex % progression.length];
-    var beatDur = style.beatDuration / timeMod.tempoMult;
-    var chordDuration = beatDur * 4; // 4 beats per chord
-
+    var tmod  = TIME_MOD[musicState.timeOfDay] || TIME_MOD.midday;
+    var chordIs  = prog[musicState.chordIndex % prog.length];
+    var beatDur  = style.beatDuration / tmod.tempoM;
+    var chordDur = beatDur * 4;
     cleanupPadNodes();
-
-    for (var i = 0; i < chordIndices.length; i++) {
-      var noteIdx = chordIndices[i];
-      var freq = scale[noteIdx % scale.length];
-
-      if (timeMod.octaveShift < 0) freq *= 0.5;
-      if (timeMod.octaveShift > 0) freq *= 2;
-
+    for (var i = 0; i < chordIs.length; i++) {
+      var freq = scale[chordIs[i] % scale.length];
+      if (tmod.octShift < 0) freq *= 0.5;
+      if (tmod.octShift > 0) freq *= 2;
       for (var d = 0; d < 2; d++) {
-        var osc = audioContext.createOscillator();
-        var gain = audioContext.createGain();
-        var filter = audioContext.createBiquadFilter();
-
+        var osc = ctx.createOscillator(), gain = ctx.createGain(), filter = ctx.createBiquadFilter();
         osc.type = (style.type === 'ethereal' || style.type === 'mysterious') ? 'sine' : 'triangle';
-        osc.frequency.value = freq + (d === 0 ? -1.5 : 1.5); // lo-fi warm detune
-
-        filter.type = 'lowpass';
-        filter.frequency.value = 500;
-        filter.Q.value = 0.7;
-
-        var padVol = style.padVolume * timeMod.volumeMult * musicState.volume;
-        var now = audioContext.currentTime;
-
+        osc.frequency.value = freq + (d === 0 ? -1.5 : 1.5);
+        filter.type = 'lowpass'; filter.frequency.value = 500; filter.Q.value = 0.7;
+        var vol = style.padVolume * tmod.volM * musicState.volume;
+        var now = ctx.currentTime;
         gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(padVol, now + chordDuration * 0.15);
-        gain.gain.setValueAtTime(padVol, now + chordDuration * 0.7);
-        gain.gain.linearRampToValueAtTime(0, now + chordDuration);
-
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(masterGain);
-
-        osc.start(now);
-        osc.stop(now + chordDuration + 0.1);
-
-        musicState.padNodes.push({ osc: osc, gain: gain, filter: filter, endTime: now + chordDuration + 0.2 });
+        gain.gain.linearRampToValueAtTime(vol, now + chordDur * 0.15);
+        gain.gain.setValueAtTime(vol, now + chordDur * 0.7);
+        gain.gain.linearRampToValueAtTime(0, now + chordDur);
+        osc.connect(filter); filter.connect(gain); gain.connect(masterGain);
+        osc.start(now); osc.stop(now + chordDur + 0.1);
+        musicState.padNodes.push({ osc: osc, gain: gain, filter: filter, endTime: now + chordDur + 0.2 });
       }
     }
-
     if (Math.random() < 0.6) {
       var arpDelay = beatDur * 0.5;
       for (var a = 0; a < 3; a++) {
-        (function(arpIdx, delay) {
+        (function(ai, delay) {
           setTimeout(function() {
-            if (!musicState.playing || !audioContext) return;
-            var arpFreq = scale[chordIndices[arpIdx % chordIndices.length] % scale.length];
-            if (timeMod.octaveShift < 0) arpFreq *= 0.5;
-            arpFreq *= 2; // One octave up for sparkle
-
-            var arpOsc = audioContext.createOscillator();
-            var arpGain = audioContext.createGain();
-
-            arpOsc.type = 'sine';
-            arpOsc.frequency.value = arpFreq;
-
-            var arpVol = style.melodyVolume * timeMod.volumeMult * musicState.volume * 0.6;
-            var t = audioContext.currentTime;
-            arpGain.gain.setValueAtTime(0, t);
-            arpGain.gain.linearRampToValueAtTime(arpVol, t + 0.05);
-            arpGain.gain.exponentialRampToValueAtTime(0.001, t + beatDur * 0.8);
-
-            arpOsc.connect(arpGain);
-            arpGain.connect(masterGain);
-            arpOsc.start(t);
-            arpOsc.stop(t + beatDur);
+            if (!musicState.playing || !ctx) return;
+            var f = scale[chordIs[ai % chordIs.length] % scale.length];
+            if (tmod.octShift < 0) f *= 0.5;
+            f *= 2;
+            var ao = ctx.createOscillator(), ag = ctx.createGain();
+            ao.type = 'sine'; ao.frequency.value = f;
+            var av = style.melodyVolume * tmod.volM * musicState.volume * 0.6;
+            var t = ctx.currentTime;
+            ag.gain.setValueAtTime(0, t);
+            ag.gain.linearRampToValueAtTime(av, t + 0.05);
+            ag.gain.exponentialRampToValueAtTime(0.001, t + beatDur * 0.8);
+            ao.connect(ag); ag.connect(masterGain); ao.start(t); ao.stop(t + beatDur);
           }, delay * 1000);
         })(a, arpDelay * (a + 1));
       }
     }
-
     musicState.chordIndex++;
     musicState.beatTimer = setTimeout(function() {
       if (musicState.playing) playPadChord();
-    }, chordDuration * 1000);
+    }, chordDur * 1000);
   }
 
   function scheduleMelody() {
-    if (!audioContext || !masterGain || !musicState.playing) return;
-
-    var zone = musicState.zone || 'nexus';
+    if (!ctx || !masterGain || !musicState.playing) return;
+    var zone  = musicState.zone || 'nexus';
     var scale = SCALES[zone] || SCALES.nexus;
     var style = ZONE_MUSIC_STYLE[zone] || ZONE_MUSIC_STYLE.nexus;
-    var timeMod = TIME_MODIFIERS[musicState.timeOfDay] || TIME_MODIFIERS.midday;
-
-    var melodyChance = style.melodyChance * timeMod.melodyMult;
-    var beatDur = style.beatDuration / timeMod.tempoMult;
-
-    var delay = beatDur * (1 + Math.random() * 3);
-
+    var tmod  = TIME_MOD[musicState.timeOfDay] || TIME_MOD.midday;
+    var beatDur = style.beatDuration / tmod.tempoM;
     musicState.melodyTimeout = setTimeout(function() {
-      if (!musicState.playing || !audioContext) return;
-
-      if (Math.random() < melodyChance) {
-        var direction = Math.random() < 0.5 ? 1 : -1;
+      if (!musicState.playing || !ctx) return;
+      if (Math.random() < style.melodyChance * tmod.melM) {
+        var dir  = Math.random() < 0.5 ? 1 : -1;
         var step = Math.random() < 0.7 ? 1 : 2;
-        musicState.noteIndex = Math.max(0, Math.min(scale.length - 1, musicState.noteIndex + direction * step));
+        musicState.noteIndex = Math.max(0, Math.min(scale.length - 1, musicState.noteIndex + dir * step));
         var freq = scale[musicState.noteIndex];
-        if (timeMod.octaveShift < 0) freq *= 0.5;
-        freq *= 2; // Melody one octave up
-
-        var melOsc = audioContext.createOscillator();
-        var melGain = audioContext.createGain();
-        var melFilter = audioContext.createBiquadFilter();
-
-        if (style.type === 'nature' || style.type === 'pastoral') {
-          melOsc.type = 'sine';
-        } else if (style.type === 'dramatic' || style.type === 'lively') {
-          melOsc.type = 'triangle';
-        } else {
-          melOsc.type = Math.random() < 0.5 ? 'sine' : 'triangle';
-        }
-
-        melOsc.frequency.value = freq;
-
-        melFilter.type = 'lowpass';
-        melFilter.frequency.value = 700;
-
-        var melVol = style.melodyVolume * timeMod.volumeMult * musicState.volume;
-        var noteDur = beatDur * (0.5 + Math.random() * 1.5);
-        var t = audioContext.currentTime;
-
-        melGain.gain.setValueAtTime(0, t);
-        melGain.gain.linearRampToValueAtTime(melVol, t + 0.03);
-        melGain.gain.setValueAtTime(melVol * 0.8, t + noteDur * 0.5);
-        melGain.gain.exponentialRampToValueAtTime(0.001, t + noteDur);
-
-        melOsc.connect(melFilter);
-        melFilter.connect(melGain);
-        melGain.connect(masterGain);
-
-        melOsc.start(t);
-        melOsc.stop(t + noteDur + 0.1);
-
+        if (tmod.octShift < 0) freq *= 0.5;
+        freq *= 2;
+        var mo = ctx.createOscillator(), mg = ctx.createGain(), melFilter = ctx.createBiquadFilter();
+        mo.type = (style.type === 'nature' || style.type === 'pastoral') ? 'sine' :
+                  (Math.random() < 0.5 ? 'sine' : 'triangle');
+        mo.frequency.value = freq;
+        melFilter.type = 'lowpass'; melFilter.frequency.value = 700;
+        var vol = style.melodyVolume * tmod.volM * musicState.volume;
+        var dur = beatDur * (0.5 + Math.random() * 1.5);
+        var t = ctx.currentTime;
+        mg.gain.setValueAtTime(0, t);
+        mg.gain.linearRampToValueAtTime(vol, t + 0.03);
+        mg.gain.setValueAtTime(vol * 0.8, t + dur * 0.5);
+        mg.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        mo.connect(melFilter); melFilter.connect(mg); mg.connect(masterGain);
+        mo.start(t); mo.stop(t + dur + 0.1);
         if (Math.random() < 0.25) {
-          var harmIdx = (musicState.noteIndex + 2) % scale.length;
-          var harmFreq = scale[harmIdx] * 2;
-          if (timeMod.octaveShift < 0) harmFreq *= 0.5;
-
-          var harmOsc = audioContext.createOscillator();
-          var harmGain = audioContext.createGain();
-
-          harmOsc.type = 'sine';
-          harmOsc.frequency.value = harmFreq;
-
-          var harmVol = melVol * 0.4;
-          harmGain.gain.setValueAtTime(0, t + 0.05);
-          harmGain.gain.linearRampToValueAtTime(harmVol, t + 0.1);
-          harmGain.gain.exponentialRampToValueAtTime(0.001, t + noteDur * 0.8);
-
-          harmOsc.connect(harmGain);
-          harmGain.connect(masterGain);
-          harmOsc.start(t + 0.05);
-          harmOsc.stop(t + noteDur);
+          var hf = scale[(musicState.noteIndex + 2) % scale.length] * 2;
+          if (tmod.octShift < 0) hf *= 0.5;
+          var ho = ctx.createOscillator(), hg = ctx.createGain();
+          ho.type = 'sine'; ho.frequency.value = hf;
+          hg.gain.setValueAtTime(0, t + 0.05);
+          hg.gain.linearRampToValueAtTime(vol * 0.4, t + 0.1);
+          hg.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.8);
+          ho.connect(hg); hg.connect(masterGain); ho.start(t + 0.05); ho.stop(t + dur);
         }
       }
-
       scheduleMelody();
-    }, delay * 1000);
+    }, beatDur * (1 + Math.random() * 3) * 1000);
   }
 
   function cleanupPadNodes() {
-    var now = audioContext ? audioContext.currentTime : 0;
-    musicState.padNodes = musicState.padNodes.filter(function(node) {
-      if (now > node.endTime) {
-        try {
-          node.osc.disconnect();
-          node.gain.disconnect();
-          node.filter.disconnect();
-        } catch (e) {}
+    var now = ctx ? ctx.currentTime : 0;
+    musicState.padNodes = musicState.padNodes.filter(function(n) {
+      if (now > n.endTime) {
+        try { n.osc.disconnect(); n.gain.disconnect(); n.filter.disconnect(); } catch (e) {}
         return false;
       }
       return true;
@@ -46029,33 +43196,17 @@
 
   function stopMusic() {
     musicState.playing = false;
-
-    if (musicState.beatTimer) {
-      clearTimeout(musicState.beatTimer);
-      musicState.beatTimer = null;
+    if (musicState.beatTimer)    { clearTimeout(musicState.beatTimer);    musicState.beatTimer    = null; }
+    if (musicState.melodyTimeout){ clearTimeout(musicState.melodyTimeout); musicState.melodyTimeout = null; }
+    if (ctx) {
+      musicState.padNodes.forEach(function(n) {
+        try { n.gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5); } catch (e) {}
+      });
     }
-    if (musicState.melodyTimeout) {
-      clearTimeout(musicState.melodyTimeout);
-      musicState.melodyTimeout = null;
-    }
-
-    for (var i = 0; i < musicState.padNodes.length; i++) {
-      try {
-        var node = musicState.padNodes[i];
-        if (node.gain && audioContext) {
-          node.gain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
-        }
-      } catch (e) {}
-    }
-
     setTimeout(function() {
-      for (var i = 0; i < musicState.padNodes.length; i++) {
-        try {
-          musicState.padNodes[i].osc.disconnect();
-          musicState.padNodes[i].gain.disconnect();
-          musicState.padNodes[i].filter.disconnect();
-        } catch (e) {}
-      }
+      musicState.padNodes.forEach(function(n) {
+        try { n.osc.disconnect(); n.gain.disconnect(); n.filter.disconnect(); } catch (e) {}
+      });
       musicState.padNodes = [];
     }, 600);
   }
@@ -46069,152 +43220,67 @@
     }
   }
 
-  function setMusicVolume(vol) {
-    musicState.volume = Math.max(0, Math.min(1, vol));
-  }
-
-  function isMusicPlaying() {
-    return musicState.playing;
-  }
+  function setMusicVolume(vol) { musicState.volume = Math.max(0, Math.min(1, vol)); }
+  function isMusicPlaying() { return musicState.playing; }
 
   var PIANO_ACCENTS = {
-    dawn: {
-      notes: [261.63, 329.63, 392.00, 523.25, 659.25],
-      noteSpacing: 0.12,
-      noteDuration: 0.6,
-      volume: 0.05
-    },
-    morning: {
-      notes: [392.00, 493.88, 587.33, 783.99, 987.77, 783.99],
-      noteSpacing: 0.1,
-      noteDuration: 0.5,
-      volume: 0.04
-    },
-    dusk: {
-      notes: [880.00, 659.25, 523.25, 440.00, 329.63],
-      noteSpacing: 0.15,
-      noteDuration: 0.7,
-      volume: 0.04
-    },
-    night: {
-      notes: [146.83, 174.61, 220.00, 196.00, 146.83],
-      noteSpacing: 0.22,
-      noteDuration: 0.9,
-      volume: 0.04
-    },
-    zone_discovery: {
-      notes: [392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 659.25, 783.99],
-      noteSpacing: 0.09,
-      noteDuration: 0.45,
-      volume: 0.06
-    },
-    quest_complete: {
-      notes: [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50, 1318.51],
-      noteSpacing: 0.1,
-      noteDuration: 0.5,
-      volume: 0.06
-    },
-    achievement: {
-      notes: [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50],
-      noteSpacing: 0.08,
-      noteDuration: 0.4,
-      volume: 0.06
-    },
-    level_up: {
-      notes: [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50],
-      noteSpacing: 0.1,
-      noteDuration: 0.6,
-      volume: 0.06
-    }
+    dawn:          { notes: [261.63, 329.63, 392.00, 523.25, 659.25],                              noteSpacing: 0.12, noteDuration: 0.6, volume: 0.05 },
+    morning:       { notes: [392.00, 493.88, 587.33, 783.99, 987.77, 783.99],                      noteSpacing: 0.10, noteDuration: 0.5, volume: 0.04 },
+    dusk:          { notes: [880.00, 659.25, 523.25, 440.00, 329.63],                              noteSpacing: 0.15, noteDuration: 0.7, volume: 0.04 },
+    night:         { notes: [146.83, 174.61, 220.00, 196.00, 146.83],                              noteSpacing: 0.22, noteDuration: 0.9, volume: 0.04 },
+    zone_discovery:{ notes: [392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 659.25, 783.99],      noteSpacing: 0.09, noteDuration: 0.45, volume: 0.06 },
+    quest_complete:{ notes: [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50, 1318.51],           noteSpacing: 0.10, noteDuration: 0.5, volume: 0.06 },
+    achievement:   { notes: [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50],                     noteSpacing: 0.08, noteDuration: 0.4, volume: 0.06 },
+    level_up:      { notes: [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50],             noteSpacing: 0.10, noteDuration: 0.6, volume: 0.06 }
   };
 
   function playPianoAccent(type) {
-    if (!audioContext || !masterGain) return;
-    var accent = PIANO_ACCENTS[type];
-    if (!accent) return;
-
-    if (audioContext.state === 'suspended') {
-      audioContext.resume();
-    }
-
-    var musicVol = volumeLevels.music !== undefined ? volumeLevels.music : 0.5;
-    var baseVol = accent.volume * musicVol;
-
+    if (!ctx || !masterGain) return;
+    var a = PIANO_ACCENTS[type];
+    if (!a) return;
+    resume();
+    var baseVol = a.volume * (volumes.music !== undefined ? volumes.music : 0.5);
     try {
-      for (var i = 0; i < accent.notes.length; i++) {
-        (function(idx) {
-          var freq = accent.notes[idx];
-          var startTime = audioContext.currentTime + idx * accent.noteSpacing;
-
-          var osc1 = audioContext.createOscillator();
-          var gain1 = audioContext.createGain();
-          osc1.type = 'sine';
-          osc1.frequency.value = freq;
-          gain1.gain.setValueAtTime(0, startTime);
-          gain1.gain.linearRampToValueAtTime(baseVol, startTime + 0.015);
-          gain1.gain.exponentialRampToValueAtTime(baseVol * 0.6, startTime + accent.noteDuration * 0.3);
-          gain1.gain.exponentialRampToValueAtTime(0.001, startTime + accent.noteDuration);
-          osc1.connect(gain1);
-          gain1.connect(masterGain);
-          osc1.start(startTime);
-          osc1.stop(startTime + accent.noteDuration + 0.05);
-
-          var osc2 = audioContext.createOscillator();
-          var gain2 = audioContext.createGain();
-          osc2.type = 'triangle';
-          osc2.frequency.value = freq * 2; // octave above for shimmer
-          gain2.gain.setValueAtTime(0, startTime);
-          gain2.gain.linearRampToValueAtTime(baseVol * 0.3, startTime + 0.01);
-          gain2.gain.exponentialRampToValueAtTime(0.001, startTime + accent.noteDuration * 0.5);
-          osc2.connect(gain2);
-          gain2.connect(masterGain);
-          osc2.start(startTime);
-          osc2.stop(startTime + accent.noteDuration * 0.5 + 0.05);
-
-          var osc3 = audioContext.createOscillator();
-          var gain3 = audioContext.createGain();
-          osc3.type = 'sine';
-          osc3.frequency.value = freq * 3;
-          gain3.gain.setValueAtTime(0, startTime);
-          gain3.gain.linearRampToValueAtTime(baseVol * 0.03, startTime + 0.005);
-          gain3.gain.exponentialRampToValueAtTime(0.001, startTime + 0.06);
-          osc3.connect(gain3);
-          gain3.connect(masterGain);
-          osc3.start(startTime);
-          osc3.stop(startTime + 0.1);
-        })(i);
-      }
-    } catch (err) {
-    }
+      a.notes.forEach(function(freq, i) {
+        var t = ctx.currentTime + i * a.noteSpacing;
+        var o1 = ctx.createOscillator(), g1 = ctx.createGain();
+        o1.type = 'sine'; o1.frequency.value = freq;
+        g1.gain.setValueAtTime(0, t);
+        g1.gain.linearRampToValueAtTime(baseVol, t + 0.015);
+        g1.gain.exponentialRampToValueAtTime(baseVol * 0.6, t + a.noteDuration * 0.3);
+        g1.gain.exponentialRampToValueAtTime(0.001, t + a.noteDuration);
+        o1.connect(g1); g1.connect(masterGain); o1.start(t); o1.stop(t + a.noteDuration + 0.05);
+        var o2 = ctx.createOscillator(), g2 = ctx.createGain();
+        o2.type = 'triangle'; o2.frequency.value = freq * 2;
+        g2.gain.setValueAtTime(0, t);
+        g2.gain.linearRampToValueAtTime(baseVol * 0.3, t + 0.01);
+        g2.gain.exponentialRampToValueAtTime(0.001, t + a.noteDuration * 0.5);
+        o2.connect(g2); g2.connect(masterGain); o2.start(t); o2.stop(t + a.noteDuration * 0.5 + 0.05);
+      });
+    } catch (e) {}
   }
 
-  function getPianoAccentTypes() {
-    return PIANO_ACCENTS;
-  }
+  function getPianoAccentTypes() { return PIANO_ACCENTS; }
 
-  exports.initAudio = initAudio;
-  exports.playAmbient = playAmbient;
-  exports.playSound = playSound;
-  exports.playFootstep = playFootstep;
-  exports.setVolume = setVolume;
-  exports.mute = mute;
-  exports.unmute = unmute;
-  exports.stopAll = stopAll;
-
-  exports.updateAmbientTime = updateAmbientForTime;
+  exports.initAudio            = initAudio;
+  exports.playAmbient          = playAmbient;
+  exports.playSound            = playSound;
+  exports.playFootstep         = playFootstep;
+  exports.setVolume            = setVolume;
+  exports.mute                 = mute;
+  exports.unmute               = unmute;
+  exports.stopAll              = stopAll;
+  exports.updateAmbientTime    = updateAmbientForTime;
   exports.updateAmbientWeather = updateAmbientForWeather;
-  exports.setZoneAmbient = setZoneAmbient;
-
-  exports.playNPCSound = playNPCSound;
-
-  exports.startMusic = startMusic;
-  exports.stopMusic = stopMusic;
-  exports.updateMusic = updateMusic;
-  exports.setMusicVolume = setMusicVolume;
-  exports.isMusicPlaying = isMusicPlaying;
-
-  exports.playPianoAccent = playPianoAccent;
-  exports.getPianoAccentTypes = getPianoAccentTypes;
+  exports.setZoneAmbient       = setZoneAmbient;
+  exports.playNPCSound         = playNPCSound;
+  exports.startMusic           = startMusic;
+  exports.stopMusic            = stopMusic;
+  exports.updateMusic          = updateMusic;
+  exports.setMusicVolume       = setMusicVolume;
+  exports.isMusicPlaying       = isMusicPlaying;
+  exports.playPianoAccent      = playPianoAccent;
+  exports.getPianoAccentTypes  = getPianoAccentTypes;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Audio = {}));
 
@@ -53814,6 +50880,26 @@
     }
     return count;
   };
+
+  var ARCHETYPE_ANIM_STATES = {
+    gardener:    'tend',
+    builder:     'hammer',
+    musician:    'sway',
+    merchant:    'idle-look',
+    explorer:    'scan',
+    teacher:     'teach',
+    healer:      'heal',
+    philosopher: 'ponder',
+    artist:      'create',
+    storyteller: 'gesture'
+  };
+
+  function getNPCAnimState(archetype) {
+    if (!archetype) return 'idle';
+    return ARCHETYPE_ANIM_STATES[archetype] || 'idle';
+  }
+
+  exports.getNPCAnimState = getNPCAnimState;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));
 

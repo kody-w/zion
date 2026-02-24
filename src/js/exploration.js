@@ -576,4 +576,39 @@
   exports.getUnlockedLore = getUnlockedLore;
   exports.getLoreCategories = getLoreCategories;
 
+
+  // ── Footpath memory ───────────────────────────────────────────────────────
+
+  var footpathCounts = {};
+  var WORN_THRESHOLD = 20;
+
+  function recordStep(x, z) {
+    var tx = Math.floor(x);
+    var tz = Math.floor(z);
+    var key = tx + ',' + tz;
+    footpathCounts[key] = (footpathCounts[key] || 0) + 1;
+  }
+
+  function isWorn(x, z) {
+    var tx = Math.floor(x);
+    var tz = Math.floor(z);
+    var key = tx + ',' + tz;
+    return (footpathCounts[key] || 0) >= WORN_THRESHOLD;
+  }
+
+  function getWornPaths() {
+    var paths = [];
+    for (var key in footpathCounts) {
+      if (footpathCounts[key] >= WORN_THRESHOLD) {
+        var parts = key.split(',');
+        paths.push({ x: parseInt(parts[0], 10), z: parseInt(parts[1], 10) });
+      }
+    }
+    return paths;
+  }
+
+  exports.recordStep   = recordStep;
+  exports.isWorn       = isWorn;
+  exports.getWornPaths = getWornPaths;
+
 })(typeof module !== 'undefined' ? module.exports : (window.Exploration = {}));

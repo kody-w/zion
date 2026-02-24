@@ -8609,6 +8609,58 @@
   exports.getWindStrength = getWindStrength;
   exports.initZoneBorderShimmer = initZoneBorderShimmer;
   exports.updateZoneBorderShimmer = updateZoneBorderShimmer;
+  // ── Weather gameplay modifiers ──────────────────────────────────────────────
+
+  var WEATHER_MODIFIERS = {
+    clear:   { yieldMultiplier: 1.0, visibilityPenalty: 0,   movementMultiplier: 1.0 },
+    cloudy:  { yieldMultiplier: 1.0, visibilityPenalty: 0.1, movementMultiplier: 1.0 },
+    rain:    { yieldMultiplier: 1.5, visibilityPenalty: 0.1, movementMultiplier: 0.9 },
+    storm:   { yieldMultiplier: 1.2, visibilityPenalty: 0.5, movementMultiplier: 0.8 },
+    snow:    { yieldMultiplier: 0.5, visibilityPenalty: 0.2, movementMultiplier: 0.75 },
+    fog:     { yieldMultiplier: 1.0, visibilityPenalty: 0.4, movementMultiplier: 0.9 }
+  };
+
+  function getWeatherModifiers(type) {
+    return WEATHER_MODIFIERS[type] || { yieldMultiplier: 1.0, visibilityPenalty: 0, movementMultiplier: 1.0 };
+  }
+
+  // ── Resource respawn stages ──────────────────────────────────────────────────
+
+  function getResourceStage(resource) {
+    if (!resource || !resource.harvested) return 3;
+    var now = Date.now();
+    if (now >= resource.respawnTime) return 3;
+    var elapsed = now - resource.harvestedAt;
+    if (elapsed < 5000)  return 0; // empty — just harvested
+    if (elapsed < 20000) return 1; // sprout — early growth
+    return 2;                       // growing — nearly ready
+  }
+
+  // ── Wildlife proximity reactions ─────────────────────────────────────────────
+
+  function getWildlifeReaction(entity, playerPos, worldTime) {
+    if (!entity || !entity.type) return 'idle';
+    var dist = Infinity;
+    if (entity.position && playerPos) {
+      var dx = (entity.position.x || 0) - (playerPos.x || 0);
+      var dz = (entity.position.z || 0) - (playerPos.z || 0);
+      dist = Math.sqrt(dx * dx + dz * dz);
+    }
+    switch (entity.type) {
+      case 'butterfly':
+        return dist < 5 ? 'flee' : 'idle';
+      case 'fish':
+        return worldTime === 'dawn' ? 'jump' : 'idle';
+      case 'firefly':
+        return (entity.nearGarden && worldTime === 'night') ? 'cluster' : 'idle';
+      default:
+        return 'idle';
+    }
+  }
+
+  exports.getWeatherModifiers  = getWeatherModifiers;
+  exports.getResourceStage     = getResourceStage;
+  exports.getWildlifeReaction  = getWildlifeReaction;
   exports.weatherCallbacks = weatherCallbacks;
   exports.addStructure = addStructure;
   exports.createPortal = createPortal;

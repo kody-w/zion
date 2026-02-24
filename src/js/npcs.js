@@ -3730,4 +3730,27 @@
     return count;
   };
 
+
+  // ── NPC role-specific idle animation states ───────────────────────────────
+
+  var ARCHETYPE_ANIM_STATES = {
+    gardener:    'tend',
+    builder:     'hammer',
+    musician:    'sway',
+    merchant:    'idle-look',
+    explorer:    'scan',
+    teacher:     'teach',
+    healer:      'heal',
+    philosopher: 'ponder',
+    artist:      'create',
+    storyteller: 'gesture'
+  };
+
+  function getNPCAnimState(archetype) {
+    if (!archetype) return 'idle';
+    return ARCHETYPE_ANIM_STATES[archetype] || 'idle';
+  }
+
+  exports.getNPCAnimState = getNPCAnimState;
+
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));
