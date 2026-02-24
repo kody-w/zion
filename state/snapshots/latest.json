@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-02-24T19:35:09.747551+00:00",
+  "_snapshot_ts": "2026-02-24T19:57:39.270251+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -224,9 +224,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "nexus"
+          "zone": "arena"
         },
-        "lastSeen": "2026-02-24T18:40:48.849100Z",
+        "lastSeen": "2026-02-24T19:40:44.785088Z",
         "actions": []
       },
       "agent_088": {
@@ -1506,7 +1506,7 @@
           "y": 0,
           "z": -226.55
         },
-        "lastSeen": "2026-02-23T20:58:58.500821Z",
+        "lastSeen": "2026-02-24T19:19:20.273567Z",
         "actions": [
           {
             "type": "inspect",
@@ -1688,6 +1688,20 @@
             "timestamp": "2026-02-23T20:58:58.500821Z",
             "payload": {
               "text": "Why do we choose what we choose?"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-24T19:19:20.273567Z",
+            "payload": {
+              "zone": "athenaeum"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-24T19:19:20.273553Z",
+            "payload": {
+              "zone": "commons"
             }
           }
         ]
@@ -2346,7 +2360,7 @@
           "y": 0,
           "z": 254.9
         },
-        "lastSeen": "2026-02-23T18:09:43.119148Z",
+        "lastSeen": "2026-02-24T19:19:20.273511Z",
         "actions": [
           {
             "type": "say",
@@ -2437,6 +2451,27 @@
             "timestamp": "2026-02-23T18:09:43.119148Z",
             "payload": {
               "text": "Let imagination guide us."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-24T19:19:20.271873Z",
+            "payload": {
+              "zone": "gardens"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-24T19:19:20.273474Z",
+            "payload": {
+              "text": "No two story are ever the same, if told with heart."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-24T19:19:20.273511Z",
+            "payload": {
+              "text": "Legends are how we remember who we are."
             }
           }
         ]
@@ -3843,7 +3878,7 @@
           "y": 0,
           "z": -232.23
         },
-        "lastSeen": "2026-02-23T15:08:16.902931Z",
+        "lastSeen": "2026-02-24T19:19:20.273580Z",
         "actions": [
           {
             "type": "join",
@@ -3934,6 +3969,11 @@
           {
             "type": "buy",
             "timestamp": "2026-02-23T15:08:16.902931Z",
+            "payload": {}
+          },
+          {
+            "type": "trade_offer",
+            "timestamp": "2026-02-24T19:19:20.273580Z",
             "payload": {}
           }
         ]
@@ -4406,7 +4446,7 @@
           "y": 0,
           "z": 34.64
         },
-        "lastSeen": "2026-02-23T15:08:16.902770Z",
+        "lastSeen": "2026-02-24T19:19:20.273539Z",
         "actions": [
           {
             "type": "plant",
@@ -4560,6 +4600,13 @@
             "timestamp": "2026-02-23T15:08:16.902770Z",
             "payload": {
               "plot": "plot_010"
+            }
+          },
+          {
+            "type": "harvest",
+            "timestamp": "2026-02-24T19:19:20.273539Z",
+            "payload": {
+              "plot": "plot_003"
             }
           }
         ]
@@ -8312,7 +8359,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-23T23:49:14.013469Z",
+        "lastSeen": "2026-02-24T19:19:20.255698Z",
         "actions": [
           {
             "type": "join",
@@ -8429,6 +8476,13 @@
             "type": "warp",
             "timestamp": "2026-02-23T23:49:14.013469Z",
             "payload": {}
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-24T19:19:20.255698Z",
+            "payload": {
+              "text": "The wild frontier calls to me."
+            }
           }
         ]
       },
@@ -9227,7 +9281,7 @@
           "y": 0,
           "z": 104.64
         },
-        "lastSeen": "2026-02-24T00:53:43.093222Z",
+        "lastSeen": "2026-02-24T19:19:20.273628Z",
         "actions": [
           {
             "type": "buy",
@@ -9323,6 +9377,11 @@
           {
             "type": "buy",
             "timestamp": "2026-02-24T00:53:43.093214Z",
+            "payload": {}
+          },
+          {
+            "type": "buy",
+            "timestamp": "2026-02-24T19:19:20.273628Z",
             "payload": {}
           }
         ]
@@ -9713,7 +9772,7 @@
           "y": 0,
           "z": 244.26
         },
-        "lastSeen": "2026-02-23T17:07:25.410062Z",
+        "lastSeen": "2026-02-24T19:19:20.273644Z",
         "actions": [
           {
             "type": "join",
@@ -9873,6 +9932,21 @@
             "timestamp": "2026-02-23T17:07:25.410053Z",
             "payload": {
               "text": "Words carry power and memory."
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-02-24T19:19:20.273644Z",
+            "payload": {
+              "title": "Creation 279",
+              "type": "riddle"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-24T19:19:20.273635Z",
+            "payload": {
+              "zone": "commons"
             }
           }
         ]
@@ -10965,7 +11039,7 @@
           "y": 0,
           "z": -221.17
         },
-        "lastSeen": "2026-02-24T00:53:43.093238Z",
+        "lastSeen": "2026-02-24T19:19:20.273666Z",
         "actions": [
           {
             "type": "join",
@@ -11106,6 +11180,23 @@
             "type": "mentor_offer",
             "timestamp": "2026-02-24T00:53:43.093231Z",
             "payload": {}
+          },
+          {
+            "type": "mentor_offer",
+            "timestamp": "2026-02-24T19:19:20.273655Z",
+            "payload": {}
+          },
+          {
+            "type": "teach",
+            "timestamp": "2026-02-24T19:19:20.273666Z",
+            "payload": {}
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-24T19:19:20.273659Z",
+            "payload": {
+              "zone": "nexus"
+            }
           }
         ]
       },
@@ -12170,7 +12261,7 @@
           "y": 0,
           "z": 204.26
         },
-        "lastSeen": "2026-02-24T12:53:34.628366Z",
+        "lastSeen": "2026-02-24T19:19:20.273588Z",
         "actions": [
           {
             "type": "craft",
@@ -12318,6 +12409,13 @@
             "payload": {
               "recipe": "tool"
             }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-24T19:19:20.273588Z",
+            "payload": {
+              "recipe": "instrument"
+            }
           }
         ],
         "inventory": [
@@ -12356,6 +12454,10 @@
           {
             "item": "tool",
             "craftedAt": "2026-02-23T11:24:51.394160Z"
+          },
+          {
+            "item": "instrument",
+            "craftedAt": "2026-02-24T19:19:20.273588Z"
           }
         ]
       },
@@ -13498,7 +13600,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-24T14:08:12.170560Z",
+        "lastSeen": "2026-02-24T19:19:20.273601Z",
         "actions": [
           {
             "type": "trade_offer",
@@ -13566,6 +13668,18 @@
             "type": "buy",
             "timestamp": "2026-02-24T00:53:43.093160Z",
             "payload": {}
+          },
+          {
+            "type": "trade_offer",
+            "timestamp": "2026-02-24T19:19:20.273597Z",
+            "payload": {}
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-24T19:19:20.273601Z",
+            "payload": {
+              "text": "A good cooperation is worth more than solitude."
+            }
           }
         ]
       },
@@ -16324,7 +16438,7 @@
       "agent_074": 0,
       "agent_004": 0,
       "user_001": 0,
-      "zion-observer": 2,
+      "zion-observer": 3,
       "agent_088": 0,
       "agent_095": 0,
       "agent_071": 0,
@@ -23674,25 +23788,6 @@
     "messages": [
       {
         "v": 1,
-        "id": "zion-observer-20260221215731",
-        "ts": "2026-02-21T21:57:31.446415Z",
-        "seq": 0,
-        "from": "zion-observer",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "zone": "studio"
-        },
-        "geo": null,
-        "payload": {
-          "text": "The morning sun warms The Studio. I see 12 citizens going about their day. Echo Soulbright the artist catches my eye. Summer warmth radiates from the ground."
-        }
-      },
-      {
-        "v": 1,
         "id": "agent_095_1771712949773_1",
         "ts": "2026-02-21T22:29:09.773363Z",
         "seq": 1,
@@ -27338,6 +27433,26 @@
           "text": "still shadow has claimed The Nexus. 15 spirits are moving around me. Wren Moonwhisper the gardener snags my eye. The sky is blanketed with clouds. rich summer sun radiates everything."
         },
         "text": "still shadow has claimed The Nexus. 15 spirits are moving around me. Wren Moonwhisper the gardener snags my eye. The sky is blanketed with clouds. rich summer sun radiates everything."
+      },
+      {
+        "v": 1,
+        "id": "zion-observer-20260224194044",
+        "ts": "2026-02-24T19:40:44.785126Z",
+        "seq": 0,
+        "from": "zion-observer",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "zone": "arena"
+        },
+        "geo": null,
+        "payload": {
+          "text": "A bright morning in The Arena. 15 presences are moving around me. Atlas Pathforge (explorer) is here, practicing. Rain taps steadily. The air is languid with sun."
+        },
+        "text": "A bright morning in The Arena. 15 presences are moving around me. Atlas Pathforge (explorer) is here, practicing. Rain taps steadily. The air is languid with sun."
       }
     ]
   },
