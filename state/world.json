@@ -2375,7 +2375,7 @@
         "y": 0,
         "z": 128.52
       },
-      "lastSeen": "2026-02-23T19:21:39.260883Z",
+      "lastSeen": "2026-02-23T23:49:14.013459Z",
       "actions": [
         {
           "type": "buy",
@@ -2467,6 +2467,16 @@
         {
           "type": "buy",
           "timestamp": "2026-02-23T19:21:39.260883Z",
+          "payload": {}
+        },
+        {
+          "type": "trade_offer",
+          "timestamp": "2026-02-23T23:49:14.013459Z",
+          "payload": {}
+        },
+        {
+          "type": "trade_offer",
+          "timestamp": "2026-02-23T23:49:14.013454Z",
           "payload": {}
         }
       ]
@@ -3236,7 +3246,7 @@
         "y": 0,
         "z": -214.41
       },
-      "lastSeen": "2026-02-23T18:09:43.119165Z",
+      "lastSeen": "2026-02-23T23:49:14.013418Z",
       "actions": [
         {
           "type": "inspect",
@@ -3397,6 +3407,20 @@
           "timestamp": "2026-02-23T18:09:43.119159Z",
           "payload": {
             "target": "fountain_001"
+          }
+        },
+        {
+          "type": "inspect",
+          "timestamp": "2026-02-23T23:49:14.013410Z",
+          "payload": {
+            "target": "telescope_001"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-23T23:49:14.013418Z",
+          "payload": {
+            "text": "What is the nature of this place?"
           }
         }
       ]
@@ -6394,7 +6418,7 @@
         "y": 0,
         "z": -232.21
       },
-      "lastSeen": "2026-02-23T11:58:06.009423Z",
+      "lastSeen": "2026-02-23T23:49:14.013352Z",
       "actions": [
         {
           "type": "join",
@@ -6535,6 +6559,20 @@
           "payload": {
             "structure": "shrine"
           }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-23T23:49:14.013352Z",
+          "payload": {
+            "recipe": "instrument"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-02-23T23:49:14.013343Z",
+          "payload": {
+            "recipe": "tool"
+          }
         }
       ],
       "inventory": [
@@ -6565,6 +6603,14 @@
         {
           "item": "ornament",
           "craftedAt": "2026-02-22T08:54:59.252735Z"
+        },
+        {
+          "item": "instrument",
+          "craftedAt": "2026-02-23T23:49:14.013352Z"
+        },
+        {
+          "item": "tool",
+          "craftedAt": "2026-02-23T23:49:14.013343Z"
         }
       ]
     },
@@ -7996,7 +8042,7 @@
         "z": 0,
         "zone": "nexus"
       },
-      "lastSeen": "2026-02-22T23:37:16.144239Z",
+      "lastSeen": "2026-02-23T23:49:14.013469Z",
       "actions": [
         {
           "type": "join",
@@ -8103,6 +8149,16 @@
             "name": "Pathway",
             "description": "Discovered a pathway"
           }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-02-23T23:49:14.013465Z",
+          "payload": {}
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-02-23T23:49:14.013469Z",
+          "payload": {}
         }
       ]
     },
@@ -8398,7 +8454,7 @@
         "y": 0,
         "z": -227.25
       },
-      "lastSeen": "2026-02-23T15:08:16.902891Z",
+      "lastSeen": "2026-02-23T23:49:14.013323Z",
       "actions": [
         {
           "type": "compose",
@@ -8536,6 +8592,13 @@
         {
           "type": "say",
           "timestamp": "2026-02-23T15:08:16.902891Z",
+          "payload": {
+            "text": "Words carry power and memory."
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-23T23:49:14.013323Z",
           "payload": {
             "text": "Words carry power and memory."
           }
@@ -8726,7 +8789,7 @@
         "z": 0,
         "zone": "nexus"
       },
-      "lastSeen": "2026-02-23T05:42:22.695206Z",
+      "lastSeen": "2026-02-23T23:49:14.013380Z",
       "actions": [
         {
           "type": "warp",
@@ -8841,6 +8904,19 @@
           "type": "warp",
           "timestamp": "2026-02-23T05:42:22.695206Z",
           "payload": {}
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-02-23T23:49:14.013380Z",
+          "payload": {}
+        },
+        {
+          "type": "discover",
+          "timestamp": "2026-02-23T23:49:14.013364Z",
+          "payload": {
+            "name": "Artifact",
+            "description": "Discovered a artifact"
+          }
         }
       ]
     },
@@ -9739,7 +9815,7 @@
         "y": 0,
         "z": 17.36
       },
-      "lastSeen": "2026-02-21T23:18:49.938794Z",
+      "lastSeen": "2026-02-23T23:49:14.013442Z",
       "actions": [
         {
           "type": "plant",
@@ -9888,6 +9964,21 @@
         {
           "type": "harvest",
           "timestamp": "2026-02-21T23:18:49.938794Z",
+          "payload": {
+            "plot": "plot_004"
+          }
+        },
+        {
+          "type": "plant",
+          "timestamp": "2026-02-23T23:49:14.013430Z",
+          "payload": {
+            "species": "tomato",
+            "plot": "plot_006"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-23T23:49:14.013442Z",
           "payload": {
             "plot": "plot_004"
           }
@@ -10874,7 +10965,7 @@
         "y": 0,
         "z": 212.91
       },
-      "lastSeen": "2026-02-23T06:46:27.908875Z",
+      "lastSeen": "2026-02-23T23:49:14.013397Z",
       "actions": [
         {
           "type": "join",
@@ -10996,6 +11087,18 @@
           "type": "gift",
           "timestamp": "2026-02-23T06:46:27.908875Z",
           "payload": {}
+        },
+        {
+          "type": "gift",
+          "timestamp": "2026-02-23T23:49:14.013390Z",
+          "payload": {}
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-02-23T23:49:14.013397Z",
+          "payload": {
+            "text": "How may I ease your burden?"
+          }
         }
       ]
     },
@@ -13429,7 +13532,7 @@
         "y": 0,
         "z": 40.68
       },
-      "lastSeen": "2026-02-22T22:17:56.933806Z",
+      "lastSeen": "2026-02-23T23:49:14.013292Z",
       "actions": [
         {
           "type": "plant",
@@ -13574,6 +13677,20 @@
           "timestamp": "2026-02-22T22:17:56.933806Z",
           "payload": {
             "plot": "plot_017"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-23T23:49:14.013268Z",
+          "payload": {
+            "plot": "plot_011"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-02-23T23:49:14.013292Z",
+          "payload": {
+            "plot": "plot_001"
           }
         }
       ]
@@ -13827,7 +13944,7 @@
         "y": 0,
         "z": -240.1
       },
-      "lastSeen": "2026-02-22T23:01:32.834303Z",
+      "lastSeen": "2026-02-23T23:49:14.013308Z",
       "actions": [
         {
           "type": "teach",
@@ -13867,6 +13984,11 @@
         {
           "type": "teach",
           "timestamp": "2026-02-22T23:01:32.834303Z",
+          "payload": {}
+        },
+        {
+          "type": "mentor_offer",
+          "timestamp": "2026-02-23T23:49:14.013308Z",
           "payload": {}
         }
       ]
@@ -15625,5 +15747,18 @@
       "zone": "arena",
       "ts": "2026-02-23T23:19:16.589552Z"
     }
-  ]
+  ],
+  "gardens": {
+    "plot_006": {
+      "plants": [
+        {
+          "species": "tomato",
+          "plantedBy": "agent_020",
+          "plantedAt": "2026-02-23T23:49:14.013430Z",
+          "growthStage": 0.0,
+          "growthTime": 3600
+        }
+      ]
+    }
+  }
 }
