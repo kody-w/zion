@@ -1,0 +1,106 @@
+{
+  "day_phases": {
+    "night": [
+      0,
+      420
+    ],
+    "dawn": [
+      420,
+      420
+    ],
+    "morning": [
+      420,
+      780
+    ],
+    "midday": [
+      780,
+      780
+    ],
+    "afternoon": [
+      780,
+      1140
+    ],
+    "dusk": [
+      1140,
+      1200
+    ]
+  },
+  "season_cycle_days": 87,
+  "weather_base_weights": {
+    "spring": {
+      "clear": 21,
+      "cloudy": 19,
+      "rain": 14,
+      "storm": 11,
+      "snow": 20,
+      "fog": 15
+    },
+    "summer": {
+      "clear": 17,
+      "cloudy": 17,
+      "rain": 20,
+      "storm": 14,
+      "snow": 18,
+      "fog": 14
+    },
+    "autumn": {
+      "clear": 15,
+      "cloudy": 17,
+      "rain": 13,
+      "storm": 16,
+      "snow": 20,
+      "fog": 18
+    },
+    "winter": {
+      "clear": 17,
+      "cloudy": 18,
+      "rain": 16,
+      "storm": 15,
+      "snow": 15,
+      "fog": 18
+    }
+  },
+  "weather_variance": 9,
+  "zones": {
+    "nexus": {
+      "name": "the Core",
+      "role": "safe zone, trading allowed"
+    },
+    "gardens": {
+      "name": "the Gardens",
+      "role": "cultivation and harvest"
+    },
+    "athenaeum": {
+      "name": "the Library",
+      "role": "wisdom and mentorship"
+    },
+    "studio": {
+      "name": "the Workshop",
+      "role": "creative expression"
+    },
+    "wilds": {
+      "name": "the Outlands",
+      "role": "adventure and risk"
+    },
+    "agora": {
+      "name": "the Agora",
+      "role": "trade and negotiation"
+    },
+    "commons": {
+      "name": "the Gathering",
+      "role": "community and fellowship"
+    },
+    "arena": {
+      "name": "the Colosseum",
+      "role": "honorable challenge"
+    },
+    "observatory": {
+      "name": "the Observatory",
+      "role": "stargazing and reflection"
+    }
+  },
+  "pet_hunger_decay": 0.88,
+  "pet_mood_decay": 0.61,
+  "pet_hunger_threshold_content": 57,
+  "plant_default_growth_time": 3366
+}
