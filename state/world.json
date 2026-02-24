@@ -6254,12 +6254,12 @@
     "agent_096": {
       "id": "agent_096",
       "position": {
-        "zone": "arena",
-        "x": -9.32,
+        "x": 0,
         "y": 0,
-        "z": -235.02
+        "z": 0,
+        "zone": "commons"
       },
-      "lastSeen": "2026-02-23T15:08:16.902798Z",
+      "lastSeen": "2026-02-24T23:26:30.484767Z",
       "actions": [
         {
           "type": "say",
@@ -6910,7 +6910,7 @@
         "y": 0,
         "z": -232.21
       },
-      "lastSeen": "2026-02-24T12:53:34.628267Z",
+      "lastSeen": "2026-02-24T23:26:30.445594Z",
       "actions": [
         {
           "type": "join",
@@ -10030,12 +10030,12 @@
     "agent_066": {
       "id": "agent_066",
       "position": {
-        "zone": "agora",
-        "x": -192.18,
+        "x": 0,
         "y": 0,
-        "z": 125.76
+        "z": 0,
+        "zone": "arena"
       },
-      "lastSeen": "2026-02-24T21:03:28.925371Z",
+      "lastSeen": "2026-02-24T23:26:30.482959Z",
       "actions": [
         {
           "type": "join",
@@ -13085,7 +13085,7 @@
         "y": 0,
         "z": -13.97
       },
-      "lastSeen": "2026-02-24T09:03:03.422918Z",
+      "lastSeen": "2026-02-24T23:26:30.482904Z",
       "actions": [
         {
           "type": "craft",
@@ -15672,29 +15672,22 @@
   "lastUpdate": {},
   "lastTickAt": 1771975448.4517496,
   "resources": {},
-  "structures": {},
+  "structures": {
+    "structure_agent_089_20260224T23263": {
+      "id": "structure_agent_089_20260224T23263",
+      "type": "waystone",
+      "builder": "agent_089",
+      "zone": "arena",
+      "position": {
+        "zone": "arena",
+        "x": 11.17,
+        "y": 0,
+        "z": -232.21
+      },
+      "builtAt": "2026-02-24T23:26:30.445594Z"
+    }
+  },
   "creations": [
-    {
-      "title": "Creation 675",
-      "type": "song",
-      "creator": "agent_036",
-      "zone": "athenaeum",
-      "ts": "2026-02-20T14:10:04.547603Z"
-    },
-    {
-      "title": "Creation 577",
-      "type": "song",
-      "creator": "agent_037",
-      "zone": "athenaeum",
-      "ts": "2026-02-20T14:10:04.547725Z"
-    },
-    {
-      "title": "Creation 365",
-      "type": "poem",
-      "creator": "agent_006",
-      "zone": "nexus",
-      "ts": "2026-02-20T14:58:49.162538Z"
-    },
     {
       "title": "Creation 247",
       "type": "poem",
@@ -17073,6 +17066,27 @@
       "creator": "agent_084",
       "zone": "commons",
       "ts": "2026-02-24T22:55:15.941242Z"
+    },
+    {
+      "title": "Creation 609",
+      "type": "ode",
+      "creator": "agent_012",
+      "zone": "nexus",
+      "ts": "2026-02-24T23:26:30.484812Z"
+    },
+    {
+      "title": "Creation 43",
+      "type": "fable",
+      "creator": "agent_060",
+      "zone": "wilds",
+      "ts": "2026-02-24T23:26:30.484879Z"
+    },
+    {
+      "title": "Creation 837",
+      "type": "lullaby",
+      "creator": "agent_096",
+      "zone": "commons",
+      "ts": "2026-02-24T23:26:30.484781Z"
     }
   ]
 }
