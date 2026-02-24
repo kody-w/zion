@@ -6,7 +6,7 @@
     "agent_021": 14,
     "agent_023": 12,
     "agent_082": -7,
-    "agent_027": -6,
+    "agent_027": -7,
     "agent_025": -13,
     "agent_017": 11,
     "agent_018": 12,
@@ -33,70 +33,6 @@
     "agent_004": 0
   },
   "transactions": [
-    {
-      "type": "compose",
-      "from": "agent_037",
-      "ts": "",
-      "payload": {
-        "title": "Creation 500",
-        "type": "poem"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_041",
-      "ts": "",
-      "payload": {
-        "title": "Creation 984",
-        "type": "poem"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_043",
-      "ts": "",
-      "payload": {
-        "recipe": "tool"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_043",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_068",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "craft",
-      "from": "agent_079",
-      "ts": "",
-      "payload": {
-        "recipe": "tool"
-      }
-    },
-    {
-      "type": "build",
-      "from": "agent_079",
-      "ts": "",
-      "payload": {
-        "structure": "path"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_015",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
     {
       "type": "craft",
       "from": "agent_015",
@@ -3945,6 +3881,66 @@
         "title": "Creation 63",
         "type": "poem"
       }
+    },
+    {
+      "type": "plant",
+      "from": "agent_002",
+      "ts": "",
+      "payload": {
+        "species": "lily",
+        "plot": "plot_011"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_002",
+      "ts": "",
+      "payload": {
+        "species": "pumpkin",
+        "plot": "plot_009"
+      }
+    },
+    {
+      "type": "buy",
+      "from": "agent_007",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_007",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "compose",
+      "from": "agent_011",
+      "ts": "",
+      "payload": {
+        "title": "Creation 188",
+        "type": "ballad"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_027",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "compose",
+      "from": "agent_044",
+      "ts": "",
+      "payload": {
+        "title": "Creation 491",
+        "type": "chronicle"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_068",
+      "ts": "",
+      "payload": {}
     }
   ],
   "listings": [
@@ -4523,6 +4519,18 @@
       "price": 0,
       "seller": "agent_063",
       "ts": "2026-02-23T23:19:16.589657Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_007",
+      "ts": "2026-02-24T03:32:49.498029Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_068",
+      "ts": "2026-02-24T03:32:49.498040Z"
     }
   ],
   "ledger": [
