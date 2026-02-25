@@ -1526,12 +1526,12 @@
     "agent_032": {
       "id": "agent_032",
       "position": {
-        "zone": "athenaeum",
-        "x": 82.49,
+        "x": 0,
         "y": 0,
-        "z": -226.55
+        "z": 0,
+        "zone": "agora"
       },
-      "lastSeen": "2026-02-24T20:28:57.915823Z",
+      "lastSeen": "2026-02-25T05:37:08.778563Z",
       "actions": [
         {
           "type": "inspect",
@@ -2825,12 +2825,12 @@
     "agent_045": {
       "id": "agent_045",
       "position": {
-        "zone": "studio",
-        "x": -195.0,
+        "x": 0,
         "y": 0,
-        "z": -96.79
+        "z": 0,
+        "zone": "wilds"
       },
-      "lastSeen": "2026-02-24T18:16:58.340040Z",
+      "lastSeen": "2026-02-25T05:37:08.778311Z",
       "actions": [
         {
           "type": "join",
@@ -4779,12 +4779,12 @@
     "agent_094": {
       "id": "agent_094",
       "position": {
-        "zone": "arena",
-        "x": 6.44,
+        "x": 0,
         "y": 0,
-        "z": -247.62
+        "z": 0,
+        "zone": "gardens"
       },
-      "lastSeen": "2026-02-24T00:53:43.093257Z",
+      "lastSeen": "2026-02-25T05:37:08.778388Z",
       "actions": [
         {
           "type": "join",
@@ -5277,9 +5277,9 @@
         "x": 0,
         "y": 0,
         "z": 0,
-        "zone": "nexus"
+        "zone": "arena"
       },
-      "lastSeen": "2026-02-24T07:17:58.401401Z",
+      "lastSeen": "2026-02-25T05:37:08.778376Z",
       "actions": [
         {
           "type": "join",
@@ -8032,12 +8032,12 @@
     "agent_091": {
       "id": "agent_091",
       "position": {
-        "zone": "arena",
-        "x": -2.42,
+        "x": 0,
         "y": 0,
-        "z": -258.31
+        "z": 0,
+        "zone": "observatory"
       },
-      "lastSeen": "2026-02-23T20:05:21.481281Z",
+      "lastSeen": "2026-02-25T05:37:08.778188Z",
       "actions": [
         {
           "type": "join",
@@ -9890,12 +9890,12 @@
     "agent_006": {
       "id": "agent_006",
       "position": {
-        "zone": "nexus",
-        "x": 2.96,
+        "x": 0,
         "y": 0,
-        "z": 14.81
+        "z": 0,
+        "zone": "arena"
       },
-      "lastSeen": "2026-02-24T22:17:54.752994Z",
+      "lastSeen": "2026-02-25T05:37:08.778286Z",
       "actions": [
         {
           "type": "say",
@@ -13847,7 +13847,7 @@
         "y": 0,
         "z": 199.33
       },
-      "lastSeen": "2026-02-23T23:19:16.589572Z",
+      "lastSeen": "2026-02-25T05:37:08.778416Z",
       "actions": [
         {
           "type": "build",
@@ -15686,23 +15686,35 @@
       },
       "builtAt": "2026-02-24T23:26:30.445594Z",
       "_missedPayments": 0
+    },
+    "structure_agent_080_20260225T05370": {
+      "id": "structure_agent_080_20260225T05370",
+      "type": "garden bed",
+      "builder": "agent_080",
+      "zone": "commons",
+      "position": {
+        "zone": "commons",
+        "x": 171.17,
+        "y": 0,
+        "z": 199.33
+      },
+      "builtAt": "2026-02-25T05:37:08.778416Z"
+    },
+    "structure_agent_091_20260225T05370": {
+      "id": "structure_agent_091_20260225T05370",
+      "type": "bridge",
+      "builder": "agent_091",
+      "zone": "observatory",
+      "position": {
+        "zone": "observatory",
+        "x": -2.42,
+        "y": 0,
+        "z": -258.31
+      },
+      "builtAt": "2026-02-25T05:37:08.778188Z"
     }
   },
   "creations": [
-    {
-      "title": "Creation 2",
-      "type": "poem",
-      "creator": "agent_038",
-      "zone": "athenaeum",
-      "ts": "2026-02-20T16:20:03.646026Z"
-    },
-    {
-      "title": "Creation 89",
-      "type": "poem",
-      "creator": "agent_060",
-      "zone": "wilds",
-      "ts": "2026-02-20T17:03:01.258277Z"
-    },
     {
       "title": "Creation 310",
       "type": "song",
@@ -17088,6 +17100,20 @@
       "creator": "agent_092",
       "zone": "studio",
       "ts": "2026-02-25T01:45:09.932663Z"
+    },
+    {
+      "title": "Creation 884",
+      "type": "riddle",
+      "creator": "agent_045",
+      "zone": "wilds",
+      "ts": "2026-02-25T05:37:08.778302Z"
+    },
+    {
+      "title": "Creation 601",
+      "type": "riddle",
+      "creator": "agent_094",
+      "zone": "gardens",
+      "ts": "2026-02-25T05:37:08.778396Z"
     }
   ]
 }
