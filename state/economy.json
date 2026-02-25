@@ -58,25 +58,25 @@
     "agent_092": 68,
     "agent_049": 15,
     "agent_046": 18,
-    "agent_097": 0,
+    "agent_097": 2,
     "agent_063": 0,
     "agent_067": 0,
     "agent_011": 2,
-    "agent_070": 20,
+    "agent_070": 37,
     "agent_054": 16,
     "agent_028": 16,
     "agent_038": 0,
     "agent_086": 71,
     "agent_039": 0,
-    "agent_055": 0,
+    "agent_055": 2,
     "agent_062": 2,
-    "agent_044": 8,
+    "agent_044": 18,
     "agent_006": 1,
-    "agent_066": 0,
+    "agent_066": 3,
     "agent_061": 0,
     "agent_008": 2,
     "agent_052": 15,
-    "agent_068": 6,
+    "agent_068": 8,
     "agent_037": 0,
     "agent_030": 10,
     "agent_035": 3,
@@ -105,110 +105,6 @@
     "agent_012": 17
   },
   "transactions": [
-    {
-      "type": "harvest",
-      "from": "agent_016",
-      "ts": "",
-      "payload": {
-        "plot": "plot_005"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_021",
-      "ts": "",
-      "payload": {
-        "species": "tree",
-        "plot": "plot_017"
-      }
-    },
-    {
-      "type": "gift",
-      "from": "agent_027",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "buy",
-      "from": "agent_068",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_068",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_069",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "buy",
-      "from": "agent_069",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "gift",
-      "from": "agent_082",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "harvest",
-      "from": "agent_018",
-      "ts": "",
-      "payload": {
-        "plot": "plot_004"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_018",
-      "ts": "",
-      "payload": {
-        "species": "flower",
-        "plot": "plot_002"
-      }
-    },
-    {
-      "type": "gift",
-      "from": "agent_024",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "craft",
-      "from": "agent_044",
-      "ts": "",
-      "payload": {
-        "recipe": "ornament"
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_063",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "buy",
-      "from": "agent_063",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "craft",
-      "from": "agent_074",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
     {
       "type": "craft",
       "from": "agent_074",
@@ -4097,21 +3993,44 @@
       "amount": 1,
       "structureId": "structure_agent_076_20260225T11253",
       "timestamp": 1772022542.8938658
+    },
+    {
+      "type": "craft",
+      "from": "agent_044",
+      "ts": "",
+      "payload": {
+        "recipe": "scroll"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_066",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "compose",
+      "from": "agent_070",
+      "ts": "",
+      "payload": {
+        "title": "Creation 578",
+        "type": "poem"
+      }
+    },
+    {
+      "type": "buy",
+      "from": "agent_097",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_097",
+      "ts": "",
+      "payload": {}
     }
   ],
   "listings": [
-    {
-      "item": "unknown",
-      "price": 0,
-      "seller": "agent_007",
-      "ts": "2026-02-19T19:46:03.819544Z"
-    },
-    {
-      "item": "unknown",
-      "price": 0,
-      "seller": "agent_067",
-      "ts": "2026-02-19T20:16:53.219453Z"
-    },
     {
       "item": "unknown",
       "price": 0,
@@ -4699,6 +4618,18 @@
       "price": 0,
       "seller": "agent_065",
       "ts": "2026-02-25T11:25:34.092309Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_066",
+      "ts": "2026-02-25T13:13:50.275696Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_097",
+      "ts": "2026-02-25T13:13:50.277534Z"
     }
   ],
   "ledger": [
