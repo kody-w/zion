@@ -1,6 +1,6 @@
 {
   "balances": {
-    "agent_019": 22,
+    "agent_019": 31,
     "agent_016": 18,
     "agent_022": 7,
     "agent_021": 20,
@@ -20,8 +20,8 @@
     "TREASURY": 0,
     "agent_081": 12,
     "agent_077": 33,
-    "agent_089": 0,
-    "agent_078": 0,
+    "agent_089": 2,
+    "agent_078": 10,
     "agent_090": 9,
     "agent_076": 0,
     "agent_075": 10,
@@ -32,12 +32,12 @@
     "agent_074": 1,
     "agent_004": 0,
     "user_001": 0,
-    "zion-observer": 47,
+    "zion-observer": 49,
     "agent_088": 58,
-    "agent_095": 0,
+    "agent_095": 15,
     "agent_071": 1,
     "agent_093": 22,
-    "agent_032": 1,
+    "agent_032": 2,
     "agent_036": 16,
     "agent_014": 0,
     "agent_060": 17,
@@ -49,7 +49,7 @@
     "agent_057": 54,
     "agent_056": 15,
     "agent_098": 1,
-    "agent_047": 19,
+    "agent_047": 20,
     "agent_094": 48,
     "agent_041": 58,
     "agent_073": 37,
@@ -67,13 +67,13 @@
     "agent_028": 16,
     "agent_038": 0,
     "agent_086": 73,
-    "agent_039": 0,
+    "agent_039": 2,
     "agent_055": 6,
     "agent_062": 2,
-    "agent_044": 18,
+    "agent_044": 48,
     "agent_006": 1,
     "agent_066": 3,
-    "agent_061": 17,
+    "agent_061": 36,
     "agent_008": 2,
     "agent_052": 15,
     "agent_068": 11,
@@ -102,106 +102,9 @@
     "agent_100": 3,
     "agent_042": 17,
     "agent_033": 2,
-    "agent_012": 21
+    "agent_012": 37
   },
   "transactions": [
-    {
-      "type": "compose",
-      "from": "agent_050",
-      "ts": "",
-      "payload": {
-        "title": "Creation 412",
-        "type": "song"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_077",
-      "ts": "",
-      "payload": {
-        "recipe": "tool"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_077",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_081",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_081",
-      "ts": "",
-      "payload": {
-        "recipe": "tool"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_093",
-      "ts": "",
-      "payload": {
-        "title": "Creation 857",
-        "type": "poem"
-      }
-    },
-    {
-      "type": "gift",
-      "from": "agent_025",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "compose",
-      "from": "agent_045",
-      "ts": "",
-      "payload": {
-        "title": "Creation 341",
-        "type": "song"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_045",
-      "ts": "",
-      "payload": {
-        "recipe": "tool"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_084",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
-    {
-      "type": "build",
-      "from": "agent_090",
-      "ts": "",
-      "payload": {
-        "structure": "statue"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_090",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
     {
       "type": "harvest",
       "from": "agent_001",
@@ -4014,6 +3917,76 @@
       "amount": 1,
       "structureId": "structure_agent_077_20260225T20512",
       "timestamp": 1772056355.5159862
+    },
+    {
+      "type": "compose",
+      "from": "agent_012",
+      "ts": "",
+      "payload": {
+        "title": "Creation 432",
+        "type": "lullaby"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_019",
+      "ts": "",
+      "payload": {
+        "species": "carrot",
+        "plot": "plot_013"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_019",
+      "ts": "",
+      "payload": {
+        "plot": "plot_003"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_044",
+      "ts": "",
+      "payload": {
+        "title": "Creation 927",
+        "type": "chronicle"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_044",
+      "ts": "",
+      "payload": {
+        "title": "Creation 676",
+        "type": "story"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_061",
+      "ts": "",
+      "payload": {
+        "title": "Creation 920",
+        "type": "chronicle"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_078",
+      "ts": "",
+      "payload": {
+        "structure": "gate"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_095",
+      "ts": "",
+      "payload": {
+        "title": "Creation 581",
+        "type": "chronicle"
+      }
     }
   ],
   "listings": [
