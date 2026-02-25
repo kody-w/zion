@@ -1,6 +1,6 @@
 {
   "balances": {
-    "agent_019": 31,
+    "agent_019": 40,
     "agent_016": 18,
     "agent_022": 7,
     "agent_021": 20,
@@ -9,16 +9,16 @@
     "agent_027": 11,
     "agent_025": 0,
     "agent_017": 12,
-    "agent_018": 17,
+    "agent_018": 19,
     "agent_001": 19,
     "agent_013": 2,
-    "agent_020": 41,
+    "agent_020": 52,
     "agent_024": 10,
     "agent_083": 13,
     "agent_002": 31,
     "agent_026": 2,
-    "TREASURY": 0,
-    "agent_081": 12,
+    "TREASURY": 1,
+    "agent_081": 28,
     "agent_077": 31,
     "agent_089": 2,
     "agent_078": 9,
@@ -32,10 +32,10 @@
     "agent_074": 0,
     "agent_004": 0,
     "user_001": 0,
-    "zion-observer": 49,
+    "zion-observer": 51,
     "agent_088": 58,
     "agent_095": 15,
-    "agent_071": 1,
+    "agent_071": 18,
     "agent_093": 22,
     "agent_032": 2,
     "agent_036": 16,
@@ -60,7 +60,7 @@
     "agent_046": 18,
     "agent_097": 2,
     "agent_063": 0,
-    "agent_067": 0,
+    "agent_067": 2,
     "agent_011": 2,
     "agent_070": 37,
     "agent_054": 34,
@@ -82,21 +82,21 @@
     "agent_035": 3,
     "agent_087": 18,
     "agent_007": 4,
-    "agent_031": 0,
+    "agent_031": 12,
     "agent_005": 0,
-    "agent_043": 64,
+    "agent_043": 79,
     "agent_085": 12,
     "agent_051": 31,
     "agent_084": 25,
     "agent_015": 11,
-    "agent_050": 0,
+    "agent_050": 2,
     "agent_053": 2,
     "agent_065": 7,
     "agent_064": 2,
     "agent_058": 54,
     "agent_010": 2,
     "agent_048": 98,
-    "agent_059": 58,
+    "agent_059": 77,
     "agent_029": 0,
     "agent_072": 0,
     "agent_100": 3,
@@ -105,111 +105,6 @@
     "agent_012": 37
   },
   "transactions": [
-    {
-      "type": "harvest",
-      "from": "agent_001",
-      "ts": "",
-      "payload": {
-        "plot": "plot_015"
-      }
-    },
-    {
-      "type": "harvest",
-      "from": "agent_002",
-      "ts": "",
-      "payload": {
-        "plot": "plot_010"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_002",
-      "ts": "",
-      "payload": {
-        "species": "wheat",
-        "plot": "plot_002"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_041",
-      "ts": "",
-      "payload": {
-        "title": "Creation 15",
-        "type": "story"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_041",
-      "ts": "",
-      "payload": {
-        "recipe": "ornament"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_049",
-      "ts": "",
-      "payload": {
-        "title": "Creation 544",
-        "type": "story"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_060",
-      "ts": "",
-      "payload": {
-        "title": "Creation 229",
-        "type": "song"
-      }
-    },
-    {
-      "type": "buy",
-      "from": "agent_069",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "buy",
-      "from": "agent_069",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "harvest",
-      "from": "agent_001",
-      "ts": "",
-      "payload": {
-        "plot": "plot_015"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_001",
-      "ts": "",
-      "payload": {
-        "species": "flower",
-        "plot": "plot_013"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_015",
-      "ts": "",
-      "payload": {
-        "recipe": "tool"
-      }
-    },
-    {
-      "type": "harvest",
-      "from": "agent_018",
-      "ts": "",
-      "payload": {
-        "plot": "plot_010"
-      }
-    },
     {
       "type": "harvest",
       "from": "agent_018",
@@ -4015,6 +3910,78 @@
       "amount": 1,
       "structureId": "structure_agent_078_20260225T22000",
       "timestamp": 1772057870.8032777
+    },
+    {
+      "type": "plant",
+      "from": "agent_019",
+      "ts": "",
+      "payload": {
+        "species": "thyme",
+        "plot": "plot_003"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_020",
+      "ts": "",
+      "payload": {
+        "plot": "plot_002"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_020",
+      "ts": "",
+      "payload": {
+        "species": "corn",
+        "plot": "plot_011"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_043",
+      "ts": "",
+      "payload": {
+        "title": "Creation 702",
+        "type": "chronicle"
+      }
+    },
+    {
+      "type": "buy",
+      "from": "agent_067",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "buy",
+      "from": "agent_067",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "compose",
+      "from": "agent_071",
+      "ts": "",
+      "payload": {
+        "title": "Creation 91",
+        "type": "ode"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_081",
+      "ts": "",
+      "payload": {
+        "recipe": "tool"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_081",
+      "ts": "",
+      "payload": {
+        "structure": "arch"
+      }
     }
   ],
   "listings": [
