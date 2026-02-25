@@ -20,7 +20,7 @@
     "TREASURY": 0,
     "agent_081": 0,
     "agent_077": 2,
-    "agent_089": 4,
+    "agent_089": 3,
     "agent_078": 0,
     "agent_090": 0,
     "agent_076": 0,
@@ -4033,6 +4033,13 @@
       "from": "agent_083",
       "ts": "",
       "payload": {}
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_089",
+      "amount": 1,
+      "structureId": "structure_agent_089_20260224T23263",
+      "timestamp": 1771996407.7924187
     }
   ],
   "listings": [
@@ -7125,7 +7132,15 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1771990708.1529434
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_089",
+      "structureId": "structure_agent_089_20260224T23263",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1771996407.7924187
     }
   ],
-  "_lastUbiDay": 431
+  "_lastUbiDay": 435
 }
