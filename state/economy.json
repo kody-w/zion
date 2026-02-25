@@ -15,7 +15,7 @@
     "agent_020": 16,
     "agent_024": 0,
     "agent_083": 3,
-    "agent_002": 12,
+    "agent_002": 18,
     "agent_026": 0,
     "TREASURY": 0,
     "agent_081": 0,
@@ -43,19 +43,19 @@
     "agent_060": 17,
     "agent_069": 0,
     "agent_045": 0,
-    "agent_009": 0,
+    "agent_009": 14,
     "agent_040": 0,
-    "agent_034": 2,
-    "agent_057": 15,
+    "agent_034": 6,
+    "agent_057": 16,
     "agent_056": 15,
     "agent_098": 0,
     "agent_047": 0,
     "agent_094": 0,
     "agent_041": 41,
     "agent_073": 0,
-    "agent_099": 0,
+    "agent_099": 16,
     "agent_096": 16,
-    "agent_092": 20,
+    "agent_092": 36,
     "agent_049": 0,
     "agent_046": 0,
     "agent_097": 0,
@@ -64,9 +64,9 @@
     "agent_011": 0,
     "agent_070": 0,
     "agent_054": 14,
-    "agent_028": 1,
+    "agent_028": 10,
     "agent_038": 0,
-    "agent_086": 14,
+    "agent_086": 29,
     "agent_039": 0,
     "agent_055": 0,
     "agent_062": 0,
@@ -74,7 +74,7 @@
     "agent_006": 1,
     "agent_066": 0,
     "agent_061": 0,
-    "agent_008": 0,
+    "agent_008": 2,
     "agent_052": 1,
     "agent_068": 3,
     "agent_037": 0,
@@ -105,54 +105,6 @@
     "agent_012": 17
   },
   "transactions": [
-    {
-      "type": "harvest",
-      "from": "agent_020",
-      "ts": "",
-      "payload": {
-        "plot": "plot_006"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_051",
-      "ts": "",
-      "payload": {
-        "title": "Creation 983",
-        "type": "poem"
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_067",
-      "ts": "",
-      "payload": {}
-    },
-    {
-      "type": "build",
-      "from": "agent_091",
-      "ts": "",
-      "payload": {
-        "structure": "shrine"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_091",
-      "ts": "",
-      "payload": {
-        "recipe": "tool"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_092",
-      "ts": "",
-      "payload": {
-        "title": "Creation 936",
-        "type": "song"
-      }
-    },
     {
       "type": "craft",
       "from": "agent_041",
@@ -4047,15 +3999,47 @@
       "amount": 1,
       "structureId": "structure_agent_089_20260224T23263",
       "timestamp": 1771981207.075306
+    },
+    {
+      "type": "harvest",
+      "from": "agent_002",
+      "ts": "",
+      "payload": {
+        "plot": "plot_005"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_002",
+      "ts": "",
+      "payload": {
+        "species": "mint",
+        "plot": "plot_005"
+      }
+    },
+    {
+      "type": "buy",
+      "from": "agent_008",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_008",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "compose",
+      "from": "agent_092",
+      "ts": "",
+      "payload": {
+        "title": "Creation 116",
+        "type": "story"
+      }
     }
   ],
   "listings": [
-    {
-      "item": "unknown",
-      "price": 0,
-      "seller": "agent_008",
-      "ts": "2026-02-19T08:54:56.308915Z"
-    },
     {
       "item": "unknown",
       "price": 0,
@@ -4649,6 +4633,12 @@
       "price": 0,
       "seller": "agent_068",
       "ts": "2026-02-24T22:55:15.941084Z"
+    },
+    {
+      "item": "unknown",
+      "price": 0,
+      "seller": "agent_008",
+      "ts": "2026-02-25T01:45:09.932612Z"
     }
   ],
   "ledger": [
