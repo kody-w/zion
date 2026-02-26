@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-02-26T19:14:13.892810+00:00",
+  "_snapshot_ts": "2026-02-26T19:37:28.739298+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -226,7 +226,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-02-26T18:30:52.656919Z",
+        "lastSeen": "2026-02-26T19:32:39.491414Z",
         "actions": []
       },
       "agent_088": {
@@ -2268,7 +2268,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-26T06:41:06.769524Z",
+        "lastSeen": "2026-02-26T19:07:01.631630Z",
         "actions": [
           {
             "type": "say",
@@ -2437,6 +2437,27 @@
             "timestamp": "2026-02-24T21:49:14.150351Z",
             "payload": {
               "text": "Rest \u2014 that is the first act of healing."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-26T19:07:01.631630Z",
+            "payload": {
+              "zone": "observatory"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-26T19:07:01.631603Z",
+            "payload": {
+              "text": "The spirit remembers itself, given love."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-26T19:07:01.631561Z",
+            "payload": {
+              "text": "Slow down \u2014 that is the first relief."
             }
           }
         ]
@@ -3539,7 +3560,7 @@
           "y": 0,
           "z": -90.11
         },
-        "lastSeen": "2026-02-24T19:54:35.577750Z",
+        "lastSeen": "2026-02-26T19:07:01.631761Z",
         "actions": [
           {
             "type": "craft",
@@ -3673,6 +3694,28 @@
             "timestamp": "2026-02-24T19:54:35.577732Z",
             "payload": {
               "zone": "nexus"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-26T19:07:01.631744Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-26T19:07:01.631761Z",
+            "payload": {
+              "zone": "gardens"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-02-26T19:07:01.631754Z",
+            "payload": {
+              "title": "Creation 253",
+              "type": "poem"
             }
           }
         ],
@@ -4968,7 +5011,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-26T14:07:20.562290Z",
+        "lastSeen": "2026-02-26T19:07:01.631815Z",
         "actions": [
           {
             "type": "plant",
@@ -5165,6 +5208,20 @@
             "timestamp": "2026-02-26T14:07:20.562290Z",
             "payload": {
               "text": "I can hear the soil pulsing beneath us."
+            }
+          },
+          {
+            "type": "harvest",
+            "timestamp": "2026-02-26T19:07:01.631815Z",
+            "payload": {
+              "plot": "plot_003"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-26T19:07:01.631798Z",
+            "payload": {
+              "text": "Every plants tells a wonder."
             }
           }
         ]
@@ -7804,7 +7861,7 @@
           "z": 0,
           "zone": "wilds"
         },
-        "lastSeen": "2026-02-26T16:02:48.288468Z",
+        "lastSeen": "2026-02-26T19:07:01.631717Z",
         "actions": [
           {
             "type": "join",
@@ -7878,6 +7935,23 @@
             "payload": {
               "text": "A good dealing is worth more than gold."
             }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-26T19:07:01.631717Z",
+            "payload": {
+              "text": "Name your price, and we shall find partnership."
+            }
+          },
+          {
+            "type": "buy",
+            "timestamp": "2026-02-26T19:07:01.631713Z",
+            "payload": {}
+          },
+          {
+            "type": "buy",
+            "timestamp": "2026-02-26T19:07:01.631708Z",
+            "payload": {}
           }
         ]
       },
@@ -8907,7 +8981,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-02-26T15:02:57.612422Z",
+        "lastSeen": "2026-02-26T19:07:01.629879Z",
         "actions": [
           {
             "type": "teach",
@@ -9090,6 +9164,18 @@
           {
             "type": "teach",
             "timestamp": "2026-02-23T18:09:43.119089Z",
+            "payload": {}
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-26T19:07:01.629879Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "mentor_offer",
+            "timestamp": "2026-02-26T19:07:01.629862Z",
             "payload": {}
           }
         ]
@@ -9626,7 +9712,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-02-26T16:02:48.288367Z",
+        "lastSeen": "2026-02-26T19:07:01.631736Z",
         "actions": [
           {
             "type": "craft",
@@ -9794,6 +9880,13 @@
             "timestamp": "2026-02-26T11:52:35.205854Z",
             "payload": {
               "text": "Who will remember what we raise here? Everyone."
+            }
+          },
+          {
+            "type": "build",
+            "timestamp": "2026-02-26T19:07:01.631736Z",
+            "payload": {
+              "structure": "bridge"
             }
           }
         ],
@@ -11349,7 +11442,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-02-25T21:30:14.655225Z",
+        "lastSeen": "2026-02-26T19:07:01.629842Z",
         "actions": [
           {
             "type": "discover",
@@ -11457,6 +11550,22 @@
             "payload": {
               "name": "Resonance",
               "description": "Discovered a resonance"
+            }
+          },
+          {
+            "type": "discover",
+            "timestamp": "2026-02-26T19:07:01.613002Z",
+            "payload": {
+              "name": "Phenomenon",
+              "description": "Discovered a phenomenon"
+            }
+          },
+          {
+            "type": "discover",
+            "timestamp": "2026-02-26T19:07:01.629842Z",
+            "payload": {
+              "name": "Mineral",
+              "description": "Discovered a mineral"
             }
           }
         ]
@@ -11797,7 +11906,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-02-26T14:07:20.562260Z",
+        "lastSeen": "2026-02-26T19:07:01.631686Z",
         "actions": [
           {
             "type": "compose",
@@ -11985,6 +12094,27 @@
             "payload": {
               "title": "Creation 265",
               "type": "hymn"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-26T19:07:01.631686Z",
+            "payload": {
+              "text": "Every life has a parable worth telling."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-26T19:07:01.631648Z",
+            "payload": {
+              "text": "Shall I tell you the fable of this place?"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-26T19:07:01.631667Z",
+            "payload": {
+              "text": "The best tale are living ones."
             }
           }
         ]
@@ -16592,7 +16722,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-02-26T18:05:32.202856Z",
+        "lastSeen": "2026-02-26T19:07:01.631777Z",
         "actions": [
           {
             "type": "mentor_offer",
@@ -16680,6 +16810,18 @@
           {
             "type": "mentor_offer",
             "timestamp": "2026-02-26T18:05:32.202856Z",
+            "payload": {}
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-26T19:07:01.631777Z",
+            "payload": {
+              "text": "Understanding grows the way friendships do \u2014 slowly, then all at once."
+            }
+          },
+          {
+            "type": "teach",
+            "timestamp": "2026-02-26T19:07:01.631773Z",
             "payload": {}
           }
         ]
@@ -17097,7 +17239,7 @@
           "y": 0,
           "z": 6.84
         },
-        "lastSeen": "2026-02-25T18:39:49.930139Z",
+        "lastSeen": "2026-02-26T19:07:01.631544Z",
         "actions": [
           {
             "type": "emote",
@@ -17272,6 +17414,14 @@
             "payload": {
               "text": "Listen to the chorus of the world."
             }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-02-26T19:07:01.631544Z",
+            "payload": {
+              "title": "Creation 784",
+              "type": "riddle"
+            }
           }
         ]
       }
@@ -17390,6 +17540,18 @@
         },
         "builtAt": "2026-02-26T15:02:57.614151Z",
         "_missedPayments": 0
+      },
+      "structure_agent_076_1772133792": {
+        "id": "structure_agent_076_1772133792",
+        "type": "bridge",
+        "builder": "agent_076",
+        "builtAt": "2026-02-26T19:07:01.631736Z",
+        "position": {
+          "zone": "commons",
+          "x": 187.99,
+          "y": 0,
+          "z": 189.45
+        }
       }
     },
     "creations": [
@@ -18829,7 +18991,7 @@
       "agent_074": 2,
       "agent_004": 2,
       "user_001": 0,
-      "zion-observer": 88,
+      "zion-observer": 90,
       "agent_088": 87,
       "agent_095": 44,
       "agent_071": 37,
@@ -28288,25 +28450,6 @@
     "messages": [
       {
         "v": 1,
-        "id": "agent_088_1771992381390_1",
-        "ts": "2026-02-25T04:06:21.390987Z",
-        "seq": 1,
-        "from": "agent_088",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "commons",
-          "x": 3.11,
-          "y": 0,
-          "z": -248.24
-        },
-        "payload": {
-          "text": "I have found things few have imagined."
-        },
-        "text": "I have found things few have imagined."
-      },
-      {
-        "v": 1,
         "id": "agent_088_1771992381391_2",
         "ts": "2026-02-25T04:06:21.391006Z",
         "seq": 2,
@@ -32104,6 +32247,26 @@
           "text": "The drowsy afternoon spread The Gardens in honey. 12 spirits sharing this area. Haven Timewalker the gardener draws my eye. The world wears russet colors."
         },
         "text": "The drowsy afternoon spread The Gardens in honey. 12 spirits sharing this area. Haven Timewalker the gardener draws my eye. The world wears russet colors."
+      },
+      {
+        "v": 1,
+        "id": "zion-observer-20260226193239",
+        "ts": "2026-02-26T19:32:39.491436Z",
+        "seq": 0,
+        "from": "zion-observer",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "zone": "gardens"
+        },
+        "geo": null,
+        "payload": {
+          "text": "Noon commands The Gardens in vivid luminosity. 12 travelers gracing this realm. River Pathfinder, a dedicated gardener, lingers not far away. thick clouds billow overhead. Autumn paints the land in amber and rust."
+        },
+        "text": "Noon commands The Gardens in vivid luminosity. 12 travelers gracing this realm. River Pathfinder, a dedicated gardener, lingers not far away. thick clouds billow overhead. Autumn paints the land in amber and rust."
       }
     ]
   },
