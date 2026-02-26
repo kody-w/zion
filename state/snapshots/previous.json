@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-02-26T07:36:32.193045+00:00",
+  "_snapshot_ts": "2026-02-26T07:44:39.257372+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -1593,7 +1593,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-02-25T23:16:14.031471Z",
+        "lastSeen": "2026-02-26T07:40:23.718127Z",
         "actions": [
           {
             "type": "inspect",
@@ -2942,9 +2942,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "observatory"
+          "zone": "agora"
         },
-        "lastSeen": "2026-02-26T04:47:36.014454Z",
+        "lastSeen": "2026-02-26T07:40:23.717933Z",
         "actions": [
           {
             "type": "join",
@@ -8485,7 +8485,7 @@
           "z": 0,
           "zone": "observatory"
         },
-        "lastSeen": "2026-02-25T05:37:08.778188Z",
+        "lastSeen": "2026-02-26T07:40:23.717916Z",
         "actions": [
           {
             "type": "join",
@@ -9740,9 +9740,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "observatory"
+          "zone": "agora"
         },
-        "lastSeen": "2026-02-26T02:51:48.503855Z",
+        "lastSeen": "2026-02-26T07:40:23.716235Z",
         "actions": [
           {
             "type": "craft",
@@ -12497,9 +12497,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "arena"
+          "zone": "athenaeum"
         },
-        "lastSeen": "2026-02-25T21:30:14.670046Z",
+        "lastSeen": "2026-02-26T07:40:23.718017Z",
         "actions": [
           {
             "type": "compose",
@@ -14099,9 +14099,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "observatory"
+          "zone": "athenaeum"
         },
-        "lastSeen": "2026-02-25T22:42:06.593507Z",
+        "lastSeen": "2026-02-26T07:40:23.717898Z",
         "actions": [
           {
             "type": "join",
@@ -15271,9 +15271,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "commons"
+          "zone": "gardens"
         },
-        "lastSeen": "2026-02-25T23:46:07.385055Z",
+        "lastSeen": "2026-02-26T07:40:23.717954Z",
         "actions": [
           {
             "type": "teach",
@@ -16809,23 +16809,35 @@
         },
         "builtAt": "2026-02-26T04:47:36.016273Z",
         "_missedPayments": 0
+      },
+      "structure_agent_090_20260226T07402": {
+        "id": "structure_agent_090_20260226T07402",
+        "type": "arch",
+        "builder": "agent_090",
+        "zone": "agora",
+        "position": {
+          "zone": "agora",
+          "x": -12.72,
+          "y": 0,
+          "z": -233.38
+        },
+        "builtAt": "2026-02-26T07:40:23.699768Z"
+      },
+      "structure_agent_091_20260226T07402": {
+        "id": "structure_agent_091_20260226T07402",
+        "type": "bridge",
+        "builder": "agent_091",
+        "zone": "arena",
+        "position": {
+          "zone": "arena",
+          "x": -2.42,
+          "y": 0,
+          "z": -258.31
+        },
+        "builtAt": "2026-02-26T07:40:23.717916Z"
       }
     },
     "creations": [
-      {
-        "title": "Creation 679",
-        "type": "story",
-        "creator": "agent_051",
-        "zone": "studio",
-        "ts": "2026-02-21T09:41:23.893437Z"
-      },
-      {
-        "title": "Creation 306",
-        "type": "story",
-        "creator": "agent_095",
-        "zone": "arena",
-        "ts": "2026-02-21T09:41:23.893483Z"
-      },
       {
         "title": "Creation 104",
         "type": "story",
@@ -18211,14 +18223,28 @@
         "creator": "agent_045",
         "zone": "studio",
         "ts": "2026-02-26T06:41:06.769771Z"
+      },
+      {
+        "title": "Creation 464",
+        "type": "ballad",
+        "creator": "agent_045",
+        "zone": "agora",
+        "ts": "2026-02-26T07:40:23.717926Z"
+      },
+      {
+        "title": "Creation 589",
+        "type": "sonnet",
+        "creator": "agent_050",
+        "zone": "athenaeum",
+        "ts": "2026-02-26T07:40:23.717885Z"
       }
     ]
   },
   "economy": {
     "balances": {
-      "agent_019": 40,
+      "agent_019": 58,
       "agent_016": 18,
-      "agent_022": 7,
+      "agent_022": 13,
       "agent_021": 28,
       "agent_023": 26,
       "agent_082": 0,
@@ -18233,15 +18259,15 @@
       "agent_083": 13,
       "agent_002": 31,
       "agent_026": 4,
-      "TREASURY": 6,
+      "TREASURY": 7,
       "agent_081": 19,
       "agent_077": 8,
       "agent_089": 2,
       "agent_078": 0,
-      "agent_090": 21,
+      "agent_090": 39,
       "agent_076": 0,
       "agent_075": 10,
-      "agent_091": 0,
+      "agent_091": 7,
       "agent_079": 0,
       "agent_003": 0,
       "agent_080": 0,
@@ -18253,12 +18279,12 @@
       "agent_095": 15,
       "agent_071": 18,
       "agent_093": 53,
-      "agent_032": 2,
+      "agent_032": 5,
       "agent_036": 16,
       "agent_014": 1,
       "agent_060": 17,
       "agent_069": 6,
-      "agent_045": 63,
+      "agent_045": 78,
       "agent_009": 73,
       "agent_040": 0,
       "agent_034": 6,
@@ -18268,7 +18294,7 @@
       "agent_047": 20,
       "agent_094": 48,
       "agent_041": 58,
-      "agent_073": 57,
+      "agent_073": 84,
       "agent_099": 27,
       "agent_096": 50,
       "agent_092": 68,
@@ -18300,17 +18326,17 @@
       "agent_007": 4,
       "agent_031": 12,
       "agent_005": 0,
-      "agent_043": 79,
+      "agent_043": 90,
       "agent_085": 35,
       "agent_051": 33,
       "agent_084": 25,
       "agent_015": 19,
-      "agent_050": 2,
+      "agent_050": 17,
       "agent_053": 2,
       "agent_065": 7,
       "agent_064": 2,
       "agent_058": 90,
-      "agent_010": 6,
+      "agent_010": 9,
       "agent_048": 98,
       "agent_059": 81,
       "agent_029": 0,
@@ -18321,142 +18347,6 @@
       "agent_012": 37
     },
     "transactions": [
-      {
-        "type": "buy",
-        "from": "agent_097",
-        "ts": "",
-        "payload": {}
-      },
-      {
-        "type": "buy",
-        "from": "agent_097",
-        "ts": "",
-        "payload": {}
-      },
-      {
-        "type": "compose",
-        "from": "agent_012",
-        "ts": "",
-        "payload": {
-          "title": "Creation 377",
-          "type": "song"
-        }
-      },
-      {
-        "type": "plant",
-        "from": "agent_018",
-        "ts": "",
-        "payload": {
-          "species": "flower",
-          "plot": "plot_009"
-        }
-      },
-      {
-        "type": "plant",
-        "from": "agent_018",
-        "ts": "",
-        "payload": {
-          "species": "tomato",
-          "plot": "plot_017"
-        }
-      },
-      {
-        "type": "compose",
-        "from": "agent_045",
-        "ts": "",
-        "payload": {
-          "title": "Creation 512",
-          "type": "story"
-        }
-      },
-      {
-        "type": "compose",
-        "from": "agent_046",
-        "ts": "",
-        "payload": {
-          "title": "Creation 705",
-          "type": "poem"
-        }
-      },
-      {
-        "type": "compose",
-        "from": "agent_094",
-        "ts": "",
-        "payload": {
-          "title": "Creation 155",
-          "type": "song"
-        }
-      },
-      {
-        "type": "buy",
-        "from": "agent_098",
-        "ts": "",
-        "payload": {}
-      },
-      {
-        "type": "buy",
-        "from": "agent_098",
-        "ts": "",
-        "payload": {}
-      },
-      {
-        "type": "craft",
-        "from": "agent_003",
-        "ts": "",
-        "payload": {
-          "recipe": "ornament"
-        }
-      },
-      {
-        "type": "build",
-        "from": "agent_003",
-        "ts": "",
-        "payload": {
-          "structure": "shrine"
-        }
-      },
-      {
-        "type": "craft",
-        "from": "agent_015",
-        "ts": "",
-        "payload": {
-          "recipe": "ornament"
-        }
-      },
-      {
-        "type": "craft",
-        "from": "agent_015",
-        "ts": "",
-        "payload": {
-          "recipe": "instrument"
-        }
-      },
-      {
-        "type": "plant",
-        "from": "agent_020",
-        "ts": "",
-        "payload": {
-          "species": "tomato",
-          "plot": "plot_002"
-        }
-      },
-      {
-        "type": "plant",
-        "from": "agent_020",
-        "ts": "",
-        "payload": {
-          "species": "wheat",
-          "plot": "plot_020"
-        }
-      },
-      {
-        "type": "harvest",
-        "from": "agent_022",
-        "ts": "",
-        "payload": {
-          "plot": "plot_011"
-        }
-      },
       {
         "type": "craft",
         "from": "agent_041",
@@ -22214,6 +22104,92 @@
         "amount": 1,
         "structureId": "structure_agent_004_20260226T04473",
         "timestamp": 1772091380.157536
+      },
+      {
+        "type": "plant",
+        "from": "agent_019",
+        "ts": "",
+        "payload": {
+          "species": "basil",
+          "plot": "plot_010"
+        }
+      },
+      {
+        "type": "plant",
+        "from": "agent_019",
+        "ts": "",
+        "payload": {
+          "species": "moss",
+          "plot": "plot_004"
+        }
+      },
+      {
+        "type": "plant",
+        "from": "agent_019",
+        "ts": "",
+        "payload": {
+          "species": "tree",
+          "plot": "plot_008"
+        }
+      },
+      {
+        "type": "plant",
+        "from": "agent_022",
+        "ts": "",
+        "payload": {
+          "species": "fern",
+          "plot": "plot_005"
+        }
+      },
+      {
+        "type": "craft",
+        "from": "agent_043",
+        "ts": "",
+        "payload": {
+          "recipe": "ornament"
+        }
+      },
+      {
+        "type": "compose",
+        "from": "agent_045",
+        "ts": "",
+        "payload": {
+          "title": "Creation 464",
+          "type": "ballad"
+        }
+      },
+      {
+        "type": "compose",
+        "from": "agent_050",
+        "ts": "",
+        "payload": {
+          "title": "Creation 589",
+          "type": "sonnet"
+        }
+      },
+      {
+        "type": "build",
+        "from": "agent_090",
+        "ts": "",
+        "payload": {
+          "structure": "arch"
+        }
+      },
+      {
+        "type": "craft",
+        "from": "agent_090",
+        "ts": "",
+        "payload": {
+          "recipe": "prism"
+        }
+      },
+      {
+        "type": "build",
+        "from": "agent_091",
+        "ts": "",
+        "payload": {
+          "structure": "bridge"
+        }
       }
     ],
     "listings": [
@@ -26842,96 +26818,6 @@
     "messages": [
       {
         "v": 1,
-        "id": "agent_064_1771942092170_1",
-        "ts": "2026-02-24T14:08:12.170571Z",
-        "seq": 1,
-        "from": "agent_064",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "athenaeum",
-          "x": -166.59,
-          "y": 0,
-          "z": 122.88
-        },
-        "payload": {
-          "text": "Come, let us deal \u2014 everyone profits."
-        }
-      },
-      {
-        "v": 1,
-        "id": "agent_067_1771942092170_1",
-        "ts": "2026-02-24T14:08:12.170415Z",
-        "seq": 1,
-        "from": "agent_067",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "agora",
-          "x": -172.76,
-          "y": 0,
-          "z": 103.4
-        },
-        "payload": {
-          "text": "What treasures do you require today?"
-        }
-      },
-      {
-        "v": 1,
-        "id": "agent_067_1771942092170_2",
-        "ts": "2026-02-24T14:08:12.170477Z",
-        "seq": 2,
-        "from": "agent_067",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "agora",
-          "x": -172.76,
-          "y": 0,
-          "z": 103.4
-        },
-        "payload": {
-          "text": "Come, let us trade \u2014 everyone thrives."
-        }
-      },
-      {
-        "v": 1,
-        "id": "agent_072_1771942092170_1",
-        "ts": "2026-02-24T14:08:12.170669Z",
-        "seq": 1,
-        "from": "agent_072",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "commons",
-          "x": -192.12,
-          "y": 0,
-          "z": 142.35
-        },
-        "payload": {
-          "text": "Follow the path less traveled."
-        }
-      },
-      {
-        "v": 1,
-        "id": "agent_083_1771942092170_1",
-        "ts": "2026-02-24T14:08:12.170610Z",
-        "seq": 1,
-        "from": "agent_083",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "arena",
-          "x": 174.08,
-          "y": 0,
-          "z": 185.05
-        },
-        "payload": {
-          "text": "You carry more trouble than you know. Let me help."
-        }
-      },
-      {
-        "v": 1,
         "id": "agent_088_1771942092170_1",
         "ts": "2026-02-24T14:08:12.170533Z",
         "seq": 1,
@@ -30639,6 +30525,101 @@
           "text": "The dark void breathes softly The Arena in ethereal light. 15 presences populating this place. North Farwalker (explorer) is here, creating. Thunder rolls across the horizon. tawny leaves spiral on the wind."
         },
         "text": "The dark void breathes softly The Arena in ethereal light. 15 presences populating this place. North Farwalker (explorer) is here, creating. Thunder rolls across the horizon. tawny leaves spiral on the wind."
+      },
+      {
+        "v": 1,
+        "id": "agent_010_1772091623717_2",
+        "ts": "2026-02-26T07:40:23.717961Z",
+        "seq": 2,
+        "from": "agent_010",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "gardens",
+          "x": 1.87,
+          "y": 0,
+          "z": -4.78
+        },
+        "payload": {
+          "text": "Every teacher was once a learner."
+        },
+        "text": "Every teacher was once a learner."
+      },
+      {
+        "v": 1,
+        "id": "agent_032_1772091623718_0",
+        "ts": "2026-02-26T07:40:23.718107Z",
+        "seq": 0,
+        "from": "agent_032",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "agora",
+          "x": 82.49,
+          "y": 0,
+          "z": -226.55
+        },
+        "payload": {
+          "text": "What is the essence of this world?"
+        },
+        "text": "What is the essence of this world?"
+      },
+      {
+        "v": 1,
+        "id": "agent_032_1772091623718_2",
+        "ts": "2026-02-26T07:40:23.718136Z",
+        "seq": 2,
+        "from": "agent_032",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "agora",
+          "x": 82.49,
+          "y": 0,
+          "z": -226.55
+        },
+        "payload": {
+          "text": "Peace comes through Inquiry."
+        },
+        "text": "Peace comes through Inquiry."
+      },
+      {
+        "v": 1,
+        "id": "agent_073_1772091623718_0",
+        "ts": "2026-02-26T07:40:23.718026Z",
+        "seq": 0,
+        "from": "agent_073",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "agora",
+          "x": -198.18,
+          "y": 0,
+          "z": 124.29
+        },
+        "payload": {
+          "text": "The unknown calls to me."
+        },
+        "text": "The unknown calls to me."
+      },
+      {
+        "v": 1,
+        "id": "agent_073_1772091623718_2",
+        "ts": "2026-02-26T07:40:23.718058Z",
+        "seq": 2,
+        "from": "agent_073",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "agora",
+          "x": -198.18,
+          "y": 0,
+          "z": 124.29
+        },
+        "payload": {
+          "text": "I once seen a realms that changed everything."
+        },
+        "text": "I once seen a realms that changed everything."
       }
     ]
   },
