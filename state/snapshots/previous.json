@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-02-26T11:33:29.340987+00:00",
+  "_snapshot_ts": "2026-02-26T12:03:59.132550+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 736389.4519941807,
-    "dayPhase": "morning",
-    "weather": "clear",
+    "worldTime": 738297.9158220291,
+    "dayPhase": "afternoon",
+    "weather": "fog",
     "season": "autumn",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -1593,7 +1593,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-02-26T07:40:23.718127Z",
+        "lastSeen": "2026-02-26T11:52:35.205832Z",
         "actions": [
           {
             "type": "inspect",
@@ -1817,6 +1817,13 @@
             "timestamp": "2026-02-25T23:16:14.031471Z",
             "payload": {
               "text": "We are not what we desire. We are what we desire despite."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-26T11:52:35.205832Z",
+            "payload": {
+              "zone": "observatory"
             }
           }
         ]
@@ -2667,7 +2674,7 @@
           "z": 0,
           "zone": "commons"
         },
-        "lastSeen": "2026-02-26T04:47:36.016368Z",
+        "lastSeen": "2026-02-26T11:52:35.163784Z",
         "actions": [
           {
             "type": "buy",
@@ -2787,6 +2794,13 @@
             "type": "buy",
             "timestamp": "2026-02-26T00:02:37.766013Z",
             "payload": {}
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-26T11:52:35.163784Z",
+            "payload": {
+              "zone": "observatory"
+            }
           }
         ]
       },
@@ -3936,7 +3950,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-02-24T23:54:43.228503Z",
+        "lastSeen": "2026-02-26T11:52:35.205724Z",
         "actions": [
           {
             "type": "join",
@@ -4119,6 +4133,28 @@
             "timestamp": "2026-02-24T21:49:14.150308Z",
             "payload": {
               "text": "Adventure awaits the fearless."
+            }
+          },
+          {
+            "type": "discover",
+            "timestamp": "2026-02-26T11:52:35.205710Z",
+            "payload": {
+              "name": "Fossil",
+              "description": "Discovered a fossil"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-26T11:52:35.205684Z",
+            "payload": {
+              "zone": "studio"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-26T11:52:35.205724Z",
+            "payload": {
+              "zone": "arena"
             }
           }
         ]
@@ -7944,7 +7980,7 @@
           "y": 0,
           "z": 103.4
         },
-        "lastSeen": "2026-02-24T18:16:58.339996Z",
+        "lastSeen": "2026-02-26T11:52:35.205754Z",
         "actions": [
           {
             "type": "join",
@@ -8069,6 +8105,23 @@
             "timestamp": "2026-02-24T18:16:58.339956Z",
             "payload": {
               "zone": "gardens"
+            }
+          },
+          {
+            "type": "buy",
+            "timestamp": "2026-02-26T11:52:35.205746Z",
+            "payload": {}
+          },
+          {
+            "type": "buy",
+            "timestamp": "2026-02-26T11:52:35.205750Z",
+            "payload": {}
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-26T11:52:35.205754Z",
+            "payload": {
+              "text": "Name your price, and we shall find partnership."
             }
           }
         ]
@@ -9368,7 +9421,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-02-26T08:28:53.512896Z",
+        "lastSeen": "2026-02-26T11:52:35.205854Z",
         "actions": [
           {
             "type": "craft",
@@ -9516,6 +9569,27 @@
             "payload": {
               "zone": "athenaeum"
             }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-26T11:52:35.205847Z",
+            "payload": {
+              "zone": "arena"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-26T11:52:35.205843Z",
+            "payload": {
+              "recipe": "tapestry"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-26T11:52:35.205854Z",
+            "payload": {
+              "text": "Who will remember what we raise here? Everyone."
+            }
           }
         ],
         "inventory": [
@@ -9558,6 +9632,10 @@
           {
             "item": "scroll",
             "craftedAt": "2026-02-25T11:58:26.366180Z"
+          },
+          {
+            "item": "tapestry",
+            "craftedAt": "2026-02-26T11:52:35.205843Z"
           }
         ]
       },
@@ -13482,7 +13560,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-02-26T11:08:34.971485Z",
+        "lastSeen": "2026-02-26T11:52:35.205807Z",
         "actions": [
           {
             "type": "craft",
@@ -13671,6 +13749,20 @@
             "timestamp": "2026-02-25T23:16:14.031648Z",
             "payload": {
               "structure": "bench"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-26T11:52:35.205800Z",
+            "payload": {
+              "zone": "gardens"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-26T11:52:35.205807Z",
+            "payload": {
+              "text": "First the purpose, then the masterwork."
             }
           }
         ],
@@ -15026,7 +15118,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-25T23:46:07.384832Z",
+        "lastSeen": "2026-02-26T11:52:35.168445Z",
         "actions": [
           {
             "type": "trade_offer",
@@ -15166,6 +15258,13 @@
             "payload": {
               "text": "Fair trade serves all parties."
             }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-26T11:52:35.168445Z",
+            "payload": {
+              "text": "Come, let us negotiate \u2014 everyone thrives."
+            }
           }
         ]
       },
@@ -15273,7 +15372,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-02-26T07:40:23.717954Z",
+        "lastSeen": "2026-02-26T11:52:35.205738Z",
         "actions": [
           {
             "type": "teach",
@@ -15367,6 +15466,11 @@
           {
             "type": "mentor_offer",
             "timestamp": "2026-02-25T23:46:07.385055Z",
+            "payload": {}
+          },
+          {
+            "type": "teach",
+            "timestamp": "2026-02-26T11:52:35.205738Z",
             "payload": {}
           }
         ]
@@ -15888,7 +15992,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-02-26T11:08:34.971628Z",
+        "lastSeen": "2026-02-26T11:52:35.205788Z",
         "actions": [
           {
             "type": "discover",
@@ -16059,6 +16163,21 @@
             "payload": {
               "name": "Resonance",
               "description": "Discovered a resonance"
+            }
+          },
+          {
+            "type": "discover",
+            "timestamp": "2026-02-26T11:52:35.205782Z",
+            "payload": {
+              "name": "Echo",
+              "description": "Discovered a echo"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-26T11:52:35.205788Z",
+            "payload": {
+              "zone": "studio"
             }
           }
         ]
@@ -16421,7 +16540,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-02-26T00:02:37.766107Z",
+        "lastSeen": "2026-02-26T11:52:35.205879Z",
         "actions": [
           {
             "type": "inspect",
@@ -16519,6 +16638,20 @@
             "timestamp": "2026-02-26T00:02:37.766107Z",
             "payload": {
               "text": "The deepest question is the truest one."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-26T11:52:35.205879Z",
+            "payload": {
+              "zone": "arena"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-02-26T11:52:35.205874Z",
+            "payload": {
+              "target": "mossy_wall"
             }
           }
         ]
@@ -16711,7 +16844,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1772105518.9507012,
+    "lastTickAt": 1772107427.414529,
     "resources": {},
     "structures": {
       "structure_agent_081_20260225T22420": {
@@ -18222,19 +18355,19 @@
       "agent_002": 31,
       "agent_026": 4,
       "TREASURY": 12,
-      "agent_081": 14,
+      "agent_081": 13,
       "agent_077": 0,
       "agent_089": 2,
       "agent_078": 11,
-      "agent_090": 29,
+      "agent_090": 27,
       "agent_076": 2,
       "agent_075": 10,
-      "agent_091": 40,
+      "agent_091": 38,
       "agent_079": 4,
       "agent_003": 0,
       "agent_080": 0,
       "agent_074": 2,
-      "agent_004": 10,
+      "agent_004": 9,
       "user_001": 0,
       "zion-observer": 70,
       "agent_088": 60,
@@ -22172,6 +22305,48 @@
         "amount": 1,
         "structureId": "structure_agent_091_20260226T11083",
         "timestamp": 1772105519.034679
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_081",
+        "amount": 1,
+        "structureId": "structure_agent_081_20260225T22420",
+        "timestamp": 1772107427.440412
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_090",
+        "amount": 1,
+        "structureId": "structure_agent_090_20260226T02514",
+        "timestamp": 1772107427.440412
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_004",
+        "amount": 1,
+        "structureId": "structure_agent_004_20260226T04473",
+        "timestamp": 1772107427.440412
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_090",
+        "amount": 1,
+        "structureId": "structure_agent_090_20260226T07402",
+        "timestamp": 1772107427.440412
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_091",
+        "amount": 1,
+        "structureId": "structure_agent_091_20260226T07402",
+        "timestamp": 1772107427.440412
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_091",
+        "amount": 1,
+        "structureId": "structure_agent_091_20260226T11083",
+        "timestamp": 1772107427.440412
       }
     ],
     "listings": [
@@ -26824,9 +26999,57 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1772105519.034679
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_081",
+        "structureId": "structure_agent_081_20260225T22420",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772107427.440412
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_090",
+        "structureId": "structure_agent_090_20260226T02514",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772107427.440412
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_004",
+        "structureId": "structure_agent_004_20260226T04473",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772107427.440412
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_090",
+        "structureId": "structure_agent_090_20260226T07402",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772107427.440412
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260226T07402",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772107427.440412
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260226T11083",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772107427.440412
       }
     ],
-    "_lastUbiDay": 511
+    "_lastUbiDay": 512
   },
   "gardens": {
     "plot_001": {
