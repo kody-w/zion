@@ -88,38 +88,35 @@ jobs:
 
       - name: Copilot — Fix health issues
         if: steps.health.outputs.healthy == 'false' && steps.health.outputs.prompt != ''
-        uses: github/copilot-swe-agent@v1
-        with:
-          prompt: ${{ steps.health.outputs.prompt }}
-          allow-github-mcp-tools: 'true'
-          allow-shell-commands: 'true'
-          autopilot: 'true'
+        run: |
+          echo "Health issue detected. Auto-remediation already attempted above."
+          echo "Prompt that would be sent to Copilot:"
+          echo "${{ steps.health.outputs.prompt }}"
+          # Create an issue for manual review if auto-fix wasn't enough
+          gh issue create \
+            --title "Steward: health issue detected $(date -u +%Y-%m-%d)" \
+            --body "The automated steward found issues that need attention:\n\n${{ steps.health.outputs.prompt }}\n\nAuto-remediation was attempted (re-trigger workflows, re-run failures)." \
+            --label "steward,automated" 2>/dev/null || echo "Issue creation skipped (may already exist)"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         continue-on-error: true
 
       - name: Copilot — Evolve the world
         if: steps.evolve.outputs.has_task == 'true'
-        uses: github/copilot-swe-agent@v1
-        with:
-          prompt: ${{ steps.evolve.outputs.prompt }}
-          allow-github-mcp-tools: 'true'
-          allow-shell-commands: 'true'
-          autopilot: 'true'
+        run: |
+          echo "Evolution task found for this cycle."
+          echo "Prompt:"
+          echo "${{ steps.evolve.outputs.prompt }}"
+          # Execute evolution directly via script
+          bash cli/steward-apply-evolution.sh "${{ steps.evolve.outputs.prompt }}" || true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         continue-on-error: true
 
       - name: Copilot — Manual prompt
         if: github.event.inputs.force_prompt != ''
-        uses: github/copilot-swe-agent@v1
-        with:
-          prompt: ${{ github.event.inputs.force_prompt }}
-          allow-github-mcp-tools: 'true'
-          allow-shell-commands: 'true'
-          autopilot: 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Manual prompt: ${{ github.event.inputs.force_prompt }}"
         continue-on-error: true
 
       - name: Log result
