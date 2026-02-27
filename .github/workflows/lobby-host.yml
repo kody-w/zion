@@ -15,7 +15,7 @@ permissions:
 
 concurrency:
   group: zion-lobby-host
-  cancel-in-progress: true  # Only one host instance at a time
+  cancel-in-progress: false  # Let current run finish and commit state before next starts
 
 jobs:
   host:
