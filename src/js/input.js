@@ -360,6 +360,13 @@
         e.preventDefault();
         break;
 
+      case 'F4':
+        if (callbacks.onAction) {
+          callbacks.onAction('toggleNetDebug', {});
+        }
+        e.preventDefault();
+        break;
+
       case 'F1':
         if (callbacks.onAction) {
           callbacks.onAction('toggleHelp', {});

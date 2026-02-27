@@ -380,6 +380,80 @@
     return true;
   }
 
+  // ====================================================================
+  // NETWORK DEBUG PANEL — F4 hotkey
+  // ====================================================================
+
+  var netDebugEl = null;
+  var netDebugInterval = null;
+
+  function toggleNetworkDebugPanel() {
+    if (typeof document === 'undefined') return;
+
+    if (netDebugEl && netDebugEl.style.display !== 'none') {
+      netDebugEl.style.display = 'none';
+      if (netDebugInterval) { clearInterval(netDebugInterval); netDebugInterval = null; }
+      if (HUD && HUD.showNotification) HUD.showNotification('Network debug OFF', 'info');
+      return;
+    }
+
+    if (!netDebugEl) {
+      netDebugEl = document.createElement('div');
+      netDebugEl.id = 'net-debug-panel';
+      netDebugEl.style.cssText = 'position:fixed;top:10px;right:10px;background:rgba(0,0,0,0.85);color:#0f0;padding:12px 16px;border-radius:8px;font:12px monospace;z-index:10000;min-width:280px;border:1px solid #0f0;pointer-events:none;';
+      document.body.appendChild(netDebugEl);
+    }
+
+    netDebugEl.style.display = 'block';
+    updateNetDebug();
+    netDebugInterval = setInterval(updateNetDebug, 1000);
+    if (HUD && HUD.showNotification) HUD.showNotification('Network debug ON (F4)', 'info');
+  }
+
+  function updateNetDebug() {
+    if (!netDebugEl) return;
+    var stats = (typeof Network !== 'undefined' && Network.getNetworkStats) ? Network.getNetworkStats() : null;
+    var peers = (typeof Network !== 'undefined' && Network.getPeers) ? Network.getPeers() : [];
+
+    var lobbyId = (typeof Network !== 'undefined' && Network.getLobbyPeerId) ? Network.getLobbyPeerId('main') : 'zion-lobby-main';
+    var isLobbyConnected = peers.indexOf(lobbyId) !== -1;
+
+    var html = '<div style="color:#0ff;font-weight:bold;margin-bottom:6px;">⚡ NETWORK DEBUG (F4)</div>';
+
+    if (stats) {
+      var statusColor = stats.connected ? '#0f0' : '#f44';
+      var statusText = stats.connected ? 'CONNECTED' : 'DISCONNECTED';
+      html += '<div>Status: <span style="color:' + statusColor + '">' + statusText + '</span></div>';
+      html += '<div>Peer ID: <span style="color:#ff0">' + (stats.peerId || 'none') + '</span></div>';
+      html += '<div>Peers: <span style="color:#ff0">' + stats.peerCount + '</span> connected, <span style="color:#ff0">' + stats.knownPeers + '</span> known</div>';
+      html += '<div>Messages seen: <span style="color:#ff0">' + stats.seenMessages + '</span></div>';
+    } else {
+      html += '<div style="color:#f44">Network module not available</div>';
+    }
+
+    html += '<div style="margin-top:6px;border-top:1px solid #333;padding-top:6px;">';
+    var lobbyColor = isLobbyConnected ? '#0f0' : '#f44';
+    var lobbyText = isLobbyConnected ? '✓ CONNECTED' : '✗ NOT FOUND';
+    html += '<div>Lobby host: <span style="color:' + lobbyColor + '">' + lobbyText + '</span></div>';
+    html += '<div style="color:#888;font-size:10px;">' + lobbyId + '</div>';
+    html += '</div>';
+
+    if (peers.length > 0) {
+      html += '<div style="margin-top:6px;border-top:1px solid #333;padding-top:6px;">';
+      html += '<div style="color:#0ff;">Connected peers:</div>';
+      for (var pi = 0; pi < Math.min(peers.length, 8); pi++) {
+        var pColor = peers[pi] === lobbyId ? '#0f0' : '#ccc';
+        html += '<div style="color:' + pColor + ';font-size:11px;">  ' + peers[pi] + '</div>';
+      }
+      if (peers.length > 8) html += '<div style="color:#888;font-size:10px;">  +' + (peers.length - 8) + ' more</div>';
+      html += '</div>';
+    }
+
+    html += '<div style="margin-top:6px;color:#555;font-size:10px;">Updated: ' + new Date().toLocaleTimeString() + '</div>';
+
+    netDebugEl.innerHTML = html;
+  }
+
   function togglePhotoMode() {
     photoMode.active = !photoMode.active;
     var hudContainer = document.getElementById('hud-container');
@@ -5704,6 +5778,10 @@
         if (fpsEl && !showDebug) fpsEl.style.display = 'none';
         if (fpsEl && showDebug) fpsEl.style.display = 'block';
         if (HUD && HUD.showNotification) HUD.showNotification('FPS display ' + (showDebug ? 'ON' : 'OFF'), 'info');
+        break;
+
+      case 'toggleNetDebug':
+        toggleNetworkDebugPanel();
         break;
 
       case 'toggleHelp':

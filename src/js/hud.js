@@ -10044,6 +10044,7 @@
       ['.', 'Anchors'],
       [',', 'Federation'],
       ['F3', 'FPS Counter'],
+      ['F4', 'Network Debug'],
       [';', 'Leaderboard'],
       ['[', 'Economy Viz'],
       [']', 'Amendments'],
