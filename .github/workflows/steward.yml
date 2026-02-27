@@ -1,0 +1,101 @@
+name: ZION Steward (Copilot Autopilot)
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Every 15 minutes
+  workflow_dispatch:
+    inputs:
+      force_prompt:
+        description: 'Force a Copilot prompt even if healthy (for testing)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zion-steward
+  cancel-in-progress: true
+
+jobs:
+  steward:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run health check
+        id: health
+        run: |
+          chmod +x cli/steward-check.sh
+          if bash cli/steward-check.sh > /tmp/health_report.txt 2>&1; then
+            echo "healthy=true" >> $GITHUB_OUTPUT
+            cat /tmp/health_report.txt
+          else
+            echo "healthy=false" >> $GITHUB_OUTPUT
+            cat /tmp/health_report.txt
+            # Extract the Copilot prompt
+            PROMPT=$(sed -n '/---COPILOT-PROMPT---/,$ p' /tmp/health_report.txt | tail -n +2)
+            # Escape for GitHub Actions
+            echo "prompt<<EOF" >> $GITHUB_OUTPUT
+            echo "$PROMPT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Auto-fix — Re-trigger failed lobby host
+        if: steps.health.outputs.healthy == 'false'
+        run: |
+          # Check if lobby host needs restarting
+          LOBBY_STATUS=$(gh run list --workflow="lobby-host.yml" --limit 1 --json status -q '.[0].status' 2>/dev/null || echo "unknown")
+          if [ "$LOBBY_STATUS" = "completed" ] || [ "$LOBBY_STATUS" = "failure" ] || [ "$LOBBY_STATUS" = "unknown" ]; then
+            echo "Lobby host not running. Re-triggering..."
+            gh workflow run lobby-host.yml --field duration_minutes=330 || true
+            echo "Lobby host re-triggered."
+          fi
+
+          # Re-run failed workflows (last 5 failures)
+          gh run list --limit 5 --json conclusion,databaseId,name -q '.[] | select(.conclusion=="failure")' | while read -r line; do
+            RUN_ID=$(echo "$line" | python3 -c "import sys,json; print(json.load(sys.stdin)['databaseId'])")
+            NAME=$(echo "$line" | python3 -c "import sys,json; print(json.load(sys.stdin)['name'])")
+            echo "Re-running failed workflow: $NAME ($RUN_ID)"
+            gh run rerun "$RUN_ID" --failed || true
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Copilot intervention (if issues need code fixes)
+        if: steps.health.outputs.healthy == 'false' && steps.health.outputs.prompt != ''
+        uses: github/copilot-swe-agent@v1
+        with:
+          prompt: ${{ steps.health.outputs.prompt }}
+          allow-github-mcp-tools: 'true'
+          allow-shell-commands: 'true'
+          autopilot: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true  # Don't fail the workflow if Copilot can't fix it
+
+      - name: Force prompt (manual testing)
+        if: github.event.inputs.force_prompt != ''
+        uses: github/copilot-swe-agent@v1
+        with:
+          prompt: ${{ github.event.inputs.force_prompt }}
+          allow-github-mcp-tools: 'true'
+          allow-shell-commands: 'true'
+          autopilot: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Log steward run
+        if: always()
+        run: |
+          echo "Steward check at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "Healthy: ${{ steps.health.outputs.healthy }}"
+          if [ -f /tmp/health_report.txt ]; then
+            cat /tmp/health_report.txt
+          fi
