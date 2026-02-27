@@ -206,29 +206,40 @@ function handleOffer(msg) {
   var connectionId = payload.connectionId;
 
   log('Incoming connection from: ' + remotePeerId);
+  log('Offer SDP type: ' + (payload.sdp ? payload.sdp.type : 'none'));
+  log('Offer connection type: ' + payload.type);
+  log('Offer label: ' + (payload.label || 'none'));
 
   // Create WebRTC peer connection using node-datachannel
-  var pc = new nodeDatachannel.PeerConnection(remotePeerId, {
-    iceServers: ['stun:stun.l.google.com:19302']
-  });
+  var config = {
+    iceServers: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302']
+  };
+  var pc = new nodeDatachannel.PeerConnection(remotePeerId + '-' + Date.now(), config);
 
   var peerInfo = {
     pc: pc,
     dc: null,
     connectionId: connectionId,
     remotePeerId: remotePeerId,
-    connected: false
+    connected: false,
+    candidateBuffer: []
   };
 
   host.peers.set(remotePeerId, peerInfo);
 
   // Handle ICE candidates from our side
   pc.onLocalCandidate(function(candidate, mid) {
+    log('Sending ICE candidate to ' + remotePeerId + ' mid=' + mid);
     sendSignaling({
       type: 'CANDIDATE',
       payload: {
-        candidate: { candidate: candidate, sdpMid: mid, sdpMLineIndex: 0 },
-        type: 'data',
+        candidate: {
+          candidate: candidate,
+          sdpMid: mid,
+          sdpMLineIndex: 0,
+          usernameFragment: null
+        },
+        type: payload.type || 'data',
         connectionId: connectionId
       },
       dst: remotePeerId
@@ -236,12 +247,14 @@ function handleOffer(msg) {
   });
 
   pc.onLocalDescription(function(sdp, type) {
+    log('Sending ' + type + ' to ' + remotePeerId + ' (SDP length: ' + sdp.length + ')');
     sendSignaling({
-      type: 'ANSWER',
+      type: type.toUpperCase() === 'OFFER' ? 'OFFER' : 'ANSWER',
       payload: {
         sdp: { sdp: sdp, type: type },
-        type: 'data',
-        connectionId: connectionId
+        type: payload.type || 'data',
+        connectionId: connectionId,
+        browser: 'node-datachannel'
       },
       dst: remotePeerId
     });
@@ -249,13 +262,17 @@ function handleOffer(msg) {
 
   pc.onStateChange(function(state) {
     log('Connection state with ' + remotePeerId + ': ' + state);
-    if (state === 'closed' || state === 'failed') {
+    if (state === 'closed' || state === 'failed' || state === 'disconnected') {
       handlePeerLeave(remotePeerId);
     }
   });
 
+  pc.onGatheringStateChange(function(state) {
+    log('ICE gathering state with ' + remotePeerId + ': ' + state);
+  });
+
   pc.onDataChannel(function(dc) {
-    log('Data channel opened with: ' + remotePeerId);
+    log('✓ Data channel opened with: ' + remotePeerId + ' (label: ' + dc.getLabel() + ')');
     peerInfo.dc = dc;
     peerInfo.connected = true;
 
@@ -281,13 +298,28 @@ function handleOffer(msg) {
     logStatus();
   });
 
-  // Set remote description (the offer)
+  // Set remote description (the offer SDP from browser PeerJS)
   try {
     if (payload.sdp && payload.sdp.sdp) {
-      pc.setRemoteDescription(payload.sdp.sdp, payload.sdp.type || 'offer');
+      log('Setting remote offer SDP (length: ' + payload.sdp.sdp.length + ')');
+      pc.setRemoteDescription(payload.sdp.sdp, 'offer');
+    } else {
+      log('WARNING: No SDP in offer payload');
     }
   } catch(e) {
     log('Error setting remote description: ' + e.message);
+    log('SDP preview: ' + (payload.sdp && payload.sdp.sdp ? payload.sdp.sdp.substring(0, 200) : 'none'));
+  }
+
+  // Apply any buffered candidates
+  if (peerInfo.candidateBuffer.length > 0) {
+    log('Applying ' + peerInfo.candidateBuffer.length + ' buffered candidates');
+    for (var ci = 0; ci < peerInfo.candidateBuffer.length; ci++) {
+      try {
+        pc.addRemoteCandidate(peerInfo.candidateBuffer[ci].candidate, peerInfo.candidateBuffer[ci].mid);
+      } catch(e) { log('Buffered candidate error: ' + e.message); }
+    }
+    peerInfo.candidateBuffer = [];
   }
 }
 
@@ -310,14 +342,22 @@ function handleCandidate(msg) {
   var payload = msg.payload;
   var peer = host.peers.get(remotePeerId);
 
-  if (peer && peer.pc && payload.candidate) {
+  if (!peer) {
+    log('Candidate from unknown peer: ' + remotePeerId + ' (ignoring)');
+    return;
+  }
+
+  if (payload.candidate && payload.candidate.candidate) {
+    var candidateStr = payload.candidate.candidate;
+    var mid = payload.candidate.sdpMid || '0';
+
     try {
-      peer.pc.addRemoteCandidate(
-        payload.candidate.candidate,
-        payload.candidate.sdpMid || '0'
-      );
+      peer.pc.addRemoteCandidate(candidateStr, mid);
     } catch(e) {
-      log('Error adding candidate: ' + e.message);
+      // Buffer if PC not ready yet
+      log('Buffering candidate for ' + remotePeerId + ': ' + e.message);
+      if (!peer.candidateBuffer) peer.candidateBuffer = [];
+      peer.candidateBuffer.push({ candidate: candidateStr, mid: mid });
     }
   }
 }
