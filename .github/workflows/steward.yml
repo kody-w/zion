@@ -19,7 +19,7 @@ concurrency:
 jobs:
   steward:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +27,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install CLI deps
+        working-directory: cli
+        run: npm install --quiet 2>/dev/null || true
 
       - name: Run health check
         id: health
@@ -38,36 +46,47 @@ jobs:
           else
             echo "healthy=false" >> $GITHUB_OUTPUT
             cat /tmp/health_report.txt
-            # Extract the Copilot prompt
             PROMPT=$(sed -n '/---COPILOT-PROMPT---/,$ p' /tmp/health_report.txt | tail -n +2)
-            # Escape for GitHub Actions
             echo "prompt<<EOF" >> $GITHUB_OUTPUT
             echo "$PROMPT" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           fi
 
-      - name: Auto-fix — Re-trigger failed lobby host
-        if: steps.health.outputs.healthy == 'false'
+      - name: Run evolution check
+        id: evolve
+        if: steps.health.outputs.healthy == 'true'
         run: |
-          # Check if lobby host needs restarting
-          LOBBY_STATUS=$(gh run list --workflow="lobby-host.yml" --limit 1 --json status -q '.[0].status' 2>/dev/null || echo "unknown")
-          if [ "$LOBBY_STATUS" = "completed" ] || [ "$LOBBY_STATUS" = "failure" ] || [ "$LOBBY_STATUS" = "unknown" ]; then
-            echo "Lobby host not running. Re-triggering..."
-            gh workflow run lobby-host.yml --field duration_minutes=330 || true
-            echo "Lobby host re-triggered."
+          chmod +x cli/steward-evolve.sh
+          bash cli/steward-evolve.sh > /tmp/evolve_report.txt 2>&1
+          cat /tmp/evolve_report.txt
+          if grep -q "---EVOLVE-PROMPT---" /tmp/evolve_report.txt; then
+            PROMPT=$(sed -n '/---EVOLVE-PROMPT---/,$ p' /tmp/evolve_report.txt | tail -n +2)
+            echo "has_task=true" >> $GITHUB_OUTPUT
+            echo "prompt<<EOF" >> $GITHUB_OUTPUT
+            echo "$PROMPT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "has_task=false" >> $GITHUB_OUTPUT
+            echo "No evolution tasks this cycle."
           fi
 
-          # Re-run failed workflows (last 5 failures)
+      - name: Auto-fix — Re-trigger failed workflows
+        if: steps.health.outputs.healthy == 'false'
+        run: |
+          LOBBY_STATUS=$(gh run list --workflow="lobby-host.yml" --limit 1 --json status -q '.[0].status' 2>/dev/null || echo "unknown")
+          if [ "$LOBBY_STATUS" = "completed" ] || [ "$LOBBY_STATUS" = "failure" ] || [ "$LOBBY_STATUS" = "unknown" ]; then
+            echo "Re-triggering lobby host..."
+            gh workflow run lobby-host.yml --field duration_minutes=330 || true
+          fi
           gh run list --limit 5 --json conclusion,databaseId,name -q '.[] | select(.conclusion=="failure")' | while read -r line; do
             RUN_ID=$(echo "$line" | python3 -c "import sys,json; print(json.load(sys.stdin)['databaseId'])")
-            NAME=$(echo "$line" | python3 -c "import sys,json; print(json.load(sys.stdin)['name'])")
-            echo "Re-running failed workflow: $NAME ($RUN_ID)"
+            echo "Re-running: $RUN_ID"
             gh run rerun "$RUN_ID" --failed || true
           done
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Copilot intervention (if issues need code fixes)
+      - name: Copilot — Fix health issues
         if: steps.health.outputs.healthy == 'false' && steps.health.outputs.prompt != ''
         uses: github/copilot-swe-agent@v1
         with:
@@ -77,9 +96,21 @@ jobs:
           autopilot: 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true  # Don't fail the workflow if Copilot can't fix it
+        continue-on-error: true
 
-      - name: Force prompt (manual testing)
+      - name: Copilot — Evolve the world
+        if: steps.evolve.outputs.has_task == 'true'
+        uses: github/copilot-swe-agent@v1
+        with:
+          prompt: ${{ steps.evolve.outputs.prompt }}
+          allow-github-mcp-tools: 'true'
+          allow-shell-commands: 'true'
+          autopilot: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Copilot — Manual prompt
         if: github.event.inputs.force_prompt != ''
         uses: github/copilot-swe-agent@v1
         with:
@@ -91,11 +122,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
 
-      - name: Log steward run
+      - name: Log result
         if: always()
         run: |
-          echo "Steward check at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "=== Steward Run $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
           echo "Healthy: ${{ steps.health.outputs.healthy }}"
-          if [ -f /tmp/health_report.txt ]; then
-            cat /tmp/health_report.txt
-          fi
+          echo "Evolution task: ${{ steps.evolve.outputs.has_task || 'skipped' }}"
