@@ -13,10 +13,10 @@
     "agent_001": 32,
     "agent_013": 9,
     "agent_020": 77,
-    "agent_024": 10,
+    "agent_024": 17,
     "agent_083": 27,
     "agent_002": 39,
-    "agent_026": 21,
+    "agent_026": 28,
     "TREASURY": 35,
     "agent_081": 31,
     "agent_077": 17,
@@ -30,9 +30,9 @@
     "agent_003": 4,
     "agent_080": 1,
     "agent_074": 0,
-    "agent_004": 1,
+    "agent_004": 4,
     "user_001": 0,
-    "zion-observer": 148,
+    "zion-observer": 151,
     "agent_088": 87,
     "agent_095": 44,
     "agent_071": 63,
@@ -62,11 +62,11 @@
     "agent_063": 11,
     "agent_067": 12,
     "agent_011": 4,
-    "agent_070": 39,
+    "agent_070": 42,
     "agent_054": 62,
     "agent_028": 49,
     "agent_038": 2,
-    "agent_086": 80,
+    "agent_086": 83,
     "agent_039": 2,
     "agent_055": 9,
     "agent_062": 6,
@@ -86,78 +86,25 @@
     "agent_005": 46,
     "agent_043": 90,
     "agent_085": 35,
-    "agent_051": 47,
+    "agent_051": 49,
     "agent_084": 51,
     "agent_015": 47,
     "agent_050": 46,
-    "agent_053": 21,
+    "agent_053": 22,
     "agent_065": 11,
-    "agent_064": 6,
+    "agent_064": 10,
     "agent_058": 93,
     "agent_010": 51,
-    "agent_048": 143,
+    "agent_048": 144,
     "agent_059": 225,
     "agent_029": 8,
     "agent_072": 73,
-    "agent_100": 47,
+    "agent_100": 49,
     "agent_042": 34,
     "agent_033": 7,
     "agent_012": 60
   },
   "transactions": [
-    {
-      "type": "maintenance",
-      "from": "agent_080",
-      "amount": 1,
-      "structureId": "structure_agent_080_20260225T05370",
-      "timestamp": 1772038000.1352563
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_076",
-      "amount": 1,
-      "structureId": "structure_agent_076_20260225T11253",
-      "timestamp": 1772038000.1352563
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_1772033758",
-      "timestamp": 1772038000.1352563
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_080",
-      "amount": 1,
-      "structureId": "structure_agent_080_1772033758",
-      "timestamp": 1772038000.1352563
-    },
-    {
-      "type": "plant",
-      "from": "agent_019",
-      "ts": "",
-      "payload": {
-        "species": "tomato",
-        "plot": "plot_012"
-      }
-    },
-    {
-      "type": "harvest",
-      "from": "agent_020",
-      "ts": "",
-      "payload": {
-        "plot": "plot_014"
-      }
-    },
-    {
-      "type": "harvest",
-      "from": "agent_020",
-      "ts": "",
-      "payload": {
-        "plot": "plot_020"
-      }
-    },
     {
       "type": "build",
       "from": "agent_074",
@@ -3807,6 +3754,24 @@
       "amount": 2,
       "structureId": "structure_agent_081_20260227T18342",
       "timestamp": 1772218741.152331
+    },
+    {
+      "type": "gift",
+      "from": "agent_024",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "gift",
+      "from": "agent_026",
+      "ts": "",
+      "payload": {}
+    },
+    {
+      "type": "buy",
+      "from": "agent_064",
+      "ts": "",
+      "payload": {}
     }
   ],
   "listings": [
