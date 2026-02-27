@@ -390,7 +390,14 @@
   function toggleNetworkDebugPanel() {
     if (typeof document === 'undefined') return;
 
+    // F4 pressed twice quickly = copy telemetry to clipboard
     if (netDebugEl && netDebugEl.style.display !== 'none') {
+      if (netDebugEl._lastToggle && Date.now() - netDebugEl._lastToggle < 1000) {
+        // Double-press F4: export telemetry
+        exportTelemetry();
+        return;
+      }
+      netDebugEl._lastToggle = Date.now();
       netDebugEl.style.display = 'none';
       if (netDebugInterval) { clearInterval(netDebugInterval); netDebugInterval = null; }
       if (HUD && HUD.showNotification) HUD.showNotification('Network debug OFF', 'info');
@@ -449,9 +456,69 @@
       html += '</div>';
     }
 
-    html += '<div style="margin-top:6px;color:#555;font-size:10px;">Updated: ' + new Date().toLocaleTimeString() + '</div>';
+    // Telemetry events (last 5)
+    var telem = (typeof Network !== 'undefined' && Network.getTelemetry) ? Network.getTelemetry() : [];
+    if (telem.length > 0) {
+      html += '<div style="margin-top:6px;border-top:1px solid #333;padding-top:6px;">';
+      html += '<div style="color:#0ff;">Recent events:</div>';
+      var recent = telem.slice(-5);
+      for (var ti = 0; ti < recent.length; ti++) {
+        var evt = recent[ti];
+        var evtTime = new Date(evt.t).toLocaleTimeString();
+        html += '<div style="color:#888;font-size:10px;">' + evtTime + ' ' + evt.cat + ': ' + JSON.stringify(evt.data).substring(0, 60) + '</div>';
+      }
+      html += '</div>';
+    }
+
+    html += '<div style="margin-top:6px;color:#ff0;font-size:10px;pointer-events:auto;cursor:pointer;" id="net-debug-export">⬇ Double-tap F4 to copy telemetry</div>';
+    html += '<div style="color:#555;font-size:10px;">Updated: ' + new Date().toLocaleTimeString() + '</div>';
 
     netDebugEl.innerHTML = html;
+
+    // Attach click handler to export button
+    var exportBtn = document.getElementById('net-debug-export');
+    if (exportBtn) {
+      exportBtn.onclick = function() { exportTelemetry(); };
+    }
+  }
+
+  function exportTelemetry() {
+    var dump = (typeof Network !== 'undefined' && Network.dumpTelemetry) ? Network.dumpTelemetry() : { error: 'Network not available' };
+    var json = JSON.stringify(dump, null, 2);
+
+    // Copy to clipboard
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(json).then(function() {
+        if (HUD && HUD.showNotification) HUD.showNotification('📋 Telemetry copied! Paste to Copilot for diagnosis.', 'success');
+      }).catch(function() {
+        fallbackCopyTelemetry(json);
+      });
+    } else {
+      fallbackCopyTelemetry(json);
+    }
+  }
+
+  function fallbackCopyTelemetry(json) {
+    // Fallback: show in a textarea for manual copy
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:20000;display:flex;align-items:center;justify-content:center;';
+    var box = document.createElement('div');
+    box.style.cssText = 'background:#111;border:1px solid #0f0;border-radius:8px;padding:16px;max-width:600px;width:90%;';
+    box.innerHTML = '<div style="color:#0f0;font-weight:bold;margin-bottom:8px;">📋 Network Telemetry — Copy and paste to Copilot</div>';
+    var ta = document.createElement('textarea');
+    ta.style.cssText = 'width:100%;height:300px;background:#000;color:#0f0;border:1px solid #333;font:11px monospace;padding:8px;';
+    ta.value = json;
+    ta.readOnly = true;
+    box.appendChild(ta);
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = 'margin-top:8px;padding:8px 16px;background:#333;color:#fff;border:none;border-radius:4px;cursor:pointer;';
+    closeBtn.onclick = function() { overlay.remove(); };
+    box.appendChild(closeBtn);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    ta.select();
+    try { document.execCommand('copy'); if (HUD && HUD.showNotification) HUD.showNotification('📋 Telemetry copied!', 'success'); } catch(e) {}
   }
 
   function togglePhotoMode() {

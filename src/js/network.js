@@ -10,6 +10,21 @@
   var MAX_SEEN_MESSAGES = 5000;
   var SEEN_MESSAGE_TTL = 60000; // Evict messages older than 60 seconds
 
+  // ── Debug Telemetry ────────────────────────────────────────────
+  var telemetry = [];
+  var TELEMETRY_MAX = 200;
+
+  function tlog(category, data) {
+    var entry = {
+      t: Date.now(),
+      ts: new Date().toISOString(),
+      cat: category,
+      data: data
+    };
+    telemetry.push(entry);
+    if (telemetry.length > TELEMETRY_MAX) telemetry = telemetry.slice(-TELEMETRY_MAX);
+  }
+
   /**
    * Initialize PeerJS mesh network
    * @param {string} peerId - Unique peer ID for this client
@@ -23,12 +38,15 @@
     // Check if PeerJS is available
     if (typeof Peer === 'undefined') {
       console.warn('PeerJS not available. Network mesh disabled.');
+      tlog('init', { error: 'PeerJS not available' });
       return null;
     }
 
     messageCallback = options.onMessage || function() {};
     peerConnectCallback = options.onPeerConnect || function() {};
     peerDisconnectCallback = options.onPeerDisconnect || function() {};
+
+    tlog('init', { peerId: peerId, peerJsVersion: typeof Peer.prototype !== 'undefined' ? 'loaded' : 'unknown' });
 
     // Create peer with STUN/TURN config for NAT traversal
     peer = new Peer(peerId, {
@@ -44,13 +62,16 @@
 
     peer.on('open', function(id) {
       console.log('Mesh network initialized. Peer ID:', id);
+      tlog('peer_open', { id: id });
     });
 
     peer.on('connection', function(conn) {
+      tlog('peer_incoming', { remotePeer: conn.peer, label: conn.label, type: conn.type });
       handleConnection(conn);
     });
 
     peer.on('error', function(err) {
+      tlog('peer_error', { type: err.type, message: (err.message || '').substring(0, 200) });
       // peer-unavailable is normal when lobby/seed peers don't exist yet
       if (err.type === 'peer-unavailable') {
         // Silently ignore — this just means no other players are online
@@ -65,6 +86,7 @@
 
     peer.on('disconnected', function() {
       console.warn('Peer disconnected from signaling server');
+      tlog('peer_disconnected', { peerId: peerId });
       attemptReconnect(peerId, 0);
     });
 
@@ -77,9 +99,11 @@
    */
   function handleConnection(conn) {
     var remotePeerId = conn.peer;
+    tlog('conn_setup', { remotePeer: remotePeerId, reliable: conn.reliable, serialization: conn.serialization, label: conn.label });
 
     conn.on('open', function() {
       console.log('Connected to peer:', remotePeerId);
+      tlog('conn_open', { remotePeer: remotePeerId });
       connections.set(remotePeerId, conn);
       peerConnectCallback(remotePeerId);
     });
@@ -90,11 +114,13 @@
 
     conn.on('close', function() {
       console.log('Peer disconnected:', remotePeerId);
+      tlog('conn_close', { remotePeer: remotePeerId });
       connections.delete(remotePeerId);
       peerDisconnectCallback(remotePeerId);
     });
 
     conn.on('error', function(err) {
+      tlog('conn_error', { remotePeer: remotePeerId, type: err ? err.type : 'unknown', message: err ? (err.message || '').substring(0, 200) : '' });
       // Don't log errors for expected lobby/seed peer failures
       if (err && err.type !== 'peer-unavailable') {
         console.warn('Connection error with peer', remotePeerId, ':', err);
@@ -259,6 +285,7 @@
   function connectToPeer(peerId) {
     if (!peer) {
       console.warn('Peer not initialized');
+      tlog('connect_fail', { target: peerId, reason: 'peer not initialized' });
       return;
     }
 
@@ -268,6 +295,7 @@
     }
 
     console.log('Connecting to peer:', peerId);
+    tlog('connect_attempt', { target: peerId, ownId: peer.id, peerOpen: peer.open });
     var conn = peer.connect(peerId, {
       reliable: true
     });
@@ -386,15 +414,21 @@
     lobbyState.playerName = playerName || 'Anonymous';
     lobbyState.zone = zone || 'nexus';
 
-    if (!peer) return;
+    if (!peer) {
+      tlog('lobby_join', { error: 'peer not initialized' });
+      return;
+    }
 
     lobbyState.peerId = peer.id;
 
     // Try connecting to the lobby peer
     var lobbyId = getLobbyPeerId(lobbyState.worldId);
 
+    tlog('lobby_join', { ownId: peer.id, lobbyId: lobbyId, isLobby: peer.id === lobbyId, peerOpen: peer.open });
+
     if (peer.id !== lobbyId) {
       // Not the lobby — try connecting to it
+      tlog('lobby_connect', { target: lobbyId });
       connectToPeer(lobbyId);
 
       // Auto-host promotion: if lobby is unreachable, re-init as lobby
@@ -403,6 +437,7 @@
       setTimeout(function() {
         if (connections.size === 0 && peer && !peer.destroyed) {
           console.log('No lobby found after ' + promotionDelay + 'ms — promoting self to lobby host');
+          tlog('lobby_promote', { delay: promotionDelay, reason: 'no connections after timeout' });
           try {
             peer.destroy();
           } catch (e) { /* ignore */ }
@@ -848,6 +883,29 @@
   exports.updateLobbyZone = updateLobbyZone;
   exports.handleLobbyMessage = handleLobbyMessage;
   exports.getNetworkStats = getNetworkStats;
+
+  // Telemetry exports
+  exports.getTelemetry = function() { return telemetry; };
+  exports.dumpTelemetry = function() {
+    var stats = getNetworkStats();
+    var peers = getPeers();
+    var lobbyId = getLobbyPeerId(lobbyState.worldId || 'main');
+    return {
+      exportedAt: new Date().toISOString(),
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'node',
+      stats: stats,
+      lobbyId: lobbyId,
+      lobbyConnected: peers.indexOf(lobbyId) !== -1,
+      connectedPeers: peers,
+      lobbyState: {
+        worldId: lobbyState.worldId,
+        peerId: lobbyState.peerId,
+        knownPeers: lobbyState.knownPeers,
+        lastAnnounce: lobbyState.lastAnnounce
+      },
+      events: telemetry.slice(-100)
+    };
+  };
 
   // Federation exports
   exports.initFederation = initFederation;

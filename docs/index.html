@@ -18654,16 +18654,33 @@
   var MAX_SEEN_MESSAGES = 5000;
   var SEEN_MESSAGE_TTL = 60000; // Evict messages older than 60 seconds
 
+  var telemetry = [];
+  var TELEMETRY_MAX = 200;
+
+  function tlog(category, data) {
+    var entry = {
+      t: Date.now(),
+      ts: new Date().toISOString(),
+      cat: category,
+      data: data
+    };
+    telemetry.push(entry);
+    if (telemetry.length > TELEMETRY_MAX) telemetry = telemetry.slice(-TELEMETRY_MAX);
+  }
+
   function initMesh(peerId, options) {
     options = options || {};
     if (typeof Peer === 'undefined') {
       console.warn('PeerJS not available. Network mesh disabled.');
+      tlog('init', { error: 'PeerJS not available' });
       return null;
     }
 
     messageCallback = options.onMessage || function() {};
     peerConnectCallback = options.onPeerConnect || function() {};
     peerDisconnectCallback = options.onPeerDisconnect || function() {};
+
+    tlog('init', { peerId: peerId, peerJsVersion: typeof Peer.prototype !== 'undefined' ? 'loaded' : 'unknown' });
 
     peer = new Peer(peerId, {
       debug: 1,
@@ -18678,13 +18695,16 @@
 
     peer.on('open', function(id) {
       console.log('Mesh network initialized. Peer ID:', id);
+      tlog('peer_open', { id: id });
     });
 
     peer.on('connection', function(conn) {
+      tlog('peer_incoming', { remotePeer: conn.peer, label: conn.label, type: conn.type });
       handleConnection(conn);
     });
 
     peer.on('error', function(err) {
+      tlog('peer_error', { type: err.type, message: (err.message || '').substring(0, 200) });
       if (err.type === 'peer-unavailable') {
         return;
       }
@@ -18696,6 +18716,7 @@
 
     peer.on('disconnected', function() {
       console.warn('Peer disconnected from signaling server');
+      tlog('peer_disconnected', { peerId: peerId });
       attemptReconnect(peerId, 0);
     });
 
@@ -18704,9 +18725,11 @@
 
   function handleConnection(conn) {
     var remotePeerId = conn.peer;
+    tlog('conn_setup', { remotePeer: remotePeerId, reliable: conn.reliable, serialization: conn.serialization, label: conn.label });
 
     conn.on('open', function() {
       console.log('Connected to peer:', remotePeerId);
+      tlog('conn_open', { remotePeer: remotePeerId });
       connections.set(remotePeerId, conn);
       peerConnectCallback(remotePeerId);
     });
@@ -18717,11 +18740,13 @@
 
     conn.on('close', function() {
       console.log('Peer disconnected:', remotePeerId);
+      tlog('conn_close', { remotePeer: remotePeerId });
       connections.delete(remotePeerId);
       peerDisconnectCallback(remotePeerId);
     });
 
     conn.on('error', function(err) {
+      tlog('conn_error', { remotePeer: remotePeerId, type: err ? err.type : 'unknown', message: err ? (err.message || '').substring(0, 200) : '' });
       if (err && err.type !== 'peer-unavailable') {
         console.warn('Connection error with peer', remotePeerId, ':', err);
       }
@@ -18839,6 +18864,7 @@
   function connectToPeer(peerId) {
     if (!peer) {
       console.warn('Peer not initialized');
+      tlog('connect_fail', { target: peerId, reason: 'peer not initialized' });
       return;
     }
 
@@ -18848,6 +18874,7 @@
     }
 
     console.log('Connecting to peer:', peerId);
+    tlog('connect_attempt', { target: peerId, ownId: peer.id, peerOpen: peer.open });
     var conn = peer.connect(peerId, {
       reliable: true
     });
@@ -18941,19 +18968,26 @@
     lobbyState.playerName = playerName || 'Anonymous';
     lobbyState.zone = zone || 'nexus';
 
-    if (!peer) return;
+    if (!peer) {
+      tlog('lobby_join', { error: 'peer not initialized' });
+      return;
+    }
 
     lobbyState.peerId = peer.id;
 
     var lobbyId = getLobbyPeerId(lobbyState.worldId);
 
+    tlog('lobby_join', { ownId: peer.id, lobbyId: lobbyId, isLobby: peer.id === lobbyId, peerOpen: peer.open });
+
     if (peer.id !== lobbyId) {
+      tlog('lobby_connect', { target: lobbyId });
       connectToPeer(lobbyId);
 
       var promotionDelay = 5000 + Math.floor(Math.random() * 3000);
       setTimeout(function() {
         if (connections.size === 0 && peer && !peer.destroyed) {
           console.log('No lobby found after ' + promotionDelay + 'ms — promoting self to lobby host');
+          tlog('lobby_promote', { delay: promotionDelay, reason: 'no connections after timeout' });
           try {
             peer.destroy();
           } catch (e) { /* ignore */ }
@@ -19316,6 +19350,28 @@
   exports.updateLobbyZone = updateLobbyZone;
   exports.handleLobbyMessage = handleLobbyMessage;
   exports.getNetworkStats = getNetworkStats;
+
+  exports.getTelemetry = function() { return telemetry; };
+  exports.dumpTelemetry = function() {
+    var stats = getNetworkStats();
+    var peers = getPeers();
+    var lobbyId = getLobbyPeerId(lobbyState.worldId || 'main');
+    return {
+      exportedAt: new Date().toISOString(),
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'node',
+      stats: stats,
+      lobbyId: lobbyId,
+      lobbyConnected: peers.indexOf(lobbyId) !== -1,
+      connectedPeers: peers,
+      lobbyState: {
+        worldId: lobbyState.worldId,
+        peerId: lobbyState.peerId,
+        knownPeers: lobbyState.knownPeers,
+        lastAnnounce: lobbyState.lastAnnounce
+      },
+      events: telemetry.slice(-100)
+    };
+  };
 
   exports.initFederation = initFederation;
   exports.announceFederation = announceFederation;
@@ -136141,6 +136197,11 @@
     if (typeof document === 'undefined') return;
 
     if (netDebugEl && netDebugEl.style.display !== 'none') {
+      if (netDebugEl._lastToggle && Date.now() - netDebugEl._lastToggle < 1000) {
+        exportTelemetry();
+        return;
+      }
+      netDebugEl._lastToggle = Date.now();
       netDebugEl.style.display = 'none';
       if (netDebugInterval) { clearInterval(netDebugInterval); netDebugInterval = null; }
       if (HUD && HUD.showNotification) HUD.showNotification('Network debug OFF', 'info');
@@ -136199,9 +136260,65 @@
       html += '</div>';
     }
 
-    html += '<div style="margin-top:6px;color:#555;font-size:10px;">Updated: ' + new Date().toLocaleTimeString() + '</div>';
+    var telem = (typeof Network !== 'undefined' && Network.getTelemetry) ? Network.getTelemetry() : [];
+    if (telem.length > 0) {
+      html += '<div style="margin-top:6px;border-top:1px solid #333;padding-top:6px;">';
+      html += '<div style="color:#0ff;">Recent events:</div>';
+      var recent = telem.slice(-5);
+      for (var ti = 0; ti < recent.length; ti++) {
+        var evt = recent[ti];
+        var evtTime = new Date(evt.t).toLocaleTimeString();
+        html += '<div style="color:#888;font-size:10px;">' + evtTime + ' ' + evt.cat + ': ' + JSON.stringify(evt.data).substring(0, 60) + '</div>';
+      }
+      html += '</div>';
+    }
+
+    html += '<div style="margin-top:6px;color:#ff0;font-size:10px;pointer-events:auto;cursor:pointer;" id="net-debug-export">⬇ Double-tap F4 to copy telemetry</div>';
+    html += '<div style="color:#555;font-size:10px;">Updated: ' + new Date().toLocaleTimeString() + '</div>';
 
     netDebugEl.innerHTML = html;
+
+    var exportBtn = document.getElementById('net-debug-export');
+    if (exportBtn) {
+      exportBtn.onclick = function() { exportTelemetry(); };
+    }
+  }
+
+  function exportTelemetry() {
+    var dump = (typeof Network !== 'undefined' && Network.dumpTelemetry) ? Network.dumpTelemetry() : { error: 'Network not available' };
+    var json = JSON.stringify(dump, null, 2);
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(json).then(function() {
+        if (HUD && HUD.showNotification) HUD.showNotification('📋 Telemetry copied! Paste to Copilot for diagnosis.', 'success');
+      }).catch(function() {
+        fallbackCopyTelemetry(json);
+      });
+    } else {
+      fallbackCopyTelemetry(json);
+    }
+  }
+
+  function fallbackCopyTelemetry(json) {
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:20000;display:flex;align-items:center;justify-content:center;';
+    var box = document.createElement('div');
+    box.style.cssText = 'background:#111;border:1px solid #0f0;border-radius:8px;padding:16px;max-width:600px;width:90%;';
+    box.innerHTML = '<div style="color:#0f0;font-weight:bold;margin-bottom:8px;">📋 Network Telemetry — Copy and paste to Copilot</div>';
+    var ta = document.createElement('textarea');
+    ta.style.cssText = 'width:100%;height:300px;background:#000;color:#0f0;border:1px solid #333;font:11px monospace;padding:8px;';
+    ta.value = json;
+    ta.readOnly = true;
+    box.appendChild(ta);
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = 'margin-top:8px;padding:8px 16px;background:#333;color:#fff;border:none;border-radius:4px;cursor:pointer;';
+    closeBtn.onclick = function() { overlay.remove(); };
+    box.appendChild(closeBtn);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    ta.select();
+    try { document.execCommand('copy'); if (HUD && HUD.showNotification) HUD.showNotification('📋 Telemetry copied!', 'success'); } catch(e) {}
   }
 
   function togglePhotoMode() {
