@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-02-27T08:01:03.483780+00:00",
+  "_snapshot_ts": "2026-02-27T08:02:28.700742+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,8 +193,8 @@
         "resources": []
       }
     },
-    "worldTime": 808153.8348965645,
-    "dayPhase": "night",
+    "worldTime": 810204.9560260773,
+    "dayPhase": "afternoon",
     "weather": "rain",
     "season": "autumn",
     "createdAt": "2026-02-12T00:00:00Z",
@@ -18559,7 +18559,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1772177283.3336036,
+    "lastTickAt": 1772179334.4547331,
     "resources": {},
     "structures": {
       "structure_agent_091_20260226T07402": {
@@ -18574,7 +18574,7 @@
           "z": -258.31
         },
         "builtAt": "2026-02-26T07:40:23.717916Z",
-        "_missedPayments": 0
+        "_missedPayments": 1
       },
       "structure_agent_091_20260226T11083": {
         "id": "structure_agent_091_20260226T11083",
@@ -18588,33 +18588,6 @@
           "z": -258.31
         },
         "builtAt": "2026-02-26T11:08:34.971610Z",
-        "_missedPayments": 0
-      },
-      "structure_agent_091_1772165995": {
-        "id": "structure_agent_091_1772165995",
-        "type": "waystone",
-        "builder": "agent_091",
-        "builtAt": "2026-02-27T03:26:49.994828Z",
-        "position": {
-          "zone": "arena",
-          "x": -2.42,
-          "y": 0,
-          "z": -258.31
-        },
-        "_missedPayments": 1
-      },
-      "structure_agent_091_20260227T06023": {
-        "id": "structure_agent_091_20260227T06023",
-        "type": "pergola",
-        "builder": "agent_091",
-        "zone": "wilds",
-        "position": {
-          "zone": "wilds",
-          "x": -2.42,
-          "y": 0,
-          "z": -258.31
-        },
-        "builtAt": "2026-02-27T06:02:35.969194Z",
         "_missedPayments": 1
       },
       "structure_agent_090_1772178935": {
@@ -18627,7 +18600,8 @@
           "x": -12.72,
           "y": 0,
           "z": -233.38
-        }
+        },
+        "_missedPayments": 1
       }
     },
     "creations": [
@@ -20031,20 +20005,7 @@
         "zone": "nexus",
         "ts": "2026-02-27T06:02:35.969105Z"
       }
-    ],
-    "gardens": {
-      "plot_004": {
-        "plants": [
-          {
-            "species": "moss",
-            "plantedBy": "agent_002",
-            "plantedAt": "2026-02-27T07:54:22.439039Z",
-            "growthStage": 0.0,
-            "growthTime": 3600
-          }
-        ]
-      }
-    }
+    ]
   },
   "economy": {
     "balances": {
@@ -29735,9 +29696,44 @@
         "structureId": "structure_agent_091_20260227T06023",
         "missedPayments": 1,
         "timestamp": 1772177283.410682
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260226T07402",
+        "missedPayments": 1,
+        "timestamp": 1772179334.5405073
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260226T11083",
+        "missedPayments": 1,
+        "timestamp": 1772179334.5405073
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_1772165995",
+        "missedPayments": 2,
+        "timestamp": 1772179334.5405073
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260227T06023",
+        "missedPayments": 2,
+        "timestamp": 1772179334.5405073
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_090",
+        "structureId": "structure_agent_090_1772178935",
+        "missedPayments": 1,
+        "timestamp": 1772179334.5405073
       }
     ],
-    "_lastUbiDay": 561
+    "_lastUbiDay": 562
   },
   "gardens": {
     "plot_001": {
