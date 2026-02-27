@@ -18,11 +18,11 @@
     "agent_002": 43,
     "agent_026": 28,
     "TREASURY": 36,
-    "agent_081": 29,
+    "agent_081": 27,
     "agent_077": 17,
     "agent_089": 12,
-    "agent_078": 3,
-    "agent_090": 3,
+    "agent_078": 1,
+    "agent_090": 1,
     "agent_076": 1,
     "agent_075": 0,
     "agent_091": 3,
@@ -3776,6 +3776,27 @@
       "payload": {
         "recipe": "vessel"
       }
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_078",
+      "amount": 2,
+      "structureId": "structure_agent_078_1772193701",
+      "timestamp": 1772222205.56213
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_090",
+      "amount": 2,
+      "structureId": "structure_agent_090_20260227T12442",
+      "timestamp": 1772222205.56213
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_081",
+      "amount": 2,
+      "structureId": "structure_agent_081_20260227T18342",
+      "timestamp": 1772222205.56213
     }
   ],
   "listings": [
@@ -10269,7 +10290,38 @@
       "amount": 2,
       "sink": "SYSTEM",
       "timestamp": 1772220902.5700157
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_078",
+      "structureId": "structure_agent_078_1772193701",
+      "amount": 2,
+      "sink": "SYSTEM",
+      "timestamp": 1772222205.56213
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_090",
+      "structureId": "structure_agent_090_20260227T12442",
+      "amount": 2,
+      "sink": "SYSTEM",
+      "timestamp": 1772222205.56213
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_078",
+      "structureId": "structure_agent_078_20260227T15075",
+      "missedPayments": 1,
+      "timestamp": 1772222205.56213
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_081",
+      "structureId": "structure_agent_081_20260227T18342",
+      "amount": 2,
+      "sink": "SYSTEM",
+      "timestamp": 1772222205.56213
     }
   ],
-  "_lastUbiDay": 591
+  "_lastUbiDay": 592
 }
