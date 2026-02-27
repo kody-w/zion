@@ -18983,7 +18983,7 @@
       tlog('lobby_connect', { target: lobbyId });
       connectToPeer(lobbyId);
 
-      var promotionDelay = 5000 + Math.floor(Math.random() * 3000);
+      var promotionDelay = 15000 + Math.floor(Math.random() * 5000);
       setTimeout(function() {
         if (connections.size === 0 && peer && !peer.destroyed) {
           console.log('No lobby found after ' + promotionDelay + 'ms — promoting self to lobby host');

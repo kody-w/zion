@@ -432,8 +432,8 @@
       connectToPeer(lobbyId);
 
       // Auto-host promotion: if lobby is unreachable, re-init as lobby
-      // Add randomized jitter (5-8s) to prevent simultaneous promotion
-      var promotionDelay = 5000 + Math.floor(Math.random() * 3000);
+      // Allow 15-20s for WebRTC negotiation to complete (node-datachannel is slower)
+      var promotionDelay = 15000 + Math.floor(Math.random() * 5000);
       setTimeout(function() {
         if (connections.size === 0 && peer && !peer.destroyed) {
           console.log('No lobby found after ' + promotionDelay + 'ms — promoting self to lobby host');
