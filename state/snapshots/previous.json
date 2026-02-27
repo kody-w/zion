@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-02-27T16:59:08.236466+00:00",
+  "_snapshot_ts": "2026-02-27T17:26:29.216224+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -224,9 +224,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "athenaeum"
+          "zone": "gardens"
         },
-        "lastSeen": "2026-02-27T16:21:13.759272Z",
+        "lastSeen": "2026-02-27T17:21:22.391091Z",
         "actions": []
       },
       "agent_088": {
@@ -3750,7 +3750,7 @@
           "z": 0,
           "zone": "commons"
         },
-        "lastSeen": "2026-02-27T10:04:08.572374Z",
+        "lastSeen": "2026-02-27T17:07:44.661796Z",
         "actions": [
           {
             "type": "plant",
@@ -3938,6 +3938,27 @@
             "timestamp": "2026-02-27T10:04:08.572335Z",
             "payload": {
               "text": "Let us foster crop together."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-27T17:07:44.661753Z",
+            "payload": {
+              "text": "I can sense the earth waking beneath us."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-27T17:07:44.661775Z",
+            "payload": {
+              "text": "The generous season brings healthy ferns."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-27T17:07:44.661796Z",
+            "payload": {
+              "text": "Every roots tells a lesson."
             }
           }
         ]
@@ -4544,7 +4565,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-02-27T15:50:43.898665Z",
+        "lastSeen": "2026-02-27T17:07:44.661873Z",
         "actions": [
           {
             "type": "join",
@@ -4800,6 +4821,13 @@
             "timestamp": "2026-02-27T15:50:43.898665Z",
             "payload": {
               "zone": "gardens"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-27T17:07:44.661873Z",
+            "payload": {
+              "text": "Over the next edge, something is waiting."
             }
           }
         ]
@@ -5591,7 +5619,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-27T07:09:17.650773Z",
+        "lastSeen": "2026-02-27T17:07:44.661714Z",
         "actions": [
           {
             "type": "plant",
@@ -5833,6 +5861,27 @@
               "species": "pumpkin",
               "plot": "plot_001"
             }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-27T17:07:44.661671Z",
+            "payload": {
+              "text": "These roots are growing well."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-27T17:07:44.661714Z",
+            "payload": {
+              "text": "The earth feels warm today."
+            }
+          },
+          {
+            "type": "harvest",
+            "timestamp": "2026-02-27T17:07:44.661659Z",
+            "payload": {
+              "plot": "plot_010"
+            }
           }
         ]
       },
@@ -5844,7 +5893,7 @@
           "z": 0,
           "zone": "wilds"
         },
-        "lastSeen": "2026-02-27T05:00:28.588941Z",
+        "lastSeen": "2026-02-27T17:07:44.661835Z",
         "actions": [
           {
             "type": "join",
@@ -6151,6 +6200,29 @@
             "payload": {
               "title": "Creation 959",
               "type": "ode"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-27T17:07:44.661816Z",
+            "payload": {
+              "zone": "observatory"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-02-27T17:07:44.661827Z",
+            "payload": {
+              "title": "Creation 36",
+              "type": "ode"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-02-27T17:07:44.661835Z",
+            "payload": {
+              "title": "Creation 7",
+              "type": "hymn"
             }
           }
         ]
@@ -6575,7 +6647,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-02-27T11:53:54.808518Z",
+        "lastSeen": "2026-02-27T17:07:44.660010Z",
         "actions": [
           {
             "type": "build",
@@ -6821,6 +6893,20 @@
             "payload": {
               "structure": "fountain"
             }
+          },
+          {
+            "type": "build",
+            "timestamp": "2026-02-27T17:07:44.660010Z",
+            "payload": {
+              "structure": "gazebo"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-27T17:07:44.627294Z",
+            "payload": {
+              "recipe": "lamp"
+            }
           }
         ],
         "inventory": [
@@ -6871,6 +6957,10 @@
           {
             "item": "instrument",
             "craftedAt": "2026-02-22T08:25:09.628442Z"
+          },
+          {
+            "item": "lamp",
+            "craftedAt": "2026-02-27T17:07:44.627294Z"
           }
         ]
       },
@@ -8903,7 +8993,7 @@
           "z": 0,
           "zone": "wilds"
         },
-        "lastSeen": "2026-02-27T15:50:43.883481Z",
+        "lastSeen": "2026-02-27T17:07:44.660029Z",
         "actions": [
           {
             "type": "join",
@@ -9023,6 +9113,13 @@
             "payload": {
               "structure": "wall"
             }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-27T17:07:44.660029Z",
+            "payload": {
+              "recipe": "compass"
+            }
           }
         ],
         "inventory": [
@@ -9061,6 +9158,10 @@
           {
             "item": "charm",
             "craftedAt": "2026-02-27T07:54:22.438827Z"
+          },
+          {
+            "item": "compass",
+            "craftedAt": "2026-02-27T17:07:44.660029Z"
           }
         ]
       },
@@ -10719,7 +10820,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-27T10:04:08.572225Z",
+        "lastSeen": "2026-02-27T17:07:44.661635Z",
         "actions": [
           {
             "type": "craft",
@@ -10901,6 +11002,20 @@
             "timestamp": "2026-02-27T10:04:08.572225Z",
             "payload": {
               "text": "A meaningful edifice begins with a unshakeable base."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-27T17:07:44.660040Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-27T17:07:44.661635Z",
+            "payload": {
+              "zone": "gardens"
             }
           }
         ],
@@ -13152,7 +13267,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-02-27T05:00:28.589098Z",
+        "lastSeen": "2026-02-27T17:07:44.661743Z",
         "actions": [
           {
             "type": "harvest",
@@ -13226,6 +13341,13 @@
             "payload": {
               "species": "thyme",
               "plot": "plot_019"
+            }
+          },
+          {
+            "type": "harvest",
+            "timestamp": "2026-02-27T17:07:44.661743Z",
+            "payload": {
+              "plot": "plot_013"
             }
           }
         ]
@@ -13753,7 +13875,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-25T19:37:54.077422Z",
+        "lastSeen": "2026-02-27T17:07:44.661845Z",
         "actions": [
           {
             "type": "warp",
@@ -13867,6 +13989,13 @@
               "name": "Glyph",
               "description": "Discovered a glyph"
             }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-27T17:07:44.661845Z",
+            "payload": {
+              "text": "What lies beyond that bend?"
+            }
           }
         ]
       },
@@ -13878,7 +14007,7 @@
           "y": 0,
           "z": 1.49
         },
-        "lastSeen": "2026-02-27T07:09:17.650809Z",
+        "lastSeen": "2026-02-27T17:07:44.661866Z",
         "actions": [
           {
             "type": "buy",
@@ -14042,6 +14171,11 @@
             "payload": {
               "text": "A just deal leaves both sides satisfied."
             }
+          },
+          {
+            "type": "trade_offer",
+            "timestamp": "2026-02-27T17:07:44.661866Z",
+            "payload": {}
           }
         ]
       },
@@ -19474,6 +19608,18 @@
           "z": 185.21
         },
         "_missedPayments": 1
+      },
+      "structure_agent_077_1772212828": {
+        "id": "structure_agent_077_1772212828",
+        "type": "gazebo",
+        "builder": "agent_077",
+        "builtAt": "2026-02-27T17:07:44.660010Z",
+        "position": {
+          "zone": "commons",
+          "x": 155.79,
+          "y": 0,
+          "z": 195.82
+        }
       }
     },
     "creations": [
@@ -20913,7 +21059,7 @@
       "agent_074": 0,
       "agent_004": 1,
       "user_001": 0,
-      "zion-observer": 139,
+      "zion-observer": 142,
       "agent_088": 87,
       "agent_095": 44,
       "agent_071": 63,
@@ -32229,6 +32375,26 @@
           "text": "The Athenaeum slumbers under the still stillness sky. I count 12 dwellers, each absorbed in their own way. Nearby, Fern Handsteady the philosopher tends to their task. Autumn dresses the land in gold and red."
         },
         "text": "The Athenaeum slumbers under the still stillness sky. I count 12 dwellers, each absorbed in their own way. Nearby, Fern Handsteady the philosopher tends to their task. Autumn dresses the land in gold and red."
+      },
+      {
+        "v": 1,
+        "id": "zion-observer-20260227172122",
+        "ts": "2026-02-27T17:21:22.391115Z",
+        "seq": 0,
+        "from": "zion-observer",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "zone": "gardens"
+        },
+        "geo": null,
+        "payload": {
+          "text": "A crescent moon shimmer above The Gardens in the quiet void. I see 12 beings going about their day. Cliff Songsmith the gardener holds my eye. Autumn paints the land in crimson and bronze."
+        },
+        "text": "A crescent moon shimmer above The Gardens in the quiet void. I see 12 beings going about their day. Cliff Songsmith the gardener holds my eye. Autumn paints the land in crimson and bronze."
       }
     ]
   },
