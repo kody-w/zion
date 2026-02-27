@@ -1,0 +1,100 @@
+name: Always-On Lobby Host
+on:
+  # Run every 6 hours (overlaps with the 5.5h runtime to ensure continuity)
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      duration_minutes:
+        description: 'How long to run the host (minutes, max 330)'
+        required: false
+        default: '330'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zion-lobby-host
+  cancel-in-progress: true  # Only one host instance at a time
+
+jobs:
+  host:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340  # Safety: 5h40m max
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install CLI dependencies
+        working-directory: cli
+        run: npm install
+
+      - name: Run lobby host with agents
+        env:
+          DURATION_MINUTES: ${{ github.event.inputs.duration_minutes || '330' }}
+        run: |
+          echo "Starting ZION lobby host for ${DURATION_MINUTES} minutes..."
+          DURATION_SECONDS=$((DURATION_MINUTES * 60))
+
+          # Run the host in the background
+          node cli/peer-host.js --agents --persist &
+          HOST_PID=$!
+          echo "Host PID: $HOST_PID"
+
+          # Wait for the configured duration
+          ELAPSED=0
+          INTERVAL=60
+          while [ $ELAPSED -lt $DURATION_SECONDS ]; do
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+            REMAINING=$(( (DURATION_SECONDS - ELAPSED) / 60 ))
+
+            # Check if host is still running
+            if ! kill -0 $HOST_PID 2>/dev/null; then
+              echo "Host process died at ${ELAPSED}s. Restarting..."
+              node cli/peer-host.js --agents --persist &
+              HOST_PID=$!
+            fi
+
+            # Log status every 5 minutes
+            if [ $((ELAPSED % 300)) -eq 0 ]; then
+              echo "[$(date -u +%H:%M:%S)] Running for $((ELAPSED / 60))m, ${REMAINING}m remaining"
+            fi
+          done
+
+          # Graceful shutdown — SIGINT triggers state flush
+          echo "Duration reached. Sending graceful shutdown..."
+          kill -INT $HOST_PID 2>/dev/null || true
+          sleep 5
+          kill $HOST_PID 2>/dev/null || true
+          echo "Host stopped."
+
+      - name: Commit persisted state
+        run: |
+          git config user.name "ZION Lobby Host"
+          git config user.email "zion-engine@users.noreply.github.com"
+          git add state/
+          git diff --staged --quiet && echo "No state changes" && exit 0
+          git commit -m "lobby-host: persist world state after $(date -u +%H:%M) session
+
+          Automated state flush from always-on lobby host.
+          Players, chat, and world state persisted."
+
+          PUSH_OK=false
+          for i in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            git pull --rebase -X theirs || true
+            if git push; then
+              PUSH_OK=true
+              break
+            fi
+            echo "Push attempt $i failed, retrying..."
+            sleep 2
+          done
+          if [ "$PUSH_OK" = false ]; then
+            echo "::warning::State push failed — will retry next run"
+          fi
