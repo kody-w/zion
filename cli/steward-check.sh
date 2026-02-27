@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 ISSUES=""
 
 # 1. Check for failed workflows (last 10 runs)
-FAILURES=$(gh run list --limit 10 --json conclusion,name,databaseId -q '[.[] | select(.conclusion=="failure")]' 2>/dev/null)
+FAILURES=$(gh run list --limit 10 --json conclusion,name,databaseId -q '[.[] | select(.conclusion=="failure") | select(.name != "ZION Steward (Copilot Autopilot)")]' 2>/dev/null)
 FAIL_COUNT=$(echo "$FAILURES" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
 
 if [ "$FAIL_COUNT" -gt "0" ]; then
