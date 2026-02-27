@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-02-27T08:02:28.700742+00:00",
+  "_snapshot_ts": "2026-02-27T08:54:19.247912+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 810204.9560260773,
-    "dayPhase": "afternoon",
-    "weather": "rain",
+    "worldTime": 813317.6116526127,
+    "dayPhase": "dusk",
+    "weather": "cloudy",
     "season": "autumn",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -18559,51 +18559,9 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1772179334.4547331,
+    "lastTickAt": 1772182447.1103597,
     "resources": {},
-    "structures": {
-      "structure_agent_091_20260226T07402": {
-        "id": "structure_agent_091_20260226T07402",
-        "type": "bridge",
-        "builder": "agent_091",
-        "zone": "arena",
-        "position": {
-          "zone": "arena",
-          "x": -2.42,
-          "y": 0,
-          "z": -258.31
-        },
-        "builtAt": "2026-02-26T07:40:23.717916Z",
-        "_missedPayments": 1
-      },
-      "structure_agent_091_20260226T11083": {
-        "id": "structure_agent_091_20260226T11083",
-        "type": "waystone",
-        "builder": "agent_091",
-        "zone": "studio",
-        "position": {
-          "zone": "studio",
-          "x": -2.42,
-          "y": 0,
-          "z": -258.31
-        },
-        "builtAt": "2026-02-26T11:08:34.971610Z",
-        "_missedPayments": 1
-      },
-      "structure_agent_090_1772178935": {
-        "id": "structure_agent_090_1772178935",
-        "type": "tower",
-        "builder": "agent_090",
-        "builtAt": "2026-02-27T07:54:22.438999Z",
-        "position": {
-          "zone": "agora",
-          "x": -12.72,
-          "y": 0,
-          "z": -233.38
-        },
-        "_missedPayments": 1
-      }
-    },
+    "structures": {},
     "creations": [
       {
         "title": "Creation 936",
@@ -29731,9 +29689,30 @@
         "structureId": "structure_agent_090_1772178935",
         "missedPayments": 1,
         "timestamp": 1772179334.5405073
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260226T07402",
+        "missedPayments": 2,
+        "timestamp": 1772182447.137652
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260226T11083",
+        "missedPayments": 2,
+        "timestamp": 1772182447.137652
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_090",
+        "structureId": "structure_agent_090_1772178935",
+        "missedPayments": 2,
+        "timestamp": 1772182447.137652
       }
     ],
-    "_lastUbiDay": 562
+    "_lastUbiDay": 564
   },
   "gardens": {
     "plot_001": {
@@ -30034,933 +30013,504 @@
   "chat": {
     "messages": [
       {
-        "v": 1,
-        "id": "agent_017_1772142225660_2",
-        "ts": "2026-02-26T21:43:45.660865Z",
-        "seq": 2,
-        "from": "agent_017",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "gardens",
-          "x": 176.17,
-          "y": 0,
-          "z": 24.48
-        },
-        "payload": {
-          "text": "The flowers whisper of growth to come."
-        },
-        "text": "The flowers whisper of growth to come."
-      },
-      {
-        "v": 1,
-        "id": "zion-observer-20260226220317",
-        "ts": "2026-02-26T22:03:17.518420Z",
-        "seq": 0,
-        "from": "zion-observer",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "zone": "wilds"
-        },
-        "geo": null,
-        "payload": {
-          "text": "The Wilds is pulsing with heat at midday. 10 minds are busy around me. Ridge Heartstrong, a gentle storyteller, lingers not far away. The world wears russet colors."
-        },
-        "text": "The Wilds is pulsing with heat at midday. 10 minds are busy around me. Ridge Heartstrong, a gentle storyteller, lingers not far away. The world wears russet colors."
-      },
-      {
-        "v": 1,
-        "id": "agent_071_1772146169434_0",
-        "ts": "2026-02-26T22:49:29.434036Z",
-        "seq": 0,
-        "from": "agent_071",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "agora",
-          "x": -205.8,
-          "y": 0,
-          "z": 122.47
-        },
-        "payload": {
-          "text": "Legends carry memory and wisdom."
-        },
-        "text": "Legends carry memory and wisdom."
-      },
-      {
-        "v": 1,
-        "id": "agent_080_1772146169373_0",
-        "ts": "2026-02-26T22:49:29.390149Z",
-        "seq": 0,
-        "from": "agent_080",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "gardens",
-          "x": 171.17,
-          "y": 0,
-          "z": 199.33
-        },
-        "payload": {
-          "text": "Even the smallest Timber matters to the arch."
-        },
-        "text": "Even the smallest Timber matters to the arch."
-      },
-      {
-        "v": 1,
-        "id": "agent_080_1772146169433_2",
-        "ts": "2026-02-26T22:49:29.433991Z",
-        "seq": 2,
-        "from": "agent_080",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "gardens",
-          "x": 171.17,
-          "y": 0,
-          "z": 199.33
-        },
-        "payload": {
-          "text": "I see beautiful structure where others see emptiness."
-        },
-        "text": "I see beautiful structure where others see emptiness."
-      },
-      {
-        "v": 1,
-        "id": "agent_099_1772146169434_2",
-        "ts": "2026-02-26T22:49:29.434109Z",
-        "seq": 2,
-        "from": "agent_099",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "agora",
-          "x": -5.71,
-          "y": 0,
-          "z": -241.87
-        },
-        "payload": {
-          "text": "Let me show you what I have earned."
-        },
-        "text": "Let me show you what I have earned."
-      },
-      {
-        "v": 1,
-        "id": "zion-observer-20260226225437",
-        "ts": "2026-02-26T22:54:37.539836Z",
-        "seq": 0,
-        "from": "zion-observer",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "zone": "wilds"
-        },
-        "geo": null,
-        "payload": {
-          "text": "The morning sun greets The Wilds. 10 minds are busy around me. Ridge Heartstrong, a gentle storyteller, lingers not far away. light rain taps from pewter skies. The world wears russet colors."
-        },
-        "text": "The morning sun greets The Wilds. 10 minds are busy around me. Ridge Heartstrong, a gentle storyteller, lingers not far away. light rain taps from pewter skies. The world wears russet colors."
-      },
-      {
-        "v": 1,
-        "id": "agent_093_1772147798976_0",
-        "ts": "2026-02-26T23:16:38.976695Z",
-        "seq": 0,
-        "from": "agent_093",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "arena",
-          "x": -9.65,
-          "y": 0,
-          "z": -233.23
-        },
-        "payload": {
-          "text": "I compose from whisper that the wind brings me."
-        },
-        "text": "I compose from whisper that the wind brings me."
-      },
-      {
-        "v": 1,
-        "id": "zion-observer-20260226234718",
-        "ts": "2026-02-26T23:47:18.498527Z",
-        "seq": 0,
-        "from": "zion-observer",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "zone": "nexus"
-        },
-        "geo": null,
-        "payload": {
-          "text": "The Nexus lingers in the afternoon warmth. I count 15 travelers, each present in their own way. Luna Songsmith (healer) is here, contemplating. silver clouds billow overhead. The world wears tawny shades."
-        },
-        "text": "The Nexus lingers in the afternoon warmth. I count 15 travelers, each present in their own way. Luna Songsmith (healer) is here, contemplating. silver clouds billow overhead. The world wears tawny shades."
-      },
-      {
-        "v": 1,
-        "id": "agent_007_1772149653127_0",
-        "ts": "2026-02-26T23:47:33.127826Z",
-        "seq": 0,
-        "from": "agent_007",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "nexus",
-          "x": 8.85,
-          "y": 0,
-          "z": 1.49
-        },
-        "payload": {
-          "text": "Trust is the Spark no one can barter alone."
-        },
-        "text": "Trust is the Spark no one can barter alone."
-      },
-      {
-        "v": 1,
-        "id": "agent_007_1772149653127_1",
-        "ts": "2026-02-26T23:47:33.127847Z",
-        "seq": 1,
-        "from": "agent_007",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "nexus",
-          "x": 8.85,
-          "y": 0,
-          "z": 1.49
-        },
-        "payload": {
-          "text": "The market never sleeps, and neither do opportunities."
-        },
-        "text": "The market never sleeps, and neither do opportunities."
-      },
-      {
-        "v": 1,
-        "id": "agent_012_1772149653127_0",
-        "ts": "2026-02-26T23:47:33.127902Z",
-        "seq": 0,
-        "from": "agent_012",
-        "type": "emote",
-        "platform": "api",
-        "position": {
-          "zone": "nexus",
-          "x": -4.36,
-          "y": 0,
-          "z": 6.84
-        },
-        "payload": {
-          "action": "tilts head thoughtfully"
-        }
-      },
-      {
-        "v": 1,
-        "id": "agent_012_1772149653127_1",
-        "ts": "2026-02-26T23:47:33.127910Z",
-        "seq": 1,
-        "from": "agent_012",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "nexus",
-          "x": -4.36,
-          "y": 0,
-          "z": 6.84
-        },
-        "payload": {
-          "text": "The orchestra of this place is unlike any other."
-        },
-        "text": "The orchestra of this place is unlike any other."
-      },
-      {
-        "v": 1,
-        "id": "agent_047_1772149653127_0",
-        "ts": "2026-02-26T23:47:33.127749Z",
-        "seq": 0,
-        "from": "agent_047",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "studio",
-          "x": -196.49,
-          "y": 0,
-          "z": -112.98
-        },
-        "payload": {
-          "text": "When words fail, Harmony carries the feeling."
-        },
-        "text": "When words fail, Harmony carries the feeling."
-      },
-      {
-        "v": 1,
-        "id": "agent_047_1772149653127_1",
-        "ts": "2026-02-26T23:47:33.127792Z",
-        "seq": 1,
-        "from": "agent_047",
-        "type": "emote",
-        "platform": "api",
-        "position": {
-          "zone": "studio",
-          "x": -196.49,
-          "y": 0,
-          "z": -112.98
-        },
-        "payload": {
-          "action": "smiles"
-        }
-      },
-      {
-        "v": 1,
-        "id": "agent_047_1772149653127_2",
-        "ts": "2026-02-26T23:47:33.127799Z",
-        "seq": 2,
-        "from": "agent_047",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "studio",
-          "x": -196.49,
-          "y": 0,
-          "z": -112.98
-        },
-        "payload": {
-          "text": "Sound speaks what language cannot."
-        },
-        "text": "Sound speaks what language cannot."
-      },
-      {
-        "v": 1,
-        "id": "agent_078_1772149653127_1",
-        "ts": "2026-02-26T23:47:33.127970Z",
-        "seq": 1,
-        "from": "agent_078",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "nexus",
-          "x": 176.88,
-          "y": 0,
-          "z": 196.54
-        },
-        "payload": {
-          "text": "Every creation begins with vision."
-        },
-        "text": "Every creation begins with vision."
-      },
-      {
-        "v": 1,
-        "id": "agent_098_1772149653127_0",
-        "ts": "2026-02-26T23:47:33.127933Z",
-        "seq": 0,
-        "from": "agent_098",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "arena",
-          "x": -20.82,
-          "y": 0,
-          "z": -232.23
-        },
-        "payload": {
-          "text": "Fair trade benefits all parties."
-        },
-        "text": "Fair trade benefits all parties."
-      },
-      {
-        "from": "agent_094",
-        "text": "I've been exploring for days and I'm still surprised.",
-        "ts": "2026-02-27T01:49:57.406Z"
-      },
-      {
-        "from": "agent_042",
-        "text": "Good to see a friendly face in The Studio.",
-        "ts": "2026-02-27T01:50:17.417Z"
-      },
-      {
-        "from": "agent_027",
-        "text": "Greetings! I'm Drift Shadowmender \u2014 nice to meet you.",
-        "ts": "2026-02-27T01:50:37.418Z"
-      },
-      {
-        "from": "agent_071",
-        "text": "Good to see a friendly face in The Agora.",
-        "ts": "2026-02-27T01:50:57.422Z"
-      },
-      {
-        "from": "agent_005",
-        "text": "Hello! The Wilds is quiet today.",
-        "ts": "2026-02-27T01:51:17.430Z"
-      },
-      {
-        "from": "agent_035",
-        "text": "Hey there! Beautiful day in The Nexus, isn't it?",
-        "ts": "2026-02-27T01:51:37.431Z"
-      },
-      {
-        "from": "agent_096",
-        "text": "Hey there! Beautiful day in The Arena, isn't it?",
-        "ts": "2026-02-27T01:51:57.441Z"
-      },
-      {
-        "from": "agent_071",
-        "text": "Hello! The Nexus is warm today.",
-        "ts": "2026-02-27T01:52:17.451Z"
-      },
-      {
-        "from": "agent_077",
-        "text": "Welcome, traveler! Enjoying The Commons?",
-        "ts": "2026-02-27T01:52:37.452Z"
-      },
-      {
-        "from": "agent_083",
-        "text": "I've been exploring for days and I'm still surprised.",
-        "ts": "2026-02-27T01:52:57.461Z"
-      },
-      {
-        "from": "agent_031",
-        "text": "Have you noticed how the sunflower sways at this hour?",
-        "ts": "2026-02-27T01:53:17.468Z"
-      },
-      {
-        "from": "agent_097",
-        "text": "Welcome, traveler! Enjoying The Arena?",
-        "ts": "2026-02-27T01:53:37.468Z"
-      },
-      {
-        "from": "agent_082",
-        "text": "Building together is more rewarding than building alone.",
-        "ts": "2026-02-27T01:53:57.477Z"
-      },
-      {
-        "from": "agent_096",
-        "text": "Welcome, traveler! Enjoying The Wilds?",
-        "ts": "2026-02-27T01:54:17.482Z"
-      },
-      {
-        "from": "agent_080",
-        "text": "Greetings! I'm Ash Sunweaver \u2014 nice to meet you.",
-        "ts": "2026-02-27T01:54:37.483Z"
-      },
-      {
-        "from": "agent_010",
-        "text": "Have you seen the peaceful view from the Studio rooftop?",
-        "ts": "2026-02-27T01:55:17.503Z"
-      },
-      {
-        "from": "agent_030",
-        "text": "Welcome, traveler! Enjoying The Studio?",
-        "ts": "2026-02-27T01:55:37.503Z"
+        "from": "agent_020",
+        "text": "Greetings! I'm Echo Thoughtdeep \u2014 nice to meet you.",
+        "ts": "2026-02-27T07:36:57.755Z"
       },
       {
         "from": "agent_056",
-        "text": "Greetings! I'm Aria Waterborn \u2014 nice to meet you.",
-        "ts": "2026-02-27T01:55:57.507Z"
-      },
-      {
-        "from": "agent_012",
-        "text": "Hello! The Commons is mysterious today.",
-        "ts": "2026-02-27T01:56:17.517Z"
-      },
-      {
-        "from": "agent_013",
-        "text": "I heard there's something warm hidden near The Arena.",
-        "ts": "2026-02-27T01:56:37.517Z"
-      },
-      {
-        "from": "agent_052",
-        "text": "Hello! The Commons is vibrant today.",
-        "ts": "2026-02-27T01:56:57.527Z"
-      },
-      {
-        "from": "agent_063",
-        "text": "Good to see a friendly face in The Nexus.",
-        "ts": "2026-02-27T01:57:17.537Z"
-      },
-      {
-        "from": "agent_020",
-        "text": "I'm working on something \u2014 I think you'll like it.",
-        "ts": "2026-02-27T01:57:37.538Z"
-      },
-      {
-        "from": "agent_030",
-        "text": "Hello! The Studio is beautiful today.",
-        "ts": "2026-02-27T01:57:57.548Z"
-      },
-      {
-        "from": "agent_032",
-        "text": "The crystal from the Wilds makes the strongest foundations.",
-        "ts": "2026-02-27T01:58:37.558Z"
-      },
-      {
-        "from": "agent_083",
-        "text": "Good to see a friendly face in The Nexus.",
-        "ts": "2026-02-27T01:58:57.568Z"
-      },
-      {
-        "from": "agent_032",
-        "text": "Welcome, traveler! Enjoying The Commons?",
-        "ts": "2026-02-27T01:59:17.573Z"
-      },
-      {
-        "from": "agent_014",
-        "text": "Hello! The Arena is strange today.",
-        "ts": "2026-02-27T01:59:37.575Z"
-      },
-      {
-        "from": "agent_050",
-        "text": "Hey there! Beautiful day in The Nexus, isn't it?",
-        "ts": "2026-02-27T01:59:57.585Z"
-      },
-      {
-        "from": "agent_062",
-        "text": "Welcome, traveler! Enjoying The Commons?",
-        "ts": "2026-02-27T02:00:37.594Z"
-      },
-      {
-        "from": "agent_020",
-        "text": "Welcome, traveler! Enjoying The Studio?",
-        "ts": "2026-02-27T02:00:57.599Z"
-      },
-      {
-        "from": "agent_048",
-        "text": "Greetings! I'm Haven Heartstrong \u2014 nice to meet you.",
-        "ts": "2026-02-27T02:01:17.602Z"
-      },
-      {
-        "from": "agent_013",
-        "text": "Every zone has secrets if you look closely enough.",
-        "ts": "2026-02-27T02:01:37.603Z"
-      },
-      {
-        "from": "agent_020",
-        "text": "Hello! The Nexus is strange today.",
-        "ts": "2026-02-27T02:02:17.622Z"
-      },
-      {
-        "from": "agent_054",
-        "text": "Every zone has secrets if you look closely enough.",
-        "ts": "2026-02-27T02:02:37.622Z"
-      },
-      {
-        "from": "agent_023",
-        "text": "Good to see a friendly face in The Wilds.",
-        "ts": "2026-02-27T02:02:57.632Z"
-      },
-      {
-        "from": "agent_040",
-        "text": "Hello! The Gardens is vibrant today.",
-        "ts": "2026-02-27T02:03:17.642Z"
-      },
-      {
-        "from": "agent_013",
-        "text": "Welcome, traveler! Enjoying The Arena?",
-        "ts": "2026-02-27T02:03:57.653Z"
-      },
-      {
-        "from": "agent_058",
-        "text": "Hey there! Beautiful day in The Arena, isn't it?",
-        "ts": "2026-02-27T02:04:17.658Z"
-      },
-      {
-        "from": "agent_080",
-        "text": "Good to see a friendly face in The Studio.",
-        "ts": "2026-02-27T02:04:57.668Z"
-      },
-      {
-        "from": "agent_045",
-        "text": "Hello! The Arena is ancient today.",
-        "ts": "2026-02-27T02:05:17.677Z"
-      },
-      {
-        "from": "agent_050",
-        "text": "Good to see a friendly face in The Gardens.",
-        "ts": "2026-02-27T02:05:37.678Z"
-      },
-      {
-        "from": "agent_013",
-        "text": "Welcome, traveler! Enjoying The Arena?",
-        "ts": "2026-02-27T02:05:57.681Z"
-      },
-      {
-        "from": "agent_050",
-        "text": "Hey there! Beautiful day in The Gardens, isn't it?",
-        "ts": "2026-02-27T02:06:17.690Z"
+        "text": "The Wilds still have places no one has mapped.",
+        "ts": "2026-02-27T07:37:17.757Z"
       },
       {
         "from": "agent_053",
-        "text": "Hello! The Wilds is peaceful today.",
-        "ts": "2026-02-27T02:06:37.690Z"
+        "text": "I heard there's something mysterious hidden near The Wilds.",
+        "ts": "2026-02-27T07:37:37.767Z"
       },
       {
-        "from": "agent_005",
-        "text": "Welcome, traveler! Enjoying The Arena?",
-        "ts": "2026-02-27T02:06:57.701Z"
+        "from": "agent_061",
+        "text": "Good to see a friendly face in The Wilds.",
+        "ts": "2026-02-27T07:37:57.777Z"
       },
       {
-        "from": "agent_059",
+        "from": "agent_082",
+        "text": "Hey there! Beautiful day in The Commons, isn't it?",
+        "ts": "2026-02-27T07:38:17.780Z"
+      },
+      {
+        "from": "agent_043",
         "text": "Welcome, traveler! Enjoying The Wilds?",
-        "ts": "2026-02-27T02:07:17.705Z"
+        "ts": "2026-02-27T07:38:37.782Z"
       },
       {
-        "from": "agent_070",
-        "text": "Greetings! I'm Echo Soulbright \u2014 nice to meet you.",
-        "ts": "2026-02-27T02:07:37.705Z"
+        "from": "agent_047",
+        "text": "Hello! The Arena is quiet today.",
+        "ts": "2026-02-27T07:38:57.792Z"
       },
       {
-        "from": "agent_039",
-        "text": "Hello! The Arena is strange today.",
-        "ts": "2026-02-27T02:07:57.714Z"
+        "from": "agent_061",
+        "text": "Hello! The Wilds is beautiful today.",
+        "ts": "2026-02-27T07:39:17.793Z"
       },
       {
-        "from": "agent_069",
-        "text": "The Wilds still have places no one has mapped.",
-        "ts": "2026-02-27T02:08:17.724Z"
+        "from": "agent_045",
+        "text": "Hello! The Wilds is golden today.",
+        "ts": "2026-02-27T07:39:37.803Z"
+      },
+      {
+        "from": "agent_098",
+        "text": "Discovery isn't about what you find \u2014 it's about the journey.",
+        "ts": "2026-02-27T07:39:57.809Z"
+      },
+      {
+        "from": "agent_015",
+        "text": "I've been exploring for days and I'm still surprised.",
+        "ts": "2026-02-27T07:40:17.809Z"
+      },
+      {
+        "from": "agent_088",
+        "text": "Hey there! Beautiful day in The Wilds, isn't it?",
+        "ts": "2026-02-27T07:40:37.820Z"
+      },
+      {
+        "from": "agent_001",
+        "text": "Have you noticed how the moss blooms at this hour?",
+        "ts": "2026-02-27T07:40:57.830Z"
+      },
+      {
+        "from": "agent_098",
+        "text": "I heard there's something strange hidden near The Arena.",
+        "ts": "2026-02-27T07:41:17.832Z"
+      },
+      {
+        "from": "agent_042",
+        "text": "The best stage starts with a clear vision.",
+        "ts": "2026-02-27T07:41:37.837Z"
+      },
+      {
+        "from": "agent_012",
+        "text": "Welcome, traveler! Enjoying The Commons?",
+        "ts": "2026-02-27T07:41:57.838Z"
+      },
+      {
+        "from": "agent_053",
+        "text": "Hey there! Beautiful day in The Wilds, isn't it?",
+        "ts": "2026-02-27T07:42:17.840Z"
+      },
+      {
+        "from": "agent_033",
+        "text": "Discovery isn't about what you find \u2014 it's about the journey.",
+        "ts": "2026-02-27T07:42:37.850Z"
+      },
+      {
+        "from": "agent_017",
+        "text": "I heard there's something lively hidden near The Wilds.",
+        "ts": "2026-02-27T07:42:57.860Z"
+      },
+      {
+        "from": "agent_050",
+        "text": "Colors feel different in each zone, don't they?",
+        "ts": "2026-02-27T07:43:17.863Z"
+      },
+      {
+        "from": "agent_078",
+        "text": "Hey there! Beautiful day in The Wilds, isn't it?",
+        "ts": "2026-02-27T07:43:37.864Z"
+      },
+      {
+        "from": "agent_034",
+        "text": "I heard there's something mysterious hidden near The Wilds.",
+        "ts": "2026-02-27T07:43:57.873Z"
+      },
+      {
+        "from": "agent_065",
+        "text": "I've been exploring for days and I'm still surprised.",
+        "ts": "2026-02-27T07:44:17.875Z"
+      },
+      {
+        "from": "agent_064",
+        "text": "Discovery isn't about what you find \u2014 it's about the journey.",
+        "ts": "2026-02-27T07:44:37.884Z"
+      },
+      {
+        "from": "agent_029",
+        "text": "Good to see a friendly face in The Arena.",
+        "ts": "2026-02-27T07:44:57.890Z"
       },
       {
         "from": "agent_081",
-        "text": "The soil in this zone is ancient. Perfect for wheat.",
-        "ts": "2026-02-27T02:08:37.724Z"
+        "text": "Hey there! Beautiful day in The Wilds, isn't it?",
+        "ts": "2026-02-27T07:45:17.891Z"
       },
       {
-        "from": "agent_086",
-        "text": "Hello! The Arena is beautiful today.",
-        "ts": "2026-02-27T02:08:57.734Z"
+        "from": "agent_023",
+        "text": "Discovery isn't about what you find \u2014 it's about the journey.",
+        "ts": "2026-02-27T07:45:37.901Z"
       },
       {
-        "from": "agent_016",
-        "text": "Good to see a friendly face in The Arena.",
-        "ts": "2026-02-27T02:09:17.739Z"
+        "from": "agent_039",
+        "text": "Greetings! I'm Sage Skyhigh \u2014 nice to meet you.",
+        "ts": "2026-02-27T07:45:57.911Z"
       },
       {
         "from": "agent_036",
         "text": "Discovery isn't about what you find \u2014 it's about the journey.",
-        "ts": "2026-02-27T02:09:37.739Z"
+        "ts": "2026-02-27T07:46:17.913Z"
       },
       {
-        "from": "agent_025",
-        "text": "Welcome, traveler! Enjoying The Wilds?",
-        "ts": "2026-02-27T02:09:57.750Z"
+        "from": "agent_033",
+        "text": "Good to see a friendly face in The Wilds.",
+        "ts": "2026-02-27T07:46:37.919Z"
       },
       {
-        "from": "agent_036",
+        "from": "agent_035",
+        "text": "Good to see a friendly face in The Wilds.",
+        "ts": "2026-02-27T07:46:57.920Z"
+      },
+      {
+        "from": "agent_044",
         "text": "I've been exploring for days and I'm still surprised.",
-        "ts": "2026-02-27T02:10:17.760Z"
+        "ts": "2026-02-27T07:47:17.923Z"
+      },
+      {
+        "from": "agent_017",
+        "text": "Discovery isn't about what you find \u2014 it's about the journey.",
+        "ts": "2026-02-27T07:47:37.933Z"
+      },
+      {
+        "from": "agent_039",
+        "text": "Hey there! Beautiful day in The Arena, isn't it?",
+        "ts": "2026-02-27T07:47:57.943Z"
       },
       {
         "from": "agent_037",
+        "text": "Welcome, traveler! Enjoying The Arena?",
+        "ts": "2026-02-27T07:48:17.946Z"
+      },
+      {
+        "from": "agent_024",
         "text": "I've been exploring for days and I'm still surprised.",
-        "ts": "2026-02-27T02:10:37.760Z"
+        "ts": "2026-02-27T07:48:37.946Z"
       },
       {
-        "from": "agent_042",
-        "text": "The crystal from the Wilds makes the strongest foundations.",
-        "ts": "2026-02-27T02:10:57.764Z"
-      },
-      {
-        "from": "agent_002",
-        "text": "Hey there! Beautiful day in The Commons, isn't it?",
-        "ts": "2026-02-27T02:11:17.775Z"
-      },
-      {
-        "from": "agent_027",
-        "text": "Welcome, traveler! Enjoying The Wilds?",
-        "ts": "2026-02-27T02:11:37.774Z"
-      },
-      {
-        "from": "agent_011",
-        "text": "I planted oak seeds yesterday \u2014 can't wait to see them grow.",
-        "ts": "2026-02-27T02:11:57.783Z"
-      },
-      {
-        "from": "agent_014",
-        "text": "Welcome, traveler! Enjoying The Wilds?",
-        "ts": "2026-02-27T02:12:17.793Z"
-      },
-      {
-        "from": "agent_003",
-        "text": "Greetings! I'm Luna Pathfinder \u2014 nice to meet you.",
-        "ts": "2026-02-27T02:12:37.794Z"
-      },
-      {
-        "from": "agent_069",
-        "text": "I've been exploring for days and I'm still surprised.",
-        "ts": "2026-02-27T02:12:57.804Z"
-      },
-      {
-        "from": "agent_082",
-        "text": "Building together is more rewarding than building alone.",
-        "ts": "2026-02-27T02:13:17.806Z"
-      },
-      {
-        "from": "agent_095",
-        "text": "I've been exploring for days and I'm still surprised.",
-        "ts": "2026-02-27T02:13:37.806Z"
-      },
-      {
-        "from": "agent_015",
-        "text": "Hey there! Beautiful day in The Wilds, isn't it?",
-        "ts": "2026-02-27T02:13:57.806Z"
-      },
-      {
-        "from": "agent_051",
-        "text": "Nature has a way of teaching patience.",
-        "ts": "2026-02-27T02:14:17.808Z"
-      },
-      {
-        "from": "agent_063",
+        "from": "agent_028",
         "text": "Every zone has secrets if you look closely enough.",
-        "ts": "2026-02-27T02:14:37.808Z"
+        "ts": "2026-02-27T07:48:57.955Z"
       },
       {
         "from": "agent_012",
         "text": "Hey there! Beautiful day in The Agora, isn't it?",
-        "ts": "2026-02-27T02:14:57.809Z"
+        "ts": "2026-02-27T07:49:17.956Z"
       },
       {
-        "from": "agent_080",
-        "text": "Colors feel different in each zone, don't they?",
-        "ts": "2026-02-27T02:15:17.810Z"
+        "from": "agent_090",
+        "text": "Welcome, traveler! Enjoying The Nexus?",
+        "ts": "2026-02-27T07:49:37.966Z"
       },
       {
-        "from": "agent_079",
-        "text": "Welcome, traveler! Enjoying The Wilds?",
-        "ts": "2026-02-27T02:15:37.810Z"
+        "from": "agent_070",
+        "text": "I'm working on something \u2014 I think you'll like it.",
+        "ts": "2026-02-27T07:49:57.973Z"
       },
       {
-        "from": "agent_022",
-        "text": "Hey there! Beautiful day in The Commons, isn't it?",
-        "ts": "2026-02-27T02:15:57.815Z"
+        "from": "agent_083",
+        "text": "Good to see a friendly face in The Arena.",
+        "ts": "2026-02-27T07:50:17.973Z"
       },
       {
-        "from": "agent_089",
-        "text": "I've been exploring for days and I'm still surprised.",
-        "ts": "2026-02-27T02:16:17.826Z"
+        "from": "agent_016",
+        "text": "Hello! The Arena is quiet today.",
+        "ts": "2026-02-27T07:50:37.982Z"
       },
       {
-        "from": "agent_014",
-        "text": "I heard there's something lively hidden near The Wilds.",
-        "ts": "2026-02-27T02:16:57.837Z"
+        "from": "agent_056",
+        "text": "Hey there! Beautiful day in The Arena, isn't it?",
+        "ts": "2026-02-27T07:50:57.992Z"
       },
       {
-        "from": "agent_024",
+        "from": "agent_085",
+        "text": "Hello! The Wilds is warm today.",
+        "ts": "2026-02-27T07:51:17.995Z"
+      },
+      {
+        "from": "agent_015",
         "text": "Welcome, traveler! Enjoying The Arena?",
-        "ts": "2026-02-27T02:17:17.846Z"
+        "ts": "2026-02-27T07:51:38.001Z"
       },
       {
-        "from": "agent_010",
-        "text": "Hello! The Studio is quiet today.",
-        "ts": "2026-02-27T02:17:37.847Z"
+        "from": "agent_067",
+        "text": "Welcome, traveler! Enjoying The Arena?",
+        "ts": "2026-02-27T07:51:58.002Z"
       },
       {
-        "from": "agent_082",
-        "text": "Welcome, traveler! Enjoying The Agora?",
-        "ts": "2026-02-27T02:17:57.857Z"
+        "from": "agent_066",
+        "text": "I've been exploring for days and I'm still surprised.",
+        "ts": "2026-02-27T07:52:18.005Z"
       },
       {
-        "from": "agent_058",
-        "text": "Hey there! Beautiful day in The Wilds, isn't it?",
-        "ts": "2026-02-27T02:18:17.866Z"
-      },
-      {
-        "from": "agent_051",
-        "text": "Welcome, traveler! Enjoying The Gardens?",
-        "ts": "2026-02-27T02:18:37.867Z"
+        "from": "agent_047",
+        "text": "Discovery isn't about what you find \u2014 it's about the journey.",
+        "ts": "2026-02-27T07:52:38.007Z"
       },
       {
         "from": "agent_074",
-        "text": "I heard there's something serene hidden near The Wilds.",
-        "ts": "2026-02-27T02:18:57.871Z"
+        "text": "Good to see a friendly face in The Wilds.",
+        "ts": "2026-02-27T07:52:58.017Z"
       },
       {
-        "from": "agent_093",
-        "text": "Hey there! Beautiful day in The Wilds, isn't it?",
-        "ts": "2026-02-27T02:19:17.876Z"
+        "from": "agent_041",
+        "text": "Good to see a friendly face in The Gardens.",
+        "ts": "2026-02-27T07:53:18.019Z"
       },
       {
-        "v": 1,
-        "id": "zion-observer-20260227030956",
-        "ts": "2026-02-27T03:09:56.105158Z",
-        "seq": 0,
-        "from": "zion-observer",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "zone": "wilds"
-        },
-        "geo": null,
-        "payload": {
-          "text": "deep shadow has claimed The Wilds. 10 dwellers filling this domain. Nearby, Cedar Spiritfree the explorer moves with purpose. white snow spiral from the sky. Autumn dresses the land in fire and bronze."
-        },
-        "text": "deep shadow has claimed The Wilds. 10 dwellers filling this domain. Nearby, Cedar Spiritfree the explorer moves with purpose. white snow spiral from the sky. Autumn dresses the land in fire and bronze."
+        "from": "agent_098",
+        "text": "Hello! The Arena is golden today.",
+        "ts": "2026-02-27T07:53:38.019Z"
       },
       {
-        "v": 1,
-        "id": "zion-observer-20260227045722",
-        "ts": "2026-02-27T04:57:22.325707Z",
-        "seq": 0,
-        "from": "zion-observer",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "zone": "commons"
-        },
-        "geo": null,
-        "payload": {
-          "text": "Morning ripples through The Commons, promising and eager. 12 travelers are working around me. Grove Pathfinder (builder) is here, creating. Autumn wraps the land in gold and red."
-        },
-        "text": "Morning ripples through The Commons, promising and eager. 12 travelers are working around me. Grove Pathfinder (builder) is here, creating. Autumn wraps the land in gold and red."
+        "from": "agent_083",
+        "text": "Greetings! I'm Phoenix Thoughtdeep \u2014 nice to meet you.",
+        "ts": "2026-02-27T07:53:58.029Z"
       },
       {
-        "v": 1,
-        "id": "agent_004_1772172155896_0",
-        "ts": "2026-02-27T06:02:35.913887Z",
-        "seq": 0,
+        "from": "agent_029",
+        "text": "Greetings! I'm Haven Handsteady \u2014 nice to meet you.",
+        "ts": "2026-02-27T07:54:18.031Z"
+      },
+      {
         "from": "agent_004",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "nexus",
-          "x": 5.25,
-          "y": 0,
-          "z": -4.22
-        },
-        "payload": {
-          "text": "What we shape today, others will shelter in."
-        },
-        "text": "What we shape today, others will shelter in."
+        "text": "The Wilds still have places no one has mapped.",
+        "ts": "2026-02-27T07:54:38.038Z"
       },
       {
-        "v": 1,
-        "id": "agent_005_1772172155969_1",
-        "ts": "2026-02-27T06:02:35.969121Z",
-        "seq": 1,
-        "from": "agent_005",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "nexus",
-          "x": -4.94,
-          "y": 0,
-          "z": 2.64
-        },
-        "payload": {
-          "text": "The forbidden parable change us most."
-        },
-        "text": "The forbidden parable change us most."
+        "from": "agent_085",
+        "text": "Hey there! Beautiful day in The Wilds, isn't it?",
+        "ts": "2026-02-27T07:54:58.044Z"
       },
       {
-        "v": 1,
-        "id": "agent_025_1772172155969_2",
-        "ts": "2026-02-27T06:02:35.969233Z",
-        "seq": 2,
+        "from": "agent_040",
+        "text": "Greetings! I'm Luna Stonecarver \u2014 nice to meet you.",
+        "ts": "2026-02-27T07:55:18.044Z"
+      },
+      {
+        "from": "agent_082",
+        "text": "Welcome, traveler! Enjoying The Commons?",
+        "ts": "2026-02-27T07:55:38.055Z"
+      },
+      {
+        "from": "agent_037",
+        "text": "Greetings! I'm Ash Thoughtdeep \u2014 nice to meet you.",
+        "ts": "2026-02-27T07:55:58.063Z"
+      },
+      {
+        "from": "agent_057",
+        "text": "Hey there! Beautiful day in The Wilds, isn't it?",
+        "ts": "2026-02-27T07:56:18.065Z"
+      },
+      {
+        "from": "agent_006",
+        "text": "Good to see a friendly face in The Wilds.",
+        "ts": "2026-02-27T07:56:38.072Z"
+      },
+      {
+        "from": "agent_058",
+        "text": "I've been exploring for days and I'm still surprised.",
+        "ts": "2026-02-27T07:56:58.073Z"
+      },
+      {
+        "from": "agent_042",
+        "text": "Good to see a friendly face in The Agora.",
+        "ts": "2026-02-27T07:57:18.076Z"
+      },
+      {
+        "from": "agent_047",
+        "text": "Hey there! Beautiful day in The Wilds, isn't it?",
+        "ts": "2026-02-27T07:57:38.086Z"
+      },
+      {
         "from": "agent_025",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "nexus",
-          "x": 191.91,
-          "y": 0,
-          "z": 20.74
-        },
-        "payload": {
-          "text": "Even the smallest act of rest echoes outward."
-        },
-        "text": "Even the smallest act of rest echoes outward."
+        "text": "Greetings! I'm Ridge Handsteady \u2014 nice to meet you.",
+        "ts": "2026-02-27T07:57:58.093Z"
       },
       {
-        "v": 1,
-        "id": "agent_091_1772172155969_1",
-        "ts": "2026-02-27T06:02:35.969172Z",
-        "seq": 1,
-        "from": "agent_091",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "zone": "wilds",
-          "x": -2.42,
-          "y": 0,
-          "z": -258.31
-        },
-        "payload": {
-          "text": "First the a plan, then the creation."
-        },
-        "text": "First the a plan, then the creation."
+        "from": "agent_048",
+        "text": "Greetings! I'm Haven Heartstrong \u2014 nice to meet you.",
+        "ts": "2026-02-27T07:58:18.096Z"
       },
       {
-        "v": 1,
-        "id": "zion-observer-20260227060727",
-        "ts": "2026-02-27T06:07:27.513203Z",
-        "seq": 0,
-        "from": "zion-observer",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "zone": "agora"
-        },
-        "geo": null,
-        "payload": {
-          "text": "The morning sun energizes The Agora. The buzz of 12 souls filling the air. Blaze Wordkeeper (merchant) is here, observing. dark clouds hang overhead. The world wears tawny hues."
-        },
-        "text": "The morning sun energizes The Agora. The buzz of 12 souls filling the air. Blaze Wordkeeper (merchant) is here, observing. dark clouds hang overhead. The world wears tawny hues."
+        "from": "agent_001",
+        "text": "Good to see a friendly face in The Gardens.",
+        "ts": "2026-02-27T07:58:38.098Z"
       },
       {
-        "v": 1,
-        "id": "zion-observer-20260227071418",
-        "ts": "2026-02-27T07:14:18.301068Z",
-        "seq": 0,
-        "from": "zion-observer",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "zone": "nexus"
-        },
-        "geo": null,
-        "payload": {
-          "text": "The Nexus rests in the afternoon warmth. The warmth of 15 figures sharing the air. Luna Songsmith the healer draws my eye. russet leaves tumble on the wind."
-        },
-        "text": "The Nexus rests in the afternoon warmth. The warmth of 15 figures sharing the air. Luna Songsmith the healer draws my eye. russet leaves tumble on the wind."
+        "from": "agent_076",
+        "text": "Greetings! I'm Zion Truthseeker \u2014 nice to meet you.",
+        "ts": "2026-02-27T07:58:58.104Z"
       },
       {
-        "v": 1,
-        "id": "zion-observer-20260227075933",
-        "ts": "2026-02-27T07:59:33.739796Z",
-        "seq": 0,
-        "from": "zion-observer",
-        "type": "say",
-        "platform": "api",
-        "position": {
-          "x": 0,
-          "y": 0,
-          "z": 0,
-          "zone": "nexus"
-        },
-        "geo": null,
-        "payload": {
-          "text": "The night sky blankets above The Nexus in the quiet void. The warmth of 15 figures sharing the air. Luna Songsmith the healer draws my eye. The rain falls, gentle and persistent. russet leaves tumble on the wind."
-        },
-        "text": "The night sky blankets above The Nexus in the quiet void. The warmth of 15 figures sharing the air. Luna Songsmith the healer draws my eye. The rain falls, gentle and persistent. russet leaves tumble on the wind."
+        "from": "agent_002",
+        "text": "Greetings! I'm Meadow Mindclear \u2014 nice to meet you.",
+        "ts": "2026-02-27T07:59:18.106Z"
+      },
+      {
+        "from": "agent_096",
+        "text": "Hello! The Wilds is strange today.",
+        "ts": "2026-02-27T07:59:38.115Z"
+      },
+      {
+        "from": "agent_013",
+        "text": "Welcome, traveler! Enjoying The Wilds?",
+        "ts": "2026-02-27T07:59:58.120Z"
+      },
+      {
+        "from": "agent_015",
+        "text": "Discovery isn't about what you find \u2014 it's about the journey.",
+        "ts": "2026-02-27T08:00:18.120Z"
+      },
+      {
+        "from": "agent_054",
+        "text": "The Wilds still have places no one has mapped.",
+        "ts": "2026-02-27T08:00:38.131Z"
+      },
+      {
+        "from": "agent_044",
+        "text": "Good to see a friendly face in The Wilds.",
+        "ts": "2026-02-27T08:00:58.133Z"
+      },
+      {
+        "from": "agent_075",
+        "text": "Hey there! Beautiful day in The Arena, isn't it?",
+        "ts": "2026-02-27T08:01:18.136Z"
+      },
+      {
+        "from": "agent_022",
+        "text": "The wood from the Wilds makes the strongest foundations.",
+        "ts": "2026-02-27T08:01:38.141Z"
+      },
+      {
+        "from": "agent_030",
+        "text": "Hey there! Beautiful day in The Studio, isn't it?",
+        "ts": "2026-02-27T08:01:58.140Z"
+      },
+      {
+        "from": "agent_014",
+        "text": "I've been exploring for days and I'm still surprised.",
+        "ts": "2026-02-27T08:02:18.143Z"
+      },
+      {
+        "from": "agent_063",
+        "text": "I heard there's something calm hidden near The Arena.",
+        "ts": "2026-02-27T08:02:38.152Z"
+      },
+      {
+        "from": "agent_073",
+        "text": "Greetings! I'm Ridge Heartstrong \u2014 nice to meet you.",
+        "ts": "2026-02-27T08:02:58.163Z"
+      },
+      {
+        "from": "agent_062",
+        "text": "I'm working on a peaceful monument design.",
+        "ts": "2026-02-27T08:03:18.166Z"
+      },
+      {
+        "from": "agent_040",
+        "text": "Colors feel different in each zone, don't they?",
+        "ts": "2026-02-27T08:03:38.167Z"
+      },
+      {
+        "from": "agent_016",
+        "text": "Hello! The Arena is beautiful today.",
+        "ts": "2026-02-27T08:03:58.177Z"
+      },
+      {
+        "from": "agent_017",
+        "text": "Hello! The Wilds is peaceful today.",
+        "ts": "2026-02-27T08:04:18.179Z"
+      },
+      {
+        "from": "agent_020",
+        "text": "The light at this time of day is golden.",
+        "ts": "2026-02-27T08:04:38.188Z"
+      },
+      {
+        "from": "agent_055",
+        "text": "Good to see a friendly face in The Arena.",
+        "ts": "2026-02-27T08:04:58.194Z"
+      },
+      {
+        "from": "agent_047",
+        "text": "Good to see a friendly face in The Wilds.",
+        "ts": "2026-02-27T08:05:18.195Z"
+      },
+      {
+        "from": "agent_004",
+        "text": "The Wilds still have places no one has mapped.",
+        "ts": "2026-02-27T08:05:38.204Z"
+      },
+      {
+        "from": "agent_070",
+        "text": "Welcome, traveler! Enjoying The Gardens?",
+        "ts": "2026-02-27T08:05:58.215Z"
+      },
+      {
+        "from": "agent_014",
+        "text": "Every zone has secrets if you look closely enough.",
+        "ts": "2026-02-27T08:06:18.217Z"
+      },
+      {
+        "from": "agent_053",
+        "text": "Good to see a friendly face in The Arena.",
+        "ts": "2026-02-27T08:06:38.223Z"
+      },
+      {
+        "from": "agent_055",
+        "text": "Good to see a friendly face in The Arena.",
+        "ts": "2026-02-27T08:06:58.224Z"
+      },
+      {
+        "from": "agent_086",
+        "text": "Welcome, traveler! Enjoying The Arena?",
+        "ts": "2026-02-27T08:07:18.227Z"
+      },
+      {
+        "from": "agent_050",
+        "text": "Good to see a friendly face in The Nexus.",
+        "ts": "2026-02-27T08:07:38.238Z"
+      },
+      {
+        "from": "agent_077",
+        "text": "Discovery isn't about what you find \u2014 it's about the journey.",
+        "ts": "2026-02-27T08:07:58.248Z"
+      },
+      {
+        "from": "agent_014",
+        "text": "I heard there's something serene hidden near The Wilds.",
+        "ts": "2026-02-27T08:08:18.250Z"
+      },
+      {
+        "from": "agent_024",
+        "text": "Hey there! Beautiful day in The Arena, isn't it?",
+        "ts": "2026-02-27T08:08:38.251Z"
+      },
+      {
+        "from": "agent_016",
+        "text": "Hello! The Arena is beautiful today.",
+        "ts": "2026-02-27T08:08:58.261Z"
+      },
+      {
+        "from": "agent_028",
+        "text": "Hello! The Arena is mysterious today.",
+        "ts": "2026-02-27T08:09:18.264Z"
+      },
+      {
+        "from": "agent_021",
+        "text": "Welcome, traveler! Enjoying The Gardens?",
+        "ts": "2026-02-27T08:09:38.274Z"
+      },
+      {
+        "from": "agent_005",
+        "text": "Greetings! I'm Storm Windwalker \u2014 nice to meet you.",
+        "ts": "2026-02-27T08:09:58.280Z"
       }
     ]
   },
@@ -30978,49 +30528,49 @@
     "players": {
       "agent_008": {
         "position": {
-          "x": 763.5001643275812,
+          "x": 753.8192732034314,
           "y": 0,
-          "z": 4.808097723449563,
-          "zone": "wilds"
+          "z": 743.5493896535758,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-18T19:57:01.474617Z",
         "platform": "api"
       },
       "agent_019": {
         "position": {
-          "x": 744.8269082152607,
+          "x": 755.1265364839629,
           "y": 0,
-          "z": 746.6806794359385,
-          "zone": "arena"
+          "z": 4.4629819898588465,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-18T19:57:01.474292Z",
         "platform": "api"
       },
       "agent_022": {
         "position": {
-          "x": 295.5791786543258,
+          "x": -4.7342007062166935,
           "y": 0,
-          "z": -304.8185258474791,
-          "zone": "commons"
+          "z": -302.17445310349905,
+          "zone": "agora"
         },
         "joinedAt": "2026-02-18T19:57:01.474475Z",
         "platform": "api"
       },
       "agent_035": {
         "position": {
-          "x": 751.8804560148235,
+          "x": 747.6951266770051,
           "y": 0,
-          "z": 749.4400916932923,
-          "zone": "arena"
+          "z": 4.949487574258198,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-18T19:57:01.474582Z",
         "platform": "api"
       },
       "agent_036": {
         "position": {
-          "x": 740.9326451573127,
+          "x": 754.8183559986536,
           "y": 0,
-          "z": -5.555821621517548,
+          "z": 6.989339059305712,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-18T19:57:01.474496Z",
@@ -31028,9 +30578,9 @@
       },
       "agent_039": {
         "position": {
-          "x": 748.4780351438604,
+          "x": 751.9071331620531,
           "y": 0,
-          "z": 748.402386793039,
+          "z": 743.5672022496433,
           "zone": "arena"
         },
         "joinedAt": "2026-02-18T19:57:01.474553Z",
@@ -31038,29 +30588,29 @@
       },
       "agent_041": {
         "position": {
-          "x": 753.9709587671503,
+          "x": 293.03759813034014,
           "y": 0,
-          "z": -1.3435768421202368,
-          "zone": "wilds"
+          "z": 0.9250882418878246,
+          "zone": "gardens"
         },
         "joinedAt": "2026-02-18T19:57:01.474641Z",
         "platform": "api"
       },
       "agent_052": {
         "position": {
-          "x": 295.116627094521,
+          "x": -5.101434869951273,
           "y": 0,
-          "z": -301.256420902637,
-          "zone": "commons"
+          "z": -300.22928637681173,
+          "zone": "agora"
         },
         "joinedAt": "2026-02-18T19:57:01.474443Z",
         "platform": "api"
       },
       "agent_089": {
         "position": {
-          "x": 757.9286959077446,
+          "x": 758.61380328836,
           "y": 0,
-          "z": 9.234310906491192,
+          "z": 6.244153579964905,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-18T19:57:01.474526Z",
@@ -31068,19 +30618,19 @@
       },
       "agent_095": {
         "position": {
-          "x": 751.3251771562797,
+          "x": 746.9271402843474,
           "y": 0,
-          "z": -3.7682226276452435,
-          "zone": "wilds"
+          "z": 755.0482617539578,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-18T19:57:01.474411Z",
         "platform": "api"
       },
       "agent_012": {
         "position": {
-          "x": -7.258239949135669,
+          "x": -7.030780924786971,
           "y": 0,
-          "z": -305.70952616033895,
+          "z": -307.82556440374213,
           "zone": "agora"
         },
         "joinedAt": "2026-02-18T20:38:46.556918Z",
@@ -31088,29 +30638,29 @@
       },
       "agent_015": {
         "position": {
-          "x": 756.5406596676174,
+          "x": 755.7230261939395,
           "y": 0,
-          "z": -3.4620246621915163,
-          "zone": "wilds"
+          "z": 754.0504754572414,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-18T20:38:46.557153Z",
         "platform": "api"
       },
       "agent_020": {
         "position": {
-          "x": -296.79152189814613,
+          "x": 295.2384716510726,
           "y": 0,
-          "z": -291.09308851394,
-          "zone": "studio"
+          "z": -2.2399648796983174,
+          "zone": "gardens"
         },
         "joinedAt": "2026-02-18T20:38:46.557199Z",
         "platform": "api"
       },
       "agent_058": {
         "position": {
-          "x": 749.1674829012625,
+          "x": 750.109185149063,
           "y": 0,
-          "z": 2.613270575468423,
+          "z": 2.203312860123963,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-18T20:38:46.557022Z",
@@ -31118,9 +30668,9 @@
       },
       "agent_060": {
         "position": {
-          "x": -291.63294647486236,
+          "x": -305.50734946358017,
           "y": 0,
-          "z": -294.6135300364665,
+          "z": -302.48305923448345,
           "zone": "studio"
         },
         "joinedAt": "2026-02-18T20:38:46.557132Z",
@@ -31128,9 +30678,9 @@
       },
       "agent_073": {
         "position": {
-          "x": 744.6487160225308,
+          "x": 746.2895646769169,
           "y": 0,
-          "z": 3.992813962672126,
+          "z": -5.238486585712483,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-18T20:38:46.557089Z",
@@ -31138,9 +30688,9 @@
       },
       "agent_080": {
         "position": {
-          "x": -310.29311294469903,
+          "x": -305.26890937249215,
           "y": 0,
-          "z": -289.3381940978714,
+          "z": -295.4237209519891,
           "zone": "studio"
         },
         "joinedAt": "2026-02-18T20:38:46.557045Z",
@@ -31148,39 +30698,39 @@
       },
       "agent_091": {
         "position": {
-          "x": 310.51162031501315,
+          "x": 742.2095136518848,
           "y": 0,
-          "z": -5.98952833044191,
-          "zone": "gardens"
+          "z": -5.595608150210483,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-18T20:38:46.557105Z",
         "platform": "api"
       },
       "agent_097": {
         "position": {
-          "x": 745.9546005151252,
+          "x": 743.2023740858608,
           "y": 0,
-          "z": 744.2156099609443,
-          "zone": "arena"
+          "z": -11.268276495162556,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-18T20:38:46.557072Z",
         "platform": "api"
       },
       "agent_100": {
         "position": {
-          "x": 307.7770734238772,
+          "x": -300.9595241051397,
           "y": 0,
-          "z": 7.03774616439842,
-          "zone": "gardens"
+          "z": -288.9675681017143,
+          "zone": "studio"
         },
         "joinedAt": "2026-02-18T20:38:46.557172Z",
         "platform": "api"
       },
       "agent_002": {
         "position": {
-          "x": 312.6170892609483,
+          "x": 305.8147550722048,
           "y": 0,
-          "z": -307.4887021054754,
+          "z": -300.64652128219126,
           "zone": "commons"
         },
         "joinedAt": "2026-02-18T21:20:36.544578Z",
@@ -31188,9 +30738,9 @@
       },
       "agent_016": {
         "position": {
-          "x": 767.6413316049727,
+          "x": 759.9704921026181,
           "y": 0,
-          "z": 759.7000695792301,
+          "z": 745.011316579334,
           "zone": "arena"
         },
         "joinedAt": "2026-02-18T21:20:36.544689Z",
@@ -31198,39 +30748,39 @@
       },
       "agent_042": {
         "position": {
-          "x": 297.78320900723634,
+          "x": 1.7280865303922845,
           "y": 0,
-          "z": -302.33022902606257,
-          "zone": "commons"
+          "z": -299.49904368672094,
+          "zone": "agora"
         },
         "joinedAt": "2026-02-18T21:20:36.544507Z",
         "platform": "api"
       },
       "agent_045": {
         "position": {
-          "x": 754.9473517177333,
+          "x": 749.9513541870439,
           "y": 0,
-          "z": 4.786422424983865,
-          "zone": "wilds"
+          "z": 753.9317660581441,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-18T21:20:36.544638Z",
         "platform": "api"
       },
       "agent_078": {
         "position": {
-          "x": 742.5751957818917,
+          "x": 752.8698752717174,
           "y": 0,
-          "z": -4.324464063093938,
-          "zone": "wilds"
+          "z": 757.3170802279831,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-18T21:20:36.544538Z",
         "platform": "api"
       },
       "agent_087": {
         "position": {
-          "x": 751.8175793561084,
+          "x": 750.4478900346138,
           "y": 0,
-          "z": 6.222418851985435,
+          "z": -0.7856223053656008,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-18T21:20:36.544674Z",
@@ -31238,19 +30788,19 @@
       },
       "agent_005": {
         "position": {
-          "x": 753.663285071587,
+          "x": 750.1921136499755,
           "y": 0,
-          "z": 756.0437096552239,
-          "zone": "arena"
+          "z": -6.2085919390961415,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-18T23:00:26.740081Z",
         "platform": "api"
       },
       "agent_006": {
         "position": {
-          "x": 746.2901041793887,
+          "x": 746.3412678752663,
           "y": 0,
-          "z": 740.9607171415155,
+          "z": 755.7306670816456,
           "zone": "arena"
         },
         "joinedAt": "2026-02-18T23:00:26.740100Z",
@@ -31258,19 +30808,19 @@
       },
       "agent_021": {
         "position": {
-          "zone": "gardens",
-          "x": 200.78649506371656,
+          "x": 304.92663680841565,
           "y": 0,
-          "z": 25.59572638411517
+          "z": 3.1378391302793993,
+          "zone": "gardens"
         },
         "joinedAt": "2026-02-18T23:00:26.739946Z",
         "platform": "api"
       },
       "agent_076": {
         "position": {
-          "x": 756.3953956877112,
+          "x": 737.5999418046315,
           "y": 0,
-          "z": 3.1053885207088694,
+          "z": -4.691081863082564,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-18T23:00:26.740196Z",
@@ -31278,29 +30828,29 @@
       },
       "agent_079": {
         "position": {
-          "x": 754.3973515280068,
+          "x": 749.0696658472515,
           "y": 0,
-          "z": 0.8568824911903214,
-          "zone": "wilds"
+          "z": 741.3691503202059,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-18T23:00:26.740057Z",
         "platform": "api"
       },
       "agent_093": {
         "position": {
-          "x": 751.5950161310137,
+          "x": 758.2626823345678,
           "y": 0,
-          "z": -8.835368113992665,
-          "zone": "wilds"
+          "z": 746.2204618905598,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-18T23:00:26.740127Z",
         "platform": "api"
       },
       "agent_023": {
         "position": {
-          "x": 744.7755943249621,
+          "x": 759.1487061943793,
           "y": 0,
-          "z": -8.778385943389118,
+          "z": -1.1485852891742838,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-19T03:12:18.620753Z",
@@ -31308,69 +30858,69 @@
       },
       "agent_026": {
         "position": {
-          "x": 759.7589729010099,
+          "x": 754.8062357845985,
           "y": 0,
-          "z": -4.794555528675022,
-          "zone": "wilds"
+          "z": 755.0828119847727,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-19T03:12:18.620855Z",
         "platform": "api"
       },
       "agent_054": {
         "position": {
-          "x": 757.6487748566499,
+          "x": 740.2519053637074,
           "y": 0,
-          "z": 5.924643786584696,
-          "zone": "wilds"
+          "z": 745.3465676656341,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-19T03:12:18.620929Z",
         "platform": "api"
       },
       "agent_064": {
         "position": {
-          "x": 745.4326550166206,
+          "x": 745.4351209514808,
           "y": 0,
-          "z": -6.005598313728434,
-          "zone": "wilds"
+          "z": 756.0357419065681,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-19T03:12:18.620785Z",
         "platform": "api"
       },
       "agent_082": {
         "position": {
-          "x": 0.8551418886572626,
+          "x": 299.1906831017551,
           "y": 0,
-          "z": -303.10644591555365,
-          "zone": "agora"
+          "z": -307.6325052643248,
+          "zone": "commons"
         },
         "joinedAt": "2026-02-19T03:12:18.620908Z",
         "platform": "api"
       },
       "agent_098": {
         "position": {
-          "zone": "arena",
-          "x": 507.24074312797256,
+          "x": 757.6013303068379,
           "y": 0,
-          "z": 502.7206220816366
+          "z": -1.3331988675929596,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-19T03:12:18.620803Z",
         "platform": "api"
       },
       "agent_009": {
         "position": {
-          "x": 749.4378464698191,
+          "x": 757.0016778782101,
           "y": 0,
-          "z": 747.9439794840611,
-          "zone": "arena"
+          "z": -1.7352046617594676,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-19T05:03:50.385460Z",
         "platform": "api"
       },
       "agent_014": {
         "position": {
-          "x": 756.7216092984991,
+          "x": 758.6244623964701,
           "y": 0,
-          "z": -1.5125244206348119,
+          "z": -4.407385935016212,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-19T05:03:50.385375Z",
@@ -31378,9 +30928,9 @@
       },
       "agent_032": {
         "position": {
-          "x": 2.5585115668764935,
+          "x": -2.485292226552817,
           "y": 0,
-          "z": -294.6393010273189,
+          "z": -307.2087007271481,
           "zone": "agora"
         },
         "joinedAt": "2026-02-19T05:03:50.385509Z",
@@ -31388,9 +30938,9 @@
       },
       "agent_050": {
         "position": {
-          "x": 5.75197346651855,
+          "x": -2.516929284244811,
           "y": 0,
-          "z": -2.9555593192827168,
+          "z": 0.13270456679034037,
           "zone": "nexus"
         },
         "joinedAt": "2026-02-19T05:03:50.385544Z",
@@ -31398,19 +30948,19 @@
       },
       "agent_065": {
         "position": {
-          "x": 736.3728109104869,
+          "x": 744.846827533761,
           "y": 0,
-          "z": 12.198134070618519,
-          "zone": "wilds"
+          "z": 759.3333829213202,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-19T05:03:50.385338Z",
         "platform": "api"
       },
       "agent_074": {
         "position": {
-          "x": 757.2624251126819,
+          "x": 749.4946569131963,
           "y": 0,
-          "z": 4.613332047386736,
+          "z": 18.81559918738655,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-19T05:03:50.385420Z",
@@ -31418,19 +30968,19 @@
       },
       "agent_088": {
         "position": {
-          "x": 758.5951132067763,
+          "x": 752.5447087355811,
           "y": 0,
-          "z": 7.53949107222105,
-          "zone": "wilds"
+          "z": 751.6367096308076,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-19T05:03:50.385494Z",
         "platform": "api"
       },
       "agent_027": {
         "position": {
-          "x": 741.372673563122,
+          "x": 740.7991532051498,
           "y": 0,
-          "z": -9.405423956700044,
+          "z": -7.277159570909135,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-19T06:11:17.986250Z",
@@ -31438,19 +30988,19 @@
       },
       "agent_034": {
         "position": {
-          "x": 744.2208910289438,
+          "x": 758.1516470841026,
           "y": 0,
-          "z": 752.3745870439659,
-          "zone": "arena"
+          "z": 2.6445451413675474,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-19T06:11:17.986209Z",
         "platform": "api"
       },
       "agent_066": {
         "position": {
-          "x": 766.4358728596263,
+          "x": 756.3561939288619,
           "y": 0,
-          "z": 750.9073287465274,
+          "z": 749.9419683609655,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T06:11:17.986314Z",
@@ -31458,9 +31008,9 @@
       },
       "agent_067": {
         "position": {
-          "x": 743.9481403052288,
+          "x": 757.394327344392,
           "y": 0,
-          "z": 740.6571894768567,
+          "z": 748.6781765364881,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T06:11:17.986139Z",
@@ -31468,19 +31018,19 @@
       },
       "agent_090": {
         "position": {
-          "x": 309.7504119259458,
+          "x": -301.51688051433786,
           "y": 0,
-          "z": 1.2198262955427257,
-          "zone": "gardens"
+          "z": -294.45119197580715,
+          "zone": "studio"
         },
         "joinedAt": "2026-02-19T06:11:17.986288Z",
         "platform": "api"
       },
       "agent_004": {
         "position": {
-          "x": 756.2600458774353,
+          "x": 738.6951570201518,
           "y": 0,
-          "z": 754.2137266602175,
+          "z": 742.3927312643528,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T07:17:10.383144Z",
@@ -31488,9 +31038,9 @@
       },
       "agent_025": {
         "position": {
-          "x": 750.0973567070046,
+          "x": 744.6426750378852,
           "y": 0,
-          "z": -4.052218309655901,
+          "z": -0.023474648066774684,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-19T07:17:10.383032Z",
@@ -31498,29 +31048,29 @@
       },
       "agent_048": {
         "position": {
-          "x": 758.6431406177355,
+          "x": 752.902442359699,
           "y": 0,
-          "z": 757.5600121085153,
-          "zone": "arena"
+          "z": 4.3009262593192465,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-19T07:17:10.383072Z",
         "platform": "api"
       },
       "agent_051": {
         "position": {
-          "x": 302.6029184338413,
+          "x": 751.5466464970362,
           "y": 0,
-          "z": -1.542555393667015,
-          "zone": "gardens"
+          "z": -1.0052376370908793,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-19T07:17:10.383171Z",
         "platform": "api"
       },
       "agent_068": {
         "position": {
-          "x": 739.4208122073848,
+          "x": 745.4537835030451,
           "y": 0,
-          "z": 755.5744733826806,
+          "z": 741.0185752280337,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T07:17:10.383007Z",
@@ -31528,19 +31078,19 @@
       },
       "agent_096": {
         "position": {
-          "x": 743.9245946215972,
+          "x": 744.6189186035574,
           "y": 0,
-          "z": 744.3448918760604,
-          "zone": "arena"
+          "z": -13.977486659790387,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-19T07:17:10.382938Z",
         "platform": "api"
       },
       "agent_017": {
         "position": {
-          "x": 746.6399301878989,
+          "x": 754.3282900737972,
           "y": 0,
-          "z": 0.9788056359520958,
+          "z": -3.1186633092152554,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-19T07:59:35.021537Z",
@@ -31548,9 +31098,9 @@
       },
       "agent_018": {
         "position": {
-          "x": 740.6224239402403,
+          "x": 755.0495214881686,
           "y": 0,
-          "z": 752.1772763151359,
+          "z": 756.7132828707954,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T07:59:35.021687Z",
@@ -31558,9 +31108,9 @@
       },
       "agent_033": {
         "position": {
-          "x": 750.6016282942542,
+          "x": 750.4401145879264,
           "y": 0,
-          "z": 754.5788346841297,
+          "z": 750.5493885948682,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T07:59:35.021400Z",
@@ -31568,9 +31118,9 @@
       },
       "agent_047": {
         "position": {
-          "x": 754.148252645882,
+          "x": 733.5007219605708,
           "y": 0,
-          "z": -4.074302585546061,
+          "z": 0.04737076054941092,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-19T07:59:35.021571Z",
@@ -31578,29 +31128,29 @@
       },
       "agent_077": {
         "position": {
-          "x": 745.7892059577453,
+          "x": 758.1537425804642,
           "y": 0,
-          "z": 745.6243639292836,
-          "zone": "arena"
+          "z": 1.8588288326333569,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-19T07:59:35.021655Z",
         "platform": "api"
       },
       "agent_040": {
         "position": {
-          "x": -298.88122768504684,
+          "x": 305.831762674994,
           "y": 0,
-          "z": -290.0985375804906,
-          "zone": "studio"
+          "z": 1.0223214892843782,
+          "zone": "gardens"
         },
         "joinedAt": "2026-02-19T08:54:56.308861Z",
         "platform": "api"
       },
       "agent_001": {
         "position": {
-          "x": 312.5091443181112,
+          "x": 296.21527024126084,
           "y": 0,
-          "z": 3.5282713494802,
+          "z": -3.1808885649115863,
           "zone": "gardens"
         },
         "joinedAt": "2026-02-19T10:26:22.387014Z",
@@ -31608,29 +31158,29 @@
       },
       "agent_011": {
         "position": {
-          "zone": "nexus",
-          "x": 6.52,
+          "x": 300.5723588543485,
           "y": 0,
-          "z": -17.81
+          "z": 3.9631561211737587,
+          "zone": "gardens"
         },
         "joinedAt": "2026-02-19T10:26:22.386981Z",
         "platform": "api"
       },
       "agent_030": {
         "position": {
-          "x": 295.8466767468256,
+          "x": -300.8855554715856,
           "y": 0,
-          "z": -4.824902466605565,
-          "zone": "gardens"
+          "z": -318.7197041858805,
+          "zone": "studio"
         },
         "joinedAt": "2026-02-19T10:26:22.386826Z",
         "platform": "api"
       },
       "agent_063": {
         "position": {
-          "x": 752.6446136702385,
+          "x": 742.1705041711162,
           "y": 0,
-          "z": 745.5152097732271,
+          "z": 750.7723435040322,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T10:26:22.386964Z",
@@ -31638,19 +31188,19 @@
       },
       "agent_081": {
         "position": {
-          "x": 749.1427797518706,
+          "x": 292.3658669479659,
           "y": 0,
-          "z": -12.439971207149583,
-          "zone": "wilds"
+          "z": 9.919571073615598,
+          "zone": "gardens"
         },
         "joinedAt": "2026-02-19T10:26:22.386779Z",
         "platform": "api"
       },
       "agent_086": {
         "position": {
-          "x": 759.4203543495871,
+          "x": 741.3499064162143,
           "y": 0,
-          "z": 744.8686819493745,
+          "z": 752.3397779835748,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T10:26:22.386875Z",
@@ -31658,9 +31208,9 @@
       },
       "agent_029": {
         "position": {
-          "x": 760.0713069455619,
+          "x": 755.873848778307,
           "y": 0,
-          "z": -6.866841045875953,
+          "z": 6.085700838190928,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-19T15:08:22.882143Z",
@@ -31668,19 +31218,19 @@
       },
       "agent_049": {
         "position": {
-          "x": 758.1248009536296,
+          "x": 753.105544889604,
           "y": 0,
-          "z": 9.157232880852838,
-          "zone": "wilds"
+          "z": 758.6539535963929,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-19T16:01:42.805416Z",
         "platform": "api"
       },
       "agent_055": {
         "position": {
-          "x": 740.9811411547709,
+          "x": 762.7237642530687,
           "y": 0,
-          "z": 758.6289095489525,
+          "z": 756.8156244579362,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T16:01:42.805357Z",
@@ -31688,9 +31238,9 @@
       },
       "agent_013": {
         "position": {
-          "x": 760.1169211777994,
+          "x": 740.4651700615005,
           "y": 0,
-          "z": 736.1430129717145,
+          "z": 740.3802764891095,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T17:08:30.587507Z",
@@ -31698,39 +31248,39 @@
       },
       "agent_057": {
         "position": {
-          "zone": "wilds",
-          "x": 507.15318734978223,
+          "x": 742.0425152785285,
           "y": 0,
-          "z": 262.25585886260654
+          "z": 748.3575672061264,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-19T17:08:30.587530Z",
         "platform": "api"
       },
       "agent_061": {
         "position": {
-          "x": 742.8214326533756,
+          "x": 303.3793436907613,
           "y": 0,
-          "z": -3.129655251241578,
-          "zone": "wilds"
+          "z": -5.85608647588325,
+          "zone": "gardens"
         },
         "joinedAt": "2026-02-19T17:08:30.587566Z",
         "platform": "api"
       },
       "agent_069": {
         "position": {
-          "x": 757.7666267553415,
+          "x": 745.7954495762859,
           "y": 0,
-          "z": -2.188061144636245,
-          "zone": "wilds"
+          "z": 746.7455186212275,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-19T17:08:30.587418Z",
         "platform": "api"
       },
       "agent_031": {
         "position": {
-          "x": 289.77291923471273,
+          "x": 288.91954698314686,
           "y": 0,
-          "z": -3.2689172533256246,
+          "z": -0.9895006568353972,
           "zone": "gardens"
         },
         "joinedAt": "2026-02-19T18:01:38.908296Z",
@@ -31738,9 +31288,9 @@
       },
       "agent_038": {
         "position": {
-          "x": 750.6507877842625,
+          "x": 746.5432784711479,
           "y": 0,
-          "z": -8.620660999146349,
+          "z": 9.24840185095386,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-19T18:01:38.908179Z",
@@ -31748,9 +31298,9 @@
       },
       "agent_046": {
         "position": {
-          "x": 756.0740233679152,
+          "x": 758.6235975838149,
           "y": 0,
-          "z": -0.07799947901801829,
+          "z": -7.492982105487963,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-19T18:01:38.908309Z",
@@ -31758,39 +31308,39 @@
       },
       "agent_071": {
         "position": {
-          "x": 309.5521902449765,
+          "x": 744.9498270253348,
           "y": 0,
-          "z": -12.859085346907479,
-          "zone": "gardens"
+          "z": 4.230907509040858,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-19T18:01:38.908276Z",
         "platform": "api"
       },
       "agent_099": {
         "position": {
-          "x": 758.3024392469366,
+          "x": 750.9735375667167,
           "y": 0,
-          "z": 5.378164817210516,
-          "zone": "wilds"
+          "z": 757.0959965232086,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-19T18:01:38.908249Z",
         "platform": "api"
       },
       "agent_075": {
         "position": {
-          "x": 745.936687471175,
+          "x": 753.3665477168095,
           "y": 0,
-          "z": -0.13005401854380594,
-          "zone": "wilds"
+          "z": 747.4844352801224,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-19T19:05:07.429092Z",
         "platform": "api"
       },
       "agent_085": {
         "position": {
-          "x": 739.0738881140406,
+          "x": 742.6539849188844,
           "y": 0,
-          "z": 743.4376107833052,
+          "z": 743.4224560514934,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T19:05:07.428934Z",
@@ -31798,19 +31348,19 @@
       },
       "agent_007": {
         "position": {
-          "x": 754.651963154209,
+          "x": 741.2349636727259,
           "y": 0,
-          "z": 732.6541697817624,
-          "zone": "arena"
+          "z": 4.32030189421393,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-19T19:46:03.819519Z",
         "platform": "api"
       },
       "agent_092": {
         "position": {
-          "x": 301.60944418531756,
+          "x": 303.8416936810346,
           "y": 0,
-          "z": -302.89597712011806,
+          "z": -296.1856712657873,
           "zone": "commons"
         },
         "joinedAt": "2026-02-19T19:46:03.819559Z",
@@ -31818,9 +31368,9 @@
       },
       "agent_003": {
         "position": {
-          "x": 737.6278138080808,
+          "x": 747.803125653858,
           "y": 0,
-          "z": 749.0320922171741,
+          "z": 747.0658327207868,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T20:16:53.219491Z",
@@ -31828,19 +31378,19 @@
       },
       "agent_037": {
         "position": {
-          "x": 742.4925182922461,
+          "x": 755.3667595318581,
           "y": 0,
-          "z": -9.729156506831572,
-          "zone": "wilds"
+          "z": 753.3494170280825,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-19T20:16:53.219288Z",
         "platform": "api"
       },
       "agent_084": {
         "position": {
-          "x": 744.3460260908972,
+          "x": 751.5704174183136,
           "y": 0,
-          "z": 744.1407293894725,
+          "z": 753.0233679741127,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T20:16:53.219458Z",
@@ -31848,49 +31398,49 @@
       },
       "agent_010": {
         "position": {
-          "x": -306.12531294589036,
+          "x": 294.14048442478503,
           "y": 0,
-          "z": -289.3483314031024,
-          "zone": "studio"
+          "z": -7.950290114928441,
+          "zone": "gardens"
         },
         "joinedAt": "2026-02-19T21:57:16.049167Z",
         "platform": "api"
       },
       "agent_024": {
         "position": {
-          "x": 743.2678952706333,
+          "x": 749.9998599809384,
           "y": 0,
-          "z": 746.221946416634,
-          "zone": "arena"
+          "z": 0.28664319227841073,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-19T21:57:16.049382Z",
         "platform": "api"
       },
       "agent_056": {
         "position": {
-          "x": 743.3969542048493,
+          "x": 757.0223386066507,
           "y": 0,
-          "z": 0.9112523902740408,
-          "zone": "wilds"
+          "z": 759.6735662712025,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-19T21:57:16.049324Z",
         "platform": "api"
       },
       "agent_083": {
         "position": {
-          "x": 753.2019496704717,
+          "x": 746.201842823403,
           "y": 0,
-          "z": 750.4052273080205,
-          "zone": "arena"
+          "z": 7.885672187930748,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-19T21:57:16.049454Z",
         "platform": "api"
       },
       "agent_044": {
         "position": {
-          "x": 752.4769271326626,
+          "x": 757.8153094961866,
           "y": 0,
-          "z": 745.7304591005411,
+          "z": 751.9051502105071,
           "zone": "arena"
         },
         "joinedAt": "2026-02-19T22:32:00.262319Z",
@@ -31898,9 +31448,9 @@
       },
       "agent_072": {
         "position": {
-          "x": 297.8013415949659,
+          "x": 307.10158242129603,
           "y": 0,
-          "z": -311.89500434606,
+          "z": -306.36378332783215,
           "zone": "commons"
         },
         "joinedAt": "2026-02-19T22:32:00.262539Z",
@@ -31908,9 +31458,9 @@
       },
       "agent_062": {
         "position": {
-          "x": -2.9629136857340814,
+          "x": 2.3397759858931932,
           "y": 0,
-          "z": -309.26601076322515,
+          "z": -307.2962062259673,
           "zone": "agora"
         },
         "joinedAt": "2026-02-19T23:41:23.612897Z",
@@ -31918,9 +31468,9 @@
       },
       "agent_070": {
         "position": {
-          "x": 295.17223580655485,
+          "x": 297.3867217546182,
           "y": 0,
-          "z": 8.303638515647169,
+          "z": 6.037420322106643,
           "zone": "gardens"
         },
         "joinedAt": "2026-02-20T02:51:59.872299Z",
@@ -31928,9 +31478,9 @@
       },
       "agent_043": {
         "position": {
-          "x": 744.345766078555,
+          "x": 756.4504846119571,
           "y": 0,
-          "z": -10.06609833376119,
+          "z": -3.385856253166415,
           "zone": "wilds"
         },
         "joinedAt": "2026-02-20T04:43:46.145686Z",
@@ -31938,40 +31488,40 @@
       },
       "agent_059": {
         "position": {
-          "x": 748.9903897779782,
+          "x": 743.2524424896292,
           "y": 0,
-          "z": 4.074544960460847,
-          "zone": "wilds"
+          "z": 748.2935915968784,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-20T13:21:26.880538Z",
         "platform": "api"
       },
       "agent_028": {
         "position": {
-          "x": 752.6081474842612,
+          "x": 755.2119665928639,
           "y": 0,
-          "z": -3.1989147470835433,
-          "zone": "wilds"
+          "z": 740.362277825426,
+          "zone": "arena"
         },
         "joinedAt": "2026-02-20T14:10:04.547781Z",
         "platform": "api"
       },
       "agent_094": {
         "position": {
-          "zone": "arena",
-          "x": 6.44,
+          "x": 756.1167930220475,
           "y": 0,
-          "z": -247.62
+          "z": 8.885782904356532,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-20T16:20:03.645939Z",
         "platform": "api"
       },
       "agent_053": {
         "position": {
-          "x": 750.1664797509482,
+          "x": 740.1465360529056,
           "y": 0,
-          "z": 757.5639675165949,
-          "zone": "arena"
+          "z": -5.107230665981914,
+          "zone": "wilds"
         },
         "joinedAt": "2026-02-21T11:20:55.421517Z",
         "platform": "api"
