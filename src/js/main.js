@@ -913,14 +913,9 @@
       }
     }
 
-    // Start tutorial for new players (tooltip guide)
-    if (HUD && HUD.initTutorial) {
-      setTimeout(function() { HUD.initTutorial(); }, 1500);
-    }
-
-    // Show onboarding walkthrough panel for first-time players
+    // Show onboarding walkthrough for first-time players (single unified guide)
     if (HUD && HUD.initOnboarding) {
-      setTimeout(function() { HUD.initOnboarding(); }, 2000);
+      setTimeout(function() { HUD.initOnboarding(); }, 1500);
     }
 
     // Auto-accept starter quest for new players with no active quests
@@ -3093,7 +3088,7 @@
         }
       }
 
-      // Update nearby players (throttled to every 10 frames)
+      // Update nearby players + NPCs (throttled to every 10 frames)
       if (npcUpdateFrame % 10 === 0 || !cachedNearbyPlayers) {
         cachedNearbyPlayers = players
           .filter(function(p) { return p.id !== localPlayer.id && p.zone === currentZone; })
@@ -3104,6 +3099,20 @@
             return { id: p.id, name: p.name, distance: distance };
           })
           .sort(function(a, b) { return a.distance - b.distance; });
+
+        // Include NPCs if no real players nearby
+        if (cachedNearbyPlayers.length === 0 && NPCs && NPCs.getNPCPositions) {
+          var npcPos = NPCs.getNPCPositions();
+          cachedNearbyPlayers = npcPos
+            .filter(function(n) { return n && (!n.zone || n.zone === currentZone); })
+            .map(function(n) {
+              var dx = n.x - localPlayer.position.x;
+              var dz = n.z - localPlayer.position.z;
+              return { id: 'npc_' + (n.name || ''), name: n.name || 'NPC', distance: Math.sqrt(dx * dx + dz * dz), isNPC: true };
+            })
+            .sort(function(a, b) { return a.distance - b.distance; })
+            .slice(0, 5);
+        }
       }
       HUD.updateNearbyPlayers(cachedNearbyPlayers);
 

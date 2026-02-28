@@ -436,12 +436,14 @@
     if (!nearbyPlayersList) return;
 
     // Keep header, remove old entries
-    nearbyPlayersList.innerHTML = '<div style="font-weight: bold; margin-bottom: 5px;">Nearby Players</div>';
+    var hasNPCs = players.some(function(p) { return p.isNPC; });
+    var headerText = hasNPCs ? 'Nearby Citizens' : 'Nearby Players';
+    nearbyPlayersList.innerHTML = '<div style="font-weight: bold; margin-bottom: 5px;">' + headerText + '</div>';
 
     if (players.length === 0) {
       var emptyMsg = document.createElement('div');
       emptyMsg.style.cssText = 'color: #888; font-size: 12px; font-style: italic;';
-      emptyMsg.textContent = 'No players nearby';
+      emptyMsg.textContent = 'No one nearby';
       nearbyPlayersList.appendChild(emptyMsg);
       return;
     }
@@ -456,9 +458,11 @@
         font-size: 13px;
       `;
 
+      var nameColor = player.isNPC ? '#7af' : '#4f4';
       var distanceStr = player.distance ? '(' + player.distance.toFixed(1) + 'm)' : '';
       playerEl.innerHTML =
-        '<span style="color: #4f4;">' + escapeHtml(player.name || player.id) + '</span>' +
+        '<span style="color: ' + nameColor + ';">' + escapeHtml(player.name || player.id) + '</span>' +
+        (player.isNPC ? '<span style="color:#666;font-size:10px;margin-left:4px;">NPC</span>' : '') +
         '<span style="color: #888; font-size: 11px; margin-left: 5px;">' + escapeHtml(distanceStr) + '</span>';
 
       nearbyPlayersList.appendChild(playerEl);
@@ -639,9 +643,9 @@
     // Bottom toolbar with action buttons
     toolbarEl = document.createElement('div');
     toolbarEl.id = 'action-toolbar';
-    toolbarEl.style.cssText = 'position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:auto;' +
+    toolbarEl.style.cssText = 'position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:auto;z-index:600;' +
       'background:rgba(5,8,18,0.85);border-radius:12px;padding:8px 14px;border:1px solid rgba(255,255,255,0.1);' +
-      'backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(0,0,0,0.5);';
+      'backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(0,0,0,0.5);transition:bottom 0.3s ease;';
 
     var actions = [
       { key: 'E', label: 'Interact', color: '#44aa66' },
@@ -10224,6 +10228,8 @@
     tutorialCallback = callback || null;
     tutorialStep = 0;
     tutorialActive = true;
+    // Shift action bar up to make room for onboarding panel
+    if (toolbarEl) toolbarEl.style.bottom = '160px';
     renderTutorialStep();
   }
 
@@ -10307,6 +10313,8 @@
       tutorialEl.parentNode.removeChild(tutorialEl);
       tutorialEl = null;
     }
+    // Restore action bar position
+    if (toolbarEl) toolbarEl.style.bottom = '12px';
   }
 
   function initOnboardingFlow() {
@@ -10317,7 +10325,7 @@
     }
     showTutorial(function(result) {
       if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('zion_tutorial_complete', '1');
+        localStorage.setItem('zion_tutorial_complete', 'true');
       }
     });
   }
