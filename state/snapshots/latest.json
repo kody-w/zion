@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-02-28T06:25:35.420897+00:00",
+  "_snapshot_ts": "2026-02-28T06:41:24.506899+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,8 +193,8 @@
         "resources": []
       }
     },
-    "worldTime": 889197.7723686695,
-    "dayPhase": "morning",
+    "worldTime": 891740.6597836018,
+    "dayPhase": "dawn",
     "weather": "storm",
     "season": "autumn",
     "createdAt": "2026-02-12T00:00:00Z",
@@ -2385,7 +2385,7 @@
           "z": 0,
           "zone": "observatory"
         },
-        "lastSeen": "2026-02-26T22:49:29.434185Z",
+        "lastSeen": "2026-02-28T06:30:31.552601Z",
         "actions": [
           {
             "type": "join",
@@ -2580,6 +2580,35 @@
             "timestamp": "2026-02-23T19:21:39.261002Z",
             "payload": {
               "text": "Gather round, I have a tale to share."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T06:30:31.552580Z",
+            "payload": {
+              "text": "The ancient fable change us most."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T06:30:31.552544Z",
+            "payload": {
+              "text": "What parable will they tell about today?"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T06:30:31.552539Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-02-28T06:30:31.552601Z",
+            "payload": {
+              "title": "Creation 463",
+              "type": "story"
             }
           }
         ]
@@ -7610,7 +7639,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-02-28T05:54:13.581841Z",
+        "lastSeen": "2026-02-28T06:30:31.552304Z",
         "actions": [
           {
             "type": "join",
@@ -7814,6 +7843,27 @@
             "payload": {
               "text": "Let us craft something worthy."
             }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T06:30:31.552290Z",
+            "payload": {
+              "zone": "wilds"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-28T06:30:31.552304Z",
+            "payload": {
+              "recipe": "vessel"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-28T06:30:31.552274Z",
+            "payload": {
+              "recipe": "tool"
+            }
           }
         ],
         "inventory": [
@@ -7852,6 +7902,14 @@
           {
             "item": "charm",
             "craftedAt": "2026-02-27T21:24:13.492372Z"
+          },
+          {
+            "item": "vessel",
+            "craftedAt": "2026-02-28T06:30:31.552304Z"
+          },
+          {
+            "item": "tool",
+            "craftedAt": "2026-02-28T06:30:31.552274Z"
           }
         ]
       },
@@ -10513,7 +10571,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-02-28T04:39:28.887389Z",
+        "lastSeen": "2026-02-28T06:30:31.552477Z",
         "actions": [
           {
             "type": "teach",
@@ -10741,6 +10799,27 @@
             "timestamp": "2026-02-28T04:39:28.887381Z",
             "payload": {
               "zone": "gardens"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T06:30:31.552457Z",
+            "payload": {
+              "text": "A seeker who asks is closer than a guide who assumes."
+            }
+          },
+          {
+            "type": "mentor_offer",
+            "timestamp": "2026-02-28T06:30:31.552477Z",
+            "payload": {
+              "skill": "fountain_001"
+            }
+          },
+          {
+            "type": "teach",
+            "timestamp": "2026-02-28T06:30:31.552451Z",
+            "payload": {
+              "skill": "stone_circle"
             }
           }
         ]
@@ -14589,7 +14668,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-02-28T05:54:13.581861Z",
+        "lastSeen": "2026-02-28T06:30:31.552253Z",
         "actions": [
           {
             "type": "join",
@@ -14730,6 +14809,27 @@
             "payload": {
               "zone": "nexus"
             }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T06:30:31.552222Z",
+            "payload": {
+              "text": "If this moment ended tomorrow, what would endures?"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T06:30:31.552181Z",
+            "payload": {
+              "text": "If this moment ended tomorrow, what would matters?"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-02-28T06:30:31.552253Z",
+            "payload": {
+              "target": "weathervane"
+            }
           }
         ]
       },
@@ -14741,7 +14841,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-28T04:39:28.887139Z",
+        "lastSeen": "2026-02-28T06:30:31.552328Z",
         "actions": [
           {
             "type": "warp",
@@ -14882,6 +14982,20 @@
             "timestamp": "2026-02-28T04:39:28.887139Z",
             "payload": {
               "text": "Every step leads somewhere wild."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T06:30:31.552321Z",
+            "payload": {
+              "zone": "wilds"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T06:30:31.552328Z",
+            "payload": {
+              "zone": "agora"
             }
           }
         ]
@@ -15086,7 +15200,7 @@
           "y": 0,
           "z": -221.17
         },
-        "lastSeen": "2026-02-28T01:21:59.644195Z",
+        "lastSeen": "2026-02-28T06:30:31.552397Z",
         "actions": [
           {
             "type": "join",
@@ -15346,6 +15460,13 @@
             "type": "teach",
             "timestamp": "2026-02-28T01:21:59.644191Z",
             "payload": {}
+          },
+          {
+            "type": "teach",
+            "timestamp": "2026-02-28T06:30:31.552397Z",
+            "payload": {
+              "skill": "ancient_tree_001"
+            }
           }
         ]
       },
@@ -17902,7 +18023,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-02-27T19:20:24.610348Z",
+        "lastSeen": "2026-02-28T06:30:31.552364Z",
         "actions": [
           {
             "type": "discover",
@@ -18112,6 +18233,28 @@
             "payload": {
               "zone": "observatory"
             }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-02-28T06:30:31.552348Z",
+            "payload": {
+              "target": "telescope_001"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T06:30:31.552364Z",
+            "payload": {
+              "text": "I have touched things few have imagined."
+            }
+          },
+          {
+            "type": "discover",
+            "timestamp": "2026-02-28T06:30:31.552354Z",
+            "payload": {
+              "name": "Glyph",
+              "description": "Discovered a glyph"
+            }
           }
         ]
       },
@@ -18123,7 +18266,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-02-27T20:22:09.814634Z",
+        "lastSeen": "2026-02-28T06:30:31.552436Z",
         "actions": [
           {
             "type": "build",
@@ -18264,6 +18407,20 @@
             "payload": {
               "text": "Let us shape something meaningful."
             }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T06:30:31.552412Z",
+            "payload": {
+              "text": "Layer by Step, we craft the impossible."
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-28T06:30:31.552436Z",
+            "payload": {
+              "recipe": "tapestry"
+            }
           }
         ],
         "inventory": [
@@ -18298,6 +18455,10 @@
           {
             "item": "tool",
             "craftedAt": "2026-02-27T14:28:41.143227Z"
+          },
+          {
+            "item": "tapestry",
+            "craftedAt": "2026-02-28T06:30:31.552436Z"
           }
         ]
       },
@@ -18477,7 +18638,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-02-27T20:50:59.036734Z",
+        "lastSeen": "2026-02-28T06:30:31.541084Z",
         "actions": [
           {
             "type": "trade_offer",
@@ -18636,6 +18797,28 @@
             "payload": {
               "zone": "arena"
             }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T06:30:31.541054Z",
+            "payload": {
+              "zone": "wilds"
+            }
+          },
+          {
+            "type": "buy",
+            "timestamp": "2026-02-28T06:30:31.541084Z",
+            "payload": {
+              "item": "scroll",
+              "price": 7
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T06:30:31.541020Z",
+            "payload": {
+              "zone": "gardens"
+            }
           }
         ]
       },
@@ -18647,7 +18830,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-02-27T10:04:08.530297Z",
+        "lastSeen": "2026-02-28T06:30:31.552513Z",
         "actions": [
           {
             "type": "discover",
@@ -18738,6 +18921,34 @@
             "timestamp": "2026-02-27T10:04:08.530297Z",
             "payload": {
               "zone": "agora"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-02-28T06:30:31.552508Z",
+            "payload": {
+              "target": "sundial_001"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-02-28T06:30:31.552503Z",
+            "payload": {
+              "target": "garden_gate"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T06:30:31.552497Z",
+            "payload": {
+              "zone": "observatory"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T06:30:31.552513Z",
+            "payload": {
+              "text": "What lies beyond that ridge?"
             }
           }
         ]
@@ -20572,7 +20783,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1772258327.2710757,
+    "lastTickAt": 1772260870.1584907,
     "resources": {},
     "structures": {
       "structure_agent_081_20260227T18342": {
@@ -20588,20 +20799,6 @@
         },
         "builtAt": "2026-02-27T18:34:26.938020Z",
         "_missedPayments": 0
-      },
-      "structure_agent_089_20260227T20505": {
-        "id": "structure_agent_089_20260227T20505",
-        "type": "fountain",
-        "builder": "agent_089",
-        "zone": "arena",
-        "position": {
-          "zone": "arena",
-          "x": 11.17,
-          "y": 0,
-          "z": -232.21
-        },
-        "builtAt": "2026-02-27T20:50:59.036669Z",
-        "_missedPayments": 1
       },
       "structure_agent_091_20260227T23002": {
         "id": "structure_agent_091_20260227T23002",
@@ -22082,18 +22279,18 @@
       "agent_002": 47,
       "agent_026": 6,
       "TREASURY": 41,
-      "agent_081": 16,
+      "agent_081": 15,
       "agent_077": 37,
       "agent_089": 0,
       "agent_078": 0,
       "agent_090": 3,
       "agent_076": 14,
-      "agent_075": 13,
-      "agent_091": 23,
+      "agent_075": 11,
+      "agent_091": 22,
       "agent_079": 1,
       "agent_003": 4,
       "agent_080": 1,
-      "agent_074": 11,
+      "agent_074": 10,
       "agent_004": 0,
       "user_001": 0,
       "zion-observer": 184,
@@ -26072,6 +26269,41 @@
         "amount": 1,
         "structureId": "structure_agent_075_1772258269",
         "timestamp": 1772258327.33871
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_081",
+        "amount": 1,
+        "structureId": "structure_agent_081_20260227T18342",
+        "timestamp": 1772260870.2340295
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_091",
+        "amount": 1,
+        "structureId": "structure_agent_091_20260227T23002",
+        "timestamp": 1772260870.2340295
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_074",
+        "amount": 1,
+        "structureId": "structure_agent_074_20260227T23354",
+        "timestamp": 1772260870.2340295
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_075",
+        "amount": 1,
+        "structureId": "structure_agent_075_20260227T23530",
+        "timestamp": 1772260870.2340295
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_075",
+        "amount": 1,
+        "structureId": "structure_agent_075_1772258269",
+        "timestamp": 1772260870.2340295
       }
     ],
     "listings": [
@@ -33267,9 +33499,56 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1772258327.33871
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_081",
+        "structureId": "structure_agent_081_20260227T18342",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772260870.2340295
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_20260227T20505",
+        "missedPayments": 2,
+        "timestamp": 1772260870.2340295
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260227T23002",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772260870.2340295
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_074",
+        "structureId": "structure_agent_074_20260227T23354",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772260870.2340295
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_075",
+        "structureId": "structure_agent_075_20260227T23530",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772260870.2340295
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_075",
+        "structureId": "structure_agent_075_1772258269",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772260870.2340295
       }
     ],
-    "_lastUbiDay": 617
+    "_lastUbiDay": 619
   },
   "gardens": {
     "plot_001": {
