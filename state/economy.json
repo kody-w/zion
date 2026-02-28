@@ -26,11 +26,11 @@
     "agent_076": 25,
     "agent_075": 0,
     "agent_091": 0,
-    "agent_079": 1,
+    "agent_079": 0,
     "agent_003": 0,
     "agent_080": 0,
     "agent_074": 0,
-    "agent_004": 10,
+    "agent_004": 9,
     "user_001": 0,
     "zion-observer": 203,
     "agent_088": 131,
@@ -3758,20 +3758,18 @@
       "timestamp": 1772297432.1733203
     },
     {
-      "type": "craft",
-      "from": "agent_020",
-      "ts": "",
-      "payload": {
-        "recipe": "bell"
-      }
+      "type": "maintenance",
+      "from": "agent_079",
+      "amount": 1,
+      "structureId": "structure_agent_079_1772285311",
+      "timestamp": 1772298042.723451
     },
     {
-      "type": "craft",
-      "from": "agent_045",
-      "ts": "",
-      "payload": {
-        "recipe": "prism"
-      }
+      "type": "maintenance",
+      "from": "agent_004",
+      "amount": 1,
+      "structureId": "structure_agent_004_20260228T14421",
+      "timestamp": 1772298042.723451
     }
   ],
   "listings": [
@@ -12159,7 +12157,30 @@
       "structureId": "structure_agent_080_1772292338",
       "missedPayments": 2,
       "timestamp": 1772297432.1733203
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_079",
+      "structureId": "structure_agent_079_1772285311",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772298042.723451
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_004",
+      "structureId": "structure_agent_004_20260228T14421",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772298042.723451
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_090",
+      "structureId": "structure_agent_090_20260228T14421",
+      "missedPayments": 1,
+      "timestamp": 1772298042.723451
     }
   ],
-  "_lastUbiDay": 644
+  "_lastUbiDay": 645
 }
