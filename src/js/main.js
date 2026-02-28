@@ -931,23 +931,31 @@
         if (Quests.acceptQuest) {
           Quests.acceptQuest(username, 'quest_nexus_001');
         }
+        // Staggered new-player guidance notifications
         setTimeout(function() {
           if (HUD && HUD.showNotification) {
-            HUD.showNotification('New Quest: Welcome to ZION', 'success');
+            HUD.showNotification('🗺️ Quest: Talk to 3 NPCs in the Nexus — walk near them and press E', 'success');
           }
-          if (Audio && Audio.playPianoAccent) {
-            Audio.playPianoAccent('quest_complete');
+        }, 2000);
+        setTimeout(function() {
+          if (HUD && HUD.showNotification) {
+            HUD.showNotification('Move: WASD | Sprint: Shift | Interact: E | Chat: Enter | Inventory: I | Quests: J', 'info');
           }
-        }, 3000);
+        }, 6000);
+        setTimeout(function() {
+          if (HUD && HUD.showNotification) {
+            HUD.showNotification('💡 Look for NPCs with names above their heads — walk close and press E to talk', 'info');
+          }
+        }, 12000);
       }
     }
 
-    // Chat hint for new players — show after 60 seconds
+    // Chat hint for new players — show after 30 seconds
     setTimeout(function() {
       if (HUD && HUD.showNotification) {
-        HUD.showNotification('Press Enter to chat with other players!', 'info');
+        HUD.showNotification('Press Enter to chat · Press M for world map · Press J for quest log', 'info');
       }
-    }, 60000);
+    }, 30000);
 
     // Start game loop
     startGameLoop();
@@ -3136,6 +3144,11 @@
       if (Quests && HUD.updateQuestTracker && npcUpdateFrame % 30 === 0) {
         var activeQuests = Quests.getActiveQuests(localPlayer.id);
         HUD.updateQuestTracker(activeQuests);
+      }
+
+      // Update NPC proximity indicator (every 10 frames)
+      if (HUD.updateNpcIndicator && NPCs && NPCs.getNPCPositions && npcUpdateFrame % 10 === 0) {
+        HUD.updateNpcIndicator(localPlayer.position, NPCs.getNPCPositions());
       }
 
       // Update quest indicators on NPCs (every few frames)

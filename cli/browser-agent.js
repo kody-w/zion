@@ -312,7 +312,7 @@ async function main() {
   console.log('🌐 Launching browser...');
   var browser = await chromium.launch({
     headless: args.headless,
-    args: ['--no-sandbox', '--disable-web-security'],
+    args: ['--no-sandbox', '--disable-web-security', '--enable-webgl', '--use-gl=swiftshader'],
   });
   var context = await browser.newContext({
     viewport: { width: 1280, height: 720 },
@@ -320,9 +320,13 @@ async function main() {
   });
   var page = await context.newPage();
 
-  // Suppress console noise
-  page.on('console', function() {});
-  page.on('pageerror', function() {});
+  // Capture console logs for debugging
+  page.on('console', function(msg) {
+    if (msg.type() === 'error') console.log('  [browser error] ' + msg.text());
+  });
+  page.on('pageerror', function(err) {
+    console.log('  [page error] ' + err.message);
+  });
 
   try {
     // Navigate to game
@@ -332,6 +336,7 @@ async function main() {
 
     // Enter as guest player by calling Auth.loginAsGuest directly
     console.log('🚪 Entering world as "' + args.name + '"...');
+    var sanitizedName = args.name.replace(/[^a-zA-Z0-9_-]/g, '');
     await page.evaluate(function(name) {
       // Set guest auth in localStorage so the game recognizes us
       if (window.Auth && window.Auth.loginAsGuest) {
@@ -341,15 +346,40 @@ async function main() {
         localStorage.setItem('zion_auth_token', 'guest_' + name);
         localStorage.setItem('zion_username', name);
       }
-    }, args.name.replace(/[^a-zA-Z0-9_-]/g, ''));
+    }, sanitizedName);
 
-    // Reload page so the game picks up the auth
-    await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 });
-    console.log('   ✅ Guest auth set, reloading...');
+    // Reload page so init() picks up the auth from localStorage
+    await page.reload({ waitUntil: 'load', timeout: 30000 });
+    console.log('   ✅ Guest auth set, page reloaded');
 
-    // Wait for game to initialize
+    // Wait for game to initialize (Three.js from CDN + scene setup)
     console.log('   ⏳ Waiting for world to load...');
-    await page.waitForTimeout(6000);
+    // Wait for THREE.js to load from CDN and scene to initialize
+    for (var waitI = 0; waitI < 20; waitI++) {
+      var loaded = await page.evaluate(function() {
+        var loadEl = document.getElementById('loading-overlay');
+        var isLoading = loadEl && loadEl.style.display !== 'none' && loadEl.style.opacity !== '0';
+        return {
+          three: typeof THREE !== 'undefined',
+          scene: !!(window.World && window.World.getCurrentWeather),
+          loading: isLoading
+        };
+      });
+      if (loaded.three && loaded.scene && !loaded.loading) {
+        console.log('   ✅ World loaded (Three.js + scene ready)');
+        break;
+      }
+      console.log('   ... waiting (' + (loaded.three ? '3D✓' : '3D…') + ' ' + (loaded.scene ? 'scene✓' : 'scene…') + ' ' + (loaded.loading ? 'loading…' : 'ready✓') + ')');
+      await page.waitForTimeout(1000);
+    }
+    // Final safety: dismiss loading screen if stuck
+    await page.evaluate(function() {
+      var loadEl = document.getElementById('loading-overlay');
+      if (loadEl && loadEl.style.display !== 'none') {
+        loadEl.style.display = 'none';
+      }
+    });
+    await page.waitForTimeout(2000);
 
     // Take initial screenshot
     var screenshotDir = path.join(ROOT, 'screenshots');

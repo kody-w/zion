@@ -7494,6 +7494,68 @@
   exports.showPetAdoptNotification = showPetAdoptNotification;
 
   // =============================================================================
+  // NPC PROXIMITY INDICATOR — shows direction to nearest NPC
+  // =============================================================================
+
+  var npcIndicatorEl = null;
+
+  function updateNpcIndicator(playerPos, npcPositions) {
+    if (typeof document === 'undefined') return;
+
+    if (!npcIndicatorEl) {
+      var hud = document.querySelector('#zion-hud');
+      if (!hud) return;
+      npcIndicatorEl = document.createElement('div');
+      npcIndicatorEl.id = 'npc-indicator';
+      npcIndicatorEl.style.cssText = 'position:absolute;bottom:80px;left:50%;transform:translateX(-50%);' +
+        'background:rgba(10,14,26,0.8);border:1px solid rgba(212,175,55,0.4);border-radius:20px;' +
+        'padding:6px 16px;font-size:12px;color:#d4af37;pointer-events:none;white-space:nowrap;' +
+        'transition:opacity 0.3s;';
+      hud.appendChild(npcIndicatorEl);
+    }
+
+    if (!playerPos || !npcPositions || npcPositions.length === 0) {
+      npcIndicatorEl.style.opacity = '0';
+      return;
+    }
+
+    // Find nearest NPC
+    var nearest = null;
+    var minDist = Infinity;
+    for (var i = 0; i < npcPositions.length; i++) {
+      var npc = npcPositions[i];
+      if (!npc) continue;
+      var dx = (npc.x || 0) - playerPos.x;
+      var dz = (npc.z || 0) - playerPos.z;
+      var dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = npc;
+      }
+    }
+
+    if (!nearest || minDist > 50) {
+      npcIndicatorEl.style.opacity = '0';
+      return;
+    }
+
+    if (minDist < 8) {
+      // Close enough to interact
+      npcIndicatorEl.style.opacity = '1';
+      npcIndicatorEl.innerHTML = '💬 <b>' + (nearest.name || 'NPC') + '</b> — Press <span style="color:#fff">E</span> to talk';
+    } else {
+      // Show direction arrow
+      var angle = Math.atan2((nearest.x || 0) - playerPos.x, (nearest.z || 0) - playerPos.z);
+      var arrows = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+      var idx = Math.round(((angle + Math.PI) / (Math.PI * 2)) * 8) % 8;
+      npcIndicatorEl.style.opacity = '1';
+      npcIndicatorEl.innerHTML = arrows[idx] + ' <b>' + (nearest.name || 'NPC') + '</b> — ' + Math.round(minDist) + 'm away';
+    }
+  }
+
+  exports.updateNpcIndicator = updateNpcIndicator;
+
+  // =============================================================================
   // TUTORIAL/ONBOARDING SYSTEM
   // =============================================================================
 
