@@ -95,12 +95,12 @@ def generate_economy(e):
     return {
         'earn_table': earn_table,
         'tax_brackets': tax_brackets,
-        'base_ubi_amount': _vary_int(rng, 5, 1, 15),
+        'base_ubi_amount': 5,          # §6.4.4 constitutional constant
         'wealth_tax_threshold': 500,   # §6.4.6 constitutional constant
         'wealth_tax_rate': 0.02,       # §6.4.6 constitutional constant
         'maintenance_cost': 1,         # §6.5.1 constitutional constant
-        'listing_fee_rate': _vary_float(rng, 0.05, 0.02, 0.10),
-        'listing_fee_min': _vary_int(rng, 1, 1, 3),
+        'listing_fee_rate': 0.05,      # §6.5.2 constitutional constant
+        'listing_fee_min': 1,          # §6.5.2 constitutional constant
     }
 
 

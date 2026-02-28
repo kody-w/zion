@@ -12,6 +12,24 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
 from world_diff import diff_states, narrate_diff, diff_files
 
+# Load current zone display names so tests accept any poetic alias
+try:
+    from load_config import get_zone_names
+    _ZONE_NAMES = get_zone_names()
+except Exception:
+    _ZONE_NAMES = {}
+
+
+def _zone_name_words(zone_id):
+    """Get all plausible words that could appear in a narrative for a zone."""
+    words = {zone_id}
+    display = _ZONE_NAMES.get(zone_id, '')
+    if display:
+        for w in display.lower().split():
+            if w not in ('the', 'of'):
+                words.add(w)
+    return words
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -518,10 +536,11 @@ class TestNarrateDiff(unittest.TestCase):
         diff = diff_states(before, after)
         narrative = narrate_diff(diff)
         self.assertIn('sage', narrative.lower())
-        # Zone may appear as display name (e.g. "the Fields") or raw key
+        # Zone may appear as any display name from config
+        zone_words = _zone_name_words('gardens')
         self.assertTrue(
-            'gardens' in narrative.lower() or 'fields' in narrative.lower(),
-            f"Expected gardens/fields in: {narrative}"
+            any(w in narrative.lower() for w in zone_words),
+            f"Expected one of {zone_words} in: {narrative}"
         )
 
     def test_narrative_new_structure(self):
@@ -536,10 +555,11 @@ class TestNarrateDiff(unittest.TestCase):
         diff = diff_states(before, after)
         narrative = narrate_diff(diff)
         self.assertIn('bench', narrative.lower())
-        # Zone may appear as display name (e.g. "the Circle") or raw key
+        # Zone may appear as any display name from config
+        zone_words = _zone_name_words('commons')
         self.assertTrue(
-            'commons' in narrative.lower() or 'gathering' in narrative.lower() or 'circle' in narrative.lower(),
-            f"Expected commons/gathering/circle in: {narrative}"
+            any(w in narrative.lower() for w in zone_words),
+            f"Expected one of {zone_words} in: {narrative}"
         )
 
     def test_narrative_plant_added(self):
@@ -609,10 +629,11 @@ class TestNarrateDiff(unittest.TestCase):
         narrative = narrate_diff(diff)
         # Both events should appear in the narrative
         self.assertIn('alice', narrative.lower())
-        # Zone may appear as display name (e.g. "the Fields") or raw key
+        # Zone may appear as any display name from config
+        zone_words = _zone_name_words('gardens')
         self.assertTrue(
-            'gardens' in narrative.lower() or 'fields' in narrative.lower(),
-            f"Expected gardens/fields in: {narrative}"
+            any(w in narrative.lower() for w in zone_words),
+            f"Expected one of {zone_words} in: {narrative}"
         )
         self.assertIn('TREASURY', narrative)
 
