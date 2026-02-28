@@ -266,6 +266,11 @@ def apply_to_state(msg, state_dir):
     payload = msg.get('payload', {})
     sender = msg['from']
 
+    # Track whether the action handler succeeded — only award earnings on success.
+    # Transfer actions (gift, buy, sell) never earn Spark: they move value, not create it.
+    _TRANSFER_TYPES = {'gift', 'buy', 'sell', 'trade_accept', 'trade_decline'}
+    action_ok = True
+
     if msg_type in ('say', 'shout', 'whisper', 'emote'):
         # Append to chat — extract payload.text to top-level for canonical readability
         chat_path = os.path.join(state_dir, 'chat.json')
@@ -440,6 +445,8 @@ def apply_to_state(msg, state_dir):
                 econ['balances'][recipient] = econ['balances'].get(recipient, 0) + amount
             save_json(econ_path, econ)
             _record_economy_txn(state_dir, 'gift', sender, payload, to=recipient)
+        else:
+            action_ok = False
 
     elif msg_type == 'trade_offer':
         econ_path = os.path.join(state_dir, 'economy.json')
@@ -461,8 +468,9 @@ def apply_to_state(msg, state_dir):
                             to=payload.get('seller') or payload.get('buyer', ''))
 
     # Universal earnings — award Spark from EARN_TABLE for every action (§6.3)
+    # Guard: only award if action succeeded and is not a pure transfer
     spark_earned = EARN_TABLE.get(msg_type, 0)
-    if spark_earned > 0:
+    if spark_earned > 0 and action_ok and msg_type not in _TRANSFER_TYPES:
         econ_path = os.path.join(state_dir, 'economy.json')
         econ = load_json(econ_path)
         if 'balances' not in econ:
