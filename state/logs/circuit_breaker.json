@@ -91,13 +91,31 @@
       "last_diagnosis": null
     },
     "Observer Agent": {
-      "consecutive_failures": 0,
-      "last_failure_ts": "2026-02-26T08:29:06.590376+00:00",
+      "consecutive_failures": 1,
+      "last_failure_ts": "2026-02-28T18:50:40.349527+00:00",
       "last_success_ts": "2026-02-28T17:55:53.664893+00:00",
-      "last_run_id": "22525915672",
+      "last_run_id": "22526812617",
       "tripped": false,
       "issue_number": null,
-      "last_diagnosis": null
+      "last_diagnosis": {
+        "ts": "2026-02-28T18:50:40.365247+00:00",
+        "findings": [
+          {
+            "error_id": "git_conflict",
+            "description": "Git push failed due to concurrent writes",
+            "severity": "medium",
+            "fix_id": null,
+            "match": "Push attempt 1 failed"
+          },
+          {
+            "error_id": "exit_code",
+            "description": "A script exited with a non-zero code",
+            "severity": "medium",
+            "fix_id": null,
+            "match": "1"
+          }
+        ]
+      }
     },
     "Daily Health Report": {
       "consecutive_failures": 0,
