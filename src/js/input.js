@@ -821,35 +821,57 @@
     }
   }
 
+  // Smooth velocity for acceleration/deceleration feel
+  var smoothVelocity = { x: 0, z: 0 };
+  var ACCEL = 8.0;  // How fast to reach target speed (units/sec²)
+  var DECEL = 12.0; // How fast to stop (slightly faster than accel for snappier stops)
+
   /**
-   * Get movement delta from keyboard state
+   * Get movement delta from keyboard state (with velocity smoothing)
    * @returns {object} - {x, y, z}
    */
   function getMovementDelta() {
-    if (chatMode) return { x: 0, y: 0, z: 0 };
+    if (chatMode) {
+      // Decelerate to zero when in chat
+      smoothVelocity.x *= 0.85;
+      smoothVelocity.z *= 0.85;
+      if (Math.abs(smoothVelocity.x) < 0.01) smoothVelocity.x = 0;
+      if (Math.abs(smoothVelocity.z) < 0.01) smoothVelocity.z = 0;
+      return { x: smoothVelocity.x, y: 0, z: smoothVelocity.z };
+    }
 
-    var delta = { x: 0, y: 0, z: 0 };
+    var target = { x: 0, z: 0 };
 
     // WASD / Arrow keys
-    if (keys['w'] || keys['arrowup']) delta.z -= 1;
-    if (keys['s'] || keys['arrowdown']) delta.z += 1;
-    if (keys['a'] || keys['arrowleft']) delta.x -= 1;
-    if (keys['d'] || keys['arrowright']) delta.x += 1;
+    if (keys['w'] || keys['arrowup']) target.z -= 1;
+    if (keys['s'] || keys['arrowdown']) target.z += 1;
+    if (keys['a'] || keys['arrowleft']) target.x -= 1;
+    if (keys['d'] || keys['arrowright']) target.x += 1;
 
     // Merge virtual joystick input (mobile)
     if (touchDelta.x !== 0 || touchDelta.z !== 0) {
-      delta.x = touchDelta.x;
-      delta.z = touchDelta.z;
+      target.x = touchDelta.x;
+      target.z = touchDelta.z;
     }
 
     // Normalize diagonal movement
-    if (delta.x !== 0 && delta.z !== 0) {
-      var length = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
-      delta.x /= length;
-      delta.z /= length;
+    if (target.x !== 0 && target.z !== 0) {
+      var length = Math.sqrt(target.x * target.x + target.z * target.z);
+      target.x /= length;
+      target.z /= length;
     }
 
-    return delta;
+    // Smooth acceleration/deceleration
+    var dt = 1 / 60; // Approximate — actual dt applied in createMoveMessage
+    var rate = (target.x !== 0 || target.z !== 0) ? ACCEL : DECEL;
+    smoothVelocity.x += (target.x - smoothVelocity.x) * Math.min(1, rate * dt);
+    smoothVelocity.z += (target.z - smoothVelocity.z) * Math.min(1, rate * dt);
+
+    // Snap to zero when very close (prevents drift)
+    if (Math.abs(smoothVelocity.x) < 0.01 && target.x === 0) smoothVelocity.x = 0;
+    if (Math.abs(smoothVelocity.z) < 0.01 && target.z === 0) smoothVelocity.z = 0;
+
+    return { x: smoothVelocity.x, y: 0, z: smoothVelocity.z };
   }
 
   /**

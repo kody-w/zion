@@ -3361,6 +3361,10 @@
   // PLAYER MANAGEMENT — API matches main.js expectations
   // ========================================================================
 
+  var _localPlayerId = null;
+
+  function setLocalPlayerId(id) { _localPlayerId = id; }
+
   function addPlayer(sceneCtx, playerId, position) {
     if (!sceneCtx || !sceneCtx.scene) return;
     var x = position.x || 0, z = position.z || 0;
@@ -3404,11 +3408,28 @@
 
     var x = position.x || 0, z = position.z || 0;
     var y = terrainHeight(x, z);
-    mesh.position.set(x, y, z);
+
+    // Smooth interpolation for remote players (local player updates instantly)
+    var isRemote = _localPlayerId && playerId !== _localPlayerId;
+    if (isRemote) {
+      // Store target and lerp toward it
+      if (!mesh.userData.targetPos) {
+        mesh.userData.targetPos = { x: x, y: y, z: z };
+      }
+      mesh.userData.targetPos.x = x;
+      mesh.userData.targetPos.y = y;
+      mesh.userData.targetPos.z = z;
+      var lf = 0.2; // Smooth but responsive
+      mesh.position.x += (x - mesh.position.x) * lf;
+      mesh.position.y += (y - mesh.position.y) * lf;
+      mesh.position.z += (z - mesh.position.z) * lf;
+    } else {
+      mesh.position.set(x, y, z);
+    }
 
     // Calculate movement delta to determine animation state
-    var dx = x - mesh.userData.prevPosition.x;
-    var dz = z - mesh.userData.prevPosition.z;
+    var dx = mesh.position.x - mesh.userData.prevPosition.x;
+    var dz = mesh.position.z - mesh.userData.prevPosition.z;
     var movementDelta = Math.sqrt(dx * dx + dz * dz);
 
     // Determine animation state based on movement
@@ -3420,10 +3441,14 @@
       mesh.userData.animState = 'walk';
     }
 
-    // Update rotation to face movement direction
+    // Smooth rotation toward movement direction
     if (movementDelta > 0.001) {
-      var angle = Math.atan2(dx, dz);
-      mesh.rotation.y = angle;
+      var targetAngle = Math.atan2(dx, dz);
+      // Shortest-path angle lerp
+      var angleDiff = targetAngle - mesh.rotation.y;
+      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+      mesh.rotation.y += angleDiff * 0.25;
     }
   }
 
@@ -8534,6 +8559,7 @@
   exports.addPlayer = addPlayer;
   exports.movePlayer = movePlayer;
   exports.removePlayer = removePlayer;
+  exports.setLocalPlayerId = setLocalPlayerId;
   exports.updatePlayerAnimations = updatePlayerAnimations;
   exports.updateDayNight = updateDayNight;
   exports.updateWeather = updateWeather;

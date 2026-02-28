@@ -1,4 +1,4 @@
-(function(exports) {
+(function (exports) {
   // Main entry point and game loop orchestrator
   var DEBUG = typeof location !== 'undefined' && location.search.indexOf('debug') !== -1;
 
@@ -96,14 +96,14 @@
 
   // Zone-specific gameplay bonuses (Constitution-aligned zone identity)
   var ZONE_BONUSES = {
-    nexus:     { harvest: 1.0, craft: 1.0,  trade: 1.0,  explore: 1.0,  fish: 1.0,  combat: 1.0,  label: 'Hub — balanced' },
-    gardens:   { harvest: 1.5, craft: 1.0,  trade: 1.0,  explore: 1.0,  fish: 1.2,  combat: 0.8,  label: 'Harvest +50%' },
-    athenaeum: { harvest: 1.0, craft: 1.3,  trade: 1.0,  explore: 1.5,  fish: 1.0,  combat: 0.7,  label: 'Research +50%' },
-    studio:    { harvest: 1.0, craft: 1.5,  trade: 1.0,  explore: 1.0,  fish: 1.0,  combat: 0.8,  label: 'Crafting +50%' },
-    wilds:     { harvest: 1.2, craft: 1.0,  trade: 0.8,  explore: 1.5,  fish: 1.3,  combat: 1.3,  label: 'Exploration +50%' },
-    agora:     { harvest: 1.0, craft: 1.0,  trade: 1.5,  explore: 1.0,  fish: 1.0,  combat: 0.5,  label: 'Trading +50%' },
-    commons:   { harvest: 1.2, craft: 1.2,  trade: 1.2,  explore: 1.2,  fish: 1.2,  combat: 1.0,  label: 'Social — +20% all' },
-    arena:     { harvest: 0.5, craft: 0.8,  trade: 1.0,  explore: 1.0,  fish: 0.5,  combat: 1.5,  label: 'Combat +50%' }
+    nexus: { harvest: 1.0, craft: 1.0, trade: 1.0, explore: 1.0, fish: 1.0, combat: 1.0, label: 'Hub — balanced' },
+    gardens: { harvest: 1.5, craft: 1.0, trade: 1.0, explore: 1.0, fish: 1.2, combat: 0.8, label: 'Harvest +50%' },
+    athenaeum: { harvest: 1.0, craft: 1.3, trade: 1.0, explore: 1.5, fish: 1.0, combat: 0.7, label: 'Research +50%' },
+    studio: { harvest: 1.0, craft: 1.5, trade: 1.0, explore: 1.0, fish: 1.0, combat: 0.8, label: 'Crafting +50%' },
+    wilds: { harvest: 1.2, craft: 1.0, trade: 0.8, explore: 1.5, fish: 1.3, combat: 1.3, label: 'Exploration +50%' },
+    agora: { harvest: 1.0, craft: 1.0, trade: 1.5, explore: 1.0, fish: 1.0, combat: 0.5, label: 'Trading +50%' },
+    commons: { harvest: 1.2, craft: 1.2, trade: 1.2, explore: 1.2, fish: 1.2, combat: 1.0, label: 'Social — +20% all' },
+    arena: { harvest: 0.5, craft: 0.8, trade: 1.0, explore: 1.0, fish: 0.5, combat: 1.5, label: 'Combat +50%' }
   };
 
   function getZoneBonus(type) {
@@ -479,7 +479,7 @@
     // Attach click handler to export button
     var exportBtn = document.getElementById('net-debug-export');
     if (exportBtn) {
-      exportBtn.onclick = function() { exportTelemetry(); };
+      exportBtn.onclick = function () { exportTelemetry(); };
     }
   }
 
@@ -489,9 +489,9 @@
 
     // Copy to clipboard
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(json).then(function() {
+      navigator.clipboard.writeText(json).then(function () {
         if (HUD && HUD.showNotification) HUD.showNotification('📋 Telemetry copied! Paste to Copilot for diagnosis.', 'success');
-      }).catch(function() {
+      }).catch(function () {
         fallbackCopyTelemetry(json);
       });
     } else {
@@ -514,12 +514,12 @@
     var closeBtn = document.createElement('button');
     closeBtn.textContent = 'Close';
     closeBtn.style.cssText = 'margin-top:8px;padding:8px 16px;background:#333;color:#fff;border:none;border-radius:4px;cursor:pointer;';
-    closeBtn.onclick = function() { overlay.remove(); };
+    closeBtn.onclick = function () { overlay.remove(); };
     box.appendChild(closeBtn);
     overlay.appendChild(box);
     document.body.appendChild(overlay);
     ta.select();
-    try { document.execCommand('copy'); if (HUD && HUD.showNotification) HUD.showNotification('📋 Telemetry copied!', 'success'); } catch(e) {}
+    try { document.execCommand('copy'); if (HUD && HUD.showNotification) HUD.showNotification('📋 Telemetry copied!', 'success'); } catch (e) { }
   }
 
   function togglePhotoMode() {
@@ -631,11 +631,11 @@
       'left:' + screenX + 'px;top:' + screenY + 'px;transform:translate(-50%,0);' +
       'transition:transform 1.2s ease-out,opacity 1.2s ease-out;opacity:1;';
     document.body.appendChild(el);
-    requestAnimationFrame(function() {
+    requestAnimationFrame(function () {
       el.style.transform = 'translate(-50%,-40px)';
       el.style.opacity = '0';
     });
-    setTimeout(function() {
+    setTimeout(function () {
       if (el.parentNode) el.parentNode.removeChild(el);
     }, 1300);
   }
@@ -682,7 +682,7 @@
     screenFlashOverlay.style.opacity = '0.6';
 
     // Fade out
-    setTimeout(function() {
+    setTimeout(function () {
       screenFlashOverlay.style.transition = 'opacity ' + duration + 's ease-out';
       screenFlashOverlay.style.opacity = '0';
     }, 50);
@@ -770,8 +770,8 @@
           minDist = dist;
           nearestTarget = {
             type: 'interactive',
-            name: nearbyObj.type ? nearbyObj.type.replace(/_/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); }) : 'Object',
-            action: nearbyObj.action ? nearbyObj.action.replace(/_/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); }) : 'Use',
+            name: nearbyObj.type ? nearbyObj.type.replace(/_/g, ' ').replace(/\b\w/g, function (l) { return l.toUpperCase(); }) : 'Object',
+            action: nearbyObj.action ? nearbyObj.action.replace(/_/g, ' ').replace(/\b\w/g, function (l) { return l.toUpperCase(); }) : 'Use',
             distance: dist,
             mesh: nearbyObj.mesh,
             position: nearbyObj.position
@@ -910,13 +910,13 @@
       if (loadEl) {
         loadEl.style.opacity = '0';
         loadEl.style.transition = 'opacity 0.5s ease';
-        setTimeout(function() { loadEl.style.display = 'none'; }, 600);
+        setTimeout(function () { loadEl.style.display = 'none'; }, 600);
       }
     }
 
     // Show onboarding walkthrough for first-time players (single unified guide)
     if (HUD && HUD.initOnboarding) {
-      setTimeout(function() { HUD.initOnboarding(); }, 1500);
+      setTimeout(function () { HUD.initOnboarding(); }, 1500);
     }
 
     // Auto-accept starter quest for new players with no active quests
@@ -928,7 +928,7 @@
           Quests.acceptQuest(username, 'quest_nexus_001');
         }
         // Single clean quest notification after tutorial appears
-        setTimeout(function() {
+        setTimeout(function () {
           if (HUD && HUD.showNotification) {
             HUD.showNotification('New Quest: Talk to 3 NPCs in the Nexus', 'success');
           }
@@ -1004,10 +1004,10 @@
       header.innerHTML =
         '<div class="dashboard-logo">ZION</div>' +
         '<div class="dashboard-player-info">' +
-          '<span id="dash-player-name">' + _escHtml(playerName) + '</span>' +
-          ' | <span class="dashboard-spark" id="dash-spark">' + (dashState ? dashState.player.spark : 100) + ' Spark</span>' +
-          ' | <span class="dashboard-zone" id="dash-zone">' + (dashState ? _zoneDisplayName(dashState.player.zone) : 'The Nexus') + '</span>' +
-          ' | <span class="dashboard-time" id="dash-time">Day 1 | 06:00</span>' +
+        '<span id="dash-player-name">' + _escHtml(playerName) + '</span>' +
+        ' | <span class="dashboard-spark" id="dash-spark">' + (dashState ? dashState.player.spark : 100) + ' Spark</span>' +
+        ' | <span class="dashboard-zone" id="dash-zone">' + (dashState ? _zoneDisplayName(dashState.player.zone) : 'The Nexus') + '</span>' +
+        ' | <span class="dashboard-time" id="dash-time">Day 1 | 06:00</span>' +
         '</div>';
       dashEl.appendChild(header);
 
@@ -1074,9 +1074,9 @@
         welcomePanel.innerHTML =
           '<div class="dashboard-panel-header"><span class="dashboard-panel-title">Welcome to ZION</span></div>' +
           '<div class="dashboard-panel-body">' +
-            '<p>Dashboard mode is active. You are exploring ZION through a text-based interface.</p>' +
-            '<p style="color:#DAA520;margin-top:12px">Current Zone: ' + (dashState ? _zoneDisplayName(dashState.player.zone) : 'The Nexus') + '</p>' +
-            '<p style="color:#A0978E;margin-top:8px">Use keyboard shortcuts: I (Inventory), J (Quests), M (Map), G (Guild)</p>' +
+          '<p>Dashboard mode is active. You are exploring ZION through a text-based interface.</p>' +
+          '<p style="color:#DAA520;margin-top:12px">Current Zone: ' + (dashState ? _zoneDisplayName(dashState.player.zone) : 'The Nexus') + '</p>' +
+          '<p style="color:#A0978E;margin-top:8px">Use keyboard shortcuts: I (Inventory), J (Quests), M (Map), G (Guild)</p>' +
           '</div>';
         panels.push(welcomePanel);
       }
@@ -1103,7 +1103,7 @@
 
     // Start dashboard game loop
     if (typeof DashboardMain !== 'undefined' && DashboardMain.dashboardTick && dashState) {
-      var dashInterval = setInterval(function() {
+      var dashInterval = setInterval(function () {
         dashState = DashboardMain.dashboardTick(dashState, 1);
 
         // Update header
@@ -1140,8 +1140,8 @@
     hdr.className = 'dashboard-panel-header';
     hdr.innerHTML = '<span class="dashboard-panel-title">' + _escHtml(title) + '</span>' +
       '<div class="dashboard-panel-controls">' +
-        '<button class="dashboard-panel-btn" title="Minimize">[-]</button>' +
-        '<button class="dashboard-panel-btn" title="Close">[x]</button>' +
+      '<button class="dashboard-panel-btn" title="Minimize">[-]</button>' +
+      '<button class="dashboard-panel-btn" title="Close">[x]</button>' +
       '</div>';
     panel.appendChild(hdr);
     var body = document.createElement('div');
@@ -1152,7 +1152,7 @@
     // Wire minimize toggle
     var minBtn = hdr.querySelector('[title="Minimize"]');
     if (minBtn) {
-      minBtn.addEventListener('click', function() {
+      minBtn.addEventListener('click', function () {
         if (body.style.display === 'none') {
           body.style.display = 'block';
           minBtn.textContent = '[-]';
@@ -1165,7 +1165,7 @@
     // Wire close
     var closeBtn = hdr.querySelector('[title="Close"]');
     if (closeBtn) {
-      closeBtn.addEventListener('click', function() {
+      closeBtn.addEventListener('click', function () {
         panel.style.display = 'none';
       });
     }
@@ -1564,7 +1564,7 @@
       var peerId = isHost ? 'zion-lobby-main' : 'zion-' + username + '-' + Date.now();
       Network.initMesh(peerId, {
         onMessage: handleIncomingMessage,
-        onPeerConnect: function(connectedPeerId) {
+        onPeerConnect: function (connectedPeerId) {
           if (DEBUG) console.log('Peer connected:', connectedPeerId);
           if (HUD) HUD.showNotification('Player connected: ' + connectedPeerId, 'info');
           // Send our current state so the new peer can see us immediately
@@ -1582,7 +1582,7 @@
             });
           }
         },
-        onPeerDisconnect: function(disconnectedPeerId) {
+        onPeerDisconnect: function (disconnectedPeerId) {
           if (DEBUG) console.log('Peer disconnected:', disconnectedPeerId);
           if (HUD) HUD.showNotification('Player disconnected: ' + disconnectedPeerId, 'info');
           if (gameState && State) {
@@ -1597,7 +1597,7 @@
       }
 
       // Broadcast join message after a short delay to var connections establish
-      setTimeout(function() {
+      setTimeout(function () {
         joinWorld();
       }, 2000);
 
@@ -1608,26 +1608,26 @@
       Network.initFederation(worldId, worldName, endpoint);
 
       // Register federation event handler
-      Network.onFederationEvent(function(event) {
+      Network.onFederationEvent(function (event) {
         handleFederationEvent(event);
       });
 
       // Announce to federation network periodically
-      setInterval(function() {
+      setInterval(function () {
         if (Network.announceFederation) {
           Network.announceFederation();
         }
       }, 60000);
 
       // Initial announce after connections establish
-      setTimeout(function() {
+      setTimeout(function () {
         if (Network.announceFederation) {
           Network.announceFederation();
         }
       }, 5000);
 
       // Federation heartbeat: check connection health every 30 seconds
-      setInterval(function() {
+      setInterval(function () {
         if (!Network.getFederatedWorlds) return;
         var fedWorlds = Network.getFederatedWorlds();
         if (fedWorlds && fedWorlds.length > 0) {
@@ -1661,13 +1661,13 @@
     // Load canonical state from GitHub (so solo visitors see agent activity)
     if (typeof fetch !== 'undefined' && State && State.getLiveState && State.setLiveState) {
       var RAW = 'https://raw.githubusercontent.com/kody-w/zion/main/state';
-      var loadCanonical = function(file) {
+      var loadCanonical = function (file) {
         return fetch(RAW + '/' + file, { cache: 'no-cache' })
-          .then(function(r) { return r.ok ? r.json() : null; })
-          .catch(function() { return null; });
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; });
       };
       Promise.all([loadCanonical('world.json'), loadCanonical('chat.json')])
-        .then(function(results) {
+        .then(function (results) {
           var world = results[0];
           var chat = results[1];
           if (!world && !chat) return;
@@ -1732,9 +1732,9 @@
     if (typeof document !== 'undefined' && World) {
       var container = document.getElementById('game-container') || document.body;
       sceneContext = World.initScene(container);
-        if (World.setPerformanceSceneContext) {
-          World.setPerformanceSceneContext(sceneContext);
-        }
+      if (World.setPerformanceSceneContext) {
+        World.setPerformanceSceneContext(sceneContext);
+      }
 
       if (sceneContext) {
         // Load initial zone - positions player at nexus center
@@ -1744,6 +1744,7 @@
           World.updateChunks(sceneContext, localPlayer.position.x, localPlayer.position.z);
         }
         World.addPlayer(sceneContext, username, localPlayer.position);
+        if (World.setLocalPlayerId) World.setLocalPlayerId(username);
 
         // Initialize particle effects (fire, sparkle, mist, fountain, etc.)
         if (World.initParticles) {
@@ -1804,11 +1805,11 @@
 
         // Wire lightning callback for camera shake + thunder
         if (World.weatherCallbacks) {
-          World.weatherCallbacks.onLightningStrike = function(boltX, boltZ) {
+          World.weatherCallbacks.onLightningStrike = function (boltX, boltZ) {
             triggerCameraShake(0.3, 0.4);
             // Trigger thunder SFX after 1-3 second delay
             var thunderDelay = 1000 + Math.random() * 2000;
-            setTimeout(function() {
+            setTimeout(function () {
               if (Audio && Audio.playAmbient) {
                 // Use existing audio system for thunder
                 triggerScreenFlash('rgba(255,255,255,0.15)', 0.1);
@@ -1856,7 +1857,7 @@
 
       // Initialize crafting panel with craft callback
       if (HUD.initCraftingPanel) {
-        HUD.initCraftingPanel(function(recipeId) {
+        HUD.initCraftingPanel(function (recipeId) {
           handleCraft(recipeId);
         });
       }
@@ -1887,7 +1888,7 @@
       getPlayTimeSeconds();
 
       // Add chat input
-      HUD.addChatInput(function(text) {
+      HUD.addChatInput(function (text) {
         handleLocalAction('chat', { message: text });
         HUD.hideChatInput();
       });
@@ -1922,7 +1923,7 @@
       if (timeSince < 86400000 && HUD) { // Less than 24 hours
         var minsAgo = Math.floor(timeSince / 60000);
         var timeStr = minsAgo < 60 ? minsAgo + ' minutes' : Math.floor(minsAgo / 60) + ' hours';
-        setTimeout(function() {
+        setTimeout(function () {
           HUD.showNotification('Welcome back! Last seen ' + timeStr + ' ago', 'info');
         }, 2000);
       }
@@ -1930,7 +1931,7 @@
 
     // Initialize trading system
     if (Trading && Network) {
-      Trading.initTrading(function(msg) {
+      Trading.initTrading(function (msg) {
         Network.broadcastMessage(msg);
       });
       if (DEBUG) console.log('Trading system initialized');
@@ -1938,7 +1939,7 @@
 
     // Set up NPC dialog action handler
     if (HUD && HUD.setNPCActionCallback) {
-      HUD.setNPCActionCallback(function(action, npcData) {
+      HUD.setNPCActionCallback(function (action, npcData) {
         handleNPCAction(action, npcData);
       });
     }
@@ -1946,18 +1947,18 @@
     // Initialize input
     if (Input) {
       Input.initInput({
-        onMove: function(delta) {
+        onMove: function (delta) {
           // Movement handled in game loop
         },
-        onAction: function(type, data) {
+        onAction: function (type, data) {
           handleLocalAction(type, data);
         },
-        onChat: function(data) {
+        onChat: function (data) {
           if (data.mode === 'open') {
             HUD && HUD.showChatInput();
           }
         },
-        onBuild: function(data) {
+        onBuild: function (data) {
           handleBuildAction(data);
         }
       });
@@ -1966,7 +1967,7 @@
     // Hover cursor change on mousemove (raycast for resource nodes)
     if (typeof document !== 'undefined' && sceneContext && sceneContext.renderer) {
       var hoverCanvas = sceneContext.renderer.domElement;
-      hoverCanvas.addEventListener('mousemove', function(e) {
+      hoverCanvas.addEventListener('mousemove', function (e) {
         var now = Date.now();
         if (now - lastHoverCheckTime < 100) return; // Throttle to 100ms
         lastHoverCheckTime = now;
@@ -1988,7 +1989,7 @@
         'background:rgba(10,14,26,0.7);border:1px solid rgba(218,165,32,0.5);border-radius:50%;' +
         'color:#E8E0D8;font-size:20px;display:flex;align-items:center;justify-content:center;' +
         'z-index:150;cursor:pointer;backdrop-filter:blur(5px);';
-      photoBtn.addEventListener('touchstart', function(e) {
+      photoBtn.addEventListener('touchstart', function (e) {
         e.preventDefault();
         e.stopPropagation();
         togglePhotoMode();
@@ -2011,10 +2012,10 @@
       // Register NPC intentions from embedded souls
       if (Intentions && EMBEDDED_SOULS && EMBEDDED_SOULS.length > 0) {
         var registered = 0;
-        EMBEDDED_SOULS.forEach(function(soul) {
+        EMBEDDED_SOULS.forEach(function (soul) {
           if (soul.intentions && soul.intentions.length > 0) {
             Intentions.clearIntentions(soul.id);
-            soul.intentions.forEach(function(intent) {
+            soul.intentions.forEach(function (intent) {
               Intentions.registerIntention(soul.id, intent);
             });
             registered++;
@@ -2032,7 +2033,7 @@
 
     // Initialize XR (VR/AR) capabilities
     if (XR && XR.initXR) {
-      XR.initXR().then(function(caps) {
+      XR.initXR().then(function (caps) {
         if (HUD && HUD.setXRCapabilities) {
           HUD.setXRCapabilities(caps, sceneContext);
         }
@@ -2045,25 +2046,25 @@
     // Wire HUD callbacks for anchor, steward, and federation panels
     if (typeof window !== 'undefined') {
       window.playerInventory = playerInventory;
-      window._onAnchorPlace = function(data) {
+      window._onAnchorPlace = function (data) {
         if (State && gameState) {
           var msg = { type: 'anchor_place', from: localPlayer.id, ts: Date.now(), payload: { anchor: data } };
           gameState = State.applyMessage(gameState, msg);
         }
       };
-      window._onElectionStart = function(data) {
+      window._onElectionStart = function (data) {
         if (State && gameState) {
           var msg = { type: 'election_start', from: localPlayer.id, ts: Date.now(), payload: data };
           gameState = State.applyMessage(gameState, msg);
         }
       };
-      window._onElectionVote = function(data) {
+      window._onElectionVote = function (data) {
         if (State && gameState) {
           var msg = { type: 'election_vote', from: localPlayer.id, ts: Date.now(), payload: data };
           gameState = State.applyMessage(gameState, msg);
         }
       };
-      window._onFederationPropose = function(data) {
+      window._onFederationPropose = function (data) {
         if (State && gameState) {
           var msg = { type: 'federation_announce', from: localPlayer.id, ts: Date.now(), payload: { federation: data } };
           gameState = State.applyMessage(gameState, msg);
@@ -2087,7 +2088,7 @@
     // Start GPS tracking for Warmth (only if geolocation available)
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       try {
-        gpsWatchId = navigator.geolocation.watchPosition(function(pos) {
+        gpsWatchId = navigator.geolocation.watchPosition(function (pos) {
           gpsHistory.push({
             lat: pos.coords.latitude,
             lon: pos.coords.longitude,
@@ -2097,7 +2098,7 @@
           if (gpsHistory.length > 100) {
             gpsHistory = gpsHistory.slice(-100);
           }
-        }, function() {
+        }, function () {
           // Geolocation denied or unavailable - game works fine without it
           if (DEBUG) console.log('Geolocation not available - Warmth bonus disabled');
         }, { enableHighAccuracy: false, maximumAge: 30000, timeout: 10000 });
@@ -2169,7 +2170,7 @@
       if (!document.getElementById('login-screen')) return;
       starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
       var time = Date.now() * 0.001;
-      loginStars.forEach(function(s) {
+      loginStars.forEach(function (s) {
         var alpha = 0.3 + Math.sin(time * s.speed + s.phase) * 0.4;
         starCtx.fillStyle = 'rgba(180, 200, 255, ' + Math.max(0, alpha) + ')';
         starCtx.beginPath();
@@ -2211,20 +2212,20 @@
     loginScreen.appendChild(content);
     document.body.appendChild(loginScreen);
 
-    document.getElementById('github-login').addEventListener('click', function() {
+    document.getElementById('github-login').addEventListener('click', function () {
       if (Auth) {
         Auth.initiateOAuth();
       }
     });
 
-    document.getElementById('guest-login').addEventListener('click', function() {
+    document.getElementById('guest-login').addEventListener('click', function () {
       if (Auth && Auth.loginAsGuest) {
         var guestNames = ['Wanderer', 'Traveler', 'Explorer', 'Seeker', 'Pilgrim', 'Nomad', 'Wayfarer', 'Drifter'];
         var guestName = guestNames[Math.floor(Math.random() * guestNames.length)] + '_' + Math.floor(Math.random() * 999);
         Auth.loginAsGuest(guestName);
         loginScreen.style.opacity = '0';
         loginScreen.style.transition = 'opacity 0.4s ease';
-        setTimeout(function() {
+        setTimeout(function () {
           if (loginScreen.parentNode) loginScreen.parentNode.removeChild(loginScreen);
           init();
         }, 400);
@@ -2259,1475 +2260,1481 @@
 
     try {
 
-    var deltaTime = (timestamp - lastTimestamp) / 1000; // seconds
-    lastTimestamp = timestamp;
+      var deltaTime = (timestamp - lastTimestamp) / 1000; // seconds
+      lastTimestamp = timestamp;
 
-    // Increment frame counter for periodic updates
-    npcUpdateFrame++;
-    frameCount++;
+      // Increment frame counter for periodic updates
+      npcUpdateFrame++;
+      frameCount++;
 
-    // Track FPS
-    fpsFrameTimes.push(deltaTime);
-    if (fpsFrameTimes.length > 60) {
-      fpsFrameTimes.shift();
-    }
-    if (fpsFrameTimes.length > 10) {
-      var avgFrameTime = fpsFrameTimes.reduce(function(a, b) { return a + b; }, 0) / fpsFrameTimes.length;
-      currentFPS = avgFrameTime > 0 ? Math.round(1 / avgFrameTime) : 60;
-    }
-
-    // Track play time
-    playTimeSeconds += deltaTime;
-    // Save every 30 seconds
-    if (frameCount % 1800 === 0) {
-      savePlayTime();
-    }
-
-    // Update FPS counter visibility from settings
-    if (HUD && HUD.getSettings) {
-      var settings = HUD.getSettings();
-      if (settings) {
-        showDebug = settings.showFPS;
+      // Track FPS
+      fpsFrameTimes.push(deltaTime);
+      if (fpsFrameTimes.length > 60) {
+        fpsFrameTimes.shift();
       }
-    }
+      if (fpsFrameTimes.length > 10) {
+        var avgFrameTime = fpsFrameTimes.reduce(function (a, b) { return a + b; }, 0) / fpsFrameTimes.length;
+        currentFPS = avgFrameTime > 0 ? Math.round(1 / avgFrameTime) : 60;
+      }
 
-    // Process queued messages
-    processMessageQueue();
+      // Track play time
+      playTimeSeconds += deltaTime;
+      // Save every 30 seconds
+      if (frameCount % 1800 === 0) {
+        savePlayTime();
+      }
 
-    // Process local player movement (skip in photo mode)
-    if (Input && localPlayer && gameState && !photoMode.active) {
-      var delta = Input.getMovementDelta();
-      if (delta.x !== 0 || delta.z !== 0) {
-        // Rotate movement delta by camera orbit so WASD is camera-relative
-        var actualYaw = Input && Input.getCameraOrbit ? Input.getCameraOrbit() : cameraYaw;
-        var sinYaw = Math.sin(actualYaw);
-        var cosYaw = Math.cos(actualYaw);
-        var rotatedDelta = {
-          x: delta.x * cosYaw - delta.z * sinYaw,
-          y: delta.y,
-          z: delta.x * sinYaw + delta.z * cosYaw
-        };
-
-        // Apply weather movement modifier (snow slows, storm slows, etc.)
-        if (localPlayer.weatherModifiers && localPlayer.weatherModifiers.movementMultiplier) {
-          var wMult = localPlayer.weatherModifiers.movementMultiplier;
-          rotatedDelta.x *= wMult;
-          rotatedDelta.z *= wMult;
+      // Update FPS counter visibility from settings
+      if (HUD && HUD.getSettings) {
+        var settings = HUD.getSettings();
+        if (settings) {
+          showDebug = settings.showFPS;
         }
+      }
 
-        var moveMsg = Input.createMoveMessage(
-          localPlayer.id,
-          rotatedDelta,
-          localPlayer.position,
-          currentZone,
-          deltaTime
-        );
+      // Process queued messages
+      processMessageQueue();
 
-        // Collision check — reject move if it would clip into a structure
-        var newPos = moveMsg.payload.position;
-        if (World && World.checkCollision && World.checkCollision(newPos.x, newPos.z, 0.5)) {
-          // Blocked — try sliding along X or Z axis only
-          var slideX = { x: newPos.x, y: localPlayer.position.y, z: localPlayer.position.z };
-          var slideZ = { x: localPlayer.position.x, y: localPlayer.position.y, z: newPos.z };
-          if (!World.checkCollision(slideX.x, slideX.z, 0.5)) {
-            moveMsg.payload.position = slideX;
-          } else if (!World.checkCollision(slideZ.x, slideZ.z, 0.5)) {
-            moveMsg.payload.position = slideZ;
-          } else {
-            // Fully blocked, don't move
-            moveMsg.payload.position = { x: localPlayer.position.x, y: localPlayer.position.y, z: localPlayer.position.z };
+      // Process local player movement (skip in photo mode)
+      if (Input && localPlayer && gameState && !photoMode.active) {
+        var delta = Input.getMovementDelta();
+        if (delta.x !== 0 || delta.z !== 0) {
+          // Rotate movement delta by camera orbit so WASD is camera-relative
+          var actualYaw = Input && Input.getCameraOrbit ? Input.getCameraOrbit() : cameraYaw;
+          var sinYaw = Math.sin(actualYaw);
+          var cosYaw = Math.cos(actualYaw);
+          var rotatedDelta = {
+            x: delta.x * cosYaw - delta.z * sinYaw,
+            y: delta.y,
+            z: delta.x * sinYaw + delta.z * cosYaw
+          };
+
+          // Apply weather movement modifier (snow slows, storm slows, etc.)
+          if (localPlayer.weatherModifiers && localPlayer.weatherModifiers.movementMultiplier) {
+            var wMult = localPlayer.weatherModifiers.movementMultiplier;
+            rotatedDelta.x *= wMult;
+            rotatedDelta.z *= wMult;
           }
-        }
 
-        // Apply locally
-        handleLocalAction('move', moveMsg.payload);
+          var moveMsg = Input.createMoveMessage(
+            localPlayer.id,
+            rotatedDelta,
+            localPlayer.position,
+            currentZone,
+            deltaTime
+          );
 
-        // Broadcast to network
-        if (Network) {
-          Network.broadcastMessage(moveMsg);
-        }
+          // Collision check — reject move if it would clip into a structure
+          var newPos = moveMsg.payload.position;
+          if (World && World.checkCollision && World.checkCollision(newPos.x, newPos.z, 0.5)) {
+            // Blocked — try sliding along X or Z axis only
+            var slideX = { x: newPos.x, y: localPlayer.position.y, z: localPlayer.position.z };
+            var slideZ = { x: localPlayer.position.x, y: localPlayer.position.y, z: newPos.z };
+            if (!World.checkCollision(slideX.x, slideX.z, 0.5)) {
+              moveMsg.payload.position = slideX;
+            } else if (!World.checkCollision(slideZ.x, slideZ.z, 0.5)) {
+              moveMsg.payload.position = slideZ;
+            } else {
+              // Fully blocked, don't move
+              moveMsg.payload.position = { x: localPlayer.position.x, y: localPlayer.position.y, z: localPlayer.position.z };
+            }
+          }
 
-        // Update world chunks around player position
-        if (World && World.updateChunks && sceneContext) {
-          World.updateChunks(sceneContext, localPlayer.position.x, localPlayer.position.z);
-        }
+          // Apply locally
+          handleLocalAction('move', moveMsg.payload);
 
-        // Detect zone from player position
-        if (World && World.getZoneAtPosition) {
-          var detectedZone = World.getZoneAtPosition(localPlayer.position.x, localPlayer.position.z);
-          if (detectedZone !== currentZone) {
-            var oldZone = currentZone;
-            currentZone = detectedZone;
-            localPlayer.zone = currentZone;
-            if (DEBUG) console.log('Entered zone:', currentZone);
+          // Broadcast to network
+          if (Network) {
+            Network.broadcastMessage(moveMsg);
+          }
 
-            // Play zone entry swoosh sound
-            if (Audio && Audio.playSound) Audio.playSound('zone_enter');
+          // Update world chunks around player position
+          if (World && World.updateChunks && sceneContext) {
+            World.updateChunks(sceneContext, localPlayer.position.x, localPlayer.position.z);
+          }
 
-            // Track activity
-            addRecentActivity('Entered ' + currentZone);
+          // Detect zone from player position
+          if (World && World.getZoneAtPosition) {
+            var detectedZone = World.getZoneAtPosition(localPlayer.position.x, localPlayer.position.z);
+            if (detectedZone !== currentZone) {
+              var oldZone = currentZone;
+              currentZone = detectedZone;
+              localPlayer.zone = currentZone;
+              if (DEBUG) console.log('Entered zone:', currentZone);
 
-            // Seamless transition — no camera teleport, just update zone context
-            // Terrain chunks load dynamically as the player walks
+              // Play zone entry swoosh sound
+              if (Audio && Audio.playSound) Audio.playSound('zone_enter');
 
-            if (Mentoring) {
-              var xpResult = Mentoring.addSkillXP(localPlayer.id, 'exploration', 8);
-              if (xpResult.leveledUp && HUD) {
-                HUD.showNotification('Exploration skill increased to ' + xpResult.newLevelName, 'success');
-                emitLevelUpParticles();
+              // Track activity
+              addRecentActivity('Entered ' + currentZone);
+
+              // Seamless transition — no camera teleport, just update zone context
+              // Terrain chunks load dynamically as the player walks
+
+              if (Mentoring) {
+                var xpResult = Mentoring.addSkillXP(localPlayer.id, 'exploration', 8);
+                if (xpResult.leveledUp && HUD) {
+                  HUD.showNotification('Exploration skill increased to ' + xpResult.newLevelName, 'success');
+                  emitLevelUpParticles();
+                }
               }
-            }
 
-            if (HUD) {
-              HUD.updateZoneLabel(currentZone);
-              HUD.showNotification('Entered ' + currentZone.charAt(0).toUpperCase() + currentZone.slice(1), 'info');
-            }
-
-            if (Audio) {
-              Audio.playAmbient(currentZone);
-              if (Audio.setZoneAmbient) Audio.setZoneAmbient(currentZone);
-              if (Audio.updateMusic) Audio.updateMusic(currentZone, currentTimePeriod);
-              // Piano accent on first zone discovery
-              if (Audio.playPianoAccent && !visitedZones[currentZone]) {
-                Audio.playPianoAccent('zone_discovery');
+              if (HUD) {
+                HUD.updateZoneLabel(currentZone);
+                HUD.showNotification('Entered ' + currentZone.charAt(0).toUpperCase() + currentZone.slice(1), 'info');
               }
-            }
-            visitedZones[currentZone] = true;
 
-            if (NPCs) {
-              NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
-              // Broadcast zone change to NPCs
-              if (NPCs.broadcastEvent) {
-                NPCs.broadcastEvent({ type: 'player_zone_change', data: {
-                  playerId: localPlayer.id, fromZone: oldZone, toZone: currentZone,
-                  position: localPlayer.position
-                }});
+              if (Audio) {
+                Audio.playAmbient(currentZone);
+                if (Audio.setZoneAmbient) Audio.setZoneAmbient(currentZone);
+                if (Audio.updateMusic) Audio.updateMusic(currentZone, currentTimePeriod);
+                // Piano accent on first zone discovery
+                if (Audio.playPianoAccent && !visitedZones[currentZone]) {
+                  Audio.playPianoAccent('zone_discovery');
+                }
               }
-            }
+              visitedZones[currentZone] = true;
 
-            // Reload interactive objects for new zone
-            if (World && World.clearInteractiveObjects && World.spawnZoneInteractives) {
-              World.clearInteractiveObjects(sceneContext);
-              World.spawnZoneInteractives(sceneContext, currentZone);
-            }
-
-            // Record zone visit for governance
-            if (Zones && Zones.recordZoneVisit) {
-              Zones.recordZoneVisit(currentZone, localPlayer.id);
-            }
-
-            // Show welcome message if zone has one
-            if (Zones && HUD) {
-              var policies = Zones.getZonePolicies(currentZone);
-              if (policies && policies.welcomeMessage) {
-                HUD.showNotification(policies.welcomeMessage, 'info');
+              if (NPCs) {
+                NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
+                // Broadcast zone change to NPCs
+                if (NPCs.broadcastEvent) {
+                  NPCs.broadcastEvent({
+                    type: 'player_zone_change', data: {
+                      playerId: localPlayer.id, fromZone: oldZone, toZone: currentZone,
+                      position: localPlayer.position
+                    }
+                  });
+                }
               }
-            }
 
-            // Update quest progress for zone visits
-            if (Quests) {
-              var updated = Quests.updateQuestProgress(localPlayer.id, 'visit_zone', { zone: currentZone });
-              if (updated.length > 0 && HUD) {
-                updated.forEach(function(quest) {
-                  HUD.showQuestProgress('Quest progress: ' + quest.title);
-                });
+              // Reload interactive objects for new zone
+              if (World && World.clearInteractiveObjects && World.spawnZoneInteractives) {
+                World.clearInteractiveObjects(sceneContext);
+                World.spawnZoneInteractives(sceneContext, currentZone);
               }
-            }
 
-            // Track zone visit achievement
-            trackAchievement('zone_visit', { zone: currentZone });
-
-            // Cross-system dispatch: zone change
-            safeDispatch('onZoneChange', gameState, localPlayer.id, oldZone, currentZone);
-
-            // Award XP for exploring new zones
-            if (Progression && Progression.awardXP && playerProgression) {
-              var xpResult = Progression.awardXP(playerProgression, 'exploring');
-              if (xpResult.leveled && HUD) {
-                HUD.showNotification('Level up! You are now level ' + xpResult.newLevel + ' — ' + Progression.getTitle(playerProgression), 'success');
-                if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('level_up');
-                emitLevelUpParticles();
+              // Record zone visit for governance
+              if (Zones && Zones.recordZoneVisit) {
+                Zones.recordZoneVisit(currentZone, localPlayer.id);
               }
-            }
 
-            // Track achievement stat: zone visits
-            if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
-              var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'zones_visited', 1);
-              achievementState = achResult.state; syncSubsystem('achievements', achievementState);
-              // Also track zone-specific stat
-              AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'zone_' + currentZone + '_visits', 1);
-              if (achResult.newAchievements.length > 0) {
-                achResult.newAchievements.forEach(function(a) {
-                  if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
-                });
+              // Show welcome message if zone has one
+              if (Zones && HUD) {
+                var policies = Zones.getZonePolicies(currentZone);
+                if (policies && policies.welcomeMessage) {
+                  HUD.showNotification(policies.welcomeMessage, 'info');
+                }
               }
-            }
 
-            // Update daily challenge progress for visit_zone challenges
-            if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
-              (dailyChallengeState.active || []).forEach(function(ch) {
-                if (ch.type === 'visit_zone' && (!ch.zone || ch.zone === currentZone)) {
-                  var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
-                  dailyChallengeState = dcResult.state;
-                  if (dcResult.completed && HUD) {
-                    HUD.showNotification('Challenge complete: ' + ch.title + '!', 'success');
+              // Update quest progress for zone visits
+              if (Quests) {
+                var updated = Quests.updateQuestProgress(localPlayer.id, 'visit_zone', { zone: currentZone });
+                if (updated.length > 0 && HUD) {
+                  updated.forEach(function (quest) {
+                    HUD.showQuestProgress('Quest progress: ' + quest.title);
+                  });
+                }
+              }
+
+              // Track zone visit achievement
+              trackAchievement('zone_visit', { zone: currentZone });
+
+              // Cross-system dispatch: zone change
+              safeDispatch('onZoneChange', gameState, localPlayer.id, oldZone, currentZone);
+
+              // Award XP for exploring new zones
+              if (Progression && Progression.awardXP && playerProgression) {
+                var xpResult = Progression.awardXP(playerProgression, 'exploring');
+                if (xpResult.leveled && HUD) {
+                  HUD.showNotification('Level up! You are now level ' + xpResult.newLevel + ' — ' + Progression.getTitle(playerProgression), 'success');
+                  if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('level_up');
+                  emitLevelUpParticles();
+                }
+              }
+
+              // Track achievement stat: zone visits
+              if (AchievementEngine && AchievementEngine.trackAndCheck && achievementState) {
+                var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'zones_visited', 1);
+                achievementState = achResult.state; syncSubsystem('achievements', achievementState);
+                // Also track zone-specific stat
+                AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'zone_' + currentZone + '_visits', 1);
+                if (achResult.newAchievements.length > 0) {
+                  achResult.newAchievements.forEach(function (a) {
+                    if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
+                  });
+                }
+              }
+
+              // Update daily challenge progress for visit_zone challenges
+              if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
+                (dailyChallengeState.active || []).forEach(function (ch) {
+                  if (ch.type === 'visit_zone' && (!ch.zone || ch.zone === currentZone)) {
+                    var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
+                    dailyChallengeState = dcResult.state;
+                    if (dcResult.completed && HUD) {
+                      HUD.showNotification('Challenge complete: ' + ch.title + '!', 'success');
+                    }
                   }
+                });
+              }
+
+              // Journal entry for zone visit
+              if (Journal && Journal.addEntry && journalState) {
+                Journal.addEntry(journalState, localPlayer.id, 'zone_visit', { zone: currentZone }, worldTime);
+              }
+
+              // StoryEngine: discover lore when entering a new zone
+              if (StoryEngine && storyState) {
+                var zoneSeasonObj = (Seasons && Seasons.getCurrentSeason) ? Seasons.getCurrentSeason() : null;
+                var zoneSeasonId = zoneSeasonObj ? zoneSeasonObj.id : 'summer';
+                var availableLore = StoryEngine.getAvailableLore
+                  ? StoryEngine.getAvailableLore(storyState, localPlayer.id, 'exploration', currentZone, zoneSeasonId)
+                  : [];
+                if (availableLore.length > 0 && Math.random() < 0.3) {
+                  var lore = availableLore[Math.floor(Math.random() * availableLore.length)];
+                  var loreResult = StoryEngine.discoverLore(storyState, localPlayer.id, lore.id, 'exploration');
+                  if (loreResult && loreResult.success) {
+                    if (HUD) HUD.showNotification('Lore: ' + (loreResult.loreEntry ? loreResult.loreEntry.title : lore.title), 'info');
+                    if (loreResult.arcCompleted && HUD) {
+                      HUD.showNotification('Story arc complete! ' + (loreResult.reward ? '+' + loreResult.reward.spark + ' Spark' : ''), 'success');
+                    }
+                  }
+                }
+              }
+
+              // LoreDiscovery: zone-based lore triggers
+              if (LoreDiscovery && LoreDiscovery.discoverLore && loreDiscoveryState) {
+                var zoneLore = LoreDiscovery.discoverLore(loreDiscoveryState, localPlayer.id, currentZone, 'zone_visit');
+                if (zoneLore && zoneLore.entry) {
+                  if (HUD) HUD.showNotification('Lore: ' + (zoneLore.entry.title || 'Ancient knowledge'), 'info');
+                }
+              }
+
+              // WarmthSystem: record zone visit as movement
+              if (WarmthSystem && WarmthSystem.recordMovement && warmthState) {
+                WarmthSystem.recordMovement(warmthState, localPlayer.id, { zone: currentZone }, worldTime);
+              }
+
+              // CommunityBoard: show board activity on zone entry
+              if (CommunityBoard && CommunityBoard.getBoardPosts && communityBoardState) {
+                var boardPosts = CommunityBoard.getBoardPosts(communityBoardState, currentZone, 1, 3);
+                if (boardPosts && boardPosts.posts && boardPosts.posts.length > 0 && HUD) {
+                  HUD.showNotification(currentZone + ' board: ' + boardPosts.total + ' posts', 'info');
+                }
+              }
+
+              // AnchorManagement: check for nearby anchors in new zone and render in 3D
+              if (AnchorManagement && AnchorManagement.getAnchorsInZone && anchorManagementState) {
+                var zoneAnchors = AnchorManagement.getAnchorsInZone(anchorManagementState, currentZone);
+                if (zoneAnchors && zoneAnchors.length > 0) {
+                  if (HUD) HUD.showNotification(zoneAnchors.length + ' anchor(s) nearby in ' + currentZone, 'info');
+                  // Render anchors as 3D beacons
+                  if (World && World.renderAnchors && sceneContext) {
+                    World.clearAnchors(sceneContext, currentZone);
+                    World.renderAnchors(sceneContext, currentZone, zoneAnchors);
+                  }
+                }
+              }
+
+              // SocialSpaces: auto-join active gathering in new zone
+              if (SocialSpaces && SocialSpaces.getActiveGatherings && socialSpacesState) {
+                var zoneGatherings = SocialSpaces.getActiveGatherings(socialSpacesState, currentZone);
+                if (zoneGatherings && zoneGatherings.length > 0) {
+                  var gath = zoneGatherings[0];
+                  SocialSpaces.joinGathering(socialSpacesState, localPlayer.id, gath.id);
+                  if (HUD) HUD.showNotification('Joined ' + (gath.title || gath.type) + ' (' + gath.type + ')', 'info');
+                }
+              }
+
+              // BattlePass XP for exploration (zone bonus applies)
+              if (BattlePass && BattlePass.addXP && battlePassState) {
+                var exploreXP = Math.round(6 * getZoneBonus('explore'));
+                BattlePass.addXP(battlePassState, localPlayer.id, exploreXP, 'exploring');
+              }
+
+              // Show zone bonus on entry
+              if (HUD && ZONE_BONUSES[currentZone]) {
+                HUD.showNotification('Zone: ' + ZONE_BONUSES[currentZone].label, 'info');
+              }
+
+              // PlayerOnboarding: complete zone visit step
+              if (PlayerOnboarding && PlayerOnboarding.completeStep && playerOnboardingState) {
+                PlayerOnboarding.completeStep(playerOnboardingState, localPlayer.id, 'visit_zone', worldTime);
+              }
+
+              // NarrativeThreads: create thread from zone exploration
+              if (NarrativeThreads && NarrativeThreads.createThread && narrativeThreadsState && Math.random() < 0.15) {
+                NarrativeThreads.createThread(narrativeThreadsState, localPlayer.id, 'explore', currentZone, { zone: currentZone }, worldTime);
+              }
+
+              // MultiverseReputation: earn rep for visiting zones
+              if (MultiverseReputation && MultiverseReputation.earnReputation && multiverseRepState) {
+                MultiverseReputation.earnReputation(multiverseRepState, localPlayer.id, 'zion', 2, 'zone_visit');
+              }
+
+              // ConsequenceBranching: check zone gates
+              if (ConsequenceBranching && ConsequenceBranching.canAccessZone && consequenceBranchingState) {
+                var canAccess = ConsequenceBranching.canAccessZone(consequenceBranchingState, localPlayer.id, currentZone);
+                if (canAccess === false && HUD) {
+                  HUD.showNotification('This area requires a different path alignment to fully explore', 'info');
+                }
+              }
+
+              // WorldShaper: update zone aesthetic from visit
+              if (WorldShaper && WorldShaper.updateAesthetic && worldShaperState) {
+                WorldShaper.updateAesthetic(worldShaperState, currentZone, worldTime);
+              }
+
+              // EventConsequences: check active zone effects
+              if (EventConsequences && EventConsequences.getActiveEffects && eventConsequencesState) {
+                var zoneEffects = EventConsequences.getActiveEffects(eventConsequencesState, currentZone, worldTime);
+                if (zoneEffects && zoneEffects.length > 0 && localPlayer) {
+                  localPlayer.zoneEffects = zoneEffects;
+                }
+              }
+
+              // Zone pricing: show market price advantages on zone entry
+              if (MarketDynamics && MarketDynamics.ZONE_PRICE_MODIFIERS) {
+                var zoneMods = MarketDynamics.ZONE_PRICE_MODIFIERS[currentZone];
+                if (zoneMods) {
+                  var advantages = [];
+                  for (var cat in zoneMods) {
+                    if (zoneMods[cat] <= 0.8) advantages.push(cat + ' -' + Math.round((1 - zoneMods[cat]) * 100) + '%');
+                    else if (zoneMods[cat] >= 1.2) advantages.push(cat + ' +' + Math.round((zoneMods[cat] - 1) * 100) + '%');
+                  }
+                  if (advantages.length > 0 && HUD) {
+                    HUD.showNotification('Market prices: ' + advantages.join(', '), 'info');
+                  }
+                }
+              }
+            }
+          }
+
+          // Update NPC visibility by distance every ~30 frames
+          if (NPCs && Math.random() < 0.03) {
+            NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
+          }
+
+          // Footstep sounds
+          footstepTimer += deltaTime;
+          if (footstepTimer >= 0.4) {
+            // Determine footstep sound based on zone
+            var footstepTerrain = 'grass'; // default
+            if (currentZone === 'nexus') footstepTerrain = 'stone';
+            else if (currentZone === 'gardens') footstepTerrain = 'grass';
+            else if (currentZone === 'athenaeum') footstepTerrain = 'stone';
+            else if (currentZone === 'studio') footstepTerrain = 'wood';
+            else if (currentZone === 'wilds') footstepTerrain = 'grass';
+            else if (currentZone === 'agora') footstepTerrain = 'stone';
+            else if (currentZone === 'commons') footstepTerrain = 'wood';
+            else if (currentZone === 'arena') footstepTerrain = 'stone';
+
+            if (Audio && Audio.playFootstep) {
+              Audio.playFootstep(footstepTerrain);
+            }
+            footstepTimer = 0;
+          }
+        } else {
+          // Reset footstep timer when not moving
+          footstepTimer = 0;
+        }
+      }
+
+      // Evaluate NPC intentions — throttled: 5 NPCs per frame
+      if (Intentions && NPCs && localPlayer && gameState) {
+        var agents = NPCs.getAgents ? NPCs.getAgents() : [];
+        if (agents.length > 0) {
+          var worldStateForIntentions = {
+            players: new Map()
+          };
+          // Add local player
+          worldStateForIntentions.players.set(localPlayer.id, {
+            id: localPlayer.id,
+            position: localPlayer.position
+          });
+          // Add NPC positions from agents array
+          agents.forEach(function (agent) {
+            if (agent.position) {
+              worldStateForIntentions.players.set(agent.id, {
+                id: agent.id,
+                position: { x: agent.position.x, y: agent.position.y || 0, z: agent.position.z }
+              });
+            }
+          });
+          // Evaluate 5 NPCs per frame round-robin
+          var count = Math.min(5, agents.length);
+          for (var ei = 0; ei < count; ei++) {
+            var idx = (npcIntentionIndex + ei) % agents.length;
+            var agent = agents[idx];
+            var actions = Intentions.evaluateTriggers(agent.id, worldStateForIntentions, deltaTime);
+            if (actions && actions.length > 0) {
+              actions.forEach(function (action) {
+                if (action.type === 'say' && NPCs.showNPCSpeechBubble) {
+                  NPCs.showNPCSpeechBubble(agent.id, action.payload ? action.payload.text || action.payload.message : '...');
                 }
               });
             }
-
-            // Journal entry for zone visit
-            if (Journal && Journal.addEntry && journalState) {
-              Journal.addEntry(journalState, localPlayer.id, 'zone_visit', { zone: currentZone }, worldTime);
-            }
-
-            // StoryEngine: discover lore when entering a new zone
-            if (StoryEngine && storyState) {
-              var zoneSeasonObj = (Seasons && Seasons.getCurrentSeason) ? Seasons.getCurrentSeason() : null;
-              var zoneSeasonId = zoneSeasonObj ? zoneSeasonObj.id : 'summer';
-              var availableLore = StoryEngine.getAvailableLore
-                ? StoryEngine.getAvailableLore(storyState, localPlayer.id, 'exploration', currentZone, zoneSeasonId)
-                : [];
-              if (availableLore.length > 0 && Math.random() < 0.3) {
-                var lore = availableLore[Math.floor(Math.random() * availableLore.length)];
-                var loreResult = StoryEngine.discoverLore(storyState, localPlayer.id, lore.id, 'exploration');
-                if (loreResult && loreResult.success) {
-                  if (HUD) HUD.showNotification('Lore: ' + (loreResult.loreEntry ? loreResult.loreEntry.title : lore.title), 'info');
-                  if (loreResult.arcCompleted && HUD) {
-                    HUD.showNotification('Story arc complete! ' + (loreResult.reward ? '+' + loreResult.reward.spark + ' Spark' : ''), 'success');
-                  }
-                }
-              }
-            }
-
-            // LoreDiscovery: zone-based lore triggers
-            if (LoreDiscovery && LoreDiscovery.discoverLore && loreDiscoveryState) {
-              var zoneLore = LoreDiscovery.discoverLore(loreDiscoveryState, localPlayer.id, currentZone, 'zone_visit');
-              if (zoneLore && zoneLore.entry) {
-                if (HUD) HUD.showNotification('Lore: ' + (zoneLore.entry.title || 'Ancient knowledge'), 'info');
-              }
-            }
-
-            // WarmthSystem: record zone visit as movement
-            if (WarmthSystem && WarmthSystem.recordMovement && warmthState) {
-              WarmthSystem.recordMovement(warmthState, localPlayer.id, { zone: currentZone }, worldTime);
-            }
-
-            // CommunityBoard: show board activity on zone entry
-            if (CommunityBoard && CommunityBoard.getBoardPosts && communityBoardState) {
-              var boardPosts = CommunityBoard.getBoardPosts(communityBoardState, currentZone, 1, 3);
-              if (boardPosts && boardPosts.posts && boardPosts.posts.length > 0 && HUD) {
-                HUD.showNotification(currentZone + ' board: ' + boardPosts.total + ' posts', 'info');
-              }
-            }
-
-            // AnchorManagement: check for nearby anchors in new zone and render in 3D
-            if (AnchorManagement && AnchorManagement.getAnchorsInZone && anchorManagementState) {
-              var zoneAnchors = AnchorManagement.getAnchorsInZone(anchorManagementState, currentZone);
-              if (zoneAnchors && zoneAnchors.length > 0) {
-                if (HUD) HUD.showNotification(zoneAnchors.length + ' anchor(s) nearby in ' + currentZone, 'info');
-                // Render anchors as 3D beacons
-                if (World && World.renderAnchors && sceneContext) {
-                  World.clearAnchors(sceneContext, currentZone);
-                  World.renderAnchors(sceneContext, currentZone, zoneAnchors);
-                }
-              }
-            }
-
-            // SocialSpaces: auto-join active gathering in new zone
-            if (SocialSpaces && SocialSpaces.getActiveGatherings && socialSpacesState) {
-              var zoneGatherings = SocialSpaces.getActiveGatherings(socialSpacesState, currentZone);
-              if (zoneGatherings && zoneGatherings.length > 0) {
-                var gath = zoneGatherings[0];
-                SocialSpaces.joinGathering(socialSpacesState, localPlayer.id, gath.id);
-                if (HUD) HUD.showNotification('Joined ' + (gath.title || gath.type) + ' (' + gath.type + ')', 'info');
-              }
-            }
-
-            // BattlePass XP for exploration (zone bonus applies)
-            if (BattlePass && BattlePass.addXP && battlePassState) {
-              var exploreXP = Math.round(6 * getZoneBonus('explore'));
-              BattlePass.addXP(battlePassState, localPlayer.id, exploreXP, 'exploring');
-            }
-
-            // Show zone bonus on entry
-            if (HUD && ZONE_BONUSES[currentZone]) {
-              HUD.showNotification('Zone: ' + ZONE_BONUSES[currentZone].label, 'info');
-            }
-
-            // PlayerOnboarding: complete zone visit step
-            if (PlayerOnboarding && PlayerOnboarding.completeStep && playerOnboardingState) {
-              PlayerOnboarding.completeStep(playerOnboardingState, localPlayer.id, 'visit_zone', worldTime);
-            }
-
-            // NarrativeThreads: create thread from zone exploration
-            if (NarrativeThreads && NarrativeThreads.createThread && narrativeThreadsState && Math.random() < 0.15) {
-              NarrativeThreads.createThread(narrativeThreadsState, localPlayer.id, 'explore', currentZone, { zone: currentZone }, worldTime);
-            }
-
-            // MultiverseReputation: earn rep for visiting zones
-            if (MultiverseReputation && MultiverseReputation.earnReputation && multiverseRepState) {
-              MultiverseReputation.earnReputation(multiverseRepState, localPlayer.id, 'zion', 2, 'zone_visit');
-            }
-
-            // ConsequenceBranching: check zone gates
-            if (ConsequenceBranching && ConsequenceBranching.canAccessZone && consequenceBranchingState) {
-              var canAccess = ConsequenceBranching.canAccessZone(consequenceBranchingState, localPlayer.id, currentZone);
-              if (canAccess === false && HUD) {
-                HUD.showNotification('This area requires a different path alignment to fully explore', 'info');
-              }
-            }
-
-            // WorldShaper: update zone aesthetic from visit
-            if (WorldShaper && WorldShaper.updateAesthetic && worldShaperState) {
-              WorldShaper.updateAesthetic(worldShaperState, currentZone, worldTime);
-            }
-
-            // EventConsequences: check active zone effects
-            if (EventConsequences && EventConsequences.getActiveEffects && eventConsequencesState) {
-              var zoneEffects = EventConsequences.getActiveEffects(eventConsequencesState, currentZone, worldTime);
-              if (zoneEffects && zoneEffects.length > 0 && localPlayer) {
-                localPlayer.zoneEffects = zoneEffects;
-              }
-            }
-
-            // Zone pricing: show market price advantages on zone entry
-            if (MarketDynamics && MarketDynamics.ZONE_PRICE_MODIFIERS) {
-              var zoneMods = MarketDynamics.ZONE_PRICE_MODIFIERS[currentZone];
-              if (zoneMods) {
-                var advantages = [];
-                for (var cat in zoneMods) {
-                  if (zoneMods[cat] <= 0.8) advantages.push(cat + ' -' + Math.round((1 - zoneMods[cat]) * 100) + '%');
-                  else if (zoneMods[cat] >= 1.2) advantages.push(cat + ' +' + Math.round((zoneMods[cat] - 1) * 100) + '%');
-                }
-                if (advantages.length > 0 && HUD) {
-                  HUD.showNotification('Market prices: ' + advantages.join(', '), 'info');
-                }
-              }
-            }
           }
+          npcIntentionIndex = (npcIntentionIndex + count) % agents.length;
         }
-
-        // Update NPC visibility by distance every ~30 frames
-        if (NPCs && Math.random() < 0.03) {
-          NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
-        }
-
-        // Footstep sounds
-        footstepTimer += deltaTime;
-        if (footstepTimer >= 0.4) {
-          // Determine footstep sound based on zone
-          var footstepTerrain = 'grass'; // default
-          if (currentZone === 'nexus') footstepTerrain = 'stone';
-          else if (currentZone === 'gardens') footstepTerrain = 'grass';
-          else if (currentZone === 'athenaeum') footstepTerrain = 'stone';
-          else if (currentZone === 'studio') footstepTerrain = 'wood';
-          else if (currentZone === 'wilds') footstepTerrain = 'grass';
-          else if (currentZone === 'agora') footstepTerrain = 'stone';
-          else if (currentZone === 'commons') footstepTerrain = 'wood';
-          else if (currentZone === 'arena') footstepTerrain = 'stone';
-
-          if (Audio && Audio.playFootstep) {
-            Audio.playFootstep(footstepTerrain);
-          }
-          footstepTimer = 0;
-        }
-      } else {
-        // Reset footstep timer when not moving
-        footstepTimer = 0;
-      }
-    }
-
-    // Evaluate NPC intentions — throttled: 5 NPCs per frame
-    if (Intentions && NPCs && localPlayer && gameState) {
-      var agents = NPCs.getAgents ? NPCs.getAgents() : [];
-      if (agents.length > 0) {
-        var worldStateForIntentions = {
-          players: new Map()
-        };
-        // Add local player
-        worldStateForIntentions.players.set(localPlayer.id, {
-          id: localPlayer.id,
-          position: localPlayer.position
-        });
-        // Add NPC positions from agents array
-        agents.forEach(function(agent) {
-          if (agent.position) {
-            worldStateForIntentions.players.set(agent.id, {
-              id: agent.id,
-              position: { x: agent.position.x, y: agent.position.y || 0, z: agent.position.z }
-            });
-          }
-        });
-        // Evaluate 5 NPCs per frame round-robin
-        var count = Math.min(5, agents.length);
-        for (var ei = 0; ei < count; ei++) {
-          var idx = (npcIntentionIndex + ei) % agents.length;
-          var agent = agents[idx];
-          var actions = Intentions.evaluateTriggers(agent.id, worldStateForIntentions, deltaTime);
-          if (actions && actions.length > 0) {
-            actions.forEach(function(action) {
-              if (action.type === 'say' && NPCs.showNPCSpeechBubble) {
-                NPCs.showNPCSpeechBubble(agent.id, action.payload ? action.payload.text || action.payload.message : '...');
-              }
-            });
-          }
-        }
-        npcIntentionIndex = (npcIntentionIndex + count) % agents.length;
-      }
-    }
-
-    // Update world time (24-min day/night cycle = 1440 minutes in 24 real minutes)
-    worldTime += deltaTime * 60; // 60x speed
-    if (worldTime >= 1440) worldTime -= 1440;
-
-    // Detect time period from worldTime (minutes 0-1440)
-    var worldHour = worldTime / 60;
-    var newTimePeriod = 'night';
-    if (worldHour >= 5 && worldHour < 7) newTimePeriod = 'dawn';
-    else if (worldHour >= 7 && worldHour < 12) newTimePeriod = 'morning';
-    else if (worldHour >= 12 && worldHour < 14) newTimePeriod = 'midday';
-    else if (worldHour >= 14 && worldHour < 18) newTimePeriod = 'afternoon';
-    else if (worldHour >= 18 && worldHour < 21) newTimePeriod = 'evening';
-    else newTimePeriod = 'night';
-
-    // Broadcast time period changes to NPCs and audio
-    if (newTimePeriod !== currentTimePeriod) {
-      currentTimePeriod = newTimePeriod;
-      if (NPCs && NPCs.broadcastEvent) {
-        NPCs.broadcastEvent({ type: 'time_change', data: { period: currentTimePeriod, hour: worldHour } });
-      }
-      // Update ambient audio and music for time of day
-      if (Audio && Audio.updateAmbientTime) {
-        Audio.updateAmbientTime(currentTimePeriod);
-      }
-      if (Audio && Audio.updateMusic) {
-        Audio.updateMusic(currentZone, currentTimePeriod);
-      }
-      // Piano accent for time-of-day transitions (BotW-style)
-      if (Audio && Audio.playPianoAccent) {
-        if (currentTimePeriod === 'dawn') Audio.playPianoAccent('dawn');
-        else if (currentTimePeriod === 'morning') Audio.playPianoAccent('morning');
-        else if (currentTimePeriod === 'evening') Audio.playPianoAccent('dusk');
-        else if (currentTimePeriod === 'night') Audio.playPianoAccent('night');
-      }
-    }
-
-    // Update AI citizens — pass player position and weather for perception
-    var currentSeasonObj = (Seasons && Seasons.getCurrentSeason) ? Seasons.getCurrentSeason() : null;
-    var currentSeasonId = currentSeasonObj ? currentSeasonObj.id : 'summer';
-    if (NPCs) {
-      var npcWorldState = {
-        weather: currentWeather,
-        worldTime: worldTime,
-        timePeriod: currentTimePeriod,
-        season: currentSeasonId,
-        playerPosition: localPlayer ? localPlayer.position : null,
-        playerId: localPlayer ? localPlayer.id : null
-      };
-      NPCs.updateNPCs(sceneContext, gameState, deltaTime, worldTime, npcWorldState);
-      // Update speech bubble positions based on camera
-      if (NPCs.updateSpeechBubbles && sceneContext && sceneContext.camera) {
-        NPCs.updateSpeechBubbles(sceneContext.camera);
-      }
-    }
-
-    // Update rendering
-    if (sceneContext && World) {
-      // Update player positions
-      if (gameState && State) {
-        var players = State.getPlayers(gameState);
-        players.forEach(function(player) {
-          if (player.id !== localPlayer.id) {
-            World.movePlayer(sceneContext, player.id, player.position);
-          } else {
-            World.movePlayer(sceneContext, player.id, localPlayer.position);
-          }
-        });
       }
 
-      // Camera follows player (orbiting third-person with smooth lerp interpolation)
-      if (sceneContext.camera && localPlayer) {
-        var terrainY = 0;
-        if (World && World.getTerrainHeight) {
-          terrainY = World.getTerrainHeight(localPlayer.position.x, localPlayer.position.z);
-        }
-        localPlayer.position.y = terrainY;
+      // Update world time (24-min day/night cycle = 1440 minutes in 24 real minutes)
+      worldTime += deltaTime * 60; // 60x speed
+      if (worldTime >= 1440) worldTime -= 1440;
 
-        // Photo mode camera overrides normal follow
-        if (photoMode.active) {
-          updatePhotoModeCamera(deltaTime);
-        }
-        else {
-        // Get camera controls from Input module
-        var inputCameraDistance = Input && Input.getCameraDistance ? Input.getCameraDistance() : cameraDistance;
-        var inputCameraOrbit = Input && Input.getCameraOrbit ? Input.getCameraOrbit() : cameraYaw;
+      // Detect time period from worldTime (minutes 0-1440)
+      var worldHour = worldTime / 60;
+      var newTimePeriod = 'night';
+      if (worldHour >= 5 && worldHour < 7) newTimePeriod = 'dawn';
+      else if (worldHour >= 7 && worldHour < 12) newTimePeriod = 'morning';
+      else if (worldHour >= 12 && worldHour < 14) newTimePeriod = 'midday';
+      else if (worldHour >= 14 && worldHour < 18) newTimePeriod = 'afternoon';
+      else if (worldHour >= 18 && worldHour < 21) newTimePeriod = 'evening';
+      else newTimePeriod = 'night';
 
-        // Calculate orbiting camera position from orbit/pitch/distance
-        var camOffX = Math.sin(inputCameraOrbit) * Math.cos(cameraPitch) * inputCameraDistance;
-        var camOffY = Math.sin(cameraPitch) * inputCameraDistance;
-        var camOffZ = Math.cos(inputCameraOrbit) * Math.cos(cameraPitch) * inputCameraDistance;
-
-        var camTargetX = localPlayer.position.x + camOffX;
-        var camTargetY = terrainY + camOffY + 2;
-        var camTargetZ = localPlayer.position.z + camOffZ;
-
-        // Camera collision: ensure camera doesn't go below terrain
-        var camTerrainY = World && World.getTerrainHeight ? World.getTerrainHeight(camTargetX, camTargetZ) : 0;
-        if (camTargetY < camTerrainY + 2) camTargetY = camTerrainY + 2;
-
-        // Buttery smooth camera follow — frame-rate-independent lerp
-        var lerpFactor = 1 - Math.pow(0.92, deltaTime * 60);
-        sceneContext.camera.position.x += (camTargetX - sceneContext.camera.position.x) * lerpFactor;
-        sceneContext.camera.position.y += (camTargetY - sceneContext.camera.position.y) * lerpFactor;
-        sceneContext.camera.position.z += (camTargetZ - sceneContext.camera.position.z) * lerpFactor;
-
-        // Apply camera shake if active
-        if (cameraShake.active) {
-          cameraShake.elapsed += deltaTime;
-          var progress = cameraShake.elapsed / cameraShake.duration;
-          if (progress >= 1) {
-            cameraShake.active = false;
-          } else {
-            var decay = 1 - progress;
-            var shakeX = (Math.random() - 0.5) * 2 * cameraShake.intensity * decay;
-            var shakeY = (Math.random() - 0.5) * 2 * cameraShake.intensity * decay;
-            sceneContext.camera.position.x += shakeX;
-            sceneContext.camera.position.y += shakeY;
-          }
-        }
-
-        sceneContext.camera.lookAt(
-          localPlayer.position.x,
-          terrainY + 1.5,
-          localPlayer.position.z
-        );
-        } // end normal camera else block
-      }
-
-      // Update day/night cycle
-      World.updateDayNight(sceneContext, worldTime);
-
-      // Weather cycling — changes every 4 in-game hours (every 4 real minutes)
-      var weatherCycleMinute = Math.floor(worldTime / 240); // 0-5
-      var nextWeather;
-      if (typeof WeatherFX !== 'undefined' && WeatherFX.rollWeather) {
-        var season = (Seasons && Seasons.getCurrentSeason) ? Seasons.getCurrentSeason() : null;
-        var seasonId = season ? season.id : 'summer';
-        nextWeather = WeatherFX.rollWeather(weatherCycleMinute, seasonId);
-      } else {
-        var weatherTypes = ['clear', 'cloudy', 'rain', 'clear', 'storm', 'snow'];
-        nextWeather = weatherTypes[weatherCycleMinute % weatherTypes.length];
-      }
-      if (nextWeather !== currentWeather) {
-        var prevWeather = currentWeather;
-        currentWeather = nextWeather;
-        if (World.setWeather) {
-          World.setWeather(sceneContext, currentWeather);
-        }
-        // Broadcast weather change to NPCs
+      // Broadcast time period changes to NPCs and audio
+      if (newTimePeriod !== currentTimePeriod) {
+        currentTimePeriod = newTimePeriod;
         if (NPCs && NPCs.broadcastEvent) {
-          NPCs.broadcastEvent({ type: 'weather_change', data: { weather: currentWeather, previous: prevWeather } });
+          NPCs.broadcastEvent({ type: 'time_change', data: { period: currentTimePeriod, hour: worldHour } });
         }
-        // Update ambient audio for weather
-        if (Audio && Audio.updateAmbientWeather) {
-          Audio.updateAmbientWeather(currentWeather);
+        // Update ambient audio and music for time of day
+        if (Audio && Audio.updateAmbientTime) {
+          Audio.updateAmbientTime(currentTimePeriod);
         }
-        // Update vignette intensity based on weather (use WeatherFX visibility if available)
-        if (typeof WeatherFX !== 'undefined' && WeatherFX.getVisibilityRange) {
-          var vis = WeatherFX.getVisibilityRange(currentWeather);
-          setVignetteIntensity(vis < 100 ? 0.7 : vis < 300 ? 0.5 : 0.3);
-        } else if (currentWeather === 'storm') {
-          setVignetteIntensity(0.7);
-        } else if (currentWeather === 'rain' || currentWeather === 'snow') {
-          setVignetteIntensity(0.5);
-        } else {
-          setVignetteIntensity(0.3);
+        if (Audio && Audio.updateMusic) {
+          Audio.updateMusic(currentZone, currentTimePeriod);
         }
-        // Apply weather gameplay modifiers
-        if (typeof WeatherFX !== 'undefined' && WeatherFX.getAmbientModifiers) {
-          var mods = WeatherFX.getAmbientModifiers(currentWeather);
-          if (localPlayer) localPlayer.weatherModifiers = mods;
-        } else if (World && World.getWeatherModifiers) {
-          if (localPlayer) localPlayer.weatherModifiers = World.getWeatherModifiers(currentWeather);
+        // Piano accent for time-of-day transitions (BotW-style)
+        if (Audio && Audio.playPianoAccent) {
+          if (currentTimePeriod === 'dawn') Audio.playPianoAccent('dawn');
+          else if (currentTimePeriod === 'morning') Audio.playPianoAccent('morning');
+          else if (currentTimePeriod === 'evening') Audio.playPianoAccent('dusk');
+          else if (currentTimePeriod === 'night') Audio.playPianoAccent('night');
         }
       }
 
-      // Apply active cooking buffs to player
-      if (Cooking && Cooking.getActiveBuffs && cookingBuffs && cookingBuffs.length > 0) {
-        localPlayer.cookingBuffs = Cooking.getActiveBuffs(cookingBuffs);
-      }
-
-      // Apply prestige bonus to player stats
-      if (Prestige && Prestige.getSparkBonus && prestigeState) {
-        localPlayer.prestigeSparkBonus = Prestige.getSparkBonus(prestigeState.level || 0);
-      }
-
-      // HousingSocial: calculate comfort bonus from housing
-      if (HousingSocial && HousingSocial.calculateComfort && housingSocialState) {
-        localPlayer.comfortBonus = HousingSocial.calculateComfort(housingSocialState);
-      }
-
-      // Cosmetics: sync current appearance
-      if (Cosmetics && Cosmetics.getAppearance && cosmeticsState) {
-        localPlayer.appearance = Cosmetics.getAppearance(cosmeticsState);
-      }
-
-      // Specializations: apply specialization bonuses
-      if (Specializations && Specializations.getBonuses && specState) {
-        localPlayer.specBonuses = Specializations.getBonuses(specState);
-      }
-
-      // Cull distant lights for performance (max 12 nearest within 40 units, every 15 frames)
-      if (npcUpdateFrame % 15 === 0 && World.cullLights) {
-        World.cullLights(sceneContext, localPlayer.position, 40, 12);
-      }
-
-      // Performance optimizations
-      // Update frustum culling every 10 frames
-      if (frameCount % 10 === 0 && World.updateFrustumCulling) {
-        World.updateFrustumCulling(sceneContext);
-      }
-
-      // Update LOD every 30 frames
-      if (frameCount % 30 === 0 && World.updateLOD) {
-        World.updateLOD(sceneContext, localPlayer.position);
-      }
-
-      // Update environmental animations
-      if (World.updateAnimations) {
-        World.updateAnimations(sceneContext, deltaTime, worldTime);
-      }
-
-      // Update resource nodes (respawning)
-      if (World.updateResourceNodes) {
-        World.updateResourceNodes(deltaTime);
-      }
-
-      // Update player animations (walk/run/idle)
-      if (World.updatePlayerAnimations) {
-        World.updatePlayerAnimations(sceneContext, deltaTime);
-      }
-
-      // Update particle effects (fire, sparkle, mist, fountain, leaves)
-      if (World.updateParticles) {
-        World.updateParticles(sceneContext, deltaTime * 1000, localPlayer ? localPlayer.position : null);
-      }
-
-      // Update weather effects (rain, snow)
-      if (World.updateWeatherEffects) {
-        World.updateWeatherEffects(sceneContext, deltaTime * 1000, localPlayer ? localPlayer.position : null);
-      }
-
-      // Update zone ambience particles
-      if (World.updateZoneAmbience && localPlayer) {
-        World.updateZoneAmbience(sceneContext, localPlayer.zone, deltaTime * 1000);
-      }
-
-      // Update seasonal visuals: particles (blossoms/fireflies/leaves/snow), light tints, fog tint
-      if (World.updateSeasonalVisuals) {
-        var seasonNormalizedTime = worldTime / 1440;
-        World.updateSeasonalVisuals(sceneContext, localPlayer ? localPlayer.zone : 'nexus', deltaTime * 1000, seasonNormalizedTime);
-      }
-
-      // Update water bodies (animated waves, weather-reactive)
-      if (World.updateWater) {
-        var waterWeather = World.getCurrentWeather ? World.getCurrentWeather() : currentWeather;
-        World.updateWater(deltaTime, waterWeather, localPlayer ? localPlayer.position : null);
-      }
-
-      // Update skybox (sun/moon orbit, star visibility)
-      if (World.updateSkybox) {
-        World.updateSkybox(sceneContext, worldTime);
-      }
-
-      // Update interactive objects (highlights, campfire flicker, etc.)
-      if (World.updateInteractiveAnimations) {
-        World.updateInteractiveAnimations(deltaTime);
-      }
-
-      // Update anchor beacon animations (bobbing glow)
-      if (World.updateAnchorAnimations) {
-        World.updateAnchorAnimations(worldTime * 0.001);
-      }
-      if (npcUpdateFrame % 5 === 0 && World.updateInteractiveHighlights && localPlayer) {
-        World.updateInteractiveHighlights(localPlayer.position.x, localPlayer.position.z, 4);
-      }
-
-      // Detect and highlight nearest interactable for E-key interaction
-      if (localPlayer) {
-        var newTarget = detectNearestInteractable();
-
-        // If target changed, update highlighting
-        if (newTarget !== currentInteractionTarget) {
-          // Clear previous highlight
-          if (World && World.unhighlightObject) {
-            World.unhighlightObject();
-          }
-
-          // Set new target
-          currentInteractionTarget = newTarget;
-
-          // Apply new highlight
-          if (currentInteractionTarget && currentInteractionTarget.mesh && World && World.highlightObject) {
-            World.highlightObject(currentInteractionTarget.mesh);
-          }
-        }
-
-        // Update tooltip position
-        updateTooltip();
-
-        // NPC proximity greeting — first-time speech bubble per session
-        if (npcGreetCooldown > 0) {
-          npcGreetCooldown -= deltaTime;
-        } else if (currentInteractionTarget && currentInteractionTarget.type === 'npc' &&
-                   currentInteractionTarget.distance < 8 && !greetedNPCIds[currentInteractionTarget.name]) {
-          greetedNPCIds[currentInteractionTarget.name] = true;
-          npcGreetCooldown = 5;
-          var npcGreetings = [
-            'Hello there, traveler!',
-            'Welcome! Press E to chat.',
-            'Good to see a new face around here!',
-            'Greetings, citizen!',
-            'Hey! Looking for adventure?'
-          ];
-          var greeting = npcGreetings[Math.floor(Math.random() * npcGreetings.length)];
-          if (HUD && HUD.showNotification) {
-            HUD.showNotification(currentInteractionTarget.name + ': ' + greeting, 'info');
-          }
-          if (Audio && Audio.playSound) {
-            Audio.playSound('chat');
-          }
+      // Update AI citizens — pass player position and weather for perception
+      var currentSeasonObj = (Seasons && Seasons.getCurrentSeason) ? Seasons.getCurrentSeason() : null;
+      var currentSeasonId = currentSeasonObj ? currentSeasonObj.id : 'summer';
+      if (NPCs) {
+        var npcWorldState = {
+          weather: currentWeather,
+          worldTime: worldTime,
+          timePeriod: currentTimePeriod,
+          season: currentSeasonId,
+          playerPosition: localPlayer ? localPlayer.position : null,
+          playerId: localPlayer ? localPlayer.id : null
+        };
+        NPCs.updateNPCs(sceneContext, gameState, deltaTime, worldTime, npcWorldState);
+        // Update speech bubble positions based on camera
+        if (NPCs.updateSpeechBubbles && sceneContext && sceneContext.camera) {
+          NPCs.updateSpeechBubbles(sceneContext.camera);
         }
       }
 
-      // Update ambient wildlife (butterflies, fireflies, birds, fish)
-      if (World.updateWildlife) {
-        World.updateWildlife(sceneContext, deltaTime, worldTime);
-      }
-
-      // Update world events (shooting stars, aurora, resource blooms, etc.)
-      updateWorldEvents(deltaTime, worldTime, sceneContext);
-
-      // Update zone boundary particles (golden floating markers)
-      if (World.updateZoneBoundaryParticles) {
-        World.updateZoneBoundaryParticles(worldTime);
-      }
-
-      // ── Enhanced systems ──
-      // World memory (footpaths, gathering, flowers)
-      if (World.updateWorldMemory && localPlayer) {
-        var nearbyCount = 0;
-        if (NPCs && NPCs.getNearbyNPCCount) {
-          nearbyCount = NPCs.getNearbyNPCCount(localPlayer.position, 5);
-        }
-        World.updateWorldMemory(localPlayer.position, nearbyCount, deltaTime);
-      }
-
-      // Billboard clouds
-      if (World.updateBillboardClouds) {
-        World.updateBillboardClouds(deltaTime, currentWeather);
-      }
-
-      // Snow accumulation
-      if (World.updateSnowAccumulation) {
-        World.updateSnowAccumulation(deltaTime * 1000, currentWeather);
-      }
-
-      // Valley fog
-      if (World.updateValleyFog) {
-        World.updateValleyFog(worldTime, currentWeather);
-      }
-
-      // Terrain breathing
-      if (World.updateTerrainBreathing) {
-        World.updateTerrainBreathing(deltaTime, worldTime);
-      }
-
-      // Wind system
-      if (World.updateWindSystem) {
-        World.updateWindSystem(deltaTime, currentWeather);
-      }
-
-      // Zone border shimmer
-      if (World.updateZoneBorderShimmer) {
-        World.updateZoneBorderShimmer(worldTime);
-      }
-
-      // Update build preview if in build mode
-      if (buildModeActive && World && World.updateBuildPreview && Input && Input.getMouseNDC) {
-        var mousePos = Input.getMouseNDC();
-        World.updateBuildPreview(sceneContext, mousePos.x, mousePos.y, sceneContext.camera);
-      }
-
-      // Render scene
-      if (sceneContext.renderer && sceneContext.scene && sceneContext.camera) {
-        sceneContext.renderer.render(sceneContext.scene, sceneContext.camera);
-      }
-    }
-
-    // Update HUD
-    if (HUD && gameState && State) {
-      // Update player info (every 30 frames — stats don't change faster)
-      if (npcUpdateFrame % 30 === 0) {
-        HUD.updatePlayerInfo(localPlayer);
-      }
-
-      // Update minimap and emote bubbles
-      var players = State.getPlayers(gameState);
-
-      // Update emote bubble positions (every 3 frames)
-      if (npcUpdateFrame % 3 === 0 && HUD.updateEmoteBubbles && sceneContext && sceneContext.camera) {
-        var playerPositions = {};
-        players.forEach(function(player) {
-          if (World && World.getPlayerMesh) {
-            var mesh = World.getPlayerMesh(sceneContext, player.id);
-            if (mesh) {
-              var screenPos = getScreenPosition(mesh.position, sceneContext.camera, sceneContext.renderer);
-              if (screenPos) {
-                playerPositions[player.id] = screenPos;
-              }
+      // Update rendering
+      if (sceneContext && World) {
+        // Update player positions
+        if (gameState && State) {
+          var players = State.getPlayers(gameState);
+          players.forEach(function (player) {
+            if (player.id !== localPlayer.id) {
+              World.movePlayer(sceneContext, player.id, player.position);
+            } else {
+              World.movePlayer(sceneContext, player.id, localPlayer.position);
             }
+          });
+        }
+
+        // Camera follows player (orbiting third-person with smooth lerp interpolation)
+        if (sceneContext.camera && localPlayer) {
+          var terrainY = 0;
+          if (World && World.getTerrainHeight) {
+            terrainY = World.getTerrainHeight(localPlayer.position.x, localPlayer.position.z);
           }
-        });
-        HUD.updateEmoteBubbles(playerPositions);
-      }
+          localPlayer.position.y = terrainY;
 
-      // Update minimap (every 5 frames)
-      if (npcUpdateFrame % 5 === 0) {
-        var mapPlayers = players.map(function(p) { return {
-          id: p.id,
-          position: p.position,
-          isLocal: p.id === localPlayer.id
-        }; });
-        HUD.updateMinimap(mapPlayers, currentZone);
+          // Photo mode camera overrides normal follow
+          if (photoMode.active) {
+            updatePhotoModeCamera(deltaTime);
+          }
+          else {
+            // Get camera controls from Input module
+            var inputCameraDistance = Input && Input.getCameraDistance ? Input.getCameraDistance() : cameraDistance;
+            var inputCameraOrbit = Input && Input.getCameraOrbit ? Input.getCameraOrbit() : cameraYaw;
 
-        // Update NPC dots on minimap
-        if (HUD.updateMinimapNPCs && NPCs && NPCs.getNPCPositions) {
-          HUD.updateMinimapNPCs(NPCs.getNPCPositions(), localPlayer.position);
-        }
-      }
+            // Calculate orbiting camera position from orbit/pitch/distance
+            var camOffX = Math.sin(inputCameraOrbit) * Math.cos(cameraPitch) * inputCameraDistance;
+            var camOffY = Math.sin(cameraPitch) * inputCameraDistance;
+            var camOffZ = Math.cos(inputCameraOrbit) * Math.cos(cameraPitch) * inputCameraDistance;
 
-      // Update nearby players + NPCs (throttled to every 10 frames)
-      if (npcUpdateFrame % 10 === 0 || !cachedNearbyPlayers) {
-        cachedNearbyPlayers = players
-          .filter(function(p) { return p.id !== localPlayer.id && p.zone === currentZone; })
-          .map(function(p) {
-            var dx = p.position.x - localPlayer.position.x;
-            var dz = p.position.z - localPlayer.position.z;
-            var distance = Math.sqrt(dx * dx + dz * dz);
-            return { id: p.id, name: p.name, distance: distance };
-          })
-          .sort(function(a, b) { return a.distance - b.distance; });
+            var camTargetX = localPlayer.position.x + camOffX;
+            var camTargetY = terrainY + camOffY + 2;
+            var camTargetZ = localPlayer.position.z + camOffZ;
 
-        // Include NPCs if no real players nearby
-        if (cachedNearbyPlayers.length === 0 && NPCs && NPCs.getNPCPositions) {
-          var npcPos = NPCs.getNPCPositions();
-          cachedNearbyPlayers = npcPos
-            .filter(function(n) { return n && (!n.zone || n.zone === currentZone); })
-            .map(function(n) {
-              var dx = n.x - localPlayer.position.x;
-              var dz = n.z - localPlayer.position.z;
-              return { id: 'npc_' + (n.name || ''), name: n.name || 'NPC', distance: Math.sqrt(dx * dx + dz * dz), isNPC: true };
-            })
-            .sort(function(a, b) { return a.distance - b.distance; })
-            .slice(0, 5);
-        }
-      }
-      HUD.updateNearbyPlayers(cachedNearbyPlayers);
+            // Camera collision: ensure camera doesn't go below terrain
+            var camTerrainY = World && World.getTerrainHeight ? World.getTerrainHeight(camTargetX, camTargetZ) : 0;
+            if (camTargetY < camTerrainY + 2) camTargetY = camTerrainY + 2;
 
-      // Update coordinates display
-      if (HUD.updateCoords && localPlayer) {
-        HUD.updateCoords(localPlayer.position);
-      }
+            // Buttery smooth camera follow — frame-rate-independent lerp
+            var lerpFactor = 1 - Math.pow(0.92, deltaTime * 60);
+            sceneContext.camera.position.x += (camTargetX - sceneContext.camera.position.x) * lerpFactor;
+            sceneContext.camera.position.y += (camTargetY - sceneContext.camera.position.y) * lerpFactor;
+            sceneContext.camera.position.z += (camTargetZ - sceneContext.camera.position.z) * lerpFactor;
 
-      // Update time and weather display
-      if (HUD.updateTimeWeather) {
-        HUD.updateTimeWeather(worldTime, currentWeather);
-      }
-
-      // Update chat (every 60 frames — with dirty tracking in hud.js)
-      if (npcUpdateFrame % 60 === 0) {
-        var messages = Social ? Social.getRecentMessages(gameState) : [];
-        HUD.updateChat(messages);
-      }
-
-      // Update quest tracker (every few frames)
-      if (Quests && HUD.updateQuestTracker && npcUpdateFrame % 30 === 0) {
-        var activeQuests = Quests.getActiveQuests(localPlayer.id);
-        HUD.updateQuestTracker(activeQuests);
-      }
-
-      // Update NPC proximity indicator (every 10 frames)
-      if (HUD.updateNpcIndicator && NPCs && NPCs.getNPCPositions && npcUpdateFrame % 10 === 0) {
-        HUD.updateNpcIndicator(localPlayer.position, NPCs.getNPCPositions());
-      }
-
-      // Update sprint indicator
-      if (HUD.updateSprintIndicator && Input && Input.isSprinting) {
-        HUD.updateSprintIndicator(Input.isSprinting());
-      }
-
-      // Update quest indicators on NPCs (every few frames)
-      if (Quests && NPCs && NPCs.updateQuestIndicators && npcUpdateFrame % 60 === 0) {
-        NPCs.updateQuestIndicators(localPlayer.id, localPlayer.position);
-      }
-
-      // Update Warmth from GPS movement (every 5 seconds)
-      var now = Date.now();
-      if (now - lastWarmthUpdate > 5000 && Physical && gpsHistory.length >= 2) {
-        lastWarmthUpdate = now;
-        var newWarmth = Physical.calculateWarmth(gpsHistory);
-        if (localPlayer && newWarmth !== localPlayer.warmth) {
-          localPlayer.warmth = newWarmth;
-          // Warmth bonus applies to harvest yields and discovery rates
-          // This is cosmetic-adjacent per constitution - minor 1-10% bonus
-        }
-      }
-
-      // Update FPS display if debug mode is enabled
-      if (showDebug && typeof document !== 'undefined') {
-        var fpsElement = document.getElementById('fps-counter');
-        if (!fpsElement) {
-          fpsElement = document.createElement('div');
-          fpsElement.id = 'fps-counter';
-          fpsElement.style.position = 'fixed';
-          fpsElement.style.top = '10px';
-          fpsElement.style.right = '10px';
-          fpsElement.style.padding = '8px 12px';
-          fpsElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-          fpsElement.style.color = '#00ff00';
-          fpsElement.style.fontFamily = 'monospace';
-          fpsElement.style.fontSize = '12px';
-          fpsElement.style.borderRadius = '4px';
-          fpsElement.style.zIndex = '10000';
-          document.body.appendChild(fpsElement);
-        }
-
-        // Get performance stats from World
-        var perfStats = World && World.getPerformanceStats ? World.getPerformanceStats() : null;
-        var statsText = 'FPS: ' + currentFPS;
-        if (perfStats) {
-          statsText += '\nObjects: ' + perfStats.visibleObjects + '/' + perfStats.totalObjects;
-          statsText += '\nAnimations: ' + perfStats.activeAnimations;
-          statsText += '\nChunks: ' + perfStats.loadedChunks;
-          statsText += '\nTriangles: ' + perfStats.estimatedTriangles;
-        }
-        fpsElement.innerText = statsText;
-      }
-    }
-
-    // Tiered break reminders via PlayerWellness (checks at 2h/3h/4h/5h)
-    var minutesPlayed = (Date.now() - playStartTime) / 60000;
-    if (PlayerWellness && PlayerWellness.checkBreakThreshold && wellnessState && localPlayer) {
-      var activeTicks = Math.floor(minutesPlayed * 60); // approximate ticks
-      var breakResult = PlayerWellness.checkBreakThreshold(wellnessState, localPlayer.id, activeTicks);
-      if (breakResult && breakResult.shouldNotify && HUD) {
-        HUD.showBreakReminder(Math.floor(minutesPlayed));
-      }
-    } else if (minutesPlayed > 30 && minutesPlayed - lastBreakReminder > 30) {
-      // Fallback: flat 30-min reminder if PlayerWellness unavailable
-      if (HUD) HUD.showBreakReminder(Math.floor(minutesPlayed));
-      lastBreakReminder = minutesPlayed;
-    }
-
-    // Auto-save player data periodically
-    var nowMs = Date.now();
-    if (nowMs - lastAutoSave > AUTO_SAVE_INTERVAL) {
-      lastAutoSave = nowMs;
-      autoSavePlayerData();
-      // Flush economy ledger into live state for API bridge visibility
-      if (State && economyLedger) {
-        State.setLiveState('economy', {
-          balances: economyLedger.balances || {},
-          transactions: (economyLedger.transactions || []).slice(-50),
-          listings: economyLedger.listings || []
-        });
-        State.flushToLocal();
-      }
-    }
-
-    // Check for nearby secrets periodically
-    if (nowMs - lastSecretCheck > SECRET_CHECK_INTERVAL) {
-      lastSecretCheck = nowMs;
-      checkSecrets();
-    }
-
-    // Update economic event display periodically (every 30 seconds)
-    if (nowMs - lastEventCheck > 30000) {
-      lastEventCheck = nowMs;
-      updateEconomicEvent();
-    }
-
-    // Update seasonal event periodically
-    if (nowMs - lastSeasonCheck > SEASON_CHECK_INTERVAL) {
-      lastSeasonCheck = nowMs;
-      updateSeasonalEvent();
-    }
-
-    // Update pet status periodically
-    if (nowMs - lastPetUpdate > PET_UPDATE_INTERVAL) {
-      lastPetUpdate = nowMs;
-      updatePetStatus();
-    }
-
-    // Check race checkpoint progress periodically
-    if (nowMs - lastRaceCheck > RACE_CHECK_INTERVAL && localPlayer && gameState && Competition && Competition.checkRaceProgress) {
-      lastRaceCheck = nowMs;
-      var comps = gameState.competitions;
-      var compKeys = comps ? Object.keys(comps) : [];
-      if (compKeys.length > 0) {
-        for (var ri = 0; ri < compKeys.length; ri++) {
-          var rc = comps[compKeys[ri]];
-          if (rc.type === 'race' && rc.status === 'active' && rc.participants && rc.participants.indexOf(localPlayer.id) !== -1) {
-            var raceResult = Competition.checkRaceProgress(rc.id, localPlayer.id, localPlayer.position, gameState);
-            if (raceResult.checkpointHit) {
-              if (raceResult.finished) {
-                HUD.showNotification('Race complete! Time: ' + (raceResult.time / 1000).toFixed(1) + 's', 'success');
-                if (Audio) Audio.playSound('coin');
+            // Apply camera shake if active
+            if (cameraShake.active) {
+              cameraShake.elapsed += deltaTime;
+              var progress = cameraShake.elapsed / cameraShake.duration;
+              if (progress >= 1) {
+                cameraShake.active = false;
               } else {
-                HUD.showNotification('Checkpoint ' + raceResult.currentCheckpoint + '/' + rc.checkpoints.length + '!', 'info');
-                if (Audio) Audio.playSound('item_pickup');
+                var decay = 1 - progress;
+                var shakeX = (Math.random() - 0.5) * 2 * cameraShake.intensity * decay;
+                var shakeY = (Math.random() - 0.5) * 2 * cameraShake.intensity * decay;
+                sceneContext.camera.position.x += shakeX;
+                sceneContext.camera.position.y += shakeY;
+              }
+            }
+
+            sceneContext.camera.lookAt(
+              localPlayer.position.x,
+              terrainY + 1.5,
+              localPlayer.position.z
+            );
+          } // end normal camera else block
+        }
+
+        // Update day/night cycle
+        World.updateDayNight(sceneContext, worldTime);
+
+        // Weather cycling — changes every 4 in-game hours (every 4 real minutes)
+        var weatherCycleMinute = Math.floor(worldTime / 240); // 0-5
+        var nextWeather;
+        if (typeof WeatherFX !== 'undefined' && WeatherFX.rollWeather) {
+          var season = (Seasons && Seasons.getCurrentSeason) ? Seasons.getCurrentSeason() : null;
+          var seasonId = season ? season.id : 'summer';
+          nextWeather = WeatherFX.rollWeather(weatherCycleMinute, seasonId);
+        } else {
+          var weatherTypes = ['clear', 'cloudy', 'rain', 'clear', 'storm', 'snow'];
+          nextWeather = weatherTypes[weatherCycleMinute % weatherTypes.length];
+        }
+        if (nextWeather !== currentWeather) {
+          var prevWeather = currentWeather;
+          currentWeather = nextWeather;
+          if (World.setWeather) {
+            World.setWeather(sceneContext, currentWeather);
+          }
+          // Broadcast weather change to NPCs
+          if (NPCs && NPCs.broadcastEvent) {
+            NPCs.broadcastEvent({ type: 'weather_change', data: { weather: currentWeather, previous: prevWeather } });
+          }
+          // Update ambient audio for weather
+          if (Audio && Audio.updateAmbientWeather) {
+            Audio.updateAmbientWeather(currentWeather);
+          }
+          // Update vignette intensity based on weather (use WeatherFX visibility if available)
+          if (typeof WeatherFX !== 'undefined' && WeatherFX.getVisibilityRange) {
+            var vis = WeatherFX.getVisibilityRange(currentWeather);
+            setVignetteIntensity(vis < 100 ? 0.7 : vis < 300 ? 0.5 : 0.3);
+          } else if (currentWeather === 'storm') {
+            setVignetteIntensity(0.7);
+          } else if (currentWeather === 'rain' || currentWeather === 'snow') {
+            setVignetteIntensity(0.5);
+          } else {
+            setVignetteIntensity(0.3);
+          }
+          // Apply weather gameplay modifiers
+          if (typeof WeatherFX !== 'undefined' && WeatherFX.getAmbientModifiers) {
+            var mods = WeatherFX.getAmbientModifiers(currentWeather);
+            if (localPlayer) localPlayer.weatherModifiers = mods;
+          } else if (World && World.getWeatherModifiers) {
+            if (localPlayer) localPlayer.weatherModifiers = World.getWeatherModifiers(currentWeather);
+          }
+        }
+
+        // Apply active cooking buffs to player
+        if (Cooking && Cooking.getActiveBuffs && cookingBuffs && cookingBuffs.length > 0) {
+          localPlayer.cookingBuffs = Cooking.getActiveBuffs(cookingBuffs);
+        }
+
+        // Apply prestige bonus to player stats
+        if (Prestige && Prestige.getSparkBonus && prestigeState) {
+          localPlayer.prestigeSparkBonus = Prestige.getSparkBonus(prestigeState.level || 0);
+        }
+
+        // HousingSocial: calculate comfort bonus from housing
+        if (HousingSocial && HousingSocial.calculateComfort && housingSocialState) {
+          localPlayer.comfortBonus = HousingSocial.calculateComfort(housingSocialState);
+        }
+
+        // Cosmetics: sync current appearance
+        if (Cosmetics && Cosmetics.getAppearance && cosmeticsState) {
+          localPlayer.appearance = Cosmetics.getAppearance(cosmeticsState);
+        }
+
+        // Specializations: apply specialization bonuses
+        if (Specializations && Specializations.getBonuses && specState) {
+          localPlayer.specBonuses = Specializations.getBonuses(specState);
+        }
+
+        // Cull distant lights for performance (max 12 nearest within 40 units, every 15 frames)
+        if (npcUpdateFrame % 15 === 0 && World.cullLights) {
+          World.cullLights(sceneContext, localPlayer.position, 40, 12);
+        }
+
+        // Performance optimizations
+        // Update frustum culling every 10 frames
+        if (frameCount % 10 === 0 && World.updateFrustumCulling) {
+          World.updateFrustumCulling(sceneContext);
+        }
+
+        // Update LOD every 30 frames
+        if (frameCount % 30 === 0 && World.updateLOD) {
+          World.updateLOD(sceneContext, localPlayer.position);
+        }
+
+        // Update environmental animations
+        if (World.updateAnimations) {
+          World.updateAnimations(sceneContext, deltaTime, worldTime);
+        }
+
+        // Update resource nodes (respawning)
+        if (World.updateResourceNodes) {
+          World.updateResourceNodes(deltaTime);
+        }
+
+        // Update player animations (walk/run/idle)
+        if (World.updatePlayerAnimations) {
+          World.updatePlayerAnimations(sceneContext, deltaTime);
+        }
+
+        // Update particle effects (fire, sparkle, mist, fountain, leaves)
+        if (World.updateParticles) {
+          World.updateParticles(sceneContext, deltaTime * 1000, localPlayer ? localPlayer.position : null);
+        }
+
+        // Update weather effects (rain, snow)
+        if (World.updateWeatherEffects) {
+          World.updateWeatherEffects(sceneContext, deltaTime * 1000, localPlayer ? localPlayer.position : null);
+        }
+
+        // Update zone ambience particles
+        if (World.updateZoneAmbience && localPlayer) {
+          World.updateZoneAmbience(sceneContext, localPlayer.zone, deltaTime * 1000);
+        }
+
+        // Update seasonal visuals: particles (blossoms/fireflies/leaves/snow), light tints, fog tint
+        if (World.updateSeasonalVisuals) {
+          var seasonNormalizedTime = worldTime / 1440;
+          World.updateSeasonalVisuals(sceneContext, localPlayer ? localPlayer.zone : 'nexus', deltaTime * 1000, seasonNormalizedTime);
+        }
+
+        // Update water bodies (animated waves, weather-reactive)
+        if (World.updateWater) {
+          var waterWeather = World.getCurrentWeather ? World.getCurrentWeather() : currentWeather;
+          World.updateWater(deltaTime, waterWeather, localPlayer ? localPlayer.position : null);
+        }
+
+        // Update skybox (sun/moon orbit, star visibility)
+        if (World.updateSkybox) {
+          World.updateSkybox(sceneContext, worldTime);
+        }
+
+        // Update interactive objects (highlights, campfire flicker, etc.)
+        if (World.updateInteractiveAnimations) {
+          World.updateInteractiveAnimations(deltaTime);
+        }
+
+        // Update anchor beacon animations (bobbing glow)
+        if (World.updateAnchorAnimations) {
+          World.updateAnchorAnimations(worldTime * 0.001);
+        }
+        if (npcUpdateFrame % 5 === 0 && World.updateInteractiveHighlights && localPlayer) {
+          World.updateInteractiveHighlights(localPlayer.position.x, localPlayer.position.z, 4);
+        }
+
+        // Detect and highlight nearest interactable for E-key interaction
+        if (localPlayer) {
+          var newTarget = detectNearestInteractable();
+
+          // If target changed, update highlighting
+          if (newTarget !== currentInteractionTarget) {
+            // Clear previous highlight
+            if (World && World.unhighlightObject) {
+              World.unhighlightObject();
+            }
+
+            // Set new target
+            currentInteractionTarget = newTarget;
+
+            // Apply new highlight
+            if (currentInteractionTarget && currentInteractionTarget.mesh && World && World.highlightObject) {
+              World.highlightObject(currentInteractionTarget.mesh);
+            }
+          }
+
+          // Update tooltip position
+          updateTooltip();
+
+          // NPC proximity greeting — first-time speech bubble per session
+          if (npcGreetCooldown > 0) {
+            npcGreetCooldown -= deltaTime;
+          } else if (currentInteractionTarget && currentInteractionTarget.type === 'npc' &&
+            currentInteractionTarget.distance < 8 && !greetedNPCIds[currentInteractionTarget.name]) {
+            greetedNPCIds[currentInteractionTarget.name] = true;
+            npcGreetCooldown = 5;
+            var npcGreetings = [
+              'Hello there, traveler!',
+              'Welcome! Press E to chat.',
+              'Good to see a new face around here!',
+              'Greetings, citizen!',
+              'Hey! Looking for adventure?'
+            ];
+            var greeting = npcGreetings[Math.floor(Math.random() * npcGreetings.length)];
+            if (NPCs && NPCs.triggerProximityGreeting) {
+              NPCs.triggerProximityGreeting(currentInteractionTarget.id || currentInteractionTarget.name, greeting);
+            } else if (HUD && HUD.showNotification) {
+              HUD.showNotification(currentInteractionTarget.name + ': ' + greeting, 'info');
+            }
+            if (Audio && Audio.playSound) {
+              Audio.playSound('npc_greet');
+            }
+          }
+        }
+
+        // Update ambient wildlife (butterflies, fireflies, birds, fish)
+        if (World.updateWildlife) {
+          World.updateWildlife(sceneContext, deltaTime, worldTime);
+        }
+
+        // Update world events (shooting stars, aurora, resource blooms, etc.)
+        updateWorldEvents(deltaTime, worldTime, sceneContext);
+
+        // Update zone boundary particles (golden floating markers)
+        if (World.updateZoneBoundaryParticles) {
+          World.updateZoneBoundaryParticles(worldTime);
+        }
+
+        // ── Enhanced systems ──
+        // World memory (footpaths, gathering, flowers)
+        if (World.updateWorldMemory && localPlayer) {
+          var nearbyCount = 0;
+          if (NPCs && NPCs.getNearbyNPCCount) {
+            nearbyCount = NPCs.getNearbyNPCCount(localPlayer.position, 5);
+          }
+          World.updateWorldMemory(localPlayer.position, nearbyCount, deltaTime);
+        }
+
+        // Billboard clouds
+        if (World.updateBillboardClouds) {
+          World.updateBillboardClouds(deltaTime, currentWeather);
+        }
+
+        // Snow accumulation
+        if (World.updateSnowAccumulation) {
+          World.updateSnowAccumulation(deltaTime * 1000, currentWeather);
+        }
+
+        // Valley fog
+        if (World.updateValleyFog) {
+          World.updateValleyFog(worldTime, currentWeather);
+        }
+
+        // Terrain breathing
+        if (World.updateTerrainBreathing) {
+          World.updateTerrainBreathing(deltaTime, worldTime);
+        }
+
+        // Wind system
+        if (World.updateWindSystem) {
+          World.updateWindSystem(deltaTime, currentWeather);
+        }
+
+        // Zone border shimmer
+        if (World.updateZoneBorderShimmer) {
+          World.updateZoneBorderShimmer(worldTime);
+        }
+
+        // Update build preview if in build mode
+        if (buildModeActive && World && World.updateBuildPreview && Input && Input.getMouseNDC) {
+          var mousePos = Input.getMouseNDC();
+          World.updateBuildPreview(sceneContext, mousePos.x, mousePos.y, sceneContext.camera);
+        }
+
+        // Render scene
+        if (sceneContext.renderer && sceneContext.scene && sceneContext.camera) {
+          sceneContext.renderer.render(sceneContext.scene, sceneContext.camera);
+        }
+      }
+
+      // Update HUD
+      if (HUD && gameState && State) {
+        // Update player info (every 30 frames — stats don't change faster)
+        if (npcUpdateFrame % 30 === 0) {
+          HUD.updatePlayerInfo(localPlayer);
+        }
+
+        // Update minimap and emote bubbles
+        var players = State.getPlayers(gameState);
+
+        // Update emote bubble positions (every 3 frames)
+        if (npcUpdateFrame % 3 === 0 && HUD.updateEmoteBubbles && sceneContext && sceneContext.camera) {
+          var playerPositions = {};
+          players.forEach(function (player) {
+            if (World && World.getPlayerMesh) {
+              var mesh = World.getPlayerMesh(sceneContext, player.id);
+              if (mesh) {
+                var screenPos = getScreenPosition(mesh.position, sceneContext.camera, sceneContext.renderer);
+                if (screenPos) {
+                  playerPositions[player.id] = screenPos;
+                }
+              }
+            }
+          });
+          HUD.updateEmoteBubbles(playerPositions);
+        }
+
+        // Update minimap (every 5 frames)
+        if (npcUpdateFrame % 5 === 0) {
+          var mapPlayers = players.map(function (p) {
+            return {
+              id: p.id,
+              position: p.position,
+              isLocal: p.id === localPlayer.id
+            };
+          });
+          HUD.updateMinimap(mapPlayers, currentZone);
+
+          // Update NPC dots on minimap
+          if (HUD.updateMinimapNPCs && NPCs && NPCs.getNPCPositions) {
+            HUD.updateMinimapNPCs(NPCs.getNPCPositions(), localPlayer.position);
+          }
+        }
+
+        // Update nearby players + NPCs (throttled to every 10 frames)
+        if (npcUpdateFrame % 10 === 0 || !cachedNearbyPlayers) {
+          cachedNearbyPlayers = players
+            .filter(function (p) { return p.id !== localPlayer.id && p.zone === currentZone; })
+            .map(function (p) {
+              var dx = p.position.x - localPlayer.position.x;
+              var dz = p.position.z - localPlayer.position.z;
+              var distance = Math.sqrt(dx * dx + dz * dz);
+              return { id: p.id, name: p.name, distance: distance };
+            })
+            .sort(function (a, b) { return a.distance - b.distance; });
+
+          // Include NPCs if no real players nearby
+          if (cachedNearbyPlayers.length === 0 && NPCs && NPCs.getNPCPositions) {
+            var npcPos = NPCs.getNPCPositions();
+            cachedNearbyPlayers = npcPos
+              .filter(function (n) { return n && (!n.zone || n.zone === currentZone); })
+              .map(function (n) {
+                var dx = n.x - localPlayer.position.x;
+                var dz = n.z - localPlayer.position.z;
+                return { id: 'npc_' + (n.name || ''), name: n.name || 'NPC', distance: Math.sqrt(dx * dx + dz * dz), isNPC: true };
+              })
+              .sort(function (a, b) { return a.distance - b.distance; })
+              .slice(0, 5);
+          }
+        }
+        HUD.updateNearbyPlayers(cachedNearbyPlayers);
+
+        // Update coordinates display
+        if (HUD.updateCoords && localPlayer) {
+          HUD.updateCoords(localPlayer.position);
+        }
+
+        // Update time and weather display
+        if (HUD.updateTimeWeather) {
+          HUD.updateTimeWeather(worldTime, currentWeather);
+        }
+
+        // Update chat (every 60 frames — with dirty tracking in hud.js)
+        if (npcUpdateFrame % 60 === 0) {
+          var messages = Social ? Social.getRecentMessages(gameState) : [];
+          HUD.updateChat(messages);
+        }
+
+        // Update quest tracker (every few frames)
+        if (Quests && HUD.updateQuestTracker && npcUpdateFrame % 30 === 0) {
+          var activeQuests = Quests.getActiveQuests(localPlayer.id);
+          HUD.updateQuestTracker(activeQuests);
+        }
+
+        // Update NPC proximity indicator (every 10 frames)
+        if (HUD.updateNpcIndicator && NPCs && NPCs.getNPCPositions && npcUpdateFrame % 10 === 0) {
+          HUD.updateNpcIndicator(localPlayer.position, NPCs.getNPCPositions());
+        }
+
+        // Update sprint indicator
+        if (HUD.updateSprintIndicator && Input && Input.isSprinting) {
+          HUD.updateSprintIndicator(Input.isSprinting());
+        }
+
+        // Update quest indicators on NPCs (every few frames)
+        if (Quests && NPCs && NPCs.updateQuestIndicators && npcUpdateFrame % 60 === 0) {
+          NPCs.updateQuestIndicators(localPlayer.id, localPlayer.position);
+        }
+
+        // Update Warmth from GPS movement (every 5 seconds)
+        var now = Date.now();
+        if (now - lastWarmthUpdate > 5000 && Physical && gpsHistory.length >= 2) {
+          lastWarmthUpdate = now;
+          var newWarmth = Physical.calculateWarmth(gpsHistory);
+          if (localPlayer && newWarmth !== localPlayer.warmth) {
+            localPlayer.warmth = newWarmth;
+            // Warmth bonus applies to harvest yields and discovery rates
+            // This is cosmetic-adjacent per constitution - minor 1-10% bonus
+          }
+        }
+
+        // Update FPS display if debug mode is enabled
+        if (showDebug && typeof document !== 'undefined') {
+          var fpsElement = document.getElementById('fps-counter');
+          if (!fpsElement) {
+            fpsElement = document.createElement('div');
+            fpsElement.id = 'fps-counter';
+            fpsElement.style.position = 'fixed';
+            fpsElement.style.top = '10px';
+            fpsElement.style.right = '10px';
+            fpsElement.style.padding = '8px 12px';
+            fpsElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            fpsElement.style.color = '#00ff00';
+            fpsElement.style.fontFamily = 'monospace';
+            fpsElement.style.fontSize = '12px';
+            fpsElement.style.borderRadius = '4px';
+            fpsElement.style.zIndex = '10000';
+            document.body.appendChild(fpsElement);
+          }
+
+          // Get performance stats from World
+          var perfStats = World && World.getPerformanceStats ? World.getPerformanceStats() : null;
+          var statsText = 'FPS: ' + currentFPS;
+          if (perfStats) {
+            statsText += '\nObjects: ' + perfStats.visibleObjects + '/' + perfStats.totalObjects;
+            statsText += '\nAnimations: ' + perfStats.activeAnimations;
+            statsText += '\nChunks: ' + perfStats.loadedChunks;
+            statsText += '\nTriangles: ' + perfStats.estimatedTriangles;
+          }
+          fpsElement.innerText = statsText;
+        }
+      }
+
+      // Tiered break reminders via PlayerWellness (checks at 2h/3h/4h/5h)
+      var minutesPlayed = (Date.now() - playStartTime) / 60000;
+      if (PlayerWellness && PlayerWellness.checkBreakThreshold && wellnessState && localPlayer) {
+        var activeTicks = Math.floor(minutesPlayed * 60); // approximate ticks
+        var breakResult = PlayerWellness.checkBreakThreshold(wellnessState, localPlayer.id, activeTicks);
+        if (breakResult && breakResult.shouldNotify && HUD) {
+          HUD.showBreakReminder(Math.floor(minutesPlayed));
+        }
+      } else if (minutesPlayed > 30 && minutesPlayed - lastBreakReminder > 30) {
+        // Fallback: flat 30-min reminder if PlayerWellness unavailable
+        if (HUD) HUD.showBreakReminder(Math.floor(minutesPlayed));
+        lastBreakReminder = minutesPlayed;
+      }
+
+      // Auto-save player data periodically
+      var nowMs = Date.now();
+      if (nowMs - lastAutoSave > AUTO_SAVE_INTERVAL) {
+        lastAutoSave = nowMs;
+        autoSavePlayerData();
+        // Flush economy ledger into live state for API bridge visibility
+        if (State && economyLedger) {
+          State.setLiveState('economy', {
+            balances: economyLedger.balances || {},
+            transactions: (economyLedger.transactions || []).slice(-50),
+            listings: economyLedger.listings || []
+          });
+          State.flushToLocal();
+        }
+      }
+
+      // Check for nearby secrets periodically
+      if (nowMs - lastSecretCheck > SECRET_CHECK_INTERVAL) {
+        lastSecretCheck = nowMs;
+        checkSecrets();
+      }
+
+      // Update economic event display periodically (every 30 seconds)
+      if (nowMs - lastEventCheck > 30000) {
+        lastEventCheck = nowMs;
+        updateEconomicEvent();
+      }
+
+      // Update seasonal event periodically
+      if (nowMs - lastSeasonCheck > SEASON_CHECK_INTERVAL) {
+        lastSeasonCheck = nowMs;
+        updateSeasonalEvent();
+      }
+
+      // Update pet status periodically
+      if (nowMs - lastPetUpdate > PET_UPDATE_INTERVAL) {
+        lastPetUpdate = nowMs;
+        updatePetStatus();
+      }
+
+      // Check race checkpoint progress periodically
+      if (nowMs - lastRaceCheck > RACE_CHECK_INTERVAL && localPlayer && gameState && Competition && Competition.checkRaceProgress) {
+        lastRaceCheck = nowMs;
+        var comps = gameState.competitions;
+        var compKeys = comps ? Object.keys(comps) : [];
+        if (compKeys.length > 0) {
+          for (var ri = 0; ri < compKeys.length; ri++) {
+            var rc = comps[compKeys[ri]];
+            if (rc.type === 'race' && rc.status === 'active' && rc.participants && rc.participants.indexOf(localPlayer.id) !== -1) {
+              var raceResult = Competition.checkRaceProgress(rc.id, localPlayer.id, localPlayer.position, gameState);
+              if (raceResult.checkpointHit) {
+                if (raceResult.finished) {
+                  HUD.showNotification('Race complete! Time: ' + (raceResult.time / 1000).toFixed(1) + 's', 'success');
+                  if (Audio) Audio.playSound('coin');
+                } else {
+                  HUD.showNotification('Checkpoint ' + raceResult.currentCheckpoint + '/' + rc.checkpoints.length + '!', 'info');
+                  if (Audio) Audio.playSound('item_pickup');
+                }
               }
             }
           }
         }
       }
-    }
 
-    // Tick CRM simulation periodically
-    if (typeof SimCRM !== 'undefined' && SimCRM.simulateTick && simCrmState && nowMs - lastSimCrmTick >= SIM_CRM_TICK_INTERVAL) {
-      lastSimCrmTick = nowMs;
-      simCrmState = SimCRM.simulateTick(simCrmState);
-    }
-
-    // Update API bridge (state publishing + inbox polling)
-    if (ApiBridge && ApiBridge.update) {
-      ApiBridge.update(nowMs, gameState);
-    }
-
-    // Cooking: decay active food buffs over time
-    if (Cooking && Cooking.updateBuffs && cookingBuffs && cookingBuffs.length > 0) {
-      cookingBuffs = Cooking.updateBuffs(cookingBuffs, deltaTime);
-    }
-
-    // MarketDynamics: periodic price updates (~every 60 seconds)
-    if (MarketDynamics && MarketDynamics.updatePrices && marketDynamicsState && Math.random() < 0.0003) {
-      MarketDynamics.updatePrices(marketDynamicsState);
-    }
-
-    // MetaEvents: check for phase advancement (~every 30 seconds)
-    if (MetaEvents && MetaEvents.getActiveEvents && metaEventsState && Math.random() < 0.0005) {
-      var activeEvents = MetaEvents.getActiveEvents(metaEventsState);
-      if (activeEvents && activeEvents.length > 0) {
-        activeEvents.forEach(function(evt) {
-          if (MetaEvents.checkPhaseTimeout) {
-            MetaEvents.checkPhaseTimeout(metaEventsState, evt.id, worldTime);
-          }
-        });
+      // Tick CRM simulation periodically
+      if (typeof SimCRM !== 'undefined' && SimCRM.simulateTick && simCrmState && nowMs - lastSimCrmTick >= SIM_CRM_TICK_INTERVAL) {
+        lastSimCrmTick = nowMs;
+        simCrmState = SimCRM.simulateTick(simCrmState);
       }
-    }
 
-    // WorldPersistence: check garden growth (~every 60 seconds)
-    if (WorldPersistence && WorldPersistence.advanceGrowth && worldPersistState && Math.random() < 0.0003) {
-      WorldPersistence.advanceGrowth(worldPersistState, worldTime);
-    }
+      // Update API bridge (state publishing + inbox polling)
+      if (ApiBridge && ApiBridge.update) {
+        ApiBridge.update(nowMs, gameState);
+      }
 
-    // ArenaScheduler: expose current schedule for UI queries
-    if (localPlayer && arenaSchedule) {
-      localPlayer.arenaSchedule = arenaSchedule;
-    }
+      // Cooking: decay active food buffs over time
+      if (Cooking && Cooking.updateBuffs && cookingBuffs && cookingBuffs.length > 0) {
+        cookingBuffs = Cooking.updateBuffs(cookingBuffs, deltaTime);
+      }
 
-    // CommunityBoard: expire old posts (~every 60 seconds)
-    if (CommunityBoard && CommunityBoard.expirePosts && communityBoardState && Math.random() < 0.0003) {
-      CommunityBoard.expirePosts(communityBoardState, worldTime);
-    }
+      // MarketDynamics: periodic price updates (~every 60 seconds)
+      if (MarketDynamics && MarketDynamics.updatePrices && marketDynamicsState && Math.random() < 0.0003) {
+        MarketDynamics.updatePrices(marketDynamicsState);
+      }
 
-    // ZoneStewards: expire terms and close elections (~every 60 seconds)
-    if (ZoneStewards && zoneStewardsState && Math.random() < 0.0003) {
-      if (ZoneStewards.expireTerms) ZoneStewards.expireTerms(zoneStewardsState, worldTime);
-      // Auto-close any open elections past their window
-      if (ZoneStewards.closeElection && ZoneStewards.isElectionOpen) {
-        var stewardZones = ZoneStewards.ZONES || ['nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'];
-        for (var zi = 0; zi < stewardZones.length; zi++) {
-          if (ZoneStewards.isElectionOpen(zoneStewardsState, stewardZones[zi])) {
-            var closeResult = ZoneStewards.closeElection(zoneStewardsState, stewardZones[zi], worldTime);
-            if (closeResult.success && closeResult.winner && HUD) {
-              HUD.showNotification(closeResult.winner + ' elected steward of ' + stewardZones[zi] + '!', 'success');
+      // MetaEvents: check for phase advancement (~every 30 seconds)
+      if (MetaEvents && MetaEvents.getActiveEvents && metaEventsState && Math.random() < 0.0005) {
+        var activeEvents = MetaEvents.getActiveEvents(metaEventsState);
+        if (activeEvents && activeEvents.length > 0) {
+          activeEvents.forEach(function (evt) {
+            if (MetaEvents.checkPhaseTimeout) {
+              MetaEvents.checkPhaseTimeout(metaEventsState, evt.id, worldTime);
+            }
+          });
+        }
+      }
+
+      // WorldPersistence: check garden growth (~every 60 seconds)
+      if (WorldPersistence && WorldPersistence.advanceGrowth && worldPersistState && Math.random() < 0.0003) {
+        WorldPersistence.advanceGrowth(worldPersistState, worldTime);
+      }
+
+      // ArenaScheduler: expose current schedule for UI queries
+      if (localPlayer && arenaSchedule) {
+        localPlayer.arenaSchedule = arenaSchedule;
+      }
+
+      // CommunityBoard: expire old posts (~every 60 seconds)
+      if (CommunityBoard && CommunityBoard.expirePosts && communityBoardState && Math.random() < 0.0003) {
+        CommunityBoard.expirePosts(communityBoardState, worldTime);
+      }
+
+      // ZoneStewards: expire terms and close elections (~every 60 seconds)
+      if (ZoneStewards && zoneStewardsState && Math.random() < 0.0003) {
+        if (ZoneStewards.expireTerms) ZoneStewards.expireTerms(zoneStewardsState, worldTime);
+        // Auto-close any open elections past their window
+        if (ZoneStewards.closeElection && ZoneStewards.isElectionOpen) {
+          var stewardZones = ZoneStewards.ZONES || ['nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'];
+          for (var zi = 0; zi < stewardZones.length; zi++) {
+            if (ZoneStewards.isElectionOpen(zoneStewardsState, stewardZones[zi])) {
+              var closeResult = ZoneStewards.closeElection(zoneStewardsState, stewardZones[zi], worldTime);
+              if (closeResult.success && closeResult.winner && HUD) {
+                HUD.showNotification(closeResult.winner + ' elected steward of ' + stewardZones[zi] + '!', 'success');
+              }
             }
           }
         }
       }
-    }
 
-    // WarmthSystem: decay warmth for inactive players (~every 30 seconds)
-    if (WarmthSystem && WarmthSystem.applyDecay && warmthState && Math.random() < 0.0005) {
-      WarmthSystem.applyDecay(warmthState, worldTime);
-    }
-
-    // SpectatorSystem: award spectator sparks (~every 30 seconds)
-    if (SpectatorSystem && SpectatorSystem.getActiveEvents && spectatorState && Math.random() < 0.0005) {
-      var activeSpectatorEvents = SpectatorSystem.getActiveEvents(spectatorState);
-      if (activeSpectatorEvents && activeSpectatorEvents.length > 0 && localPlayer) {
-        localPlayer.spectatorEvents = activeSpectatorEvents;
+      // WarmthSystem: decay warmth for inactive players (~every 30 seconds)
+      if (WarmthSystem && WarmthSystem.applyDecay && warmthState && Math.random() < 0.0005) {
+        WarmthSystem.applyDecay(warmthState, worldTime);
       }
-    }
 
-    // SeasonalEventsAuto: check for seasonal event transitions (~every 60 seconds)
-    if (SeasonalEventsAuto && SeasonalEventsAuto.tick && seasonalEventsAutoState && Math.random() < 0.0003) {
-      SeasonalEventsAuto.tick(seasonalEventsAutoState, worldTime);
-    }
-
-    // MarketSignals: update price signals (~every 60 seconds)
-    if (MarketSignals && MarketSignals.tick && marketSignalsState && Math.random() < 0.0003) {
-      MarketSignals.tick(marketSignalsState, worldTime);
-    }
-
-    // BountyBoard: expire old bounties (~every 60 seconds)
-    if (BountyBoard && BountyBoard.expireBounties && bountyBoardState && Math.random() < 0.0003) {
-      BountyBoard.expireBounties(bountyBoardState, worldTime);
-    }
-
-    // BountyBoard: NPC auto-posts bounties (~every 3 minutes)
-    if (BountyBoard && BountyBoard.postBounty && bountyBoardState && Math.random() < 0.00015) {
-      var bTypes = ['locate_item', 'investigation', 'challenge'];
-      var bType = bTypes[Math.floor(Math.random() * bTypes.length)];
-      var bResult = BountyBoard.postBounty(bountyBoardState, 'npc_poster_' + Math.floor(Math.random() * 50),
-        'npc_target_' + Math.floor(Math.random() * 50), bType,
-        'Bounty: ' + bType.replace(/_/g, ' '), 100 + Math.floor(Math.random() * 200), worldTime);
-      if (bResult && bResult.success && HUD) {
-        HUD.showNotification('New bounty posted: ' + bType.replace(/_/g, ' '), 'info');
-      }
-    }
-
-    // BountyBoard: show bounty board stats (~every 5 minutes)
-    if (BountyBoard && BountyBoard.getBountyBoardStats && bountyBoardState && Math.random() < 0.00005) {
-      var bStats = BountyBoard.getBountyBoardStats(bountyBoardState);
-      if (bStats && bStats.active > 0 && HUD) {
-        HUD.showNotification('Bounty Board: ' + bStats.active + ' active bounties, ' + bStats.resolved + ' resolved', 'info');
-      }
-    }
-
-    // TrustBonds: bond decay (~every 2 minutes)
-    if (TrustBonds && TrustBonds.applyDecay && trustBondsState && Math.random() < 0.0002) {
-      TrustBonds.applyDecay(trustBondsState, worldTime);
-    }
-
-    // TrustBonds: show bond stats (~every 5 minutes)
-    if (TrustBonds && TrustBonds.getPlayerBondStats && trustBondsState && localPlayer && Math.random() < 0.00005) {
-      var bondStats = TrustBonds.getPlayerBondStats(trustBondsState, localPlayer.id);
-      if (bondStats && bondStats.totalBonds > 0 && HUD) {
-        HUD.showNotification('Bonds: ' + bondStats.totalBonds + ' NPCs, strongest: ' + (bondStats.topNpc || 'none'), 'info');
-      }
-    }
-
-    // Contracts: NPC guilds auto-propose contracts (~every 3 minutes)
-    if (Contracts && Contracts.proposeContract && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.00015) {
-      var cTypes = Contracts.getContractTypes ? Contracts.getContractTypes() : [];
-      if (cTypes.length > 0) {
-        var cType = cTypes[Math.floor(Math.random() * cTypes.length)];
-        var guildA = 'guild_' + Math.floor(Math.random() * 5);
-        var guildB = 'guild_' + (5 + Math.floor(Math.random() * 5));
-        var terms = { itemId: 'wood', quantity: 10, pricePerUnit: 5, deliveryInterval: 100, duration: 500 };
-        var cResult = Contracts.proposeContract(gameState.subsystems, guildA, guildB, cType.id, terms, worldTime);
-        if (cResult && cResult.success && HUD) {
-          HUD.showNotification('Trade contract proposed: ' + cType.id.replace(/_/g, ' '), 'info');
+      // SpectatorSystem: award spectator sparks (~every 30 seconds)
+      if (SpectatorSystem && SpectatorSystem.getActiveEvents && spectatorState && Math.random() < 0.0005) {
+        var activeSpectatorEvents = SpectatorSystem.getActiveEvents(spectatorState);
+        if (activeSpectatorEvents && activeSpectatorEvents.length > 0 && localPlayer) {
+          localPlayer.spectatorEvents = activeSpectatorEvents;
         }
       }
-    }
 
-    // Contracts: auto-vote and activate pending contracts (~every 60 seconds)
-    if (Contracts && Contracts.getPendingVotes && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0003) {
-      var pendingVotes = Contracts.getPendingVotes(gameState.subsystems, 'guild_0');
-      if (pendingVotes && pendingVotes.length > 0) {
-        var pc = pendingVotes[0];
-        Contracts.voteOnContract(gameState.subsystems, 'npc_voter_' + Math.floor(Math.random() * 10), pc.id, pc.proposerGuildId, true);
-        if (Contracts.activateContract && pc.status === 'approved') {
-          Contracts.activateContract(gameState.subsystems, pc.id, worldTime);
+      // SeasonalEventsAuto: check for seasonal event transitions (~every 60 seconds)
+      if (SeasonalEventsAuto && SeasonalEventsAuto.tick && seasonalEventsAutoState && Math.random() < 0.0003) {
+        SeasonalEventsAuto.tick(seasonalEventsAutoState, worldTime);
+      }
+
+      // MarketSignals: update price signals (~every 60 seconds)
+      if (MarketSignals && MarketSignals.tick && marketSignalsState && Math.random() < 0.0003) {
+        MarketSignals.tick(marketSignalsState, worldTime);
+      }
+
+      // BountyBoard: expire old bounties (~every 60 seconds)
+      if (BountyBoard && BountyBoard.expireBounties && bountyBoardState && Math.random() < 0.0003) {
+        BountyBoard.expireBounties(bountyBoardState, worldTime);
+      }
+
+      // BountyBoard: NPC auto-posts bounties (~every 3 minutes)
+      if (BountyBoard && BountyBoard.postBounty && bountyBoardState && Math.random() < 0.00015) {
+        var bTypes = ['locate_item', 'investigation', 'challenge'];
+        var bType = bTypes[Math.floor(Math.random() * bTypes.length)];
+        var bResult = BountyBoard.postBounty(bountyBoardState, 'npc_poster_' + Math.floor(Math.random() * 50),
+          'npc_target_' + Math.floor(Math.random() * 50), bType,
+          'Bounty: ' + bType.replace(/_/g, ' '), 100 + Math.floor(Math.random() * 200), worldTime);
+        if (bResult && bResult.success && HUD) {
+          HUD.showNotification('New bounty posted: ' + bType.replace(/_/g, ' '), 'info');
         }
       }
-    }
 
-    // CommunityBoard: NPC auto-creates posts (~every 2 minutes)
-    if (CommunityBoard && CommunityBoard.createNpcPost && communityBoardState && Math.random() < 0.0002) {
-      var postTypes = ['announcement', 'event', 'trade_listing'];
-      var postType = postTypes[Math.floor(Math.random() * postTypes.length)];
-      var npcPoster = 'npc_' + Math.floor(Math.random() * 100);
-      var cbResult = CommunityBoard.createNpcPost(communityBoardState, npcPoster, currentZone,
-        postType, 'NPC ' + postType.replace(/_/g, ' '), 'Check the board for details', worldTime);
-      if (cbResult && cbResult.success && HUD && Math.random() < 0.3) {
-        HUD.showNotification('New post on ' + currentZone + ' board: ' + postType.replace(/_/g, ' '), 'info');
+      // BountyBoard: show bounty board stats (~every 5 minutes)
+      if (BountyBoard && BountyBoard.getBountyBoardStats && bountyBoardState && Math.random() < 0.00005) {
+        var bStats = BountyBoard.getBountyBoardStats(bountyBoardState);
+        if (bStats && bStats.active > 0 && HUD) {
+          HUD.showNotification('Bounty Board: ' + bStats.active + ' active bounties, ' + bStats.resolved + ' resolved', 'info');
+        }
       }
-    }
 
-    // HousingSocial: NPC visits player house (~every 3 minutes)
-    if (HousingSocial && HousingSocial.visitHouse && housingSocialState && Math.random() < 0.00015) {
-      var visitorNpc = 'npc_visitor_' + Math.floor(Math.random() * 100);
-      var visitResult = HousingSocial.visitHouse(housingSocialState, visitorNpc, worldTime);
-      if (visitResult && HUD) {
-        HUD.showNotification('An NPC visited your home! ' + (visitResult.message || ''), 'info');
+      // TrustBonds: bond decay (~every 2 minutes)
+      if (TrustBonds && TrustBonds.applyDecay && trustBondsState && Math.random() < 0.0002) {
+        TrustBonds.applyDecay(trustBondsState, worldTime);
       }
-      if (HousingSocial.leaveGuestbookEntry && Math.random() < 0.5) {
-        var guestMessages = ['What a cozy place!', 'Love the decor!', 'Great vibes here.', 'I feel at home.'];
-        HousingSocial.leaveGuestbookEntry(housingSocialState, visitorNpc, guestMessages[Math.floor(Math.random() * guestMessages.length)], worldTime);
-      }
-    }
 
-    // HousingSocial: show comfort bonus + stats (~every 5 minutes)
-    if (HousingSocial && HousingSocial.getVisitorCount && housingSocialState && Math.random() < 0.00005) {
-      var hVisitors = HousingSocial.getVisitorCount(housingSocialState);
-      var hComfort = HousingSocial.calculateComfort ? HousingSocial.calculateComfort(housingSocialState) : 0;
-      if (hVisitors > 0 && HUD) {
-        HUD.showNotification('Home: ' + hVisitors + ' visitors, comfort ' + hComfort, 'info');
+      // TrustBonds: show bond stats (~every 5 minutes)
+      if (TrustBonds && TrustBonds.getPlayerBondStats && trustBondsState && localPlayer && Math.random() < 0.00005) {
+        var bondStats = TrustBonds.getPlayerBondStats(trustBondsState, localPlayer.id);
+        if (bondStats && bondStats.totalBonds > 0 && HUD) {
+          HUD.showNotification('Bonds: ' + bondStats.totalBonds + ' NPCs, strongest: ' + (bondStats.topNpc || 'none'), 'info');
+        }
       }
-    }
 
-    // NpcDelegation: check for completed delegations (~every 30 seconds)
-    if (NpcDelegation && NpcDelegation.checkCompletion && npcDelegationState && Math.random() < 0.0005) {
-      var delegationResults = NpcDelegation.checkCompletion(npcDelegationState, worldTime);
-      var completedDels = delegationResults && delegationResults.completed ? delegationResults.completed : (Array.isArray(delegationResults) ? delegationResults : []);
-      if (completedDels.length > 0 && HUD && localPlayer) {
-        completedDels.forEach(function(r) {
-          if (r.receipt && HUD) {
-            HUD.showNotification('Task complete: ' + (r.receipt.task || 'delegation').replace(/_/g, ' ') +
-              ' (' + (r.receipt.outcome || 'done') + ')', 'success');
+      // Contracts: NPC guilds auto-propose contracts (~every 3 minutes)
+      if (Contracts && Contracts.proposeContract && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.00015) {
+        var cTypes = Contracts.getContractTypes ? Contracts.getContractTypes() : [];
+        if (cTypes.length > 0) {
+          var cType = cTypes[Math.floor(Math.random() * cTypes.length)];
+          var guildA = 'guild_' + Math.floor(Math.random() * 5);
+          var guildB = 'guild_' + (5 + Math.floor(Math.random() * 5));
+          var terms = { itemId: 'wood', quantity: 10, pricePerUnit: 5, deliveryInterval: 100, duration: 500 };
+          var cResult = Contracts.proposeContract(gameState.subsystems, guildA, guildB, cType.id, terms, worldTime);
+          if (cResult && cResult.success && HUD) {
+            HUD.showNotification('Trade contract proposed: ' + cType.id.replace(/_/g, ' '), 'info');
           }
+        }
+      }
+
+      // Contracts: auto-vote and activate pending contracts (~every 60 seconds)
+      if (Contracts && Contracts.getPendingVotes && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0003) {
+        var pendingVotes = Contracts.getPendingVotes(gameState.subsystems, 'guild_0');
+        if (pendingVotes && pendingVotes.length > 0) {
+          var pc = pendingVotes[0];
+          Contracts.voteOnContract(gameState.subsystems, 'npc_voter_' + Math.floor(Math.random() * 10), pc.id, pc.proposerGuildId, true);
+          if (Contracts.activateContract && pc.status === 'approved') {
+            Contracts.activateContract(gameState.subsystems, pc.id, worldTime);
+          }
+        }
+      }
+
+      // CommunityBoard: NPC auto-creates posts (~every 2 minutes)
+      if (CommunityBoard && CommunityBoard.createNpcPost && communityBoardState && Math.random() < 0.0002) {
+        var postTypes = ['announcement', 'event', 'trade_listing'];
+        var postType = postTypes[Math.floor(Math.random() * postTypes.length)];
+        var npcPoster = 'npc_' + Math.floor(Math.random() * 100);
+        var cbResult = CommunityBoard.createNpcPost(communityBoardState, npcPoster, currentZone,
+          postType, 'NPC ' + postType.replace(/_/g, ' '), 'Check the board for details', worldTime);
+        if (cbResult && cbResult.success && HUD && Math.random() < 0.3) {
+          HUD.showNotification('New post on ' + currentZone + ' board: ' + postType.replace(/_/g, ' '), 'info');
+        }
+      }
+
+      // HousingSocial: NPC visits player house (~every 3 minutes)
+      if (HousingSocial && HousingSocial.visitHouse && housingSocialState && Math.random() < 0.00015) {
+        var visitorNpc = 'npc_visitor_' + Math.floor(Math.random() * 100);
+        var visitResult = HousingSocial.visitHouse(housingSocialState, visitorNpc, worldTime);
+        if (visitResult && HUD) {
+          HUD.showNotification('An NPC visited your home! ' + (visitResult.message || ''), 'info');
+        }
+        if (HousingSocial.leaveGuestbookEntry && Math.random() < 0.5) {
+          var guestMessages = ['What a cozy place!', 'Love the decor!', 'Great vibes here.', 'I feel at home.'];
+          HousingSocial.leaveGuestbookEntry(housingSocialState, visitorNpc, guestMessages[Math.floor(Math.random() * guestMessages.length)], worldTime);
+        }
+      }
+
+      // HousingSocial: show comfort bonus + stats (~every 5 minutes)
+      if (HousingSocial && HousingSocial.getVisitorCount && housingSocialState && Math.random() < 0.00005) {
+        var hVisitors = HousingSocial.getVisitorCount(housingSocialState);
+        var hComfort = HousingSocial.calculateComfort ? HousingSocial.calculateComfort(housingSocialState) : 0;
+        if (hVisitors > 0 && HUD) {
+          HUD.showNotification('Home: ' + hVisitors + ' visitors, comfort ' + hComfort, 'info');
+        }
+      }
+
+      // NpcDelegation: check for completed delegations (~every 30 seconds)
+      if (NpcDelegation && NpcDelegation.checkCompletion && npcDelegationState && Math.random() < 0.0005) {
+        var delegationResults = NpcDelegation.checkCompletion(npcDelegationState, worldTime);
+        var completedDels = delegationResults && delegationResults.completed ? delegationResults.completed : (Array.isArray(delegationResults) ? delegationResults : []);
+        if (completedDels.length > 0 && HUD && localPlayer) {
+          completedDels.forEach(function (r) {
+            if (r.receipt && HUD) {
+              HUD.showNotification('Task complete: ' + (r.receipt.task || 'delegation').replace(/_/g, ' ') +
+                ' (' + (r.receipt.outcome || 'done') + ')', 'success');
+            }
+          });
+        }
+      }
+
+      // NpcDelegation: show delegation stats (~every 5 minutes)
+      if (NpcDelegation && NpcDelegation.getDelegationStats && npcDelegationState && localPlayer && Math.random() < 0.00005) {
+        var delStats = NpcDelegation.getDelegationStats(npcDelegationState, localPlayer.id);
+        if (delStats && delStats.totalDelegated > 0 && HUD) {
+          HUD.showNotification('Delegations: ' + delStats.completed + '/' + delStats.totalDelegated + ' complete', 'info');
+        }
+      }
+
+      // EventConsequences: expire active effects (~every 60 seconds)
+      if (EventConsequences && EventConsequences.expireEffects && eventConsequencesState && Math.random() < 0.0003) {
+        EventConsequences.expireEffects(eventConsequencesState, worldTime);
+      }
+
+      // Economy achievements: periodic balance check (~every 60 seconds)
+      if (Economy && Economy.checkEconomyAchievement && economyLedger && localPlayer && Math.random() < 0.0003) {
+        checkEconAchievement('balance_check', { balance: Economy.getBalance(economyLedger, localPlayer.id) });
+      }
+
+      // WorldShaper: regenerate zone resources (~every 60 seconds)
+      if (WorldShaper && WorldShaper.regenerateResources && worldShaperState && Math.random() < 0.0003) {
+        WorldShaper.regenerateResources(worldShaperState, worldTime);
+      }
+
+      // RecoverySystem: advance recovery phases (~every 30 seconds)
+      if (RecoverySystem && RecoverySystem.advanceRecovery && recoveryState && localPlayer && Math.random() < 0.0005) {
+        RecoverySystem.advanceRecovery(recoveryState, localPlayer.id, worldTime);
+      }
+
+      // DiplomaticSystem: expire aged treaties (~every 60 seconds)
+      if (DiplomaticSystem && DiplomaticSystem.expireTreaties && diplomaticState && Math.random() < 0.0003) {
+        DiplomaticSystem.expireTreaties(diplomaticState, worldTime);
+      }
+
+      // MerchantGuilds: process arrived cargo shipments (~every 30 seconds)
+      if (MerchantGuilds && MerchantGuilds.checkCargo && merchantGuildsState && Math.random() < 0.0005) {
+        MerchantGuilds.checkCargo(merchantGuildsState, worldTime);
+      }
+
+      // Contracts: expire overdue contracts (~every 60 seconds)
+      if (Contracts && Contracts.expireContracts && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0003) {
+        Contracts.expireContracts(gameState.subsystems, worldTime);
+      }
+
+      // MarketSpeculation: settle expired positions and check liquidations (~every 30 seconds)
+      if (MarketSpeculation && MarketSpeculation.settleExpired && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0005) {
+        MarketSpeculation.settleExpired(gameState.subsystems, worldTime, function (itemId) {
+          return MarketDynamics && MarketDynamics.getPrice ? MarketDynamics.getPrice(marketDynamicsState, itemId) : 10;
         });
       }
-    }
 
-    // NpcDelegation: show delegation stats (~every 5 minutes)
-    if (NpcDelegation && NpcDelegation.getDelegationStats && npcDelegationState && localPlayer && Math.random() < 0.00005) {
-      var delStats = NpcDelegation.getDelegationStats(npcDelegationState, localPlayer.id);
-      if (delStats && delStats.totalDelegated > 0 && HUD) {
-        HUD.showNotification('Delegations: ' + delStats.completed + '/' + delStats.totalDelegated + ' complete', 'info');
-      }
-    }
-
-    // EventConsequences: expire active effects (~every 60 seconds)
-    if (EventConsequences && EventConsequences.expireEffects && eventConsequencesState && Math.random() < 0.0003) {
-      EventConsequences.expireEffects(eventConsequencesState, worldTime);
-    }
-
-    // Economy achievements: periodic balance check (~every 60 seconds)
-    if (Economy && Economy.checkEconomyAchievement && economyLedger && localPlayer && Math.random() < 0.0003) {
-      checkEconAchievement('balance_check', { balance: Economy.getBalance(economyLedger, localPlayer.id) });
-    }
-
-    // WorldShaper: regenerate zone resources (~every 60 seconds)
-    if (WorldShaper && WorldShaper.regenerateResources && worldShaperState && Math.random() < 0.0003) {
-      WorldShaper.regenerateResources(worldShaperState, worldTime);
-    }
-
-    // RecoverySystem: advance recovery phases (~every 30 seconds)
-    if (RecoverySystem && RecoverySystem.advanceRecovery && recoveryState && localPlayer && Math.random() < 0.0005) {
-      RecoverySystem.advanceRecovery(recoveryState, localPlayer.id, worldTime);
-    }
-
-    // DiplomaticSystem: expire aged treaties (~every 60 seconds)
-    if (DiplomaticSystem && DiplomaticSystem.expireTreaties && diplomaticState && Math.random() < 0.0003) {
-      DiplomaticSystem.expireTreaties(diplomaticState, worldTime);
-    }
-
-    // MerchantGuilds: process arrived cargo shipments (~every 30 seconds)
-    if (MerchantGuilds && MerchantGuilds.checkCargo && merchantGuildsState && Math.random() < 0.0005) {
-      MerchantGuilds.checkCargo(merchantGuildsState, worldTime);
-    }
-
-    // Contracts: expire overdue contracts (~every 60 seconds)
-    if (Contracts && Contracts.expireContracts && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0003) {
-      Contracts.expireContracts(gameState.subsystems, worldTime);
-    }
-
-    // MarketSpeculation: settle expired positions and check liquidations (~every 30 seconds)
-    if (MarketSpeculation && MarketSpeculation.settleExpired && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0005) {
-      MarketSpeculation.settleExpired(gameState.subsystems, worldTime, function(itemId) {
-        return MarketDynamics && MarketDynamics.getPrice ? MarketDynamics.getPrice(marketDynamicsState, itemId) : 10;
-      });
-    }
-
-    // MarketSpeculation: NPC traders open speculative positions (~every 2 minutes)
-    if (MarketSpeculation && MarketSpeculation.openPosition && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0002) {
-      var msCommodities = MarketSpeculation.getCommodities ? MarketSpeculation.getCommodities() : [];
-      if (msCommodities.length > 0) {
-        var msComm = msCommodities[Math.floor(Math.random() * msCommodities.length)];
-        var msDir = Math.random() < 0.5 ? 'long' : 'short';
-        var msNpcTrader = 'npc_trader_' + Math.floor(Math.random() * 50);
-        if (MarketSpeculation.depositMargin) {
-          MarketSpeculation.depositMargin(gameState.subsystems, msNpcTrader, 500);
-        }
-        MarketSpeculation.openPosition(gameState.subsystems, msNpcTrader, msComm.id, msDir,
-          1 + Math.floor(Math.random() * 5), msComm.basePrice || 10, worldTime);
-      }
-    }
-
-    // MarketSpeculation: show market health (~every 3 minutes)
-    if (MarketSpeculation && MarketSpeculation.getMarketHealth && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.00005) {
-      var msHealth = MarketSpeculation.getMarketHealth(gameState.subsystems);
-      if (msHealth && msHealth.activePositions > 0 && HUD) {
-        HUD.showNotification('Market: ' + msHealth.activePositions + ' positions open, volatility ' +
-          (msHealth.volatilityIndex ? msHealth.volatilityIndex.toFixed(1) : '0') + '%', 'info');
-      }
-    }
-
-    // RadioStation: award listener Spark (~every 10 seconds)
-    if (RadioStation && RadioStation.updateListenerRewards && radioStationState && Math.random() < 0.0015) {
-      var zones = ['nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'];
-      zones.forEach(function(z) {
-        RadioStation.updateListenerRewards(radioStationState, z, worldTime);
-      });
-    }
-
-    // SocialSpaces: clean expired bulletins (~every 60 seconds)
-    if (SocialSpaces && socialSpacesState && Math.random() < 0.0003) {
-      if (SocialSpaces.cleanExpiredBulletins) {
-        SocialSpaces.cleanExpiredBulletins(socialSpacesState, worldTime);
-      }
-    }
-
-    // SocialSpaces: NPC auto-starts gatherings (~every 2 minutes)
-    if (SocialSpaces && SocialSpaces.createGathering && socialSpacesState && Math.random() < 0.0002) {
-      var gTypes = SocialSpaces.getGatheringTypes ? SocialSpaces.getGatheringTypes() : [];
-      // Filter to types allowed in current zone
-      var zoneGTypes = gTypes.filter(function(gt) {
-        return gt.allowedZones && gt.allowedZones.indexOf(currentZone) !== -1;
-      });
-      if (zoneGTypes.length > 0) {
-        var gType = zoneGTypes[Math.floor(Math.random() * zoneGTypes.length)];
-        var gResult = SocialSpaces.createGathering(socialSpacesState, 'npc_host_' + Math.floor(Math.random() * 100),
-          gType.id, currentZone, gType.name + ' gathering', '', worldTime, 300);
-        if (gResult && gResult.success && gResult.gathering) {
-          SocialSpaces.startGathering(socialSpacesState, gResult.gathering.id, worldTime);
-          if (HUD) HUD.showNotification('A ' + gType.name + ' is happening nearby!', 'info');
-        }
-      }
-    }
-
-    // SocialSpaces: end expired gatherings
-    if (SocialSpaces && SocialSpaces.getActiveGatherings && socialSpacesState && Math.random() < 0.001) {
-      var activeGatherings = SocialSpaces.getActiveGatherings(socialSpacesState, null);
-      if (activeGatherings && activeGatherings.length > 0) {
-        activeGatherings.forEach(function(g) {
-          if (g.endTick && worldTime > g.endTick) {
-            SocialSpaces.endGathering(socialSpacesState, g.id, worldTime);
+      // MarketSpeculation: NPC traders open speculative positions (~every 2 minutes)
+      if (MarketSpeculation && MarketSpeculation.openPosition && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0002) {
+        var msCommodities = MarketSpeculation.getCommodities ? MarketSpeculation.getCommodities() : [];
+        if (msCommodities.length > 0) {
+          var msComm = msCommodities[Math.floor(Math.random() * msCommodities.length)];
+          var msDir = Math.random() < 0.5 ? 'long' : 'short';
+          var msNpcTrader = 'npc_trader_' + Math.floor(Math.random() * 50);
+          if (MarketSpeculation.depositMargin) {
+            MarketSpeculation.depositMargin(gameState.subsystems, msNpcTrader, 500);
           }
+          MarketSpeculation.openPosition(gameState.subsystems, msNpcTrader, msComm.id, msDir,
+            1 + Math.floor(Math.random() * 5), msComm.basePrice || 10, worldTime);
+        }
+      }
+
+      // MarketSpeculation: show market health (~every 3 minutes)
+      if (MarketSpeculation && MarketSpeculation.getMarketHealth && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.00005) {
+        var msHealth = MarketSpeculation.getMarketHealth(gameState.subsystems);
+        if (msHealth && msHealth.activePositions > 0 && HUD) {
+          HUD.showNotification('Market: ' + msHealth.activePositions + ' positions open, volatility ' +
+            (msHealth.volatilityIndex ? msHealth.volatilityIndex.toFixed(1) : '0') + '%', 'info');
+        }
+      }
+
+      // RadioStation: award listener Spark (~every 10 seconds)
+      if (RadioStation && RadioStation.updateListenerRewards && radioStationState && Math.random() < 0.0015) {
+        var zones = ['nexus', 'gardens', 'athenaeum', 'studio', 'wilds', 'agora', 'commons', 'arena'];
+        zones.forEach(function (z) {
+          RadioStation.updateListenerRewards(radioStationState, z, worldTime);
         });
       }
-    }
 
-    // AsyncCollab: check project phase completion (~every 60 seconds)
-    if (AsyncCollab && AsyncCollab.getActiveProjects && asyncCollabState && Math.random() < 0.0003) {
-      var activeProjects = AsyncCollab.getActiveProjects(asyncCollabState);
-      if (activeProjects && activeProjects.length > 0 && localPlayer) {
-        localPlayer.activeProjects = activeProjects.length;
+      // SocialSpaces: clean expired bulletins (~every 60 seconds)
+      if (SocialSpaces && socialSpacesState && Math.random() < 0.0003) {
+        if (SocialSpaces.cleanExpiredBulletins) {
+          SocialSpaces.cleanExpiredBulletins(socialSpacesState, worldTime);
+        }
       }
-    }
 
-    // MentorGuilds: check cohort graduation (~every 60 seconds)
-    if (MentorGuilds && MentorGuilds.getMentorGuilds && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0003) {
-      // Expose mentor guilds for UI
-      if (localPlayer) localPlayer.mentorGuildsAvailable = true;
-    }
-
-    // --- Previously dead systems now ticked ---
-
-    // RaidSystem: check active raids for timeout/completion
-    if (RaidSystem && RaidSystem.getAvailableRaids && raidStateStore && Math.random() < 0.0003) {
-      var activeRaids = RaidSystem.getAvailableRaids(raidStateStore);
-      if (localPlayer) localPlayer.availableRaids = activeRaids;
-    }
-
-    // GuildWars: resolve pending battles and collect territory taxes
-    if (GuildWars && GuildWars.getActiveWars && guildWarsState && Math.random() < 0.0003) {
-      var wars = GuildWars.getActiveWars(guildWarsState);
-      if (wars.length > 0 && GuildWars.resolveBattle) {
-        for (var wi = 0; wi < wars.length; wi++) {
-          if (wars[wi].status === 'battle') {
-            GuildWars.resolveBattle(guildWarsState, wars[wi].id);
+      // SocialSpaces: NPC auto-starts gatherings (~every 2 minutes)
+      if (SocialSpaces && SocialSpaces.createGathering && socialSpacesState && Math.random() < 0.0002) {
+        var gTypes = SocialSpaces.getGatheringTypes ? SocialSpaces.getGatheringTypes() : [];
+        // Filter to types allowed in current zone
+        var zoneGTypes = gTypes.filter(function (gt) {
+          return gt.allowedZones && gt.allowedZones.indexOf(currentZone) !== -1;
+        });
+        if (zoneGTypes.length > 0) {
+          var gType = zoneGTypes[Math.floor(Math.random() * zoneGTypes.length)];
+          var gResult = SocialSpaces.createGathering(socialSpacesState, 'npc_host_' + Math.floor(Math.random() * 100),
+            gType.id, currentZone, gType.name + ' gathering', '', worldTime, 300);
+          if (gResult && gResult.success && gResult.gathering) {
+            SocialSpaces.startGathering(socialSpacesState, gResult.gathering.id, worldTime);
+            if (HUD) HUD.showNotification('A ' + gType.name + ' is happening nearby!', 'info');
           }
         }
       }
-    }
 
-    // Apprenticeship: check active lessons for completion
-    if (Apprenticeship && Apprenticeship.getActiveLessons && apprenticeshipState && Math.random() < 0.0005) {
-      var activeLessons = Apprenticeship.getActiveLessons(apprenticeshipState);
-      if (localPlayer) localPlayer.activeLessons = activeLessons;
-    }
-
-    // MinigameForge: check active play sessions for completion
-    if (MinigameForge && MinigameForge.getPublishedGames && minigameForgeState && Math.random() < 0.0003) {
-      var forgeGames = MinigameForge.getPublishedGames(minigameForgeState);
-      if (localPlayer) localPlayer.availableMinigames = forgeGames.length;
-    }
-
-    // ConstitutionAmendments: close expired voting periods
-    if (ConstitutionAmendments && ConstitutionAmendments.getActiveAmendments && constitutionState && Math.random() < 0.0003) {
-      var activeAmendments = ConstitutionAmendments.getActiveAmendments(constitutionState);
-      for (var ai = 0; ai < activeAmendments.length; ai++) {
-        if (activeAmendments[ai].status === 'voting' && ConstitutionAmendments.closeVoting) {
-          ConstitutionAmendments.closeVoting(constitutionState, activeAmendments[ai].id);
+      // SocialSpaces: end expired gatherings
+      if (SocialSpaces && SocialSpaces.getActiveGatherings && socialSpacesState && Math.random() < 0.001) {
+        var activeGatherings = SocialSpaces.getActiveGatherings(socialSpacesState, null);
+        if (activeGatherings && activeGatherings.length > 0) {
+          activeGatherings.forEach(function (g) {
+            if (g.endTick && worldTime > g.endTick) {
+              SocialSpaces.endGathering(socialSpacesState, g.id, worldTime);
+            }
+          });
         }
       }
-    }
 
-    // EconomySimulator: periodic market health check
-    if (EconomySimulator && EconomySimulator.getMarketHealthScore && economySimState && Math.random() < 0.0003) {
-      var healthScore = EconomySimulator.getMarketHealthScore(economySimState);
-      if (localPlayer) localPlayer.marketHealth = healthScore;
-    }
-
-    // GuildProgression: update weekly challenge progress
-    if (GuildProgression && GuildProgression.getGuildSummary && guildProgressionState && Math.random() < 0.0003) {
-      var guildSummary = GuildProgression.getGuildSummary(guildProgressionState);
-      if (localPlayer) localPlayer.guildLevel = guildSummary.level;
-    }
-
-    // StoryEngine: periodic lore completion check (~every 5 minutes)
-    if (StoryEngine && StoryEngine.getCompletionPercent && storyState && localPlayer && Math.random() < 0.00005) {
-      var lorePct = StoryEngine.getCompletionPercent(storyState, localPlayer.id);
-      if (lorePct > 0 && HUD) HUD.showNotification('Lore collection: ' + lorePct + '% complete', 'info');
-    }
-
-    // Archival: auto-start/advance research projects (~every 90 seconds)
-    if (Archival && Archival.getActiveResearch && archivalState && Math.random() < 0.0002) {
-      var activeRes = Archival.getActiveResearch(archivalState, 'default_guild');
-      if (activeRes && activeRes.length === 0 && Archival.startResearchProject && Archival.getResearchProjects) {
-        var resProjects = Archival.getResearchProjects();
-        if (resProjects && resProjects.length > 0) {
-          var proj = resProjects[Math.floor(Math.random() * resProjects.length)];
-          Archival.startResearchProject(archivalState, 'default_guild', proj.id, worldTime);
-        }
-      } else if (activeRes && activeRes.length > 0 && Archival.contributeToResearch && localPlayer) {
-        var res = activeRes[0];
-        Archival.contributeToResearch(archivalState, localPlayer.id, res.projectId || res.id, 1, null);
-        if (HUD && Math.random() < 0.1) {
-          HUD.showNotification('Research progressing: ' + (res.name || 'project'), 'info');
+      // AsyncCollab: check project phase completion (~every 60 seconds)
+      if (AsyncCollab && AsyncCollab.getActiveProjects && asyncCollabState && Math.random() < 0.0003) {
+        var activeProjects = AsyncCollab.getActiveProjects(asyncCollabState);
+        if (activeProjects && activeProjects.length > 0 && localPlayer) {
+          localPlayer.activeProjects = activeProjects.length;
         }
       }
-    }
 
-    // MentorshipMarket: NPCs auto-create teaching listings (~every 3 minutes)
-    if (MentorshipMarket && MentorshipMarket.createListing && mentorshipMarketState && Math.random() < 0.00015) {
-      var mmSubjects = MentorshipMarket.getSubjects ? MentorshipMarket.getSubjects() : {};
-      var mmSubjectKeys = Object.keys(mmSubjects);
-      if (mmSubjectKeys.length > 0) {
-        var mmSubjectId = mmSubjectKeys[Math.floor(Math.random() * mmSubjectKeys.length)];
-        var mmSub = mmSubjects[mmSubjectId];
-        var npcTeacher = 'npc_teacher_' + Math.floor(Math.random() * 100);
-        var mmListResult = MentorshipMarket.createListing(mentorshipMarketState,
-          npcTeacher, mmSubjectId, mmSub.basePrice || 10, 3, worldTime + 300, 5);
-        if (mmListResult && mmListResult.success) {
-          mentorshipMarketState = mmListResult.state;
-          syncSubsystem('mentorshipMarket', mentorshipMarketState);
+      // MentorGuilds: check cohort graduation (~every 60 seconds)
+      if (MentorGuilds && MentorGuilds.getMentorGuilds && typeof gameState !== 'undefined' && gameState && gameState.subsystems && Math.random() < 0.0003) {
+        // Expose mentor guilds for UI
+        if (localPlayer) localPlayer.mentorGuildsAvailable = true;
+      }
+
+      // --- Previously dead systems now ticked ---
+
+      // RaidSystem: check active raids for timeout/completion
+      if (RaidSystem && RaidSystem.getAvailableRaids && raidStateStore && Math.random() < 0.0003) {
+        var activeRaids = RaidSystem.getAvailableRaids(raidStateStore);
+        if (localPlayer) localPlayer.availableRaids = activeRaids;
+      }
+
+      // GuildWars: resolve pending battles and collect territory taxes
+      if (GuildWars && GuildWars.getActiveWars && guildWarsState && Math.random() < 0.0003) {
+        var wars = GuildWars.getActiveWars(guildWarsState);
+        if (wars.length > 0 && GuildWars.resolveBattle) {
+          for (var wi = 0; wi < wars.length; wi++) {
+            if (wars[wi].status === 'battle') {
+              GuildWars.resolveBattle(guildWarsState, wars[wi].id);
+            }
+          }
         }
       }
-    }
 
-    // Prestige: check ascension eligibility
-    if (Prestige && Prestige.canAscend && prestigeState && localPlayer && Math.random() < 0.0005) {
-      localPlayer.canAscend = Prestige.canAscend(prestigeState);
-    }
+      // Apprenticeship: check active lessons for completion
+      if (Apprenticeship && Apprenticeship.getActiveLessons && apprenticeshipState && Math.random() < 0.0005) {
+        var activeLessons = Apprenticeship.getActiveLessons(apprenticeshipState);
+        if (localPlayer) localPlayer.activeLessons = activeLessons;
+      }
+
+      // MinigameForge: check active play sessions for completion
+      if (MinigameForge && MinigameForge.getPublishedGames && minigameForgeState && Math.random() < 0.0003) {
+        var forgeGames = MinigameForge.getPublishedGames(minigameForgeState);
+        if (localPlayer) localPlayer.availableMinigames = forgeGames.length;
+      }
+
+      // ConstitutionAmendments: close expired voting periods
+      if (ConstitutionAmendments && ConstitutionAmendments.getActiveAmendments && constitutionState && Math.random() < 0.0003) {
+        var activeAmendments = ConstitutionAmendments.getActiveAmendments(constitutionState);
+        for (var ai = 0; ai < activeAmendments.length; ai++) {
+          if (activeAmendments[ai].status === 'voting' && ConstitutionAmendments.closeVoting) {
+            ConstitutionAmendments.closeVoting(constitutionState, activeAmendments[ai].id);
+          }
+        }
+      }
+
+      // EconomySimulator: periodic market health check
+      if (EconomySimulator && EconomySimulator.getMarketHealthScore && economySimState && Math.random() < 0.0003) {
+        var healthScore = EconomySimulator.getMarketHealthScore(economySimState);
+        if (localPlayer) localPlayer.marketHealth = healthScore;
+      }
+
+      // GuildProgression: update weekly challenge progress
+      if (GuildProgression && GuildProgression.getGuildSummary && guildProgressionState && Math.random() < 0.0003) {
+        var guildSummary = GuildProgression.getGuildSummary(guildProgressionState);
+        if (localPlayer) localPlayer.guildLevel = guildSummary.level;
+      }
+
+      // StoryEngine: periodic lore completion check (~every 5 minutes)
+      if (StoryEngine && StoryEngine.getCompletionPercent && storyState && localPlayer && Math.random() < 0.00005) {
+        var lorePct = StoryEngine.getCompletionPercent(storyState, localPlayer.id);
+        if (lorePct > 0 && HUD) HUD.showNotification('Lore collection: ' + lorePct + '% complete', 'info');
+      }
+
+      // Archival: auto-start/advance research projects (~every 90 seconds)
+      if (Archival && Archival.getActiveResearch && archivalState && Math.random() < 0.0002) {
+        var activeRes = Archival.getActiveResearch(archivalState, 'default_guild');
+        if (activeRes && activeRes.length === 0 && Archival.startResearchProject && Archival.getResearchProjects) {
+          var resProjects = Archival.getResearchProjects();
+          if (resProjects && resProjects.length > 0) {
+            var proj = resProjects[Math.floor(Math.random() * resProjects.length)];
+            Archival.startResearchProject(archivalState, 'default_guild', proj.id, worldTime);
+          }
+        } else if (activeRes && activeRes.length > 0 && Archival.contributeToResearch && localPlayer) {
+          var res = activeRes[0];
+          Archival.contributeToResearch(archivalState, localPlayer.id, res.projectId || res.id, 1, null);
+          if (HUD && Math.random() < 0.1) {
+            HUD.showNotification('Research progressing: ' + (res.name || 'project'), 'info');
+          }
+        }
+      }
+
+      // MentorshipMarket: NPCs auto-create teaching listings (~every 3 minutes)
+      if (MentorshipMarket && MentorshipMarket.createListing && mentorshipMarketState && Math.random() < 0.00015) {
+        var mmSubjects = MentorshipMarket.getSubjects ? MentorshipMarket.getSubjects() : {};
+        var mmSubjectKeys = Object.keys(mmSubjects);
+        if (mmSubjectKeys.length > 0) {
+          var mmSubjectId = mmSubjectKeys[Math.floor(Math.random() * mmSubjectKeys.length)];
+          var mmSub = mmSubjects[mmSubjectId];
+          var npcTeacher = 'npc_teacher_' + Math.floor(Math.random() * 100);
+          var mmListResult = MentorshipMarket.createListing(mentorshipMarketState,
+            npcTeacher, mmSubjectId, mmSub.basePrice || 10, 3, worldTime + 300, 5);
+          if (mmListResult && mmListResult.success) {
+            mentorshipMarketState = mmListResult.state;
+            syncSubsystem('mentorshipMarket', mentorshipMarketState);
+          }
+        }
+      }
+
+      // Prestige: check ascension eligibility
+      if (Prestige && Prestige.canAscend && prestigeState && localPlayer && Math.random() < 0.0005) {
+        localPlayer.canAscend = Prestige.canAscend(prestigeState);
+      }
 
     } catch (err) {
       console.error('Game loop error:', err);
@@ -4306,7 +4313,7 @@
       currentZone = msg.payload.zone;
 
       // Get zone center position from World
-      var zonePos = World.getZoneCenter ? World.getZoneCenter(currentZone) : {x: 0, z: 0};
+      var zonePos = World.getZoneCenter ? World.getZoneCenter(currentZone) : { x: 0, z: 0 };
       localPlayer.position.x = zonePos.x;
       localPlayer.position.z = zonePos.z;
       localPlayer.position.y = 0;
@@ -4449,7 +4456,7 @@
           HUD.showTradeRequest(
             result.data.from,
             result.data.tradeId,
-            function(tradeId) {
+            function (tradeId) {
               // Accept trade
               var acceptResult = Trading.acceptTrade(tradeId, localPlayer.id, localPlayer.position);
               if (acceptResult.success) {
@@ -4458,7 +4465,7 @@
                 HUD.showNotification(acceptResult.message, 'error');
               }
             },
-            function(tradeId) {
+            function (tradeId) {
               // Decline trade
               Trading.declineTrade(tradeId, localPlayer.id, localPlayer.position);
 
@@ -4532,7 +4539,7 @@
           var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'trades_completed', 1);
           achievementState = achResult.state; syncSubsystem('achievements', achievementState);
           if (achResult.newAchievements.length > 0) {
-            achResult.newAchievements.forEach(function(a) {
+            achResult.newAchievements.forEach(function (a) {
               if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
             });
           }
@@ -4547,7 +4554,7 @@
 
         // Update daily challenge progress for trade-type challenges
         if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
-          (dailyChallengeState.active || []).forEach(function(ch) {
+          (dailyChallengeState.active || []).forEach(function (ch) {
             if (ch.type === 'trade') {
               var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
               dailyChallengeState = dcResult.state;
@@ -4676,7 +4683,7 @@
       trade,
       localPlayer.id,
       // onAddItem — opens inventory picker, adds selected item to trade
-      function(slotIndex, itemId) {
+      function (slotIndex, itemId) {
         if (Trading && playerInventory) {
           var result = Trading.addItemToTrade(trade.id, localPlayer.id, itemId, playerInventory, localPlayer.position);
           if (result && !result.success) {
@@ -4685,28 +4692,28 @@
         }
       },
       // onRemoveItem
-      function(tradeSlot) {
+      function (tradeSlot) {
         var result = Trading.removeItemFromTrade(trade.id, localPlayer.id, tradeSlot, localPlayer.position);
         if (!result.success) {
           HUD.showNotification(result.message, 'error');
         }
       },
       // onSetSpark
-      function(amount) {
+      function (amount) {
         var result = Trading.setSparkOffer(trade.id, localPlayer.id, amount, economyLedger, localPlayer.position);
         if (!result.success) {
           HUD.showNotification(result.message, 'error');
         }
       },
       // onReady
-      function() {
+      function () {
         var result = Trading.setReady(trade.id, localPlayer.id, localPlayer.position);
         if (!result.success) {
           HUD.showNotification(result.message, 'error');
         }
       },
       // onConfirm
-      function() {
+      function () {
         // In P2P, each client only has their own inventory.
         // Pass local inventory for the local player's side; null for remote
         // (the remote peer confirms with their own inventory on their end).
@@ -4732,7 +4739,7 @@
         }
       },
       // onCancel
-      function() {
+      function () {
         Trading.cancelTrade(trade.id, localPlayer.id, localPlayer.position);
         HUD.hideTradeWindow();
       }
@@ -4823,7 +4830,7 @@
         var shopItems = NPC_SHOP_ITEMS[npcData.archetype] || NPC_SHOP_ITEMS.merchant;
         if (HUD && HUD.showNPCShop) {
           HUD.showNPCShop(npcData, shopItems, localPlayer.spark, function onBuyItem(itemId) {
-            var item = shopItems.find(function(i) { return i.id === itemId; });
+            var item = shopItems.find(function (i) { return i.id === itemId; });
             if (!item) return;
             if (localPlayer.spark < item.price) {
               if (HUD) HUD.showNotification('Not enough Spark!', 'error');
@@ -4976,7 +4983,7 @@
       if (Quests) {
         var updated = Quests.updateQuestProgress(localPlayer.id, 'collect', { item: itemId, amount: 1 });
         if (updated.length > 0 && HUD) {
-          updated.forEach(function(quest) {
+          updated.forEach(function (quest) {
             HUD.showQuestProgress('Quest progress: ' + quest.title);
           });
         }
@@ -4991,7 +4998,7 @@
           if (bonusResult.success) {
             var bonusData = Inventory.getItemData(bonusDrop.id);
             if (bonusData && HUD) {
-              setTimeout(function() {
+              setTimeout(function () {
                 HUD.showItemPickup(bonusData.name, 1, bonusData.icon);
               }, 500);
             }
@@ -5039,7 +5046,7 @@
         var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'harvests', 1);
         achievementState = achResult.state; syncSubsystem('achievements', achievementState);
         if (achResult.newAchievements.length > 0) {
-          achResult.newAchievements.forEach(function(a) {
+          achResult.newAchievements.forEach(function (a) {
             if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
           });
         }
@@ -5047,7 +5054,7 @@
 
       // Update daily challenge progress for gather-type challenges
       if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
-        (dailyChallengeState.active || []).forEach(function(ch) {
+        (dailyChallengeState.active || []).forEach(function (ch) {
           if (ch.type === 'gather' && (!ch.resource || ch.resource === itemId)) {
             var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
             dailyChallengeState = dcResult.state;
@@ -5067,7 +5074,7 @@
       if (Loot && Loot.rollLoot && lootHistory) {
         var bonusLoot = Loot.rollLoot('gathering', { zone: currentZone, rarity: 1 });
         if (bonusLoot && bonusLoot.items && bonusLoot.items.length > 0) {
-          bonusLoot.items.forEach(function(lootItem) {
+          bonusLoot.items.forEach(function (lootItem) {
             if (Inventory) Inventory.addItem(playerInventory, lootItem.id, lootItem.count || 1);
           });
           Loot.recordDrop(lootHistory, bonusLoot);
@@ -5170,7 +5177,7 @@
         var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'items_crafted', 1);
         achievementState = achResult.state; syncSubsystem('achievements', achievementState);
         if (achResult.newAchievements.length > 0) {
-          achResult.newAchievements.forEach(function(a) {
+          achResult.newAchievements.forEach(function (a) {
             if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
           });
         }
@@ -5178,7 +5185,7 @@
 
       // Update daily challenge progress for craft-type challenges
       if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
-        (dailyChallengeState.active || []).forEach(function(ch) {
+        (dailyChallengeState.active || []).forEach(function (ch) {
           if (ch.type === 'craft' || (ch.type === 'craft_category' && result.output)) {
             var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
             dailyChallengeState = dcResult.state;
@@ -5291,7 +5298,7 @@
 
   // Global guild action handler for panel buttons
   if (typeof window !== 'undefined') {
-    window.handleGuildAction = function(action, data) {
+    window.handleGuildAction = function (action, data) {
       if (!Guilds || !localPlayer) return;
 
       switch (action) {
@@ -5318,7 +5325,7 @@
 
     // Handle music composition (from new compose panel with notes/instrument)
     if (composeData.notes && composeData.instrument) {
-      var noteNames = composeData.notes.map(function(n) { return n.note; }).join('-');
+      var noteNames = composeData.notes.map(function (n) { return n.note; }).join('-');
       var msg = {
         type: 'compose',
         from: localPlayer.id,
@@ -5657,7 +5664,7 @@
             var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'buildings_placed', 1);
             achievementState = achResult.state; syncSubsystem('achievements', achievementState);
             if (achResult.newAchievements.length > 0) {
-              achResult.newAchievements.forEach(function(a) {
+              achResult.newAchievements.forEach(function (a) {
                 if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
               });
             }
@@ -5771,10 +5778,12 @@
 
         // Broadcast player chat to NPCs for reaction
         if (NPCs && NPCs.broadcastEvent) {
-          NPCs.broadcastEvent({ type: 'player_action', data: {
-            playerId: localPlayer.id, action: 'chat',
-            position: localPlayer.position, message: message
-          }});
+          NPCs.broadcastEvent({
+            type: 'player_action', data: {
+              playerId: localPlayer.id, action: 'chat',
+              position: localPlayer.position, message: message
+            }
+          });
         }
         break;
 
@@ -5821,7 +5830,7 @@
           } else {
             var npcPositions = NPCs && NPCs.getNPCPositions ? NPCs.getNPCPositions() : [];
             var landmarks = [];
-            HUD.showWorldMap(localPlayer.position, npcPositions, landmarks, function(zoneId) {
+            HUD.showWorldMap(localPlayer.position, npcPositions, landmarks, function (zoneId) {
               handleLocalAction('fastTravel', { zone: zoneId });
             });
           }
@@ -5860,7 +5869,7 @@
 
           // Fade transition with teleport at peak
           if (World.fadeTransition) {
-            World.fadeTransition(function() {
+            World.fadeTransition(function () {
               // Teleport player to zone center
               var tx = zoneInfo.cx;
               var tz = zoneInfo.cz;
@@ -6076,7 +6085,7 @@
               HUD.updateGuildTag(playerGuild.tag);
             } else {
               // Show guild creation form if not in a guild
-              HUD.showGuildCreate(function(guildData) {
+              HUD.showGuildCreate(function (guildData) {
                 handleGuildCreate(guildData);
               });
             }
@@ -6102,7 +6111,7 @@
           if (composePanelEl) {
             HUD.hideComposePanel();
           } else {
-            HUD.showComposePanel(function(composeData) {
+            HUD.showComposePanel(function (composeData) {
               handleComposeAction(composeData);
             });
           }
@@ -6171,7 +6180,7 @@
                     var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'quests_completed', 1);
                     achievementState = achResult.state; syncSubsystem('achievements', achievementState);
                     if (achResult.newAchievements.length > 0) {
-                      achResult.newAchievements.forEach(function(a) {
+                      achResult.newAchievements.forEach(function (a) {
                         if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
                       });
                     }
@@ -6222,7 +6231,7 @@
                   if (Loot && Loot.rollLoot && lootHistory) {
                     var questLoot = Loot.rollLoot('quest', { zone: currentZone, rarity: 2 });
                     if (questLoot && questLoot.items && questLoot.items.length > 0) {
-                      questLoot.items.forEach(function(lootItem) {
+                      questLoot.items.forEach(function (lootItem) {
                         if (Inventory) Inventory.addItem(playerInventory, lootItem.id, lootItem.count || 1);
                       });
                       Loot.recordDrop(lootHistory, questLoot);
@@ -6257,7 +6266,7 @@
               var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'npcs_befriended', 1);
               achievementState = achResult.state; syncSubsystem('achievements', achievementState);
               if (achResult.newAchievements.length > 0) {
-                achResult.newAchievements.forEach(function(a) {
+                achResult.newAchievements.forEach(function (a) {
                   if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
                 });
               }
@@ -6265,7 +6274,7 @@
 
             // Update daily challenge progress for greet_npc challenges
             if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
-              (dailyChallengeState.active || []).forEach(function(ch) {
+              (dailyChallengeState.active || []).forEach(function (ch) {
                 if (ch.type === 'greet_npc') {
                   var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
                   dailyChallengeState = dcResult.state;
@@ -6380,9 +6389,9 @@
 
             // BountyBoard: player accepts bounty from explorer/merchant NPCs (20% chance)
             if (BountyBoard && BountyBoard.getActiveBounties && bountyBoardState &&
-                (npcResponse.archetype === 'explorer' || npcResponse.archetype === 'merchant') && Math.random() < 0.2) {
+              (npcResponse.archetype === 'explorer' || npcResponse.archetype === 'merchant') && Math.random() < 0.2) {
               var activeBounties = BountyBoard.getActiveBounties(bountyBoardState);
-              var unclaimed = activeBounties.filter(function(b) { return !b.hunterId; });
+              var unclaimed = activeBounties.filter(function (b) { return !b.hunterId; });
               if (unclaimed.length > 0) {
                 var bounty = unclaimed[0];
                 var acceptResult = BountyBoard.acceptBounty(bountyBoardState, bounty.id, localPlayer.id, worldTime);
@@ -6394,8 +6403,10 @@
 
             // NpcDelegation: delegate task matching NPC archetype (20% chance)
             if (NpcDelegation && NpcDelegation.delegate && npcDelegationState && Math.random() < 0.2) {
-              var archTaskMap = { gardener: 'water_garden', merchant: 'trade_goods', explorer: 'scout_dungeon',
-                musician: 'compose_song', healer: 'gather_herbs', builder: 'craft_basic', teacher: 'teach_skill' };
+              var archTaskMap = {
+                gardener: 'water_garden', merchant: 'trade_goods', explorer: 'scout_dungeon',
+                musician: 'compose_song', healer: 'gather_herbs', builder: 'craft_basic', teacher: 'teach_skill'
+              };
               var taskId = archTaskMap[npcResponse.archetype] || 'gather_herbs';
               var delResult = NpcDelegation.delegate(npcDelegationState, localPlayer.id, taskId, npcResponse.id, worldTime);
               if (delResult && delResult.success && HUD) {
@@ -6407,10 +6418,12 @@
             addRecentActivity('Talked to ' + npcResponse.name);
             // Broadcast player interaction to other NPCs
             if (NPCs.broadcastEvent) {
-              NPCs.broadcastEvent({ type: 'player_action', data: {
-                playerId: localPlayer.id, action: 'interact_npc',
-                position: localPlayer.position, targetNPC: npcResponse.id
-              }});
+              NPCs.broadcastEvent({
+                type: 'player_action', data: {
+                  playerId: localPlayer.id, action: 'interact_npc',
+                  position: localPlayer.position, targetNPC: npcResponse.id
+                }
+              });
             }
             break;
           }
@@ -6468,17 +6481,19 @@
         if (Quests) {
           var updated = Quests.updateQuestProgress(localPlayer.id, 'collect', { item: 'resource', amount: 1 });
           if (updated.length > 0 && HUD) {
-            updated.forEach(function(quest) {
+            updated.forEach(function (quest) {
               HUD.showQuestProgress('Quest progress: ' + quest.title);
             });
           }
         }
         // Broadcast harvest action to NPCs
         if (NPCs && NPCs.broadcastEvent) {
-          NPCs.broadcastEvent({ type: 'player_action', data: {
-            playerId: localPlayer.id, action: 'harvest',
-            position: localPlayer.position
-          }});
+          NPCs.broadcastEvent({
+            type: 'player_action', data: {
+              playerId: localPlayer.id, action: 'harvest',
+              position: localPlayer.position
+            }
+          });
         }
         break;
 
@@ -6619,16 +6634,16 @@
         if (Trading && gameState && State && HUD) {
           var players = State.getPlayers(gameState);
           var nearbyPlayers = players
-            .filter(function(p) {
+            .filter(function (p) {
               return p.id !== localPlayer.id && p.zone === currentZone;
             })
-            .map(function(p) {
+            .map(function (p) {
               var dx = p.position.x - localPlayer.position.x;
               var dz = p.position.z - localPlayer.position.z;
               var distance = Math.sqrt(dx * dx + dz * dz);
               return { player: p, distance: distance };
             })
-            .sort(function(a, b) { return a.distance - b.distance; });
+            .sort(function (a, b) { return a.distance - b.distance; });
 
           if (nearbyPlayers.length > 0 && nearbyPlayers[0].distance < 10) {
             var targetPlayer = nearbyPlayers[0].player;
@@ -6732,7 +6747,7 @@
     window.addEventListener('DOMContentLoaded', init);
 
     // Handle page unload — save and leave, register player star
-    window.addEventListener('beforeunload', function() {
+    window.addEventListener('beforeunload', function () {
       // Register player's constellation star before leaving
       if (World && World.registerPlayerStar && localPlayer) {
         World.registerPlayerStar(localPlayer.id, localPlayer.name || localPlayer.id);
@@ -6854,7 +6869,7 @@
     if (Quests && Quests.trackAchievementEvent) {
       var earned = Quests.trackAchievementEvent(localPlayer.id, eventType, eventData);
       if (earned && earned.length > 0) {
-        earned.forEach(function(achievement) {
+        earned.forEach(function (achievement) {
           // Piano accent for achievement unlock
           if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('achievement');
           // Show achievement banner
@@ -6889,7 +6904,7 @@
         var achResult = AchievementEngine.trackAndCheck(achievementState, localPlayer.id, statName, 1);
         achievementState = achResult.state; syncSubsystem('achievements', achievementState);
         if (achResult.newAchievements.length > 0) {
-          achResult.newAchievements.forEach(function(a) {
+          achResult.newAchievements.forEach(function (a) {
             if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
             if (Audio && Audio.playPianoAccent) Audio.playPianoAccent('achievement');
           });
@@ -6991,7 +7006,7 @@
     if (!Exploration || !Exploration.checkNearbySecrets || !localPlayer || !gameState) return;
     var nearbySecrets = Exploration.checkNearbySecrets(localPlayer.id, localPlayer.position, currentZone, gameState);
     if (nearbySecrets && nearbySecrets.length > 0) {
-      nearbySecrets.forEach(function(secret) {
+      nearbySecrets.forEach(function (secret) {
         var result = Exploration.discoverSecret(localPlayer.id, secret, gameState);
         if (result && result.success) {
           // Show discovery notification with lore
@@ -7017,7 +7032,7 @@
           if (secret.loreId && Exploration.getLoreEntry) {
             var lore = Exploration.getLoreEntry(secret.loreId);
             if (lore && HUD) {
-              setTimeout(function() {
+              setTimeout(function () {
                 HUD.showNotification('Lore unlocked: ' + lore.title, 'info');
               }, 3000);
             }
@@ -7103,7 +7118,7 @@
       banner.style.display = 'block';
 
       // Auto-hide after 8 seconds
-      setTimeout(function() {
+      setTimeout(function () {
         if (banner) banner.style.display = 'none';
       }, 8000);
     }
@@ -7193,7 +7208,7 @@
     isFishing = true;
     if (Audio) Audio.playSound('harvest');
 
-    HUD.showFishingUI(currentZone, function(result) {
+    HUD.showFishingUI(currentZone, function (result) {
       isFishing = false;
       if (result && result.success && result.fish) {
         // Add fish to inventory
@@ -7241,7 +7256,7 @@
             AchievementEngine.trackAndCheck(achievementState, localPlayer.id, 'epic_fish_caught', 1);
           }
           if (achResult.newAchievements.length > 0) {
-            achResult.newAchievements.forEach(function(a) {
+            achResult.newAchievements.forEach(function (a) {
               if (HUD && HUD.showAchievementBanner) HUD.showAchievementBanner(a);
             });
           }
@@ -7249,7 +7264,7 @@
 
         // Update daily challenge progress for catch_fish challenges
         if (DailyChallenges && DailyChallenges.updateProgress && dailyChallengeState) {
-          (dailyChallengeState.active || []).forEach(function(ch) {
+          (dailyChallengeState.active || []).forEach(function (ch) {
             if (ch.type === 'catch_fish') {
               var dcResult = DailyChallenges.updateProgress(dailyChallengeState, ch.id, 1);
               dailyChallengeState = dcResult.state;
@@ -7342,7 +7357,7 @@
     closeBtn.style.cssText = 'position:absolute;top:12px;right:12px;width:30px;height:30px;' +
       'background:rgba(255,255,255,0.1);color:#E8E0D8;border:1px solid rgba(255,255,255,0.2);' +
       'border-radius:50%;font-size:18px;cursor:pointer;';
-    closeBtn.onclick = function() { panel.remove(); };
+    closeBtn.onclick = function () { panel.remove(); };
     panel.appendChild(closeBtn);
 
     if (playerPlot) {
@@ -7362,18 +7377,18 @@
       furnitureHeader.style.cssText = 'color:#DAA520;font-size:0.9rem;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;';
       panel.appendChild(furnitureHeader);
 
-      Object.keys(furnitureTypes).forEach(function(fType) {
+      Object.keys(furnitureTypes).forEach(function (fType) {
         var ft = furnitureTypes[fType];
         var row = document.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px;' +
           'background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:4px;' +
           'border:1px solid rgba(255,255,255,0.05);cursor:pointer;transition:all 0.2s;';
-        row.onmouseover = function() { this.style.borderColor = 'rgba(218,165,32,0.3)'; };
-        row.onmouseout = function() { this.style.borderColor = 'rgba(255,255,255,0.05)'; };
+        row.onmouseover = function () { this.style.borderColor = 'rgba(218,165,32,0.3)'; };
+        row.onmouseout = function () { this.style.borderColor = 'rgba(255,255,255,0.05)'; };
         row.innerHTML = '<span style="font-size:1.3rem;">' + ft.icon + '</span>' +
           '<span style="flex:1;color:#E8E0D8;font-size:0.85rem;">' + ft.name + '</span>' +
           '<span style="color:#DAA520;font-size:0.8rem;">' + ft.cost + ' Spark</span>';
-        row.onclick = function() {
+        row.onclick = function () {
           var result = Creation.placeFurniture(localPlayer.id, fType, 5, 5);
           if (result && result.success) {
             HUD.showNotification('Placed ' + ft.name + ' in your home!', 'success');
@@ -7398,17 +7413,17 @@
         infoText.style.cssText = 'color:#B8B0A8;font-size:0.85rem;margin-bottom:12px;';
         panel.appendChild(infoText);
 
-        plots.slice(0, 8).forEach(function(plot) {
+        plots.slice(0, 8).forEach(function (plot) {
           var row = document.createElement('div');
           row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;' +
             'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);' +
             'border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all 0.2s;';
-          row.onmouseover = function() { this.style.borderColor = 'rgba(218,165,32,0.4)'; };
-          row.onmouseout = function() { this.style.borderColor = 'rgba(255,255,255,0.08)'; };
+          row.onmouseover = function () { this.style.borderColor = 'rgba(218,165,32,0.4)'; };
+          row.onmouseout = function () { this.style.borderColor = 'rgba(255,255,255,0.08)'; };
           row.innerHTML = '<span style="font-size:1.3rem;">🏠</span>' +
             '<span style="flex:1;color:#E8E0D8;font-size:0.9rem;">Plot ' + plot.id + '</span>' +
             '<span style="color:#B8B0A8;font-size:0.75rem;">(' + plot.bounds.x1 + ', ' + plot.bounds.z1 + ')</span>';
-          row.onclick = function() {
+          row.onclick = function () {
             var plotName = prompt('Name your home:');
             if (plotName && plotName.trim()) {
               var result = Creation.claimPlot(localPlayer.id, plot.id, plotName.trim());
@@ -7429,7 +7444,7 @@
     document.body.appendChild(panel);
 
     // Close on Escape
-    var escHandler = function(e) {
+    var escHandler = function (e) {
       if (e.key === 'Escape') {
         panel.remove();
         document.removeEventListener('keydown', escHandler);
@@ -7689,7 +7704,7 @@
     if (isNight) {
       var auroraInterval = worldEvents.auroraBorealis.interval + Math.random() * 600000;
       if (!worldEvents.auroraBorealis.active &&
-          currentTime - worldEvents.auroraBorealis.lastSpawn > auroraInterval) {
+        currentTime - worldEvents.auroraBorealis.lastSpawn > auroraInterval) {
         spawnAuroraBorealis(sceneContext, currentTime);
         worldEvents.auroraBorealis.lastSpawn = currentTime;
       }
@@ -7718,7 +7733,7 @@
             var x = originalPositions[v];
             var y = originalPositions[v + 1];
             var offset = Math.sin(x * 0.02 + worldEvents.auroraBorealis.animTime * 2) *
-                        Math.cos(y * 0.02 + worldEvents.auroraBorealis.animTime * 1.5) * 8;
+              Math.cos(y * 0.02 + worldEvents.auroraBorealis.animTime * 1.5) * 8;
             positions[v + 2] = originalPositions[v + 2] + offset;
           }
           geometry.attributes.position.needsUpdate = true;
@@ -7742,7 +7757,7 @@
     if (isNight && currentZone === 'gardens') {
       var swarmInterval = worldEvents.fireflySwarm.interval;
       if (!worldEvents.fireflySwarm.active &&
-          currentTime - worldEvents.fireflySwarm.lastSpawn > swarmInterval) {
+        currentTime - worldEvents.fireflySwarm.lastSpawn > swarmInterval) {
         spawnFireflySwarm(currentTime);
         worldEvents.fireflySwarm.lastSpawn = currentTime;
       }
@@ -7767,8 +7782,8 @@
   exports.triggerCameraShake = triggerCameraShake;
   exports.triggerScreenFlash = triggerScreenFlash;
   exports.setVignetteIntensity = setVignetteIntensity;
-  exports.getSimCrmState = function() { return simCrmState; };
-  exports.getSimProjectManagerState = function() { return simProjectManagerState; };
-  exports.getSimTodoState = function() { return simTodoState; };
+  exports.getSimCrmState = function () { return simCrmState; };
+  exports.getSimProjectManagerState = function () { return simProjectManagerState; };
+  exports.getSimTodoState = function () { return simTodoState; };
 
 })(typeof module !== 'undefined' ? module.exports : (window.Main = {}));
