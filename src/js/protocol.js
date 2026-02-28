@@ -62,7 +62,8 @@
     'garden_invite',
     'garden_uninvite',
     'garden_tend',
-    'garden_set_public'
+    'garden_set_public',
+    'weather_change'
   ]);
 
   // Message types that require consent

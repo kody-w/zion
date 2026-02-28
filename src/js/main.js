@@ -3867,6 +3867,9 @@
       case 'return_home':
         handleReturnHome(msg);
         break;
+      case 'weather_change':
+        handleWeatherChangeMessage(msg);
+        break;
       default:
         console.log('Unknown message type:', msg.type);
     }
@@ -3989,6 +3992,40 @@
     var worldName = msg.worldName || (msg.payload && msg.payload.worldName) || 'Unknown World';
     if (HUD && HUD.showNotification) {
       HUD.showNotification('Federation established with ' + worldName, 'success');
+    }
+  }
+
+  /**
+   * Handle weather_change protocol message — applies visuals and updates state
+   */
+  function handleWeatherChangeMessage(msg) {
+    if (!msg.payload || !msg.payload.weather) return;
+
+    var newWeather = msg.payload.weather;
+
+    // Apply to state
+    gameState = State.applyMessage(gameState, msg);
+
+    // If zone-specific, only apply visuals if player is in that zone
+    if (msg.payload.zone) {
+      var playerZone = localPlayer ? localPlayer.zone : null;
+      if (playerZone !== msg.payload.zone) return;
+    }
+
+    // Apply visual weather change
+    var prevWeather = currentWeather;
+    currentWeather = newWeather;
+    if (World && World.setWeather) {
+      World.setWeather(sceneContext, currentWeather);
+    }
+    if (NPCs && NPCs.broadcastEvent) {
+      NPCs.broadcastEvent({ type: 'weather_change', data: { weather: currentWeather, previous: prevWeather } });
+    }
+    if (Audio && Audio.updateAmbientWeather) {
+      Audio.updateAmbientWeather(currentWeather);
+    }
+    if (HUD && HUD.showNotification) {
+      HUD.showNotification('Weather changed to ' + currentWeather, 'info');
     }
   }
 

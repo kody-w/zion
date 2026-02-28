@@ -827,6 +827,29 @@
         }
         break;
 
+      case 'weather_change':
+        // Update world weather state; supports global or per-zone weather
+        newState.world = Object.assign({}, state.world);
+        if (payload.weather) {
+          if (payload.zone) {
+            // Per-zone weather
+            if (!newState.world.zoneWeather) newState.world.zoneWeather = {};
+            newState.world.zoneWeather = Object.assign({}, newState.world.zoneWeather);
+            newState.world.zoneWeather[payload.zone] = {
+              weather: payload.weather,
+              changed_by: from,
+              changed_at: timestamp,
+              duration: payload.duration || null
+            };
+          } else {
+            // Global weather change
+            newState.world.weather = payload.weather;
+            newState.world.weatherChangedBy = from;
+            newState.world.weatherChangedAt = timestamp;
+          }
+        }
+        break;
+
       default:
         // Unknown message type - no state change
         break;

@@ -14,7 +14,14 @@ MESSAGE_TYPES = {
     'challenge', 'accept_challenge', 'forfeit', 'score',
     'discover', 'anchor_place', 'inspect',
     'intention_set', 'intention_clear',
-    'warp_fork', 'return_home', 'federation_announce', 'federation_handshake'
+    'warp_fork', 'return_home', 'federation_announce', 'federation_handshake',
+    'reputation_adjust', 'report_griefing',
+    'election_start', 'election_vote', 'election_finalize',
+    'steward_set_welcome', 'steward_set_policy', 'steward_moderate',
+    'star_register', 'sim_crm_action',
+    'propose_amendment', 'vote_amendment', 'close_amendment',
+    'garden_create', 'garden_invite', 'garden_uninvite', 'garden_tend', 'garden_set_public',
+    'weather_change'
 }
 
 PLATFORMS = {'desktop', 'phone', 'vr', 'ar', 'api'}

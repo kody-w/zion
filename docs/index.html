@@ -174,7 +174,8 @@
     'garden_invite',
     'garden_uninvite',
     'garden_tend',
-    'garden_set_public'
+    'garden_set_public',
+    'weather_change'
   ]);
 
   var CONSENT_REQUIRED_TYPES = new Set([
@@ -5304,6 +5305,26 @@
               newState.amendments[ci].closed_at = typeof timestamp === 'string' ? timestamp : new Date(timestamp).toISOString();
               break;
             }
+          }
+        }
+        break;
+
+      case 'weather_change':
+        newState.world = Object.assign({}, state.world);
+        if (payload.weather) {
+          if (payload.zone) {
+            if (!newState.world.zoneWeather) newState.world.zoneWeather = {};
+            newState.world.zoneWeather = Object.assign({}, newState.world.zoneWeather);
+            newState.world.zoneWeather[payload.zone] = {
+              weather: payload.weather,
+              changed_by: from,
+              changed_at: timestamp,
+              duration: payload.duration || null
+            };
+          } else {
+            newState.world.weather = payload.weather;
+            newState.world.weatherChangedBy = from;
+            newState.world.weatherChangedAt = timestamp;
           }
         }
         break;
@@ -29809,7 +29830,16 @@
     }
   }
 
+  function getZoneWeather(worldState, zoneId) {
+    if (!worldState) return currentWeatherType;
+    if (worldState.zoneWeather && worldState.zoneWeather[zoneId]) {
+      return worldState.zoneWeather[zoneId].weather;
+    }
+    return worldState.weather || currentWeatherType;
+  }
+
   exports.getWeatherModifiers  = getWeatherModifiers;
+  exports.getZoneWeather       = getZoneWeather;
   exports.getResourceStage     = getResourceStage;
   exports.getWildlifeReaction  = getWildlifeReaction;
   exports.weatherCallbacks = weatherCallbacks;
@@ -139193,6 +139223,9 @@
       case 'return_home':
         handleReturnHome(msg);
         break;
+      case 'weather_change':
+        handleWeatherChangeMessage(msg);
+        break;
       default:
         console.log('Unknown message type:', msg.type);
     }
@@ -139289,6 +139322,34 @@
     var worldName = msg.worldName || (msg.payload && msg.payload.worldName) || 'Unknown World';
     if (HUD && HUD.showNotification) {
       HUD.showNotification('Federation established with ' + worldName, 'success');
+    }
+  }
+
+  function handleWeatherChangeMessage(msg) {
+    if (!msg.payload || !msg.payload.weather) return;
+
+    var newWeather = msg.payload.weather;
+
+    gameState = State.applyMessage(gameState, msg);
+
+    if (msg.payload.zone) {
+      var playerZone = localPlayer ? localPlayer.zone : null;
+      if (playerZone !== msg.payload.zone) return;
+    }
+
+    var prevWeather = currentWeather;
+    currentWeather = newWeather;
+    if (World && World.setWeather) {
+      World.setWeather(sceneContext, currentWeather);
+    }
+    if (NPCs && NPCs.broadcastEvent) {
+      NPCs.broadcastEvent({ type: 'weather_change', data: { weather: currentWeather, previous: prevWeather } });
+    }
+    if (Audio && Audio.updateAmbientWeather) {
+      Audio.updateAmbientWeather(currentWeather);
+    }
+    if (HUD && HUD.showNotification) {
+      HUD.showNotification('Weather changed to ' + currentWeather, 'info');
     }
   }
 

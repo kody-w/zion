@@ -8658,7 +8658,22 @@
     }
   }
 
+  /**
+   * Get effective weather for a zone, checking zone-specific overrides in state
+   * @param {object} worldState - The world state (state.world)
+   * @param {string} zoneId - Zone to check
+   * @returns {string} Weather type for the zone
+   */
+  function getZoneWeather(worldState, zoneId) {
+    if (!worldState) return currentWeatherType;
+    if (worldState.zoneWeather && worldState.zoneWeather[zoneId]) {
+      return worldState.zoneWeather[zoneId].weather;
+    }
+    return worldState.weather || currentWeatherType;
+  }
+
   exports.getWeatherModifiers  = getWeatherModifiers;
+  exports.getZoneWeather       = getZoneWeather;
   exports.getResourceStage     = getResourceStage;
   exports.getWildlifeReaction  = getWildlifeReaction;
   exports.weatherCallbacks = weatherCallbacks;
