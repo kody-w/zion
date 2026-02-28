@@ -25463,61 +25463,47 @@
 
       var state = mesh.userData.animState || 'idle';
 
-      limbs.leftArm.rotation.x = 0;
-      limbs.rightArm.rotation.x = 0;
-      limbs.leftLeg.rotation.x = 0;
-      limbs.rightLeg.rotation.x = 0;
-      limbs.torso.rotation.x = 0;
-      limbs.torso.scale.set(1, 1, 1);
+      var targetBlend = state === 'idle' ? 0 : (state === 'walk' ? 0.5 : 1.0);
+      if (mesh.userData.animBlend === undefined) mesh.userData.animBlend = 0;
+      mesh.userData.animBlend += (targetBlend - mesh.userData.animBlend) * 0.12;
+      var blend = mesh.userData.animBlend;
+
+      var speed = 2 + blend * 10;        // 2 (idle sway) → 7 (walk) → 12 (run)
+      var swingAngle = blend * 0.9;       // 0 → 0.45 (walk) → 0.9 (run)
+      var armSwing = blend * 0.85;        // 0 → 0.42 (walk) → 0.85 (run)
+      var bobAmount = blend * 0.09;       // 0 → 0.045 → 0.09
+      var forwardLean = blend * 0.17;     // 0 → 0.085 → 0.17
+
+      var idleWeight = Math.max(0, 1 - blend * 2.5);
+      var breathe = Math.sin(t * 2) * 0.02 * idleWeight;
+      var sway = Math.sin(t * 1.5) * 0.02 * idleWeight;
+      var armSway = Math.sin(t * 1.3) * 0.05 * idleWeight;
+
+      var locoWeight = Math.min(1, blend * 2);
+      var legSwing = Math.sin(t * speed) * swingAngle * locoWeight;
+      var legSwingOpp = Math.sin(t * speed + Math.PI) * swingAngle * locoWeight;
+      var armSwingVal = Math.sin(t * speed + Math.PI) * armSwing * locoWeight;
+      var armSwingOppVal = Math.sin(t * speed) * armSwing * locoWeight;
+      var bob = Math.abs(Math.sin(t * speed)) * bobAmount * locoWeight;
+      var footRot = swingAngle * 0.5 * locoWeight;
+
+      limbs.leftLeg.rotation.x = legSwing;
+      limbs.rightLeg.rotation.x = legSwingOpp;
+      limbs.leftArm.rotation.x = armSwingVal;
+      limbs.rightArm.rotation.x = armSwingOppVal;
+      limbs.leftArm.rotation.z = armSway;
+      limbs.rightArm.rotation.z = -armSway;
+      limbs.leftFoot.rotation.x = Math.sin(t * speed) * footRot;
+      limbs.rightFoot.rotation.x = Math.sin(t * speed + Math.PI) * footRot;
+
+      limbs.torso.scale.y = 1.0 + breathe;
+      limbs.torso.scale.x = 1;
+      limbs.torso.scale.z = 1;
+      limbs.torso.rotation.x = forwardLean * locoWeight;
+      limbs.torso.rotation.z = sway;
+      limbs.torso.position.y = 0.9 + bob;
+      limbs.head.position.y = 1.5 + bob;
       limbs.head.rotation.x = 0;
-
-      if (state === 'idle') {
-        var breathe = Math.sin(t * 2) * 0.02;
-        limbs.torso.scale.y = 1.0 + breathe;
-
-        limbs.torso.rotation.z = Math.sin(t * 1.5) * 0.02;
-
-        limbs.leftArm.rotation.z = Math.sin(t * 1.3) * 0.05;
-        limbs.rightArm.rotation.z = -Math.sin(t * 1.3) * 0.05;
-
-      } else if (state === 'walk') {
-        var walkSpeed = 8;
-        var swingAngle = 0.5;
-
-        limbs.leftLeg.rotation.x = Math.sin(t * walkSpeed) * swingAngle;
-        limbs.rightLeg.rotation.x = Math.sin(t * walkSpeed + Math.PI) * swingAngle;
-
-        limbs.leftArm.rotation.x = Math.sin(t * walkSpeed + Math.PI) * swingAngle * 0.7;
-        limbs.rightArm.rotation.x = Math.sin(t * walkSpeed) * swingAngle * 0.7;
-
-        limbs.leftFoot.rotation.x = Math.sin(t * walkSpeed) * swingAngle * 0.5;
-        limbs.rightFoot.rotation.x = Math.sin(t * walkSpeed + Math.PI) * swingAngle * 0.5;
-
-        var bob = Math.abs(Math.sin(t * walkSpeed)) * 0.05;
-        limbs.torso.position.y = 0.9 + bob;
-        limbs.head.position.y = 1.5 + bob;
-
-        limbs.torso.rotation.x = 0.05;
-
-      } else if (state === 'run') {
-        var runSpeed = 12;
-        var runSwingAngle = 0.8;
-
-        limbs.leftLeg.rotation.x = Math.sin(t * runSpeed) * runSwingAngle;
-        limbs.rightLeg.rotation.x = Math.sin(t * runSpeed + Math.PI) * runSwingAngle;
-
-        limbs.leftArm.rotation.x = Math.sin(t * runSpeed + Math.PI) * runSwingAngle;
-        limbs.rightArm.rotation.x = Math.sin(t * runSpeed) * runSwingAngle;
-
-        limbs.leftFoot.rotation.x = Math.sin(t * runSpeed) * runSwingAngle * 0.5;
-        limbs.rightFoot.rotation.x = Math.sin(t * runSpeed + Math.PI) * runSwingAngle * 0.5;
-
-        var runBob = Math.abs(Math.sin(t * runSpeed)) * 0.08;
-        limbs.torso.position.y = 0.9 + runBob;
-        limbs.head.position.y = 1.5 + runBob;
-
-        limbs.torso.rotation.x = 0.15;
-      }
     });
   }
 
@@ -48038,60 +48024,60 @@
 
 
 // npcs.js
-(function (exports) {
+(function(exports) {
 
   var EMBEDDED_AGENTS = [{"id":"agent_001","name":"Iris Skyhigh","archetype":"gardener","position":{"zone":"nexus","x":-3.52,"y":0,"z":-4.23},"personality":["patient","nurturing","observant"]},{"id":"agent_002","name":"Wren Moonwhisper","archetype":"gardener","position":{"zone":"nexus","x":-1.48,"y":0,"z":9.35},"personality":["patient","nurturing","observant"]},{"id":"agent_003","name":"Meadow Mindclear","archetype":"builder","position":{"zone":"nexus","x":-1.57,"y":0,"z":-18.47},"personality":["creative","methodical","ambitious"]},{"id":"agent_004","name":"Frost Rootdeep","archetype":"builder","position":{"zone":"nexus","x":5.25,"y":0,"z":-4.22},"personality":["creative","methodical","ambitious"]},{"id":"agent_005","name":"Luna Pathfinder","archetype":"storyteller","position":{"zone":"nexus","x":-4.94,"y":0,"z":2.64},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_006","name":"River Soulbright","archetype":"storyteller","position":{"zone":"nexus","x":2.96,"y":0,"z":14.81},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_007","name":"Luna Rootdeep","archetype":"merchant","position":{"zone":"nexus","x":8.85,"y":0,"z":1.49},"personality":["shrewd","social","opportunistic"]},{"id":"agent_008","name":"Felix Shadowmender","archetype":"merchant","position":{"zone":"nexus","x":-9.35,"y":0,"z":-12.86},"personality":["shrewd","social","opportunistic"]},{"id":"agent_009","name":"Storm Windwalker","archetype":"explorer","position":{"zone":"nexus","x":3.1,"y":0,"z":16.5},"personality":["curious","brave","adaptable"]},{"id":"agent_010","name":"Wren Voicetrue","archetype":"teacher","position":{"zone":"nexus","x":1.87,"y":0,"z":-4.78},"personality":["wise","patient","generous"]},{"id":"agent_011","name":"Delta Hopefast","archetype":"musician","position":{"zone":"nexus","x":6.52,"y":0,"z":-17.81},"personality":["artistic","rhythmic","emotional"]},{"id":"agent_012","name":"Vale Truthseeker","archetype":"musician","position":{"zone":"nexus","x":-4.36,"y":0,"z":6.84},"personality":["artistic","rhythmic","emotional"]},{"id":"agent_013","name":"Luna Songsmith","archetype":"healer","position":{"zone":"nexus","x":11.31,"y":0,"z":-3.12},"personality":["compassionate","calm","perceptive"]},{"id":"agent_014","name":"Wren Starseed","archetype":"philosopher","position":{"zone":"nexus","x":5.79,"y":0,"z":3.82},"personality":["contemplative","analytical","questioning"]},{"id":"agent_015","name":"Lyra Thoughtdeep","archetype":"artist","position":{"zone":"nexus","x":9.82,"y":0,"z":-13.97},"personality":["creative","passionate","experimental"]},{"id":"agent_016","name":"Vale Waterborn","archetype":"gardener","position":{"zone":"gardens","x":206.88,"y":0,"z":11.65},"personality":["patient","nurturing","observant"]},{"id":"agent_017","name":"Meadow Lightbringer","archetype":"gardener","position":{"zone":"gardens","x":176.17,"y":0,"z":24.48},"personality":["patient","nurturing","observant"]},{"id":"agent_018","name":"Phoenix Waterborn","archetype":"gardener","position":{"zone":"gardens","x":188.41,"y":0,"z":41.09},"personality":["patient","nurturing","observant"]},{"id":"agent_019","name":"Cliff Songsmith","archetype":"gardener","position":{"zone":"gardens","x":208.31,"y":0,"z":14.75},"personality":["patient","nurturing","observant"]},{"id":"agent_020","name":"River Pathfinder","archetype":"gardener","position":{"zone":"gardens","x":210.68,"y":0,"z":17.36},"personality":["patient","nurturing","observant"]},{"id":"agent_021","name":"Coral Mindclear","archetype":"gardener","position":{"zone":"gardens","x":198.33,"y":0,"z":24.32},"personality":["patient","nurturing","observant"]},{"id":"agent_022","name":"Haven Timewalker","archetype":"gardener","position":{"zone":"gardens","x":201.49,"y":0,"z":40.68},"personality":["patient","nurturing","observant"]},{"id":"agent_023","name":"Reef Spiritfree","archetype":"gardener","position":{"zone":"gardens","x":208.47,"y":0,"z":34.64},"personality":["patient","nurturing","observant"]},{"id":"agent_024","name":"Ezra Willstrong","archetype":"healer","position":{"zone":"gardens","x":208.5,"y":0,"z":36.26},"personality":["compassionate","calm","perceptive"]},{"id":"agent_025","name":"Vale Pathfinder","archetype":"healer","position":{"zone":"gardens","x":191.91,"y":0,"z":20.74},"personality":["compassionate","calm","perceptive"]},{"id":"agent_026","name":"Haven Heartstrong","archetype":"healer","position":{"zone":"gardens","x":193.7,"y":0,"z":36.69},"personality":["compassionate","calm","perceptive"]},{"id":"agent_027","name":"Mira Truthseeker","archetype":"healer","position":{"zone":"gardens","x":197.47,"y":0,"z":53.6},"personality":["compassionate","calm","perceptive"]},{"id":"agent_028","name":"Luna Rootdeep","archetype":"teacher","position":{"zone":"athenaeum","x":89.73,"y":0,"z":-233.78},"personality":["wise","patient","generous"]},{"id":"agent_029","name":"Frost Voicetrue","archetype":"teacher","position":{"zone":"athenaeum","x":109.31,"y":0,"z":-202.77},"personality":["wise","patient","generous"]},{"id":"agent_030","name":"Cedar Timewalker","archetype":"teacher","position":{"zone":"athenaeum","x":106.52,"y":0,"z":-209.23},"personality":["wise","patient","generous"]},{"id":"agent_031","name":"Aria Waterborn","archetype":"teacher","position":{"zone":"athenaeum","x":117.76,"y":0,"z":-221.17},"personality":["wise","patient","generous"]},{"id":"agent_032","name":"Nova Dreamweaver","archetype":"philosopher","position":{"zone":"athenaeum","x":82.49,"y":0,"z":-226.55},"personality":["contemplative","analytical","questioning"]},{"id":"agent_033","name":"Haven Handsteady","archetype":"philosopher","position":{"zone":"athenaeum","x":111.3,"y":0,"z":-237.13},"personality":["contemplative","analytical","questioning"]},{"id":"agent_034","name":"Fern Handsteady","archetype":"philosopher","position":{"zone":"athenaeum","x":100.74,"y":0,"z":-214.41},"personality":["contemplative","analytical","questioning"]},{"id":"agent_035","name":"Ezra Spaceborn","archetype":"philosopher","position":{"zone":"athenaeum","x":95.86,"y":0,"z":-210.51},"personality":["contemplative","analytical","questioning"]},{"id":"agent_036","name":"Echo Thoughtdeep","archetype":"storyteller","position":{"zone":"athenaeum","x":105.79,"y":0,"z":-196.86},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_037","name":"Sage Starseed","archetype":"storyteller","position":{"zone":"athenaeum","x":108.05,"y":0,"z":-227.92},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_038","name":"Haven Handsteady","archetype":"storyteller","position":{"zone":"athenaeum","x":92.77,"y":0,"z":-230.7},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_039","name":"Ezra Dreamweaver","archetype":"storyteller","position":{"zone":"athenaeum","x":112.18,"y":0,"z":-227.25},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_040","name":"Echo Thoughtdeep","archetype":"artist","position":{"zone":"studio","x":-200.93,"y":0,"z":-90.11},"personality":["creative","passionate","experimental"]},{"id":"agent_041","name":"River Mindclear","archetype":"artist","position":{"zone":"studio","x":-209.5,"y":0,"z":-103.86},"personality":["creative","passionate","experimental"]},{"id":"agent_042","name":"Luna Stonecarver","archetype":"artist","position":{"zone":"studio","x":-219.79,"y":0,"z":-111.63},"personality":["creative","passionate","experimental"]},{"id":"agent_043","name":"Stella Windwalker","archetype":"artist","position":{"zone":"studio","x":-207.57,"y":0,"z":-94.45},"personality":["creative","passionate","experimental"]},{"id":"agent_044","name":"Iris Timewalker","archetype":"artist","position":{"zone":"studio","x":-184.81,"y":0,"z":-100.24},"personality":["creative","passionate","experimental"]},{"id":"agent_045","name":"Echo Soulbright","archetype":"artist","position":{"zone":"studio","x":-195.0,"y":0,"z":-96.79},"personality":["creative","passionate","experimental"]},{"id":"agent_046","name":"Drift Shadowmender","archetype":"musician","position":{"zone":"studio","x":-186.45,"y":0,"z":-88.84},"personality":["artistic","rhythmic","emotional"]},{"id":"agent_047","name":"Ash Thoughtdeep","archetype":"musician","position":{"zone":"studio","x":-196.49,"y":0,"z":-112.98},"personality":["artistic","rhythmic","emotional"]},{"id":"agent_048","name":"Grove Skyhigh","archetype":"musician","position":{"zone":"studio","x":-188.36,"y":0,"z":-95.09},"personality":["artistic","rhythmic","emotional"]},{"id":"agent_049","name":"Willow Heartstrong","archetype":"musician","position":{"zone":"studio","x":-184.42,"y":0,"z":-100.38},"personality":["artistic","rhythmic","emotional"]},{"id":"agent_050","name":"Dawn Mindclear","archetype":"musician","position":{"zone":"studio","x":-178.15,"y":0,"z":-104.01},"personality":["artistic","rhythmic","emotional"]},{"id":"agent_051","name":"Quill Dreamweaver","archetype":"musician","position":{"zone":"studio","x":-180.64,"y":0,"z":-98.6},"personality":["artistic","rhythmic","emotional"]},{"id":"agent_052","name":"Phoenix Sunweaver","archetype":"explorer","position":{"zone":"wilds","x":-36.55,"y":0,"z":245.69},"personality":["curious","brave","adaptable"]},{"id":"agent_053","name":"Ridge Handsteady","archetype":"explorer","position":{"zone":"wilds","x":-31.88,"y":0,"z":277.72},"personality":["curious","brave","adaptable"]},{"id":"agent_054","name":"Orion Sunweaver","archetype":"explorer","position":{"zone":"wilds","x":-19.53,"y":0,"z":268.83},"personality":["curious","brave","adaptable"]},{"id":"agent_055","name":"Phoenix Spiritfree","archetype":"explorer","position":{"zone":"wilds","x":-53.07,"y":0,"z":266.9},"personality":["curious","brave","adaptable"]},{"id":"agent_056","name":"Sol Mindclear","archetype":"explorer","position":{"zone":"wilds","x":-22.7,"y":0,"z":252.78},"personality":["curious","brave","adaptable"]},{"id":"agent_057","name":"Storm Skyhigh","archetype":"explorer","position":{"zone":"wilds","x":-38.57,"y":0,"z":259.97},"personality":["curious","brave","adaptable"]},{"id":"agent_058","name":"Cedar Spiritfree","archetype":"explorer","position":{"zone":"wilds","x":-10.88,"y":0,"z":248.31},"personality":["curious","brave","adaptable"]},{"id":"agent_059","name":"Cliff Sunweaver","archetype":"explorer","position":{"zone":"wilds","x":-35.33,"y":0,"z":276.96},"personality":["curious","brave","adaptable"]},{"id":"agent_060","name":"Coral Songsmith","archetype":"storyteller","position":{"zone":"wilds","x":-36.24,"y":0,"z":254.9},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_061","name":"Ridge Heartstrong","archetype":"storyteller","position":{"zone":"wilds","x":-28.76,"y":0,"z":244.26},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_062","name":"Nova Hopefast","archetype":"merchant","position":{"zone":"agora","x":-187.21,"y":0,"z":104.64},"personality":["shrewd","social","opportunistic"]},{"id":"agent_063","name":"Jasper Shadowmender","archetype":"merchant","position":{"zone":"agora","x":-178.52,"y":0,"z":120.04},"personality":["shrewd","social","opportunistic"]},{"id":"agent_064","name":"Opal Moonwhisper","archetype":"merchant","position":{"zone":"agora","x":-166.59,"y":0,"z":122.88},"personality":["shrewd","social","opportunistic"]},{"id":"agent_065","name":"Reef Hopefast","archetype":"merchant","position":{"zone":"agora","x":-174.35,"y":0,"z":105.06},"personality":["shrewd","social","opportunistic"]},{"id":"agent_066","name":"Blaze Wordkeeper","archetype":"merchant","position":{"zone":"agora","x":-192.18,"y":0,"z":125.76},"personality":["shrewd","social","opportunistic"]},{"id":"agent_067","name":"Cedar Wordkeeper","archetype":"merchant","position":{"zone":"agora","x":-172.76,"y":0,"z":103.4},"personality":["shrewd","social","opportunistic"]},{"id":"agent_068","name":"Flint Rootdeep","archetype":"merchant","position":{"zone":"agora","x":-177.36,"y":0,"z":127.54},"personality":["shrewd","social","opportunistic"]},{"id":"agent_069","name":"River Soulbright","archetype":"merchant","position":{"zone":"agora","x":-171.67,"y":0,"z":128.52},"personality":["shrewd","social","opportunistic"]},{"id":"agent_070","name":"Phoenix Thoughtdeep","archetype":"storyteller","position":{"zone":"agora","x":-189.25,"y":0,"z":112.47},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_071","name":"River Mindclear","archetype":"storyteller","position":{"zone":"agora","x":-205.8,"y":0,"z":122.47},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_072","name":"Ezra Spiritfree","archetype":"explorer","position":{"zone":"agora","x":-192.12,"y":0,"z":142.35},"personality":["curious","brave","adaptable"]},{"id":"agent_073","name":"Dawn Horizonseek","archetype":"explorer","position":{"zone":"agora","x":-198.18,"y":0,"z":124.29},"personality":["curious","brave","adaptable"]},{"id":"agent_074","name":"Vale Spaceborn","archetype":"builder","position":{"zone":"commons","x":151.0,"y":0,"z":185.21},"personality":["creative","methodical","ambitious"]},{"id":"agent_075","name":"Fern Spaceborn","archetype":"builder","position":{"zone":"commons","x":173.39,"y":0,"z":200.71},"personality":["creative","methodical","ambitious"]},{"id":"agent_076","name":"Luna Moonwhisper","archetype":"builder","position":{"zone":"commons","x":187.99,"y":0,"z":189.45},"personality":["creative","methodical","ambitious"]},{"id":"agent_077","name":"River Footswift","archetype":"builder","position":{"zone":"commons","x":155.79,"y":0,"z":195.82},"personality":["creative","methodical","ambitious"]},{"id":"agent_078","name":"Storm Sunweaver","archetype":"builder","position":{"zone":"commons","x":176.88,"y":0,"z":196.54},"personality":["creative","methodical","ambitious"]},{"id":"agent_079","name":"Grove Pathfinder","archetype":"builder","position":{"zone":"commons","x":161.19,"y":0,"z":204.26},"personality":["creative","methodical","ambitious"]},{"id":"agent_080","name":"Aria Spaceborn","archetype":"builder","position":{"zone":"commons","x":171.17,"y":0,"z":199.33},"personality":["creative","methodical","ambitious"]},{"id":"agent_081","name":"Vale Spiritfree","archetype":"builder","position":{"zone":"commons","x":185.9,"y":0,"z":197.6},"personality":["creative","methodical","ambitious"]},{"id":"agent_082","name":"Opal Earthshaper","archetype":"healer","position":{"zone":"commons","x":173.05,"y":0,"z":212.91},"personality":["compassionate","calm","perceptive"]},{"id":"agent_083","name":"Flint Heartstrong","archetype":"healer","position":{"zone":"commons","x":174.08,"y":0,"z":185.05},"personality":["compassionate","calm","perceptive"]},{"id":"agent_084","name":"Ash Sunweaver","archetype":"artist","position":{"zone":"commons","x":171.38,"y":0,"z":208.33},"personality":["creative","passionate","experimental"]},{"id":"agent_085","name":"Echo Footswift","archetype":"artist","position":{"zone":"commons","x":171.7,"y":0,"z":197.45},"personality":["creative","passionate","experimental"]},{"id":"agent_086","name":"North Farwalker","archetype":"explorer","position":{"zone":"arena","x":15.09,"y":0,"z":-246.47},"personality":["curious","brave","adaptable"]},{"id":"agent_087","name":"Zephyr Trailblaze","archetype":"explorer","position":{"zone":"arena","x":-20.39,"y":0,"z":-236.46},"personality":["curious","brave","adaptable"]},{"id":"agent_088","name":"Atlas Pathforge","archetype":"explorer","position":{"zone":"arena","x":3.11,"y":0,"z":-248.24},"personality":["curious","brave","adaptable"]},{"id":"agent_089","name":"Ridge Stonemaker","archetype":"builder","position":{"zone":"arena","x":11.17,"y":0,"z":-232.21},"personality":["creative","methodical","ambitious"]},{"id":"agent_090","name":"Cedar Hammerfall","archetype":"builder","position":{"zone":"arena","x":-12.72,"y":0,"z":-233.38},"personality":["creative","methodical","ambitious"]},{"id":"agent_091","name":"Blaze Ironwright","archetype":"builder","position":{"zone":"arena","x":-2.42,"y":0,"z":-258.31},"personality":["creative","methodical","ambitious"]},{"id":"agent_092","name":"Rain Dreamweaver","archetype":"musician","position":{"zone":"arena","x":6.93,"y":0,"z":-240.69},"personality":["artistic","rhythmic","emotional"]},{"id":"agent_093","name":"Cliff Hopefast","archetype":"musician","position":{"zone":"arena","x":-9.65,"y":0,"z":-233.23},"personality":["artistic","rhythmic","emotional"]},{"id":"agent_094","name":"Lyra Wordweaver","archetype":"storyteller","position":{"zone":"arena","x":6.44,"y":0,"z":-247.62},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_095","name":"Bard Eventide","archetype":"storyteller","position":{"zone":"arena","x":5.13,"y":0,"z":-227.0},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_096","name":"Mira Voicefull","archetype":"storyteller","position":{"zone":"arena","x":-9.32,"y":0,"z":-235.02},"personality":["expressive","imaginative","empathetic"]},{"id":"agent_097","name":"Orin Coinfast","archetype":"merchant","position":{"zone":"arena","x":0.03,"y":0,"z":-216.53},"personality":["shrewd","social","opportunistic"]},{"id":"agent_098","name":"Jade Tradewell","archetype":"merchant","position":{"zone":"arena","x":-20.82,"y":0,"z":-232.23},"personality":["shrewd","social","opportunistic"]},{"id":"agent_099","name":"Zion Truthseeker","archetype":"teacher","position":{"zone":"arena","x":-5.71,"y":0,"z":-241.87},"personality":["wise","patient","generous"]},{"id":"agent_100","name":"Sage Handsteady","archetype":"teacher","position":{"zone":"arena","x":21.72,"y":0,"z":-240.1},"personality":["wise","patient","generous"]}];
 
   var ZONE_CENTERS = {
-    nexus: { x: 0, z: 0 },
-    gardens: { x: 200, z: 30 },
-    athenaeum: { x: 100, z: -220 },
-    studio: { x: -200, z: -100 },
-    wilds: { x: -30, z: 260 },
-    agora: { x: -190, z: 120 },
-    commons: { x: 170, z: 190 },
-    arena: { x: 0, z: -240 }
+    nexus: {x: 0, z: 0},
+    gardens: {x: 200, z: 30},
+    athenaeum: {x: 100, z: -220},
+    studio: {x: -200, z: -100},
+    wilds: {x: -30, z: 260},
+    agora: {x: -190, z: 120},
+    commons: {x: 170, z: 190},
+    arena: {x: 0, z: -240}
   };
 
   var ZONE_LANDMARKS = {
     nexus: [
-      { x: 0, z: 0, name: 'obelisk', types: ['all'] },
-      { x: 15, z: 15, name: 'bulletin', types: ['all'] },
-      { x: -10, z: 8, name: 'bench', types: ['all'] }
+      {x: 0, z: 0, name: 'obelisk', types: ['all']},
+      {x: 15, z: 15, name: 'bulletin', types: ['all']},
+      {x: -10, z: 8, name: 'bench', types: ['all']}
     ],
     gardens: [
-      { x: 200, z: 30, name: 'fountain', types: ['gardener', 'healer'] },
-      { x: 210, z: 25, name: 'well', types: ['gardener'] },
-      { x: 195, z: 40, name: 'flowerbed', types: ['gardener', 'artist'] },
-      { x: 205, z: 20, name: 'greenhouse', types: ['gardener', 'healer', 'teacher'] }
+      {x: 200, z: 30, name: 'fountain', types: ['gardener', 'healer']},
+      {x: 210, z: 25, name: 'well', types: ['gardener']},
+      {x: 195, z: 40, name: 'flowerbed', types: ['gardener', 'artist']},
+      {x: 205, z: 20, name: 'greenhouse', types: ['gardener', 'healer', 'teacher']}
     ],
     athenaeum: [
-      { x: 100, z: -220, name: 'library', types: ['teacher', 'philosopher', 'storyteller'] },
-      { x: 110, z: -215, name: 'scriptorium', types: ['storyteller', 'philosopher'] },
-      { x: 95, z: -230, name: 'telescope', types: ['teacher', 'explorer'] }
+      {x: 100, z: -220, name: 'library', types: ['teacher', 'philosopher', 'storyteller']},
+      {x: 110, z: -215, name: 'scriptorium', types: ['storyteller', 'philosopher']},
+      {x: 95, z: -230, name: 'telescope', types: ['teacher', 'explorer']}
     ],
     studio: [
-      { x: -200, z: -100, name: 'easel', types: ['artist', 'builder'] },
-      { x: -205, z: -105, name: 'piano', types: ['musician'] },
-      { x: -195, z: -95, name: 'workbench', types: ['builder', 'artist'] }
+      {x: -200, z: -100, name: 'easel', types: ['artist', 'builder']},
+      {x: -205, z: -105, name: 'piano', types: ['musician']},
+      {x: -195, z: -95, name: 'workbench', types: ['builder', 'artist']}
     ],
     wilds: [
-      { x: -30, z: 260, name: 'campfire', types: ['explorer'] },
-      { x: -20, z: 270, name: 'lookout', types: ['explorer', 'storyteller'] },
-      { x: -40, z: 255, name: 'trail_marker', types: ['explorer'] }
+      {x: -30, z: 260, name: 'campfire', types: ['explorer']},
+      {x: -20, z: 270, name: 'lookout', types: ['explorer', 'storyteller']},
+      {x: -40, z: 255, name: 'trail_marker', types: ['explorer']}
     ],
     agora: [
-      { x: -190, z: 120, name: 'market_stall', types: ['merchant'] },
-      { x: -185, z: 125, name: 'notice_board', types: ['merchant', 'storyteller'] },
-      { x: -195, z: 115, name: 'trade_post', types: ['merchant'] }
+      {x: -190, z: 120, name: 'market_stall', types: ['merchant']},
+      {x: -185, z: 125, name: 'notice_board', types: ['merchant', 'storyteller']},
+      {x: -195, z: 115, name: 'trade_post', types: ['merchant']}
     ],
     commons: [
-      { x: 170, z: 190, name: 'gathering_circle', types: ['all'] },
-      { x: 175, z: 195, name: 'message_tree', types: ['storyteller', 'philosopher'] }
+      {x: 170, z: 190, name: 'gathering_circle', types: ['all']},
+      {x: 175, z: 195, name: 'message_tree', types: ['storyteller', 'philosopher']}
     ],
     arena: [
-      { x: 0, z: -240, name: 'arena_center', types: ['all'] },
-      { x: 5, z: -235, name: 'training_dummy', types: ['builder', 'explorer'] }
+      {x: 0, z: -240, name: 'arena_center', types: ['all']},
+      {x: 5, z: -235, name: 'training_dummy', types: ['builder', 'explorer']}
     ]
   };
 
@@ -49372,7 +49358,7 @@
 
     lastPlayerIdForQuests = playerId;
 
-    npcAgents.forEach(function (agent) {
+    npcAgents.forEach(function(agent) {
       var mesh = npcMeshes.get(agent.id);
       if (!mesh) return;
 
@@ -49552,7 +49538,7 @@
     if (!THREE) return;
     if (activityParticles.length >= 20) return; // Global particle limit
 
-    var npcParticleCount = activityParticles.filter(function (p) { return p.npcId === npcMesh.userData.agentId; }).length;
+    var npcParticleCount = activityParticles.filter(function(p) { return p.npcId === npcMesh.userData.agentId; }).length;
     if (npcParticleCount >= 3) return; // Per-NPC limit
 
     var color, size;
@@ -49665,7 +49651,7 @@
       console.log('NpcDialogue manager initialized');
     }
 
-    npcAgents.forEach(function (agent) {
+    npcAgents.forEach(function(agent) {
       npcStates.set(agent.id, {
         currentState: 'idle',
         stateTimer: 5,
@@ -49702,7 +49688,7 @@
 
     storedSceneContext = sceneContext;
 
-    npcAgents.forEach(function (agent) {
+    npcAgents.forEach(function(agent) {
       var group = createHumanoidNPC(agent.archetype, THREE, agent.id);
 
       var canvas = document.createElement('canvas');
@@ -49730,7 +49716,7 @@
       label.position.y = 2.5;
       group.add(label);
 
-      var zoneCenter = ZONE_CENTERS[agent.position.zone] || { x: 0, z: 0 };
+      var zoneCenter = ZONE_CENTERS[agent.position.zone] || {x: 0, z: 0};
       group.position.set(
         zoneCenter.x + agent.position.x,
         agent.position.y,
@@ -49833,7 +49819,7 @@
 
     if (!NpcAI && typeof window !== 'undefined' && window.NpcAI) {
       NpcAI = window.NpcAI;
-      npcAgents.forEach(function (agent) {
+      npcAgents.forEach(function(agent) {
         if (!npcBrains.has(agent.id) && NpcAI.createNpcBrain) {
           npcBrains.set(agent.id, NpcAI.createNpcBrain(agent.archetype, agent.id));
         }
@@ -49844,8 +49830,8 @@
     if (NpcAI && pendingEvents.length > 0) {
       var events = pendingEvents.slice();
       pendingEvents = [];
-      events.forEach(function (event) {
-        npcBrains.forEach(function (brain) {
+      events.forEach(function(event) {
+        npcBrains.forEach(function(brain) {
           if (NpcAI.handleEvent) NpcAI.handleEvent(brain.memory, event);
         });
       });
@@ -49873,7 +49859,7 @@
       }
     }
 
-    npcAgents.forEach(function (agent, index) {
+    npcAgents.forEach(function(agent, index) {
       var state = npcStates.get(agent.id);
       if (!state) return;
 
@@ -49940,7 +49926,7 @@
             });
           }
         } else {
-          npcAgents.forEach(function (other) {
+          npcAgents.forEach(function(other) {
             if (other.id === agent.id) return;
             var ndx = other.position.x - agent.position.x;
             var ndz = other.position.z - agent.position.z;
@@ -49998,12 +49984,12 @@
     });
 
     if (NpcAI && NpcAI.generateConversation && npcUpdateFrame % 120 === 0) {
-      npcAgents.forEach(function (agent) {
+      npcAgents.forEach(function(agent) {
         var state = npcStates.get(agent.id);
         if (!state || state.currentState !== 'collaborating' || !state.collaborateTarget) return;
         if (chatBubbles.has(agent.id)) return; // Already showing dialogue
 
-        var partner = npcAgents.find(function (a) { return a.id === state.collaborateTarget; });
+        var partner = npcAgents.find(function(a) { return a.id === state.collaborateTarget; });
         if (!partner) return;
 
         var convo = NpcAI.generateConversation(agent.name, agent.archetype, partner.name, partner.archetype);
@@ -50020,7 +50006,7 @@
     updateActivityParticles(deltaTime);
     updateSpeechBubbleTimers(deltaTime);
 
-    npcAgents.forEach(function (agent) {
+    npcAgents.forEach(function(agent) {
       if (playerPos) {
         var dx = agent.position.x - playerPos.x;
         var dz = agent.position.z - playerPos.z;
@@ -50213,7 +50199,7 @@
           state.destination = { x: landmark.x + lmOffX, z: landmark.z + lmOffZ };
           state.landmarkTarget = landmark.name;
         } else {
-          var zoneCenter = ZONE_CENTERS[agent.position.zone] || { x: 0, z: 0 };
+          var zoneCenter = ZONE_CENTERS[agent.position.zone] || {x: 0, z: 0};
           var wAngle = seededRandom(seed + 2) * Math.PI * 2;
           var wDist = 5 + seededRandom(seed + 3) * 20;
           var destX = agent.position.x + Math.cos(wAngle) * wDist;
@@ -50241,7 +50227,7 @@
         break;
 
       case 'socializing':
-        var nearby = npcAgents.filter(function (other) {
+        var nearby = npcAgents.filter(function(other) {
           if (other.id === agent.id) return false;
           var dx = other.position.x - agent.position.x;
           var dz = other.position.z - agent.position.z;
@@ -50617,7 +50603,7 @@
 
   function updateChatBubbles(deltaTime) {
     var toRemove = [];
-    chatBubbles.forEach(function (bubble, agentId) {
+    chatBubbles.forEach(function(bubble, agentId) {
       bubble.timer -= deltaTime;
 
       if (bubble.timer <= 0) {
@@ -50702,7 +50688,7 @@
     var height = window.innerHeight;
 
     var toRemove = [];
-    speechBubbles.forEach(function (bubble, npcId) {
+    speechBubbles.forEach(function(bubble, npcId) {
       var npcMesh = npcMeshes.get(npcId);
       if (!npcMesh) {
         if (bubble.element && bubble.element.parentNode) {
@@ -50741,7 +50727,7 @@
 
   function updateSpeechBubbleTimers(deltaTime) {
     var toRemove = [];
-    speechBubbles.forEach(function (bubble, npcId) {
+    speechBubbles.forEach(function(bubble, npcId) {
       bubble.timer -= deltaTime;
 
       if (bubble.timer <= 0) {
@@ -50869,8 +50855,8 @@
 
   function reloadZoneNPCs(sceneContext, currentZone, playerPos) {
     if (!playerPos) {
-      npcMeshes.forEach(function (mesh, agentId) {
-        var agent = npcAgents.find(function (a) { return a.id === agentId; });
+      npcMeshes.forEach(function(mesh, agentId) {
+        var agent = npcAgents.find(function(a) { return a.id === agentId; });
         if (agent) {
           mesh.visible = (agent.position.zone === currentZone);
         }
@@ -50878,8 +50864,8 @@
       console.log(`Showing NPCs for zone: ${currentZone}`);
     } else {
       var viewDist = 200;
-      npcMeshes.forEach(function (mesh, agentId) {
-        var agent = npcAgents.find(function (a) { return a.id === agentId; });
+      npcMeshes.forEach(function(mesh, agentId) {
+        var agent = npcAgents.find(function(a) { return a.id === agentId; });
         if (agent) {
           var dx = agent.position.x - playerPos.x;
           var dz = agent.position.z - playerPos.z;
@@ -50891,11 +50877,11 @@
   }
 
   function getNPCsInZone(zone) {
-    return npcAgents.filter(function (agent) { return agent.position.zone === zone; });
+    return npcAgents.filter(function(agent) { return agent.position.zone === zone; });
   }
 
   function getNPCById(id) {
-    return npcAgents.find(function (agent) { return agent.id === id; });
+    return npcAgents.find(function(agent) { return agent.id === id; });
   }
 
   function findNearestNPC(worldX, worldZ, maxDist) {
@@ -51017,7 +51003,7 @@
   }
 
   function getNPCPositions() {
-    return npcAgents.map(function (agent) {
+    return npcAgents.map(function(agent) {
       return {
         id: agent.id,
         x: agent.position.x,
@@ -51237,14 +51223,14 @@
   exports.showNPCSpeechBubble = showNPCSpeechBubble;
   exports.updateSpeechBubbles = updateSpeechBubbles;
   exports.clearSpeechBubbles = clearSpeechBubbles;
-  exports.getAgents = function () { return npcAgents; };
+  exports.getAgents = function() { return npcAgents; };
   exports.buildNpcDialogueContext = buildNpcDialogueContext;
-  exports.getDialogueHistory = function () { return recentDialogueHistory.slice(); };
-  exports.getDialogueTrend = function () {
+  exports.getDialogueHistory = function() { return recentDialogueHistory.slice(); };
+  exports.getDialogueTrend = function() {
     if (!dialogue || !dialogue.detectTrend) return null;
     return dialogue.detectTrend(recentDialogueHistory);
   };
-  exports.getNearbyNPCCount = function (playerPos, radius) {
+  exports.getNearbyNPCCount = function(playerPos, radius) {
     if (!playerPos || !npcAgents) return 0;
     var count = 0;
     for (var i = 0; i < npcAgents.length; i++) {
@@ -51258,15 +51244,15 @@
   };
 
   var ARCHETYPE_ANIM_STATES = {
-    gardener: 'tend',
-    builder: 'hammer',
-    musician: 'sway',
-    merchant: 'idle-look',
-    explorer: 'scan',
-    teacher: 'teach',
-    healer: 'heal',
+    gardener:    'tend',
+    builder:     'hammer',
+    musician:    'sway',
+    merchant:    'idle-look',
+    explorer:    'scan',
+    teacher:     'teach',
+    healer:      'heal',
     philosopher: 'ponder',
-    artist: 'create',
+    artist:      'create',
     storyteller: 'gesture'
   };
 
@@ -51275,13 +51261,7 @@
     return ARCHETYPE_ANIM_STATES[archetype] || 'idle';
   }
 
-  function triggerProximityGreeting(npcId, text) {
-    if (typeof document === 'undefined') return;
-    showChatBubbleWithText({ id: npcId }, text);
-  }
-
   exports.getNPCAnimState = getNPCAnimState;
-  exports.triggerProximityGreeting = triggerProximityGreeting;
 
 })(typeof module !== 'undefined' ? module.exports : (window.NPCs = {}));
 
@@ -136343,6 +136323,7 @@
   var wellnessState = null;
   var wellnessSessionId = null;
   var footstepTimer = 0;
+  var headBobPhase = 0; // camera bob phase for movement feel
   var greetedNPCIds = {};
   var npcGreetCooldown = 0;
   var currentTimePeriod = 'morning';  // tracks dawn/morning/midday/afternoon/evening/night
@@ -138192,6 +138173,8 @@
       var deltaTime = (timestamp - lastTimestamp) / 1000; // seconds
       lastTimestamp = timestamp;
 
+      if (deltaTime > 0.1) deltaTime = 0.1; // Cap at 100ms (10fps minimum)
+
       npcUpdateFrame++;
       frameCount++;
 
@@ -138495,16 +138478,10 @@
           }
 
           footstepTimer += deltaTime;
-          if (footstepTimer >= 0.4) {
-            var footstepTerrain = 'grass'; // default
-            if (currentZone === 'nexus') footstepTerrain = 'stone';
-            else if (currentZone === 'gardens') footstepTerrain = 'grass';
-            else if (currentZone === 'athenaeum') footstepTerrain = 'stone';
-            else if (currentZone === 'studio') footstepTerrain = 'wood';
-            else if (currentZone === 'wilds') footstepTerrain = 'grass';
-            else if (currentZone === 'agora') footstepTerrain = 'stone';
-            else if (currentZone === 'commons') footstepTerrain = 'wood';
-            else if (currentZone === 'arena') footstepTerrain = 'stone';
+          var footstepInterval = (Input && Input.isSprinting && Input.isSprinting()) ? 0.28 : 0.4;
+          if (footstepTimer >= footstepInterval) {
+            var ZONE_TERRAIN = { nexus: 'stone', gardens: 'grass', athenaeum: 'stone', studio: 'wood', wilds: 'grass', agora: 'stone', commons: 'wood', arena: 'stone' };
+            var footstepTerrain = ZONE_TERRAIN[currentZone] || 'grass';
 
             if (Audio && Audio.playFootstep) {
               Audio.playFootstep(footstepTerrain);
@@ -138653,6 +138630,19 @@
                 sceneContext.camera.position.x += shakeX;
                 sceneContext.camera.position.y += shakeY;
               }
+            }
+
+            var mvDelta = Input ? Input.getMovementDelta() : { x: 0, z: 0 };
+            var isMoving = Math.abs(mvDelta.x) > 0.05 || Math.abs(mvDelta.z) > 0.05;
+            if (isMoving) {
+              var bobSpeed = (Input && Input.isSprinting && Input.isSprinting()) ? 14 : 8;
+              headBobPhase += deltaTime * bobSpeed;
+              var bobY = Math.sin(headBobPhase) * 0.06;
+              var bobX = Math.sin(headBobPhase * 0.5) * 0.03;
+              sceneContext.camera.position.y += bobY;
+              sceneContext.camera.position.x += bobX;
+            } else {
+              headBobPhase *= 0.9;
             }
 
             sceneContext.camera.lookAt(

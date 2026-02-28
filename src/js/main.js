@@ -131,6 +131,7 @@
   var wellnessState = null;
   var wellnessSessionId = null;
   var footstepTimer = 0;
+  var headBobPhase = 0; // camera bob phase for movement feel
   var greetedNPCIds = {};
   var npcGreetCooldown = 0;
   var currentTimePeriod = 'morning';  // tracks dawn/morning/midday/afternoon/evening/night
@@ -2263,6 +2264,9 @@
       var deltaTime = (timestamp - lastTimestamp) / 1000; // seconds
       lastTimestamp = timestamp;
 
+      // Clamp deltaTime — prevent physics explosions from background tabs
+      if (deltaTime > 0.1) deltaTime = 0.1; // Cap at 100ms (10fps minimum)
+
       // Increment frame counter for periodic updates
       npcUpdateFrame++;
       frameCount++;
@@ -2616,19 +2620,13 @@
             NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
           }
 
-          // Footstep sounds
+          // Footstep sounds — interval scales with speed
           footstepTimer += deltaTime;
-          if (footstepTimer >= 0.4) {
-            // Determine footstep sound based on zone
-            var footstepTerrain = 'grass'; // default
-            if (currentZone === 'nexus') footstepTerrain = 'stone';
-            else if (currentZone === 'gardens') footstepTerrain = 'grass';
-            else if (currentZone === 'athenaeum') footstepTerrain = 'stone';
-            else if (currentZone === 'studio') footstepTerrain = 'wood';
-            else if (currentZone === 'wilds') footstepTerrain = 'grass';
-            else if (currentZone === 'agora') footstepTerrain = 'stone';
-            else if (currentZone === 'commons') footstepTerrain = 'wood';
-            else if (currentZone === 'arena') footstepTerrain = 'stone';
+          var footstepInterval = (Input && Input.isSprinting && Input.isSprinting()) ? 0.28 : 0.4;
+          if (footstepTimer >= footstepInterval) {
+            // Determine footstep sound based on zone terrain
+            var ZONE_TERRAIN = { nexus: 'stone', gardens: 'grass', athenaeum: 'stone', studio: 'wood', wilds: 'grass', agora: 'stone', commons: 'wood', arena: 'stone' };
+            var footstepTerrain = ZONE_TERRAIN[currentZone] || 'grass';
 
             if (Audio && Audio.playFootstep) {
               Audio.playFootstep(footstepTerrain);
@@ -2798,6 +2796,20 @@
                 sceneContext.camera.position.x += shakeX;
                 sceneContext.camera.position.y += shakeY;
               }
+            }
+
+            // Subtle camera head bob during movement
+            var mvDelta = Input ? Input.getMovementDelta() : { x: 0, z: 0 };
+            var isMoving = Math.abs(mvDelta.x) > 0.05 || Math.abs(mvDelta.z) > 0.05;
+            if (isMoving) {
+              var bobSpeed = (Input && Input.isSprinting && Input.isSprinting()) ? 14 : 8;
+              headBobPhase += deltaTime * bobSpeed;
+              var bobY = Math.sin(headBobPhase) * 0.06;
+              var bobX = Math.sin(headBobPhase * 0.5) * 0.03;
+              sceneContext.camera.position.y += bobY;
+              sceneContext.camera.position.x += bobX;
+            } else {
+              headBobPhase *= 0.9;
             }
 
             sceneContext.camera.lookAt(

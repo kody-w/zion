@@ -3493,78 +3493,52 @@
 
       var state = mesh.userData.animState || 'idle';
 
-      // Reset rotations to neutral positions
-      limbs.leftArm.rotation.x = 0;
-      limbs.rightArm.rotation.x = 0;
-      limbs.leftLeg.rotation.x = 0;
-      limbs.rightLeg.rotation.x = 0;
-      limbs.torso.rotation.x = 0;
-      limbs.torso.scale.set(1, 1, 1);
+      // Smooth animation blend weight (0 = idle, 0.5 = walk, 1 = run)
+      var targetBlend = state === 'idle' ? 0 : (state === 'walk' ? 0.5 : 1.0);
+      if (mesh.userData.animBlend === undefined) mesh.userData.animBlend = 0;
+      mesh.userData.animBlend += (targetBlend - mesh.userData.animBlend) * 0.12;
+      var blend = mesh.userData.animBlend;
+
+      // Derive animation parameters from blend weight
+      var speed = 2 + blend * 10;        // 2 (idle sway) → 7 (walk) → 12 (run)
+      var swingAngle = blend * 0.9;       // 0 → 0.45 (walk) → 0.9 (run)
+      var armSwing = blend * 0.85;        // 0 → 0.42 (walk) → 0.85 (run)
+      var bobAmount = blend * 0.09;       // 0 → 0.045 → 0.09
+      var forwardLean = blend * 0.17;     // 0 → 0.085 → 0.17
+
+      // Idle breathing (fades out as movement increases)
+      var idleWeight = Math.max(0, 1 - blend * 2.5);
+      var breathe = Math.sin(t * 2) * 0.02 * idleWeight;
+      var sway = Math.sin(t * 1.5) * 0.02 * idleWeight;
+      var armSway = Math.sin(t * 1.3) * 0.05 * idleWeight;
+
+      // Locomotion (fades in as movement increases)
+      var locoWeight = Math.min(1, blend * 2);
+      var legSwing = Math.sin(t * speed) * swingAngle * locoWeight;
+      var legSwingOpp = Math.sin(t * speed + Math.PI) * swingAngle * locoWeight;
+      var armSwingVal = Math.sin(t * speed + Math.PI) * armSwing * locoWeight;
+      var armSwingOppVal = Math.sin(t * speed) * armSwing * locoWeight;
+      var bob = Math.abs(Math.sin(t * speed)) * bobAmount * locoWeight;
+      var footRot = swingAngle * 0.5 * locoWeight;
+
+      // Apply blended animations
+      limbs.leftLeg.rotation.x = legSwing;
+      limbs.rightLeg.rotation.x = legSwingOpp;
+      limbs.leftArm.rotation.x = armSwingVal;
+      limbs.rightArm.rotation.x = armSwingOppVal;
+      limbs.leftArm.rotation.z = armSway;
+      limbs.rightArm.rotation.z = -armSway;
+      limbs.leftFoot.rotation.x = Math.sin(t * speed) * footRot;
+      limbs.rightFoot.rotation.x = Math.sin(t * speed + Math.PI) * footRot;
+
+      limbs.torso.scale.y = 1.0 + breathe;
+      limbs.torso.scale.x = 1;
+      limbs.torso.scale.z = 1;
+      limbs.torso.rotation.x = forwardLean * locoWeight;
+      limbs.torso.rotation.z = sway;
+      limbs.torso.position.y = 0.9 + bob;
+      limbs.head.position.y = 1.5 + bob;
       limbs.head.rotation.x = 0;
-
-      if (state === 'idle') {
-        // IDLE ANIMATION
-        // Subtle breathing - torso scales slightly on Y
-        var breathe = Math.sin(t * 2) * 0.02;
-        limbs.torso.scale.y = 1.0 + breathe;
-
-        // Slight body sway
-        limbs.torso.rotation.z = Math.sin(t * 1.5) * 0.02;
-
-        // Arms hang naturally with subtle sway
-        limbs.leftArm.rotation.z = Math.sin(t * 1.3) * 0.05;
-        limbs.rightArm.rotation.z = -Math.sin(t * 1.3) * 0.05;
-
-      } else if (state === 'walk') {
-        // WALKING ANIMATION
-        var walkSpeed = 8;
-        var swingAngle = 0.5;
-
-        // Legs swing forward/back alternately
-        limbs.leftLeg.rotation.x = Math.sin(t * walkSpeed) * swingAngle;
-        limbs.rightLeg.rotation.x = Math.sin(t * walkSpeed + Math.PI) * swingAngle;
-
-        // Arms swing opposite to legs (counter-swing)
-        limbs.leftArm.rotation.x = Math.sin(t * walkSpeed + Math.PI) * swingAngle * 0.7;
-        limbs.rightArm.rotation.x = Math.sin(t * walkSpeed) * swingAngle * 0.7;
-
-        // Feet rotate with legs
-        limbs.leftFoot.rotation.x = Math.sin(t * walkSpeed) * swingAngle * 0.5;
-        limbs.rightFoot.rotation.x = Math.sin(t * walkSpeed + Math.PI) * swingAngle * 0.5;
-
-        // Body bobs slightly up/down
-        var bob = Math.abs(Math.sin(t * walkSpeed)) * 0.05;
-        limbs.torso.position.y = 0.9 + bob;
-        limbs.head.position.y = 1.5 + bob;
-
-        // Slight forward lean
-        limbs.torso.rotation.x = 0.05;
-
-      } else if (state === 'run') {
-        // RUNNING ANIMATION
-        var runSpeed = 12;
-        var runSwingAngle = 0.8;
-
-        // Legs swing with larger amplitude and faster
-        limbs.leftLeg.rotation.x = Math.sin(t * runSpeed) * runSwingAngle;
-        limbs.rightLeg.rotation.x = Math.sin(t * runSpeed + Math.PI) * runSwingAngle;
-
-        // More dramatic arm swing
-        limbs.leftArm.rotation.x = Math.sin(t * runSpeed + Math.PI) * runSwingAngle;
-        limbs.rightArm.rotation.x = Math.sin(t * runSpeed) * runSwingAngle;
-
-        // Feet rotate with legs
-        limbs.leftFoot.rotation.x = Math.sin(t * runSpeed) * runSwingAngle * 0.5;
-        limbs.rightFoot.rotation.x = Math.sin(t * runSpeed + Math.PI) * runSwingAngle * 0.5;
-
-        // More pronounced body bob
-        var runBob = Math.abs(Math.sin(t * runSpeed)) * 0.08;
-        limbs.torso.position.y = 0.9 + runBob;
-        limbs.head.position.y = 1.5 + runBob;
-
-        // More body lean forward
-        limbs.torso.rotation.x = 0.15;
-      }
     });
   }
 
