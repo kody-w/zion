@@ -133,6 +133,7 @@
   var wellnessSessionId = null;
   var footstepTimer = 0;
   var headBobPhase = 0; // camera bob phase for movement feel
+  var _minimapPlayers = null; // reusable array for minimap updates
   var greetedNPCIds = {};
   var npcGreetCooldown = 0;
   var currentTimePeriod = 'morning';  // tracks dawn/morning/midday/afternoon/evening/night
@@ -2686,8 +2687,8 @@
               });
             }
           });
-          // Evaluate 5 NPCs per frame round-robin
-          var count = Math.min(5, agents.length);
+          // Evaluate 2 NPCs per frame round-robin (reduced for perf)
+          var count = Math.min(2, agents.length);
           for (var ei = 0; ei < count; ei++) {
             var idx = (npcIntentionIndex + ei) % agents.length;
             var agent = agents[idx];
@@ -2764,13 +2765,10 @@
         // Update player positions
         if (gameState && State) {
           var players = State.getPlayers(gameState);
-          players.forEach(function (player) {
-            if (player.id !== localPlayer.id) {
-              World.movePlayer(sceneContext, player.id, player.position);
-            } else {
-              World.movePlayer(sceneContext, player.id, localPlayer.position);
-            }
-          });
+          for (var _pi = 0; _pi < players.length; _pi++) {
+            var _p = players[_pi];
+            World.movePlayer(sceneContext, _p.id, _p.id === localPlayer.id ? localPlayer.position : _p.position);
+          }
         }
 
         // Camera follows player (orbiting third-person with smooth lerp interpolation)
@@ -3138,14 +3136,13 @@
 
         // Update minimap (every 5 frames)
         if (npcUpdateFrame % 5 === 0) {
-          var mapPlayers = players.map(function (p) {
-            return {
-              id: p.id,
-              position: p.position,
-              isLocal: p.id === localPlayer.id
-            };
-          });
-          HUD.updateMinimap(mapPlayers, currentZone);
+          // Reuse minimap array to avoid allocation
+          if (!_minimapPlayers) _minimapPlayers = [];
+          _minimapPlayers.length = 0;
+          for (var _mi = 0; _mi < players.length; _mi++) {
+            _minimapPlayers.push({ id: players[_mi].id, position: players[_mi].position, isLocal: players[_mi].id === localPlayer.id });
+          }
+          HUD.updateMinimap(_minimapPlayers, currentZone);
 
           // Update NPC dots on minimap
           if (HUD.updateMinimapNPCs && NPCs && NPCs.getNPCPositions) {
@@ -3155,28 +3152,29 @@
 
         // Update nearby players + NPCs (throttled to every 10 frames)
         if (npcUpdateFrame % 10 === 0 || !cachedNearbyPlayers) {
-          cachedNearbyPlayers = players
-            .filter(function (p) { return p.id !== localPlayer.id && p.zone === currentZone; })
-            .map(function (p) {
-              var dx = p.position.x - localPlayer.position.x;
-              var dz = p.position.z - localPlayer.position.z;
-              var distance = Math.sqrt(dx * dx + dz * dz);
-              return { id: p.id, name: p.name, distance: distance };
-            })
-            .sort(function (a, b) { return a.distance - b.distance; });
+          // Reuse array to avoid GC pressure — clear and rebuild in-place
+          if (!cachedNearbyPlayers) cachedNearbyPlayers = [];
+          cachedNearbyPlayers.length = 0;
+          var px = localPlayer.position.x, pz = localPlayer.position.z;
+          for (var pi = 0; pi < players.length; pi++) {
+            var p = players[pi];
+            if (p.id === localPlayer.id || p.zone !== currentZone) continue;
+            var dx = p.position.x - px, dz = p.position.z - pz;
+            cachedNearbyPlayers.push({ id: p.id, name: p.name, distance: Math.sqrt(dx * dx + dz * dz) });
+          }
+          cachedNearbyPlayers.sort(function (a, b) { return a.distance - b.distance; });
 
           // Include NPCs if no real players nearby
           if (cachedNearbyPlayers.length === 0 && NPCs && NPCs.getNPCPositions) {
             var npcPos = NPCs.getNPCPositions();
-            cachedNearbyPlayers = npcPos
-              .filter(function (n) { return n && (!n.zone || n.zone === currentZone); })
-              .map(function (n) {
-                var dx = n.x - localPlayer.position.x;
-                var dz = n.z - localPlayer.position.z;
-                return { id: 'npc_' + (n.name || ''), name: n.name || 'NPC', distance: Math.sqrt(dx * dx + dz * dz), isNPC: true };
-              })
-              .sort(function (a, b) { return a.distance - b.distance; })
-              .slice(0, 5);
+            for (var ni = 0; ni < npcPos.length && cachedNearbyPlayers.length < 5; ni++) {
+              var n = npcPos[ni];
+              if (!n || (n.zone && n.zone !== currentZone)) continue;
+              var ndx = n.x - px, ndz = n.z - pz;
+              cachedNearbyPlayers.push({ id: 'npc_' + (n.name || ''), name: n.name || 'NPC', distance: Math.sqrt(ndx * ndx + ndz * ndz), isNPC: true });
+            }
+            cachedNearbyPlayers.sort(function (a, b) { return a.distance - b.distance; });
+            if (cachedNearbyPlayers.length > 5) cachedNearbyPlayers.length = 5;
           }
         }
         HUD.updateNearbyPlayers(cachedNearbyPlayers);

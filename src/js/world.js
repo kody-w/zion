@@ -3910,8 +3910,8 @@
   // ========================================================================
 
   var particleSystems = null;
-  var MAX_PARTICLES = 500;
-  var PARTICLE_CULL_DISTANCE = 100;
+  var MAX_PARTICLES = 300;
+  var PARTICLE_CULL_DISTANCE = 60;
 
   // Particle pool and emitter definitions
   function ParticleSystem() {
@@ -4328,7 +4328,7 @@
 
     // Create particle system based on type
     if (type === 'rain') {
-      var rainCount = 2000;
+      var rainCount = 800;
       var rainGeo = new THREE.BufferGeometry();
       var rainPositions = new Float32Array(rainCount * 3);
       var rainVelocities = new Float32Array(rainCount * 3);
@@ -4362,7 +4362,7 @@
       sceneCtx.scene.add(weatherParticles);
 
     } else if (type === 'snow') {
-      var snowCount = 1000;
+      var snowCount = 400;
       var snowGeo = new THREE.BufferGeometry();
       var snowPositions = new Float32Array(snowCount * 3);
       var snowVelocities = new Float32Array(snowCount * 3);

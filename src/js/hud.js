@@ -200,25 +200,22 @@
   function updateChat(messages) {
     if (!chatPanel) return;
 
-    // Dirty tracking: skip DOM rebuild if message count unchanged
+    // Dirty tracking: skip DOM update if message count unchanged
     var msgLen = messages ? messages.length : 0;
     if (msgLen === lastChatMessageCount) return;
+
+    // Only append NEW messages (don't nuke existing DOM)
+    var newMessages = messages ? messages.slice(lastChatMessageCount > 0 ? -(msgLen - lastChatMessageCount) : -10) : [];
     lastChatMessageCount = msgLen;
 
-    chatPanel.innerHTML = '';
-
-    messages.slice(-10).forEach(function(msg) {
+    newMessages.forEach(function(msg) {
       var msgEl = document.createElement('div');
-      msgEl.style.cssText = `
-        margin-bottom: 5px;
-        padding: 3px;
-        border-radius: 3px;
-      `;
+      msgEl.style.cssText = 'margin-bottom:5px;padding:3px;border-radius:3px;';
 
-      var time = new Date(msg.timestamp).toLocaleTimeString([], {
+      var time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit'
-      });
+      }) : '';
 
       msgEl.innerHTML =
         '<span style="color: #888; font-size: 11px;">' + escapeHtml(time) + '</span> ' +
@@ -227,6 +224,11 @@
 
       chatPanel.appendChild(msgEl);
     });
+
+    // Cap DOM nodes
+    while (chatPanel.children.length > 30) {
+      chatPanel.removeChild(chatPanel.firstChild);
+    }
 
     // Auto-scroll to bottom
     chatPanel.scrollTop = chatPanel.scrollHeight;
