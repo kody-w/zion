@@ -136,6 +136,168 @@
     return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
   }
 
+  // Earn table from the constitution / config defaults
+  var EARN_TABLE = {
+    join: 1, say: 2, shout: 3, whisper: 1, emote: 1, build: 12,
+    plant: 4, harvest: 2, craft: 8, compose: 11, teach: 8, learn: 5,
+    gift: 6, discover: 17, trade_offer: 1, buy: 1, sell: 1, score: 12,
+    warp: 1, inspect: 1, anchor_place: 18, mentor_offer: 1
+  };
+
+  /**
+   * Compute economy forecast from ledger + changes data
+   */
+  function computeForecast(economy, changesList) {
+    var ledger = economy.ledger || [];
+    var txns = economy.transactions || [];
+
+    // Group changes by day to compute daily creation rate
+    var dayBuckets = {};
+    changesList.forEach(function(c) {
+      if (!c.ts) return;
+      var day = c.ts.substring(0, 10);
+      if (!dayBuckets[day]) dayBuckets[day] = { created: 0, types: {} };
+      var earn = EARN_TABLE[c.type] || 0;
+      dayBuckets[day].created += earn;
+      dayBuckets[day].types[c.type] = (dayBuckets[day].types[c.type] || 0) + 1;
+    });
+
+    // Group destruction (maintenance) by day from ledger + transactions
+    var destroyBuckets = {};
+    var allDestroy = [];
+
+    // From ledger (structure_maintenance entries)
+    ledger.forEach(function(e) {
+      if (e.type === 'structure_maintenance' && e.timestamp) {
+        var d = new Date(e.timestamp * 1000);
+        var day = d.toISOString().substring(0, 10);
+        if (!destroyBuckets[day]) destroyBuckets[day] = 0;
+        destroyBuckets[day] += (e.amount || 1);
+      }
+    });
+
+    // From transactions (maintenance type)
+    txns.forEach(function(t) {
+      if (t.type === 'maintenance' && t.timestamp) {
+        var d = new Date(t.timestamp * 1000);
+        var day = d.toISOString().substring(0, 10);
+        if (!destroyBuckets[day]) destroyBuckets[day] = 0;
+        destroyBuckets[day] += (t.amount || 1);
+      }
+    });
+
+    var days = Object.keys(dayBuckets).sort();
+    var numDays = Math.max(1, days.length);
+
+    var totalCreated = 0;
+    days.forEach(function(d) { totalCreated += dayBuckets[d].created; });
+
+    var totalDestroyed = 0;
+    Object.values(destroyBuckets).forEach(function(v) { totalDestroyed += v; });
+
+    // Average daily rates
+    var dailyCreation = totalCreated / numDays;
+    var dailyDestruction = totalDestroyed / Math.max(1, Object.keys(destroyBuckets).length || numDays);
+    var netDaily = dailyCreation - dailyDestruction;
+
+    // Build sparkline data: daily net flow
+    var sparkData = [];
+    days.forEach(function(d) {
+      var created = dayBuckets[d].created;
+      var destroyed = destroyBuckets[d] || 0;
+      sparkData.push({ day: d, net: created - destroyed, created: created, destroyed: destroyed });
+    });
+
+    return {
+      dailyCreation: dailyCreation,
+      dailyDestruction: dailyDestruction,
+      netDaily: netDaily,
+      sparkData: sparkData,
+      numDays: numDays
+    };
+  }
+
+  /**
+   * Draw a sparkline chart on a canvas element
+   */
+  function drawSparkline(canvasId, data) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas || !data.length) return;
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width, H = canvas.height;
+    var pad = 10;
+
+    ctx.clearRect(0, 0, W, H);
+
+    var values = data.map(function(d) { return d.net; });
+    var maxVal = Math.max.apply(null, values.map(Math.abs).concat([1]));
+
+    var mid = H / 2;
+    var xStep = (W - pad * 2) / Math.max(1, values.length - 1);
+
+    // Zero line
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad, mid);
+    ctx.lineTo(W - pad, mid);
+    ctx.stroke();
+
+    // Fill areas
+    ctx.beginPath();
+    ctx.moveTo(pad, mid);
+    for (var i = 0; i < values.length; i++) {
+      var x = pad + i * xStep;
+      var y = mid - (values[i] / maxVal) * (mid - pad);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.lineTo(pad + (values.length - 1) * xStep, mid);
+    ctx.closePath();
+
+    // Gradient fill
+    var grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, 'rgba(0, 184, 148, 0.3)');
+    grad.addColorStop(0.5, 'rgba(0, 184, 148, 0.05)');
+    grad.addColorStop(0.5, 'rgba(225, 112, 85, 0.05)');
+    grad.addColorStop(1, 'rgba(225, 112, 85, 0.3)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Line
+    ctx.beginPath();
+    for (var j = 0; j < values.length; j++) {
+      var lx = pad + j * xStep;
+      var ly = mid - (values[j] / maxVal) * (mid - pad);
+      if (j === 0) ctx.moveTo(lx, ly);
+      else ctx.lineTo(lx, ly);
+    }
+    ctx.strokeStyle = values[values.length - 1] >= 0 ? '#00b894' : '#e17055';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // End dot
+    if (values.length > 0) {
+      var lastX = pad + (values.length - 1) * xStep;
+      var lastY = mid - (values[values.length - 1] / maxVal) * (mid - pad);
+      ctx.beginPath();
+      ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = values[values.length - 1] >= 0 ? '#00b894' : '#e17055';
+      ctx.fill();
+    }
+
+    // Day labels
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'center';
+    for (var k = 0; k < data.length; k++) {
+      if (k === 0 || k === data.length - 1 || k === Math.floor(data.length / 2)) {
+        var dx = pad + k * xStep;
+        ctx.fillText(data[k].day.substring(5), dx, H - 2);
+      }
+    }
+  }
+
   function render(data) {
     var world = data[0], economy = data[1], players = data[2];
     var chat = data[3], changes = data[4], structures = data[5];
@@ -294,9 +456,59 @@
     });
     html += '</div></div>';
 
+    // ── Economy Forecast ──
+    var forecast = computeForecast(economy, changesList);
+    html += '<div class="card full-width">';
+    html += '<h2><span class="icon">📈</span>Economy Forecast</h2>';
+    html += '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px">';
+
+    html += '<div style="flex:1;min-width:140px">';
+    html += '<div class="stat-row"><span class="stat-label">Daily Creation</span>';
+    html += '<span class="stat-value green">+' + forecast.dailyCreation.toFixed(1) + ' ⚡</span></div>';
+    html += '<div class="stat-row"><span class="stat-label">Daily Destruction</span>';
+    html += '<span class="stat-value red">-' + forecast.dailyDestruction.toFixed(1) + ' ⚡</span></div>';
+    html += '<div class="stat-row"><span class="stat-label">Net Flow</span>';
+    var netColor = forecast.netDaily >= 0 ? 'green' : 'red';
+    var netSign = forecast.netDaily >= 0 ? '+' : '';
+    html += '<span class="stat-value ' + netColor + '">' + netSign + forecast.netDaily.toFixed(1) + ' ⚡/day</span></div>';
+    html += '<div class="stat-row"><span class="stat-label">Treasury in 7d</span>';
+    var proj7 = treasury + forecast.netDaily * 7;
+    var projColor = proj7 > 0 ? 'green' : 'red';
+    html += '<span class="stat-value ' + projColor + '">' + Math.floor(proj7) + ' ⚡</span></div>';
+    html += '</div>';
+
+    html += '<div style="flex:2;min-width:250px">';
+    html += '<canvas id="sparkline" width="400" height="100" style="width:100%;height:100px;border-radius:8px;background:rgba(255,255,255,0.03)"></canvas>';
+    html += '</div>';
+
+    html += '</div>';
+
+    // Health indicator
+    var healthClass = 'green', healthText = '✅ Economy is healthy';
+    if (forecast.netDaily < -5) {
+      healthClass = 'red';
+      healthText = '🚨 DEFLATION WARNING — Spark is being destroyed faster than created';
+    } else if (forecast.netDaily < 0) {
+      healthClass = 'gold';
+      healthText = '⚠️ Mild deflation — monitor maintenance fees vs earnings';
+    } else if (forecast.netDaily > 50) {
+      healthClass = 'gold';
+      healthText = '⚠️ High inflation — consider raising tax rates or adding sinks';
+    }
+    html += '<div style="padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.03);font-size:0.85em">';
+    html += '<span class="stat-value ' + healthClass + '">' + healthText + '</span>';
+    html += '</div>';
+
+    html += '</div>'; // end forecast card
+
     html += '</div>'; // end grid
     document.getElementById('dashboard').innerHTML = html;
     document.getElementById('dashboard').className = '';
+
+    // Render sparkline chart after DOM update
+    if (forecast.sparkData.length > 1) {
+      drawSparkline('sparkline', forecast.sparkData);
+    }
   }
 
   loadAll().then(render).catch(function(err) {
