@@ -931,31 +931,14 @@
         if (Quests.acceptQuest) {
           Quests.acceptQuest(username, 'quest_nexus_001');
         }
-        // Staggered new-player guidance notifications
+        // Single clean quest notification after tutorial appears
         setTimeout(function() {
           if (HUD && HUD.showNotification) {
-            HUD.showNotification('🗺️ Quest: Talk to 3 NPCs in the Nexus — walk near them and press E', 'success');
+            HUD.showNotification('New Quest: Talk to 3 NPCs in the Nexus', 'success');
           }
-        }, 2000);
-        setTimeout(function() {
-          if (HUD && HUD.showNotification) {
-            HUD.showNotification('Move: WASD | Sprint: Shift | Interact: E | Chat: Enter | Inventory: I | Quests: J', 'info');
-          }
-        }, 6000);
-        setTimeout(function() {
-          if (HUD && HUD.showNotification) {
-            HUD.showNotification('💡 Look for NPCs with names above their heads — walk close and press E to talk', 'info');
-          }
-        }, 12000);
+        }, 4000);
       }
     }
-
-    // Chat hint for new players — show after 30 seconds
-    setTimeout(function() {
-      if (HUD && HUD.showNotification) {
-        HUD.showNotification('Press Enter to chat · Press M for world map · Press J for quest log', 'info');
-      }
-    }, 30000);
 
     // Start game loop
     startGameLoop();

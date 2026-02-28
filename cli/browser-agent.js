@@ -312,7 +312,8 @@ async function main() {
   console.log('🌐 Launching browser...');
   var browser = await chromium.launch({
     headless: args.headless,
-    args: ['--no-sandbox', '--disable-web-security', '--enable-webgl', '--use-gl=swiftshader'],
+    args: ['--no-sandbox', '--disable-web-security', '--enable-webgl',
+           '--enable-gpu', '--ignore-gpu-blocklist', '--enable-unsafe-swiftshader'],
   });
   var context = await browser.newContext({
     viewport: { width: 1280, height: 720 },
@@ -320,12 +321,15 @@ async function main() {
   });
   var page = await context.newPage();
 
-  // Capture console logs for debugging
+  // Capture console logs for debugging (suppress shader noise)
   page.on('console', function(msg) {
-    if (msg.type() === 'error') console.log('  [browser error] ' + msg.text());
+    var txt = msg.text();
+    if (msg.type() === 'error' && !txt.includes('#ifdef') && !txt.includes('shader') && !txt.includes('vec4') && txt.length < 500) {
+      console.log('  [browser error] ' + txt.slice(0, 120));
+    }
   });
   page.on('pageerror', function(err) {
-    console.log('  [page error] ' + err.message);
+    console.log('  [page error] ' + err.message.slice(0, 120));
   });
 
   try {

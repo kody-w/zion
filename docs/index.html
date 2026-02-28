@@ -32534,11 +32534,14 @@
       position: absolute;
       top: 20px;
       left: 20px;
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 8px;
-      padding: 15px;
-      min-width: 200px;
+      background: rgba(5, 8, 18, 0.85);
+      border-radius: 10px;
+      padding: 14px 16px;
+      min-width: 180px;
       pointer-events: auto;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
     `;
     hudOverlay.appendChild(playerInfoPanel);
 
@@ -32549,12 +32552,15 @@
       top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-size: 18px;
-      font-weight: bold;
+      background: rgba(5, 8, 18, 0.8);
+      border-radius: 20px;
+      padding: 8px 24px;
+      font-size: 16px;
+      font-weight: 600;
       text-align: center;
+      letter-spacing: 1px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     `;
     hudOverlay.appendChild(zoneLabel);
 
@@ -32563,18 +32569,21 @@
       position: absolute;
       top: 20px;
       right: 20px;
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 8px;
-      padding: 10px;
+      background: rgba(5, 8, 18, 0.85);
+      border-radius: 12px;
+      padding: 8px;
       pointer-events: auto;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
     `;
 
     minimapCanvas = document.createElement('canvas');
-    minimapCanvas.width = 200;
-    minimapCanvas.height = 200;
+    minimapCanvas.width = 180;
+    minimapCanvas.height = 180;
     minimapCanvas.style.cssText = `
       display: block;
-      border-radius: 4px;
+      border-radius: 8px;
     `;
     minimapCtx = minimapCanvas.getContext('2d');
     minimapContainer.appendChild(minimapCanvas);
@@ -32584,35 +32593,40 @@
     nearbyPlayersList.id = 'nearby-players';
     nearbyPlayersList.style.cssText = `
       position: absolute;
-      top: 200px;
+      top: 220px;
       right: 20px;
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 8px;
-      padding: 10px;
+      background: rgba(5, 8, 18, 0.8);
+      border-radius: 10px;
+      padding: 10px 12px;
       min-width: 150px;
-      max-height: 300px;
+      max-height: 80px;
       overflow-y: auto;
       pointer-events: auto;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 11px;
     `;
-    nearbyPlayersList.innerHTML = '<div style="font-weight: bold; margin-bottom: 5px;">Nearby Players</div>';
+    nearbyPlayersList.innerHTML = '<div style="font-weight:600;margin-bottom:4px;color:#8890a0;font-size:11px;">Nearby Players</div>';
     hudOverlay.appendChild(nearbyPlayersList);
 
     federationPanel = document.createElement('div');
     federationPanel.id = 'federation-panel';
     federationPanel.style.cssText = `
       position: absolute;
-      bottom: 20px;
+      bottom: 70px;
       right: 20px;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(5, 8, 18, 0.75);
       border-radius: 8px;
-      padding: 10px;
-      min-width: 200px;
-      max-height: 250px;
+      padding: 8px 12px;
+      min-width: 140px;
+      max-height: 100px;
       overflow-y: auto;
       pointer-events: auto;
-      border: 2px solid rgba(100, 100, 255, 0.5);
+      border: 1px solid rgba(100, 100, 255, 0.2);
+      font-size: 11px;
+      backdrop-filter: blur(4px);
     `;
-    federationPanel.innerHTML = '<div style="font-weight: bold; margin-bottom: 5px; color: #88f;">Federation</div>';
+    federationPanel.innerHTML = '<div style="font-weight:600;margin-bottom:4px;color:#8888cc;font-size:11px;">Federation</div>';
     hudOverlay.appendChild(federationPanel);
 
     notificationContainer = document.createElement('div');
@@ -32937,13 +32951,17 @@
     var notification = document.createElement('div');
     notification.className = 'notification';
     notification.style.cssText = `
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(5, 8, 18, 0.9);
       border-left: 4px solid ${colors[type] || colors.info};
-      border-radius: 4px;
-      padding: 12px 15px;
-      margin-bottom: 10px;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
       pointer-events: auto;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      font-size: 13px;
+      max-width: 400px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
     `;
     notification.textContent = text;
 
@@ -33000,19 +33018,25 @@
 
     toolbarEl = document.createElement('div');
     toolbarEl.id = 'action-toolbar';
-    toolbarEl.style.cssText = 'position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:8px;pointer-events:auto;';
+    toolbarEl.style.cssText = 'position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:auto;' +
+      'background:rgba(5,8,18,0.85);border-radius:12px;padding:8px 14px;border:1px solid rgba(255,255,255,0.1);' +
+      'backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(0,0,0,0.5);';
 
     var actions = [
       { key: 'E', label: 'Interact', color: '#44aa66' },
       { key: 'B', label: 'Build', color: '#aa6644' },
       { key: 'Enter', label: 'Chat', color: '#4488cc' },
-      { key: 'Shift', label: 'Sprint', color: '#cc8844' }
+      { key: 'Shift', label: 'Sprint', color: '#cc8844' },
+      { key: 'I', label: 'Items', color: '#aa44cc' },
+      { key: 'J', label: 'Quests', color: '#d4af37' }
     ];
 
     actions.forEach(function(action) {
       var btn = document.createElement('div');
-      btn.style.cssText = 'background:rgba(0,0,0,0.7);border:1px solid ' + action.color + ';border-radius:6px;padding:6px 12px;text-align:center;font-size:11px;min-width:50px;';
-      btn.innerHTML = '<div style="font-weight:bold;color:' + action.color + ';font-size:14px;">' + action.key + '</div><div style="color:#aaa;margin-top:2px;">' + action.label + '</div>';
+      btn.style.cssText = 'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 10px;text-align:center;font-size:10px;min-width:48px;cursor:pointer;transition:background 0.15s;';
+      btn.innerHTML = '<div style="font-weight:bold;color:' + action.color + ';font-size:13px;letter-spacing:0.5px;">' + action.key + '</div><div style="color:#999;margin-top:1px;font-size:9px;">' + action.label + '</div>';
+      btn.onmouseenter = function() { this.style.background = 'rgba(255,255,255,0.12)'; };
+      btn.onmouseleave = function() { this.style.background = 'rgba(255,255,255,0.06)'; };
       toolbarEl.appendChild(btn);
     });
     hud.appendChild(toolbarEl);
@@ -33023,7 +33047,7 @@
     hud.appendChild(coordsEl);
 
     var infoPanel = document.createElement('div');
-    infoPanel.style.cssText = 'position:absolute;top:260px;right:20px;background:rgba(0,0,0,0.6);border-radius:8px;padding:10px;min-width:120px;font-size:12px;pointer-events:none;';
+    infoPanel.style.cssText = 'position:absolute;top:250px;right:20px;background:rgba(5,8,18,0.8);border-radius:8px;padding:8px 12px;min-width:120px;font-size:12px;pointer-events:none;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.08);';
 
     timeEl = document.createElement('div');
     timeEl.style.cssText = 'margin-bottom:4px;';
@@ -33317,10 +33341,11 @@
 
     questTrackerEl = document.createElement('div');
     questTrackerEl.id = 'quest-tracker';
-    questTrackerEl.style.cssText = 'position:absolute;top:470px;right:20px;background:rgba(10,14,26,0.85);' +
-      'border-left:3px solid #d4af37;border-radius:8px;padding:12px;min-width:220px;max-width:300px;' +
-      'font-size:12px;pointer-events:auto;max-height:250px;overflow-y:auto;';
-    questTrackerEl.innerHTML = '<div style="font-weight:bold;color:#d4af37;margin-bottom:6px;font-size:13px;">Active Quests</div>';
+    questTrackerEl.style.cssText = 'position:absolute;top:320px;right:20px;background:rgba(10,14,26,0.9);' +
+      'border-left:3px solid #d4af37;border-radius:8px;padding:12px 14px;min-width:230px;max-width:280px;' +
+      'font-size:12px;pointer-events:auto;max-height:200px;overflow-y:auto;' +
+      'box-shadow:0 2px 12px rgba(0,0,0,0.4);backdrop-filter:blur(4px);';
+    questTrackerEl.innerHTML = '<div style="font-weight:bold;color:#d4af37;margin-bottom:6px;font-size:13px;letter-spacing:0.5px;">📋 Active Quests</div>';
     hud.appendChild(questTrackerEl);
   }
 
@@ -136931,27 +136956,11 @@
         }
         setTimeout(function() {
           if (HUD && HUD.showNotification) {
-            HUD.showNotification('🗺️ Quest: Talk to 3 NPCs in the Nexus — walk near them and press E', 'success');
+            HUD.showNotification('New Quest: Talk to 3 NPCs in the Nexus', 'success');
           }
-        }, 2000);
-        setTimeout(function() {
-          if (HUD && HUD.showNotification) {
-            HUD.showNotification('Move: WASD | Sprint: Shift | Interact: E | Chat: Enter | Inventory: I | Quests: J', 'info');
-          }
-        }, 6000);
-        setTimeout(function() {
-          if (HUD && HUD.showNotification) {
-            HUD.showNotification('💡 Look for NPCs with names above their heads — walk close and press E to talk', 'info');
-          }
-        }, 12000);
+        }, 4000);
       }
     }
-
-    setTimeout(function() {
-      if (HUD && HUD.showNotification) {
-        HUD.showNotification('Press Enter to chat · Press M for world map · Press J for quest log', 'info');
-      }
-    }, 30000);
 
     startGameLoop();
   }
