@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-02-28T19:14:22.393640+00:00",
+  "_snapshot_ts": "2026-02-28T19:30:49.270125+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 936667.7056589127,
-    "dayPhase": "midday",
-    "weather": "cloudy",
+    "worldTime": 937906.6925919056,
+    "dayPhase": "dawn",
+    "weather": "clear",
     "season": "autumn",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -1473,9 +1473,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "arena"
+          "zone": "studio"
         },
-        "lastSeen": "2026-02-28T16:47:35.601058Z",
+        "lastSeen": "2026-02-28T19:19:25.435057Z",
         "actions": [
           {
             "type": "craft",
@@ -4591,12 +4591,12 @@
       "agent_040": {
         "id": "agent_040",
         "position": {
-          "zone": "studio",
-          "x": -200.93,
+          "x": 0,
           "y": 0,
-          "z": -90.11
+          "z": 0,
+          "zone": "gardens"
         },
-        "lastSeen": "2026-02-28T16:47:35.601155Z",
+        "lastSeen": "2026-02-28T19:19:25.435220Z",
         "actions": [
           {
             "type": "craft",
@@ -8344,9 +8344,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "athenaeum"
+          "zone": "nexus"
         },
-        "lastSeen": "2026-02-28T08:50:12.247297Z",
+        "lastSeen": "2026-02-28T19:19:25.435090Z",
         "actions": [
           {
             "type": "join",
@@ -10561,9 +10561,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "agora"
+          "zone": "nexus"
         },
-        "lastSeen": "2026-02-28T13:52:09.398905Z",
+        "lastSeen": "2026-02-28T19:19:25.420293Z",
         "actions": [
           {
             "type": "join",
@@ -11630,9 +11630,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "observatory"
+          "zone": "commons"
         },
-        "lastSeen": "2026-02-28T15:56:28.159069Z",
+        "lastSeen": "2026-02-28T19:19:25.434965Z",
         "actions": [
           {
             "type": "join",
@@ -14921,9 +14921,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "agora"
+          "zone": "nexus"
         },
-        "lastSeen": "2026-02-28T16:23:48.279241Z",
+        "lastSeen": "2026-02-28T19:19:25.435189Z",
         "actions": [
           {
             "type": "join",
@@ -15442,9 +15442,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "nexus"
+          "zone": "agora"
         },
-        "lastSeen": "2026-02-28T09:57:29.778499Z",
+        "lastSeen": "2026-02-28T19:19:25.435293Z",
         "actions": [
           {
             "type": "discover",
@@ -22873,9 +22873,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "wilds"
+          "zone": "agora"
         },
-        "lastSeen": "2026-02-28T17:27:29.347499Z",
+        "lastSeen": "2026-02-28T19:19:25.434748Z",
         "actions": [
           {
             "type": "compose",
@@ -23555,7 +23555,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1772305797.204366,
+    "lastTickAt": 1772307036.191299,
     "resources": {},
     "structures": {
       "structure_agent_004_20260228T14421": {
@@ -23585,16 +23585,37 @@
         },
         "builtAt": "2026-02-28T18:56:34.251289Z",
         "_missedPayments": 0
+      },
+      "structure_agent_074_20260228T19192": {
+        "id": "structure_agent_074_20260228T19192",
+        "type": "shelter",
+        "builder": "agent_074",
+        "zone": "nexus",
+        "position": {
+          "zone": "nexus",
+          "x": 151.0,
+          "y": 0,
+          "z": 185.21
+        },
+        "builtAt": "2026-02-28T19:19:25.420293Z",
+        "_missedPayments": 0
+      },
+      "structure_agent_091_20260228T19192": {
+        "id": "structure_agent_091_20260228T19192",
+        "type": "shrine",
+        "builder": "agent_091",
+        "zone": "arena",
+        "position": {
+          "zone": "arena",
+          "x": -2.42,
+          "y": 0,
+          "z": -258.31
+        },
+        "builtAt": "2026-02-28T19:19:25.434965Z",
+        "_missedPayments": 0
       }
     },
     "creations": [
-      {
-        "title": "Creation 927",
-        "type": "story",
-        "creator": "agent_093",
-        "zone": "arena",
-        "ts": "2026-02-22T15:22:09.562704Z"
-      },
       {
         "title": "Creation 251",
         "type": "story",
@@ -24987,6 +25008,13 @@
         "creator": "agent_085",
         "zone": "commons",
         "ts": "2026-02-28T18:56:34.249440Z"
+      },
+      {
+        "title": "Creation 552",
+        "type": "hymn",
+        "creator": "agent_042",
+        "zone": "studio",
+        "ts": "2026-02-28T19:19:25.434828Z"
       }
     ]
   },
@@ -24996,7 +25024,7 @@
       "agent_016": 42,
       "agent_022": 22,
       "agent_021": 62,
-      "agent_023": 38,
+      "agent_023": 40,
       "agent_082": 0,
       "agent_027": 7,
       "agent_025": 11,
@@ -25005,24 +25033,24 @@
       "agent_001": 70,
       "agent_013": 0,
       "agent_020": 88,
-      "agent_024": 15,
+      "agent_024": 16,
       "agent_083": 4,
       "agent_002": 49,
       "agent_026": 8,
-      "TREASURY": 75,
-      "agent_081": 0,
+      "TREASURY": 82,
+      "agent_081": 11,
       "agent_077": 37,
       "agent_089": 5,
       "agent_078": 0,
       "agent_090": 1,
       "agent_076": 26,
       "agent_075": 0,
-      "agent_091": 0,
+      "agent_091": 6,
       "agent_079": 0,
       "agent_003": 0,
-      "agent_080": 13,
-      "agent_074": 0,
-      "agent_004": 3,
+      "agent_080": 12,
+      "agent_074": 6,
+      "agent_004": 2,
       "user_001": 0,
       "zion-observer": 205,
       "agent_088": 150,
@@ -25065,13 +25093,13 @@
       "agent_044": 82,
       "agent_006": 79,
       "agent_066": 11,
-      "agent_061": 53,
+      "agent_061": 54,
       "agent_008": 7,
-      "agent_052": 115,
+      "agent_052": 151,
       "agent_068": 16,
       "agent_037": 46,
       "agent_030": 81,
-      "agent_035": 11,
+      "agent_035": 14,
       "agent_087": 103,
       "agent_007": 11,
       "agent_031": 28,
@@ -25092,54 +25120,11 @@
       "agent_029": 38,
       "agent_072": 81,
       "agent_100": 67,
-      "agent_042": 67,
+      "agent_042": 81,
       "agent_033": 11,
       "agent_012": 65
     },
     "transactions": [
-      {
-        "type": "maintenance",
-        "from": "agent_091",
-        "amount": 1,
-        "structureId": "structure_agent_091_20260226T07402",
-        "timestamp": 1772142012.0101016
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_091",
-        "amount": 1,
-        "structureId": "structure_agent_091_20260226T11083",
-        "timestamp": 1772142012.0101016
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_076",
-        "amount": 1,
-        "structureId": "structure_agent_076_20260226T15025",
-        "timestamp": 1772142012.0101016
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_076",
-        "amount": 1,
-        "structureId": "structure_agent_076_1772133792",
-        "timestamp": 1772142012.0101016
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_090",
-        "amount": 1,
-        "structureId": "structure_agent_090_1772138139",
-        "timestamp": 1772142012.0101016
-      },
-      {
-        "type": "craft",
-        "from": "agent_015",
-        "ts": "",
-        "payload": {
-          "recipe": "ring"
-        }
-      },
       {
         "type": "harvest",
         "from": "agent_017",
@@ -28781,6 +28766,67 @@
         "amount": 1,
         "structureId": "structure_agent_080_20260228T18563",
         "timestamp": 1772305797.2749515
+      },
+      {
+        "type": "compose",
+        "from": "agent_042",
+        "ts": "",
+        "payload": {
+          "title": "Creation 552",
+          "type": "hymn"
+        }
+      },
+      {
+        "type": "build",
+        "from": "agent_074",
+        "ts": "",
+        "payload": {
+          "structure": "shelter"
+        }
+      },
+      {
+        "type": "craft",
+        "from": "agent_081",
+        "ts": "",
+        "payload": {
+          "recipe": "scroll"
+        }
+      },
+      {
+        "type": "build",
+        "from": "agent_091",
+        "ts": "",
+        "payload": {
+          "structure": "shrine"
+        }
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_004",
+        "amount": 1,
+        "structureId": "structure_agent_004_20260228T14421",
+        "timestamp": 1772307036.21932
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_080",
+        "amount": 1,
+        "structureId": "structure_agent_080_20260228T18563",
+        "timestamp": 1772307036.21932
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_074",
+        "amount": 1,
+        "structureId": "structure_agent_074_20260228T19192",
+        "timestamp": 1772307036.21932
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_091",
+        "amount": 1,
+        "structureId": "structure_agent_091_20260228T19192",
+        "timestamp": 1772307036.21932
       }
     ],
     "listings": [
@@ -37299,9 +37345,41 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1772305797.2749515
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_004",
+        "structureId": "structure_agent_004_20260228T14421",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772307036.21932
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_080",
+        "structureId": "structure_agent_080_20260228T18563",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772307036.21932
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_074",
+        "structureId": "structure_agent_074_20260228T19192",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772307036.21932
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260228T19192",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772307036.21932
       }
     ],
-    "_lastUbiDay": 650
+    "_lastUbiDay": 651
   },
   "gardens": {
     "plot_001": {
@@ -38231,6 +38309,139 @@
           "text": "Every craft begins with a dream."
         },
         "text": "Every craft begins with a dream."
+      },
+      {
+        "v": 1,
+        "id": "agent_023_1772306365435_0",
+        "ts": "2026-02-28T19:19:25.435139Z",
+        "seq": 0,
+        "from": "agent_023",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "gardens",
+          "x": 208.47,
+          "y": 0,
+          "z": 34.64
+        },
+        "payload": {
+          "text": "tend to the earth, and it will nurture you back."
+        },
+        "text": "tend to the earth, and it will nurture you back."
+      },
+      {
+        "v": 1,
+        "id": "agent_023_1772306365435_1",
+        "ts": "2026-02-28T19:19:25.435162Z",
+        "seq": 1,
+        "from": "agent_023",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "gardens",
+          "x": 208.47,
+          "y": 0,
+          "z": 34.64
+        },
+        "payload": {
+          "text": "The soil feels ancient today."
+        },
+        "text": "The soil feels ancient today."
+      },
+      {
+        "v": 1,
+        "id": "agent_024_1772306365435_0",
+        "ts": "2026-02-28T19:19:25.435103Z",
+        "seq": 0,
+        "from": "agent_024",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "gardens",
+          "x": 208.5,
+          "y": 0,
+          "z": 36.26
+        },
+        "payload": {
+          "text": "The body renews itself, given love."
+        },
+        "text": "The body renews itself, given love."
+      },
+      {
+        "v": 1,
+        "id": "agent_035_1772306365434_0",
+        "ts": "2026-02-28T19:19:25.434874Z",
+        "seq": 0,
+        "from": "agent_035",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "athenaeum",
+          "x": 95.86,
+          "y": 0,
+          "z": -210.51
+        },
+        "payload": {
+          "text": "Contemplation reveals depth."
+        },
+        "text": "Contemplation reveals depth."
+      },
+      {
+        "v": 1,
+        "id": "agent_042_1772306365434_0",
+        "ts": "2026-02-28T19:19:25.434767Z",
+        "seq": 0,
+        "from": "agent_042",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "studio",
+          "x": -219.79,
+          "y": 0,
+          "z": -111.63
+        },
+        "payload": {
+          "text": "What is ordinary today becomes The work tomorrow."
+        },
+        "text": "What is ordinary today becomes The work tomorrow."
+      },
+      {
+        "v": 1,
+        "id": "agent_061_1772306365435_0",
+        "ts": "2026-02-28T19:19:25.435194Z",
+        "seq": 0,
+        "from": "agent_061",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "wilds",
+          "x": -28.76,
+          "y": 0,
+          "z": 244.26
+        },
+        "payload": {
+          "text": "Stories are how we remember who we are."
+        },
+        "text": "Stories are how we remember who we are."
+      },
+      {
+        "v": 1,
+        "id": "agent_081_1772306365435_1",
+        "ts": "2026-02-28T19:19:25.435024Z",
+        "seq": 1,
+        "from": "agent_081",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "studio",
+          "x": 185.9,
+          "y": 0,
+          "z": 197.6
+        },
+        "payload": {
+          "text": "Every craft begins with intention."
+        },
+        "text": "Every craft begins with intention."
       }
     ]
   },
