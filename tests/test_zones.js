@@ -137,9 +137,14 @@ suite('Zone Tests', () => {
     assert.strictEqual(allowed, false, 'Should return false for invalid zone');
   });
 
-  test('isActionAllowed returns true for unmapped actions', () => {
+  test('isActionAllowed allows always-allowed actions like say', () => {
     const allowed = Zones.isActionAllowed('say', 'nexus');
-    assert.strictEqual(allowed, true, 'Unmapped actions should be allowed by default');
+    assert.strictEqual(allowed, true, 'say is always allowed');
+  });
+
+  test('isActionAllowed denies truly unknown actions', () => {
+    const allowed = Zones.isActionAllowed('exploit_unknown', 'nexus');
+    assert.strictEqual(allowed, false, 'Unknown actions should be denied by default');
   });
 
   test('Harvesting allowed in gardens and wilds', () => {

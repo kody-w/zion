@@ -6,6 +6,27 @@
 (function(exports) {
   'use strict';
 
+  // SECURITY: Sanitize user-provided text to prevent XSS and injection (VULN-07)
+  var MAX_TEXT_LENGTH = 500;
+  function sanitizeText(text) {
+    if (typeof text !== 'string') return '';
+    return text
+      .slice(0, MAX_TEXT_LENGTH)
+      .replace(/[<>]/g, '')                    // Strip HTML angle brackets
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, ''); // Strip control chars (keep \n \r \t)
+  }
+
+  // SECURITY: Clamp position coordinates to world bounds (VULN-03)
+  var MAX_COORD = 10000;
+  function clampPosition(pos) {
+    if (!pos || typeof pos !== 'object') return { x: 0, y: 0, z: 0 };
+    return {
+      x: Math.max(-MAX_COORD, Math.min(MAX_COORD, Number(pos.x) || 0)),
+      y: Math.max(-MAX_COORD, Math.min(MAX_COORD, Number(pos.y) || 0)),
+      z: Math.max(-MAX_COORD, Math.min(MAX_COORD, Number(pos.z) || 0))
+    };
+  }
+
   // In-memory live state
   var liveState = null;
 
@@ -173,9 +194,12 @@
 
     switch (type) {
       case 'join':
+        // SECURITY: Whitelist allowed join payload fields to prevent
+        // prototype pollution and arbitrary field injection (VULN-02)
+        var ALLOWED_JOIN_FIELDS = ['name', 'position', 'zone', 'avatar', 'platform'];
         var joinData = {
           id: from,
-          name: payload.name || from,
+          name: String(payload.name || from).slice(0, 50),
           position: payload.position || { x: 0, y: 0, z: 0 },
           zone: payload.zone || 'default',
           online: true,
@@ -184,9 +208,11 @@
           inventory: [],
           intentions: []
         };
-        var payloadKeys = Object.keys(payload);
-        for (var _pk = 0; _pk < payloadKeys.length; _pk++) {
-          joinData[payloadKeys[_pk]] = payload[payloadKeys[_pk]];
+        for (var _pk = 0; _pk < ALLOWED_JOIN_FIELDS.length; _pk++) {
+          var _key = ALLOWED_JOIN_FIELDS[_pk];
+          if (payload.hasOwnProperty(_key) && _key !== '__proto__' && _key !== 'constructor') {
+            joinData[_key] = payload[_key];
+          }
         }
         newState.players[from] = joinData;
         break;
@@ -213,7 +239,8 @@
 
       case 'move':
         if (newState.players[from] && payload.position) {
-          newState.players[from].position = payload.position;
+          // SECURITY: Clamp position to world bounds (VULN-03)
+          newState.players[from].position = clampPosition(payload.position);
         }
         break;
 
@@ -237,7 +264,8 @@
           type: type,
           from: from,
           to: payload.to,
-          text: payload.text || payload.message || '',
+          // SECURITY: Sanitize chat text — strip HTML, control chars, limit length (VULN-07)
+          text: sanitizeText(payload.text || payload.message || ''),
           ts: timestamp
         });
         break;

@@ -172,7 +172,7 @@ suite('UBI Distribution Tests', () => {
     ledger.balances['player1'] = 5;
     ledger.balances['player2'] = 3;
 
-    const result = Economy.distributeUBI(ledger, ['player1', 'player2']);
+    const result = Economy.distributeUBI(ledger, ['player1', 'player2'], 'test-epoch-1');
     assert.strictEqual(result.perPlayer, 5); // min(5, 20/2) = 5
     assert.strictEqual(result.recipients, 2);
     assert.strictEqual(result.distributed, 10);
@@ -185,7 +185,7 @@ suite('UBI Distribution Tests', () => {
     const ledger = Economy.createLedger();
     ledger.balances[Economy.TREASURY_ID] = 3;
 
-    const result = Economy.distributeUBI(ledger, ['p1', 'p2', 'p3']);
+    const result = Economy.distributeUBI(ledger, ['p1', 'p2', 'p3'], 'test-epoch-2');
     assert.strictEqual(result.perPlayer, 1); // min(2, floor(3/3)) = 1
     assert.strictEqual(result.distributed, 3);
     assert.strictEqual(Economy.getBalance(ledger, Economy.TREASURY_ID), 0);
@@ -195,7 +195,7 @@ suite('UBI Distribution Tests', () => {
     const ledger = Economy.createLedger();
     ledger.balances[Economy.TREASURY_ID] = 1;
 
-    const result = Economy.distributeUBI(ledger, ['p1', 'p2', 'p3']);
+    const result = Economy.distributeUBI(ledger, ['p1', 'p2', 'p3'], 'test-epoch-3');
     assert.strictEqual(result.distributed, 0);
     assert.strictEqual(result.perPlayer, 0);
   });
@@ -204,7 +204,7 @@ suite('UBI Distribution Tests', () => {
     const ledger = Economy.createLedger();
     ledger.balances[Economy.TREASURY_ID] = 5;
 
-    Economy.distributeUBI(ledger, ['p1', 'p2', 'p3']);
+    Economy.distributeUBI(ledger, ['p1', 'p2', 'p3'], 'test-epoch-4');
     assert(Economy.getBalance(ledger, Economy.TREASURY_ID) >= 0, 'Treasury should not go negative');
   });
 
@@ -213,7 +213,7 @@ suite('UBI Distribution Tests', () => {
     ledger.balances[Economy.TREASURY_ID] = 10;
     ledger.balances['player1'] = -5;
 
-    const result = Economy.distributeUBI(ledger, ['player1']);
+    const result = Economy.distributeUBI(ledger, ['player1'], 'test-epoch-5');
     assert.strictEqual(result.recipients, 1);
     assert.strictEqual(Economy.getBalance(ledger, 'player1'), 0); // -5 + 5
   });
@@ -222,7 +222,7 @@ suite('UBI Distribution Tests', () => {
     const ledger = Economy.createLedger();
     ledger.balances[Economy.TREASURY_ID] = 100;
 
-    const result = Economy.distributeUBI(ledger, []);
+    const result = Economy.distributeUBI(ledger, [], 'test-epoch-6');
     assert.strictEqual(result.distributed, 0);
   });
 
@@ -231,7 +231,7 @@ suite('UBI Distribution Tests', () => {
     ledger.balances[Economy.TREASURY_ID] = 10;
     ledger.balances['p1'] = 0;
 
-    Economy.distributeUBI(ledger, ['p1']);
+    Economy.distributeUBI(ledger, ['p1'], 'test-epoch-7');
     const ubiTxns = ledger.transactions.filter(tx => tx.type === 'ubi');
     assert.strictEqual(ubiTxns.length, 1);
     assert.strictEqual(ubiTxns[0].from, Economy.TREASURY_ID);

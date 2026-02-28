@@ -272,6 +272,10 @@
       if (isNaN(date.getTime())) {
         errors.push('Invalid ts: must be a valid ISO-8601 timestamp');
       }
+      var MAX_FUTURE_MS = 5 * 60 * 1000;
+      if (date.getTime() > Date.now() + MAX_FUTURE_MS) {
+        errors.push('Invalid ts: timestamp too far in the future');
+      }
     }
 
     if (typeof msg.seq !== 'number' || msg.seq < 0 || !Number.isInteger(msg.seq)) {
@@ -322,6 +326,16 @@
 
     if (!msg.payload || typeof msg.payload !== 'object' || Array.isArray(msg.payload)) {
       errors.push('Invalid payload: must be an object');
+    } else {
+      var MAX_PAYLOAD_SIZE = 10000; // 10KB serialized
+      try {
+        var payloadSize = JSON.stringify(msg.payload).length;
+        if (payloadSize > MAX_PAYLOAD_SIZE) {
+          errors.push('Invalid payload: exceeds maximum size of ' + MAX_PAYLOAD_SIZE + ' bytes');
+        }
+      } catch (e) {
+        errors.push('Invalid payload: cannot be serialized');
+      }
     }
 
     return {
@@ -668,8 +682,16 @@
     trade_decline: 'trading',
     buy: 'trading',
     sell: 'trading',
-    challenge: 'competition_pvp', // Special: requires both competition AND pvp
-    accept_challenge: 'competition_pvp'
+    challenge: 'competition',
+    accept_challenge: 'competition'
+  };
+
+  var ALWAYS_ALLOWED_ACTIONS = {
+    join: true, leave: true, move: true, warp: true, idle: true,
+    say: true, shout: true, emote: true, whisper: true,
+    discover: true, gift: true, vote: true, ping: true,
+    intention_set: true, consent_request: true, consent_respond: true,
+    reputation_update: true, federation_announce: true, warp_fork: true
   };
 
   function getZoneRules(zoneId) {
@@ -688,12 +710,12 @@
 
     var ruleKey = ACTION_RULE_MAP[action];
 
-    if (!ruleKey) {
+    if (ALWAYS_ALLOWED_ACTIONS[action]) {
       return true;
     }
 
-    if (ruleKey === 'competition_pvp') {
-      return zone.rules.competition === true && zone.rules.pvp === true;
+    if (!ruleKey) {
+      return false;
     }
 
     return zone.rules[ruleKey] === true;
@@ -722,6 +744,20 @@
   function zoneExists(zoneId) {
     return ZONES.hasOwnProperty(zoneId);
   }
+
+  (function _verifyPortalSymmetry() {
+    var ids = Object.keys(ZONES);
+    for (var i = 0; i < ids.length; i++) {
+      var a = ids[i];
+      var portals = ZONES[a].portals || [];
+      for (var j = 0; j < portals.length; j++) {
+        var b = portals[j];
+        if (ZONES[b] && (ZONES[b].portals || []).indexOf(a) === -1) {
+          ZONES[b].portals.push(a);
+        }
+      }
+    }
+  })();
 
   var zoneStewards = new Map(); // zoneId -> {stewards: [], elections: [], policies: {}}
   var governanceLog = []; // Array of all governance actions
@@ -1155,7 +1191,8 @@
       ledger.balances[playerId] = 0;
     }
 
-    var tax = calculateTax(amount, ledger.balances[playerId]);
+    var projectedBalance = ledger.balances[playerId] + amount;
+    var tax = calculateTax(amount, projectedBalance);
 
     ledger.balances[playerId] += tax.netAmount;
 
@@ -1195,6 +1232,7 @@
     }
 
     ledger.balances[playerId] -= amount;
+    ledger.balances[playerId] = Math.max(0, ledger.balances[playerId]);
 
     recordTransaction(ledger, playerId, 'SYSTEM', amount, 'spend', {});
 
@@ -1216,6 +1254,7 @@
     }
 
     ledger.balances[from] -= amount;
+    ledger.balances[from] = Math.max(0, ledger.balances[from]);
     ledger.balances[to] += amount;
 
     recordTransaction(ledger, from, to, amount, 'transfer', {});
@@ -1236,6 +1275,7 @@
     }
 
     ledger.balances[playerId] -= listingFee;
+    ledger.balances[playerId] = Math.max(0, ledger.balances[playerId]);
 
     recordTransaction(ledger, playerId, SYSTEM_SINK_ID, listingFee, 'listing_fee', {
       askingPrice: price,
@@ -1365,8 +1405,14 @@
     return players.slice(0, limit);
   }
 
-  function distributeUBI(ledger, eligiblePlayerIds) {
+  var _lastUbiEpoch = null;
+  function distributeUBI(ledger, eligiblePlayerIds, epoch) {
     if (!eligiblePlayerIds || eligiblePlayerIds.length === 0) {
+      return { distributed: 0, perPlayer: 0, recipients: 0 };
+    }
+
+    var currentEpoch = epoch || new Date().toISOString().slice(0, 13); // YYYY-MM-DDTHH
+    if (_lastUbiEpoch === currentEpoch) {
       return { distributed: 0, perPlayer: 0, recipients: 0 };
     }
 
@@ -1401,6 +1447,7 @@
       recordTransaction(ledger, TREASURY_ID, pid, perPlayer, 'ubi', {});
     }
 
+    _lastUbiEpoch = currentEpoch;
     return { distributed: totalDistributed, perPlayer: perPlayer, recipients: recipientCount };
   }
 
@@ -1443,6 +1490,7 @@
         var tax = Math.floor(taxableAmount * WEALTH_TAX_RATE);
         if (tax > 0) {
           ledger.balances[pid] -= tax;
+          ledger.balances[pid] = Math.max(0, ledger.balances[pid]);
           ledger.balances[TREASURY_ID] += tax;
           totalCollected += tax;
           playersAffected++;
@@ -1475,6 +1523,7 @@
 
       if (balance >= MAINTENANCE_COST) {
         ledger.balances[ownerId] -= MAINTENANCE_COST;
+        ledger.balances[ownerId] = Math.max(0, ledger.balances[ownerId]);
         totalDestroyed += MAINTENANCE_COST;
 
         recordTransaction(ledger, ownerId, SYSTEM_SINK_ID, MAINTENANCE_COST, 'maintenance', {
@@ -1524,6 +1573,15 @@
     var balance = getBalance(ledger, bidderId);
     if (balance < amount) return { success: false, message: 'Insufficient Spark' };
 
+    if (!ledger.balances[bidderId]) ledger.balances[bidderId] = 0;
+    ledger.balances[bidderId] -= amount;
+    ledger.balances[bidderId] = Math.max(0, ledger.balances[bidderId]);
+
+    if (auction.currentBidder && auction.currentBid > 0) {
+      if (!ledger.balances[auction.currentBidder]) ledger.balances[auction.currentBidder] = 0;
+      ledger.balances[auction.currentBidder] += auction.currentBid;
+    }
+
     auction.currentBid = amount;
     auction.currentBidder = bidderId;
     auction.bids.push({ bidder: bidderId, amount: amount, ts: Date.now() });
@@ -1547,22 +1605,16 @@
       if (now < auction.endTime) continue;
 
       if (auction.currentBidder && auction.currentBid > 0) {
-        var winnerBalance = getBalance(ledger, auction.currentBidder);
-        if (winnerBalance >= auction.currentBid) {
-          if (!ledger.balances[auction.seller]) ledger.balances[auction.seller] = 0;
-          ledger.balances[auction.currentBidder] -= auction.currentBid;
-          ledger.balances[auction.seller] += auction.currentBid;
+        if (!ledger.balances[auction.seller]) ledger.balances[auction.seller] = 0;
+        ledger.balances[auction.seller] += auction.currentBid;
 
-          recordTransaction(ledger, auction.currentBidder, auction.seller, auction.currentBid, 'auction', {
-            auctionId: auction.id,
-            item: auction.item
-          });
+        recordTransaction(ledger, auction.currentBidder, auction.seller, auction.currentBid, 'auction', {
+          auctionId: auction.id,
+          item: auction.item
+        });
 
-          auction.status = 'sold';
-          completed.push({ auction: auction, winner: auction.currentBidder, item: auction.item });
-        } else {
-          auction.status = 'failed';
-        }
+        auction.status = 'sold';
+        completed.push({ auction: auction, winner: auction.currentBidder, item: auction.item });
       } else {
         auction.status = 'expired';
       }
@@ -4542,6 +4594,25 @@
 (function(exports) {
   'use strict';
 
+  var MAX_TEXT_LENGTH = 500;
+  function sanitizeText(text) {
+    if (typeof text !== 'string') return '';
+    return text
+      .slice(0, MAX_TEXT_LENGTH)
+      .replace(/[<>]/g, '')                    // Strip HTML angle brackets
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, ''); // Strip control chars (keep \n \r \t)
+  }
+
+  var MAX_COORD = 10000;
+  function clampPosition(pos) {
+    if (!pos || typeof pos !== 'object') return { x: 0, y: 0, z: 0 };
+    return {
+      x: Math.max(-MAX_COORD, Math.min(MAX_COORD, Number(pos.x) || 0)),
+      y: Math.max(-MAX_COORD, Math.min(MAX_COORD, Number(pos.y) || 0)),
+      z: Math.max(-MAX_COORD, Math.min(MAX_COORD, Number(pos.z) || 0))
+    };
+  }
+
   var liveState = null;
 
   function createWorldState() {
@@ -4673,9 +4744,10 @@
 
     switch (type) {
       case 'join':
+        var ALLOWED_JOIN_FIELDS = ['name', 'position', 'zone', 'avatar', 'platform'];
         var joinData = {
           id: from,
-          name: payload.name || from,
+          name: String(payload.name || from).slice(0, 50),
           position: payload.position || { x: 0, y: 0, z: 0 },
           zone: payload.zone || 'default',
           online: true,
@@ -4684,9 +4756,11 @@
           inventory: [],
           intentions: []
         };
-        var payloadKeys = Object.keys(payload);
-        for (var _pk = 0; _pk < payloadKeys.length; _pk++) {
-          joinData[payloadKeys[_pk]] = payload[payloadKeys[_pk]];
+        for (var _pk = 0; _pk < ALLOWED_JOIN_FIELDS.length; _pk++) {
+          var _key = ALLOWED_JOIN_FIELDS[_pk];
+          if (payload.hasOwnProperty(_key) && _key !== '__proto__' && _key !== 'constructor') {
+            joinData[_key] = payload[_key];
+          }
         }
         newState.players[from] = joinData;
         break;
@@ -4713,7 +4787,7 @@
 
       case 'move':
         if (newState.players[from] && payload.position) {
-          newState.players[from].position = payload.position;
+          newState.players[from].position = clampPosition(payload.position);
         }
         break;
 
@@ -4737,7 +4811,7 @@
           type: type,
           from: from,
           to: payload.to,
-          text: payload.text || payload.message || '',
+          text: sanitizeText(payload.text || payload.message || ''),
           ts: timestamp
         });
         break;
@@ -5391,8 +5465,14 @@
     merged.anchors = mergeById(stateA.anchors || {}, stateB.anchors || {});
     merged.competitions = mergeById(stateA.competitions || {}, stateB.competitions || {});
 
-    merged.chat = (stateA.chat || []).concat(stateB.chat || [])
-      .sort(function(a, b) { return a.ts - b.ts; });
+    var allChat = (stateA.chat || []).concat(stateB.chat || []);
+    var chatSeen = {};
+    merged.chat = allChat.filter(function(msg) {
+      var key = (msg.from || '') + ':' + (msg.ts || '') + ':' + (msg.text || '');
+      if (chatSeen[key]) return false;
+      chatSeen[key] = true;
+      return true;
+    }).sort(function(a, b) { return a.ts - b.ts; });
 
     merged.actions = (stateA.actions || []).concat(stateB.actions || []);
     var actionIdsSeen = {};
@@ -5431,8 +5511,9 @@
   }
 
   function addPlayer(state, player) {
-    if (!state || !player) return;
-    state.players[player.id] = {
+    if (!state || !player) return state;
+    var newState = JSON.parse(JSON.stringify(state));
+    newState.players[player.id] = {
       id: player.id,
       name: player.name || player.id,
       position: player.position || { x: 0, y: 0, z: 0 },
@@ -5442,14 +5523,17 @@
       online: true,
       lastSeen: new Date().toISOString()
     };
+    return newState;
   }
 
   function removePlayer(state, playerId) {
-    if (!state || !playerId) return;
-    if (state.players[playerId]) {
-      state.players[playerId].online = false;
-      state.players[playerId].lastSeen = new Date().toISOString();
+    if (!state || !playerId) return state;
+    var newState = JSON.parse(JSON.stringify(state));
+    if (newState.players[playerId]) {
+      newState.players[playerId].online = false;
+      newState.players[playerId].lastSeen = new Date().toISOString();
     }
+    return newState;
   }
 
   function getPlayer(state, playerId) {
@@ -9793,7 +9877,7 @@
     for (var discovery of state.discoveries) {
       if (discovery.discoverer === playerId) {
         var distance = calculateDistance(position, discovery.position);
-        if (distance <= 5) {
+        if (distance < 5) {
           return true;
         }
       }
@@ -10972,7 +11056,7 @@
     }
 
     var totalKm = 0;
-    var maxWalkingSpeed = 25; // km/h - filter out driving
+    var maxWalkingSpeed = 9; // km/h - brisk walk (§5.3, §8.6: filter out driving/cycling)
 
     for (var i = 1; i < gpsHistory.length; i++) {
       var prev = gpsHistory[i - 1];

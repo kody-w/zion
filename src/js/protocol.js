@@ -196,6 +196,11 @@
       if (isNaN(date.getTime())) {
         errors.push('Invalid ts: must be a valid ISO-8601 timestamp');
       }
+      // SECURITY: Reject timestamps more than 5 minutes in the future (VULN-04)
+      var MAX_FUTURE_MS = 5 * 60 * 1000;
+      if (date.getTime() > Date.now() + MAX_FUTURE_MS) {
+        errors.push('Invalid ts: timestamp too far in the future');
+      }
     }
 
     // Validate sequence
@@ -253,6 +258,17 @@
     // Validate payload
     if (!msg.payload || typeof msg.payload !== 'object' || Array.isArray(msg.payload)) {
       errors.push('Invalid payload: must be an object');
+    } else {
+      // SECURITY: Payload size limit — prevent DoS via oversized messages (VULN-10)
+      var MAX_PAYLOAD_SIZE = 10000; // 10KB serialized
+      try {
+        var payloadSize = JSON.stringify(msg.payload).length;
+        if (payloadSize > MAX_PAYLOAD_SIZE) {
+          errors.push('Invalid payload: exceeds maximum size of ' + MAX_PAYLOAD_SIZE + ' bytes');
+        }
+      } catch (e) {
+        errors.push('Invalid payload: cannot be serialized');
+      }
     }
 
     return {

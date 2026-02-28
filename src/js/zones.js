@@ -147,6 +147,15 @@
     accept_challenge: 'competition'
   };
 
+  // Actions that are always allowed regardless of zone rules
+  var ALWAYS_ALLOWED_ACTIONS = {
+    join: true, leave: true, move: true, warp: true, idle: true,
+    say: true, shout: true, emote: true, whisper: true,
+    discover: true, gift: true, vote: true, ping: true,
+    intention_set: true, consent_request: true, consent_respond: true,
+    reputation_update: true, federation_announce: true, warp_fork: true
+  };
+
   /**
    * Get the rules for a specific zone
    * @param {string} zoneId - The zone identifier
@@ -174,9 +183,15 @@
 
     var ruleKey = ACTION_RULE_MAP[action];
 
-    // If no rule mapping exists, action is allowed by default
-    if (!ruleKey) {
+    // Always-allowed actions bypass zone rules
+    if (ALWAYS_ALLOWED_ACTIONS[action]) {
       return true;
+    }
+
+    // SECURITY: Default-deny for unmapped actions (VULN-08)
+    // Unknown actions not in either map are blocked
+    if (!ruleKey) {
+      return false;
     }
 
     // Check the mapped rule

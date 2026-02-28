@@ -456,8 +456,16 @@
    * @param {Array} eligiblePlayerIds - Array of player IDs to receive UBI
    * @returns {Object} {distributed, perPlayer, recipients}
    */
-  function distributeUBI(ledger, eligiblePlayerIds) {
+  // SECURITY: Track UBI distribution epochs to prevent repeated draining (VULN-06)
+  var _lastUbiEpoch = null;
+  function distributeUBI(ledger, eligiblePlayerIds, epoch) {
     if (!eligiblePlayerIds || eligiblePlayerIds.length === 0) {
+      return { distributed: 0, perPlayer: 0, recipients: 0 };
+    }
+
+    // Deduplicate: only allow one distribution per epoch (hour)
+    var currentEpoch = epoch || new Date().toISOString().slice(0, 13); // YYYY-MM-DDTHH
+    if (_lastUbiEpoch === currentEpoch) {
       return { distributed: 0, perPlayer: 0, recipients: 0 };
     }
 
@@ -493,6 +501,7 @@
       recordTransaction(ledger, TREASURY_ID, pid, perPlayer, 'ubi', {});
     }
 
+    _lastUbiEpoch = currentEpoch;
     return { distributed: totalDistributed, perPlayer: perPlayer, recipients: recipientCount };
   }
 
