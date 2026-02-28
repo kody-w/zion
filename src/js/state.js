@@ -925,9 +925,15 @@
     merged.anchors = mergeById(stateA.anchors || {}, stateB.anchors || {});
     merged.competitions = mergeById(stateA.competitions || {}, stateB.competitions || {});
 
-    // Merge chat (combine and sort by timestamp)
-    merged.chat = (stateA.chat || []).concat(stateB.chat || [])
-      .sort(function(a, b) { return a.ts - b.ts; });
+    // Merge chat (combine, deduplicate by from+ts+text, sort by timestamp)
+    var allChat = (stateA.chat || []).concat(stateB.chat || []);
+    var chatSeen = {};
+    merged.chat = allChat.filter(function(msg) {
+      var key = (msg.from || '') + ':' + (msg.ts || '') + ':' + (msg.text || '');
+      if (chatSeen[key]) return false;
+      chatSeen[key] = true;
+      return true;
+    }).sort(function(a, b) { return a.ts - b.ts; });
 
     // Merge actions (combine and deduplicate)
     merged.actions = (stateA.actions || []).concat(stateB.actions || []);
@@ -971,8 +977,9 @@
   }
 
   function addPlayer(state, player) {
-    if (!state || !player) return;
-    state.players[player.id] = {
+    if (!state || !player) return state;
+    var newState = JSON.parse(JSON.stringify(state));
+    newState.players[player.id] = {
       id: player.id,
       name: player.name || player.id,
       position: player.position || { x: 0, y: 0, z: 0 },
@@ -982,14 +989,17 @@
       online: true,
       lastSeen: new Date().toISOString()
     };
+    return newState;
   }
 
   function removePlayer(state, playerId) {
-    if (!state || !playerId) return;
-    if (state.players[playerId]) {
-      state.players[playerId].online = false;
-      state.players[playerId].lastSeen = new Date().toISOString();
+    if (!state || !playerId) return state;
+    var newState = JSON.parse(JSON.stringify(state));
+    if (newState.players[playerId]) {
+      newState.players[playerId].online = false;
+      newState.players[playerId].lastSeen = new Date().toISOString();
     }
+    return newState;
   }
 
   function getPlayer(state, playerId) {

@@ -37,11 +37,11 @@
       return false;
     }
 
-    // Check if player has already discovered within distance 5
+    // Check if player has already discovered within distance 5 (strictly less than)
     for (var discovery of state.discoveries) {
       if (discovery.discoverer === playerId) {
         var distance = calculateDistance(position, discovery.position);
-        if (distance <= 5) {
+        if (distance < 5) {
           return true;
         }
       }

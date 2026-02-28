@@ -29,9 +29,9 @@ suite('Economy Tests', () => {
     const earnedMin = Economy.earnSpark(ledger, 'player1', 'craft', { complexity: 0 });
     assert.strictEqual(earnedMin, 5, 'Min craft should be 5');
 
-    // Max complexity
+    // Max complexity (gross=50, but projected balance 50 → 10% tax → net 45)
     const earnedMax = Economy.earnSpark(ledger, 'player2', 'craft', { complexity: 1 });
-    assert.strictEqual(earnedMax, 50, 'Max craft should be 50');
+    assert.strictEqual(earnedMax, 45, 'Max craft net after tax should be 45');
 
     // Mid complexity
     const earnedMid = Economy.earnSpark(ledger, 'player3', 'craft', { complexity: 0.5 });
@@ -107,20 +107,22 @@ suite('Economy Tests', () => {
     const listing = Economy.createMarketListing(ledger, 'seller1', item, 50);
     const sellerAfterFee = Economy.getBalance(ledger, 'seller1'); // 10 - 2 = 8
 
-    // Give buyer enough Spark
+    // Give buyer enough Spark (6 logins needed due to tax at higher projected balances)
     Economy.earnSpark(ledger, 'buyer1', 'daily_login'); // 10
     Economy.earnSpark(ledger, 'buyer1', 'daily_login'); // 20
     Economy.earnSpark(ledger, 'buyer1', 'daily_login'); // 30
     Economy.earnSpark(ledger, 'buyer1', 'daily_login'); // 40
-    Economy.earnSpark(ledger, 'buyer1', 'daily_login'); // 50
+    Economy.earnSpark(ledger, 'buyer1', 'daily_login'); // 49
+    Economy.earnSpark(ledger, 'buyer1', 'daily_login'); // enough
 
     // Buy the listing
+    const buyerBefore = Economy.getBalance(ledger, 'buyer1');
     const result = Economy.buyListing(ledger, 'buyer1', listing.id);
     assert.strictEqual(result.success, true);
     assert.deepStrictEqual(result.item, item);
 
-    // Check balances (seller gets 50 from sale + had 8 after fee)
-    assert.strictEqual(Economy.getBalance(ledger, 'buyer1'), 0);
+    // Check balances (buyer pays 50, seller receives 50)
+    assert.strictEqual(Economy.getBalance(ledger, 'buyer1'), buyerBefore - 50);
     assert.strictEqual(Economy.getBalance(ledger, 'seller1'), sellerAfterFee + 50);
 
     // Listing should be inactive

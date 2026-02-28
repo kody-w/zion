@@ -143,8 +143,8 @@
     trade_decline: 'trading',
     buy: 'trading',
     sell: 'trading',
-    challenge: 'competition_pvp', // Special: requires both competition AND pvp
-    accept_challenge: 'competition_pvp'
+    challenge: 'competition',
+    accept_challenge: 'competition'
   };
 
   /**
@@ -177,11 +177,6 @@
     // If no rule mapping exists, action is allowed by default
     if (!ruleKey) {
       return true;
-    }
-
-    // Special case: challenge/accept_challenge requires both competition AND pvp
-    if (ruleKey === 'competition_pvp') {
-      return zone.rules.competition === true && zone.rules.pvp === true;
     }
 
     // Check the mapped rule
@@ -234,6 +229,21 @@
   function zoneExists(zoneId) {
     return ZONES.hasOwnProperty(zoneId);
   }
+
+  // Verify portal symmetry at load time: if A→B then B→A
+  (function _verifyPortalSymmetry() {
+    var ids = Object.keys(ZONES);
+    for (var i = 0; i < ids.length; i++) {
+      var a = ids[i];
+      var portals = ZONES[a].portals || [];
+      for (var j = 0; j < portals.length; j++) {
+        var b = portals[j];
+        if (ZONES[b] && (ZONES[b].portals || []).indexOf(a) === -1) {
+          ZONES[b].portals.push(a);
+        }
+      }
+    }
+  })();
 
   // Zone governance stores
   var zoneStewards = new Map(); // zoneId -> {stewards: [], elections: [], policies: {}}

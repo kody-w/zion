@@ -120,7 +120,7 @@
     }
 
     var totalKm = 0;
-    var maxWalkingSpeed = 25; // km/h - filter out driving
+    var maxWalkingSpeed = 9; // km/h - brisk walk (§5.3, §8.6: filter out driving/cycling)
 
     for (var i = 1; i < gpsHistory.length; i++) {
       var prev = gpsHistory[i - 1];

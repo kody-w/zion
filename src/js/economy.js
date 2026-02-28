@@ -165,8 +165,10 @@
       ledger.balances[playerId] = 0;
     }
 
-    // Calculate tax based on current balance (§6.4)
-    var tax = calculateTax(amount, ledger.balances[playerId]);
+    // Calculate tax based on projected balance AFTER earning (§6.4)
+    // Using post-earning balance prevents bracket-boundary exploitation
+    var projectedBalance = ledger.balances[playerId] + amount;
+    var tax = calculateTax(amount, projectedBalance);
 
     // Credit the player with net amount
     ledger.balances[playerId] += tax.netAmount;
@@ -215,8 +217,9 @@
       return { success: false, balance: currentBalance };
     }
 
-    // Deduct from balance
+    // Deduct from balance (§6.5 balance floor: never below 0)
     ledger.balances[playerId] -= amount;
+    ledger.balances[playerId] = Math.max(0, ledger.balances[playerId]);
 
     // Record transaction
     recordTransaction(ledger, playerId, 'SYSTEM', amount, 'spend', {});
@@ -247,8 +250,9 @@
       ledger.balances[to] = 0;
     }
 
-    // Perform transfer
+    // Perform transfer (§6.5 balance floor)
     ledger.balances[from] -= amount;
+    ledger.balances[from] = Math.max(0, ledger.balances[from]);
     ledger.balances[to] += amount;
 
     // Record transaction
@@ -287,6 +291,7 @@
 
     // Deduct listing fee — spark is destroyed (sent to SYSTEM)
     ledger.balances[playerId] -= listingFee;
+    ledger.balances[playerId] = Math.max(0, ledger.balances[playerId]);
 
     recordTransaction(ledger, playerId, SYSTEM_SINK_ID, listingFee, 'listing_fee', {
       askingPrice: price,
@@ -540,6 +545,7 @@
         var tax = Math.floor(taxableAmount * WEALTH_TAX_RATE);
         if (tax > 0) {
           ledger.balances[pid] -= tax;
+          ledger.balances[pid] = Math.max(0, ledger.balances[pid]);
           ledger.balances[TREASURY_ID] += tax;
           totalCollected += tax;
           playersAffected++;
@@ -585,6 +591,7 @@
       if (balance >= MAINTENANCE_COST) {
         // Charge maintenance — spark is destroyed (sent to SYSTEM)
         ledger.balances[ownerId] -= MAINTENANCE_COST;
+        ledger.balances[ownerId] = Math.max(0, ledger.balances[ownerId]);
         totalDestroyed += MAINTENANCE_COST;
 
         recordTransaction(ledger, ownerId, SYSTEM_SINK_ID, MAINTENANCE_COST, 'maintenance', {
@@ -656,6 +663,17 @@
     var balance = getBalance(ledger, bidderId);
     if (balance < amount) return { success: false, message: 'Insufficient Spark' };
 
+    // Escrow: deduct bid from bidder immediately to prevent race condition
+    if (!ledger.balances[bidderId]) ledger.balances[bidderId] = 0;
+    ledger.balances[bidderId] -= amount;
+    ledger.balances[bidderId] = Math.max(0, ledger.balances[bidderId]);
+
+    // Refund previous bidder's escrowed amount
+    if (auction.currentBidder && auction.currentBid > 0) {
+      if (!ledger.balances[auction.currentBidder]) ledger.balances[auction.currentBidder] = 0;
+      ledger.balances[auction.currentBidder] += auction.currentBid;
+    }
+
     // Record bid
     auction.currentBid = amount;
     auction.currentBidder = bidderId;
@@ -686,24 +704,17 @@
       if (now < auction.endTime) continue;
 
       if (auction.currentBidder && auction.currentBid > 0) {
-        // Check winner still has funds
-        var winnerBalance = getBalance(ledger, auction.currentBidder);
-        if (winnerBalance >= auction.currentBid) {
-          // Transfer Spark
-          if (!ledger.balances[auction.seller]) ledger.balances[auction.seller] = 0;
-          ledger.balances[auction.currentBidder] -= auction.currentBid;
-          ledger.balances[auction.seller] += auction.currentBid;
+        // Funds already escrowed at bid time — transfer to seller
+        if (!ledger.balances[auction.seller]) ledger.balances[auction.seller] = 0;
+        ledger.balances[auction.seller] += auction.currentBid;
 
-          recordTransaction(ledger, auction.currentBidder, auction.seller, auction.currentBid, 'auction', {
-            auctionId: auction.id,
-            item: auction.item
-          });
+        recordTransaction(ledger, auction.currentBidder, auction.seller, auction.currentBid, 'auction', {
+          auctionId: auction.id,
+          item: auction.item
+        });
 
-          auction.status = 'sold';
-          completed.push({ auction: auction, winner: auction.currentBidder, item: auction.item });
-        } else {
-          auction.status = 'failed';
-        }
+        auction.status = 'sold';
+        completed.push({ auction: auction, winner: auction.currentBidder, item: auction.item });
       } else {
         auction.status = 'expired';
       }
