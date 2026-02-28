@@ -5774,10 +5774,100 @@
     return buildRecording(messages);
   }
 
+  var StateRef = (typeof require !== 'undefined')
+    ? (function() { try { return require('./state'); } catch(e) { return null; } })()
+    : (typeof window !== 'undefined' && window.State) || null;
+
+  function changeToMessage(change) {
+    return {
+      v: 1,
+      id: change.id || ('replay_' + change.ts + '_' + (change.from || 'system')),
+      ts: change.ts,
+      seq: change.seq || 0,
+      from: change.from || 'system',
+      type: change.type,
+      platform: change.platform || 'api',
+      position: change.position || { x: 0, y: 0, z: 0, zone: change.zone || 'nexus' },
+      payload: change.payload || {}
+    };
+  }
+
+  function parseChanges(changesData) {
+    var arr = Array.isArray(changesData) ? changesData :
+              (changesData && changesData.changes) ? changesData.changes : [];
+    return arr.map(function(c) {
+      return Object.assign({}, c, { _ts: new Date(c.ts).getTime() });
+    }).sort(function(a, b) { return a._ts - b._ts; });
+  }
+
+  function filterByTimeRange(changes, startTime, endTime) {
+    var start = (typeof startTime === 'string') ? new Date(startTime).getTime() : startTime;
+    var end = (typeof endTime === 'string') ? new Date(endTime).getTime() : endTime;
+    return changes.filter(function(c) { return c._ts >= start && c._ts <= end; });
+  }
+
+  function filterByType(changes, types) {
+    var typeSet = Array.isArray(types) ? new Set(types) : new Set([types]);
+    return changes.filter(function(c) { return typeSet.has(c.type); });
+  }
+
+  function filterByAgent(changes, agentId) {
+    return changes.filter(function(c) { return c.from === agentId; });
+  }
+
+  function replayToState(changes, initialState) {
+    if (!StateRef) throw new Error('State module not available');
+
+    var state = initialState || StateRef.createWorldState();
+    var applied = 0, skipped = 0;
+    var timeline = [];
+
+    for (var i = 0; i < changes.length; i++) {
+      var msg = changeToMessage(changes[i]);
+      try {
+        var next = StateRef.applyMessage(state, msg);
+        if (next) { state = next; applied++; }
+        else { skipped++; }
+        timeline.push({ i: i, type: changes[i].type, from: changes[i].from, ts: changes[i].ts });
+      } catch (e) { skipped++; }
+    }
+
+    return { state: state, applied: applied, skipped: skipped, total: changes.length, timeline: timeline };
+  }
+
+  function replayToTime(allChanges, targetTime, initialState) {
+    var target = (typeof targetTime === 'string') ? new Date(targetTime).getTime() : targetTime;
+    var subset = allChanges.filter(function(c) { return c._ts <= target; });
+    return replayToState(subset, initialState);
+  }
+
+  function summarizeChanges(changes) {
+    var byType = {}, byAgent = {}, byZone = {};
+    for (var i = 0; i < changes.length; i++) {
+      var c = changes[i];
+      byType[c.type] = (byType[c.type] || 0) + 1;
+      if (c.from) byAgent[c.from] = (byAgent[c.from] || 0) + 1;
+      if (c.zone) byZone[c.zone] = (byZone[c.zone] || 0) + 1;
+    }
+    return {
+      total: changes.length,
+      timeRange: { first: changes[0] && changes[0].ts, last: changes[changes.length - 1] && changes[changes.length - 1].ts },
+      byType: byType, byAgent: byAgent, byZone: byZone
+    };
+  }
+
   exports.createRecorder = createRecorder;
   exports.createPlayer = createPlayer;
   exports.importRecording = importRecording;
   exports.importFromInbox = importFromInbox;
+  exports.changeToMessage = changeToMessage;
+  exports.parseChanges = parseChanges;
+  exports.filterByTimeRange = filterByTimeRange;
+  exports.filterByType = filterByType;
+  exports.filterByAgent = filterByAgent;
+  exports.replayToState = replayToState;
+  exports.replayToTime = replayToTime;
+  exports.summarizeChanges = summarizeChanges;
 
 })(typeof module !== 'undefined' ? module.exports : (window.Replay = {}));
 

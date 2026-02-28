@@ -68,13 +68,14 @@ EARN_RANGES = {
 }
 
 # Tax bracket ranges: each bracket is (min_bal, max_bal, base_rate, min_rate, max_rate)
+# §6.4.1 Constitutional tax brackets — these are fixed, not varied
 TAX_BRACKET_RANGES = [
-    (0, 50, 0.0, 0.0, 0.0),
-    (50, 100, 0.05, 0.03, 0.08),
-    (100, 250, 0.10, 0.06, 0.15),
-    (250, 500, 0.15, 0.10, 0.25),
-    (500, 1000, 0.25, 0.15, 0.35),
-    (1000, None, 0.35, 0.25, 0.45),
+    (0, 20, 0.0, 0.0, 0.0),
+    (20, 50, 0.05, 0.05, 0.05),
+    (50, 100, 0.10, 0.10, 0.10),
+    (100, 250, 0.15, 0.15, 0.15),
+    (250, 500, 0.25, 0.25, 0.25),
+    (500, None, 0.40, 0.40, 0.40),
 ]
 
 
@@ -95,9 +96,9 @@ def generate_economy(e):
         'earn_table': earn_table,
         'tax_brackets': tax_brackets,
         'base_ubi_amount': _vary_int(rng, 5, 1, 15),
-        'wealth_tax_threshold': _vary_int(rng, 500, 200, 800),
-        'wealth_tax_rate': _vary_float(rng, 0.02, 0.005, 0.05, 3),
-        'maintenance_cost': _vary_int(rng, 1, 1, 3),
+        'wealth_tax_threshold': 500,   # §6.4.6 constitutional constant
+        'wealth_tax_rate': 0.02,       # §6.4.6 constitutional constant
+        'maintenance_cost': 1,         # §6.5.1 constitutional constant
         'listing_fee_rate': _vary_float(rng, 0.05, 0.02, 0.10),
         'listing_fee_min': _vary_int(rng, 1, 1, 3),
     }

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZION — World Dashboard</title>
+<style>
+  :root {
+    --bg: #0a0e17; --card: #131a2b; --border: #1e2d4a;
+    --text: #c8d6e5; --dim: #5a6d8a; --accent: #6c5ce7;
+    --gold: #f9ca24; --green: #00b894; --red: #e17055;
+    --blue: #74b9ff; --purple: #a29bfe;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; padding: 20px;
+  }
+  h1 { text-align: center; font-size: 1.8em; color: var(--gold);
+       letter-spacing: 4px; margin-bottom: 6px; }
+  .subtitle { text-align: center; color: var(--dim); font-size: 0.85em; margin-bottom: 24px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px; max-width: 1400px; margin: 0 auto;
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px; position: relative;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card h2 {
+    font-size: 0.75em; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--dim); margin-bottom: 12px;
+  }
+  .card h2 .icon { margin-right: 6px; }
+  .big-number { font-size: 2.4em; font-weight: bold; color: var(--gold); }
+  .stat-row { display: flex; justify-content: space-between; padding: 6px 0;
+              border-bottom: 1px solid var(--border); font-size: 0.9em; }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { color: var(--dim); }
+  .stat-value { color: var(--text); font-weight: 600; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.gold { color: var(--gold); }
+  .stat-value.blue { color: var(--blue); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.purple { color: var(--purple); }
+  .bar-chart { margin-top: 8px; }
+  .bar-row { display: flex; align-items: center; margin: 4px 0; font-size: 0.8em; }
+  .bar-label { width: 90px; color: var(--dim); text-align: right; margin-right: 8px; }
+  .bar-track { flex: 1; height: 18px; background: rgba(255,255,255,0.04); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; display: flex;
+              align-items: center; padding-left: 6px; font-size: 0.75em; color: #fff; }
+  .chat-msg { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.85em; }
+  .chat-msg:last-child { border-bottom: none; }
+  .chat-from { color: var(--blue); font-weight: 600; }
+  .chat-text { color: var(--text); margin-left: 4px; }
+  .chat-time { color: var(--dim); font-size: 0.75em; float: right; }
+  .leaderboard-row { display: flex; align-items: center; padding: 5px 0;
+                     border-bottom: 1px solid var(--border); font-size: 0.85em; }
+  .leaderboard-row:last-child { border-bottom: none; }
+  .rank { width: 28px; color: var(--dim); text-align: center; }
+  .rank.top { color: var(--gold); font-weight: bold; }
+  .lb-name { flex: 1; }
+  .lb-spark { color: var(--gold); font-weight: 600; }
+  .weather-icon { font-size: 2em; margin-right: 12px; }
+  .weather-row { display: flex; align-items: center; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px;
+         font-size: 0.75em; margin: 2px; }
+  .tag.dawn { background: #e17055; color: #fff; }
+  .tag.day { background: #f9ca24; color: #333; }
+  .tag.afternoon { background: #ff9f43; color: #333; }
+  .tag.dusk { background: #a29bfe; color: #fff; }
+  .tag.night { background: #2d3436; color: #dfe6e9; border: 1px solid #636e72; }
+  .full-width { grid-column: 1 / -1; }
+  .changes-list { max-height: 240px; overflow-y: auto; }
+  .change-item { padding: 4px 0; border-bottom: 1px solid var(--border);
+                 font-size: 0.8em; display: flex; gap: 8px; }
+  .change-type { color: var(--accent); width: 70px; text-align: right; }
+  .change-agent { color: var(--blue); width: 80px; }
+  .change-detail { color: var(--dim); flex: 1; }
+  #error { color: var(--red); text-align: center; padding: 20px; display: none; }
+  .loading { text-align: center; color: var(--dim); padding: 40px; font-size: 1.2em; }
+</style>
+</head>
+<body>
+
+<h1>⚡ ZION</h1>
+<p class="subtitle">World Dashboard — <span id="timestamp">Loading...</span></p>
+<div id="error"></div>
+<div id="dashboard" class="loading">Loading world state...</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var STATE_BASE = '../state/';
+
+  var WEATHER_ICONS = {
+    clear: '☀️', cloudy: '☁️', rain: '🌧️', heavy_rain: '⛈️', snow: '❄️',
+    blizzard: '🌨️', fog: '🌫️', thunderstorm: '⛈️', sandstorm: '🏜️',
+    mist: '🌁', storm: '⛈️'
+  };
+
+  var ZONE_COLORS = {
+    nexus: '#8888cc', gardens: '#4caf50', athenaeum: '#795548', studio: '#ff9800',
+    wilds: '#2e7d32', agora: '#ffd700', commons: '#faf0e6', arena: '#d2691e',
+    observatory: '#6c5ce7'
+  };
+
+  function fetchJSON(file) {
+    return fetch(STATE_BASE + file).then(function(r) {
+      if (!r.ok) throw new Error(file + ': ' + r.status);
+      return r.json();
+    });
+  }
+
+  function loadAll() {
+    return Promise.all([
+      fetchJSON('world.json'),
+      fetchJSON('economy.json'),
+      fetchJSON('players.json'),
+      fetchJSON('chat.json'),
+      fetchJSON('changes.json'),
+      fetchJSON('structures.json'),
+      fetchJSON('gardens.json').catch(function() { return {}; }),
+      fetchJSON('discoveries.json').catch(function() { return {}; }),
+    ]);
+  }
+
+  function formatTime(ts) {
+    if (!ts) return '';
+    var d = new Date(ts);
+    return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+  }
+
+  function render(data) {
+    var world = data[0], economy = data[1], players = data[2];
+    var chat = data[3], changes = data[4], structures = data[5];
+    var gardens = data[6], discoveries = data[7];
+
+    var balances = economy.balances || economy;
+    var playerMap = players.players || {};
+    var playerCount = Object.keys(playerMap).length;
+    var onlineCount = Object.values(playerMap).filter(function(p) { return p.online; }).length;
+    var chatMsgs = chat.messages || (Array.isArray(chat) ? chat : []);
+    var changesList = changes.changes || (Array.isArray(changes) ? changes : []);
+    var structMap = structures.structures || structures;
+    var structCount = typeof structMap === 'object' ? Object.keys(structMap).length : 0;
+    var gardenMap = gardens.gardens || gardens;
+    var gardenCount = typeof gardenMap === 'object' ? Object.keys(gardenMap).length : 0;
+    var discMap = discoveries.discoveries || discoveries;
+    var discCount = typeof discMap === 'object' ? Object.keys(discMap).length : 0;
+
+    // Treasury
+    var treasury = balances.TREASURY || balances.treasury || 0;
+
+    // Total spark in circulation
+    var totalSpark = 0;
+    var agentBalances = [];
+    for (var id in balances) {
+      var val = balances[id];
+      if (typeof val === 'number') {
+        totalSpark += val;
+        if (id !== 'TREASURY' && id !== 'SYSTEM' && id !== 'treasury') {
+          agentBalances.push({id: id, spark: val});
+        }
+      }
+    }
+    agentBalances.sort(function(a, b) { return b.spark - a.spark; });
+
+    // Zone populations
+    var zonePops = {};
+    for (var pid in playerMap) {
+      var pzone = (playerMap[pid].position && playerMap[pid].position.zone) ||
+                  playerMap[pid].zone || 'nexus';
+      zonePops[pzone] = (zonePops[pzone] || 0) + 1;
+    }
+    var maxPop = Math.max.apply(null, Object.values(zonePops).concat([1]));
+
+    // Day phase & time
+    var worldTime = world.worldTime || world.time || 0;
+    var dayPhase = world.dayPhase || 'day';
+    var weather = world.weather || 'clear';
+    var season = world.season || 'spring';
+
+    // Recent activity types
+    var recentChanges = changesList.slice(-50);
+    var activityCounts = {};
+    recentChanges.forEach(function(c) {
+      var t = c.type || 'unknown';
+      activityCounts[t] = (activityCounts[t] || 0) + 1;
+    });
+
+    document.getElementById('timestamp').textContent = new Date().toLocaleString();
+
+    var html = '<div class="grid">';
+
+    // ── World Status ──
+    html += '<div class="card">';
+    html += '<h2><span class="icon">🌍</span>World Status</h2>';
+    html += '<div class="weather-row">';
+    html += '<span class="weather-icon">' + (WEATHER_ICONS[weather] || '🌤️') + '</span>';
+    html += '<div>';
+    html += '<div style="font-size:1.4em;font-weight:bold">' + weather.charAt(0).toUpperCase() + weather.slice(1) + '</div>';
+    html += '<div style="color:var(--dim)">' + season.charAt(0).toUpperCase() + season.slice(1) + ' · ';
+    html += '<span class="tag ' + dayPhase + '">' + dayPhase + '</span></div>';
+    html += '</div></div>';
+    html += '<div style="margin-top:12px">';
+    html += '<div class="stat-row"><span class="stat-label">World Time</span><span class="stat-value">' + Math.floor(worldTime) + '</span></div>';
+    html += '<div class="stat-row"><span class="stat-label">Game Day</span><span class="stat-value">' + Math.floor(worldTime / 1440) + '</span></div>';
+    html += '</div></div>';
+
+    // ── Population ──
+    html += '<div class="card">';
+    html += '<h2><span class="icon">👥</span>Population</h2>';
+    html += '<div class="big-number">' + playerCount + '</div>';
+    html += '<div style="color:var(--dim);margin-bottom:12px">' + onlineCount + ' online</div>';
+    html += '<div class="stat-row"><span class="stat-label">Structures</span><span class="stat-value">' + structCount + '</span></div>';
+    html += '<div class="stat-row"><span class="stat-label">Gardens</span><span class="stat-value green">' + gardenCount + '</span></div>';
+    html += '<div class="stat-row"><span class="stat-label">Discoveries</span><span class="stat-value purple">' + discCount + '</span></div>';
+    html += '</div>';
+
+    // ── Economy ──
+    html += '<div class="card">';
+    html += '<h2><span class="icon">⚡</span>Economy</h2>';
+    html += '<div class="stat-row"><span class="stat-label">Total Spark</span><span class="stat-value gold">' + totalSpark.toLocaleString() + '</span></div>';
+    html += '<div class="stat-row"><span class="stat-label">Treasury</span><span class="stat-value green">' + treasury.toLocaleString() + '</span></div>';
+    html += '<div class="stat-row"><span class="stat-label">Avg Balance</span><span class="stat-value">' +
+      (agentBalances.length ? Math.floor(totalSpark / agentBalances.length) : 0) + '</span></div>';
+    html += '<div class="stat-row"><span class="stat-label">Transactions</span><span class="stat-value">' +
+      (economy.transactions || []).length + '</span></div>';
+    html += '<div class="stat-row"><span class="stat-label">Listings</span><span class="stat-value">' +
+      (economy.listings || []).length + '</span></div>';
+    html += '</div>';
+
+    // ── Zone Populations ──
+    html += '<div class="card">';
+    html += '<h2><span class="icon">🗺️</span>Zone Populations</h2>';
+    html += '<div class="bar-chart">';
+    var zoneEntries = Object.entries(zonePops).sort(function(a, b) { return b[1] - a[1]; });
+    zoneEntries.forEach(function(entry) {
+      var zname = entry[0], count = entry[1];
+      var pct = Math.round((count / maxPop) * 100);
+      var color = ZONE_COLORS[zname] || '#6c5ce7';
+      html += '<div class="bar-row">';
+      html += '<span class="bar-label">' + zname + '</span>';
+      html += '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:' + color + '">' + count + '</div></div>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+
+    // ── Top Earners ──
+    html += '<div class="card">';
+    html += '<h2><span class="icon">🏆</span>Top Earners</h2>';
+    agentBalances.slice(0, 10).forEach(function(entry, i) {
+      html += '<div class="leaderboard-row">';
+      html += '<span class="rank' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</span>';
+      html += '<span class="lb-name">' + entry.id + '</span>';
+      html += '<span class="lb-spark">⚡ ' + entry.spark + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+
+    // ── Recent Chat ──
+    html += '<div class="card">';
+    html += '<h2><span class="icon">💬</span>Recent Chat</h2>';
+    chatMsgs.slice(-8).reverse().forEach(function(msg) {
+      html += '<div class="chat-msg">';
+      html += '<span class="chat-time">' + formatTime(msg.ts) + '</span>';
+      html += '<span class="chat-from">' + (msg.from || 'unknown') + '</span>';
+      html += '<span class="chat-text">' + (msg.text || '').slice(0, 100) + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+
+    // ── Recent Activity ──
+    html += '<div class="card full-width">';
+    html += '<h2><span class="icon">📊</span>Recent Activity (' + changesList.length + ' total changes)</h2>';
+    html += '<div class="changes-list">';
+    changesList.slice(-30).reverse().forEach(function(c) {
+      var detail = '';
+      if (c.payload) {
+        var pk = Object.keys(c.payload)[0];
+        if (pk) detail = pk + ': ' + JSON.stringify(c.payload[pk]).slice(0, 40);
+      }
+      html += '<div class="change-item">';
+      html += '<span class="change-type">' + (c.type || '?') + '</span>';
+      html += '<span class="change-agent">' + (c.from || '?') + '</span>';
+      html += '<span class="change-detail">' + (c.zone || '') + (detail ? ' · ' + detail : '') + '</span>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+
+    html += '</div>'; // end grid
+    document.getElementById('dashboard').innerHTML = html;
+    document.getElementById('dashboard').className = '';
+  }
+
+  loadAll().then(render).catch(function(err) {
+    var el = document.getElementById('error');
+    el.style.display = 'block';
+    el.textContent = 'Error loading state: ' + err.message +
+      '. Make sure to serve from the docs/ directory or the repo root.';
+    document.getElementById('dashboard').textContent = '';
+  });
+
+  // Auto-refresh every 30 seconds
+  setInterval(function() { loadAll().then(render).catch(function() {}); }, 30000);
+})();
+</script>
+</body>
+</html>

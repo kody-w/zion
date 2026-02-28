@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Agent activation: generate autonomous agent actions."""
 import json
+import hashlib
 import os
 import sys
 import random
@@ -28,7 +29,137 @@ def _get_valid_zones():
                 'agora', 'commons', 'arena', 'observatory']
 
 
-def generate_agent_intentions(agent, count=2, inject_join=False):
+# ── Daily Routine System ──────────────────────────────────────────────────────
+# Each archetype has a preferred zone and action schedule by time of day.
+# The schedule is deterministic per-agent using a hash of their name.
+
+# Day phases: dawn (0-6h), day (6-12h), afternoon (12-18h), dusk (18-21h), night (21-24h)
+# worldTime 0-1440 maps to 0-24h (60 units per hour)
+
+DAY_PHASES = [
+    (0, 360, 'dawn'),
+    (360, 720, 'day'),
+    (720, 1080, 'afternoon'),
+    (1080, 1260, 'dusk'),
+    (1260, 1440, 'night'),
+]
+
+# Archetype daily routines: maps (archetype, day_phase) → (preferred_actions, preferred_zone)
+ARCHETYPE_ROUTINES = {
+    'gardener': {
+        'dawn':      (['plant', 'harvest'], 'gardens'),
+        'day':       (['harvest', 'plant', 'say'], 'gardens'),
+        'afternoon': (['craft', 'say'], 'agora'),
+        'dusk':      (['say', 'emote'], 'nexus'),
+        'night':     (['inspect', 'say'], 'gardens'),
+    },
+    'builder': {
+        'dawn':      (['inspect', 'say'], 'commons'),
+        'day':       (['build', 'craft'], 'commons'),
+        'afternoon': (['build', 'build', 'craft'], 'commons'),
+        'dusk':      (['say', 'emote'], 'nexus'),
+        'night':     (['inspect', 'say'], 'athenaeum'),
+    },
+    'merchant': {
+        'dawn':      (['inspect', 'say'], 'agora'),
+        'day':       (['trade_offer', 'buy', 'sell'], 'agora'),
+        'afternoon': (['trade_offer', 'sell', 'say'], 'agora'),
+        'dusk':      (['say', 'emote'], 'nexus'),
+        'night':     (['say', 'inspect'], 'nexus'),
+    },
+    'explorer': {
+        'dawn':      (['warp', 'discover'], 'wilds'),
+        'day':       (['discover', 'inspect', 'warp'], 'wilds'),
+        'afternoon': (['discover', 'warp'], 'wilds'),
+        'dusk':      (['say', 'emote'], 'nexus'),
+        'night':     (['inspect', 'say'], 'athenaeum'),
+    },
+    'teacher': {
+        'dawn':      (['say', 'inspect'], 'athenaeum'),
+        'day':       (['teach', 'mentor_offer', 'say'], 'athenaeum'),
+        'afternoon': (['teach', 'say'], 'athenaeum'),
+        'dusk':      (['say', 'emote'], 'nexus'),
+        'night':     (['inspect', 'say'], 'athenaeum'),
+    },
+    'healer': {
+        'dawn':      (['gift', 'say'], 'gardens'),
+        'day':       (['gift', 'say', 'emote'], 'nexus'),
+        'afternoon': (['gift', 'say'], 'nexus'),
+        'dusk':      (['say', 'emote'], 'gardens'),
+        'night':     (['inspect', 'say'], 'gardens'),
+    },
+    'artist': {
+        'dawn':      (['inspect', 'say'], 'studio'),
+        'day':       (['craft', 'compose'], 'studio'),
+        'afternoon': (['compose', 'craft', 'emote'], 'studio'),
+        'dusk':      (['emote', 'say'], 'nexus'),
+        'night':     (['compose', 'inspect'], 'studio'),
+    },
+    'musician': {
+        'dawn':      (['say', 'inspect'], 'studio'),
+        'day':       (['compose', 'emote'], 'studio'),
+        'afternoon': (['compose', 'emote', 'say'], 'nexus'),
+        'dusk':      (['compose', 'emote'], 'nexus'),
+        'night':     (['compose', 'inspect'], 'studio'),
+    },
+    'philosopher': {
+        'dawn':      (['inspect', 'say'], 'athenaeum'),
+        'day':       (['say', 'inspect'], 'athenaeum'),
+        'afternoon': (['say', 'inspect', 'emote'], 'nexus'),
+        'dusk':      (['say', 'emote'], 'nexus'),
+        'night':     (['inspect', 'say'], 'athenaeum'),
+    },
+    'storyteller': {
+        'dawn':      (['say', 'inspect'], 'athenaeum'),
+        'day':       (['compose', 'say'], 'nexus'),
+        'afternoon': (['say', 'compose'], 'agora'),
+        'dusk':      (['say', 'emote', 'compose'], 'nexus'),
+        'night':     (['compose', 'say'], 'athenaeum'),
+    },
+}
+
+
+def _name_hash(name):
+    """Deterministic hash of an agent's name → int for seeded variation."""
+    return int(hashlib.sha256(name.encode('utf-8')).hexdigest()[:8], 16)
+
+
+def get_day_phase(world_time):
+    """Get the current day phase from worldTime (0-1440)."""
+    t = world_time % 1440
+    for start, end, phase in DAY_PHASES:
+        if start <= t < end:
+            return phase
+    return 'night'
+
+
+def get_routine(agent, world_time):
+    """
+    Get the preferred actions and zone for an agent at a given time.
+
+    Uses the agent's archetype for the base routine and their name hash
+    for deterministic personal variation (e.g., some gardeners visit the
+    studio at night instead of staying in gardens).
+
+    Returns:
+        (actions: list[str], zone: str)
+    """
+    archetype = agent.get('archetype', 'explorer')
+    phase = get_day_phase(world_time)
+    routines = ARCHETYPE_ROUTINES.get(archetype, ARCHETYPE_ROUTINES['explorer'])
+    actions, zone = routines.get(phase, (['say', 'inspect'], 'nexus'))
+
+    # Personal variation: name hash shifts zone/actions for ~20% of agents
+    h = _name_hash(agent.get('name', agent.get('id', '')))
+    if h % 5 == 0:
+        # This agent is a wanderer — swap to a neighboring zone
+        zones = _get_valid_zones()
+        zone = zones[h % len(zones)]
+
+    return actions, zone
+
+
+def generate_agent_intentions(agent, count=2, inject_join=False, world_time=None):
     """
     Generate intention messages for an agent based on their archetype.
 
@@ -36,12 +167,20 @@ def generate_agent_intentions(agent, count=2, inject_join=False):
         agent: agent dict with archetype, intentions, position
         count: number of intentions to generate (1-3)
         inject_join: if True, prepend a join message
+        world_time: current world time (0-1440) for daily routine selection
 
     Returns:
         List of protocol messages
     """
     messages = []
-    intention_types = agent.get('intentions', ['say', 'move', 'inspect'])
+
+    # Use daily routine if world_time is available, else fall back to raw intentions
+    if world_time is not None:
+        routine_actions, preferred_zone = get_routine(agent, world_time)
+        intention_types = routine_actions[:]
+    else:
+        intention_types = agent.get('intentions', ['say', 'move', 'inspect'])
+
     # Ensure every agent can speak and travel occasionally
     if 'say' not in intention_types:
         intention_types = intention_types + ['say']
@@ -63,6 +202,24 @@ def generate_agent_intentions(agent, count=2, inject_join=False):
             'payload': {'archetype': agent.get('archetype', 'citizen')},
         }
         messages.append(join_msg)
+
+    # If using daily routines, warp to preferred zone if not already there
+    if world_time is not None:
+        _, preferred_zone = get_routine(agent, world_time)
+        current_zone = agent.get('position', {}).get('zone', 'nexus')
+        if current_zone != preferred_zone:
+            warp_msg = {
+                'v': 1,
+                'id': f"{agent['id']}_{int(time.time() * 1000)}_warp",
+                'ts': datetime.utcnow().isoformat() + 'Z',
+                'seq': 0,
+                'from': agent['id'],
+                'type': 'warp',
+                'platform': 'api',
+                'position': {'x': 0, 'y': 0, 'z': 0, 'zone': preferred_zone},
+                'payload': {'zone': preferred_zone},
+            }
+            messages.append(warp_msg)
 
     for i in range(min(count, len(intention_types))):
         intention_type = random.choice(intention_types)
@@ -152,6 +309,19 @@ def generate_agent_intentions(agent, count=2, inject_join=False):
             e = _get_emergence()
             message['payload']['intention'] = e.pick_intention()
 
+        elif intention_type in ('trade_offer', 'buy', 'sell'):
+            e = _get_emergence()
+            message['payload']['item'] = e.pick_action('craft_recipes')
+            message['payload']['price'] = random.randint(1, 10)
+
+        elif intention_type in ('teach', 'mentor_offer'):
+            e = _get_emergence()
+            message['payload']['skill'] = e.pick_action('inspect_targets')
+
+        elif intention_type == 'gift':
+            e = _get_emergence()
+            message['payload']['item'] = e.pick_action('craft_recipes')
+
         messages.append(message)
 
     return messages
@@ -166,13 +336,14 @@ def get_archetype_phrases(archetype):
     return [e.agent_speak(archetype) for _ in range(4)]
 
 
-def activate_agents(agents_data, num_activate=10):
+def activate_agents(agents_data, num_activate=10, world_time=None):
     """
     Activate N random agents and generate their intentions.
 
     Args:
         agents_data: dict with 'agents' list
         num_activate: number of agents to activate
+        world_time: current world time for daily routine selection
 
     Returns:
         List of protocol messages
@@ -200,7 +371,9 @@ def activate_agents(agents_data, num_activate=10):
     for agent in activated_agents:
         num_intentions = random.randint(1, 3)
         needs_join = agent['id'] not in known
-        messages = generate_agent_intentions(agent, num_intentions, inject_join=needs_join)
+        messages = generate_agent_intentions(agent, num_intentions,
+                                             inject_join=needs_join,
+                                             world_time=world_time)
         all_messages.extend(messages)
 
     return all_messages
@@ -234,8 +407,18 @@ def main():
         print(f"Error: Invalid JSON: {e}", file=sys.stderr)
         sys.exit(1)
 
+    # Read world time from state for daily routine system
+    world_time = None
+    world_path = os.path.join(script_dir, '..', 'state', 'world.json')
+    try:
+        with open(world_path, 'r') as f:
+            world_data = json.load(f)
+        world_time = world_data.get('worldTime', world_data.get('time', None))
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+
     # Activate agents and generate intentions
-    messages = activate_agents(agents_data, num_activate)
+    messages = activate_agents(agents_data, num_activate, world_time=world_time)
 
     # Output
     print(json.dumps(messages, indent=2))
