@@ -32515,16 +32515,18 @@
     chatPanel.id = 'chat-panel';
     chatPanel.style.cssText = `
       position: absolute;
-      bottom: 20px;
+      bottom: 60px;
       left: 20px;
-      width: 350px;
-      height: 200px;
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 8px;
-      padding: 10px;
+      width: 340px;
+      max-height: 180px;
+      background: rgba(5, 8, 18, 0.75);
+      border-radius: 10px;
+      padding: 10px 12px;
       overflow-y: auto;
       pointer-events: auto;
-      font-size: 14px;
+      font-size: 13px;
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
     `;
     hudOverlay.appendChild(chatPanel);
 
@@ -32890,17 +32892,20 @@
     chatInput.placeholder = 'Press Enter to chat...';
     chatInput.style.cssText = `
       position: absolute;
-      bottom: 230px;
+      bottom: 250px;
       left: 20px;
-      width: 330px;
-      padding: 10px;
-      background: rgba(0, 0, 0, 0.8);
-      border: 2px solid #4af;
-      border-radius: 4px;
+      width: 340px;
+      padding: 10px 14px;
+      background: rgba(5, 8, 18, 0.9);
+      border: 1px solid rgba(74, 170, 255, 0.4);
+      border-radius: 10px;
       color: white;
-      font-size: 14px;
+      font-size: 13px;
       pointer-events: auto;
       display: none;
+      outline: none;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
     `;
 
     chatInput.addEventListener('keydown', function(e) {
@@ -33043,7 +33048,7 @@
 
     coordsEl = document.createElement('div');
     coordsEl.id = 'coords-display';
-    coordsEl.style.cssText = 'position:absolute;bottom:240px;left:20px;background:rgba(0,0,0,0.5);border-radius:4px;padding:4px 8px;font-size:11px;color:#888;font-family:monospace;pointer-events:none;';
+    coordsEl.style.cssText = 'position:absolute;bottom:250px;left:20px;background:rgba(5,8,18,0.5);border-radius:6px;padding:3px 8px;font-size:10px;color:#556;font-family:monospace;pointer-events:none;';
     hud.appendChild(coordsEl);
 
     var infoPanel = document.createElement('div');
@@ -33127,9 +33132,9 @@
     npcDialogEl = document.createElement('div');
     npcDialogEl.id = 'npc-dialog';
     npcDialogEl.style.cssText = 'position:absolute;bottom:60px;left:50%;transform:translateX(-50%);' +
-      'background:rgba(10,14,26,0.92);border:2px solid ' + color + ';border-radius:12px;' +
-      'padding:16px 20px;min-width:380px;max-width:480px;pointer-events:auto;' +
-      'box-shadow:0 4px 20px rgba(0,0,0,0.6);animation:slideIn 0.3s ease-out;';
+      'background:rgba(5,8,18,0.92);border:1px solid ' + color + '44;border-radius:14px;' +
+      'padding:16px 20px;min-width:370px;max-width:460px;pointer-events:auto;' +
+      'box-shadow:0 4px 24px rgba(0,0,0,0.6);backdrop-filter:blur(12px);animation:slideIn 0.3s ease-out;';
 
     var header = '<div style="display:flex;align-items:center;margin-bottom:10px;">' +
       '<div style="width:48px;height:48px;border-radius:50%;background:' + color + ';' +
@@ -39558,29 +39563,30 @@
     tooltip.id = 'tutorial-tooltip';
     tooltip.style.cssText = `
       position: absolute;
-      bottom: 240px;
+      bottom: 160px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(15, 12, 10, 0.92);
-      border: 1px solid rgba(218, 165, 32, 0.4);
-      border-radius: 8px;
-      padding: 20px 25px;
-      min-width: 400px;
-      max-width: 500px;
+      background: rgba(5, 8, 18, 0.92);
+      border: 1px solid rgba(218, 165, 32, 0.3);
+      border-radius: 12px;
+      padding: 18px 24px;
+      min-width: 360px;
+      max-width: 460px;
       pointer-events: auto;
       z-index: 1000;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-      animation: tutorialPulse 2s infinite;
+      backdrop-filter: blur(12px);
+      animation: tutorialPulse 3s ease-in-out infinite;
     `;
 
     var styleSheet = document.createElement('style');
     styleSheet.textContent = `
       @keyframes tutorialPulse {
         0%, 100% {
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 10px rgba(218, 165, 32, 0.2);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 8px rgba(218, 165, 32, 0.15);
         }
         50% {
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(218, 165, 32, 0.5);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(218, 165, 32, 0.35);
         }
       }
     `;
@@ -41902,10 +41908,10 @@
     tutorialEl = document.createElement('div');
     tutorialEl.id = 'tutorial-overlay';
     tutorialEl.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);' +
-      'background:rgba(10,14,26,0.92);border:2px solid #DAA520;border-radius:12px;' +
-      'padding:20px 28px;width:440px;pointer-events:auto;z-index:500;' +
-      'box-shadow:0 8px 32px rgba(0,0,0,0.8);color:#E8E0D8;font-family:Arial,sans-serif;' +
-      'animation:fadeIn 0.3s ease;';
+      'background:rgba(5,8,18,0.92);border:1px solid rgba(218,165,32,0.3);border-radius:14px;' +
+      'padding:20px 28px;width:420px;pointer-events:auto;z-index:500;' +
+      'box-shadow:0 8px 32px rgba(0,0,0,0.6);color:#E8E0D8;font-family:Arial,sans-serif;' +
+      'backdrop-filter:blur(12px);animation:fadeIn 0.3s ease;';
 
     var progress = '';
     for (var i = 0; i < TUTORIAL_STEPS.length; i++) {
