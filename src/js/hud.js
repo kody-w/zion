@@ -280,7 +280,6 @@
     playerInfoPanel.innerHTML =
       '<div style="font-weight: bold; font-size: 16px; margin-bottom: 8px;">' + escapeHtml(pName) + '</div>' +
       '<div style="margin-bottom: 3px;"><span style="color: #ffa500;">Spark:</span> ' + escapeHtml(pSpark) + '</div>' +
-      '<div style="margin-bottom: 3px;"><span style="color: #4af;">Zone:</span> ' + escapeHtml(pZone) + '</div>' +
       '<div style="margin-bottom: 3px;"><span style="color: #ff6347;">Warmth:</span> ' + pWarmth + '%</div>';
   }
 
@@ -557,6 +556,11 @@
     type = type || 'info';
     if (!notificationContainer) return;
     if (typeof document === 'undefined') return;
+
+    // Cap at 3 visible notifications — remove oldest
+    while (notificationContainer.children.length >= 3) {
+      notificationContainer.removeChild(notificationContainer.firstChild);
+    }
 
     var colors = {
       info: '#4af',

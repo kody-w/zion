@@ -5531,6 +5531,15 @@
 
   function handleBuildAction(data) {
     if (data.mode !== undefined) {
+      // Check zone rules before entering build mode
+      if (data.mode && Zones && Zones.isActionAllowed && !Zones.isActionAllowed('build', currentZone)) {
+        if (HUD && HUD.showNotification) {
+          HUD.showNotification('Building is not allowed in this zone. Visit The Commons to build.', 'warning');
+        }
+        buildModeActive = false;
+        return;
+      }
+
       // Toggle build mode
       buildModeActive = data.mode;
 
