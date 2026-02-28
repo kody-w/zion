@@ -59,39 +59,39 @@
   "tax_brackets": [
     [
       0,
-      50,
+      20,
       0.0
     ],
     [
+      20,
+      50,
+      0.05
+    ],
+    [
       50,
       100,
-      0.062
+      0.10
     ],
     [
       100,
       250,
-      0.071
+      0.15
     ],
     [
       250,
       500,
-      0.183
+      0.25
     ],
     [
       500,
-      1000,
-      0.314
-    ],
-    [
-      1000,
       null,
-      0.312
+      0.40
     ]
   ],
   "base_ubi_amount": 5,
-  "wealth_tax_threshold": 564,
-  "wealth_tax_rate": 0.016,
-  "maintenance_cost": 2,
+  "wealth_tax_threshold": 500,
+  "wealth_tax_rate": 0.02,
+  "maintenance_cost": 1,
   "listing_fee_rate": 0.05,
   "listing_fee_min": 1
 }

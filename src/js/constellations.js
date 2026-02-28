@@ -498,7 +498,7 @@
     } else if (fraction < 0.3125) {
       phase = 'first_quarter'; illumination = 0.5;
     } else if (fraction < 0.4375) {
-      phase = 'waxing_gibbous'; illumination = 0.5 + (fraction - 0.25) * 4;
+      phase = 'waxing_gibbous'; illumination = 0.5 + (fraction - 0.3125) * 4;
     } else if (fraction < 0.5625) {
       phase = 'full_moon'; illumination = 1.0;
     } else if (fraction < 0.6875) {

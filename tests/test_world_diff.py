@@ -518,7 +518,11 @@ class TestNarrateDiff(unittest.TestCase):
         diff = diff_states(before, after)
         narrative = narrate_diff(diff)
         self.assertIn('sage', narrative.lower())
-        self.assertIn('gardens', narrative.lower())
+        # Zone may appear as display name (e.g. "the Fields") or raw key
+        self.assertTrue(
+            'gardens' in narrative.lower() or 'fields' in narrative.lower(),
+            f"Expected gardens/fields in: {narrative}"
+        )
 
     def test_narrative_new_structure(self):
         before = make_state(structures=make_structures({}))
@@ -532,10 +536,10 @@ class TestNarrateDiff(unittest.TestCase):
         diff = diff_states(before, after)
         narrative = narrate_diff(diff)
         self.assertIn('bench', narrative.lower())
-        # Zone may appear as display name (e.g. "the Gathering") or raw key
+        # Zone may appear as display name (e.g. "the Circle") or raw key
         self.assertTrue(
-            'commons' in narrative.lower() or 'gathering' in narrative.lower(),
-            f"Expected commons/gathering in: {narrative}"
+            'commons' in narrative.lower() or 'gathering' in narrative.lower() or 'circle' in narrative.lower(),
+            f"Expected commons/gathering/circle in: {narrative}"
         )
 
     def test_narrative_plant_added(self):
@@ -605,7 +609,11 @@ class TestNarrateDiff(unittest.TestCase):
         narrative = narrate_diff(diff)
         # Both events should appear in the narrative
         self.assertIn('alice', narrative.lower())
-        self.assertIn('gardens', narrative.lower())
+        # Zone may appear as display name (e.g. "the Fields") or raw key
+        self.assertTrue(
+            'gardens' in narrative.lower() or 'fields' in narrative.lower(),
+            f"Expected gardens/fields in: {narrative}"
+        )
         self.assertIn('TREASURY', narrative)
 
 

@@ -378,10 +378,12 @@ def _diff_chat(before, after):
     after_msgs = after.get('messages', []) if after else []
 
     before_ids = set(m.get('id') for m in before_msgs if m.get('id'))
-    new_messages = [m for m in after_msgs if m.get('id') not in before_ids]
+    has_ids = bool(before_ids) or any(m.get('id') for m in after_msgs)
 
-    # Handle case where messages have no id — fall back to length-based diff
-    if not before_ids and not any(m.get('id') for m in after_msgs):
+    if has_ids:
+        new_messages = [m for m in after_msgs if m.get('id') and m.get('id') not in before_ids]
+    else:
+        # No ids — fall back to length-based diff
         new_messages = after_msgs[len(before_msgs):]
 
     return {

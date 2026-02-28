@@ -52,8 +52,9 @@ class TestProcessEarningsWithTax(unittest.TestCase):
         economy = {'balances': {}, 'ledger': []}
         actions = [{'type': 'say', 'from': 'user1', 'ts': 1000}]
         result = process_earnings(economy, actions)
-        # say earns 1, balance 0 -> 0% tax
-        self.assertEqual(result['balances']['user1'], 1)
+        # say earns EARN_TABLE['say'], balance 0 -> 0% tax
+        expected = EARN_TABLE.get('say', 1)
+        self.assertEqual(result['balances']['user1'], expected)
         self.assertNotIn(TREASURY_ID, result['balances'])
 
     def test_earnings_with_tax(self):
