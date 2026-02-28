@@ -8612,12 +8612,17 @@
   // ── Weather gameplay modifiers ──────────────────────────────────────────────
 
   var WEATHER_MODIFIERS = {
-    clear:   { yieldMultiplier: 1.0, visibilityPenalty: 0,   movementMultiplier: 1.0 },
-    cloudy:  { yieldMultiplier: 1.0, visibilityPenalty: 0.1, movementMultiplier: 1.0 },
-    rain:    { yieldMultiplier: 1.5, visibilityPenalty: 0.1, movementMultiplier: 0.9 },
-    storm:   { yieldMultiplier: 1.2, visibilityPenalty: 0.5, movementMultiplier: 0.8 },
-    snow:    { yieldMultiplier: 0.5, visibilityPenalty: 0.2, movementMultiplier: 0.75 },
-    fog:     { yieldMultiplier: 1.0, visibilityPenalty: 0.4, movementMultiplier: 0.9 }
+    clear:        { yieldMultiplier: 1.0, visibilityPenalty: 0,   movementMultiplier: 1.0 },
+    cloudy:       { yieldMultiplier: 1.0, visibilityPenalty: 0.1, movementMultiplier: 1.0 },
+    rain:         { yieldMultiplier: 1.5, visibilityPenalty: 0.1, movementMultiplier: 0.9 },
+    heavy_rain:   { yieldMultiplier: 1.3, visibilityPenalty: 0.3, movementMultiplier: 0.85 },
+    storm:        { yieldMultiplier: 1.2, visibilityPenalty: 0.5, movementMultiplier: 0.8 },
+    thunderstorm: { yieldMultiplier: 1.2, visibilityPenalty: 0.5, movementMultiplier: 0.8 },
+    snow:         { yieldMultiplier: 0.5, visibilityPenalty: 0.2, movementMultiplier: 0.75 },
+    blizzard:     { yieldMultiplier: 0.3, visibilityPenalty: 0.6, movementMultiplier: 0.6 },
+    fog:          { yieldMultiplier: 1.0, visibilityPenalty: 0.4, movementMultiplier: 0.9 },
+    mist:         { yieldMultiplier: 1.1, visibilityPenalty: 0.3, movementMultiplier: 0.95 },
+    sandstorm:    { yieldMultiplier: 0.7, visibilityPenalty: 0.5, movementMultiplier: 0.7 }
   };
 
   function getWeatherModifiers(type) {

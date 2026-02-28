@@ -2302,6 +2302,13 @@
           z: delta.x * sinYaw + delta.z * cosYaw
         };
 
+        // Apply weather movement modifier (snow slows, storm slows, etc.)
+        if (localPlayer.weatherModifiers && localPlayer.weatherModifiers.movementMultiplier) {
+          var wMult = localPlayer.weatherModifiers.movementMultiplier;
+          rotatedDelta.x *= wMult;
+          rotatedDelta.z *= wMult;
+        }
+
         var moveMsg = Input.createMoveMessage(
           localPlayer.id,
           rotatedDelta,
@@ -2835,6 +2842,8 @@
         if (typeof WeatherFX !== 'undefined' && WeatherFX.getAmbientModifiers) {
           var mods = WeatherFX.getAmbientModifiers(currentWeather);
           if (localPlayer) localPlayer.weatherModifiers = mods;
+        } else if (World && World.getWeatherModifiers) {
+          if (localPlayer) localPlayer.weatherModifiers = World.getWeatherModifiers(currentWeather);
         }
       }
 
@@ -4898,6 +4907,10 @@
         if (Physical && localPlayer.warmth > 0) {
           var warmthBonus = Physical.getWarmthBonus(localPlayer.warmth);
           harvestComplexity = Math.min(1.0, harvestComplexity * warmthBonus);
+        }
+        // Apply weather yield modifier (rain boosts, snow reduces)
+        if (localPlayer.weatherModifiers && localPlayer.weatherModifiers.yieldMultiplier) {
+          harvestComplexity = Math.min(1.0, harvestComplexity * localPlayer.weatherModifiers.yieldMultiplier);
         }
         var sparkEarned = Economy.earnSpark(economyLedger, localPlayer.id, 'harvest', { complexity: harvestComplexity });
         if (localPlayer) {
