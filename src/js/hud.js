@@ -655,11 +655,11 @@
 
     var actions = [
       { key: 'E', label: 'Interact', color: '#44aa66' },
-      { key: 'B', label: 'Build', color: '#aa6644' },
-      { key: 'Enter', label: 'Chat', color: '#4488cc' },
-      { key: 'Shift', label: 'Sprint', color: '#cc8844' },
       { key: 'I', label: 'Items', color: '#aa44cc' },
-      { key: 'J', label: 'Quests', color: '#d4af37' }
+      { key: 'C', label: 'Craft', color: '#cc8844' },
+      { key: 'J', label: 'Quests', color: '#d4af37' },
+      { key: 'Z', label: 'Map', color: '#4488cc' },
+      { key: 'F1', label: 'Help', color: '#888' }
     ];
 
     actions.forEach(function(action) {
@@ -811,6 +811,12 @@
 
     // Action buttons row
     var actionBtns = '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">';
+    // Shop button (shown if zone has a shop)
+    if (npcData.hasShop) {
+      actionBtns += '<button class="npc-action-btn" data-action="shop" style="flex:1;padding:6px 10px;' +
+        'background:rgba(76,175,80,0.2);border:1px solid rgba(76,175,80,0.5);border-radius:6px;' +
+        'color:#4caf50;font-size:11px;cursor:pointer;transition:background 0.2s;font-weight:bold;">&#128722; Shop</button>';
+    }
     // Trade button (merchants/traders show prominently)
     var isMerchant = npcData.archetype === 'merchant' || npcData.archetype === 'trader' ||
                      npcData.archetype === 'artisan' || npcData.archetype === 'farmer';
@@ -10152,7 +10158,7 @@
       ['E', 'Interact / Harvest'],
       ['I', 'Inventory'],
       ['C', 'Crafting'],
-      ['J', 'Journal'],
+      ['J', 'Quest Log'],
       ['T', 'Trading'],
       ['F', 'Fishing'],
       ['M', 'Map / Minimap'],

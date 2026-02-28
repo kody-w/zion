@@ -340,7 +340,7 @@
       case 'Z':
         if (!chatMode) {
           if (callbacks.onAction) {
-            callbacks.onAction('toggleHousing', {});
+            callbacks.onAction('toggleZoneMap', {});
           }
           e.preventDefault();
         }

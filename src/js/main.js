@@ -4972,6 +4972,38 @@
           addRecentActivity('Heard lore from ' + npcData.name);
         }
         break;
+
+      case 'shop':
+        if (HUD && HUD.showNPCShop && Shops && Shops.getShop) {
+          var zoneShop = Shops.getShop(currentZone);
+          if (zoneShop) {
+            var shopDisplayItems = zoneShop.items.filter(function(i) { return i.stock > 0; }).map(function(i) {
+              var iData = Inventory ? Inventory.getItemData(i.id) : null;
+              return { id: i.id, name: iData ? iData.name : i.id.replace(/_/g, ' '), icon: iData ? iData.icon : '📦', price: i.price, description: i.desc, stock: i.stock };
+            });
+            var shopBalance = economyLedger ? Economy.getBalance(economyLedger, localPlayer.id) : localPlayer.spark;
+            HUD.showNPCShop({ name: zoneShop.keeper, archetype: 'merchant' }, shopDisplayItems, shopBalance, function onShopBuy(itemId) {
+              var buyResult = Shops.buyFromShop(currentZone, itemId, economyLedger, localPlayer.id, playerInventory, 1);
+              if (buyResult.success) {
+                localPlayer.spark = Economy.getBalance(economyLedger, localPlayer.id);
+                HUD.updatePlayerInfo(localPlayer);
+                HUD.showNotification(buyResult.message, 'success');
+                if (Audio) Audio.playSound('coin');
+                if (Shops && dailyQuests) {
+                  var comp = Shops.trackDailyProgress(dailyQuests, 'shop_buy', { count: 1 });
+                  comp.forEach(function(q) { HUD.showNotification('🎯 Daily: ' + q.title, 'success'); });
+                }
+                if (Shops && collectionState) {
+                  var disc = Shops.recordDiscovery(collectionState, 'items_found', itemId);
+                  if (disc) HUD.showNotification(disc.message, 'success');
+                }
+              } else {
+                HUD.showNotification(buyResult.message, 'error');
+              }
+            });
+          }
+        }
+        break;
     }
   }
 
@@ -5883,6 +5915,7 @@
         break;
 
       case 'toggleMap':
+      case 'toggleZoneMap':
         if (HUD && localPlayer) {
           var mapEl = document.getElementById('world-map-overlay');
           if (mapEl) {
@@ -6184,6 +6217,10 @@
         if (NPCs && NPCs.interactWithNPC && localPlayer) {
           var npcResponse = NPCs.interactWithNPC(localPlayer.position.x, localPlayer.position.z, localPlayer.id);
           if (npcResponse) {
+            // Add shop flag if zone has a shop
+            if (Shops && Shops.getShop && Shops.getShop(currentZone)) {
+              npcResponse.hasShop = true;
+            }
             // Show rich NPC interaction dialog
             if (HUD && HUD.showNPCDialog) {
               HUD.showNPCDialog(npcResponse);
