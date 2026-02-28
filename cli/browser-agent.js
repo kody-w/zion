@@ -13,6 +13,9 @@
  */
 'use strict';
 
+// Node.js sleep (doesn't depend on page event loop)
+function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
 var pw, chromium;
 try {
   pw = require('playwright');
@@ -44,8 +47,12 @@ function startServer(dir, port) {
       '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml',
       '.xml': 'application/xml',
     };
+    // Local copies of CDN scripts to avoid network dependency
+    var CDN_OVERRIDES = {
+      'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js': path.join(dir, 'three.min.js'),
+      'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js': path.join(dir, 'peerjs.min.js'),
+    };
     var server = http.createServer(function(req, res) {
-      // Map /state/ to the actual state directory
       var urlPath = req.url.split('?')[0];
       var filePath;
       if (urlPath.startsWith('/state/')) {
@@ -59,6 +66,17 @@ function startServer(dir, port) {
           res.writeHead(404);
           res.end('Not found');
         } else {
+          // Rewrite CDN URLs to local paths in HTML
+          if (ext === '.html') {
+            var html = data.toString();
+            for (var cdn in CDN_OVERRIDES) {
+              if (fs.existsSync(CDN_OVERRIDES[cdn])) {
+                var localName = path.basename(CDN_OVERRIDES[cdn]);
+                html = html.replace(cdn, '/' + localName);
+              }
+            }
+            data = Buffer.from(html);
+          }
           res.writeHead(200, {
             'Content-Type': MIME[ext] || 'application/octet-stream',
             'Access-Control-Allow-Origin': '*',
@@ -312,8 +330,7 @@ async function main() {
   console.log('🌐 Launching browser...');
   var browser = await chromium.launch({
     headless: args.headless,
-    args: ['--no-sandbox', '--disable-web-security', '--enable-webgl',
-           '--enable-gpu', '--ignore-gpu-blocklist', '--enable-unsafe-swiftshader'],
+    args: ['--no-sandbox', '--disable-web-security', '--ignore-gpu-blocklist', '--use-gl=angle'],
   });
   var context = await browser.newContext({
     viewport: { width: 1280, height: 720 },
@@ -332,34 +349,47 @@ async function main() {
     console.log('  [page error] ' + err.message.slice(0, 120));
   });
 
-  try {
-    // Navigate to game
-    console.log('🎮 Loading ZION...');
-    await page.goto(gameUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
-    await page.waitForTimeout(2000);
+  // CDP session for reliable screenshots (bypasses Playwright's animation wait)
+  var cdpSession = await context.newCDPSession(page);
+  async function takeScreenshot(filepath) {
+    try {
+      var result = await cdpSession.send('Page.captureScreenshot', { format: 'png' });
+      fs.writeFileSync(filepath, Buffer.from(result.data, 'base64'));
+    } catch (e) {
+      console.log('  ⚠ Screenshot failed: ' + e.message.slice(0, 60));
+    }
+  }
 
-    // Enter as guest player by calling Auth.loginAsGuest directly
+  try {
+    // Navigate to game (use 'commit' to avoid hanging on CDN scripts)
+    console.log('🎮 Loading ZION...');
+    await page.goto(gameUrl, { waitUntil: 'commit', timeout: 10000 }).catch(function(e) {
+      console.log('   ⚠ Initial nav: ' + e.message.slice(0, 60));
+    });
+    await sleep(3000);
+
+    // Enter as guest player
     console.log('🚪 Entering world as "' + args.name + '"...');
     var sanitizedName = args.name.replace(/[^a-zA-Z0-9_-]/g, '');
     await page.evaluate(function(name) {
-      // Set guest auth in localStorage so the game recognizes us
       if (window.Auth && window.Auth.loginAsGuest) {
         window.Auth.loginAsGuest(name);
       } else {
-        // Fallback: set localStorage directly
         localStorage.setItem('zion_auth_token', 'guest_' + name);
         localStorage.setItem('zion_username', name);
       }
-    }, sanitizedName);
+    }, sanitizedName).catch(function() {
+      // If evaluate fails (page still loading), set via cdp
+    });
 
-    // Reload page so init() picks up the auth from localStorage
-    await page.reload({ waitUntil: 'load', timeout: 30000 });
-    console.log('   ✅ Guest auth set, page reloaded');
+    // Reload with auth — don't await full load, use fire-and-forget + timer
+    console.log('   ✅ Auth set, reloading...');
+    page.goto(gameUrl, { waitUntil: 'commit', timeout: 15000 }).catch(function() {});
 
-    // Wait for game to initialize (Three.js from CDN + scene setup)
+    // Wait for game to fully initialize
     console.log('   ⏳ Waiting for world to load...');
-    // Wait for THREE.js to load from CDN and scene to initialize
     for (var waitI = 0; waitI < 20; waitI++) {
+      await sleep(1500);
       var loaded = await page.evaluate(function() {
         var loadEl = document.getElementById('loading-overlay');
         var isLoading = loadEl && loadEl.style.display !== 'none' && loadEl.style.opacity !== '0';
@@ -368,27 +398,37 @@ async function main() {
           scene: !!(window.World && window.World.getCurrentWeather),
           loading: isLoading
         };
-      });
+      }).catch(function() { return { three: false, scene: false, loading: true }; });
+
       if (loaded.three && loaded.scene && !loaded.loading) {
-        console.log('   ✅ World loaded (Three.js + scene ready)');
+        console.log('   ✅ World loaded!');
         break;
       }
-      console.log('   ... waiting (' + (loaded.three ? '3D✓' : '3D…') + ' ' + (loaded.scene ? 'scene✓' : 'scene…') + ' ' + (loaded.loading ? 'loading…' : 'ready✓') + ')');
-      await page.waitForTimeout(1000);
+      var status = (loaded.three ? '3D✓' : '3D…') + ' ' + (loaded.scene ? 'scene✓' : 'scene…') + ' ' + (loaded.loading ? 'loading…' : 'ready✓');
+      console.log('   ... ' + status + ' (' + ((waitI + 1) * 1.5).toFixed(0) + 's)');
     }
-    // Final safety: dismiss loading screen if stuck
+    // Force-dismiss loading screen if stuck
     await page.evaluate(function() {
       var loadEl = document.getElementById('loading-overlay');
       if (loadEl && loadEl.style.display !== 'none') {
         loadEl.style.display = 'none';
       }
-    });
-    await page.waitForTimeout(2000);
+    }).catch(function() {});
+    await sleep(2000);
+
+    // Kill PeerJS connection attempts — they block the main thread in local mode
+    await page.evaluate(function() {
+      if (window.Network && window.Network.disconnect) {
+        window.Network.disconnect();
+      }
+      // Destroy the peer object if it exists
+      if (window._peer) { try { window._peer.destroy(); } catch(e) {} }
+    }).catch(function() {});
 
     // Take initial screenshot
     var screenshotDir = path.join(ROOT, 'screenshots');
     if (!fs.existsSync(screenshotDir)) fs.mkdirSync(screenshotDir, { recursive: true });
-    await page.screenshot({ path: path.join(screenshotDir, 'agent-entry.png') });
+    await takeScreenshot(path.join(screenshotDir, 'agent-entry.png'));
     console.log('   📸 Entry screenshot saved\n');
 
     // ── Game Loop ────────────────────────────────────────────────────────────
@@ -413,12 +453,12 @@ async function main() {
       // Screenshot periodically
       if ((cycle + 1) % args.screenshotInterval === 0 || cycle === args.cycles - 1) {
         var ssPath = path.join(screenshotDir, 'agent-cycle-' + (cycle + 1) + '.png');
-        await page.screenshot({ path: ssPath });
+        await takeScreenshot(ssPath);
         console.log('  📸 Screenshot: ' + path.basename(ssPath));
       }
 
       // Brief pause between cycles
-      await page.waitForTimeout(1500);
+      await sleep(1500);
       console.log('');
     }
 
@@ -459,14 +499,14 @@ async function main() {
     console.log('\n💾 Log saved to ' + logPath);
 
     // Final screenshot
-    await page.screenshot({ path: path.join(screenshotDir, 'agent-final.png') });
+    await takeScreenshot(path.join(screenshotDir, 'agent-final.png'));
     console.log('📸 Final screenshot saved');
 
   } catch (e) {
     console.error('\n❌ Error:', e.message);
     var errSsDir = path.join(ROOT, 'screenshots');
     if (!fs.existsSync(errSsDir)) fs.mkdirSync(errSsDir, { recursive: true });
-    await page.screenshot({ path: path.join(errSsDir, 'agent-error.png') }).catch(function() {});
+    await takeScreenshot(path.join(errSsDir, 'agent-error.png'));
   } finally {
     await browser.close();
     server.close();
