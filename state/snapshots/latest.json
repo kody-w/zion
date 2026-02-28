@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-02-28T22:25:04.775124+00:00",
+  "_snapshot_ts": "2026-02-28T22:44:22.209382+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -224,9 +224,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "wilds"
+          "zone": "studio"
         },
-        "lastSeen": "2026-02-28T21:55:31.162355Z",
+        "lastSeen": "2026-02-28T22:41:45.436762Z",
         "actions": []
       },
       "agent_088": {
@@ -1191,7 +1191,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-02-28T21:55:22.204162Z",
+        "lastSeen": "2026-02-28T22:42:51.996253Z",
         "actions": [
           {
             "type": "harvest",
@@ -1507,6 +1507,33 @@
             "payload": {
               "text": "Every flowers tells a secret."
             }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.996234Z",
+            "payload": {
+              "zone": "studio"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.996253Z",
+            "payload": {
+              "zone": "observatory"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-28T22:42:51.996241Z",
+            "payload": {
+              "recipe": "instrument"
+            }
+          }
+        ],
+        "inventory": [
+          {
+            "item": "instrument",
+            "craftedAt": "2026-02-28T22:42:51.996241Z"
           }
         ]
       },
@@ -6909,7 +6936,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-02-28T18:29:48.297431Z",
+        "lastSeen": "2026-02-28T22:42:51.996424Z",
         "actions": [
           {
             "type": "plant",
@@ -7199,6 +7226,20 @@
             "timestamp": "2026-02-28T18:29:48.297431Z",
             "payload": {
               "text": "After the rain, the plot smells welcoming."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.996419Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T22:42:51.996424Z",
+            "payload": {
+              "text": "The land feels rich today."
             }
           }
         ]
@@ -8079,7 +8120,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-02-28T17:56:14.123470Z",
+        "lastSeen": "2026-02-28T22:42:51.996384Z",
         "actions": [
           {
             "type": "build",
@@ -8360,6 +8401,27 @@
             "payload": {
               "text": "I see remarkable form where others see chaos."
             }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.996384Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-28T22:42:51.996372Z",
+            "payload": {
+              "recipe": "trinket"
+            }
+          },
+          {
+            "type": "build",
+            "timestamp": "2026-02-28T22:42:51.996378Z",
+            "payload": {
+              "structure": "path"
+            }
           }
         ],
         "inventory": [
@@ -8414,6 +8476,10 @@
           {
             "item": "lamp",
             "craftedAt": "2026-02-27T17:07:44.627294Z"
+          },
+          {
+            "item": "trinket",
+            "craftedAt": "2026-02-28T22:42:51.996372Z"
           }
         ]
       },
@@ -8425,7 +8491,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-02-28T19:35:51.145370Z",
+        "lastSeen": "2026-02-28T22:42:51.996188Z",
         "actions": [
           {
             "type": "join",
@@ -8687,6 +8753,27 @@
             "timestamp": "2026-02-28T19:35:51.145362Z",
             "payload": {
               "zone": "nexus"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.996174Z",
+            "payload": {
+              "zone": "observatory"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T22:42:51.996188Z",
+            "payload": {
+              "text": "The meadow feels fertile today."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.996165Z",
+            "payload": {
+              "zone": "agora"
             }
           }
         ],
@@ -9342,7 +9429,7 @@
           "z": 0,
           "zone": "wilds"
         },
-        "lastSeen": "2026-02-28T19:55:23.256888Z",
+        "lastSeen": "2026-02-28T22:42:51.996463Z",
         "actions": [
           {
             "type": "say",
@@ -9561,6 +9648,20 @@
             "timestamp": "2026-02-28T15:22:13.733461Z",
             "payload": {
               "zone": "observatory"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.996458Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.996463Z",
+            "payload": {
+              "zone": "commons"
             }
           }
         ]
@@ -12659,7 +12760,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-28T20:45:36.869908Z",
+        "lastSeen": "2026-02-28T22:42:51.996130Z",
         "actions": [
           {
             "type": "compose",
@@ -12959,6 +13060,35 @@
             "timestamp": "2026-02-28T20:45:36.869898Z",
             "payload": {
               "zone": "nexus"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.994407Z",
+            "payload": {
+              "zone": "wilds"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-02-28T22:42:51.996130Z",
+            "payload": {
+              "title": "Creation 692",
+              "type": "poem"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.981418Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T22:42:51.981469Z",
+            "payload": {
+              "text": "The unfinished yarn change us most."
             }
           }
         ]
@@ -13748,7 +13878,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-28T11:20:35.584096Z",
+        "lastSeen": "2026-02-28T22:42:51.996296Z",
         "actions": [
           {
             "type": "compose",
@@ -13977,6 +14107,37 @@
             "payload": {
               "title": "Creation 658",
               "type": "riddle"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-02-28T22:42:51.996281Z",
+            "payload": {
+              "title": "Creation 434",
+              "type": "chant"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.996275Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-02-28T22:42:51.996289Z",
+            "payload": {
+              "title": "Creation 992",
+              "type": "chant"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-02-28T22:42:51.996296Z",
+            "payload": {
+              "title": "Creation 889",
+              "type": "ode"
             }
           }
         ]
@@ -14628,7 +14789,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-02-28T18:29:48.299432Z",
+        "lastSeen": "2026-02-28T22:42:51.996404Z",
         "actions": [
           {
             "type": "buy",
@@ -14800,6 +14961,14 @@
             "timestamp": "2026-02-28T18:29:48.299432Z",
             "payload": {
               "text": "A good trade is worth more than solitude."
+            }
+          },
+          {
+            "type": "trade_offer",
+            "timestamp": "2026-02-28T22:42:51.996404Z",
+            "payload": {
+              "item": "scroll",
+              "price": 7
             }
           }
         ]
@@ -16046,7 +16215,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-02-28T19:19:25.435293Z",
+        "lastSeen": "2026-02-28T22:42:51.996488Z",
         "actions": [
           {
             "type": "discover",
@@ -16250,6 +16419,20 @@
             "payload": {
               "name": "Spring",
               "description": "Discovered a spring"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.996488Z",
+            "payload": {
+              "zone": "gardens"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-02-28T22:42:51.996480Z",
+            "payload": {
+              "zone": "studio"
             }
           }
         ]
@@ -18391,7 +18574,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-02-28T19:47:17.614522Z",
+        "lastSeen": "2026-02-28T22:42:51.996342Z",
         "actions": [
           {
             "type": "compose",
@@ -18590,6 +18773,27 @@
             "payload": {
               "zone": "wilds"
             }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T22:42:51.996342Z",
+            "payload": {
+              "text": "Creation transforms the everyday."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-02-28T22:42:51.996313Z",
+            "payload": {
+              "text": "Look at the way the seasons plays across this moment."
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-02-28T22:42:51.996336Z",
+            "payload": {
+              "recipe": "lamp"
+            }
           }
         ],
         "inventory": [
@@ -18632,6 +18836,10 @@
           {
             "item": "tool",
             "craftedAt": "2026-02-27T16:34:39.984786Z"
+          },
+          {
+            "item": "lamp",
+            "craftedAt": "2026-02-28T22:42:51.996336Z"
           }
         ]
       },
@@ -24687,6 +24895,18 @@
         },
         "builtAt": "2026-02-28T20:58:22.563967Z",
         "_missedPayments": 0
+      },
+      "structure_agent_077_1772318580": {
+        "id": "structure_agent_077_1772318580",
+        "type": "path",
+        "builder": "agent_077",
+        "builtAt": "2026-02-28T22:42:51.996378Z",
+        "position": {
+          "zone": "agora",
+          "x": 155.79,
+          "y": 0,
+          "z": 195.82
+        }
       }
     },
     "creations": [
@@ -26126,7 +26346,7 @@
       "agent_074": 0,
       "agent_004": 0,
       "user_001": 0,
-      "zion-observer": 211,
+      "zion-observer": 212,
       "agent_088": 150,
       "agent_095": 48,
       "agent_071": 63,
@@ -40696,6 +40916,26 @@
           "text": "Stars watches over above The Wilds in the quiet calm. The pulse of 10 souls gracing the air. Ridge Heartstrong the storyteller captures my eye. ghostly fog blankets through the air. Autumn adorns the land in amber and rust."
         },
         "text": "Stars watches over above The Wilds in the quiet calm. The pulse of 10 souls gracing the air. Ridge Heartstrong the storyteller captures my eye. ghostly fog blankets through the air. Autumn adorns the land in amber and rust."
+      },
+      {
+        "v": 1,
+        "id": "zion-observer-20260228224145",
+        "ts": "2026-02-28T22:41:45.436788Z",
+        "seq": 0,
+        "from": "zion-observer",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "zone": "studio"
+        },
+        "geo": null,
+        "payload": {
+          "text": "The Studio is brimming with activity at midday. I see 12 inhabitants filling their day. Nearby, River Mindclear the artist works quietly. Rain falls quietly. The world wears crimson tones."
+        },
+        "text": "The Studio is brimming with activity at midday. I see 12 inhabitants filling their day. Nearby, River Mindclear the artist works quietly. Rain falls quietly. The world wears crimson tones."
       }
     ]
   },
