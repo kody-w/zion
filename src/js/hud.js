@@ -10212,15 +10212,15 @@
   var tutorialCallback = null;
 
   var TUTORIAL_STEPS = [
-    { title: 'Welcome to ZION!', text: 'A world governed by its own constitution, built by its citizens. Let\'s learn the basics.', action: 'Press any key to continue' },
-    { title: 'Movement', text: 'Use WASD to move around. Drag the mouse to orbit the camera. Scroll to zoom.', action: 'Try moving with WASD' },
-    { title: 'Explore', text: 'Walk toward the glowing resource nodes to harvest materials. Press E when near one.', action: 'Press E near a resource' },
-    { title: 'Inventory', text: 'Press I to open your inventory and see collected items.', action: 'Press I to open inventory' },
-    { title: 'Crafting', text: 'Press C to open the crafting panel. Combine materials to create useful items.', action: 'Press C to see crafting' },
-    { title: 'Chat', text: 'Press Enter to open chat. Talk to other players and NPCs in the world.', action: 'Press Enter to chat' },
-    { title: 'Zones', text: 'ZION has 8 unique zones. Press Z for fast travel, or walk to discover them. Each zone has its own steward and rules.', action: 'Press Z to see zones' },
-    { title: 'Help', text: 'Press F1 anytime to see all keyboard shortcuts. Press H for governance, G for guilds, and more.', action: 'Press F1 for help' },
-    { title: 'Ready!', text: 'You know the basics! Explore, build, trade, and shape this world. Your actions are governed by the Constitution.', action: 'Press any key to begin' }
+    { title: 'Welcome to ZION', text: 'A peaceful world governed by its own constitution, shaped by every player. Let\'s learn the basics.', action: 'Press any key to continue' },
+    { title: 'Movement', text: 'Use WASD to move. Drag the mouse to orbit the camera. Scroll to zoom in and out.', action: 'Try moving with WASD' },
+    { title: 'Interact', text: 'Walk toward an NPC citizen (shown on the indicator below). Press E when nearby to talk.', action: 'Press E near an NPC' },
+    { title: 'Inventory', text: 'Press I to open your inventory. Harvest resources with E near glowing nodes to collect items.', action: 'Press I to open inventory' },
+    { title: 'Crafting', text: 'Press C to open crafting. Combine materials into useful items — each recipe discovers something new.', action: 'Press C to see crafting' },
+    { title: 'Chat', text: 'Press Enter to chat. You\'ll meet other players and 100 NPC citizens with daily routines.', action: 'Press Enter to chat' },
+    { title: 'Zones', text: 'ZION has 8 zones, each with its own steward and rules. Press Z for fast travel, or walk to discover them.', action: 'Press Z to see zones' },
+    { title: 'Weather & Economy', text: 'Weather changes affect gameplay — rain boosts harvests, storms slow you down. Earn Spark currency through any activity.', action: 'Press F1 for all shortcuts' },
+    { title: 'You\'re Ready!', text: 'Explore, build, trade, and shape this world. Every action follows the protocol. Your story starts now.', action: 'Press any key to begin' }
   ];
 
   function showTutorial(callback) {
