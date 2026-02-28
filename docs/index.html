@@ -31663,6 +31663,8 @@
 
   var cameraDistance = 20; // Default camera distance from player
   var cameraOrbitAngle = 0; // Horizontal orbit angle in radians
+  var targetCameraDistance = 20; // Smooth zoom target
+  var targetOrbitAngle = 0; // Smooth orbit target
   var isDraggingCamera = false;
   var lastCameraDragX = 0;
   var lastCameraDragY = 0;
@@ -32112,7 +32114,7 @@
       var deltaX = e.clientX - lastCameraDragX;
       var deltaY = e.clientY - lastCameraDragY;
 
-      cameraOrbitAngle -= deltaX * 0.005;
+      targetOrbitAngle -= deltaX * 0.005;
 
       lastCameraDragX = e.clientX;
       lastCameraDragY = e.clientY;
@@ -32137,8 +32139,8 @@
   function handleMouseWheel(e) {
     e.preventDefault();
 
-    cameraDistance += e.deltaY * 0.02;
-    cameraDistance = Math.max(5, Math.min(50, cameraDistance));
+    targetCameraDistance += e.deltaY * 0.02;
+    targetCameraDistance = Math.max(5, Math.min(50, targetCameraDistance));
   }
 
   function getMouseNDC() {
@@ -32146,10 +32148,12 @@
   }
 
   function getCameraDistance() {
+    cameraDistance += (targetCameraDistance - cameraDistance) * 0.15;
     return cameraDistance;
   }
 
   function getCameraOrbit() {
+    cameraOrbitAngle += (targetOrbitAngle - cameraOrbitAngle) * 0.2;
     return cameraOrbitAngle;
   }
 
@@ -32337,8 +32341,8 @@
 
         if (lastPinchDistance > 0) {
           var delta = lastPinchDistance - distance;
-          cameraDistance += delta * 0.1;
-          cameraDistance = Math.max(5, Math.min(50, cameraDistance));
+          targetCameraDistance += delta * 0.1;
+          targetCameraDistance = Math.max(5, Math.min(50, targetCameraDistance));
         }
 
         lastPinchDistance = distance;
@@ -32353,7 +32357,7 @@
         if (totalMoved > 10) {
           isTouchDragging = true;
           var deltaX = touchX - lastTouchX;
-          cameraOrbitAngle -= deltaX * 0.008;
+          targetOrbitAngle -= deltaX * 0.008;
         }
 
         lastTouchX = touchX;
@@ -32462,6 +32466,7 @@
   exports.getMouseNDC = getMouseNDC;
   exports.getCameraDistance = getCameraDistance;
   exports.getCameraOrbit = getCameraOrbit;
+  exports.isSprinting = function() { return !!keys['shift']; };
 
 })(typeof module !== 'undefined' ? module.exports : (window.Input = {}));
 
@@ -39521,6 +39526,28 @@
   }
 
   exports.updateNpcIndicator = updateNpcIndicator;
+
+  var sprintEl = null;
+
+  function updateSprintIndicator(isSprinting) {
+    if (typeof document === 'undefined') return;
+
+    if (!sprintEl) {
+      var hud = document.querySelector('#zion-hud');
+      if (!hud) return;
+      sprintEl = document.createElement('div');
+      sprintEl.id = 'sprint-indicator';
+      sprintEl.style.cssText = 'position:absolute;bottom:52px;left:50%;transform:translateX(-50%);' +
+        'color:#cc8844;font-size:11px;font-weight:bold;letter-spacing:2px;pointer-events:none;' +
+        'opacity:0;transition:opacity 0.15s ease;text-shadow:0 0 8px rgba(204,136,68,0.4);';
+      sprintEl.textContent = '⚡ SPRINT';
+      hud.appendChild(sprintEl);
+    }
+
+    sprintEl.style.opacity = isSprinting ? '0.8' : '0';
+  }
+
+  exports.updateSprintIndicator = updateSprintIndicator;
 
   var tutorialState = {
     active: false,
@@ -138863,6 +138890,10 @@
 
       if (HUD.updateNpcIndicator && NPCs && NPCs.getNPCPositions && npcUpdateFrame % 10 === 0) {
         HUD.updateNpcIndicator(localPlayer.position, NPCs.getNPCPositions());
+      }
+
+      if (HUD.updateSprintIndicator && Input && Input.isSprinting) {
+        HUD.updateSprintIndicator(Input.isSprinting());
       }
 
       if (Quests && NPCs && NPCs.updateQuestIndicators && npcUpdateFrame % 60 === 0) {

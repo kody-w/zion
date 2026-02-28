@@ -11,6 +11,8 @@
   // Camera control variables
   var cameraDistance = 20; // Default camera distance from player
   var cameraOrbitAngle = 0; // Horizontal orbit angle in radians
+  var targetCameraDistance = 20; // Smooth zoom target
+  var targetOrbitAngle = 0; // Smooth orbit target
   var isDraggingCamera = false;
   var lastCameraDragX = 0;
   var lastCameraDragY = 0;
@@ -497,7 +499,7 @@
       var deltaY = e.clientY - lastCameraDragY;
 
       // Adjust orbit angle based on horizontal drag
-      cameraOrbitAngle -= deltaX * 0.005;
+      targetOrbitAngle -= deltaX * 0.005;
 
       lastCameraDragX = e.clientX;
       lastCameraDragY = e.clientY;
@@ -533,8 +535,8 @@
     e.preventDefault();
 
     // Adjust camera distance with constraints
-    cameraDistance += e.deltaY * 0.02;
-    cameraDistance = Math.max(5, Math.min(50, cameraDistance));
+    targetCameraDistance += e.deltaY * 0.02;
+    targetCameraDistance = Math.max(5, Math.min(50, targetCameraDistance));
   }
 
   /**
@@ -545,16 +547,20 @@
   }
 
   /**
-   * Get camera distance (for zoom)
+   * Get camera distance (for zoom) — smoothed
    */
   function getCameraDistance() {
+    // Lerp toward target for smooth zoom
+    cameraDistance += (targetCameraDistance - cameraDistance) * 0.15;
     return cameraDistance;
   }
 
   /**
-   * Get camera orbit angle
+   * Get camera orbit angle — smoothed
    */
   function getCameraOrbit() {
+    // Lerp toward target for smooth orbit
+    cameraOrbitAngle += (targetOrbitAngle - cameraOrbitAngle) * 0.2;
     return cameraOrbitAngle;
   }
 
@@ -756,8 +762,8 @@
 
         if (lastPinchDistance > 0) {
           var delta = lastPinchDistance - distance;
-          cameraDistance += delta * 0.1;
-          cameraDistance = Math.max(5, Math.min(50, cameraDistance));
+          targetCameraDistance += delta * 0.1;
+          targetCameraDistance = Math.max(5, Math.min(50, targetCameraDistance));
         }
 
         lastPinchDistance = distance;
@@ -774,7 +780,7 @@
           // Past drag threshold — orbit camera
           isTouchDragging = true;
           var deltaX = touchX - lastTouchX;
-          cameraOrbitAngle -= deltaX * 0.008;
+          targetOrbitAngle -= deltaX * 0.008;
         }
 
         lastTouchX = touchX;
@@ -908,5 +914,6 @@
   exports.getMouseNDC = getMouseNDC;
   exports.getCameraDistance = getCameraDistance;
   exports.getCameraOrbit = getCameraOrbit;
+  exports.isSprinting = function() { return !!keys['shift']; };
 
 })(typeof module !== 'undefined' ? module.exports : (window.Input = {}));

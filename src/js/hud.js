@@ -7594,6 +7594,32 @@
   exports.updateNpcIndicator = updateNpcIndicator;
 
   // =============================================================================
+  // SPRINT INDICATOR — subtle speed feedback
+  // =============================================================================
+
+  var sprintEl = null;
+
+  function updateSprintIndicator(isSprinting) {
+    if (typeof document === 'undefined') return;
+
+    if (!sprintEl) {
+      var hud = document.querySelector('#zion-hud');
+      if (!hud) return;
+      sprintEl = document.createElement('div');
+      sprintEl.id = 'sprint-indicator';
+      sprintEl.style.cssText = 'position:absolute;bottom:52px;left:50%;transform:translateX(-50%);' +
+        'color:#cc8844;font-size:11px;font-weight:bold;letter-spacing:2px;pointer-events:none;' +
+        'opacity:0;transition:opacity 0.15s ease;text-shadow:0 0 8px rgba(204,136,68,0.4);';
+      sprintEl.textContent = '⚡ SPRINT';
+      hud.appendChild(sprintEl);
+    }
+
+    sprintEl.style.opacity = isSprinting ? '0.8' : '0';
+  }
+
+  exports.updateSprintIndicator = updateSprintIndicator;
+
+  // =============================================================================
   // TUTORIAL/ONBOARDING SYSTEM
   // =============================================================================
 

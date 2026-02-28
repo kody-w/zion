@@ -3143,6 +3143,11 @@
         HUD.updateNpcIndicator(localPlayer.position, NPCs.getNPCPositions());
       }
 
+      // Update sprint indicator
+      if (HUD.updateSprintIndicator && Input && Input.isSprinting) {
+        HUD.updateSprintIndicator(Input.isSprinting());
+      }
+
       // Update quest indicators on NPCs (every few frames)
       if (Quests && NPCs && NPCs.updateQuestIndicators && npcUpdateFrame % 60 === 0) {
         NPCs.updateQuestIndicators(localPlayer.id, localPlayer.position);
