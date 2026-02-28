@@ -1,5 +1,6 @@
 (function(exports) {
   // Main entry point and game loop orchestrator
+  var DEBUG = typeof location !== 'undefined' && location.search.indexOf('debug') !== -1;
 
   // Import references (browser globals or require)
   var Protocol = typeof require !== 'undefined' ? require('./protocol') : window.Protocol;
@@ -827,13 +828,13 @@
    * Initialize the game
    */
   async function init() {
-    console.log('Initializing ZION MMO...');
+    if (DEBUG) console.log('Initializing ZION MMO...');
 
     // --- Dashboard Mode Check ---
     // If ?mode=dashboard or #dashboard, launch UI-only mode
     if (typeof window !== 'undefined' && typeof Dashboard !== 'undefined' && Dashboard.isDashboardMode) {
       if (Dashboard.isDashboardMode()) {
-        console.log('[Dashboard] UI-only mode detected');
+        if (DEBUG) console.log('[Dashboard] UI-only mode detected');
         return initDashboardMode();
       }
     }
@@ -841,7 +842,7 @@
     // Detect platform
     if (Input) {
       platform = Input.getPlatform();
-      console.log('Platform:', platform);
+      if (DEBUG) console.log('Platform:', platform);
     }
 
     // Check authentication
@@ -869,7 +870,7 @@
 
     // Get username
     var username = Auth.getUsername();
-    console.log('Authenticated as:', username);
+    if (DEBUG) console.log('Authenticated as:', username);
 
     // Initialize game systems with loading progress
     await initGameSystems(username);
@@ -943,7 +944,7 @@
    * Initialize dashboard (UI-only) mode — no 3D world, text/panel interface
    */
   function initDashboardMode() {
-    console.log('[Dashboard] Launching dashboard mode...');
+    if (DEBUG) console.log('[Dashboard] Launching dashboard mode...');
 
     // Hide login screen, loading overlay, and 3D canvas
     if (typeof document !== 'undefined') {
@@ -1128,7 +1129,7 @@
       }
     }
 
-    console.log('[Dashboard] Dashboard mode initialized');
+    if (DEBUG) console.log('[Dashboard] Dashboard mode initialized');
   }
 
   function _wrapPanel(title, contentEl) {
@@ -1564,7 +1565,7 @@
       Network.initMesh(peerId, {
         onMessage: handleIncomingMessage,
         onPeerConnect: function(connectedPeerId) {
-          console.log('Peer connected:', connectedPeerId);
+          if (DEBUG) console.log('Peer connected:', connectedPeerId);
           if (HUD) HUD.showNotification('Player connected: ' + connectedPeerId, 'info');
           // Send our current state so the new peer can see us immediately
           if (localPlayer && Network && Network.broadcastMessage) {
@@ -1582,7 +1583,7 @@
           }
         },
         onPeerDisconnect: function(disconnectedPeerId) {
-          console.log('Peer disconnected:', disconnectedPeerId);
+          if (DEBUG) console.log('Peer disconnected:', disconnectedPeerId);
           if (HUD) HUD.showNotification('Player disconnected: ' + disconnectedPeerId, 'info');
           if (gameState && State) {
             State.removePlayer(gameState, disconnectedPeerId);
@@ -1703,7 +1704,7 @@
               }
             }
           }
-          console.log('[Canonical] Loaded %d citizens, %d chat messages from state/',
+          if (DEBUG) console.log('[Canonical] Loaded %d citizens, %d chat messages from state/',
             Object.keys((world && world.citizens) || {}).length,
             (chat && chat.messages || []).length);
         });
@@ -1712,19 +1713,19 @@
     // Initialize CRM simulation
     if (typeof SimCRM !== 'undefined' && SimCRM.initState) {
       simCrmState = SimCRM.initState();
-      console.log('[SimCRM] Initialized');
+      if (DEBUG) console.log('[SimCRM] Initialized');
     }
 
     // Initialize Project Manager simulation
     if (typeof SimProjectManager !== 'undefined' && SimProjectManager.initState) {
       simProjectManagerState = SimProjectManager.initState();
-      console.log('[SimProjectManager] Initialized');
+      if (DEBUG) console.log('[SimProjectManager] Initialized');
     }
 
     // Initialize Todo simulation
     if (typeof SimTodo !== 'undefined' && SimTodo.initState) {
       simTodoState = SimTodo.initState();
-      console.log('[SimTodo] Initialized');
+      if (DEBUG) console.log('[SimTodo] Initialized');
     }
 
     // Initialize 3D scene
@@ -1910,13 +1911,13 @@
       if (Quests.initPlayerAchievements) {
         Quests.initPlayerAchievements(username);
       }
-      console.log('Quest system initialized for player:', username);
+      if (DEBUG) console.log('Quest system initialized for player:', username);
     }
 
     // Restore saved player data (position, inventory, spark, etc.)
     var wasRestored = restorePlayerData();
     if (wasRestored) {
-      console.log('Restored saved player data');
+      if (DEBUG) console.log('Restored saved player data');
       var timeSince = Auth.getTimeSinceLastSave ? Auth.getTimeSinceLastSave() : Infinity;
       if (timeSince < 86400000 && HUD) { // Less than 24 hours
         var minsAgo = Math.floor(timeSince / 60000);
@@ -1932,7 +1933,7 @@
       Trading.initTrading(function(msg) {
         Network.broadcastMessage(msg);
       });
-      console.log('Trading system initialized');
+      if (DEBUG) console.log('Trading system initialized');
     }
 
     // Set up NPC dialog action handler
@@ -2019,7 +2020,7 @@
             registered++;
           }
         });
-        console.log('Registered intentions for ' + registered + ' NPCs');
+        if (DEBUG) console.log('Registered intentions for ' + registered + ' NPCs');
       }
     }
 
@@ -2098,14 +2099,14 @@
           }
         }, function() {
           // Geolocation denied or unavailable - game works fine without it
-          console.log('Geolocation not available - Warmth bonus disabled');
+          if (DEBUG) console.log('Geolocation not available - Warmth bonus disabled');
         }, { enableHighAccuracy: false, maximumAge: 30000, timeout: 10000 });
       } catch (e) {
         // Silently ignore - warmth is optional
       }
     }
 
-    console.log('Game systems initialized');
+    if (DEBUG) console.log('Game systems initialized');
   }
 
   /**
@@ -2132,7 +2133,7 @@
    */
   function showLoginScreen() {
     if (typeof document === 'undefined') {
-      console.log('Not authenticated. Please authenticate.');
+      if (DEBUG) console.log('Not authenticated. Please authenticate.');
       return;
     }
 
@@ -2186,20 +2187,25 @@
       <div style="font-size:72px;font-weight:100;letter-spacing:16px;margin-bottom:8px;
         background:linear-gradient(135deg,#4af,#a8f,#4af);-webkit-background-clip:text;
         -webkit-text-fill-color:transparent;background-clip:text;">ZION</div>
-      <p style="font-size:16px;margin-bottom:40px;opacity:0.6;letter-spacing:4px;text-transform:uppercase;">
-        A peer-to-peer social metaverse</p>
+      <p style="font-size:14px;margin-bottom:40px;opacity:0.5;letter-spacing:3px;text-transform:uppercase;">
+        A peaceful world shaped by its citizens</p>
       <button id="github-login" style="
         padding:16px 48px;font-size:16px;background:rgba(255,255,255,0.1);
         color:white;border:1px solid rgba(255,255,255,0.3);border-radius:30px;
         cursor:pointer;font-weight:500;letter-spacing:1px;
-        backdrop-filter:blur(10px);transition:all 0.3s;
+        backdrop-filter:blur(10px);transition:all 0.3s;display:block;margin:0 auto;
       " onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='rgba(255,255,255,0.6)'"
          onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='rgba(255,255,255,0.3)'"
       >Login with GitHub</button>
-      <p style="margin-top:24px;font-size:12px;opacity:0.4;">
-        Or append ?token=YOUR_GITHUB_PAT to the URL</p>
-      <div style="margin-top:60px;font-size:11px;opacity:0.3;">
-        100 AI citizens await in 8 zones</div>
+      <button id="guest-login" style="
+        padding:12px 36px;font-size:14px;background:none;
+        color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.15);border-radius:30px;
+        cursor:pointer;letter-spacing:1px;transition:all 0.3s;display:block;margin:16px auto 0;
+      " onmouseover="this.style.color='rgba(255,255,255,0.8)';this.style.borderColor='rgba(255,255,255,0.4)'"
+         onmouseout="this.style.color='rgba(255,255,255,0.5)';this.style.borderColor='rgba(255,255,255,0.15)'"
+      >Play as Guest</button>
+      <div style="margin-top:48px;font-size:11px;opacity:0.25;">
+        100 citizens · 8 zones · governed by constitution</div>
     `;
 
     loginScreen.appendChild(content);
@@ -2208,6 +2214,20 @@
     document.getElementById('github-login').addEventListener('click', function() {
       if (Auth) {
         Auth.initiateOAuth();
+      }
+    });
+
+    document.getElementById('guest-login').addEventListener('click', function() {
+      if (Auth && Auth.loginAsGuest) {
+        var guestNames = ['Wanderer', 'Traveler', 'Explorer', 'Seeker', 'Pilgrim', 'Nomad', 'Wayfarer', 'Drifter'];
+        var guestName = guestNames[Math.floor(Math.random() * guestNames.length)] + '_' + Math.floor(Math.random() * 999);
+        Auth.loginAsGuest(guestName);
+        loginScreen.style.opacity = '0';
+        loginScreen.style.transition = 'opacity 0.4s ease';
+        setTimeout(function() {
+          if (loginScreen.parentNode) loginScreen.parentNode.removeChild(loginScreen);
+          init();
+        }, 400);
       }
     });
   }
@@ -2339,7 +2359,7 @@
             var oldZone = currentZone;
             currentZone = detectedZone;
             localPlayer.zone = currentZone;
-            console.log('Entered zone:', currentZone);
+            if (DEBUG) console.log('Entered zone:', currentZone);
 
             // Play zone entry swoosh sound
             if (Audio && Audio.playSound) Audio.playSound('zone_enter');
@@ -3735,7 +3755,7 @@
 
     switch (event.type) {
       case 'world_discovered':
-        console.log('Discovered federated world:', event.worldInfo.worldName);
+        if (DEBUG) console.log('Discovered federated world:', event.worldInfo.worldName);
         if (HUD && HUD.showNotification) {
           HUD.showNotification('Discovered world: ' + event.worldInfo.worldName, 'info');
         }
@@ -3745,7 +3765,7 @@
         break;
 
       case 'federation_established':
-        console.log('Federation established with:', event.worldInfo.worldName);
+        if (DEBUG) console.log('Federation established with:', event.worldInfo.worldName);
         if (HUD && HUD.showNotification) {
           HUD.showNotification('Portal opened to: ' + event.worldInfo.worldName, 'success');
         }
@@ -3759,17 +3779,17 @@
         break;
 
       case 'cross_world_warp':
-        console.log('Player warping to world:', event.targetWorld);
+        if (DEBUG) console.log('Player warping to world:', event.targetWorld);
         triggerCameraShake(0.4, 0.6);
         triggerScreenFlash('rgba(138,43,226,0.4)', 0.5);
         break;
 
       case 'player_returned':
-        console.log('Player returned:', event.playerId);
+        if (DEBUG) console.log('Player returned:', event.playerId);
         break;
 
       default:
-        console.log('Unknown federation event:', event.type);
+        if (DEBUG) console.log('Unknown federation event:', event.type);
     }
   }
 
@@ -3795,7 +3815,7 @@
     };
 
     World.createPortal(sceneContext, portalData);
-    console.log('Created federation portal to:', worldInfo.worldName);
+    if (DEBUG) console.log('Created federation portal to:', worldInfo.worldName);
   }
 
   /**
@@ -3890,7 +3910,7 @@
         handleWeatherChangeMessage(msg);
         break;
       default:
-        console.log('Unknown message type:', msg.type);
+        if (DEBUG) console.log('Unknown message type:', msg.type);
     }
   }
 
@@ -4077,7 +4097,7 @@
 
       // In a real implementation, this would navigate to the other world's URL
       // For now, we just track the state
-      console.log('Player warped to federated world:', targetWorld);
+      if (DEBUG) console.log('Player warped to federated world:', targetWorld);
     } else {
       // Another player warped out
       if (gameState && State) {
@@ -4109,7 +4129,7 @@
         HUD.showNotification('Returned to home world', 'success');
       }
 
-      console.log('Player returned to home world:', homeWorld);
+      if (DEBUG) console.log('Player returned to home world:', homeWorld);
     } else {
       // Another player returned from traveling
       if (HUD && HUD.showNotification) {
@@ -4355,17 +4375,17 @@
     // Route simulation messages
     if (msg.payload && msg.payload.sim === 'crm' && typeof SimCRM !== 'undefined' && simCrmState) {
       simCrmState = SimCRM.applyAction(simCrmState, msg);
-      console.log('[SimCRM] Applied action:', msg.payload.action);
+      if (DEBUG) console.log('[SimCRM] Applied action:', msg.payload.action);
       return;
     }
     if (msg.payload && msg.payload.sim === 'project_manager' && typeof SimProjectManager !== 'undefined' && simProjectManagerState) {
       simProjectManagerState = SimProjectManager.applyAction(simProjectManagerState, msg);
-      console.log('[SimProjectManager] Applied action:', msg.payload.action);
+      if (DEBUG) console.log('[SimProjectManager] Applied action:', msg.payload.action);
       return;
     }
     if (msg.payload && msg.payload.sim === 'todo' && typeof SimTodo !== 'undefined' && simTodoState) {
       simTodoState = SimTodo.applyAction(simTodoState, msg);
-      console.log('[SimTodo] Applied action:', msg.payload.action);
+      if (DEBUG) console.log('[SimTodo] Applied action:', msg.payload.action);
       return;
     }
 
@@ -6651,7 +6671,7 @@
         break;
 
       default:
-        console.log('Unknown local action:', type);
+        if (DEBUG) console.log('Unknown local action:', type);
     }
 
     if (msg) {
@@ -6679,7 +6699,7 @@
     // Broadcast join message
     Network.broadcastMessage(msg);
 
-    console.log('Joined world');
+    if (DEBUG) console.log('Joined world');
   }
 
   /**
@@ -6704,7 +6724,7 @@
     // Stop game loop
     isRunning = false;
 
-    console.log('Left world');
+    if (DEBUG) console.log('Left world');
   }
 
   // Auto-start on DOM ready
@@ -6960,7 +6980,7 @@
       localPlayer.warmth = data.warmth;
     }
 
-    console.log('Player data restored from save');
+    if (DEBUG) console.log('Player data restored from save');
     return true;
   }
 
@@ -7090,7 +7110,7 @@
 
     // Apply seasonal NPC greetings
     if (NPCs && Seasons.getSeasonalGreeting) {
-      console.log('Season: ' + currentSeason.name + ' — ' + Seasons.getSeasonalGreeting());
+      if (DEBUG) console.log('Season: ' + currentSeason.name + ' — ' + Seasons.getSeasonalGreeting());
     }
   }
 
@@ -7127,7 +7147,7 @@
     var savedData = Auth && Auth.loadPlayerData ? Auth.loadPlayerData() : null;
     if (savedData && savedData.pet) {
       // Restore pet from saved data - pets module stores internally
-      console.log('Pet system initialized');
+      if (DEBUG) console.log('Pet system initialized');
     }
   }
 
