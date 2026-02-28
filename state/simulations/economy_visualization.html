@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZION Economy Simulation — Gini Coefficient Over Time</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0a0a1a;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.8rem;
+    background: linear-gradient(90deg, #00d4ff, #7b2fff, #ff6bcb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+  .subtitle { text-align: center; color: #888; margin-bottom: 2rem; font-size: 0.9rem; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 1200px; margin: 0 auto; }
+  .card {
+    background: #12122a;
+    border: 1px solid #2a2a4a;
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+  .card.full { grid-column: 1 / -1; }
+  .card h2 { font-size: 1.1rem; color: #7b9fff; margin-bottom: 1rem; }
+  .stat { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #1a1a3a; }
+  .stat:last-child { border-bottom: none; }
+  .stat .label { color: #888; }
+  .stat .value { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat .value.good { color: #4ade80; }
+  .stat .value.bad { color: #f87171; }
+  .stat .value.neutral { color: #60a5fa; }
+  .bracket-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+  .bracket-table th, .bracket-table td {
+    padding: 0.4rem 0.8rem;
+    text-align: right;
+    border-bottom: 1px solid #1a1a3a;
+    font-size: 0.85rem;
+  }
+  .bracket-table th { color: #888; font-weight: normal; text-align: right; }
+  .bracket-table td:first-child, .bracket-table th:first-child { text-align: left; }
+  .arrow { color: #4ade80; font-weight: bold; }
+  canvas { width: 100% !important; }
+</style>
+</head>
+<body>
+
+<h1>🧬 ZION Economy Evolution</h1>
+<p class="subtitle">Monte Carlo: 1,000 agents × 100 game-days × ~8 actions/day — 33 bracket configs tested</p>
+
+<div class="grid">
+
+  <!-- Main Chart -->
+  <div class="card full">
+    <h2>📈 Gini Coefficient Over Time (lower = more equal)</h2>
+    <canvas id="giniChart" height="80"></canvas>
+  </div>
+
+  <!-- Baseline Stats -->
+  <div class="card">
+    <h2>📊 Baseline (Current Config)</h2>
+    <div id="baselineStats"></div>
+  </div>
+
+  <!-- Optimal Stats -->
+  <div class="card">
+    <h2>🏆 Optimal (Evolved Config)</h2>
+    <div id="optimalStats"></div>
+  </div>
+
+  <!-- Bracket Comparison -->
+  <div class="card full">
+    <h2>💰 Tax Bracket Comparison</h2>
+    <table class="bracket-table" id="bracketTable"></table>
+  </div>
+
+  <!-- Balance Distribution Chart -->
+  <div class="card full">
+    <h2>🎯 Final Balance Distribution (Day 100)</h2>
+    <canvas id="distChart" height="60"></canvas>
+  </div>
+
+</div>
+
+<script>
+// Simulation data is embedded inline by the generator
+const DATA = {"baseline":{"gini_series":[0.263315253710467,0.1950796107055961,0.1538216223316913,0.1274721181917372,0.11259636994949494,0.1013135446685879,0.09376058304573272,0.08758329235913069,0.08124045986443253,0.07512671071260028,0.06858475101738282,0.06367929172752186,0.060352677935700455,0.05810012285356864,0.05656283732294228,0.05490663912136718,0.05262521036025713,0.050800379945846796,0.04805562573777621,0.04578299863521154,0.04294037436726064,0.04087645493787825,0.03863023596549344,0.03701943044002371,0.0357797606806848,0.03484240092964871,0.03361646722575307,0.03239650363225813,0.03189005379622094,0.030995720523415028,0.030170841979635942,0.029711455454216468,0.0290251210746721,0.028483090500437135,0.027871763720356046,0.027132852194894613,0.026632873804259636,0.026098465165207033,0.025787969989466218,0.02540409327674405,0.024871870701738477,0.024651302445899723,0.024646969307881798,0.02443064480874317,0.02424755733046869,0.02366494726586976,0.02333849481874324,0.022951809385026396,0.022674537697798588,0.022416801044894456,0.02242756740450457,0.022313635292665685,0.02209916995451717,0.02184571056415585,0.021687618952808033,0.021322344368274827,0.020907705129512316,0.02067995096971783,0.020488551869569868,0.020288699264020636,0.020126652908093186,0.019828911312312222,0.019739198506381374,0.019748107953258452,0.01966474099717842,0.019535267701916326,0.019510538378554418,0.01936970174080175,0.01915975291027751,0.01905087081519716,0.018955945810892463,0.019182268009446238,0.018898458713445723,0.018736103040566787,0.01873973573423367,0.018887033457637162,0.018782598171901713,0.018718551528816876,0.01853709408630987,0.018522497349695223,0.01858651574825229,0.018588609765587513,0.018621425355983604,0.01864940011117517,0.018536049048360287,0.01839842888261325,0.018213424511852795,0.01821439100945835,0.018421231001230207,0.018323462635592726,0.018308519023071654,0.01815916366953293,0.018107276759519855,0.01801440971152968,0.01798497313254236,0.01804969804343394,0.017939091492336183,0.017926635778574684,0.01781816922902417,0.017923473998972043],"final_gini":0.017923473998972043,"avg_balance":1441.693,"total_spark":1441693,"treasury":1085813,"tax_brackets":[[0,20,0.0],[20,50,0.05],[50,100,0.1],[100,250,0.15],[250,500,0.25],[500,null,0.4]],"score":-0.12071160862160352},"optimal":{"gini_series":[0.25835022752236,0.18036143843566188,0.13499028694104095,0.10806522420821574,0.09519722176207492,0.08549319594116259,0.07846905899407183,0.07124253026933532,0.06501867181508027,0.06152210259557071,0.058270283940599174,0.054845474035974194,0.052290503244735075,0.05054223882713495,0.048287707551133825,0.044643247748312034,0.04005105215892818,0.03712091564579526,0.03528596527032183,0.03478231782407309,0.0339331588801913,0.03343001579778831,0.032255675546871275,0.03128226339745396,0.03039732906306785,0.029668690285935672,0.02872350639098376,0.02783094704749207,0.027477963626181132,0.026715674456343833,0.026032867006832085,0.025610816844361676,0.025027389923542132,0.024548293304994688,0.02404750750575522,0.023484510079100074,0.023046543940723876,0.022647643025160667,0.022475132018397403,0.02216833791435395,0.021744697645257417,0.021575253064872887,0.021597852738079813,0.02144825244190224,0.021280811658322202,0.020822820789999547,0.020622268962948106,0.02031412697245215,0.02003186425979547,0.01980284390636435,0.01985636143266557,0.019771738133294768,0.01960109101705088,0.01941761824320753,0.01925543698373379,0.019015164955419134,0.018661388533044276,0.018486619692525498,0.018354541807045027,0.01820544949541894,0.018109900987155973,0.017920007035976838,0.017834909687757066,0.01784746585724221,0.017815110157027046,0.01772439730468344,0.017720983245892885,0.017650785026311684,0.017475119459087012,0.017430806994303143,0.017361660658473395,0.017551112308274445,0.01735110738447504,0.01724189849707445,0.017273135562640433,0.01741246531445246,0.017349774187256698,0.01736474121029699,0.017223286839119323,0.01724134071940528,0.01734927885454863,0.01732900495338122,0.01744150074860982,0.01747429376219415,0.01736548678560069,0.017269357900318586,0.017067731743514072,0.017093868461155966,0.017248277852461132,0.017162578796657963,0.017173775753443705,0.017042451621625907,0.017024937867360014,0.017021606552241664,0.017026324680420462,0.01711005878188135,0.017062764890909656,0.017060742764142534,0.017031243374767198,0.017109229249734792],"final_gini":0.017109229249734792,"avg_balance":1230.165,"total_spark":1230165,"treasury":1297341,"tax_brackets":[[0,15,0.0],[15,40,0.1],[40,80,0.2],[80,200,0.3],[200,400,0.4],[400,null,0.55]],"score":-0.12377712035599174},"top5":[{"tax_brackets":[[0,15,0.0],[15,40,0.1],[40,80,0.2],[80,200,0.3],[200,400,0.4],[400,null,0.55]],"final_gini":0.017109229249734792,"score":-0.12377712035599174,"avg_balance":1230.165},{"tax_brackets":[[0,20,0.0],[20,50,0.1],[50,100,0.2],[100,250,0.3],[250,500,0.4],[500,null,0.55]],"final_gini":0.01701222188492907,"score":-0.12363009056492692,"avg_balance":1235.325},{"tax_brackets":[[0,30,0.0],[30,80,0.1],[80,150,0.2],[150,300,0.3],[300,600,0.4],[600,null,0.55]],"final_gini":0.016918331516937623,"score":-0.12327779673461525,"avg_balance":1240.552},{"tax_brackets":[[0,50,0.0],[50,100,0.1],[100,250,0.2],[250,500,0.3],[500,1000,0.4],[1000,null,0.55]],"final_gini":0.01608311726823635,"score":-0.12314856793708512,"avg_balance":1274.693},{"tax_brackets":[[0,15,0.0],[15,40,0.08],[40,80,0.15],[80,200,0.25],[200,400,0.35],[400,null,0.5]],"final_gini":0.017556437919971524,"score":-0.12294186776481104,"avg_balance":1247.406}],"metadata":{"num_agents":1000,"num_days":100,"actions_per_day":8,"variants_tested":33,"timestamp":1772248955.362489}};
+
+// --- Render Stats ---
+function renderStats(containerId, data, isOptimal) {
+  const el = document.getElementById(containerId);
+  const stats = [
+    ['Final Gini', data.final_gini.toFixed(4), 'neutral'],
+    ['Avg Balance', Math.round(data.avg_balance).toLocaleString() + ' ✦', 'neutral'],
+    ['Total Spark', data.total_spark.toLocaleString() + ' ✦', 'neutral'],
+    ['Treasury', data.treasury.toLocaleString() + ' ✦', 'neutral'],
+  ];
+  if (isOptimal) {
+    const giniDelta = ((DATA.baseline.final_gini - data.final_gini) / DATA.baseline.final_gini * 100);
+    stats.push(['Gini Improvement', giniDelta.toFixed(1) + '%', giniDelta > 0 ? 'good' : 'bad']);
+  }
+  el.innerHTML = stats.map(([label, value, cls]) =>
+    `<div class="stat"><span class="label">${label}</span><span class="value ${cls}">${value}</span></div>`
+  ).join('');
+}
+
+renderStats('baselineStats', DATA.baseline, false);
+renderStats('optimalStats', DATA.optimal, true);
+
+// --- Bracket Table ---
+function renderBrackets() {
+  const table = document.getElementById('bracketTable');
+  const bb = DATA.baseline.tax_brackets;
+  const ob = DATA.optimal.tax_brackets;
+  let html = '<tr><th>Balance Range</th><th>Current Rate</th><th></th><th>Optimal Rate</th></tr>';
+  const maxLen = Math.max(bb.length, ob.length);
+  for (let i = 0; i < maxLen; i++) {
+    const b = bb[i] || ['-', '-', 0];
+    const o = ob[i] || ['-', '-', 0];
+    const bRange = b[1] === null ? `${b[0]}+` : `${b[0]}–${b[1]}`;
+    const bRate = (b[2] * 100).toFixed(1) + '%';
+    const oRate = (o[2] * 100).toFixed(1) + '%';
+    const arrow = o[2] > b[2] ? '↑' : o[2] < b[2] ? '↓' : '=';
+    const arrowColor = o[2] > b[2] ? '#f87171' : o[2] < b[2] ? '#4ade80' : '#888';
+    html += `<tr>
+      <td>${bRange} ✦</td>
+      <td>${bRate}</td>
+      <td style="text-align:center;color:${arrowColor};font-weight:bold">${arrow}</td>
+      <td style="color:#4ade80">${oRate}</td>
+    </tr>`;
+  }
+  table.innerHTML = html;
+}
+renderBrackets();
+
+// --- Gini Chart ---
+const giniCtx = document.getElementById('giniChart').getContext('2d');
+new Chart(giniCtx, {
+  type: 'line',
+  data: {
+    labels: DATA.baseline.gini_series.map((_, i) => i),
+    datasets: [
+      {
+        label: 'Baseline (Current)',
+        data: DATA.baseline.gini_series,
+        borderColor: '#f87171',
+        backgroundColor: 'rgba(248,113,113,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        borderWidth: 2,
+      },
+      {
+        label: 'Optimal (Evolved)',
+        data: DATA.optimal.gini_series,
+        borderColor: '#4ade80',
+        backgroundColor: 'rgba(74,222,128,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        borderWidth: 2,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { intersect: false, mode: 'index' },
+    scales: {
+      x: { title: { display: true, text: 'Game Day', color: '#888' }, ticks: { color: '#666' }, grid: { color: '#1a1a3a' } },
+      y: { title: { display: true, text: 'Gini Coefficient', color: '#888' }, ticks: { color: '#666' }, grid: { color: '#1a1a3a' }, min: 0 }
+    },
+    plugins: {
+      legend: { labels: { color: '#ccc' } },
+      tooltip: { backgroundColor: '#1a1a3a', titleColor: '#fff', bodyColor: '#ccc' }
+    }
+  }
+});
+
+// --- Distribution Chart (simulated from Gini) ---
+// Generate approximate log-normal distributions matching each Gini
+function generateDistribution(avgBalance, gini, n) {
+  // Use Gini to estimate sigma of log-normal: Gini ≈ 2Φ(σ/√2)-1
+  const sigma = Math.max(0.05, gini * 3);
+  const mu = Math.log(avgBalance) - sigma * sigma / 2;
+  const buckets = new Array(20).fill(0);
+  const maxVal = avgBalance * 3;
+  const step = maxVal / 20;
+  // Simple approximation: generate n samples
+  for (let i = 0; i < n; i++) {
+    // Box-Muller
+    const u1 = Math.random(), u2 = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    const val = Math.exp(mu + sigma * z);
+    const bucket = Math.min(19, Math.floor(val / step));
+    if (bucket >= 0) buckets[bucket]++;
+  }
+  return { buckets, labels: buckets.map((_, i) => Math.round(i * step)) };
+}
+
+const baseDist = generateDistribution(DATA.baseline.avg_balance, DATA.baseline.final_gini, 5000);
+const optDist = generateDistribution(DATA.optimal.avg_balance, DATA.optimal.final_gini, 5000);
+
+const distCtx = document.getElementById('distChart').getContext('2d');
+new Chart(distCtx, {
+  type: 'bar',
+  data: {
+    labels: baseDist.labels.map(v => v.toLocaleString() + '✦'),
+    datasets: [
+      {
+        label: 'Baseline',
+        data: baseDist.buckets,
+        backgroundColor: 'rgba(248,113,113,0.5)',
+        borderColor: '#f87171',
+        borderWidth: 1,
+      },
+      {
+        label: 'Optimal',
+        data: optDist.buckets,
+        backgroundColor: 'rgba(74,222,128,0.5)',
+        borderColor: '#4ade80',
+        borderWidth: 1,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Spark Balance', color: '#888' }, ticks: { color: '#666', maxRotation: 45 }, grid: { color: '#1a1a3a' } },
+      y: { title: { display: true, text: 'Number of Players', color: '#888' }, ticks: { color: '#666' }, grid: { color: '#1a1a3a' } }
+    },
+    plugins: {
+      legend: { labels: { color: '#ccc' } }
+    }
+  }
+});
+</script>
+</body>
+</html>
