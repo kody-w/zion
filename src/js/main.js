@@ -7,6 +7,7 @@
   var State = typeof require !== 'undefined' ? require('./state') : window.State;
   var Zones = typeof require !== 'undefined' ? require('./zones') : window.Zones;
   var Economy = typeof require !== 'undefined' ? require('./economy') : window.Economy;
+  var Shops = typeof require !== 'undefined' ? require('./shops') : window.Shops;
   var Inventory = typeof require !== 'undefined' ? require('./inventory') : window.Inventory;
   var Trading = typeof require !== 'undefined' ? require('./trading') : window.Trading;
   var Intentions = typeof require !== 'undefined' ? require('./intentions') : window.Intentions;
@@ -142,6 +143,8 @@
   var lastMouseX = 0, lastMouseY = 0;
   var playerInventory = null;
   var economyLedger = null;
+  var collectionState = null;
+  var dailyQuests = null;
   var playerProgression = null;
   var achievementState = null;
 
@@ -1222,6 +1225,16 @@
       Inventory.addItem(playerInventory, 'wood_oak', 5);
       Inventory.addItem(playerInventory, 'stone_common', 5);
       Inventory.addItem(playerInventory, 'seed_wildflower', 3);
+    }
+
+    // Initialize retention loop: collection journal + daily quests
+    if (Shops) {
+      collectionState = Shops.createCollection();
+      var today = new Date().toISOString().split('T')[0];
+      dailyQuests = Shops.generateDailyQuests(today);
+      Shops.restockAllShops();
+      // Record starting zone discovery
+      Shops.recordDiscovery(collectionState, 'zones_visited', 'nexus');
     }
 
     // Initialize player progression (XP, skill trees, perks)
@@ -2398,6 +2411,19 @@
                 }
               }
               visitedZones[currentZone] = true;
+
+              // Collection: record zone discovery + daily quest progress
+              if (Shops && collectionState) {
+                var disc = Shops.recordDiscovery(collectionState, 'zones_visited', currentZone);
+                if (disc && HUD) HUD.showNotification(disc.message, 'success');
+              }
+              if (Shops && dailyQuests) {
+                var completed = Shops.trackDailyProgress(dailyQuests, 'visit_zones', { count: 1 });
+                completed.forEach(function(q) {
+                  if (HUD) HUD.showNotification('🎯 Daily quest complete: ' + q.title + ' (+' + q.reward.spark + ' Spark)', 'success');
+                  if (Economy && economyLedger) Economy.earnSpark(economyLedger, localPlayer.id, 'daily_quest', { complexity: 0.5 });
+                });
+              }
 
               if (NPCs) {
                 NPCs.reloadZoneNPCs(sceneContext, currentZone, localPlayer.position);
@@ -4384,6 +4410,30 @@
     if (msg.from === localPlayer.id && HUD) {
       var bonusText = bonus > 1.0 ? ' (' + ZONE_BONUSES[currentZone].label + ')' : '';
       HUD.showNotification('Harvested ' + amount + ' Spark' + bonusText, 'success');
+
+      // Drop an item from zone loot table
+      if (Inventory && playerInventory) {
+        var drop = Inventory.rollHarvestDrop(currentZone, 0.3);
+        if (drop) {
+          Inventory.addItem(playerInventory, drop.itemId, drop.count);
+          HUD.showNotification('Found: ' + drop.itemId.replace(/_/g, ' ') + (drop.rarity !== 'common' ? ' (' + drop.rarity + '!)' : ''), drop.rarity === 'rare' ? 'success' : 'info');
+
+          // Collection tracking
+          if (Shops && collectionState) {
+            var disc = Shops.recordDiscovery(collectionState, 'items_found', drop.itemId);
+            if (disc) HUD.showNotification(disc.message, 'success');
+          }
+        }
+      }
+
+      // Daily quest progress
+      if (Shops && dailyQuests) {
+        var completed = Shops.trackDailyProgress(dailyQuests, 'harvest', { zone: currentZone, count: 1 });
+        completed.forEach(function(q) {
+          HUD.showNotification('🎯 Daily complete: ' + q.title + ' (+' + q.reward.spark + ' Spark)', 'success');
+          if (Economy && economyLedger) Economy.earnSpark(economyLedger, localPlayer.id, 'daily_quest', { complexity: 0.5 });
+        });
+      }
     }
   }
 
@@ -6428,6 +6478,19 @@
 
             // Track activity
             addRecentActivity('Talked to ' + npcResponse.name);
+
+            // Collection: track NPC befriended + daily talk progress
+            if (Shops && collectionState) {
+              var disc = Shops.recordDiscovery(collectionState, 'npcs_befriended', npcResponse.id || npcResponse.name);
+              if (disc && HUD) HUD.showNotification(disc.message, 'success');
+            }
+            if (Shops && dailyQuests) {
+              var completed = Shops.trackDailyProgress(dailyQuests, 'talk_npc', { count: 1 });
+              completed.forEach(function(q) {
+                if (HUD) HUD.showNotification('🎯 Daily complete: ' + q.title + ' (+' + q.reward.spark + ' Spark)', 'success');
+                if (Economy && economyLedger) Economy.earnSpark(economyLedger, localPlayer.id, 'daily_quest', { complexity: 0.5 });
+              });
+            }
             // Broadcast player interaction to other NPCs
             if (NPCs.broadcastEvent) {
               NPCs.broadcastEvent({

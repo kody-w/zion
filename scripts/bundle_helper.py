@@ -20,6 +20,7 @@ JS_FILES = [
     'zones.js',
     'economy.js',
     'economy_viz.js',
+    'shops.js',
     'inventory.js',
     'trading.js',
     'state.js',
