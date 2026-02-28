@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZION — World Cartography</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #080818; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; height: 100vh; }
+#map-container { width: 100%; height: 100vh; position: relative; }
+svg { width: 100%; height: 100%; }
+
+/* Tooltip */
+#tooltip {
+  position: fixed; display: none; background: rgba(10,10,30,0.95);
+  border: 1px solid #3a3a6a; border-radius: 8px; padding: 12px 16px;
+  font-size: 13px; max-width: 280px; pointer-events: none; z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+#tooltip h3 { color: #7b9fff; margin-bottom: 6px; font-size: 15px; }
+#tooltip .stat { display: flex; justify-content: space-between; padding: 2px 0; }
+#tooltip .stat .label { color: #888; }
+#tooltip .stat .value { color: #fff; font-weight: 600; }
+
+/* Legend */
+#legend {
+  position: fixed; bottom: 20px; left: 20px; background: rgba(10,10,30,0.9);
+  border: 1px solid #2a2a4a; border-radius: 8px; padding: 14px 18px; font-size: 12px;
+}
+#legend h4 { color: #7b9fff; margin-bottom: 8px; }
+.legend-item { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* Title */
+#title {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+  font-size: 1.4rem; font-weight: 700; letter-spacing: 2px;
+  background: linear-gradient(90deg, #00d4ff, #7b2fff, #ff6bcb);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+#subtitle {
+  position: fixed; top: 50px; left: 50%; transform: translateX(-50%);
+  font-size: 0.75rem; color: #666; letter-spacing: 1px;
+}
+
+/* Stats panel */
+#stats {
+  position: fixed; top: 20px; right: 20px; background: rgba(10,10,30,0.9);
+  border: 1px solid #2a2a4a; border-radius: 8px; padding: 14px 18px; font-size: 12px;
+  min-width: 180px;
+}
+#stats h4 { color: #7b9fff; margin-bottom: 8px; }
+.stat-row { display: flex; justify-content: space-between; padding: 3px 0; }
+.stat-row .v { color: #4ade80; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div id="title">ZION WORLD MAP</div>
+<div id="subtitle">PROCEDURAL CARTOGRAPHY FROM STATE DATA</div>
+
+<div id="map-container">
+<svg id="worldMap" viewBox="0 0 1200 800"></svg>
+</div>
+
+<div id="tooltip"></div>
+
+<div id="legend">
+  <h4>MAP LEGEND</h4>
+  <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div> Zone territory</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Structure</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#818cf8"></div> Discovery</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f472b6"></div> Garden</div>
+  <div class="legend-item"><svg width="30" height="10"><line x1="0" y1="5" x2="30" y2="5" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.4"/></svg> Warp route</div>
+  <div class="legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="3" fill="#60a5fa"/></svg> Player (citizen)</div>
+</div>
+
+<div id="stats">
+  <h4>WORLD CENSUS</h4>
+  <div class="stat-row"><span>Zones</span><span class="v">9</span></div>
+  <div class="stat-row"><span>Citizens</span><span class="v" id="totalCitizens">0</span></div>
+  <div class="stat-row"><span>Structures</span><span class="v" id="totalStructures">0</span></div>
+  <div class="stat-row"><span>Discoveries</span><span class="v" id="totalDiscoveries">0</span></div>
+  <div class="stat-row"><span>Gardens</span><span class="v" id="totalGardens">0</span></div>
+  <div class="stat-row"><span>Warp Routes</span><span class="v" id="totalRoutes">0</span></div>
+</div>
+
+<script>
+// === WORLD DATA (extracted from state files) ===
+const ZONES = {
+  nexus:       { name: 'Nexus',       color: '#3b82f6', theme: 'Spawn Hub',       x: 600, y: 380, citizens: 10, structures: 0, discoveries: 18, gardens: 0, activity: 73 },
+  arena:       { name: 'The Arena',   color: '#ef4444', theme: 'Competition',     x: 350, y: 200, citizens: 10, structures: 2, discoveries: 35, gardens: 0, activity: 76 },
+  studio:      { name: 'The Studio',  color: '#a855f7', theme: 'Art & Craft',     x: 850, y: 280, citizens: 17, structures: 0, discoveries: 5,  gardens: 0, activity: 64 },
+  agora:       { name: 'The Agora',   color: '#f59e0b', theme: 'Marketplace',     x: 400, y: 500, citizens: 12, structures: 0, discoveries: 27, gardens: 0, activity: 61 },
+  athenaeum:   { name: 'Athenaeum',   color: '#06b6d4', theme: 'Knowledge',       x: 750, y: 550, citizens: 11, structures: 0, discoveries: 7,  gardens: 0, activity: 62 },
+  gardens:     { name: 'The Gardens', color: '#22c55e', theme: 'Agriculture',     x: 900, y: 500, citizens: 12, structures: 1, discoveries: 3,  gardens: 20, activity: 57 },
+  wilds:       { name: 'The Wilds',   color: '#84cc16', theme: 'Exploration',     x: 200, y: 380, citizens: 13, structures: 0, discoveries: 91, gardens: 0, activity: 43 },
+  commons:     { name: 'The Commons', color: '#fb923c', theme: 'Community',       x: 250, y: 600, citizens: 8,  structures: 2, discoveries: 1,  gardens: 0, activity: 38 },
+  observatory: { name: 'Observatory', color: '#818cf8', theme: 'Reflection',      x: 1000, y: 200, citizens: 9,  structures: 0, discoveries: 0,  gardens: 0, activity: 26 },
+};
+
+// Warp routes: [from, to, weight]
+const WARP_ROUTES = [
+  ['commons','arena',8],['arena','agora',7],['arena','studio',6],['nexus','studio',6],
+  ['nexus','agora',5],['nexus','athenaeum',5],['athenaeum','gardens',5],['nexus','wilds',5],
+  ['wilds','agora',4],['wilds','arena',4],['nexus','arena',4],['gardens','commons',4],
+  ['nexus','gardens',4],['arena','athenaeum',1],['gardens','arena',3],
+  ['gardens','agora',3],['agora','athenaeum',5],['nexus','observatory',3],
+  ['observatory','arena',3],['observatory','commons',2],['observatory','studio',2],
+  ['studio','wilds',2],['athenaeum','studio',3],['arena','commons',2],
+  ['commons','athenaeum',2],['commons','nexus',2],
+];
+
+// === RENDERING ===
+const svg = document.getElementById('worldMap');
+const tooltip = document.getElementById('tooltip');
+const NS = 'http://www.w3.org/2000/svg';
+
+function el(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v);
+  return e;
+}
+
+// Background stars
+const defs = el('defs');
+const starGrad = el('radialGradient', {id: 'starGlow'});
+starGrad.appendChild(el('stop', {offset: '0%', 'stop-color': '#ffffff', 'stop-opacity': '0.8'}));
+starGrad.appendChild(el('stop', {offset: '100%', 'stop-color': '#ffffff', 'stop-opacity': '0'}));
+defs.appendChild(starGrad);
+
+// Zone glow filter
+const glowFilter = el('filter', {id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%'});
+glowFilter.appendChild(el('feGaussianBlur', {stdDeviation: '8', result: 'blur'}));
+const merge = el('feMerge');
+merge.appendChild(el('feMergeNode', {'in': 'blur'}));
+merge.appendChild(el('feMergeNode', {'in': 'SourceGraphic'}));
+glowFilter.appendChild(merge);
+defs.appendChild(glowFilter);
+
+// Particle filter for discoveries
+const discFilter = el('filter', {id: 'discGlow', x: '-100%', y: '-100%', width: '300%', height: '300%'});
+discFilter.appendChild(el('feGaussianBlur', {stdDeviation: '3', result: 'blur'}));
+const merge2 = el('feMerge');
+merge2.appendChild(el('feMergeNode', {'in': 'blur'}));
+merge2.appendChild(el('feMergeNode', {'in': 'SourceGraphic'}));
+discFilter.appendChild(merge2);
+defs.appendChild(discFilter);
+
+svg.appendChild(defs);
+
+// Draw stars
+for (let i = 0; i < 200; i++) {
+  const s = el('circle', {
+    cx: Math.random() * 1200, cy: Math.random() * 800,
+    r: Math.random() * 1.5 + 0.3,
+    fill: '#ffffff', opacity: Math.random() * 0.4 + 0.1,
+  });
+  svg.appendChild(s);
+}
+
+// Draw warp routes first (behind zones)
+const routeGroup = el('g', {id: 'routes'});
+WARP_ROUTES.forEach(([from, to, weight]) => {
+  const z1 = ZONES[from], z2 = ZONES[to];
+  if (!z1 || !z2) return;
+  
+  const maxWeight = 8;
+  const opacity = 0.15 + (weight / maxWeight) * 0.4;
+  const width = 0.5 + (weight / maxWeight) * 2.5;
+  
+  // Curved path
+  const mx = (z1.x + z2.x) / 2;
+  const my = (z1.y + z2.y) / 2;
+  const dx = z2.x - z1.x;
+  const dy = z2.y - z1.y;
+  const cx = mx - dy * 0.15;
+  const cy = my + dx * 0.15;
+  
+  const path = el('path', {
+    d: `M ${z1.x} ${z1.y} Q ${cx} ${cy} ${z2.x} ${z2.y}`,
+    stroke: '#ffffff', 'stroke-width': width, fill: 'none',
+    opacity: opacity, 'stroke-dasharray': weight > 4 ? 'none' : '6,4',
+  });
+  routeGroup.appendChild(path);
+  
+  // Flow particles
+  if (weight > 3) {
+    const particle = el('circle', {r: '2', fill: '#ffffff', opacity: '0.6'});
+    const anim = el('animateMotion', {
+      dur: (8 - weight * 0.5) + 's', repeatCount: 'indefinite',
+      path: `M ${z1.x} ${z1.y} Q ${cx} ${cy} ${z2.x} ${z2.y}`,
+    });
+    particle.appendChild(anim);
+    routeGroup.appendChild(particle);
+  }
+});
+svg.appendChild(routeGroup);
+
+// Draw zone territories
+const zoneGroup = el('g', {id: 'zones'});
+const PRNG = (s) => { let x = Math.sin(s) * 10000; return x - Math.floor(x); };
+
+Object.entries(ZONES).forEach(([id, zone]) => {
+  const g = el('g', {'data-zone': id, class: 'zone-group', style: 'cursor: pointer'});
+  
+  // Territory blob (organic shape using activity as radius)
+  const baseR = 40 + (zone.activity / 76) * 35;
+  const points = [];
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const wobble = 0.7 + PRNG(id.charCodeAt(0) * 100 + i * 37) * 0.6;
+    const r = baseR * wobble;
+    points.push([
+      zone.x + Math.cos(angle) * r,
+      zone.y + Math.sin(angle) * r,
+    ]);
+  }
+  
+  // Smooth the blob path
+  let pathD = `M ${points[0][0]} ${points[0][1]}`;
+  for (let i = 0; i < points.length; i++) {
+    const p0 = points[i];
+    const p1 = points[(i + 1) % points.length];
+    const p2 = points[(i + 2) % points.length];
+    const cx1 = p0[0] + (p1[0] - points[(i - 1 + points.length) % points.length][0]) * 0.25;
+    const cy1 = p0[1] + (p1[1] - points[(i - 1 + points.length) % points.length][1]) * 0.25;
+    const cx2 = p1[0] - (p2[0] - p0[0]) * 0.25;
+    const cy2 = p1[1] - (p2[1] - p0[1]) * 0.25;
+    pathD += ` C ${cx1} ${cy1} ${cx2} ${cy2} ${p1[0]} ${p1[1]}`;
+  }
+  pathD += ' Z';
+  
+  // Territory fill
+  const territory = el('path', {
+    d: pathD, fill: zone.color, opacity: '0.12',
+    stroke: zone.color, 'stroke-width': '1.5', 'stroke-opacity': '0.3',
+    filter: 'url(#glow)',
+  });
+  g.appendChild(territory);
+  
+  // Heat ring (population density)
+  const heatR = 5 + zone.citizens * 2.5;
+  const heat = el('circle', {
+    cx: zone.x, cy: zone.y, r: heatR,
+    fill: zone.color, opacity: '0.15', filter: 'url(#glow)',
+  });
+  g.appendChild(heat);
+  
+  // Zone center dot
+  g.appendChild(el('circle', {
+    cx: zone.x, cy: zone.y, r: 6,
+    fill: zone.color, stroke: '#fff', 'stroke-width': '2', opacity: '0.9',
+  }));
+  
+  // Zone label
+  const label = el('text', {
+    x: zone.x, y: zone.y - 18, 'text-anchor': 'middle',
+    fill: '#ffffff', 'font-size': '13', 'font-weight': '700',
+    'letter-spacing': '1',
+  });
+  label.textContent = zone.name.toUpperCase();
+  g.appendChild(label);
+  
+  // Theme sublabel
+  const sub = el('text', {
+    x: zone.x, y: zone.y - 6, 'text-anchor': 'middle',
+    fill: zone.color, 'font-size': '9', opacity: '0.7',
+  });
+  sub.textContent = zone.theme;
+  g.appendChild(sub);
+  
+  // Scatter citizens as dots
+  for (let i = 0; i < zone.citizens; i++) {
+    const angle = PRNG(i * 73 + id.charCodeAt(0)) * Math.PI * 2;
+    const dist = 15 + PRNG(i * 31 + id.charCodeAt(1)) * (baseR * 0.5);
+    const cx = zone.x + Math.cos(angle) * dist;
+    const cy = zone.y + Math.sin(angle) * dist;
+    const dot = el('circle', {
+      cx, cy, r: 2.5, fill: '#60a5fa', opacity: '0.7',
+    });
+    // Pulse animation
+    const anim = el('animate', {
+      attributeName: 'opacity', values: '0.7;0.3;0.7',
+      dur: (2 + PRNG(i * 17) * 3) + 's', repeatCount: 'indefinite',
+    });
+    dot.appendChild(anim);
+    g.appendChild(dot);
+  }
+  
+  // Scatter structures as diamonds
+  for (let i = 0; i < zone.structures; i++) {
+    const angle = PRNG(i * 53 + 200) * Math.PI * 2;
+    const dist = 10 + PRNG(i * 41 + 300) * 25;
+    const sx = zone.x + Math.cos(angle) * dist;
+    const sy = zone.y + Math.sin(angle) * dist;
+    const diamond = el('polygon', {
+      points: `${sx},${sy-5} ${sx+4},${sy} ${sx},${sy+5} ${sx-4},${sy}`,
+      fill: '#f59e0b', stroke: '#fbbf24', 'stroke-width': '0.5', opacity: '0.9',
+    });
+    g.appendChild(diamond);
+  }
+  
+  // Scatter discoveries as sparkles
+  const discCount = Math.min(zone.discoveries, 25); // cap visual density
+  for (let i = 0; i < discCount; i++) {
+    const angle = PRNG(i * 67 + 400) * Math.PI * 2;
+    const dist = 10 + PRNG(i * 29 + 500) * (baseR * 0.7);
+    const dx = zone.x + Math.cos(angle) * dist;
+    const dy = zone.y + Math.sin(angle) * dist;
+    const sparkle = el('circle', {
+      cx: dx, cy: dy, r: 1.5, fill: '#818cf8', opacity: '0.6',
+      filter: 'url(#discGlow)',
+    });
+    const twinkle = el('animate', {
+      attributeName: 'opacity', values: '0.2;0.8;0.2',
+      dur: (1.5 + PRNG(i * 11) * 2) + 's', repeatCount: 'indefinite',
+    });
+    sparkle.appendChild(twinkle);
+    g.appendChild(sparkle);
+  }
+  
+  // Gardens (green patches)
+  for (let i = 0; i < Math.min(zone.gardens, 12); i++) {
+    const angle = PRNG(i * 47 + 600) * Math.PI * 2;
+    const dist = 8 + PRNG(i * 59 + 700) * (baseR * 0.5);
+    const gx = zone.x + Math.cos(angle) * dist;
+    const gy = zone.y + Math.sin(angle) * dist;
+    const garden = el('rect', {
+      x: gx - 3, y: gy - 3, width: 6, height: 6, rx: 1,
+      fill: '#f472b6', opacity: '0.6', transform: `rotate(45 ${gx} ${gy})`,
+    });
+    g.appendChild(garden);
+  }
+  
+  // Tooltip interaction
+  g.addEventListener('mouseenter', (e) => {
+    territory.setAttribute('opacity', '0.25');
+    tooltip.style.display = 'block';
+    tooltip.innerHTML = `
+      <h3>${zone.name}</h3>
+      <div class="stat"><span class="label">Theme</span><span class="value">${zone.theme}</span></div>
+      <div class="stat"><span class="label">Citizens</span><span class="value">${zone.citizens}</span></div>
+      <div class="stat"><span class="label">Activity</span><span class="value">${zone.activity} actions</span></div>
+      <div class="stat"><span class="label">Structures</span><span class="value">${zone.structures}</span></div>
+      <div class="stat"><span class="label">Discoveries</span><span class="value">${zone.discoveries}</span></div>
+      <div class="stat"><span class="label">Gardens</span><span class="value">${zone.gardens}</span></div>
+    `;
+  });
+  g.addEventListener('mousemove', (e) => {
+    tooltip.style.left = (e.clientX + 15) + 'px';
+    tooltip.style.top = (e.clientY + 15) + 'px';
+  });
+  g.addEventListener('mouseleave', () => {
+    territory.setAttribute('opacity', '0.12');
+    tooltip.style.display = 'none';
+  });
+  
+  zoneGroup.appendChild(g);
+});
+svg.appendChild(zoneGroup);
+
+// Update stats
+document.getElementById('totalCitizens').textContent = Object.values(ZONES).reduce((s, z) => s + z.citizens, 0);
+document.getElementById('totalStructures').textContent = Object.values(ZONES).reduce((s, z) => s + z.structures, 0);
+document.getElementById('totalDiscoveries').textContent = Object.values(ZONES).reduce((s, z) => s + z.discoveries, 0);
+document.getElementById('totalGardens').textContent = Object.values(ZONES).reduce((s, z) => s + z.gardens, 0);
+document.getElementById('totalRoutes').textContent = WARP_ROUTES.length;
+
+// Compass rose
+const compass = el('g', {transform: 'translate(1120, 720)'});
+const compassLines = [
+  [0, -25, 0, 25], [-25, 0, 25, 0],
+  [-15, -15, 15, 15], [-15, 15, 15, -15],
+];
+compassLines.forEach(([x1, y1, x2, y2]) => {
+  compass.appendChild(el('line', {x1, y1, x2, y2, stroke: '#444', 'stroke-width': '0.5'}));
+});
+compass.appendChild(el('circle', {cx: 0, cy: 0, r: 3, fill: '#666'}));
+const nLabel = el('text', {x: 0, y: -30, 'text-anchor': 'middle', fill: '#888', 'font-size': '10'});
+nLabel.textContent = 'N';
+compass.appendChild(nLabel);
+svg.appendChild(compass);
+</script>
+</body>
+</html>
