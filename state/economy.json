@@ -19,13 +19,13 @@
     "agent_026": 8,
     "TREASURY": 17,
     "agent_081": 13,
-    "agent_077": 10,
+    "agent_077": 9,
     "agent_089": 0,
     "agent_078": 1,
     "agent_090": 4,
     "agent_076": 47,
     "agent_075": 0,
-    "agent_091": 13,
+    "agent_091": 12,
     "agent_079": 4,
     "agent_003": 0,
     "agent_080": 0,
@@ -3703,6 +3703,20 @@
       "payload": {
         "structure": "garden bed"
       }
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_077",
+      "amount": 1,
+      "structureId": "structure_agent_077_20260301T17182",
+      "timestamp": 1772386588.1862643
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_091",
+      "amount": 1,
+      "structureId": "structure_agent_091_20260301T17182",
+      "timestamp": 1772386588.1862643
     }
   ],
   "listings": [
@@ -14521,7 +14535,30 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1772385122.5209994
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_075",
+      "structureId": "structure_agent_075_1772379699",
+      "missedPayments": 1,
+      "timestamp": 1772386588.1862643
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_077",
+      "structureId": "structure_agent_077_20260301T17182",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772386588.1862643
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_091",
+      "structureId": "structure_agent_091_20260301T17182",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772386588.1862643
     }
   ],
-  "_lastUbiDay": 705
+  "_lastUbiDay": 706
 }
