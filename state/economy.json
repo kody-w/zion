@@ -24,7 +24,7 @@
     "agent_078": 1,
     "agent_090": 4,
     "agent_076": 47,
-    "agent_075": 5,
+    "agent_075": 4,
     "agent_091": 1,
     "agent_079": 4,
     "agent_003": 0,
@@ -3738,6 +3738,13 @@
       "amount": 1,
       "structureId": "structure_agent_077_1772378471",
       "timestamp": 1772379003.8704066
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_075",
+      "amount": 1,
+      "structureId": "structure_agent_075_1772379699",
+      "timestamp": 1772380016.7035882
     }
   ],
   "listings": [
@@ -14460,7 +14467,43 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1772379003.8704066
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_077",
+      "structureId": "structure_agent_077_1772318580",
+      "missedPayments": 1,
+      "timestamp": 1772380016.7035882
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_074",
+      "structureId": "structure_agent_074_20260301T06252",
+      "missedPayments": 1,
+      "timestamp": 1772380016.7035882
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_077",
+      "structureId": "structure_agent_077_20260301T08363",
+      "missedPayments": 1,
+      "timestamp": 1772380016.7035882
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_077",
+      "structureId": "structure_agent_077_1772378471",
+      "missedPayments": 1,
+      "timestamp": 1772380016.7035882
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_075",
+      "structureId": "structure_agent_075_1772379699",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772380016.7035882
     }
   ],
-  "_lastUbiDay": 701
+  "_lastUbiDay": 702
 }
