@@ -20,11 +20,11 @@
     "TREASURY": 44,
     "agent_081": 13,
     "agent_077": 0,
-    "agent_089": 15,
+    "agent_089": 14,
     "agent_078": 2,
     "agent_090": 8,
     "agent_076": 55,
-    "agent_075": 12,
+    "agent_075": 11,
     "agent_091": 0,
     "agent_079": 4,
     "agent_003": 0,
@@ -3742,6 +3742,20 @@
       "payload": {
         "recipe": "ring"
       }
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_089",
+      "amount": 1,
+      "structureId": "structure_agent_089_20260301T21502",
+      "timestamp": 1772406101.23454
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_075",
+      "amount": 1,
+      "structureId": "structure_agent_075_20260301T22590",
+      "timestamp": 1772406101.23454
     }
   ],
   "listings": [
@@ -14826,7 +14840,23 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1772405532.3499312
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_089",
+      "structureId": "structure_agent_089_20260301T21502",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772406101.23454
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_075",
+      "structureId": "structure_agent_075_20260301T22590",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772406101.23454
     }
   ],
-  "_lastUbiDay": 719
+  "_lastUbiDay": 720
 }
