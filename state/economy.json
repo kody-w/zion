@@ -8,7 +8,7 @@
     "agent_082": 0,
     "agent_027": 9,
     "agent_025": 14,
-    "agent_017": 54,
+    "agent_017": 55,
     "agent_018": 46,
     "agent_001": 82,
     "agent_013": 0,
@@ -17,7 +17,7 @@
     "agent_083": 5,
     "agent_002": 58,
     "agent_026": 8,
-    "TREASURY": 10,
+    "TREASURY": 16,
     "agent_081": 13,
     "agent_077": 0,
     "agent_089": 0,
@@ -38,7 +38,7 @@
     "agent_071": 77,
     "agent_093": 75,
     "agent_032": 25,
-    "agent_036": 128,
+    "agent_036": 139,
     "agent_014": 5,
     "agent_060": 55,
     "agent_069": 9,
@@ -47,9 +47,9 @@
     "agent_040": 62,
     "agent_034": 31,
     "agent_057": 161,
-    "agent_056": 123,
+    "agent_056": 147,
     "agent_098": 17,
-    "agent_047": 60,
+    "agent_047": 61,
     "agent_094": 63,
     "agent_041": 111,
     "agent_073": 105,
@@ -60,16 +60,16 @@
     "agent_046": 77,
     "agent_097": 8,
     "agent_063": 9,
-    "agent_067": 9,
+    "agent_067": 10,
     "agent_011": 23,
-    "agent_070": 46,
+    "agent_070": 58,
     "agent_054": 68,
     "agent_028": 60,
     "agent_038": 19,
     "agent_086": 104,
     "agent_039": 49,
     "agent_055": 38,
-    "agent_062": 14,
+    "agent_062": 15,
     "agent_044": 93,
     "agent_006": 94,
     "agent_066": 13,
@@ -77,7 +77,7 @@
     "agent_008": 20,
     "agent_052": 184,
     "agent_068": 20,
-    "agent_037": 59,
+    "agent_037": 70,
     "agent_030": 85,
     "agent_035": 18,
     "agent_087": 107,
@@ -105,58 +105,6 @@
     "agent_012": 70
   },
   "transactions": [
-    {
-      "type": "compose",
-      "from": "agent_049",
-      "ts": "",
-      "payload": {
-        "title": "Creation 417",
-        "type": "sonnet"
-      }
-    },
-    {
-      "type": "gift",
-      "from": "agent_083",
-      "ts": "",
-      "payload": {
-        "item": "ring"
-      }
-    },
-    {
-      "type": "gift",
-      "from": "agent_083",
-      "ts": "",
-      "payload": {
-        "item": "charm"
-      }
-    },
-    {
-      "type": "sell",
-      "from": "agent_098",
-      "ts": "",
-      "payload": {
-        "item": "trinket",
-        "price": 3
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_098",
-      "ts": "",
-      "payload": {
-        "item": "ring",
-        "price": 7
-      }
-    },
-    {
-      "type": "sell",
-      "from": "agent_098",
-      "ts": "",
-      "payload": {
-        "item": "charm",
-        "price": 3
-      }
-    },
     {
       "type": "maintenance",
       "from": "agent_081",
@@ -3694,15 +3642,54 @@
       "amount": 1,
       "structureId": "structure_agent_075_1772379699",
       "timestamp": 1772383901.0520709
+    },
+    {
+      "type": "compose",
+      "from": "agent_036",
+      "ts": "",
+      "payload": {
+        "title": "Creation 25",
+        "type": "chronicle"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_037",
+      "ts": "",
+      "payload": {
+        "title": "Creation 3",
+        "type": "chronicle"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_062",
+      "ts": "",
+      "payload": {
+        "item": "compass",
+        "price": 4
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_070",
+      "ts": "",
+      "payload": {
+        "title": "Creation 532",
+        "type": "sonnet"
+      }
+    },
+    {
+      "type": "sell",
+      "from": "agent_098",
+      "ts": "",
+      "payload": {
+        "item": "lamp",
+        "price": 8
+      }
     }
   ],
   "listings": [
-    {
-      "item": "unknown",
-      "price": 0,
-      "seller": "agent_098",
-      "ts": "2026-02-21T19:50:58.360473Z"
-    },
     {
       "item": "unknown",
       "price": 0,
@@ -4296,6 +4283,12 @@
       "price": 7,
       "seller": "agent_066",
       "ts": "2026-03-01T14:28:48.215506Z"
+    },
+    {
+      "item": "compass",
+      "price": 4,
+      "seller": "agent_062",
+      "ts": "2026-03-01T16:51:52.672429Z"
     }
   ],
   "ledger": [
