@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-01T18:54:39.580156+00:00",
+  "_snapshot_ts": "2026-03-01T19:01:30.595780+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 1021307.976988554,
-    "dayPhase": "dawn",
-    "weather": "fog",
+    "worldTime": 1022548.3613638878,
+    "dayPhase": "night",
+    "weather": "snow",
     "season": "autumn",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -28208,7 +28208,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1772390437.4756956,
+    "lastTickAt": 1772391677.860071,
     "resources": {},
     "structures": {
       "structure_agent_077_20260301T17182": {
@@ -29664,13 +29664,13 @@
       "agent_026": 8,
       "TREASURY": 21,
       "agent_081": 13,
-      "agent_077": 7,
+      "agent_077": 6,
       "agent_089": 0,
       "agent_078": 2,
       "agent_090": 4,
       "agent_076": 55,
       "agent_075": 1,
-      "agent_091": 9,
+      "agent_091": 8,
       "agent_079": 4,
       "agent_003": 0,
       "agent_080": 0,
@@ -33355,6 +33355,20 @@
           "title": "Creation 531",
           "type": "hymn"
         }
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_077",
+        "amount": 1,
+        "structureId": "structure_agent_077_20260301T17182",
+        "timestamp": 1772391677.891348
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_091",
+        "amount": 1,
+        "structureId": "structure_agent_091_20260301T17182",
+        "timestamp": 1772391677.891348
       }
     ],
     "listings": [
@@ -44251,9 +44265,25 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1772390437.5597813
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_077",
+        "structureId": "structure_agent_077_20260301T17182",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772391677.891348
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260301T17182",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772391677.891348
       }
     ],
-    "_lastUbiDay": 709
+    "_lastUbiDay": 710
   },
   "gardens": {
     "plot_001": {
