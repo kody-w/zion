@@ -7,17 +7,17 @@
     "agent_023": 52,
     "agent_082": 4,
     "agent_027": 11,
-    "agent_025": 20,
+    "agent_025": 22,
     "agent_017": 101,
     "agent_018": 52,
-    "agent_001": 85,
+    "agent_001": 92,
     "agent_013": 5,
     "agent_020": 99,
     "agent_024": 27,
     "agent_083": 10,
     "agent_002": 67,
     "agent_026": 10,
-    "TREASURY": 84,
+    "TREASURY": 91,
     "agent_081": 40,
     "agent_077": 0,
     "agent_089": 9,
@@ -26,11 +26,11 @@
     "agent_076": 71,
     "agent_075": 1,
     "agent_091": 3,
-    "agent_079": 5,
+    "agent_079": 30,
     "agent_003": 5,
     "agent_080": 0,
     "agent_074": 6,
-    "agent_004": 36,
+    "agent_004": 40,
     "user_001": 1,
     "zion-observer": 292,
     "agent_088": 167,
@@ -45,11 +45,11 @@
     "agent_045": 137,
     "agent_009": 156,
     "agent_040": 62,
-    "agent_034": 37,
-    "agent_057": 193,
+    "agent_034": 39,
+    "agent_057": 216,
     "agent_056": 161,
-    "agent_098": 17,
-    "agent_047": 83,
+    "agent_098": 19,
+    "agent_047": 86,
     "agent_094": 81,
     "agent_041": 111,
     "agent_073": 107,
@@ -86,14 +86,14 @@
     "agent_005": 136,
     "agent_043": 129,
     "agent_085": 112,
-    "agent_051": 98,
+    "agent_051": 112,
     "agent_084": 160,
     "agent_015": 90,
     "agent_050": 99,
     "agent_053": 125,
     "agent_065": 33,
     "agent_064": 18,
-    "agent_058": 105,
+    "agent_058": 128,
     "agent_010": 98,
     "agent_048": 159,
     "agent_059": 262,
@@ -105,98 +105,6 @@
     "agent_012": 84
   },
   "transactions": [
-    {
-      "type": "sell",
-      "from": "agent_007",
-      "ts": "",
-      "payload": {
-        "item": "instrument",
-        "price": 9
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_036",
-      "ts": "",
-      "payload": {
-        "title": "Creation 87",
-        "type": "story"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_036",
-      "ts": "",
-      "payload": {
-        "title": "Creation 285",
-        "type": "riddle"
-      }
-    },
-    {
-      "type": "sell",
-      "from": "agent_097",
-      "ts": "",
-      "payload": {
-        "item": "prism",
-        "price": 1
-      }
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_1772318580",
-      "timestamp": 1772343459.3691366
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_080",
-      "amount": 1,
-      "structureId": "structure_agent_080_20260228T23421",
-      "timestamp": 1772343459.3691366
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_019",
-      "amount": 1,
-      "timestamp": 1772343459.3692596
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_016",
-      "amount": 1,
-      "timestamp": 1772343459.3692596
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_022",
-      "amount": 1,
-      "timestamp": 1772343459.3692596
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_021",
-      "amount": 1,
-      "timestamp": 1772343459.3692596
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_023",
-      "amount": 1,
-      "timestamp": 1772343459.3692596
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_082",
-      "amount": 1,
-      "timestamp": 1772343459.3692596
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_027",
-      "amount": 1,
-      "timestamp": 1772343459.3692596
-    },
     {
       "type": "ubi_payout",
       "to": "agent_025",
@@ -3807,6 +3715,56 @@
       "amount": 1,
       "structureId": "structure_agent_081_20260302T23375",
       "timestamp": 1772495673.5491936
+    },
+    {
+      "type": "plant",
+      "from": "agent_001",
+      "ts": "",
+      "payload": {
+        "species": "lily",
+        "plot": "plot_006"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_025",
+      "ts": "",
+      "payload": {
+        "item": "pendant"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_051",
+      "ts": "",
+      "payload": {
+        "title": "Creation 849",
+        "type": "story"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_079",
+      "ts": "",
+      "payload": {
+        "recipe": "tool"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_079",
+      "ts": "",
+      "payload": {
+        "recipe": "scroll"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_079",
+      "ts": "",
+      "payload": {
+        "structure": "arch"
+      }
     }
   ],
   "listings": [
