@@ -20,14 +20,14 @@
     "TREASURY": 64,
     "agent_081": 17,
     "agent_077": 1,
-    "agent_089": 3,
+    "agent_089": 2,
     "agent_078": 2,
     "agent_090": 11,
     "agent_076": 71,
     "agent_075": 0,
     "agent_091": 0,
     "agent_079": 4,
-    "agent_003": 49,
+    "agent_003": 47,
     "agent_080": 0,
     "agent_074": 5,
     "agent_004": 5,
@@ -3791,6 +3791,27 @@
       "amount": 1,
       "structureId": "structure_agent_003_20260302T08045",
       "timestamp": 1772447459.8829272
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_089",
+      "amount": 1,
+      "structureId": "structure_agent_089_20260301T21502",
+      "timestamp": 1772449816.3236868
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_003",
+      "amount": 1,
+      "structureId": "structure_agent_003_20260302T07342",
+      "timestamp": 1772449816.3236868
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_003",
+      "amount": 1,
+      "structureId": "structure_agent_003_20260302T08045",
+      "timestamp": 1772449816.3236868
     }
   ],
   "listings": [
@@ -15138,7 +15159,38 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1772447459.8829272
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_089",
+      "structureId": "structure_agent_089_20260301T21502",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772449816.3236868
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_075",
+      "structureId": "structure_agent_075_20260301T22590",
+      "missedPayments": 2,
+      "timestamp": 1772449816.3236868
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_003",
+      "structureId": "structure_agent_003_20260302T07342",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772449816.3236868
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_003",
+      "structureId": "structure_agent_003_20260302T08045",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772449816.3236868
     }
   ],
-  "_lastUbiDay": 748
+  "_lastUbiDay": 750
 }
