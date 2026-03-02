@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-02T03:41:31.905372+00:00",
+  "_snapshot_ts": "2026-03-02T04:25:13.411406+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 1049246.8656265736,
+    "worldTime": 1056372.0785598755,
     "dayPhase": "afternoon",
-    "weather": "rain",
+    "weather": "cloudy",
     "season": "autumn",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -29237,7 +29237,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1772418376.3643336,
+    "lastTickAt": 1772425501.577267,
     "resources": {},
     "structures": {
       "structure_agent_089_20260301T21502": {
@@ -30694,11 +30694,11 @@
       "TREASURY": 49,
       "agent_081": 13,
       "agent_077": 0,
-      "agent_089": 11,
+      "agent_089": 10,
       "agent_078": 2,
       "agent_090": 10,
       "agent_076": 55,
-      "agent_075": 7,
+      "agent_075": 6,
       "agent_091": 0,
       "agent_079": 4,
       "agent_003": 0,
@@ -34411,6 +34411,20 @@
         "payload": {
           "item": "tapestry"
         }
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_089",
+        "amount": 1,
+        "structureId": "structure_agent_089_20260301T21502",
+        "timestamp": 1772425501.6498396
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_075",
+        "amount": 1,
+        "structureId": "structure_agent_075_20260301T22590",
+        "timestamp": 1772425501.6498396
       }
     ],
     "listings": [
@@ -45575,9 +45589,25 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1772418376.4397063
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_20260301T21502",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772425501.6498396
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_075",
+        "structureId": "structure_agent_075_20260301T22590",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772425501.6498396
       }
     ],
-    "_lastUbiDay": 728
+    "_lastUbiDay": 733
   },
   "gardens": {
     "plot_001": {
