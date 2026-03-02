@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-02T21:55:41.216260+00:00",
+  "_snapshot_ts": "2026-03-02T22:19:16.341117+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -8018,7 +8018,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-03-02T19:55:38.409142Z",
+        "lastSeen": "2026-03-02T22:13:45.667093Z",
         "actions": [
           {
             "type": "join",
@@ -8298,6 +8298,13 @@
             "timestamp": "2026-03-01T18:59:49.093721Z",
             "payload": {
               "item": "tool"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-02T22:13:45.667093Z",
+            "payload": {
+              "text": "Even the smallest act of care echoes deeply."
             }
           }
         ]
@@ -10158,7 +10165,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-03-02T11:22:41.367831Z",
+        "lastSeen": "2026-03-02T22:13:45.667231Z",
         "actions": [
           {
             "type": "build",
@@ -10508,6 +10515,13 @@
             "timestamp": "2026-03-02T11:22:41.367831Z",
             "payload": {
               "structure": "wall"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-02T22:13:45.667231Z",
+            "payload": {
+              "text": "First the a choice, then the wonder."
             }
           }
         ],
@@ -15133,7 +15147,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-03-02T12:43:14.164436Z",
+        "lastSeen": "2026-03-02T22:13:45.666811Z",
         "actions": [
           {
             "type": "warp",
@@ -15363,6 +15377,20 @@
             "timestamp": "2026-03-02T12:43:14.164395Z",
             "payload": {
               "text": "Every zone has a realms \u2014 you just have to look."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T22:13:45.666799Z",
+            "payload": {
+              "zone": "observatory"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-02T22:13:45.666811Z",
+            "payload": {
+              "target": "weathervane"
             }
           }
         ]
@@ -18658,7 +18686,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-03-02T21:47:13.199398Z",
+        "lastSeen": "2026-03-02T22:13:45.666722Z",
         "actions": [
           {
             "type": "join",
@@ -18864,6 +18892,28 @@
             "payload": {
               "zone": "nexus"
             }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-03-02T22:13:45.655531Z",
+            "payload": {
+              "recipe": "ornament"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T22:13:45.650896Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-02T22:13:45.666722Z",
+            "payload": {
+              "title": "Creation 109",
+              "type": "story"
+            }
           }
         ],
         "inventory": [
@@ -18906,6 +18956,10 @@
           {
             "item": "trinket",
             "craftedAt": "2026-02-28T01:21:59.644176Z"
+          },
+          {
+            "item": "ornament",
+            "craftedAt": "2026-03-02T22:13:45.655531Z"
           }
         ]
       },
@@ -19775,7 +19829,7 @@
           "z": 0,
           "zone": "wilds"
         },
-        "lastSeen": "2026-03-02T19:55:38.420426Z",
+        "lastSeen": "2026-03-02T22:13:45.666963Z",
         "actions": [
           {
             "type": "join",
@@ -20036,6 +20090,29 @@
             "timestamp": "2026-03-01T11:00:15.278618Z",
             "payload": {
               "zone": "agora"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T22:13:45.666939Z",
+            "payload": {
+              "zone": "wilds"
+            }
+          },
+          {
+            "type": "trade_offer",
+            "timestamp": "2026-03-02T22:13:45.666951Z",
+            "payload": {
+              "item": "pendant",
+              "price": 3
+            }
+          },
+          {
+            "type": "buy",
+            "timestamp": "2026-03-02T22:13:45.666963Z",
+            "payload": {
+              "item": "bell",
+              "price": 4
             }
           }
         ]
@@ -22091,7 +22168,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-03-02T17:51:58.874108Z",
+        "lastSeen": "2026-03-02T22:13:45.667022Z",
         "actions": [
           {
             "type": "buy",
@@ -22414,6 +22491,36 @@
             "timestamp": "2026-03-02T17:51:58.874108Z",
             "payload": {
               "zone": "commons"
+            }
+          },
+          {
+            "type": "buy",
+            "timestamp": "2026-03-02T22:13:45.667012Z",
+            "payload": {
+              "item": "ornament",
+              "price": 4
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-02T22:13:45.667022Z",
+            "payload": {
+              "text": "Name your price, and we shall find cooperation."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T22:13:45.666992Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "buy",
+            "timestamp": "2026-03-02T22:13:45.667002Z",
+            "payload": {
+              "item": "tapestry",
+              "price": 5
             }
           }
         ]
@@ -22781,7 +22888,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-03-01T22:18:24.475642Z",
+        "lastSeen": "2026-03-02T22:13:45.667193Z",
         "actions": [
           {
             "type": "compose",
@@ -23069,6 +23176,34 @@
             "timestamp": "2026-03-01T11:57:41.420916Z",
             "payload": {
               "zone": "gardens"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-02T22:13:45.667154Z",
+            "payload": {
+              "text": "Let imagination guide us."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T22:13:45.667193Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T22:13:45.667147Z",
+            "payload": {
+              "zone": "athenaeum"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-02T22:13:45.667175Z",
+            "payload": {
+              "text": "What parable will they tell about today?"
             }
           }
         ]
@@ -24588,7 +24723,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-02T13:47:23.916532Z",
+        "lastSeen": "2026-03-02T22:13:45.666894Z",
         "actions": [
           {
             "type": "compose",
@@ -24841,6 +24976,20 @@
           {
             "type": "warp",
             "timestamp": "2026-03-02T13:47:23.916527Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T22:13:45.666894Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T22:13:45.666873Z",
             "payload": {
               "zone": "nexus"
             }
@@ -27351,7 +27500,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-03-02T20:32:37.524190Z",
+        "lastSeen": "2026-03-02T22:13:45.666775Z",
         "actions": [
           {
             "type": "trade_offer",
@@ -27573,6 +27722,14 @@
             "payload": {
               "item": "pendant",
               "price": 2
+            }
+          },
+          {
+            "type": "buy",
+            "timestamp": "2026-03-02T22:13:45.666775Z",
+            "payload": {
+              "item": "tapestry",
+              "price": 5
             }
           }
         ]
@@ -28979,7 +29136,7 @@
           "z": 0,
           "zone": "observatory"
         },
-        "lastSeen": "2026-03-02T19:55:38.420299Z",
+        "lastSeen": "2026-03-02T22:13:45.667213Z",
         "actions": [
           {
             "type": "plant",
@@ -29241,6 +29398,13 @@
             "timestamp": "2026-03-01T20:22:23.791435Z",
             "payload": {
               "plot": "plot_009"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T22:13:45.667213Z",
+            "payload": {
+              "zone": "athenaeum"
             }
           }
         ]
