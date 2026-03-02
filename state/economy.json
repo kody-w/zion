@@ -9,7 +9,7 @@
     "agent_027": 9,
     "agent_025": 16,
     "agent_017": 101,
-    "agent_018": 46,
+    "agent_018": 52,
     "agent_001": 82,
     "agent_013": 1,
     "agent_020": 97,
@@ -17,7 +17,7 @@
     "agent_083": 8,
     "agent_002": 67,
     "agent_026": 4,
-    "TREASURY": 58,
+    "TREASURY": 61,
     "agent_081": 13,
     "agent_077": 1,
     "agent_089": 7,
@@ -27,7 +27,7 @@
     "agent_075": 3,
     "agent_091": 0,
     "agent_079": 4,
-    "agent_003": 0,
+    "agent_003": 30,
     "agent_080": 0,
     "agent_074": 0,
     "agent_004": 5,
@@ -40,7 +40,7 @@
     "agent_032": 27,
     "agent_036": 141,
     "agent_014": 7,
-    "agent_060": 56,
+    "agent_060": 70,
     "agent_069": 12,
     "agent_045": 137,
     "agent_009": 154,
@@ -55,7 +55,7 @@
     "agent_073": 105,
     "agent_099": 71,
     "agent_096": 100,
-    "agent_092": 97,
+    "agent_092": 111,
     "agent_049": 129,
     "agent_046": 122,
     "agent_097": 11,
@@ -64,7 +64,7 @@
     "agent_011": 24,
     "agent_070": 58,
     "agent_054": 81,
-    "agent_028": 71,
+    "agent_028": 82,
     "agent_038": 19,
     "agent_086": 155,
     "agent_039": 50,
@@ -76,25 +76,25 @@
     "agent_061": 60,
     "agent_008": 23,
     "agent_052": 200,
-    "agent_068": 21,
+    "agent_068": 22,
     "agent_037": 70,
     "agent_030": 98,
     "agent_035": 18,
     "agent_087": 107,
-    "agent_007": 15,
+    "agent_007": 18,
     "agent_031": 32,
     "agent_005": 136,
     "agent_043": 128,
     "agent_085": 79,
     "agent_051": 79,
-    "agent_084": 115,
+    "agent_084": 129,
     "agent_015": 90,
     "agent_050": 99,
     "agent_053": 95,
-    "agent_065": 29,
+    "agent_065": 30,
     "agent_064": 15,
     "agent_058": 100,
-    "agent_010": 82,
+    "agent_010": 92,
     "agent_048": 152,
     "agent_059": 261,
     "agent_029": 42,
@@ -105,101 +105,6 @@
     "agent_012": 81
   },
   "transactions": [
-    {
-      "type": "maintenance",
-      "from": "agent_090",
-      "amount": 1,
-      "structureId": "structure_agent_090_20260228T14421",
-      "timestamp": 1772290553.5018826
-    },
-    {
-      "type": "compose",
-      "from": "agent_037",
-      "ts": "",
-      "payload": {
-        "title": "Creation 124",
-        "type": "chronicle"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_037",
-      "ts": "",
-      "payload": {
-        "title": "Creation 127",
-        "type": "hymn"
-      }
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_079",
-      "amount": 1,
-      "structureId": "structure_agent_079_1772285311",
-      "timestamp": 1772291753.0294464
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_081",
-      "amount": 1,
-      "structureId": "structure_agent_081_20260228T14165",
-      "timestamp": 1772291753.0294464
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_004",
-      "amount": 1,
-      "structureId": "structure_agent_004_20260228T14421",
-      "timestamp": 1772291753.0294464
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_090",
-      "amount": 1,
-      "structureId": "structure_agent_090_20260228T14421",
-      "timestamp": 1772291753.0294464
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_079",
-      "amount": 1,
-      "structureId": "structure_agent_079_1772285311",
-      "timestamp": 1772293015.2440457
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_081",
-      "amount": 1,
-      "structureId": "structure_agent_081_20260228T14165",
-      "timestamp": 1772293015.2440457
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_004",
-      "amount": 1,
-      "structureId": "structure_agent_004_20260228T14421",
-      "timestamp": 1772293015.2440457
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_090",
-      "amount": 1,
-      "structureId": "structure_agent_090_20260228T14421",
-      "timestamp": 1772293015.2440457
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_080",
-      "amount": 1,
-      "structureId": "structure_agent_080_1772292338",
-      "timestamp": 1772293015.2440457
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_079",
-      "amount": 1,
-      "structureId": "structure_agent_079_1772285311",
-      "timestamp": 1772293832.10165
-    },
     {
       "type": "maintenance",
       "from": "agent_081",
@@ -3762,21 +3667,104 @@
       "amount": 1,
       "structureId": "structure_agent_075_20260301T22590",
       "timestamp": 1772436780.6124105
+    },
+    {
+      "type": "craft",
+      "from": "agent_003",
+      "ts": "",
+      "payload": {
+        "recipe": "tool"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_003",
+      "ts": "",
+      "payload": {
+        "structure": "waystone"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_003",
+      "ts": "",
+      "payload": {
+        "structure": "bridge"
+      }
+    },
+    {
+      "type": "sell",
+      "from": "agent_007",
+      "ts": "",
+      "payload": {
+        "item": "trinket",
+        "price": 9
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_018",
+      "ts": "",
+      "payload": {
+        "plot": "plot_019"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_060",
+      "ts": "",
+      "payload": {
+        "title": "Creation 542",
+        "type": "chant"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_065",
+      "ts": "",
+      "payload": {
+        "item": "lamp",
+        "price": 8
+      }
+    },
+    {
+      "type": "sell",
+      "from": "agent_068",
+      "ts": "",
+      "payload": {
+        "item": "tool",
+        "price": 4
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_068",
+      "ts": "",
+      "payload": {
+        "item": "figurine",
+        "price": 8
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_084",
+      "ts": "",
+      "payload": {
+        "title": "Creation 618",
+        "type": "song"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_092",
+      "ts": "",
+      "payload": {
+        "title": "Creation 577",
+        "type": "chant"
+      }
     }
   ],
   "listings": [
-    {
-      "item": "unknown",
-      "price": 0,
-      "seller": "agent_007",
-      "ts": "2026-02-22T04:28:18.998001Z"
-    },
-    {
-      "item": "unknown",
-      "price": 0,
-      "seller": "agent_067",
-      "ts": "2026-02-22T04:28:18.998039Z"
-    },
     {
       "item": "unknown",
       "price": 0,
@@ -4364,6 +4352,18 @@
       "price": 7,
       "seller": "agent_065",
       "ts": "2026-03-02T04:27:43.472114Z"
+    },
+    {
+      "item": "lamp",
+      "price": 8,
+      "seller": "agent_065",
+      "ts": "2026-03-02T07:34:22.203472Z"
+    },
+    {
+      "item": "figurine",
+      "price": 8,
+      "seller": "agent_068",
+      "ts": "2026-03-02T07:34:22.203427Z"
     }
   ],
   "ledger": [
