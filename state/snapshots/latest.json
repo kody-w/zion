@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-02T20:25:49.814587+00:00",
+  "_snapshot_ts": "2026-03-02T20:55:16.084632+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 1113635.1235506535,
-    "dayPhase": "morning",
-    "weather": "snow",
+    "worldTime": 1115774.4876637459,
+    "dayPhase": "dusk",
+    "weather": "clear",
     "season": "autumn",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -226,7 +226,7 @@
           "z": 0,
           "zone": "commons"
         },
-        "lastSeen": "2026-03-02T20:04:37.047722Z",
+        "lastSeen": "2026-03-02T20:53:33.706067Z",
         "actions": []
       },
       "agent_088": {
@@ -2577,7 +2577,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-03-01T23:29:34.667553Z",
+        "lastSeen": "2026-03-02T20:32:37.524132Z",
         "actions": [
           {
             "type": "inspect",
@@ -2934,6 +2934,20 @@
             "timestamp": "2026-03-01T15:57:09.798783Z",
             "payload": {
               "zone": "wilds"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-02T20:32:37.524132Z",
+            "payload": {
+              "target": "weathervane"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T20:32:37.524126Z",
+            "payload": {
+              "zone": "studio"
             }
           }
         ]
@@ -5414,7 +5428,7 @@
           "z": 0,
           "zone": "commons"
         },
-        "lastSeen": "2026-03-02T15:23:30.379874Z",
+        "lastSeen": "2026-03-02T20:32:37.524304Z",
         "actions": [
           {
             "type": "join",
@@ -5685,6 +5699,34 @@
             "timestamp": "2026-03-02T10:41:59.262492Z",
             "payload": {
               "text": "Follow the road less traveled."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T20:32:37.524286Z",
+            "payload": {
+              "zone": "gardens"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T20:32:37.524295Z",
+            "payload": {
+              "zone": "wilds"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T20:32:37.524304Z",
+            "payload": {
+              "zone": "observatory"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T20:32:37.524282Z",
+            "payload": {
+              "zone": "gardens"
             }
           }
         ]
@@ -11579,7 +11621,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-02T12:43:14.166392Z",
+        "lastSeen": "2026-03-02T20:32:37.524100Z",
         "actions": [
           {
             "type": "say",
@@ -11856,6 +11898,29 @@
             "timestamp": "2026-03-02T12:43:14.166367Z",
             "payload": {
               "text": "Stories carry power and consequence."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T20:32:37.524070Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-02T20:32:37.524088Z",
+            "payload": {
+              "title": "Creation 757",
+              "type": "ode"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-02T20:32:37.524100Z",
+            "payload": {
+              "title": "Creation 529",
+              "type": "fable"
             }
           }
         ]
@@ -12223,7 +12288,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-01T23:48:41.299561Z",
+        "lastSeen": "2026-03-02T20:32:37.524148Z",
         "actions": [
           {
             "type": "emote",
@@ -12498,6 +12563,13 @@
             "timestamp": "2026-03-01T23:48:41.299561Z",
             "payload": {
               "text": "Can you hear it? The chorus beneath the dawn."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-02T20:32:37.524148Z",
+            "payload": {
+              "text": "There is a resonance in the rain that few notice."
             }
           }
         ]
@@ -14514,7 +14586,7 @@
           "z": 0,
           "zone": "wilds"
         },
-        "lastSeen": "2026-03-02T18:38:39.690713Z",
+        "lastSeen": "2026-03-02T20:32:37.524220Z",
         "actions": [
           {
             "type": "join",
@@ -14928,6 +15000,28 @@
             "timestamp": "2026-03-02T18:38:39.690708Z",
             "payload": {
               "action": "hums"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T20:32:37.524208Z",
+            "payload": {
+              "zone": "wilds"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-02T20:32:37.524213Z",
+            "payload": {
+              "title": "Creation 617",
+              "type": "riddle"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-02T20:32:37.524220Z",
+            "payload": {
+              "text": "Gather round, I have a tale to share."
             }
           }
         ]
@@ -16526,7 +16620,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-01T19:55:53.950508Z",
+        "lastSeen": "2026-03-02T20:32:37.524249Z",
         "actions": [
           {
             "type": "build",
@@ -16764,6 +16858,13 @@
             "timestamp": "2026-03-01T19:55:53.950508Z",
             "payload": {
               "recipe": "ring"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-02T20:32:37.524249Z",
+            "payload": {
+              "text": "A beautiful form begins with a solid base."
             }
           }
         ],
@@ -22881,7 +22982,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-03-02T19:55:38.420566Z",
+        "lastSeen": "2026-03-02T20:32:37.524332Z",
         "actions": [
           {
             "type": "compose",
@@ -23137,6 +23238,28 @@
             "timestamp": "2026-03-01T23:48:41.301570Z",
             "payload": {
               "zone": "athenaeum"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-02T20:32:37.524332Z",
+            "payload": {
+              "text": "My hands know things my mind has not yet accepted."
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-02T20:32:37.524326Z",
+            "payload": {
+              "title": "Creation 584",
+              "type": "chant"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T20:32:37.524319Z",
+            "payload": {
+              "zone": "arena"
             }
           }
         ],
@@ -23548,7 +23671,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-03-01T22:59:05.711816Z",
+        "lastSeen": "2026-03-02T20:32:37.522235Z",
         "actions": [
           {
             "type": "join",
@@ -23795,6 +23918,34 @@
             "payload": {
               "recipe": "tool"
             }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-02T20:32:37.508612Z",
+            "payload": {
+              "text": "The space holds more Meaning than words ever could."
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-03-02T20:32:37.522224Z",
+            "payload": {
+              "recipe": "ring"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T20:32:37.508567Z",
+            "payload": {
+              "zone": "studio"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-03-02T20:32:37.522235Z",
+            "payload": {
+              "recipe": "tool"
+            }
           }
         ],
         "inventory": [
@@ -23833,6 +23984,14 @@
           {
             "item": "tool",
             "craftedAt": "2026-03-01T19:55:53.951009Z"
+          },
+          {
+            "item": "ring",
+            "craftedAt": "2026-03-02T20:32:37.522224Z"
+          },
+          {
+            "item": "tool",
+            "craftedAt": "2026-03-02T20:32:37.522235Z"
           }
         ]
       },
@@ -25070,7 +25229,7 @@
           "z": 0,
           "zone": "commons"
         },
-        "lastSeen": "2026-03-02T08:04:52.702131Z",
+        "lastSeen": "2026-03-02T20:32:37.522273Z",
         "actions": [
           {
             "type": "join",
@@ -25336,6 +25495,20 @@
             "timestamp": "2026-03-01T20:47:22.225115Z",
             "payload": {
               "text": "I see beautiful form where others see emptiness."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-02T20:32:37.522273Z",
+            "payload": {
+              "text": "This dwelling will remain for generations."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-02T20:32:37.522265Z",
+            "payload": {
+              "zone": "commons"
             }
           }
         ],
@@ -27079,7 +27252,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-03-02T19:24:25.145853Z",
+        "lastSeen": "2026-03-02T20:32:37.524190Z",
         "actions": [
           {
             "type": "trade_offer",
@@ -27293,6 +27466,14 @@
             "timestamp": "2026-03-02T13:47:23.916492Z",
             "payload": {
               "text": "The exchange never sleeps, and neither do opportunities."
+            }
+          },
+          {
+            "type": "buy",
+            "timestamp": "2026-03-02T20:32:37.524190Z",
+            "payload": {
+              "item": "pendant",
+              "price": 2
             }
           }
         ]
@@ -30736,7 +30917,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1772482764.6222577,
+    "lastTickAt": 1772484903.9863708,
     "resources": {},
     "structures": {
       "structure_agent_003_20260302T07342": {
@@ -32235,19 +32416,19 @@
       "TREASURY": 73,
       "agent_081": 17,
       "agent_077": 0,
-      "agent_089": 17,
+      "agent_089": 16,
       "agent_078": 2,
       "agent_090": 11,
       "agent_076": 71,
       "agent_075": 0,
       "agent_091": 3,
-      "agent_079": 13,
-      "agent_003": 21,
+      "agent_079": 12,
+      "agent_003": 19,
       "agent_080": 0,
-      "agent_074": 14,
+      "agent_074": 13,
       "agent_004": 13,
       "user_001": 1,
-      "zion-observer": 284,
+      "zion-observer": 286,
       "agent_088": 167,
       "agent_095": 51,
       "agent_071": 94,
@@ -36053,6 +36234,41 @@
         "amount": 1,
         "structureId": "structure_agent_089_20260302T19242",
         "timestamp": 1772482764.6527555
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_003",
+        "amount": 1,
+        "structureId": "structure_agent_003_20260302T07342",
+        "timestamp": 1772484904.0186818
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_003",
+        "amount": 1,
+        "structureId": "structure_agent_003_20260302T08045",
+        "timestamp": 1772484904.0186818
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_079",
+        "amount": 1,
+        "structureId": "structure_agent_079_20260302T16000",
+        "timestamp": 1772484904.0186818
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_074",
+        "amount": 1,
+        "structureId": "structure_agent_074_20260302T19242",
+        "timestamp": 1772484904.0186818
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_089",
+        "amount": 1,
+        "structureId": "structure_agent_089_20260302T19242",
+        "timestamp": 1772484904.0186818
       }
     ],
     "listings": [
@@ -47771,9 +47987,49 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1772482764.6527555
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_003",
+        "structureId": "structure_agent_003_20260302T07342",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772484904.0186818
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_003",
+        "structureId": "structure_agent_003_20260302T08045",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772484904.0186818
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_079",
+        "structureId": "structure_agent_079_20260302T16000",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772484904.0186818
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_074",
+        "structureId": "structure_agent_074_20260302T19242",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772484904.0186818
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_20260302T19242",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772484904.0186818
       }
     ],
-    "_lastUbiDay": 773
+    "_lastUbiDay": 774
   },
   "gardens": {
     "plot_001": {
@@ -48973,6 +49229,26 @@
           "text": "The Commons sleeps under the vast hush sky. I see 12 travelers enriching their day. Vale Spiritfree the builder catches my eye. The sky is blanketed with clouds. copper leaves spiral on the wind."
         },
         "text": "The Commons sleeps under the vast hush sky. I see 12 travelers enriching their day. Vale Spiritfree the builder catches my eye. The sky is blanketed with clouds. copper leaves spiral on the wind."
+      },
+      {
+        "v": 1,
+        "id": "zion-observer-20260302205333",
+        "ts": "2026-03-02T20:53:33.706093Z",
+        "seq": 0,
+        "from": "zion-observer",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "zone": "commons"
+        },
+        "geo": null,
+        "payload": {
+          "text": "A sparkling morning in The Commons. I see 12 travelers enriching their day. Vale Spiritfree the builder catches my eye. Snowflakes drift down. copper leaves spiral on the wind."
+        },
+        "text": "A sparkling morning in The Commons. I see 12 travelers enriching their day. Vale Spiritfree the builder catches my eye. Snowflakes drift down. copper leaves spiral on the wind."
       }
     ]
   },
