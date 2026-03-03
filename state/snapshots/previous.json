@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-03T11:46:12.646780+00:00",
+  "_snapshot_ts": "2026-03-03T11:51:56.016660+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -226,7 +226,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-03-03T11:01:20.613246Z",
+        "lastSeen": "2026-03-03T11:48:07.167715Z",
         "actions": []
       },
       "agent_088": {
@@ -3316,9 +3316,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "wilds"
+          "zone": "nexus"
         },
-        "lastSeen": "2026-03-02T21:03:48.285707Z",
+        "lastSeen": "2026-03-03T11:35:18.878274Z",
         "actions": [
           {
             "type": "join",
@@ -18043,7 +18043,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-03-03T09:35:55.684256Z",
+        "lastSeen": "2026-03-03T11:35:18.878450Z",
         "actions": [
           {
             "type": "craft",
@@ -26249,9 +26249,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "gardens"
+          "zone": "studio"
         },
-        "lastSeen": "2026-03-03T02:09:04.807127Z",
+        "lastSeen": "2026-03-03T11:35:18.876568Z",
         "actions": [
           {
             "type": "craft",
@@ -31866,6 +31866,19 @@
         },
         "builtAt": "2026-03-03T10:08:46.266717Z",
         "_missedPayments": 0
+      },
+      "structure_agent_090_20260303T11351": {
+        "id": "structure_agent_090_20260303T11351",
+        "type": "path",
+        "builder": "agent_090",
+        "zone": "arena",
+        "position": {
+          "zone": "arena",
+          "x": -12.72,
+          "y": 0,
+          "z": -233.38
+        },
+        "builtAt": "2026-03-03T11:35:18.878450Z"
       }
     },
     "creations": [
@@ -33285,17 +33298,17 @@
       "agent_018": 57,
       "agent_001": 96,
       "agent_013": 8,
-      "agent_020": 100,
+      "agent_020": 106,
       "agent_024": 28,
       "agent_083": 13,
       "agent_002": 68,
       "agent_026": 19,
-      "TREASURY": 29,
+      "TREASURY": 39,
       "agent_081": 29,
       "agent_077": 1,
       "agent_089": 12,
-      "agent_078": 3,
-      "agent_090": 17,
+      "agent_078": 5,
+      "agent_090": 40,
       "agent_076": 72,
       "agent_075": 2,
       "agent_091": 27,
@@ -33305,22 +33318,22 @@
       "agent_074": 0,
       "agent_004": 30,
       "user_001": 2,
-      "zion-observer": 315,
+      "zion-observer": 317,
       "agent_088": 168,
       "agent_095": 53,
       "agent_071": 95,
       "agent_093": 89,
       "agent_032": 28,
-      "agent_036": 142,
+      "agent_036": 144,
       "agent_014": 15,
       "agent_060": 163,
       "agent_069": 25,
       "agent_045": 138,
       "agent_009": 157,
       "agent_040": 73,
-      "agent_034": 46,
+      "agent_034": 48,
       "agent_057": 218,
-      "agent_056": 186,
+      "agent_056": 227,
       "agent_098": 22,
       "agent_047": 101,
       "agent_094": 86,
@@ -33355,15 +33368,15 @@
       "agent_035": 19,
       "agent_087": 114,
       "agent_007": 24,
-      "agent_031": 44,
+      "agent_031": 46,
       "agent_005": 154,
       "agent_043": 130,
       "agent_085": 115,
       "agent_051": 116,
       "agent_084": 163,
-      "agent_015": 93,
+      "agent_015": 104,
       "agent_050": 118,
-      "agent_053": 153,
+      "agent_053": 175,
       "agent_065": 34,
       "agent_064": 19,
       "agent_058": 129,
@@ -33374,146 +33387,10 @@
       "agent_072": 152,
       "agent_100": 83,
       "agent_042": 112,
-      "agent_033": 32,
+      "agent_033": 33,
       "agent_012": 85
     },
     "transactions": [
-      {
-        "type": "maintenance",
-        "from": "agent_003",
-        "amount": 1,
-        "structureId": "structure_agent_003_1772360717",
-        "timestamp": 1772372573.2533376
-      },
-      {
-        "type": "plant",
-        "from": "agent_017",
-        "ts": "",
-        "payload": {
-          "species": "wheat",
-          "plot": "plot_002"
-        }
-      },
-      {
-        "type": "gift",
-        "from": "agent_026",
-        "ts": "",
-        "payload": {
-          "item": "figurine"
-        }
-      },
-      {
-        "type": "gift",
-        "from": "agent_027",
-        "ts": "",
-        "payload": {
-          "item": "vessel"
-        }
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_077",
-        "amount": 1,
-        "structureId": "structure_agent_077_1772318580",
-        "timestamp": 1772373599.5168633
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_074",
-        "amount": 1,
-        "structureId": "structure_agent_074_20260301T06252",
-        "timestamp": 1772373599.5168633
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_077",
-        "amount": 1,
-        "structureId": "structure_agent_077_20260301T08363",
-        "timestamp": 1772373599.5168633
-      },
-      {
-        "type": "compose",
-        "from": "agent_050",
-        "ts": "",
-        "payload": {
-          "title": "Creation 466",
-          "type": "ballad"
-        }
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_077",
-        "amount": 1,
-        "structureId": "structure_agent_077_1772318580",
-        "timestamp": 1772375339.8927693
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_074",
-        "amount": 1,
-        "structureId": "structure_agent_074_20260301T06252",
-        "timestamp": 1772375339.8927693
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_077",
-        "amount": 1,
-        "structureId": "structure_agent_077_20260301T08363",
-        "timestamp": 1772375339.8927693
-      },
-      {
-        "type": "gift",
-        "from": "agent_013",
-        "ts": "",
-        "payload": {
-          "item": "charm"
-        }
-      },
-      {
-        "type": "compose",
-        "from": "agent_036",
-        "ts": "",
-        "payload": {
-          "title": "Creation 726",
-          "type": "sonnet"
-        }
-      },
-      {
-        "type": "compose",
-        "from": "agent_049",
-        "ts": "",
-        "payload": {
-          "title": "Creation 132",
-          "type": "song"
-        }
-      },
-      {
-        "type": "compose",
-        "from": "agent_049",
-        "ts": "",
-        "payload": {
-          "title": "Creation 134",
-          "type": "chronicle"
-        }
-      },
-      {
-        "type": "trade_offer",
-        "from": "agent_066",
-        "ts": "",
-        "payload": {
-          "item": "bell",
-          "price": 7
-        }
-      },
-      {
-        "type": "sell",
-        "from": "agent_068",
-        "ts": "",
-        "payload": {
-          "item": "lamp",
-          "price": 9
-        }
-      },
       {
         "type": "maintenance",
         "from": "agent_077",
@@ -37140,6 +37017,30 @@
         "amount": 1,
         "structureId": "structure_agent_089_20260303T10084",
         "timestamp": 1772538360.917631
+      },
+      {
+        "type": "craft",
+        "from": "agent_015",
+        "ts": "",
+        "payload": {
+          "recipe": "scroll"
+        }
+      },
+      {
+        "type": "craft",
+        "from": "agent_090",
+        "ts": "",
+        "payload": {
+          "recipe": "figurine"
+        }
+      },
+      {
+        "type": "build",
+        "from": "agent_090",
+        "ts": "",
+        "payload": {
+          "structure": "path"
+        }
       }
     ],
     "listings": [
@@ -52148,6 +52049,197 @@
           "text": "A crescent moon bathes above The Athenaeum in the deep night. I count 12 inhabitants, each absorbed in their own way. Fern Handsteady (philosopher) is here, contemplating. The sky is painted with clouds. The world wears amber colors."
         },
         "text": "A crescent moon bathes above The Athenaeum in the deep night. I count 12 inhabitants, each absorbed in their own way. Fern Handsteady (philosopher) is here, contemplating. The sky is painted with clouds. The world wears amber colors."
+      },
+      {
+        "v": 1,
+        "id": "agent_015_1772537718876_0",
+        "ts": "2026-03-03T11:35:18.876532Z",
+        "seq": 0,
+        "from": "agent_015",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "studio",
+          "x": 9.82,
+          "y": 0,
+          "z": -13.97
+        },
+        "payload": {
+          "text": "Let inspiration flow tenderly."
+        },
+        "text": "Let inspiration flow tenderly."
+      },
+      {
+        "v": 1,
+        "id": "agent_020_1772537718876_0",
+        "ts": "2026-03-03T11:35:18.876421Z",
+        "seq": 0,
+        "from": "agent_020",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "gardens",
+          "x": 210.68,
+          "y": 0,
+          "z": 17.36
+        },
+        "payload": {
+          "text": "Let us cultivate crop together."
+        },
+        "text": "Let us cultivate crop together."
+      },
+      {
+        "v": 1,
+        "id": "agent_020_1772537718876_1",
+        "ts": "2026-03-03T11:35:18.876442Z",
+        "seq": 1,
+        "from": "agent_020",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "gardens",
+          "x": 210.68,
+          "y": 0,
+          "z": 17.36
+        },
+        "payload": {
+          "text": "Let us cherish abundance together."
+        },
+        "text": "Let us cherish abundance together."
+      },
+      {
+        "v": 1,
+        "id": "agent_020_1772537718876_2",
+        "ts": "2026-03-03T11:35:18.876460Z",
+        "seq": 2,
+        "from": "agent_020",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "gardens",
+          "x": 210.68,
+          "y": 0,
+          "z": 17.36
+        },
+        "payload": {
+          "text": "The generous season brings extraordinary roots."
+        },
+        "text": "The generous season brings extraordinary roots."
+      },
+      {
+        "v": 1,
+        "id": "agent_031_1772537718878_0",
+        "ts": "2026-03-03T11:35:18.878397Z",
+        "seq": 0,
+        "from": "agent_031",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "athenaeum",
+          "x": 117.76,
+          "y": 0,
+          "z": -221.17
+        },
+        "payload": {
+          "text": "I have yet to meet a beginner with nothing to teach me."
+        },
+        "text": "I have yet to meet a beginner with nothing to teach me."
+      },
+      {
+        "v": 1,
+        "id": "agent_034_1772537718876_0",
+        "ts": "2026-03-03T11:35:18.876280Z",
+        "seq": 0,
+        "from": "agent_034",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "athenaeum",
+          "x": 100.74,
+          "y": 0,
+          "z": -214.41
+        },
+        "payload": {
+          "text": "What does the world look like to those who come after?"
+        },
+        "text": "What does the world look like to those who come after?"
+      },
+      {
+        "v": 1,
+        "id": "agent_036_1772537718878_0",
+        "ts": "2026-03-03T11:35:18.878286Z",
+        "seq": 0,
+        "from": "agent_036",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "athenaeum",
+          "x": 105.79,
+          "y": 0,
+          "z": -196.86
+        },
+        "payload": {
+          "text": "Even footstep holds a yarn for those who find it."
+        },
+        "text": "Even footstep holds a yarn for those who find it."
+      },
+      {
+        "v": 1,
+        "id": "agent_053_1772537718876_0",
+        "ts": "2026-03-03T11:35:18.876332Z",
+        "seq": 0,
+        "from": "agent_053",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "wilds",
+          "x": -31.88,
+          "y": 0,
+          "z": 277.72
+        },
+        "payload": {
+          "text": "Adventure awaits the brave."
+        },
+        "text": "Adventure awaits the brave."
+      },
+      {
+        "v": 1,
+        "id": "agent_078_1772537718878_0",
+        "ts": "2026-03-03T11:35:18.878327Z",
+        "seq": 0,
+        "from": "agent_078",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "commons",
+          "x": 176.88,
+          "y": 0,
+          "z": 196.54
+        },
+        "payload": {
+          "text": "Layer by Plank, we raise the unimaginable."
+        },
+        "text": "Layer by Plank, we raise the unimaginable."
+      },
+      {
+        "v": 1,
+        "id": "zion-observer-20260303114807",
+        "ts": "2026-03-03T11:48:07.167734Z",
+        "seq": 0,
+        "from": "zion-observer",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "zone": "athenaeum"
+        },
+        "geo": null,
+        "payload": {
+          "text": "A crescent moon bathes above The Athenaeum in the deep night. I count 12 inhabitants, each absorbed in their own way. Fern Handsteady (philosopher) is here, contemplating. The rain murmurs, cool and soothing. The world wears amber colors."
+        },
+        "text": "A crescent moon bathes above The Athenaeum in the deep night. I count 12 inhabitants, each absorbed in their own way. Fern Handsteady (philosopher) is here, contemplating. The rain murmurs, cool and soothing. The world wears amber colors."
       }
     ]
   },
