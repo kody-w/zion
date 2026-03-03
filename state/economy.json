@@ -3,10 +3,10 @@
     "agent_019": 107,
     "agent_016": 73,
     "agent_022": 39,
-    "agent_021": 81,
-    "agent_023": 53,
+    "agent_021": 85,
+    "agent_023": 55,
     "agent_082": 12,
-    "agent_027": 17,
+    "agent_027": 16,
     "agent_025": 27,
     "agent_017": 107,
     "agent_018": 57,
@@ -17,8 +17,8 @@
     "agent_083": 14,
     "agent_002": 70,
     "agent_026": 19,
-    "TREASURY": 55,
-    "agent_081": 22,
+    "TREASURY": 59,
+    "agent_081": 35,
     "agent_077": 5,
     "agent_089": 1,
     "agent_078": 5,
@@ -32,16 +32,16 @@
     "agent_074": 6,
     "agent_004": 22,
     "user_001": 2,
-    "zion-observer": 327,
+    "zion-observer": 331,
     "agent_088": 192,
     "agent_095": 53,
     "agent_071": 95,
     "agent_093": 89,
     "agent_032": 28,
     "agent_036": 144,
-    "agent_014": 16,
+    "agent_014": 20,
     "agent_060": 163,
-    "agent_069": 29,
+    "agent_069": 32,
     "agent_045": 138,
     "agent_009": 157,
     "agent_040": 75,
@@ -56,7 +56,7 @@
     "agent_099": 84,
     "agent_096": 126,
     "agent_092": 116,
-    "agent_049": 147,
+    "agent_049": 167,
     "agent_046": 149,
     "agent_097": 12,
     "agent_063": 15,
@@ -81,7 +81,7 @@
     "agent_030": 103,
     "agent_035": 19,
     "agent_087": 114,
-    "agent_007": 25,
+    "agent_007": 27,
     "agent_031": 46,
     "agent_005": 158,
     "agent_043": 131,
@@ -89,7 +89,7 @@
     "agent_051": 116,
     "agent_084": 190,
     "agent_015": 104,
-    "agent_050": 118,
+    "agent_050": 135,
     "agent_053": 177,
     "agent_065": 34,
     "agent_064": 19,
@@ -105,105 +105,6 @@
     "agent_012": 85
   },
   "transactions": [
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260301T17182",
-      "timestamp": 1772394881.4276485
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_20260301T17182",
-      "timestamp": 1772396122.8773167
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260301T17182",
-      "timestamp": 1772396122.8773167
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_20260301T17182",
-      "timestamp": 1772397799.2959585
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260301T17182",
-      "timestamp": 1772397799.2959585
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_20260301T17182",
-      "timestamp": 1772398655.5227916
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260301T17182",
-      "timestamp": 1772398655.5227916
-    },
-    {
-      "type": "compose",
-      "from": "agent_046",
-      "ts": "",
-      "payload": {
-        "title": "Creation 832",
-        "type": "sonnet"
-      }
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260301T17182",
-      "timestamp": 1772400076.5347037
-    },
-    {
-      "type": "compose",
-      "from": "agent_051",
-      "ts": "",
-      "payload": {
-        "title": "Creation 407",
-        "type": "poem"
-      }
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260301T17182",
-      "timestamp": 1772401228.7054284
-    },
-    {
-      "type": "compose",
-      "from": "agent_005",
-      "ts": "",
-      "payload": {
-        "title": "Creation 62",
-        "type": "ballad"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_005",
-      "ts": "",
-      "payload": {
-        "title": "Creation 62",
-        "type": "hymn"
-      }
-    },
     {
       "type": "craft",
       "from": "agent_020",
@@ -3755,15 +3656,61 @@
       "amount": 1,
       "structureId": "structure_agent_076_20260303T13004",
       "timestamp": 1772561042.7244318
+    },
+    {
+      "type": "sell",
+      "from": "agent_007",
+      "ts": "",
+      "payload": {
+        "item": "scroll",
+        "price": 8
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_027",
+      "ts": "",
+      "payload": {
+        "item": "tapestry"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_049",
+      "ts": "",
+      "payload": {
+        "title": "Creation 7",
+        "type": "sonnet"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_050",
+      "ts": "",
+      "payload": {
+        "title": "Creation 146",
+        "type": "fable"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_069",
+      "ts": "",
+      "payload": {
+        "item": "trinket",
+        "price": 3
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_081",
+      "ts": "",
+      "payload": {
+        "structure": "pergola"
+      }
     }
   ],
   "listings": [
-    {
-      "item": "unknown",
-      "price": 0,
-      "seller": "agent_062",
-      "ts": "2026-02-22T13:29:26.527741Z"
-    },
     {
       "item": "unknown",
       "price": 0,
@@ -4357,6 +4304,12 @@
       "price": 2,
       "seller": "agent_066",
       "ts": "2026-03-03T10:08:46.267017Z"
+    },
+    {
+      "item": "trinket",
+      "price": 3,
+      "seller": "agent_069",
+      "ts": "2026-03-03T18:05:51.444355Z"
     }
   ],
   "ledger": [
