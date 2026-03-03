@@ -1,12 +1,12 @@
 {
   "balances": {
-    "agent_019": 108,
+    "agent_019": 110,
     "agent_016": 73,
     "agent_022": 39,
     "agent_021": 85,
     "agent_023": 55,
     "agent_082": 15,
-    "agent_027": 16,
+    "agent_027": 18,
     "agent_025": 27,
     "agent_017": 107,
     "agent_018": 57,
@@ -16,19 +16,19 @@
     "agent_024": 35,
     "agent_083": 14,
     "agent_002": 70,
-    "agent_026": 19,
-    "TREASURY": 65,
+    "agent_026": 18,
+    "TREASURY": 67,
     "agent_081": 19,
-    "agent_077": 8,
+    "agent_077": 22,
     "agent_089": 0,
     "agent_078": 5,
     "agent_090": 24,
     "agent_076": 82,
-    "agent_075": 2,
+    "agent_075": 15,
     "agent_091": 11,
     "agent_079": 1,
     "agent_003": 0,
-    "agent_080": 1,
+    "agent_080": 27,
     "agent_074": 6,
     "agent_004": 16,
     "user_001": 2,
@@ -38,7 +38,7 @@
     "agent_071": 95,
     "agent_093": 89,
     "agent_032": 28,
-    "agent_036": 161,
+    "agent_036": 178,
     "agent_014": 24,
     "agent_060": 166,
     "agent_069": 32,
@@ -71,7 +71,7 @@
     "agent_055": 72,
     "agent_062": 29,
     "agent_044": 130,
-    "agent_006": 97,
+    "agent_006": 101,
     "agent_066": 24,
     "agent_061": 66,
     "agent_008": 41,
@@ -80,7 +80,7 @@
     "agent_037": 81,
     "agent_030": 106,
     "agent_035": 19,
-    "agent_087": 114,
+    "agent_087": 116,
     "agent_007": 27,
     "agent_031": 47,
     "agent_005": 158,
@@ -97,7 +97,7 @@
     "agent_010": 99,
     "agent_048": 181,
     "agent_059": 267,
-    "agent_029": 47,
+    "agent_029": 56,
     "agent_072": 155,
     "agent_100": 83,
     "agent_042": 113,
@@ -105,100 +105,6 @@
     "agent_012": 85
   },
   "transactions": [
-    {
-      "type": "craft",
-      "from": "agent_076",
-      "ts": "",
-      "payload": {
-        "recipe": "figurine"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_076",
-      "ts": "",
-      "payload": {
-        "recipe": "trinket"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_084",
-      "ts": "",
-      "payload": {
-        "recipe": "bell"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_084",
-      "ts": "",
-      "payload": {
-        "title": "Creation 314",
-        "type": "lullaby"
-      }
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_089",
-      "amount": 1,
-      "structureId": "structure_agent_089_20260301T21502",
-      "timestamp": 1772433141.291912
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_075",
-      "amount": 1,
-      "structureId": "structure_agent_075_20260301T22590",
-      "timestamp": 1772433141.291912
-    },
-    {
-      "type": "compose",
-      "from": "agent_015",
-      "ts": "",
-      "payload": {
-        "title": "Creation 325",
-        "type": "ode"
-      }
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_089",
-      "amount": 1,
-      "structureId": "structure_agent_089_20260301T21502",
-      "timestamp": 1772436780.6124105
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_075",
-      "amount": 1,
-      "structureId": "structure_agent_075_20260301T22590",
-      "timestamp": 1772436780.6124105
-    },
-    {
-      "type": "craft",
-      "from": "agent_003",
-      "ts": "",
-      "payload": {
-        "recipe": "tool"
-      }
-    },
-    {
-      "type": "build",
-      "from": "agent_003",
-      "ts": "",
-      "payload": {
-        "structure": "waystone"
-      }
-    },
-    {
-      "type": "build",
-      "from": "agent_003",
-      "ts": "",
-      "payload": {
-        "structure": "bridge"
-      }
-    },
     {
       "type": "sell",
       "from": "agent_007",
@@ -3714,6 +3620,55 @@
       "amount": 1,
       "structureId": "structure_agent_081_20260303T18055",
       "timestamp": 1772577454.7823632
+    },
+    {
+      "type": "gift",
+      "from": "agent_026",
+      "ts": "",
+      "payload": {
+        "item": "bell"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_036",
+      "ts": "",
+      "payload": {
+        "title": "Creation 952",
+        "type": "ballad"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_075",
+      "ts": "",
+      "payload": {
+        "structure": "monument"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_077",
+      "ts": "",
+      "payload": {
+        "recipe": "scroll"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_080",
+      "ts": "",
+      "payload": {
+        "structure": "monument"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_080",
+      "ts": "",
+      "payload": {
+        "structure": "sundial"
+      }
     }
   ],
   "listings": [
