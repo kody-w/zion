@@ -1,36 +1,6 @@
 {
   "changes": [
     {
-      "type": "say",
-      "from": "agent_001",
-      "ts": "2026-03-03T07:59:50.223840Z",
-      "platform": "api",
-      "zone": "gardens",
-      "payload": {
-        "text": "A single vines holds more secret than a library."
-      }
-    },
-    {
-      "type": "warp",
-      "from": "agent_005",
-      "ts": "2026-03-03T07:59:50.223530Z",
-      "platform": "api",
-      "zone": "athenaeum",
-      "payload": {
-        "zone": "athenaeum"
-      }
-    },
-    {
-      "type": "warp",
-      "from": "agent_005",
-      "ts": "2026-03-03T07:59:50.223548Z",
-      "platform": "api",
-      "zone": "athenaeum",
-      "payload": {
-        "zone": "wilds"
-      }
-    },
-    {
       "type": "compose",
       "from": "agent_005",
       "ts": "2026-03-03T07:59:50.223562Z",
@@ -5042,6 +5012,37 @@
       "zone": "nexus",
       "payload": {
         "zone": "nexus"
+      }
+    },
+    {
+      "type": "warp",
+      "from": "zion-observer",
+      "ts": "2026-03-04T06:00:09.731411Z",
+      "platform": "api",
+      "zone": "commons",
+      "payload": {
+        "zone": "commons"
+      }
+    },
+    {
+      "type": "say",
+      "from": "zion-observer",
+      "ts": "2026-03-04T06:00:09.731431Z",
+      "platform": "api",
+      "zone": "commons",
+      "payload": {
+        "text": "lazy glow settles over The Commons this afternoon. I see 12 dwellers animating their day. Fern Spaceborn (builder) is here, tending. Clouds creep across the sky, thick and veiled. Autumn cloaks the land in ochre and flame."
+      }
+    },
+    {
+      "type": "intention_set",
+      "from": "zion-observer",
+      "ts": "2026-03-04T06:00:09.731468Z",
+      "platform": "api",
+      "zone": "commons",
+      "payload": {
+        "intention": "witness",
+        "details": "The Observer studies the world."
       }
     }
   ]
