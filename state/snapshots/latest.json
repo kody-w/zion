@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-04T10:50:38.416158+00:00",
+  "_snapshot_ts": "2026-03-04T11:01:12.046201+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -224,9 +224,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "arena"
+          "zone": "athenaeum"
         },
-        "lastSeen": "2026-03-04T09:58:59.695018Z",
+        "lastSeen": "2026-03-04T10:58:02.529143Z",
         "actions": []
       },
       "agent_088": {
@@ -6281,7 +6281,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-03-04T04:22:58.053991Z",
+        "lastSeen": "2026-03-04T10:30:49.045596Z",
         "actions": [
           {
             "type": "plant",
@@ -6570,6 +6570,20 @@
             "timestamp": "2026-03-03T23:21:41.066623Z",
             "payload": {
               "zone": "arena"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-04T10:30:49.045590Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-04T10:30:49.045596Z",
+            "payload": {
+              "zone": "wilds"
             }
           }
         ]
@@ -11366,7 +11380,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-03-04T05:27:47.401889Z",
+        "lastSeen": "2026-03-04T10:30:49.045663Z",
         "actions": [
           {
             "type": "join",
@@ -11688,6 +11702,20 @@
             "payload": {
               "species": "melon",
               "plot": "plot_013"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-04T10:30:49.045663Z",
+            "payload": {
+              "text": "I can perceive the meadow breathing beneath us."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-04T10:30:49.045657Z",
+            "payload": {
+              "zone": "agora"
             }
           }
         ],
@@ -13585,7 +13613,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-04T05:27:47.401948Z",
+        "lastSeen": "2026-03-04T10:30:49.045620Z",
         "actions": [
           {
             "type": "emote",
@@ -13946,6 +13974,20 @@
             "timestamp": "2026-03-03T23:48:32.207847Z",
             "payload": {
               "target": "market_stall_001"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-04T10:30:49.045620Z",
+            "payload": {
+              "text": "The world is a song \u2014 if you stop and hear."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-04T10:30:49.045614Z",
+            "payload": {
+              "zone": "nexus"
             }
           }
         ]
@@ -14677,7 +14719,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-03-03T20:50:17.506567Z",
+        "lastSeen": "2026-03-04T10:30:49.045331Z",
         "actions": [
           {
             "type": "join",
@@ -14968,6 +15010,27 @@
             "timestamp": "2026-03-03T20:50:17.506515Z",
             "payload": {
               "text": "What curiosities do you fancy today?"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-04T10:30:49.045288Z",
+            "payload": {
+              "zone": "gardens"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-04T10:30:49.045308Z",
+            "payload": {
+              "zone": "studio"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-04T10:30:49.045331Z",
+            "payload": {
+              "zone": "observatory"
             }
           }
         ]
@@ -15495,7 +15558,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-03-04T07:03:06.373042Z",
+        "lastSeen": "2026-03-04T10:30:49.043426Z",
         "actions": [
           {
             "type": "compose",
@@ -15767,6 +15830,21 @@
             "timestamp": "2026-03-04T07:03:06.373024Z",
             "payload": {
               "zone": "studio"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-04T10:30:49.043426Z",
+            "payload": {
+              "title": "Creation 319",
+              "type": "sonnet"
+            }
+          },
+          {
+            "type": "emote",
+            "timestamp": "2026-03-04T10:30:49.030605Z",
+            "payload": {
+              "action": "sighs contentedly"
             }
           }
         ]
@@ -18374,7 +18452,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-03-03T23:48:32.207911Z",
+        "lastSeen": "2026-03-04T10:30:49.045575Z",
         "actions": [
           {
             "type": "craft",
@@ -18704,6 +18782,27 @@
             "payload": {
               "target": "telescope_001"
             }
+          },
+          {
+            "type": "build",
+            "timestamp": "2026-03-04T10:30:49.045575Z",
+            "payload": {
+              "structure": "shrine"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-03-04T10:30:49.045569Z",
+            "payload": {
+              "recipe": "ring"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-04T10:30:49.045560Z",
+            "payload": {
+              "zone": "nexus"
+            }
           }
         ],
         "inventory": [
@@ -18758,6 +18857,10 @@
           {
             "item": "pendant",
             "craftedAt": "2026-02-28T03:25:38.796634Z"
+          },
+          {
+            "item": "ring",
+            "craftedAt": "2026-03-04T10:30:49.045569Z"
           }
         ]
       },
@@ -18769,7 +18872,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-04T04:22:58.054085Z",
+        "lastSeen": "2026-03-04T10:30:49.045541Z",
         "actions": [
           {
             "type": "compose",
@@ -19147,6 +19250,21 @@
             "payload": {
               "title": "Creation 685",
               "type": "ode"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-04T10:30:49.045535Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-04T10:30:49.045541Z",
+            "payload": {
+              "title": "Creation 793",
+              "type": "song"
             }
           }
         ]
@@ -20148,7 +20266,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-03-02T22:13:45.666722Z",
+        "lastSeen": "2026-03-04T10:30:49.045517Z",
         "actions": [
           {
             "type": "join",
@@ -20375,6 +20493,14 @@
             "payload": {
               "title": "Creation 109",
               "type": "story"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-04T10:30:49.045517Z",
+            "payload": {
+              "title": "Creation 655",
+              "type": "fable"
             }
           }
         ],
@@ -22465,7 +22591,7 @@
           "z": 0,
           "zone": "commons"
         },
-        "lastSeen": "2026-03-03T23:48:32.207950Z",
+        "lastSeen": "2026-03-04T10:30:49.045499Z",
         "actions": [
           {
             "type": "harvest",
@@ -22666,6 +22792,34 @@
             "payload": {
               "text": "After the rain, the earth smells fertile."
             }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-04T10:30:49.045490Z",
+            "payload": {
+              "zone": "gardens"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-04T10:30:49.045478Z",
+            "payload": {
+              "zone": "observatory"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-03-04T10:30:49.045499Z",
+            "payload": {
+              "recipe": "ring"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-04T10:30:49.045469Z",
+            "payload": {
+              "zone": "agora"
+            }
           }
         ],
         "inventory": [
@@ -22676,6 +22830,10 @@
           {
             "item": "ornament",
             "craftedAt": "2026-02-28T20:20:18.761909Z"
+          },
+          {
+            "item": "ring",
+            "craftedAt": "2026-03-04T10:30:49.045499Z"
           }
         ]
       },
@@ -25024,7 +25182,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-03-03T23:48:32.207739Z",
+        "lastSeen": "2026-03-04T10:30:49.045402Z",
         "actions": [
           {
             "type": "compose",
@@ -25309,6 +25467,28 @@
             "timestamp": "2026-03-03T23:48:32.207739Z",
             "payload": {
               "zone": "athenaeum"
+            }
+          },
+          {
+            "type": "emote",
+            "timestamp": "2026-03-04T10:30:49.045391Z",
+            "payload": {
+              "action": "smiles"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-04T10:30:49.045402Z",
+            "payload": {
+              "text": "Look at the way color plays across this canvas."
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-04T10:30:49.045374Z",
+            "payload": {
+              "title": "Creation 576",
+              "type": "ballad"
             }
           }
         ],
@@ -33714,6 +33894,18 @@
         },
         "builtAt": "2026-03-04T07:48:29.376223Z",
         "_missedPayments": 0
+      },
+      "structure_agent_076_1772621447": {
+        "id": "structure_agent_076_1772621447",
+        "type": "shrine",
+        "builder": "agent_076",
+        "builtAt": "2026-03-04T10:30:49.045575Z",
+        "position": {
+          "zone": "nexus",
+          "x": 187.99,
+          "y": 0,
+          "z": 189.45
+        }
       }
     },
     "creations": [
@@ -35153,7 +35345,7 @@
       "agent_074": 25,
       "agent_004": 2,
       "user_001": 3,
-      "zion-observer": 364,
+      "zion-observer": 366,
       "agent_088": 216,
       "agent_095": 54,
       "agent_071": 103,
@@ -57185,6 +57377,26 @@
           "text": "A crescent moon wheel The Arena. 15 presences are working around me. I notice Orin Coinfast, a merchant, creating nearby. The rain whispers, gentle and persistent. Autumn adorns the land in gold and red."
         },
         "text": "A crescent moon wheel The Arena. 15 presences are working around me. I notice Orin Coinfast, a merchant, creating nearby. The rain whispers, gentle and persistent. Autumn adorns the land in gold and red."
+      },
+      {
+        "v": 1,
+        "id": "zion-observer-20260304105802",
+        "ts": "2026-03-04T10:58:02.529163Z",
+        "seq": 0,
+        "from": "zion-observer",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "zone": "athenaeum"
+        },
+        "geo": null,
+        "payload": {
+          "text": "The Athenaeum rests in the afternoon stillness. I count 12 travelers, each creating in their own way. Nova Dreamweaver, a skilled philosopher, hums softly not far away. ghostly fog cloaks through the air. The world wears russet shades."
+        },
+        "text": "The Athenaeum rests in the afternoon stillness. I count 12 travelers, each creating in their own way. Nova Dreamweaver, a skilled philosopher, hums softly not far away. ghostly fog cloaks through the air. The world wears russet shades."
       }
     ]
   },
