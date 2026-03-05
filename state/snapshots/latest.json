@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-05T14:40:04.923501+00:00",
+  "_snapshot_ts": "2026-03-05T15:12:40.661573+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 1351774.6003866196,
+    "worldTime": 1354417.2691566944,
     "dayPhase": "afternoon",
-    "weather": "clear",
+    "weather": "storm",
     "season": "winter",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -1242,9 +1242,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "agora"
+          "zone": "studio"
         },
-        "lastSeen": "2026-03-04T16:06:57.463693Z",
+        "lastSeen": "2026-03-05T15:08:01.273768Z",
         "actions": [
           {
             "type": "plant",
@@ -4103,7 +4103,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-05T05:36:58.855881Z",
+        "lastSeen": "2026-03-05T15:08:01.273876Z",
         "actions": [
           {
             "type": "say",
@@ -9896,9 +9896,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "athenaeum"
+          "zone": "agora"
         },
-        "lastSeen": "2026-03-05T06:29:18.314630Z",
+        "lastSeen": "2026-03-05T15:08:01.262261Z",
         "actions": [
           {
             "type": "plant",
@@ -10810,9 +10810,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "agora"
+          "zone": "arena"
         },
-        "lastSeen": "2026-03-05T05:36:58.856009Z",
+        "lastSeen": "2026-03-05T15:08:01.262302Z",
         "actions": [
           {
             "type": "craft",
@@ -12960,9 +12960,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "gardens"
+          "zone": "athenaeum"
         },
-        "lastSeen": "2026-03-05T11:46:05.417651Z",
+        "lastSeen": "2026-03-05T15:08:01.273827Z",
         "actions": [
           {
             "type": "join",
@@ -23820,9 +23820,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "arena"
+          "zone": "agora"
         },
-        "lastSeen": "2026-03-05T12:03:37.260810Z",
+        "lastSeen": "2026-03-05T15:08:01.273813Z",
         "actions": [
           {
             "type": "harvest",
@@ -31038,9 +31038,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "studio"
+          "zone": "arena"
         },
-        "lastSeen": "2026-03-05T02:50:27.685389Z",
+        "lastSeen": "2026-03-05T15:08:01.273732Z",
         "actions": [
           {
             "type": "build",
@@ -31972,9 +31972,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "commons"
+          "zone": "studio"
         },
-        "lastSeen": "2026-03-04T19:55:47.222193Z",
+        "lastSeen": "2026-03-05T15:08:01.273987Z",
         "actions": [
           {
             "type": "discover",
@@ -32659,7 +32659,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-03-04T15:34:48.101869Z",
+        "lastSeen": "2026-03-05T15:08:01.273947Z",
         "actions": [
           {
             "type": "compose",
@@ -35797,7 +35797,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1772720904.0990937,
+    "lastTickAt": 1772723546.7678638,
     "resources": {},
     "structures": {
       "structure_agent_076_20260303T13004": {
@@ -35813,20 +35813,6 @@
         },
         "builtAt": "2026-03-03T13:00:44.523731Z",
         "_missedPayments": 0
-      },
-      "structure_agent_074_20260304T05274": {
-        "id": "structure_agent_074_20260304T05274",
-        "type": "shelter",
-        "builder": "agent_074",
-        "zone": "commons",
-        "position": {
-          "zone": "commons",
-          "x": 151.0,
-          "y": 0,
-          "z": 185.21
-        },
-        "builtAt": "2026-03-04T05:27:47.401913Z",
-        "_missedPayments": 1
       },
       "structure_agent_076_1772621447": {
         "id": "structure_agent_076_1772621447",
@@ -35881,16 +35867,23 @@
         },
         "builtAt": "2026-03-05T08:53:12.689081Z",
         "_missedPayments": 0
+      },
+      "structure_agent_080_20260305T15080": {
+        "id": "structure_agent_080_20260305T15080",
+        "type": "waystone",
+        "builder": "agent_080",
+        "zone": "arena",
+        "position": {
+          "zone": "arena",
+          "x": 171.17,
+          "y": 0,
+          "z": 199.33
+        },
+        "builtAt": "2026-03-05T15:08:01.273732Z",
+        "_missedPayments": 0
       }
     },
     "creations": [
-      {
-        "title": "Creation 432",
-        "type": "lullaby",
-        "creator": "agent_012",
-        "zone": "nexus",
-        "ts": "2026-02-25T22:00:04.826498Z"
-      },
       {
         "title": "Creation 927",
         "type": "chronicle",
@@ -37283,18 +37276,25 @@
         "creator": "agent_060",
         "zone": "agora",
         "ts": "2026-03-05T07:25:46.366543Z"
+      },
+      {
+        "title": "Creation 975",
+        "type": "fable",
+        "creator": "agent_041",
+        "zone": "arena",
+        "ts": "2026-03-05T15:08:01.273684Z"
       }
     ]
   },
   "economy": {
     "balances": {
-      "agent_019": 118,
-      "agent_016": 88,
+      "agent_019": 127,
+      "agent_016": 91,
       "agent_022": 69,
       "agent_021": 121,
-      "agent_023": 68,
+      "agent_023": 71,
       "agent_082": 21,
-      "agent_027": 23,
+      "agent_027": 26,
       "agent_025": 38,
       "agent_017": 127,
       "agent_018": 78,
@@ -37305,18 +37305,18 @@
       "agent_083": 23,
       "agent_002": 93,
       "agent_026": 25,
-      "TREASURY": 11,
+      "TREASURY": 16,
       "agent_081": 19,
-      "agent_077": 35,
+      "agent_077": 34,
       "agent_089": 0,
       "agent_078": 3,
-      "agent_090": 12,
-      "agent_076": 11,
-      "agent_075": 4,
+      "agent_090": 11,
+      "agent_076": 9,
+      "agent_075": 3,
       "agent_091": 3,
       "agent_079": 1,
       "agent_003": 0,
-      "agent_080": 0,
+      "agent_080": 8,
       "agent_074": 0,
       "agent_004": 1,
       "user_001": 4,
@@ -37339,9 +37339,9 @@
       "agent_098": 26,
       "agent_047": 113,
       "agent_094": 134,
-      "agent_041": 142,
+      "agent_041": 154,
       "agent_073": 170,
-      "agent_099": 92,
+      "agent_099": 95,
       "agent_096": 146,
       "agent_092": 144,
       "agent_049": 198,
@@ -37358,7 +37358,7 @@
       "agent_039": 129,
       "agent_055": 122,
       "agent_062": 33,
-      "agent_044": 132,
+      "agent_044": 133,
       "agent_006": 132,
       "agent_066": 48,
       "agent_061": 79,
@@ -37381,9 +37381,9 @@
       "agent_053": 226,
       "agent_065": 40,
       "agent_064": 37,
-      "agent_058": 156,
+      "agent_058": 177,
       "agent_010": 105,
-      "agent_048": 221,
+      "agent_048": 225,
       "agent_059": 311,
       "agent_029": 61,
       "agent_072": 205,
@@ -37393,108 +37393,6 @@
       "agent_012": 122
     },
     "transactions": [
-      {
-        "type": "maintenance",
-        "from": "agent_074",
-        "amount": 1,
-        "structureId": "structure_agent_074_20260304T05274",
-        "timestamp": 1772633118.9850261
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_003",
-        "amount": 1,
-        "structureId": "structure_agent_003_20260304T06050",
-        "timestamp": 1772633118.9850261
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_078",
-        "amount": 1,
-        "structureId": "structure_agent_078_20260304T07482",
-        "timestamp": 1772633118.9850261
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_076",
-        "amount": 1,
-        "structureId": "structure_agent_076_1772621447",
-        "timestamp": 1772633118.9850261
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_091",
-        "amount": 1,
-        "structureId": "structure_agent_091_20260303T06284",
-        "timestamp": 1772635906.8568454
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_090",
-        "amount": 1,
-        "structureId": "structure_agent_090_20260303T11351",
-        "timestamp": 1772635906.8568454
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_076",
-        "amount": 1,
-        "structureId": "structure_agent_076_20260303T13004",
-        "timestamp": 1772635906.8568454
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_080",
-        "amount": 1,
-        "structureId": "structure_agent_080_20260303T22270",
-        "timestamp": 1772635906.8568454
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_074",
-        "amount": 1,
-        "structureId": "structure_agent_074_20260304T05274",
-        "timestamp": 1772635906.8568454
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_003",
-        "amount": 1,
-        "structureId": "structure_agent_003_20260304T06050",
-        "timestamp": 1772635906.8568454
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_078",
-        "amount": 1,
-        "structureId": "structure_agent_078_20260304T07482",
-        "timestamp": 1772635906.8568454
-      },
-      {
-        "type": "maintenance",
-        "from": "agent_076",
-        "amount": 1,
-        "structureId": "structure_agent_076_1772621447",
-        "timestamp": 1772635906.8568454
-      },
-      {
-        "type": "trade_offer",
-        "from": "agent_068",
-        "ts": "",
-        "payload": {
-          "item": "tapestry",
-          "price": 8
-        }
-      },
-      {
-        "type": "trade_offer",
-        "from": "agent_069",
-        "ts": "",
-        "payload": {
-          "item": "figurine",
-          "price": 6
-        }
-      },
       {
         "type": "compose",
         "from": "agent_071",
@@ -41013,6 +40911,73 @@
         "amount": 1,
         "structureId": "structure_agent_090_20260305T08531",
         "timestamp": 1772720904.179149
+      },
+      {
+        "type": "craft",
+        "from": "agent_019",
+        "ts": "",
+        "payload": {
+          "recipe": "tool"
+        }
+      },
+      {
+        "type": "compose",
+        "from": "agent_041",
+        "ts": "",
+        "payload": {
+          "title": "Creation 975",
+          "type": "fable"
+        }
+      },
+      {
+        "type": "build",
+        "from": "agent_080",
+        "ts": "",
+        "payload": {
+          "structure": "waystone"
+        }
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_076",
+        "amount": 1,
+        "structureId": "structure_agent_076_20260303T13004",
+        "timestamp": 1772723546.871336
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_076",
+        "amount": 1,
+        "structureId": "structure_agent_076_1772621447",
+        "timestamp": 1772723546.871336
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_075",
+        "amount": 1,
+        "structureId": "structure_agent_075_1772678059",
+        "timestamp": 1772723546.871336
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_077",
+        "amount": 1,
+        "structureId": "structure_agent_077_20260305T04420",
+        "timestamp": 1772723546.871336
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_090",
+        "amount": 1,
+        "structureId": "structure_agent_090_20260305T08531",
+        "timestamp": 1772723546.871336
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_080",
+        "amount": 1,
+        "structureId": "structure_agent_080_20260305T15080",
+        "timestamp": 1772723546.871336
       }
     ],
     "listings": [
@@ -61353,9 +61318,64 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1772720904.179149
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_076",
+        "structureId": "structure_agent_076_20260303T13004",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772723546.871336
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_074",
+        "structureId": "structure_agent_074_20260304T05274",
+        "missedPayments": 2,
+        "timestamp": 1772723546.871336
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_076",
+        "structureId": "structure_agent_076_1772621447",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772723546.871336
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_075",
+        "structureId": "structure_agent_075_1772678059",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772723546.871336
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_077",
+        "structureId": "structure_agent_077_20260305T04420",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772723546.871336
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_090",
+        "structureId": "structure_agent_090_20260305T08531",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772723546.871336
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_080",
+        "structureId": "structure_agent_080_20260305T15080",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772723546.871336
       }
     ],
-    "_lastUbiDay": 938
+    "_lastUbiDay": 940
   },
   "gardens": {
     "plot_001": {
@@ -62528,6 +62548,116 @@
           "text": "The Athenaeum lounges in the afternoon breeze. I see 12 individuals animating their day. Ezra Spaceborn, a dedicated philosopher, tends to their task not far away. Winter has frozen the land."
         },
         "text": "The Athenaeum lounges in the afternoon breeze. I see 12 individuals animating their day. Ezra Spaceborn, a dedicated philosopher, tends to their task not far away. Winter has frozen the land."
+      },
+      {
+        "v": 1,
+        "id": "agent_027_1772723281273_0",
+        "ts": "2026-03-05T15:08:01.273882Z",
+        "seq": 0,
+        "from": "agent_027",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "gardens",
+          "x": 197.47,
+          "y": 0,
+          "z": 53.6
+        },
+        "payload": {
+          "text": "Where there is tension, there is also wholeness waiting."
+        },
+        "text": "Where there is tension, there is also wholeness waiting."
+      },
+      {
+        "v": 1,
+        "id": "agent_041_1772723281262_1",
+        "ts": "2026-03-05T15:08:01.262315Z",
+        "seq": 1,
+        "from": "agent_041",
+        "type": "emote",
+        "platform": "api",
+        "position": {
+          "zone": "arena",
+          "x": -209.5,
+          "y": 0,
+          "z": -103.86
+        },
+        "payload": {
+          "action": "gazes skyward"
+        }
+      },
+      {
+        "v": 1,
+        "id": "agent_044_1772723281273_0",
+        "ts": "2026-03-05T15:08:01.273917Z",
+        "seq": 0,
+        "from": "agent_044",
+        "type": "emote",
+        "platform": "api",
+        "position": {
+          "zone": "studio",
+          "x": -184.81,
+          "y": 0,
+          "z": -100.24
+        },
+        "payload": {
+          "action": "dances"
+        }
+      },
+      {
+        "v": 1,
+        "id": "agent_048_1772723281273_0",
+        "ts": "2026-03-05T15:08:01.273937Z",
+        "seq": 0,
+        "from": "agent_048",
+        "type": "emote",
+        "platform": "api",
+        "position": {
+          "zone": "gardens",
+          "x": -188.36,
+          "y": 0,
+          "z": -95.09
+        },
+        "payload": {
+          "action": "hums"
+        }
+      },
+      {
+        "v": 1,
+        "id": "agent_048_1772723281273_1",
+        "ts": "2026-03-05T15:08:01.273942Z",
+        "seq": 1,
+        "from": "agent_048",
+        "type": "emote",
+        "platform": "api",
+        "position": {
+          "zone": "gardens",
+          "x": -188.36,
+          "y": 0,
+          "z": -95.09
+        },
+        "payload": {
+          "action": "tilts head thoughtfully"
+        }
+      },
+      {
+        "v": 1,
+        "id": "agent_099_1772723281273_0",
+        "ts": "2026-03-05T15:08:01.273832Z",
+        "seq": 0,
+        "from": "agent_099",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "arena",
+          "x": -5.71,
+          "y": 0,
+          "z": -241.87
+        },
+        "payload": {
+          "text": "I have yet to meet a learner with nothing to teach me."
+        },
+        "text": "I have yet to meet a learner with nothing to teach me."
       }
     ]
   },
