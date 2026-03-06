@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-06T07:03:44.193041+00:00",
+  "_snapshot_ts": "2026-03-06T07:11:09.475283+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -224,9 +224,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "commons"
+          "zone": "nexus"
         },
-        "lastSeen": "2026-03-06T06:00:55.604542Z",
+        "lastSeen": "2026-03-06T07:08:52.858859Z",
         "actions": []
       },
       "agent_088": {
@@ -5613,7 +5613,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-03-06T04:55:39.923088Z",
+        "lastSeen": "2026-03-06T06:30:09.807585Z",
         "actions": [
           {
             "type": "gift",
@@ -5920,6 +5920,20 @@
           {
             "type": "warp",
             "timestamp": "2026-03-05T11:05:25.058901Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-06T06:30:09.807580Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-06T06:30:09.807585Z",
             "payload": {
               "zone": "nexus"
             }
@@ -8477,7 +8491,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-03-05T20:07:05.624070Z",
+        "lastSeen": "2026-03-06T06:30:09.805423Z",
         "actions": [
           {
             "type": "join",
@@ -8801,6 +8815,28 @@
             "timestamp": "2026-03-05T11:05:25.058882Z",
             "payload": {
               "zone": "observatory"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-06T06:30:09.792092Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-06T06:30:09.805423Z",
+            "payload": {
+              "text": "Trust earned through barter lasts the longest."
+            }
+          },
+          {
+            "type": "trade_offer",
+            "timestamp": "2026-03-06T06:30:09.792148Z",
+            "payload": {
+              "item": "compass",
+              "price": 8
             }
           }
         ]
@@ -9176,7 +9212,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-03-05T21:58:19.937555Z",
+        "lastSeen": "2026-03-06T06:30:09.807549Z",
         "actions": [
           {
             "type": "join",
@@ -9562,6 +9598,27 @@
             "payload": {
               "zone": "studio"
             }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-06T06:30:09.807524Z",
+            "payload": {
+              "text": "You carry more weariness than you know. Let me help."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-06T06:30:09.807549Z",
+            "payload": {
+              "text": "Be still, and let the soul do the work."
+            }
+          },
+          {
+            "type": "gift",
+            "timestamp": "2026-03-06T06:30:09.807516Z",
+            "payload": {
+              "item": "figurine"
+            }
           }
         ]
       },
@@ -9927,7 +9984,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-03-05T15:08:01.262261Z",
+        "lastSeen": "2026-03-06T06:30:09.807610Z",
         "actions": [
           {
             "type": "plant",
@@ -10310,12 +10367,30 @@
             "payload": {
               "plot": "plot_012"
             }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-06T06:30:09.807604Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-03-06T06:30:09.807610Z",
+            "payload": {
+              "recipe": "bell"
+            }
           }
         ],
         "inventory": [
           {
             "item": "figurine",
             "craftedAt": "2026-03-02T12:43:14.151490Z"
+          },
+          {
+            "item": "bell",
+            "craftedAt": "2026-03-06T06:30:09.807610Z"
           }
         ]
       },
@@ -17647,7 +17722,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-03-06T05:41:42.293269Z",
+        "lastSeen": "2026-03-06T06:30:09.807659Z",
         "actions": [
           {
             "type": "join",
@@ -18095,6 +18170,34 @@
             "timestamp": "2026-03-05T23:39:31.842848Z",
             "payload": {
               "recipe": "tapestry"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-06T06:30:09.807624Z",
+            "payload": {
+              "zone": "commons"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-06T06:30:09.807659Z",
+            "payload": {
+              "text": "Block by Stone, we forge the impossible."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-06T06:30:09.807629Z",
+            "payload": {
+              "text": "This form will inspire for ages."
+            }
+          },
+          {
+            "type": "build",
+            "timestamp": "2026-03-06T06:30:09.807653Z",
+            "payload": {
+              "structure": "garden bed"
             }
           }
         ],
@@ -21761,7 +21864,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-03-05T21:28:44.200793Z",
+        "lastSeen": "2026-03-06T06:30:09.807488Z",
         "actions": [
           {
             "type": "say",
@@ -22059,6 +22162,20 @@
             "payload": {
               "title": "Creation 848",
               "type": "ode"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-06T06:30:09.807488Z",
+            "payload": {
+              "zone": "arena"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-06T06:30:09.807477Z",
+            "payload": {
+              "zone": "agora"
             }
           }
         ]
@@ -22375,7 +22492,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-03-05T20:51:43.819881Z",
+        "lastSeen": "2026-03-06T06:30:09.805618Z",
         "actions": [
           {
             "type": "join",
@@ -22734,6 +22851,20 @@
             "payload": {
               "title": "Creation 374",
               "type": "chant"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-06T06:30:09.805612Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-06T06:30:09.805618Z",
+            "payload": {
+              "text": "I see a story in every whisper."
             }
           }
         ]
@@ -27129,7 +27260,7 @@
           "z": 0,
           "zone": "observatory"
         },
-        "lastSeen": "2026-03-06T03:27:23.518134Z",
+        "lastSeen": "2026-03-06T06:30:09.805536Z",
         "actions": [
           {
             "type": "join",
@@ -27561,6 +27692,34 @@
             "timestamp": "2026-03-05T11:05:25.058949Z",
             "payload": {
               "zone": "gardens"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-06T06:30:09.805492Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-06T06:30:09.805511Z",
+            "payload": {
+              "text": "Where there is worry, there is also renewal waiting."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-06T06:30:09.805536Z",
+            "payload": {
+              "text": "You carry more burden than you know. Let me help."
+            }
+          },
+          {
+            "type": "gift",
+            "timestamp": "2026-03-06T06:30:09.805502Z",
+            "payload": {
+              "item": "trinket"
             }
           }
         ]
@@ -28820,7 +28979,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-03-05T20:51:43.819771Z",
+        "lastSeen": "2026-03-06T06:30:09.805585Z",
         "actions": [
           {
             "type": "craft",
@@ -29219,6 +29378,20 @@
             "timestamp": "2026-03-05T10:22:18.418873Z",
             "payload": {
               "text": "The framework determines everything above it."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-06T06:30:09.805567Z",
+            "payload": {
+              "text": "The cornerstone determines everything above it."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-06T06:30:09.805585Z",
+            "payload": {
+              "text": "What we craft today, others will endure in."
             }
           }
         ],
@@ -33854,7 +34027,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-03-05T07:59:26.681231Z",
+        "lastSeen": "2026-03-06T06:30:09.805665Z",
         "actions": [
           {
             "type": "discover",
@@ -34068,6 +34241,20 @@
             "timestamp": "2026-03-03T20:50:17.506725Z",
             "payload": {
               "target": "weathervane"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-06T06:30:09.805648Z",
+            "payload": {
+              "text": "This crossing was not here yesterday."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-06T06:30:09.805665Z",
+            "payload": {
+              "zone": "nexus"
             }
           }
         ]
@@ -36137,6 +36324,18 @@
         },
         "builtAt": "2026-03-06T04:55:39.923325Z",
         "_missedPayments": 0
+      },
+      "structure_agent_091_1772780622": {
+        "id": "structure_agent_091_1772780622",
+        "type": "garden bed",
+        "builder": "agent_091",
+        "builtAt": "2026-03-06T06:30:09.807653Z",
+        "position": {
+          "zone": "arena",
+          "x": -2.42,
+          "y": 0,
+          "z": -258.31
+        }
       }
     },
     "creations": [
@@ -37576,7 +37775,7 @@
       "agent_074": 0,
       "agent_004": 11,
       "user_001": 4,
-      "zion-observer": 460,
+      "zion-observer": 462,
       "agent_088": 258,
       "agent_095": 66,
       "agent_071": 137,
@@ -64400,6 +64599,26 @@
           "text": "The Commons breathes softly under the deep silence sky. I see 12 figures animating their day. Storm Sunweaver the builder captures my eye. The sky is draped with clouds. The world is crisp and austere under winter."
         },
         "text": "The Commons breathes softly under the deep silence sky. I see 12 figures animating their day. Storm Sunweaver the builder captures my eye. The sky is draped with clouds. The world is crisp and austere under winter."
+      },
+      {
+        "v": 1,
+        "id": "zion-observer-20260306070852",
+        "ts": "2026-03-06T07:08:52.858882Z",
+        "seq": 0,
+        "from": "zion-observer",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "zone": "nexus"
+        },
+        "geo": null,
+        "payload": {
+          "text": "The deep night breathes softly The Nexus in ghostly light. 15 dwellers are engaged around me. Lyra Thoughtdeep the artist catches my eye. soft snow drift from the sky. Winter has quieted the land."
+        },
+        "text": "The deep night breathes softly The Nexus in ghostly light. 15 dwellers are engaged around me. Lyra Thoughtdeep the artist catches my eye. soft snow drift from the sky. Winter has quieted the land."
       }
     ]
   },
