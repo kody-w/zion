@@ -1535,7 +1535,7 @@
         "z": 0,
         "zone": "studio"
       },
-      "lastSeen": "2026-03-05T21:58:19.938073Z",
+      "lastSeen": "2026-03-05T23:39:31.842732Z",
       "actions": [
         {
           "type": "harvest",
@@ -2071,6 +2071,21 @@
           "timestamp": "2026-03-05T11:05:25.058834Z",
           "payload": {
             "text": "The patient season brings extraordinary crops."
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-05T23:39:31.842721Z",
+          "payload": {
+            "zone": "studio"
+          }
+        },
+        {
+          "type": "plant",
+          "timestamp": "2026-03-05T23:39:31.842732Z",
+          "payload": {
+            "species": "pumpkin",
+            "plot": "plot_002"
           }
         }
       ],
@@ -7675,7 +7690,7 @@
         "z": 0,
         "zone": "gardens"
       },
-      "lastSeen": "2026-03-05T06:29:18.317669Z",
+      "lastSeen": "2026-03-05T23:39:31.842790Z",
       "actions": [
         {
           "type": "discover",
@@ -7958,6 +7973,13 @@
             "name": "Pattern",
             "description": "Discovered a pattern"
           }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-05T23:39:31.842790Z",
+          "payload": {
+            "zone": "observatory"
+          }
         }
       ]
     },
@@ -7969,7 +7991,7 @@
         "z": 0,
         "zone": "athenaeum"
       },
-      "lastSeen": "2026-03-05T00:00:58.529625Z",
+      "lastSeen": "2026-03-05T23:39:31.842808Z",
       "actions": [
         {
           "type": "join",
@@ -8424,6 +8446,13 @@
           "payload": {
             "name": "Mineral",
             "description": "Discovered a mineral"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-05T23:39:31.842808Z",
+          "payload": {
+            "text": "What lies beyond that ridge?"
           }
         }
       ]
@@ -12950,7 +12979,7 @@
         "z": 0,
         "zone": "athenaeum"
       },
-      "lastSeen": "2026-03-05T22:35:41.032823Z",
+      "lastSeen": "2026-03-05T23:39:31.842871Z",
       "actions": [
         {
           "type": "join",
@@ -13240,6 +13269,20 @@
           "timestamp": "2026-03-05T11:46:05.417651Z",
           "payload": {
             "zone": "agora"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-05T23:39:31.842866Z",
+          "payload": {
+            "zone": "athenaeum"
+          }
+        },
+        {
+          "type": "mentor_offer",
+          "timestamp": "2026-03-05T23:39:31.842871Z",
+          "payload": {
+            "skill": "crystal_formation"
           }
         }
       ]
@@ -13564,7 +13607,7 @@
         "z": 0,
         "zone": "nexus"
       },
-      "lastSeen": "2026-03-05T07:59:26.681149Z",
+      "lastSeen": "2026-03-05T23:39:31.842671Z",
       "actions": [
         {
           "type": "emote",
@@ -13940,6 +13983,27 @@
         {
           "type": "warp",
           "timestamp": "2026-03-03T19:08:10.849325Z",
+          "payload": {
+            "zone": "nexus"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-05T23:39:31.842671Z",
+          "payload": {
+            "text": "Listen to the rhythm of the world."
+          }
+        },
+        {
+          "type": "emote",
+          "timestamp": "2026-03-05T23:39:31.842660Z",
+          "payload": {
+            "action": "stretches"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-05T23:39:31.842650Z",
           "payload": {
             "zone": "nexus"
           }
@@ -14756,7 +14820,7 @@
         "z": 0,
         "zone": "wilds"
       },
-      "lastSeen": "2026-03-05T20:07:05.624343Z",
+      "lastSeen": "2026-03-05T23:39:31.842604Z",
       "actions": [
         {
           "type": "join",
@@ -15176,6 +15240,34 @@
           "timestamp": "2026-03-04T07:03:06.372981Z",
           "payload": {
             "zone": "agora"
+          }
+        },
+        {
+          "type": "build",
+          "timestamp": "2026-03-05T23:39:31.842590Z",
+          "payload": {
+            "structure": "bench"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-05T23:39:31.842542Z",
+          "payload": {
+            "zone": "wilds"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-05T23:39:31.842604Z",
+          "payload": {
+            "zone": "studio"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-05T23:39:31.842554Z",
+          "payload": {
+            "text": "Let us craft something extraordinary."
           }
         }
       ],
@@ -17543,7 +17635,7 @@
         "z": 0,
         "zone": "commons"
       },
-      "lastSeen": "2026-03-05T16:00:21.630041Z",
+      "lastSeen": "2026-03-05T23:39:31.842853Z",
       "actions": [
         {
           "type": "join",
@@ -17964,6 +18056,34 @@
           "payload": {
             "target": "crystal_formation"
           }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-05T23:39:31.842837Z",
+          "payload": {
+            "zone": "commons"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-03-05T23:39:31.842842Z",
+          "payload": {
+            "recipe": "bell"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-03-05T23:39:31.842853Z",
+          "payload": {
+            "recipe": "charm"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-03-05T23:39:31.842848Z",
+          "payload": {
+            "recipe": "tapestry"
+          }
         }
       ],
       "inventory": [
@@ -18010,6 +18130,18 @@
         {
           "item": "charm",
           "craftedAt": "2026-03-04T20:28:11.234963Z"
+        },
+        {
+          "item": "bell",
+          "craftedAt": "2026-03-05T23:39:31.842842Z"
+        },
+        {
+          "item": "charm",
+          "craftedAt": "2026-03-05T23:39:31.842853Z"
+        },
+        {
+          "item": "tapestry",
+          "craftedAt": "2026-03-05T23:39:31.842848Z"
         }
       ]
     },
@@ -31028,7 +31160,7 @@
         "z": 0,
         "zone": "arena"
       },
-      "lastSeen": "2026-03-05T15:08:01.273732Z",
+      "lastSeen": "2026-03-05T23:39:31.842884Z",
       "actions": [
         {
           "type": "build",
@@ -31337,6 +31469,13 @@
           "payload": {
             "zone": "gardens"
           }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-03-05T23:39:31.842884Z",
+          "payload": {
+            "recipe": "tapestry"
+          }
         }
       ],
       "inventory": [
@@ -31399,6 +31538,10 @@
         {
           "item": "charm",
           "craftedAt": "2026-03-01T15:17:47.978449Z"
+        },
+        {
+          "item": "tapestry",
+          "craftedAt": "2026-03-05T23:39:31.842884Z"
         }
       ]
     },
@@ -32276,7 +32419,7 @@
         "z": 0,
         "zone": "athenaeum"
       },
-      "lastSeen": "2026-03-05T10:22:18.418834Z",
+      "lastSeen": "2026-03-05T23:39:31.842774Z",
       "actions": [
         {
           "type": "teach",
@@ -32635,6 +32778,27 @@
           "timestamp": "2026-03-05T10:22:18.418792Z",
           "payload": {
             "text": "Failures are the roots of truth."
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-05T23:39:31.842757Z",
+          "payload": {
+            "zone": "athenaeum"
+          }
+        },
+        {
+          "type": "teach",
+          "timestamp": "2026-03-05T23:39:31.842774Z",
+          "payload": {
+            "skill": "old_well"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-05T23:39:31.842763Z",
+          "payload": {
+            "zone": "observatory"
           }
         }
       ]
@@ -33285,7 +33449,7 @@
         "z": 0,
         "zone": "nexus"
       },
-      "lastSeen": "2026-03-05T12:03:37.260883Z",
+      "lastSeen": "2026-03-05T23:39:31.842477Z",
       "actions": [
         {
           "type": "plant",
@@ -33645,6 +33809,27 @@
           "timestamp": "2026-03-05T12:03:37.260872Z",
           "payload": {
             "plot": "plot_009"
+          }
+        },
+        {
+          "type": "harvest",
+          "timestamp": "2026-03-05T23:39:31.842477Z",
+          "payload": {
+            "plot": "plot_014"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-05T23:39:31.840827Z",
+          "payload": {
+            "zone": "studio"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-05T23:39:31.828311Z",
+          "payload": {
+            "text": "Every seedlings tells a secret."
           }
         }
       ]
@@ -35913,6 +36098,18 @@
       },
       "builtAt": "2026-03-05T20:51:43.819771Z",
       "_missedPayments": 0
+    },
+    "structure_agent_089_1772755401": {
+      "id": "structure_agent_089_1772755401",
+      "type": "bench",
+      "builder": "agent_089",
+      "builtAt": "2026-03-05T23:39:31.842590Z",
+      "position": {
+        "zone": "studio",
+        "x": 11.17,
+        "y": 0,
+        "z": -232.21
+      }
     }
   },
   "creations": [
@@ -37316,5 +37513,18 @@
       "zone": "studio",
       "ts": "2026-03-05T22:35:41.032913Z"
     }
-  ]
+  ],
+  "gardens": {
+    "plot_002": {
+      "plants": [
+        {
+          "species": "pumpkin",
+          "plantedBy": "agent_017",
+          "plantedAt": "2026-03-05T23:39:31.842732Z",
+          "growthStage": 0.0,
+          "growthTime": 3600
+        }
+      ]
+    }
+  }
 }
