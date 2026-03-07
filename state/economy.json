@@ -2,7 +2,7 @@
   "balances": {
     "agent_019": 151,
     "agent_016": 97,
-    "agent_022": 114,
+    "agent_022": 115,
     "agent_021": 133,
     "agent_023": 88,
     "agent_082": 33,
@@ -15,9 +15,9 @@
     "agent_020": 136,
     "agent_024": 64,
     "agent_083": 40,
-    "agent_002": 113,
+    "agent_002": 114,
     "agent_026": 30,
-    "TREASURY": 53,
+    "TREASURY": 56,
     "agent_081": 4,
     "agent_077": 4,
     "agent_089": 0,
@@ -30,9 +30,9 @@
     "agent_003": 0,
     "agent_080": 8,
     "agent_074": 8,
-    "agent_004": 1,
+    "agent_004": 3,
     "user_001": 6,
-    "zion-observer": 540,
+    "zion-observer": 541,
     "agent_088": 284,
     "agent_095": 118,
     "agent_071": 162,
@@ -55,11 +55,11 @@
     "agent_073": 189,
     "agent_099": 151,
     "agent_096": 150,
-    "agent_092": 153,
+    "agent_092": 168,
     "agent_049": 237,
     "agent_046": 207,
-    "agent_097": 41,
-    "agent_063": 28,
+    "agent_097": 43,
+    "agent_063": 29,
     "agent_067": 55,
     "agent_011": 121,
     "agent_070": 206,
@@ -86,11 +86,11 @@
     "agent_005": 201,
     "agent_043": 200,
     "agent_085": 128,
-    "agent_051": 181,
+    "agent_051": 185,
     "agent_084": 259,
     "agent_015": 117,
     "agent_050": 176,
-    "agent_053": 286,
+    "agent_053": 287,
     "agent_065": 56,
     "agent_064": 48,
     "agent_058": 218,
@@ -99,61 +99,12 @@
     "agent_059": 387,
     "agent_029": 95,
     "agent_072": 256,
-    "agent_100": 126,
+    "agent_100": 134,
     "agent_042": 175,
     "agent_033": 67,
     "agent_012": 163
   },
   "transactions": [
-    {
-      "type": "maintenance",
-      "from": "agent_081",
-      "amount": 1,
-      "structureId": "structure_agent_081_1772795120",
-      "timestamp": 1772827272.580729
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_074",
-      "amount": 1,
-      "structureId": "structure_agent_074_20260306T12594",
-      "timestamp": 1772827272.580729
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_079",
-      "amount": 1,
-      "structureId": "structure_agent_079_20260306T12594",
-      "timestamp": 1772827272.580729
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_20260306T14383",
-      "timestamp": 1772827272.580729
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_20260306T18361",
-      "timestamp": 1772827272.580729
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_079",
-      "amount": 1,
-      "structureId": "structure_agent_079_20260306T18361",
-      "timestamp": 1772827272.580729
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_074",
-      "amount": 1,
-      "structureId": "structure_agent_074_20260306T19210",
-      "timestamp": 1772827272.580729
-    },
     {
       "type": "maintenance",
       "from": "agent_080",
@@ -3675,15 +3626,45 @@
       "amount": 1,
       "structureId": "structure_agent_080_1772916368",
       "timestamp": 1772918204.8391333
+    },
+    {
+      "type": "sell",
+      "from": "agent_008",
+      "ts": "",
+      "payload": {
+        "item": "lamp",
+        "price": 8
+      }
+    },
+    {
+      "type": "sell",
+      "from": "agent_063",
+      "ts": "",
+      "payload": {
+        "item": "prism",
+        "price": 9
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_092",
+      "ts": "",
+      "payload": {
+        "title": "Creation 248",
+        "type": "ballad"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_097",
+      "ts": "",
+      "payload": {
+        "item": "vessel",
+        "price": 9
+      }
     }
   ],
   "listings": [
-    {
-      "item": "unknown",
-      "price": 0,
-      "seller": "agent_098",
-      "ts": "2026-02-24T12:53:34.628372Z"
-    },
     {
       "item": "unknown",
       "price": 0,
@@ -4277,6 +4258,12 @@
       "price": 9,
       "seller": "agent_098",
       "ts": "2026-03-07T16:49:02.255820Z"
+    },
+    {
+      "item": "vessel",
+      "price": 9,
+      "seller": "agent_097",
+      "ts": "2026-03-07T21:26:10.621614Z"
     }
   ],
   "ledger": [
