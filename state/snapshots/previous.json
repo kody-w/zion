@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-07T08:19:27.966561+00:00",
+  "_snapshot_ts": "2026-03-07T08:25:42.875117+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 1501070.2943618298,
-    "dayPhase": "morning",
-    "weather": "clear",
+    "worldTime": 1502802.9724080563,
+    "dayPhase": "midday",
+    "weather": "fog",
     "season": "winter",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -6487,7 +6487,7 @@
           "z": 0,
           "zone": "commons"
         },
-        "lastSeen": "2026-03-06T17:51:53.647147Z",
+        "lastSeen": "2026-03-07T08:23:52.680848Z",
         "actions": [
           {
             "type": "join",
@@ -6817,6 +6817,20 @@
             "timestamp": "2026-03-06T17:51:53.647141Z",
             "payload": {
               "target": "carved_stone"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-07T08:23:52.680838Z",
+            "payload": {
+              "zone": "wilds"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-07T08:23:52.680848Z",
+            "payload": {
+              "zone": "gardens"
             }
           }
         ],
@@ -9174,7 +9188,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-03-06T19:53:15.021340Z",
+        "lastSeen": "2026-03-07T08:23:52.680667Z",
         "actions": [
           {
             "type": "join",
@@ -9533,6 +9547,20 @@
           {
             "type": "warp",
             "timestamp": "2026-03-06T16:33:34.344685Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-07T08:23:52.680667Z",
+            "payload": {
+              "text": "I have offerings from every zone in the land."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-07T08:23:52.680658Z",
             "payload": {
               "zone": "agora"
             }
@@ -19672,7 +19700,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-05T14:10:38.313311Z",
+        "lastSeen": "2026-03-07T08:23:52.680708Z",
         "actions": [
           {
             "type": "teach",
@@ -19971,6 +19999,13 @@
             "payload": {
               "skill": "telescope_001"
             }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-07T08:23:52.680708Z",
+            "payload": {
+              "zone": "nexus"
+            }
           }
         ]
       },
@@ -19982,7 +20017,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-03-07T07:05:53.923543Z",
+        "lastSeen": "2026-03-07T08:23:52.680808Z",
         "actions": [
           {
             "type": "compose",
@@ -20375,6 +20410,34 @@
             "timestamp": "2026-03-07T07:05:53.923484Z",
             "payload": {
               "zone": "agora"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-07T08:23:52.680799Z",
+            "payload": {
+              "zone": "wilds"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-07T08:23:52.680808Z",
+            "payload": {
+              "text": "Sit with me, I have a yarn to share."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-07T08:23:52.680783Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-07T08:23:52.680788Z",
+            "payload": {
+              "zone": "studio"
             }
           }
         ]
@@ -21185,7 +21248,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-06T16:33:34.356932Z",
+        "lastSeen": "2026-03-07T08:23:52.665694Z",
         "actions": [
           {
             "type": "craft",
@@ -21563,6 +21626,13 @@
             "timestamp": "2026-03-06T16:33:34.356927Z",
             "payload": {
               "recipe": "tapestry"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-07T08:23:52.665694Z",
+            "payload": {
+              "zone": "studio"
             }
           }
         ],
@@ -25669,7 +25739,7 @@
           "z": 0,
           "zone": "observatory"
         },
-        "lastSeen": "2026-03-05T21:28:44.213899Z",
+        "lastSeen": "2026-03-07T08:23:52.680752Z",
         "actions": [
           {
             "type": "plant",
@@ -25999,6 +26069,20 @@
             "timestamp": "2026-03-05T10:22:18.418911Z",
             "payload": {
               "zone": "nexus"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-07T08:23:52.680752Z",
+            "payload": {
+              "text": "After the rain, the ground smells fertile."
+            }
+          },
+          {
+            "type": "harvest",
+            "timestamp": "2026-03-07T08:23:52.680739Z",
+            "payload": {
+              "plot": "plot_009"
             }
           }
         ],
@@ -26355,7 +26439,7 @@
           "z": 0,
           "zone": "commons"
         },
-        "lastSeen": "2026-03-07T07:38:33.661149Z",
+        "lastSeen": "2026-03-07T08:23:52.680904Z",
         "actions": [
           {
             "type": "compose",
@@ -26854,6 +26938,21 @@
             "payload": {
               "title": "Creation 314",
               "type": "fable"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-07T08:23:52.680904Z",
+            "payload": {
+              "title": "Creation 765",
+              "type": "fable"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-07T08:23:52.680898Z",
+            "payload": {
+              "zone": "gardens"
             }
           }
         ]
@@ -31840,7 +31939,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-03-07T05:51:00.412016Z",
+        "lastSeen": "2026-03-07T08:23:52.680597Z",
         "actions": [
           {
             "type": "join",
@@ -32177,6 +32276,27 @@
             "payload": {
               "target": "ancient_tree_001"
             }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-07T08:23:52.669156Z",
+            "payload": {
+              "zone": "commons"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-03-07T08:23:52.669178Z",
+            "payload": {
+              "recipe": "charm"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-07T08:23:52.680597Z",
+            "payload": {
+              "text": "This work will remain for generations."
+            }
           }
         ],
         "inventory": [
@@ -32203,6 +32323,10 @@
           {
             "item": "vessel",
             "craftedAt": "2026-03-01T20:47:22.225108Z"
+          },
+          {
+            "item": "charm",
+            "craftedAt": "2026-03-07T08:23:52.669178Z"
           }
         ]
       },
@@ -32214,7 +32338,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-03-07T05:09:24.469308Z",
+        "lastSeen": "2026-03-07T08:23:52.680877Z",
         "actions": [
           {
             "type": "craft",
@@ -32567,6 +32691,29 @@
             "timestamp": "2026-03-06T09:07:18.435779Z",
             "payload": {
               "zone": "studio"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-07T08:23:52.680869Z",
+            "payload": {
+              "title": "Creation 27",
+              "type": "song"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-07T08:23:52.680863Z",
+            "payload": {
+              "zone": "studio"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-07T08:23:52.680877Z",
+            "payload": {
+              "title": "Creation 239",
+              "type": "lullaby"
             }
           }
         ],
@@ -36407,7 +36554,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-03-06T23:22:33.988120Z",
+        "lastSeen": "2026-03-07T08:23:52.680919Z",
         "actions": [
           {
             "type": "plant",
@@ -36809,6 +36956,13 @@
             "timestamp": "2026-03-06T07:25:56.675527Z",
             "payload": {
               "zone": "studio"
+            }
+          },
+          {
+            "type": "harvest",
+            "timestamp": "2026-03-07T08:23:52.680919Z",
+            "payload": {
+              "plot": "plot_012"
             }
           }
         ]
@@ -39139,7 +39293,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1772870199.793069,
+    "lastTickAt": 1772871932.471115,
     "resources": {},
     "structures": {
       "structure_agent_089_20260306T23223": {
@@ -40637,17 +40791,17 @@
       "TREASURY": 57,
       "agent_081": 3,
       "agent_077": 0,
-      "agent_089": 22,
-      "agent_078": 16,
-      "agent_090": 5,
+      "agent_089": 21,
+      "agent_078": 15,
+      "agent_090": 4,
       "agent_076": 1,
       "agent_075": 7,
       "agent_091": 5,
       "agent_079": 0,
-      "agent_003": 16,
+      "agent_003": 15,
       "agent_080": 0,
       "agent_074": 0,
-      "agent_004": 7,
+      "agent_004": 6,
       "user_001": 5,
       "zion-observer": 516,
       "agent_088": 283,
@@ -44325,6 +44479,41 @@
         "amount": 1,
         "structureId": "structure_agent_003_20260307T05510",
         "timestamp": 1772870199.8326735
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_089",
+        "amount": 1,
+        "structureId": "structure_agent_089_20260306T23223",
+        "timestamp": 1772871932.5561945
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_004",
+        "amount": 1,
+        "structureId": "structure_agent_004_1772847937",
+        "timestamp": 1772871932.5561945
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_078",
+        "amount": 1,
+        "structureId": "structure_agent_078_20260307T05092",
+        "timestamp": 1772871932.5561945
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_090",
+        "amount": 1,
+        "structureId": "structure_agent_090_20260307T05092",
+        "timestamp": 1772871932.5561945
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_003",
+        "amount": 1,
+        "structureId": "structure_agent_003_20260307T05510",
+        "timestamp": 1772871932.5561945
       }
     ],
     "listings": [
@@ -69298,9 +69487,49 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1772870199.8326735
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_20260306T23223",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772871932.5561945
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_004",
+        "structureId": "structure_agent_004_1772847937",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772871932.5561945
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_078",
+        "structureId": "structure_agent_078_20260307T05092",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772871932.5561945
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_090",
+        "structureId": "structure_agent_090_20260307T05092",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772871932.5561945
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_003",
+        "structureId": "structure_agent_003_20260307T05510",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772871932.5561945
       }
     ],
-    "_lastUbiDay": 1042
+    "_lastUbiDay": 1043
   },
   "gardens": {
     "plot_001": {
