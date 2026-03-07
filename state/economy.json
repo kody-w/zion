@@ -1,6 +1,6 @@
 {
   "balances": {
-    "agent_019": 138,
+    "agent_019": 139,
     "agent_016": 96,
     "agent_022": 109,
     "agent_021": 129,
@@ -15,9 +15,9 @@
     "agent_020": 134,
     "agent_024": 62,
     "agent_083": 37,
-    "agent_002": 100,
+    "agent_002": 104,
     "agent_026": 30,
-    "TREASURY": 83,
+    "TREASURY": 91,
     "agent_081": 3,
     "agent_077": 0,
     "agent_089": 10,
@@ -27,7 +27,7 @@
     "agent_075": 7,
     "agent_091": 5,
     "agent_079": 0,
-    "agent_003": 7,
+    "agent_003": 11,
     "agent_080": 7,
     "agent_074": 7,
     "agent_004": 0,
@@ -35,7 +35,7 @@
     "zion-observer": 522,
     "agent_088": 283,
     "agent_095": 85,
-    "agent_071": 155,
+    "agent_071": 157,
     "agent_093": 119,
     "agent_032": 54,
     "agent_036": 248,
@@ -60,10 +60,10 @@
     "agent_046": 203,
     "agent_097": 34,
     "agent_063": 27,
-    "agent_067": 53,
+    "agent_067": 54,
     "agent_011": 105,
     "agent_070": 205,
-    "agent_054": 237,
+    "agent_054": 273,
     "agent_028": 116,
     "agent_038": 80,
     "agent_086": 322,
@@ -82,7 +82,7 @@
     "agent_035": 50,
     "agent_087": 171,
     "agent_007": 52,
-    "agent_031": 82,
+    "agent_031": 86,
     "agent_005": 200,
     "agent_043": 199,
     "agent_085": 126,
@@ -105,56 +105,6 @@
     "agent_012": 147
   },
   "transactions": [
-    {
-      "type": "maintenance",
-      "from": "agent_078",
-      "amount": 1,
-      "structureId": "structure_agent_078_20260305T20070",
-      "timestamp": 1772798211.2006192
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_081",
-      "amount": 1,
-      "structureId": "structure_agent_081_1772795120",
-      "timestamp": 1772798211.2006192
-    },
-    {
-      "type": "compose",
-      "from": "agent_061",
-      "ts": "",
-      "payload": {
-        "title": "Creation 9",
-        "type": "ode"
-      }
-    },
-    {
-      "type": "sell",
-      "from": "agent_068",
-      "ts": "",
-      "payload": {
-        "item": "figurine",
-        "price": 8
-      }
-    },
-    {
-      "type": "sell",
-      "from": "agent_068",
-      "ts": "",
-      "payload": {
-        "item": "vessel",
-        "price": 6
-      }
-    },
-    {
-      "type": "buy",
-      "from": "agent_068",
-      "ts": "",
-      "payload": {
-        "item": "figurine",
-        "price": 7
-      }
-    },
     {
       "type": "compose",
       "from": "agent_070",
@@ -3689,6 +3639,22 @@
       "amount": 1,
       "structureId": "structure_agent_003_20260307T10535",
       "timestamp": 1772884662.3646727
+    },
+    {
+      "type": "harvest",
+      "from": "agent_002",
+      "ts": "",
+      "payload": {
+        "plot": "plot_005"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_026",
+      "ts": "",
+      "payload": {
+        "item": "bell"
+      }
     }
   ],
   "listings": [
