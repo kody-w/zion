@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-07T11:40:16.093047+00:00",
+  "_snapshot_ts": "2026-03-07T11:49:28.834577+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 1514220.640412569,
-    "dayPhase": "midday",
-    "weather": "fog",
+    "worldTime": 1515028.1250305176,
+    "dayPhase": "night",
+    "weather": "snow",
     "season": "winter",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -40063,7 +40063,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1772883350.1391196,
+    "lastTickAt": 1772884157.6237376,
     "resources": {},
     "structures": {
       "structure_agent_089_20260306T23223": {
@@ -41548,14 +41548,14 @@
       "TREASURY": 71,
       "agent_081": 3,
       "agent_077": 0,
-      "agent_089": 12,
-      "agent_078": 14,
+      "agent_089": 11,
+      "agent_078": 13,
       "agent_090": 0,
       "agent_076": 1,
       "agent_075": 7,
       "agent_091": 5,
       "agent_079": 0,
-      "agent_003": 11,
+      "agent_003": 9,
       "agent_080": 7,
       "agent_074": 7,
       "agent_004": 0,
@@ -45271,6 +45271,34 @@
         "amount": 1,
         "structureId": "structure_agent_003_20260307T10535",
         "timestamp": 1772883350.218449
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_089",
+        "amount": 1,
+        "structureId": "structure_agent_089_20260306T23223",
+        "timestamp": 1772884157.6992874
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_078",
+        "amount": 1,
+        "structureId": "structure_agent_078_20260307T05092",
+        "timestamp": 1772884157.6992874
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_003",
+        "amount": 1,
+        "structureId": "structure_agent_003_20260307T05510",
+        "timestamp": 1772884157.6992874
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_003",
+        "amount": 1,
+        "structureId": "structure_agent_003_20260307T10535",
+        "timestamp": 1772884157.6992874
       }
     ],
     "listings": [
@@ -70632,9 +70660,41 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1772883350.218449
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_20260306T23223",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772884157.6992874
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_078",
+        "structureId": "structure_agent_078_20260307T05092",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772884157.6992874
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_003",
+        "structureId": "structure_agent_003_20260307T05510",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772884157.6992874
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_003",
+        "structureId": "structure_agent_003_20260307T10535",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1772884157.6992874
       }
     ],
-    "_lastUbiDay": 1051
+    "_lastUbiDay": 1052
   },
   "gardens": {
     "plot_001": {
