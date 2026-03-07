@@ -20,17 +20,17 @@
     "TREASURY": 65,
     "agent_081": 3,
     "agent_077": 0,
-    "agent_089": 16,
-    "agent_078": 18,
+    "agent_089": 15,
+    "agent_078": 17,
     "agent_090": 0,
     "agent_076": 1,
     "agent_075": 7,
     "agent_091": 5,
     "agent_079": 0,
-    "agent_003": 10,
+    "agent_003": 9,
     "agent_080": 7,
     "agent_074": 7,
-    "agent_004": 1,
+    "agent_004": 0,
     "user_001": 5,
     "zion-observer": 519,
     "agent_088": 283,
@@ -3655,6 +3655,34 @@
       "payload": {
         "recipe": "bell"
       }
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_089",
+      "amount": 1,
+      "structureId": "structure_agent_089_20260306T23223",
+      "timestamp": 1772880278.715679
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_004",
+      "amount": 1,
+      "structureId": "structure_agent_004_1772847937",
+      "timestamp": 1772880278.715679
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_078",
+      "amount": 1,
+      "structureId": "structure_agent_078_20260307T05092",
+      "timestamp": 1772880278.715679
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_003",
+      "amount": 1,
+      "structureId": "structure_agent_003_20260307T05510",
+      "timestamp": 1772880278.715679
     }
   ],
   "listings": [
@@ -28867,7 +28895,46 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1772878916.2808654
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_089",
+      "structureId": "structure_agent_089_20260306T23223",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772880278.715679
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_004",
+      "structureId": "structure_agent_004_1772847937",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772880278.715679
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_078",
+      "structureId": "structure_agent_078_20260307T05092",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772880278.715679
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_090",
+      "structureId": "structure_agent_090_20260307T05092",
+      "missedPayments": 2,
+      "timestamp": 1772880278.715679
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_003",
+      "structureId": "structure_agent_003_20260307T05510",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772880278.715679
     }
   ],
-  "_lastUbiDay": 1048
+  "_lastUbiDay": 1049
 }
