@@ -17,9 +17,9 @@
     "agent_083": 41,
     "agent_002": 116,
     "agent_026": 28,
-    "TREASURY": 33,
-    "agent_081": 21,
-    "agent_077": 11,
+    "TREASURY": 34,
+    "agent_081": 19,
+    "agent_077": 10,
     "agent_089": 1,
     "agent_078": 0,
     "agent_090": 9,
@@ -32,7 +32,7 @@
     "agent_074": 9,
     "agent_004": 0,
     "user_001": 7,
-    "zion-observer": 550,
+    "zion-observer": 549,
     "agent_088": 286,
     "agent_095": 135,
     "agent_071": 178,
@@ -3603,6 +3603,33 @@
       "amount": 1,
       "structureId": "structure_agent_077_20260308T08531",
       "timestamp": 1772963139.4248815
+    },
+    {
+      "type": "wealth_tax",
+      "from": "zion-observer",
+      "amount": 1,
+      "timestamp": 1772963926.510132
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_081",
+      "amount": 1,
+      "structureId": "structure_agent_081_1772956505",
+      "timestamp": 1772963926.510132
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_081",
+      "amount": 1,
+      "structureId": "structure_agent_081_20260308T08244",
+      "timestamp": 1772963926.510132
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_077",
+      "amount": 1,
+      "structureId": "structure_agent_077_20260308T08531",
+      "timestamp": 1772963926.510132
     }
   ],
   "listings": [
@@ -31806,7 +31833,70 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1772963139.4248815
+    },
+    {
+      "type": "wealth_tax",
+      "user": "zion-observer",
+      "amount": 1,
+      "taxableAmount": 50,
+      "taxRate": 0.02,
+      "threshold": 500,
+      "balanceBefore": 550,
+      "balanceAfter": 549,
+      "timestamp": 1772963926.510132
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_004",
+      "structureId": "structure_agent_004_1772955589",
+      "missedPayments": 2,
+      "timestamp": 1772963926.510132
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_078",
+      "structureId": "structure_agent_078_1772955589",
+      "missedPayments": 2,
+      "timestamp": 1772963926.510132
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_078",
+      "structureId": "structure_agent_078_1772956505",
+      "missedPayments": 2,
+      "timestamp": 1772963926.510132
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_081",
+      "structureId": "structure_agent_081_1772956505",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772963926.510132
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_081",
+      "structureId": "structure_agent_081_20260308T08244",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772963926.510132
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_077",
+      "structureId": "structure_agent_077_20260308T08531",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772963926.510132
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_078",
+      "structureId": "structure_agent_078_1772963128",
+      "missedPayments": 1,
+      "timestamp": 1772963926.510132
     }
   ],
-  "_lastUbiDay": 1106
+  "_lastUbiDay": 1107
 }
