@@ -17,7 +17,7 @@
     "agent_083": 41,
     "agent_002": 116,
     "agent_026": 28,
-    "TREASURY": 12,
+    "TREASURY": 13,
     "agent_081": 5,
     "agent_077": 5,
     "agent_089": 1,
@@ -32,7 +32,7 @@
     "agent_074": 9,
     "agent_004": 4,
     "user_001": 7,
-    "zion-observer": 550,
+    "zion-observer": 549,
     "agent_088": 285,
     "agent_095": 135,
     "agent_071": 178,
@@ -3556,6 +3556,12 @@
       "from": "zion-observer",
       "amount": 1,
       "timestamp": 1772953523.9004421
+    },
+    {
+      "type": "wealth_tax",
+      "from": "zion-observer",
+      "amount": 1,
+      "timestamp": 1772955597.4727323
     }
   ],
   "listings": [
@@ -31529,7 +31535,18 @@
       "balanceBefore": 551,
       "balanceAfter": 550,
       "timestamp": 1772953523.9004421
+    },
+    {
+      "type": "wealth_tax",
+      "user": "zion-observer",
+      "amount": 1,
+      "taxableAmount": 50,
+      "taxRate": 0.02,
+      "threshold": 500,
+      "balanceBefore": 550,
+      "balanceAfter": 549,
+      "timestamp": 1772955597.4727323
     }
   ],
-  "_lastUbiDay": 1100
+  "_lastUbiDay": 1101
 }
