@@ -2,105 +2,105 @@
   "day_phases": {
     "night": [
       0,
-      420
+      360
     ],
     "dawn": [
-      420,
-      453
+      360,
+      540
     ],
     "morning": [
-      453,
-      775
+      540,
+      780
     ],
     "midday": [
-      775,
-      900
+      780,
+      780
     ],
     "afternoon": [
-      900,
-      1118
+      780,
+      1140
     ],
     "dusk": [
-      1118,
+      1140,
       1200
     ]
   },
-  "season_cycle_days": 101,
+  "season_cycle_days": 92,
   "weather_base_weights": {
     "spring": {
-      "clear": 16,
-      "cloudy": 16,
-      "rain": 21,
-      "storm": 11,
-      "snow": 17,
-      "fog": 19
+      "clear": 15,
+      "cloudy": 18,
+      "rain": 16,
+      "storm": 20,
+      "snow": 16,
+      "fog": 14
     },
     "summer": {
+      "clear": 15,
+      "cloudy": 22,
+      "rain": 16,
+      "storm": 19,
+      "snow": 14,
+      "fog": 15
+    },
+    "autumn": {
       "clear": 18,
-      "cloudy": 17,
+      "cloudy": 15,
       "rain": 20,
-      "storm": 13,
+      "storm": 16,
       "snow": 19,
       "fog": 12
     },
-    "autumn": {
-      "clear": 17,
-      "cloudy": 19,
-      "rain": 20,
-      "storm": 12,
-      "snow": 15,
-      "fog": 18
-    },
     "winter": {
-      "clear": 14,
-      "cloudy": 20,
-      "rain": 15,
-      "storm": 19,
-      "snow": 15,
-      "fog": 17
+      "clear": 16,
+      "cloudy": 21,
+      "rain": 17,
+      "storm": 13,
+      "snow": 19,
+      "fog": 14
     }
   },
-  "weather_variance": 7,
+  "weather_variance": 8,
   "zones": {
     "nexus": {
-      "name": "the Nexus",
-      "role": "safe zone, trading allowed"
+      "name": "the Crossroads",
+      "role": "central meeting ground"
     },
     "gardens": {
-      "name": "the Gardens",
+      "name": "the Fields",
       "role": "gardening and growth"
     },
     "athenaeum": {
-      "name": "the Hall of Knowledge",
-      "role": "knowledge and study"
+      "name": "the Lyceum",
+      "role": "wisdom and mentorship"
     },
     "studio": {
       "name": "the Atelier",
-      "role": "creative expression"
+      "role": "crafting and composition"
     },
     "wilds": {
-      "name": "the Frontier",
-      "role": "adventure and risk"
+      "name": "the Expanse",
+      "role": "exploration and discovery"
     },
     "agora": {
-      "name": "the Forum",
-      "role": "economic activity"
+      "name": "the Agora",
+      "role": "trade and negotiation"
     },
     "commons": {
-      "name": "the Square",
-      "role": "social gathering"
+      "name": "the Gathering",
+      "role": "community and fellowship"
     },
     "arena": {
-      "name": "the Proving Grounds",
-      "role": "honorable challenge"
+      "name": "the Field of Honor",
+      "role": "friendly competition"
     },
     "observatory": {
-      "name": "the Watchtower",
-      "role": "contemplation and wonder"
+      "name": "the Spire",
+      "role": "watching the cosmos"
     }
   },
-  "pet_hunger_decay": 0.7,
-  "pet_mood_decay": 0.64,
-  "pet_hunger_threshold_content": 59,
-  "plant_default_growth_time": 4208
+  "pet_hunger_decay": 1.13,
+  "pet_mood_decay": 0.49,
+  "pet_hunger_threshold_content": 46,
+  "plant_default_growth_time": 2902
 }
