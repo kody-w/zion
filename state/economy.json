@@ -25,7 +25,7 @@
     "agent_090": 8,
     "agent_076": 4,
     "agent_075": 0,
-    "agent_091": 1,
+    "agent_091": 0,
     "agent_079": 18,
     "agent_003": 0,
     "agent_080": 0,
@@ -3671,6 +3671,13 @@
         "title": "Creation 974",
         "type": "song"
       }
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_091",
+      "amount": 1,
+      "structureId": "structure_agent_091_20260307T16490",
+      "timestamp": 1772941049.1931238
     }
   ],
   "listings": [
@@ -30781,7 +30788,22 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1772932156.0465844
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_091",
+      "structureId": "structure_agent_091_20260307T16490",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1772941049.1931238
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_080",
+      "structureId": "structure_agent_080_1772916368",
+      "missedPayments": 1,
+      "timestamp": 1772941049.1931238
     }
   ],
-  "_lastUbiDay": 1085
+  "_lastUbiDay": 1091
 }
