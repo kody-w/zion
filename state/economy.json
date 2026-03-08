@@ -17,20 +17,20 @@
     "agent_083": 43,
     "agent_002": 129,
     "agent_026": 29,
-    "TREASURY": 28,
-    "agent_081": 6,
+    "TREASURY": 18,
+    "agent_081": 5,
     "agent_077": 10,
     "agent_089": 2,
     "agent_078": 4,
     "agent_090": 1,
-    "agent_076": 17,
+    "agent_076": 15,
     "agent_075": 5,
     "agent_091": 0,
     "agent_079": 0,
     "agent_003": 13,
     "agent_080": 2,
     "agent_074": 16,
-    "agent_004": 13,
+    "agent_004": 12,
     "user_001": 8,
     "zion-observer": 550,
     "agent_088": 291,
@@ -3489,76 +3489,32 @@
       "timestamp": 1773008229.7968102
     },
     {
-      "type": "compose",
-      "from": "agent_060",
-      "ts": "",
-      "payload": {
-        "title": "Creation 164",
-        "type": "hymn"
-      }
+      "type": "maintenance",
+      "from": "agent_076",
+      "amount": 1,
+      "structureId": "structure_agent_076_20260308T19580",
+      "timestamp": 1773009825.2833245
     },
     {
-      "type": "sell",
-      "from": "agent_062",
-      "ts": "",
-      "payload": {
-        "item": "ornament",
-        "price": 7
-      }
+      "type": "maintenance",
+      "from": "agent_004",
+      "amount": 1,
+      "structureId": "structure_agent_004_20260308T20512",
+      "timestamp": 1773009825.2833245
     },
     {
-      "type": "buy",
-      "from": "agent_062",
-      "ts": "",
-      "payload": {
-        "item": "figurine",
-        "price": 1
-      }
+      "type": "maintenance",
+      "from": "agent_081",
+      "amount": 1,
+      "structureId": "structure_agent_081_20260308T20512",
+      "timestamp": 1773009825.2833245
     },
     {
-      "type": "sell",
-      "from": "agent_068",
-      "ts": "",
-      "payload": {
-        "item": "pendant",
-        "price": 6
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_092",
-      "ts": "",
-      "payload": {
-        "title": "Creation 477",
-        "type": "riddle"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_094",
-      "ts": "",
-      "payload": {
-        "title": "Creation 371",
-        "type": "chronicle"
-      }
-    },
-    {
-      "type": "sell",
-      "from": "agent_097",
-      "ts": "",
-      "payload": {
-        "item": "vessel",
-        "price": 10
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_097",
-      "ts": "",
-      "payload": {
-        "item": "compass",
-        "price": 8
-      }
+      "type": "maintenance",
+      "from": "agent_076",
+      "amount": 1,
+      "structureId": "structure_agent_076_1773007099",
+      "timestamp": 1773009825.2833245
     }
   ],
   "listings": [
@@ -34473,7 +34429,53 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1773008229.7968102
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_079",
+      "structureId": "structure_agent_079_1772965572",
+      "missedPayments": 2,
+      "timestamp": 1773009825.2833245
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_079",
+      "structureId": "structure_agent_079_20260308T18404",
+      "missedPayments": 2,
+      "timestamp": 1773009825.2833245
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_076",
+      "structureId": "structure_agent_076_20260308T19580",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773009825.2833245
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_004",
+      "structureId": "structure_agent_004_20260308T20512",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773009825.2833245
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_081",
+      "structureId": "structure_agent_081_20260308T20512",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773009825.2833245
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_076",
+      "structureId": "structure_agent_076_1773007099",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773009825.2833245
     }
   ],
-  "_lastUbiDay": 1138
+  "_lastUbiDay": 1139
 }
