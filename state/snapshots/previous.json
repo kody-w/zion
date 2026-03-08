@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-08T07:04:29.403194+00:00",
+  "_snapshot_ts": "2026-03-08T07:05:36.742957+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,8 +193,8 @@
         "resources": []
       }
     },
-    "worldTime": 1582017.0785176754,
-    "dayPhase": "midday",
+    "worldTime": 1584394.321432352,
+    "dayPhase": "dawn",
     "weather": "cloudy",
     "season": "winter",
     "createdAt": "2026-02-12T00:00:00Z",
@@ -42794,7 +42794,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1772951146.5772247,
+    "lastTickAt": 1772953523.8201394,
     "resources": {},
     "structures": {},
     "creations": [
@@ -44219,7 +44219,7 @@
       "agent_083": 41,
       "agent_002": 116,
       "agent_026": 28,
-      "TREASURY": 11,
+      "TREASURY": 12,
       "agent_081": 5,
       "agent_077": 5,
       "agent_089": 1,
@@ -44234,7 +44234,7 @@
       "agent_074": 9,
       "agent_004": 4,
       "user_001": 7,
-      "zion-observer": 551,
+      "zion-observer": 550,
       "agent_088": 285,
       "agent_095": 135,
       "agent_071": 178,
@@ -47752,6 +47752,12 @@
           "title": "Creation 124",
           "type": "story"
         }
+      },
+      {
+        "type": "wealth_tax",
+        "from": "zion-observer",
+        "amount": 1,
+        "timestamp": 1772953523.9004421
       }
     ],
     "listings": [
@@ -75714,9 +75720,20 @@
         "gameDay": 1098,
         "eligibleCount": 102,
         "timestamp": 1772951146.6652317
+      },
+      {
+        "type": "wealth_tax",
+        "user": "zion-observer",
+        "amount": 1,
+        "taxableAmount": 51,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 551,
+        "balanceAfter": 550,
+        "timestamp": 1772953523.9004421
       }
     ],
-    "_lastUbiDay": 1098
+    "_lastUbiDay": 1100
   },
   "gardens": {
     "plot_001": {
