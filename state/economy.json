@@ -6,7 +6,7 @@
     "agent_021": 158,
     "agent_023": 120,
     "agent_082": 41,
-    "agent_027": 39,
+    "agent_027": 38,
     "agent_025": 47,
     "agent_017": 188,
     "agent_018": 126,
@@ -17,15 +17,15 @@
     "agent_083": 44,
     "agent_002": 140,
     "agent_026": 30,
-    "TREASURY": 47,
+    "TREASURY": 54,
     "agent_081": 0,
     "agent_077": 11,
     "agent_089": 3,
     "agent_078": 5,
     "agent_090": 10,
-    "agent_076": 1,
+    "agent_076": 2,
     "agent_075": 0,
-    "agent_091": 2,
+    "agent_091": 20,
     "agent_079": 1,
     "agent_003": 14,
     "agent_080": 3,
@@ -39,7 +39,7 @@
     "agent_093": 191,
     "agent_032": 60,
     "agent_036": 272,
-    "agent_014": 55,
+    "agent_014": 59,
     "agent_060": 289,
     "agent_069": 54,
     "agent_045": 205,
@@ -64,13 +64,13 @@
     "agent_011": 127,
     "agent_070": 266,
     "agent_054": 297,
-    "agent_028": 137,
+    "agent_028": 149,
     "agent_038": 129,
     "agent_086": 347,
     "agent_039": 205,
     "agent_055": 194,
     "agent_062": 60,
-    "agent_044": 203,
+    "agent_044": 222,
     "agent_006": 203,
     "agent_066": 56,
     "agent_061": 149,
@@ -82,11 +82,11 @@
     "agent_035": 62,
     "agent_087": 214,
     "agent_007": 56,
-    "agent_031": 140,
+    "agent_031": 146,
     "agent_005": 251,
-    "agent_043": 274,
+    "agent_043": 283,
     "agent_085": 165,
-    "agent_051": 238,
+    "agent_051": 239,
     "agent_084": 304,
     "agent_015": 152,
     "agent_050": 180,
@@ -105,65 +105,6 @@
     "agent_012": 198
   },
   "transactions": [
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260308T12452",
-      "timestamp": 1772992802.8162825
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_1772978545",
-      "timestamp": 1772992802.8162825
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_090",
-      "amount": 1,
-      "structureId": "structure_agent_090_20260308T14543",
-      "timestamp": 1772992802.8162825
-    },
-    {
-      "type": "plant",
-      "from": "agent_019",
-      "ts": "",
-      "payload": {
-        "species": "berry",
-        "plot": "plot_006"
-      }
-    },
-    {
-      "type": "gift",
-      "from": "agent_082",
-      "ts": "",
-      "payload": {
-        "item": "charm"
-      }
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_079",
-      "amount": 1,
-      "structureId": "structure_agent_079_1772965572",
-      "timestamp": 1772995303.0298176
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_076",
-      "amount": 1,
-      "structureId": "structure_agent_076_20260308T12452",
-      "timestamp": 1772995303.0298176
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_090",
-      "amount": 1,
-      "structureId": "structure_agent_090_20260308T12452",
-      "timestamp": 1772995303.0298176
-    },
     {
       "type": "maintenance",
       "from": "agent_090",
@@ -3524,6 +3465,54 @@
       "amount": 1,
       "structureId": "structure_agent_074_20260309T08585",
       "timestamp": 1773093621.398649
+    },
+    {
+      "type": "gift",
+      "from": "agent_027",
+      "ts": "",
+      "payload": {
+        "item": "tapestry"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_043",
+      "ts": "",
+      "payload": {
+        "recipe": "trinket"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_044",
+      "ts": "",
+      "payload": {
+        "recipe": "scroll"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_044",
+      "ts": "",
+      "payload": {
+        "recipe": "bell"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_091",
+      "ts": "",
+      "payload": {
+        "structure": "plinth"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_091",
+      "ts": "",
+      "payload": {
+        "structure": "garden bed"
+      }
     }
   ],
   "listings": [
