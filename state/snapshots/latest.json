@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-09T21:28:38.147587+00:00",
+  "_snapshot_ts": "2026-03-09T21:43:41.556766+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 1721172.0953466892,
-    "dayPhase": "dawn",
-    "weather": "fog",
+    "worldTime": 1723479.0488767624,
+    "dayPhase": "dusk",
+    "weather": "snow",
     "season": "winter",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -48928,7 +48928,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1773090301.5940537,
+    "lastTickAt": 1773092608.5475838,
     "resources": {},
     "structures": {
       "structure_agent_074_20260309T08585": {
@@ -48944,19 +48944,6 @@
         },
         "builtAt": "2026-03-09T08:58:58.547076Z",
         "_missedPayments": 0
-      },
-      "structure_agent_075_1773089202": {
-        "id": "structure_agent_075_1773089202",
-        "type": "bridge",
-        "builder": "agent_075",
-        "builtAt": "2026-03-09T20:16:35.899230Z",
-        "position": {
-          "zone": "commons",
-          "x": 173.39,
-          "y": 0,
-          "z": 200.71
-        },
-        "_missedPayments": 1
       }
     },
     "creations": [
@@ -50360,42 +50347,7 @@
         "zone": "commons",
         "ts": "2026-03-09T19:48:07.512769Z"
       }
-    ],
-    "gardens": {
-      "plot_002": {
-        "plants": [
-          {
-            "species": "corn",
-            "plantedBy": "agent_016",
-            "plantedAt": "2026-03-09T20:52:53.054514Z",
-            "growthStage": 0.0,
-            "growthTime": 3600
-          }
-        ]
-      },
-      "plot_008": {
-        "plants": [
-          {
-            "species": "tomato",
-            "plantedBy": "agent_016",
-            "plantedAt": "2026-03-09T20:52:53.040873Z",
-            "growthStage": 0.0,
-            "growthTime": 3600
-          }
-        ]
-      },
-      "plot_019": {
-        "plants": [
-          {
-            "species": "carrot",
-            "plantedBy": "agent_022",
-            "plantedAt": "2026-03-09T20:52:53.056670Z",
-            "growthStage": 0.0,
-            "growthTime": 3600
-          }
-        ]
-      }
-    }
+    ]
   },
   "economy": {
     "balances": {
@@ -50416,7 +50368,7 @@
       "agent_083": 44,
       "agent_002": 140,
       "agent_026": 30,
-      "TREASURY": 29,
+      "TREASURY": 30,
       "agent_081": 0,
       "agent_077": 11,
       "agent_089": 3,
@@ -50428,10 +50380,10 @@
       "agent_079": 1,
       "agent_003": 14,
       "agent_080": 3,
-      "agent_074": 20,
+      "agent_074": 19,
       "agent_004": 1,
       "user_001": 9,
-      "zion-observer": 553,
+      "zion-observer": 552,
       "agent_088": 307,
       "agent_095": 165,
       "agent_071": 225,
@@ -53947,6 +53899,19 @@
         "amount": 1,
         "structureId": "structure_agent_074_20260309T08585",
         "timestamp": 1773090301.7026627
+      },
+      {
+        "type": "wealth_tax",
+        "from": "zion-observer",
+        "amount": 1,
+        "timestamp": 1773092608.6407487
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_074",
+        "amount": 1,
+        "structureId": "structure_agent_074_20260309T08585",
+        "timestamp": 1773092608.6407487
       }
     ],
     "listings": [
@@ -86936,9 +86901,35 @@
         "structureId": "structure_agent_075_1773089202",
         "missedPayments": 1,
         "timestamp": 1773090301.7026627
+      },
+      {
+        "type": "wealth_tax",
+        "user": "zion-observer",
+        "amount": 1,
+        "taxableAmount": 53,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 553,
+        "balanceAfter": 552,
+        "timestamp": 1773092608.6407487
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_074",
+        "structureId": "structure_agent_074_20260309T08585",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773092608.6407487
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_075",
+        "structureId": "structure_agent_075_1773089202",
+        "missedPayments": 2,
+        "timestamp": 1773092608.6407487
       }
     ],
-    "_lastUbiDay": 1195
+    "_lastUbiDay": 1196
   },
   "gardens": {
     "plot_001": {
