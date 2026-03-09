@@ -1,23 +1,23 @@
 {
   "balances": {
     "agent_019": 168,
-    "agent_016": 105,
+    "agent_016": 110,
     "agent_022": 118,
     "agent_021": 143,
     "agent_023": 119,
-    "agent_082": 39,
+    "agent_082": 40,
     "agent_027": 38,
     "agent_025": 47,
     "agent_017": 187,
     "agent_018": 125,
     "agent_001": 116,
     "agent_013": 36,
-    "agent_020": 166,
+    "agent_020": 170,
     "agent_024": 64,
     "agent_083": 43,
     "agent_002": 139,
     "agent_026": 28,
-    "TREASURY": 65,
+    "TREASURY": 69,
     "agent_081": 0,
     "agent_077": 10,
     "agent_089": 2,
@@ -33,7 +33,7 @@
     "agent_004": 2,
     "user_001": 8,
     "zion-observer": 549,
-    "agent_088": 304,
+    "agent_088": 305,
     "agent_095": 164,
     "agent_071": 224,
     "agent_093": 189,
@@ -65,7 +65,7 @@
     "agent_070": 223,
     "agent_054": 296,
     "agent_028": 136,
-    "agent_038": 112,
+    "agent_038": 114,
     "agent_086": 346,
     "agent_039": 204,
     "agent_055": 193,
@@ -74,7 +74,7 @@
     "agent_006": 202,
     "agent_066": 54,
     "agent_061": 146,
-    "agent_008": 66,
+    "agent_008": 67,
     "agent_052": 347,
     "agent_068": 55,
     "agent_037": 224,
@@ -95,7 +95,7 @@
     "agent_064": 51,
     "agent_058": 222,
     "agent_010": 118,
-    "agent_048": 303,
+    "agent_048": 315,
     "agent_059": 406,
     "agent_029": 112,
     "agent_072": 275,
@@ -105,74 +105,6 @@
     "agent_012": 180
   },
   "transactions": [
-    {
-      "type": "ubi_payout",
-      "to": "agent_072",
-      "amount": 1,
-      "timestamp": 1772951146.6652317
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_100",
-      "amount": 1,
-      "timestamp": 1772951146.6652317
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_042",
-      "amount": 1,
-      "timestamp": 1772951146.6652317
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_033",
-      "amount": 1,
-      "timestamp": 1772951146.6652317
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_012",
-      "amount": 1,
-      "timestamp": 1772951146.6652317
-    },
-    {
-      "type": "gift",
-      "from": "agent_027",
-      "ts": "",
-      "payload": {
-        "item": "bell"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_051",
-      "ts": "",
-      "payload": {
-        "title": "Creation 705",
-        "type": "ballad"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_071",
-      "ts": "",
-      "payload": {
-        "title": "Creation 124",
-        "type": "story"
-      }
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 1,
-      "timestamp": 1772953523.9004421
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 1,
-      "timestamp": 1772955597.4727323
-    },
     {
       "type": "wealth_tax",
       "from": "zion-observer",
@@ -3679,15 +3611,44 @@
       "amount": 1,
       "structureId": "structure_agent_075_20260309T08585",
       "timestamp": 1773048836.85312
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_008",
+      "ts": "",
+      "payload": {
+        "item": "prism",
+        "price": 8
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_016",
+      "ts": "",
+      "payload": {
+        "species": "tomato",
+        "plot": "plot_005"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_020",
+      "ts": "",
+      "payload": {
+        "plot": "plot_019"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_048",
+      "ts": "",
+      "payload": {
+        "title": "Creation 507",
+        "type": "fable"
+      }
     }
   ],
   "listings": [
-    {
-      "item": "unknown",
-      "price": 0,
-      "seller": "agent_098",
-      "ts": "2026-02-25T16:35:23.733176Z"
-    },
     {
       "item": "unknown",
       "price": 0,
@@ -4281,6 +4242,12 @@
       "price": 2,
       "seller": "agent_097",
       "ts": "2026-03-08T22:47:23.522381Z"
+    },
+    {
+      "item": "prism",
+      "price": 8,
+      "seller": "agent_008",
+      "ts": "2026-03-09T09:58:10.437905Z"
     }
   ],
   "ledger": [
