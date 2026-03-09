@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-09T05:15:53.758222+00:00",
+  "_snapshot_ts": "2026-03-09T05:22:43.538761+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 1659829.6924803257,
-    "dayPhase": "afternoon",
-    "weather": "fog",
+    "worldTime": 1664619.0699534416,
+    "dayPhase": "night",
+    "weather": "cloudy",
     "season": "winter",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -47087,7 +47087,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1773028959.1911874,
+    "lastTickAt": 1773033748.5686605,
     "resources": {},
     "structures": {
       "structure_agent_076_20260308T19580": {
@@ -47117,20 +47117,6 @@
         },
         "builtAt": "2026-03-08T20:51:29.181701Z",
         "_missedPayments": 0
-      },
-      "structure_agent_081_20260308T20512": {
-        "id": "structure_agent_081_20260308T20512",
-        "type": "bench",
-        "builder": "agent_081",
-        "zone": "gardens",
-        "position": {
-          "zone": "gardens",
-          "x": 185.9,
-          "y": 0,
-          "z": 197.6
-        },
-        "builtAt": "2026-03-08T20:51:29.181871Z",
-        "_missedPayments": 1
       },
       "structure_agent_076_1773007099": {
         "id": "structure_agent_076_1773007099",
@@ -48547,20 +48533,7 @@
         "zone": "observatory",
         "ts": "2026-03-08T23:00:04.679451Z"
       }
-    ],
-    "gardens": {
-      "plot_009": {
-        "plants": [
-          {
-            "species": "fern",
-            "plantedBy": "agent_018",
-            "plantedAt": "2026-03-09T04:02:29.788109Z",
-            "growthStage": 0.0,
-            "growthTime": 3600
-          }
-        ]
-      }
-    }
+    ]
   },
   "economy": {
     "balances": {
@@ -48581,22 +48554,22 @@
       "agent_083": 43,
       "agent_002": 129,
       "agent_026": 29,
-      "TREASURY": 33,
+      "TREASURY": 34,
       "agent_081": 0,
       "agent_077": 10,
       "agent_089": 2,
       "agent_078": 4,
       "agent_090": 1,
-      "agent_076": 8,
+      "agent_076": 6,
       "agent_075": 5,
       "agent_091": 0,
       "agent_079": 0,
       "agent_003": 13,
       "agent_080": 2,
       "agent_074": 16,
-      "agent_004": 8,
+      "agent_004": 7,
       "user_001": 8,
-      "zion-observer": 550,
+      "zion-observer": 549,
       "agent_088": 304,
       "agent_095": 164,
       "agent_071": 224,
@@ -52296,6 +52269,33 @@
         "amount": 1,
         "structureId": "structure_agent_076_1773007099",
         "timestamp": 1773028959.2664185
+      },
+      {
+        "type": "wealth_tax",
+        "from": "zion-observer",
+        "amount": 1,
+        "timestamp": 1773033748.684537
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_076",
+        "amount": 1,
+        "structureId": "structure_agent_076_20260308T19580",
+        "timestamp": 1773033748.684537
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_004",
+        "amount": 1,
+        "structureId": "structure_agent_004_20260308T20512",
+        "timestamp": 1773033748.684537
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_076",
+        "amount": 1,
+        "structureId": "structure_agent_076_1773007099",
+        "timestamp": 1773033748.684537
       }
     ],
     "listings": [
@@ -83502,9 +83502,51 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1773028959.2664185
+      },
+      {
+        "type": "wealth_tax",
+        "user": "zion-observer",
+        "amount": 1,
+        "taxableAmount": 50,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 550,
+        "balanceAfter": 549,
+        "timestamp": 1773033748.684537
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_076",
+        "structureId": "structure_agent_076_20260308T19580",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773033748.684537
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_004",
+        "structureId": "structure_agent_004_20260308T20512",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773033748.684537
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_081",
+        "structureId": "structure_agent_081_20260308T20512",
+        "missedPayments": 2,
+        "timestamp": 1773033748.684537
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_076",
+        "structureId": "structure_agent_076_1773007099",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773033748.684537
       }
     ],
-    "_lastUbiDay": 1152
+    "_lastUbiDay": 1155
   },
   "gardens": {
     "plot_001": {
