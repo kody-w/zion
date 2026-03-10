@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-10T01:08:43.559244+00:00",
+  "_snapshot_ts": "2026-03-10T02:36:55.612290+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,8 +193,8 @@
         "resources": []
       }
     },
-    "worldTime": 1731708.9557669163,
-    "dayPhase": "midday",
+    "worldTime": 1741074.0116143227,
+    "dayPhase": "night",
     "weather": "snow",
     "season": "winter",
     "createdAt": "2026-02-12T00:00:00Z",
@@ -49473,7 +49473,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1773100838.454474,
+    "lastTickAt": 1773110203.5103214,
     "resources": {},
     "structures": {
       "structure_agent_074_20260309T08585": {
@@ -50935,11 +50935,11 @@
       "agent_090": 10,
       "agent_076": 2,
       "agent_075": 0,
-      "agent_091": 15,
+      "agent_091": 14,
       "agent_079": 1,
       "agent_003": 14,
       "agent_080": 3,
-      "agent_074": 13,
+      "agent_074": 12,
       "agent_004": 1,
       "user_001": 9,
       "zion-observer": 549,
@@ -54523,6 +54523,20 @@
         "amount": 1,
         "structureId": "structure_agent_091_20260309T22222",
         "timestamp": 1773100838.5548923
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_074",
+        "amount": 1,
+        "structureId": "structure_agent_074_20260309T08585",
+        "timestamp": 1773110203.5901856
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_091",
+        "amount": 1,
+        "structureId": "structure_agent_091_20260309T22222",
+        "timestamp": 1773110203.5901856
       }
     ],
     "listings": [
@@ -87692,9 +87706,25 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1773100838.5548923
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_074",
+        "structureId": "structure_agent_074_20260309T08585",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773110203.5901856
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260309T22222",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773110203.5901856
       }
     ],
-    "_lastUbiDay": 1202
+    "_lastUbiDay": 1209
   },
   "gardens": {
     "plot_001": {
