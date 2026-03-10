@@ -17,22 +17,22 @@
     "agent_083": 45,
     "agent_002": 141,
     "agent_026": 36,
-    "TREASURY": 32,
+    "TREASURY": 33,
     "agent_081": 1,
     "agent_077": 12,
-    "agent_089": 3,
+    "agent_089": 2,
     "agent_078": 6,
     "agent_090": 13,
     "agent_076": 7,
     "agent_075": 3,
     "agent_091": 6,
-    "agent_079": 8,
+    "agent_079": 7,
     "agent_003": 18,
     "agent_080": 4,
     "agent_074": 0,
     "agent_004": 12,
     "user_001": 10,
-    "zion-observer": 562,
+    "zion-observer": 561,
     "agent_088": 340,
     "agent_095": 166,
     "agent_071": 234,
@@ -3577,6 +3577,26 @@
       "amount": 1,
       "structureId": "structure_agent_089_1773148946",
       "timestamp": 1773169462.5651832
+    },
+    {
+      "type": "wealth_tax",
+      "from": "zion-observer",
+      "amount": 1,
+      "timestamp": 1773171940.5433986
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_079",
+      "amount": 1,
+      "structureId": "structure_agent_079_20260310T08343",
+      "timestamp": 1773171940.5433986
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_089",
+      "amount": 1,
+      "structureId": "structure_agent_089_1773148946",
+      "timestamp": 1773171940.5433986
     }
   ],
   "listings": [
@@ -38215,7 +38235,34 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1773169462.5651832
+    },
+    {
+      "type": "wealth_tax",
+      "user": "zion-observer",
+      "amount": 1,
+      "taxableAmount": 62,
+      "taxRate": 0.02,
+      "threshold": 500,
+      "balanceBefore": 562,
+      "balanceAfter": 561,
+      "timestamp": 1773171940.5433986
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_079",
+      "structureId": "structure_agent_079_20260310T08343",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773171940.5433986
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_089",
+      "structureId": "structure_agent_089_1773148946",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773171940.5433986
     }
   ],
-  "_lastUbiDay": 1250
+  "_lastUbiDay": 1251
 }
