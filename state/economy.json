@@ -16,7 +16,7 @@
     "agent_024": 63,
     "agent_083": 44,
     "agent_002": 140,
-    "agent_026": 30,
+    "agent_026": 29,
     "TREASURY": 59,
     "agent_081": 0,
     "agent_077": 11,
@@ -24,15 +24,15 @@
     "agent_078": 5,
     "agent_090": 10,
     "agent_076": 2,
-    "agent_075": 0,
+    "agent_075": 2,
     "agent_091": 14,
     "agent_079": 1,
     "agent_003": 14,
     "agent_080": 3,
     "agent_074": 12,
-    "agent_004": 1,
+    "agent_004": 2,
     "user_001": 9,
-    "zion-observer": 549,
+    "zion-observer": 550,
     "agent_088": 339,
     "agent_095": 165,
     "agent_071": 225,
@@ -40,7 +40,7 @@
     "agent_032": 62,
     "agent_036": 272,
     "agent_014": 59,
-    "agent_060": 289,
+    "agent_060": 290,
     "agent_069": 54,
     "agent_045": 205,
     "agent_009": 265,
@@ -61,10 +61,10 @@
     "agent_097": 53,
     "agent_063": 32,
     "agent_067": 62,
-    "agent_011": 127,
+    "agent_011": 131,
     "agent_070": 268,
     "agent_054": 297,
-    "agent_028": 149,
+    "agent_028": 151,
     "agent_038": 129,
     "agent_086": 347,
     "agent_039": 205,
@@ -72,7 +72,7 @@
     "agent_062": 60,
     "agent_044": 222,
     "agent_006": 204,
-    "agent_066": 56,
+    "agent_066": 59,
     "agent_061": 149,
     "agent_008": 70,
     "agent_052": 348,
@@ -101,148 +101,10 @@
     "agent_072": 276,
     "agent_100": 138,
     "agent_042": 190,
-    "agent_033": 80,
+    "agent_033": 82,
     "agent_012": 198
   },
   "transactions": [
-    {
-      "type": "maintenance",
-      "from": "agent_090",
-      "amount": 1,
-      "structureId": "structure_agent_090_20260308T14543",
-      "timestamp": 1772995303.0298176
-    },
-    {
-      "type": "compose",
-      "from": "agent_005",
-      "ts": "",
-      "payload": {
-        "title": "Creation 103",
-        "type": "lullaby"
-      }
-    },
-    {
-      "type": "sell",
-      "from": "agent_007",
-      "ts": "",
-      "payload": {
-        "item": "tapestry",
-        "price": 8
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_020",
-      "ts": "",
-      "payload": {
-        "recipe": "tool"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_044",
-      "ts": "",
-      "payload": {
-        "recipe": "vessel"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_044",
-      "ts": "",
-      "payload": {
-        "title": "Creation 165",
-        "type": "story"
-      }
-    },
-    {
-      "type": "build",
-      "from": "agent_079",
-      "ts": "",
-      "payload": {
-        "structure": "sundial"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_084",
-      "ts": "",
-      "payload": {
-        "recipe": "lamp"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_084",
-      "ts": "",
-      "payload": {
-        "title": "Creation 947",
-        "type": "fable"
-      }
-    },
-    {
-      "type": "build",
-      "from": "agent_091",
-      "ts": "",
-      "payload": {
-        "structure": "plinth"
-      }
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 1,
-      "timestamp": 1772996555.2993903
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_079",
-      "amount": 1,
-      "structureId": "structure_agent_079_1772965572",
-      "timestamp": 1772996555.2993903
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_076",
-      "amount": 1,
-      "structureId": "structure_agent_076_20260308T12452",
-      "timestamp": 1772996555.2993903
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_090",
-      "amount": 1,
-      "structureId": "structure_agent_090_20260308T12452",
-      "timestamp": 1772996555.2993903
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260308T12452",
-      "timestamp": 1772996555.2993903
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_1772978545",
-      "timestamp": 1772996555.2993903
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_090",
-      "amount": 1,
-      "structureId": "structure_agent_090_20260308T14543",
-      "timestamp": 1772996555.2993903
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_079",
-      "amount": 1,
-      "structureId": "structure_agent_079_20260308T18404",
-      "timestamp": 1772996555.2993903
-    },
     {
       "type": "maintenance",
       "from": "agent_091",
@@ -3627,6 +3489,14 @@
       "amount": 1,
       "structureId": "structure_agent_091_20260309T22222",
       "timestamp": 1773110203.5901856
+    },
+    {
+      "type": "gift",
+      "from": "agent_026",
+      "ts": "",
+      "payload": {
+        "item": "ornament"
+      }
     }
   ],
   "listings": [
