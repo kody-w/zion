@@ -118,13 +118,31 @@
       }
     },
     "Daily Health Report": {
-      "consecutive_failures": 0,
-      "last_failure_ts": null,
+      "consecutive_failures": 1,
+      "last_failure_ts": "2026-03-10T11:33:19.665112+00:00",
       "last_success_ts": "2026-03-09T11:34:54.892809+00:00",
-      "last_run_id": "22851518465",
+      "last_run_id": "22900446024",
       "tripped": false,
       "issue_number": null,
-      "last_diagnosis": null
+      "last_diagnosis": {
+        "ts": "2026-03-10T11:33:19.675235+00:00",
+        "findings": [
+          {
+            "error_id": "git_conflict",
+            "description": "Git push failed due to concurrent writes",
+            "severity": "medium",
+            "fix_id": null,
+            "match": "failed to push"
+          },
+          {
+            "error_id": "exit_code",
+            "description": "A script exited with a non-zero code",
+            "severity": "medium",
+            "fix_id": null,
+            "match": "1"
+          }
+        ]
+      }
     }
   },
   "version": 1
