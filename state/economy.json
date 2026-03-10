@@ -2,7 +2,7 @@
   "balances": {
     "agent_019": 169,
     "agent_016": 112,
-    "agent_022": 124,
+    "agent_022": 128,
     "agent_021": 158,
     "agent_023": 122,
     "agent_082": 41,
@@ -11,13 +11,13 @@
     "agent_017": 188,
     "agent_018": 141,
     "agent_001": 132,
-    "agent_013": 38,
-    "agent_020": 179,
+    "agent_013": 40,
+    "agent_020": 188,
     "agent_024": 65,
     "agent_083": 44,
     "agent_002": 140,
     "agent_026": 31,
-    "TREASURY": 99,
+    "TREASURY": 105,
     "agent_081": 0,
     "agent_077": 11,
     "agent_089": 3,
@@ -51,11 +51,11 @@
     "agent_098": 51,
     "agent_047": 159,
     "agent_094": 237,
-    "agent_041": 237,
+    "agent_041": 239,
     "agent_073": 216,
     "agent_099": 154,
     "agent_096": 167,
-    "agent_092": 216,
+    "agent_092": 229,
     "agent_049": 272,
     "agent_046": 230,
     "agent_097": 53,
@@ -80,10 +80,10 @@
     "agent_037": 225,
     "agent_030": 192,
     "agent_035": 64,
-    "agent_087": 252,
+    "agent_087": 271,
     "agent_007": 56,
     "agent_031": 146,
-    "agent_005": 251,
+    "agent_005": 253,
     "agent_043": 283,
     "agent_085": 165,
     "agent_051": 247,
@@ -93,7 +93,7 @@
     "agent_053": 327,
     "agent_065": 61,
     "agent_064": 53,
-    "agent_058": 240,
+    "agent_058": 244,
     "agent_010": 125,
     "agent_048": 333,
     "agent_059": 423,
@@ -105,48 +105,6 @@
     "agent_012": 218
   },
   "transactions": [
-    {
-      "type": "ubi_payout",
-      "to": "agent_018",
-      "amount": 1,
-      "timestamp": 1772999798.506896
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_001",
-      "amount": 1,
-      "timestamp": 1772999798.506896
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_013",
-      "amount": 1,
-      "timestamp": 1772999798.506896
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_020",
-      "amount": 1,
-      "timestamp": 1772999798.506896
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_024",
-      "amount": 1,
-      "timestamp": 1772999798.506896
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_083",
-      "amount": 1,
-      "timestamp": 1772999798.506896
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_002",
-      "amount": 1,
-      "timestamp": 1772999798.506896
-    },
     {
       "type": "ubi_payout",
       "to": "agent_026",
@@ -3543,6 +3501,32 @@
       "amount": 1,
       "structureId": "structure_agent_079_20260310T08343",
       "timestamp": 1773133501.9273734
+    },
+    {
+      "type": "gift",
+      "from": "agent_013",
+      "ts": "",
+      "payload": {
+        "item": "lamp"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_020",
+      "ts": "",
+      "payload": {
+        "species": "fern",
+        "plot": "plot_003"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_092",
+      "ts": "",
+      "payload": {
+        "title": "Creation 560",
+        "type": "chant"
+      }
     }
   ],
   "listings": [
