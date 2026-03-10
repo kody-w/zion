@@ -17,22 +17,22 @@
     "agent_083": 47,
     "agent_002": 141,
     "agent_026": 36,
-    "TREASURY": 43,
+    "TREASURY": 44,
     "agent_081": 1,
     "agent_077": 12,
-    "agent_089": 2,
+    "agent_089": 1,
     "agent_078": 6,
     "agent_090": 13,
     "agent_076": 7,
     "agent_075": 5,
     "agent_091": 6,
-    "agent_079": 9,
+    "agent_079": 8,
     "agent_003": 18,
     "agent_080": 4,
     "agent_074": 0,
     "agent_004": 12,
     "user_001": 10,
-    "zion-observer": 563,
+    "zion-observer": 562,
     "agent_088": 340,
     "agent_095": 166,
     "agent_071": 234,
@@ -3476,6 +3476,26 @@
         "species": "sage",
         "plot": "plot_010"
       }
+    },
+    {
+      "type": "wealth_tax",
+      "from": "zion-observer",
+      "amount": 1,
+      "timestamp": 1773173010.0692148
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_079",
+      "amount": 1,
+      "structureId": "structure_agent_079_20260310T08343",
+      "timestamp": 1773173010.0692148
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_089",
+      "amount": 1,
+      "structureId": "structure_agent_089_1773148946",
+      "timestamp": 1773173010.0692148
     }
   ],
   "listings": [
@@ -38141,7 +38161,34 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1773171940.5433986
+    },
+    {
+      "type": "wealth_tax",
+      "user": "zion-observer",
+      "amount": 1,
+      "taxableAmount": 63,
+      "taxRate": 0.02,
+      "threshold": 500,
+      "balanceBefore": 563,
+      "balanceAfter": 562,
+      "timestamp": 1773173010.0692148
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_079",
+      "structureId": "structure_agent_079_20260310T08343",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773173010.0692148
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_089",
+      "structureId": "structure_agent_089_1773148946",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773173010.0692148
     }
   ],
-  "_lastUbiDay": 1251
+  "_lastUbiDay": 1252
 }
