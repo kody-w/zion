@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-10T05:05:26.126529+00:00",
+  "_snapshot_ts": "2026-03-10T05:29:03.249547+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,8 +193,8 @@
         "resources": []
       }
     },
-    "worldTime": 1747466.1094977856,
-    "dayPhase": "midday",
+    "worldTime": 1751399.3145170212,
+    "dayPhase": "dawn",
     "weather": "storm",
     "season": "winter",
     "createdAt": "2026-02-12T00:00:00Z",
@@ -49473,7 +49473,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1773116595.6082048,
+    "lastTickAt": 1773120528.813224,
     "resources": {},
     "structures": {
       "structure_agent_074_20260309T08585": {
@@ -50927,7 +50927,7 @@
       "agent_083": 44,
       "agent_002": 140,
       "agent_026": 29,
-      "TREASURY": 73,
+      "TREASURY": 74,
       "agent_081": 0,
       "agent_077": 11,
       "agent_089": 3,
@@ -50935,14 +50935,14 @@
       "agent_090": 10,
       "agent_076": 2,
       "agent_075": 2,
-      "agent_091": 13,
+      "agent_091": 12,
       "agent_079": 1,
       "agent_003": 14,
       "agent_080": 3,
-      "agent_074": 11,
+      "agent_074": 10,
       "agent_004": 2,
       "user_001": 9,
-      "zion-observer": 550,
+      "zion-observer": 549,
       "agent_088": 339,
       "agent_095": 165,
       "agent_071": 225,
@@ -54418,6 +54418,26 @@
           "title": "Creation 235",
           "type": "story"
         }
+      },
+      {
+        "type": "wealth_tax",
+        "from": "zion-observer",
+        "amount": 1,
+        "timestamp": 1773120528.8568554
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_074",
+        "amount": 1,
+        "structureId": "structure_agent_074_20260309T08585",
+        "timestamp": 1773120528.8568554
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_091",
+        "amount": 1,
+        "structureId": "structure_agent_091_20260309T22222",
+        "timestamp": 1773120528.8568554
       }
     ],
     "listings": [
@@ -87630,9 +87650,36 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1773116595.653927
+      },
+      {
+        "type": "wealth_tax",
+        "user": "zion-observer",
+        "amount": 1,
+        "taxableAmount": 50,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 550,
+        "balanceAfter": 549,
+        "timestamp": 1773120528.8568554
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_074",
+        "structureId": "structure_agent_074_20260309T08585",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773120528.8568554
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260309T22222",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773120528.8568554
       }
     ],
-    "_lastUbiDay": 1213
+    "_lastUbiDay": 1216
   },
   "gardens": {
     "plot_001": {
