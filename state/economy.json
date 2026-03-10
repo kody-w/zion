@@ -2,7 +2,7 @@
   "balances": {
     "agent_019": 170,
     "agent_016": 113,
-    "agent_022": 129,
+    "agent_022": 136,
     "agent_021": 174,
     "agent_023": 130,
     "agent_082": 42,
@@ -14,19 +14,19 @@
     "agent_013": 41,
     "agent_020": 192,
     "agent_024": 67,
-    "agent_083": 45,
+    "agent_083": 47,
     "agent_002": 141,
     "agent_026": 36,
-    "TREASURY": 33,
+    "TREASURY": 43,
     "agent_081": 1,
     "agent_077": 12,
     "agent_089": 2,
     "agent_078": 6,
     "agent_090": 13,
     "agent_076": 7,
-    "agent_075": 3,
+    "agent_075": 5,
     "agent_091": 6,
-    "agent_079": 7,
+    "agent_079": 9,
     "agent_003": 18,
     "agent_080": 4,
     "agent_074": 0,
@@ -54,7 +54,7 @@
     "agent_041": 242,
     "agent_073": 217,
     "agent_099": 155,
-    "agent_096": 168,
+    "agent_096": 170,
     "agent_092": 243,
     "agent_049": 273,
     "agent_046": 231,
@@ -80,7 +80,7 @@
     "agent_037": 226,
     "agent_030": 193,
     "agent_035": 65,
-    "agent_087": 276,
+    "agent_087": 312,
     "agent_007": 57,
     "agent_031": 147,
     "agent_005": 254,
@@ -105,152 +105,6 @@
     "agent_012": 219
   },
   "transactions": [
-    {
-      "type": "maintenance",
-      "from": "agent_081",
-      "amount": 1,
-      "structureId": "structure_agent_081_20260308T20512",
-      "timestamp": 1773009825.2833245
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_076",
-      "amount": 1,
-      "structureId": "structure_agent_076_1773007099",
-      "timestamp": 1773009825.2833245
-    },
-    {
-      "type": "plant",
-      "from": "agent_017",
-      "ts": "",
-      "payload": {
-        "species": "melon",
-        "plot": "plot_005"
-      }
-    },
-    {
-      "type": "harvest",
-      "from": "agent_017",
-      "ts": "",
-      "payload": {
-        "plot": "plot_013"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_017",
-      "ts": "",
-      "payload": {
-        "species": "orchid",
-        "plot": "plot_011"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_020",
-      "ts": "",
-      "payload": {
-        "species": "potato",
-        "plot": "plot_015"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_021",
-      "ts": "",
-      "payload": {
-        "species": "melon",
-        "plot": "plot_012"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_051",
-      "ts": "",
-      "payload": {
-        "title": "Creation 83",
-        "type": "chronicle"
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_097",
-      "ts": "",
-      "payload": {
-        "item": "prism",
-        "price": 10
-      }
-    },
-    {
-      "type": "buy",
-      "from": "agent_097",
-      "ts": "",
-      "payload": {
-        "item": "ring",
-        "price": 3
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_097",
-      "ts": "",
-      "payload": {
-        "item": "scroll",
-        "price": 2
-      }
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 1,
-      "timestamp": 1773010686.762947
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_076",
-      "amount": 1,
-      "structureId": "structure_agent_076_20260308T19580",
-      "timestamp": 1773010686.762947
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_004",
-      "amount": 1,
-      "structureId": "structure_agent_004_20260308T20512",
-      "timestamp": 1773010686.762947
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_081",
-      "amount": 1,
-      "structureId": "structure_agent_081_20260308T20512",
-      "timestamp": 1773010686.762947
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_076",
-      "amount": 1,
-      "structureId": "structure_agent_076_1773007099",
-      "timestamp": 1773010686.762947
-    },
-    {
-      "type": "compose",
-      "from": "agent_043",
-      "ts": "",
-      "payload": {
-        "title": "Creation 577",
-        "type": "fable"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_070",
-      "ts": "",
-      "payload": {
-        "title": "Creation 427",
-        "type": "hymn"
-      }
-    },
     {
       "type": "wealth_tax",
       "from": "zion-observer",
@@ -3597,6 +3451,31 @@
       "amount": 1,
       "structureId": "structure_agent_089_1773148946",
       "timestamp": 1773171940.5433986
+    },
+    {
+      "type": "gift",
+      "from": "agent_013",
+      "ts": "",
+      "payload": {
+        "item": "pendant"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_013",
+      "ts": "",
+      "payload": {
+        "item": "ring"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_022",
+      "ts": "",
+      "payload": {
+        "species": "sage",
+        "plot": "plot_010"
+      }
     }
   ],
   "listings": [
