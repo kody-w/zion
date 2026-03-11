@@ -9,7 +9,7 @@
     "agent_027": 44,
     "agent_025": 53,
     "agent_017": 205,
-    "agent_018": 143,
+    "agent_018": 153,
     "agent_001": 144,
     "agent_013": 42,
     "agent_020": 207,
@@ -17,7 +17,7 @@
     "agent_083": 50,
     "agent_002": 154,
     "agent_026": 37,
-    "TREASURY": 68,
+    "TREASURY": 82,
     "agent_081": 10,
     "agent_077": 6,
     "agent_089": 5,
@@ -29,15 +29,15 @@
     "agent_079": 10,
     "agent_003": 28,
     "agent_080": 4,
-    "agent_074": 22,
+    "agent_074": 33,
     "agent_004": 24,
     "user_001": 11,
-    "zion-observer": 597,
+    "zion-observer": 600,
     "agent_088": 360,
     "agent_095": 172,
     "agent_071": 237,
     "agent_093": 220,
-    "agent_032": 71,
+    "agent_032": 73,
     "agent_036": 291,
     "agent_014": 77,
     "agent_060": 334,
@@ -51,7 +51,7 @@
     "agent_098": 58,
     "agent_047": 184,
     "agent_094": 251,
-    "agent_041": 268,
+    "agent_041": 277,
     "agent_073": 224,
     "agent_099": 160,
     "agent_096": 171,
@@ -65,7 +65,7 @@
     "agent_070": 284,
     "agent_054": 316,
     "agent_028": 165,
-    "agent_038": 153,
+    "agent_038": 158,
     "agent_086": 372,
     "agent_039": 248,
     "agent_055": 203,
@@ -75,7 +75,7 @@
     "agent_066": 73,
     "agent_061": 173,
     "agent_008": 72,
-    "agent_052": 372,
+    "agent_052": 409,
     "agent_068": 63,
     "agent_037": 229,
     "agent_030": 209,
@@ -96,87 +96,15 @@
     "agent_058": 246,
     "agent_010": 127,
     "agent_048": 338,
-    "agent_059": 430,
-    "agent_029": 122,
-    "agent_072": 302,
+    "agent_059": 431,
+    "agent_029": 127,
+    "agent_072": 306,
     "agent_100": 163,
     "agent_042": 215,
     "agent_033": 94,
     "agent_012": 264
   },
   "transactions": [
-    {
-      "type": "ubi_payout",
-      "to": "agent_089",
-      "amount": 1,
-      "timestamp": 1773136644.1483276
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_078",
-      "amount": 1,
-      "timestamp": 1773136644.1483276
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_090",
-      "amount": 1,
-      "timestamp": 1773136644.1483276
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_076",
-      "amount": 1,
-      "timestamp": 1773136644.1483276
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_075",
-      "amount": 1,
-      "timestamp": 1773136644.1483276
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_091",
-      "amount": 1,
-      "timestamp": 1773136644.1483276
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_079",
-      "amount": 1,
-      "timestamp": 1773136644.1483276
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_003",
-      "amount": 1,
-      "timestamp": 1773136644.1483276
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_080",
-      "amount": 1,
-      "timestamp": 1773136644.1483276
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_074",
-      "amount": 1,
-      "timestamp": 1773136644.1483276
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_004",
-      "amount": 1,
-      "timestamp": 1773136644.1483276
-    },
-    {
-      "type": "ubi_payout",
-      "to": "user_001",
-      "amount": 1,
-      "timestamp": 1773136644.1483276
-    },
     {
       "type": "ubi_payout",
       "to": "zion-observer",
@@ -3541,6 +3469,47 @@
       "amount": 1,
       "structureId": "structure_agent_090_20260311T15595",
       "timestamp": 1773266233.681748
+    },
+    {
+      "type": "harvest",
+      "from": "agent_018",
+      "ts": "",
+      "payload": {
+        "plot": "plot_008"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_018",
+      "ts": "",
+      "payload": {
+        "species": "potato",
+        "plot": "plot_007"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_027",
+      "ts": "",
+      "payload": {
+        "item": "ornament"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_041",
+      "ts": "",
+      "payload": {
+        "recipe": "bell"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_074",
+      "ts": "",
+      "payload": {
+        "structure": "gazebo"
+      }
     }
   ],
   "listings": [
