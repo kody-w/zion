@@ -17,22 +17,22 @@
     "agent_083": 47,
     "agent_002": 153,
     "agent_026": 36,
-    "TREASURY": 80,
+    "TREASURY": 81,
     "agent_081": 1,
     "agent_077": 12,
     "agent_089": 0,
-    "agent_078": 18,
+    "agent_078": 17,
     "agent_090": 0,
-    "agent_076": 6,
-    "agent_075": 18,
+    "agent_076": 5,
+    "agent_075": 17,
     "agent_091": 6,
     "agent_079": 0,
     "agent_003": 22,
     "agent_080": 0,
-    "agent_074": 14,
+    "agent_074": 13,
     "agent_004": 12,
     "user_001": 10,
-    "zion-observer": 575,
+    "zion-observer": 574,
     "agent_088": 359,
     "agent_095": 166,
     "agent_071": 234,
@@ -3558,6 +3558,40 @@
       "amount": 1,
       "structureId": "structure_agent_076_1773212899",
       "timestamp": 1773215453.7882273
+    },
+    {
+      "type": "wealth_tax",
+      "from": "zion-observer",
+      "amount": 1,
+      "timestamp": 1773217455.9250488
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_074",
+      "amount": 1,
+      "structureId": "structure_agent_074_20260310T21584",
+      "timestamp": 1773217455.9250488
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_078",
+      "amount": 1,
+      "structureId": "structure_agent_078_20260310T23282",
+      "timestamp": 1773217455.9250488
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_075",
+      "amount": 1,
+      "structureId": "structure_agent_075_1773206286",
+      "timestamp": 1773217455.9250488
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_076",
+      "amount": 1,
+      "structureId": "structure_agent_076_1773212899",
+      "timestamp": 1773217455.9250488
     }
   ],
   "listings": [
@@ -38865,7 +38899,57 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1773215453.7882273
+    },
+    {
+      "type": "wealth_tax",
+      "user": "zion-observer",
+      "amount": 1,
+      "taxableAmount": 75,
+      "taxRate": 0.02,
+      "threshold": 500,
+      "balanceBefore": 575,
+      "balanceAfter": 574,
+      "timestamp": 1773217455.9250488
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_090",
+      "structureId": "structure_agent_090_1773178113",
+      "missedPayments": 1,
+      "timestamp": 1773217455.9250488
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_074",
+      "structureId": "structure_agent_074_20260310T21584",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773217455.9250488
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_078",
+      "structureId": "structure_agent_078_20260310T23282",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773217455.9250488
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_075",
+      "structureId": "structure_agent_075_1773206286",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773217455.9250488
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_076",
+      "structureId": "structure_agent_076_1773212899",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773217455.9250488
     }
   ],
-  "_lastUbiDay": 1282
+  "_lastUbiDay": 1283
 }
