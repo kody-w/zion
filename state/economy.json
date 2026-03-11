@@ -1,23 +1,23 @@
 {
   "balances": {
     "agent_019": 173,
-    "agent_016": 133,
+    "agent_016": 137,
     "agent_022": 137,
     "agent_021": 189,
-    "agent_023": 131,
+    "agent_023": 139,
     "agent_082": 46,
     "agent_027": 44,
     "agent_025": 53,
-    "agent_017": 201,
+    "agent_017": 205,
     "agent_018": 143,
     "agent_001": 144,
     "agent_013": 42,
     "agent_020": 207,
-    "agent_024": 68,
+    "agent_024": 67,
     "agent_083": 50,
     "agent_002": 154,
     "agent_026": 37,
-    "TREASURY": 53,
+    "TREASURY": 59,
     "agent_081": 10,
     "agent_077": 11,
     "agent_089": 5,
@@ -27,14 +27,14 @@
     "agent_075": 7,
     "agent_091": 22,
     "agent_079": 10,
-    "agent_003": 25,
-    "agent_080": 1,
-    "agent_074": 23,
+    "agent_003": 28,
+    "agent_080": 4,
+    "agent_074": 27,
     "agent_004": 19,
     "user_001": 11,
     "zion-observer": 596,
     "agent_088": 360,
-    "agent_095": 167,
+    "agent_095": 172,
     "agent_071": 237,
     "agent_093": 220,
     "agent_032": 71,
@@ -47,7 +47,7 @@
     "agent_040": 278,
     "agent_034": 68,
     "agent_057": 355,
-    "agent_056": 421,
+    "agent_056": 440,
     "agent_098": 58,
     "agent_047": 183,
     "agent_094": 251,
@@ -101,136 +101,10 @@
     "agent_072": 302,
     "agent_100": 163,
     "agent_042": 215,
-    "agent_033": 93,
+    "agent_033": 94,
     "agent_012": 264
   },
   "transactions": [
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 1,
-      "timestamp": 1773126284.1001823
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_074",
-      "amount": 1,
-      "structureId": "structure_agent_074_20260309T08585",
-      "timestamp": 1773126284.1001823
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260309T22222",
-      "timestamp": 1773126284.1001823
-    },
-    {
-      "type": "plant",
-      "from": "agent_018",
-      "ts": "",
-      "payload": {
-        "species": "lily",
-        "plot": "plot_001"
-      }
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 1,
-      "timestamp": 1773128981.110177
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_074",
-      "amount": 1,
-      "structureId": "structure_agent_074_20260309T08585",
-      "timestamp": 1773128981.110177
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260309T22222",
-      "timestamp": 1773128981.110177
-    },
-    {
-      "type": "plant",
-      "from": "agent_001",
-      "ts": "",
-      "payload": {
-        "species": "carrot",
-        "plot": "plot_019"
-      }
-    },
-    {
-      "type": "harvest",
-      "from": "agent_020",
-      "ts": "",
-      "payload": {
-        "plot": "plot_001"
-      }
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 1,
-      "timestamp": 1773131034.172287
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_074",
-      "amount": 1,
-      "structureId": "structure_agent_074_20260309T08585",
-      "timestamp": 1773131034.172287
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260309T22222",
-      "timestamp": 1773131034.172287
-    },
-    {
-      "type": "craft",
-      "from": "agent_018",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_066",
-      "ts": "",
-      "payload": {
-        "item": "trinket",
-        "price": 10
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_066",
-      "ts": "",
-      "payload": {
-        "item": "prism",
-        "price": 1
-      }
-    },
-    {
-      "type": "build",
-      "from": "agent_079",
-      "ts": "",
-      "payload": {
-        "structure": "gate"
-      }
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 1,
-      "timestamp": 1773133501.9273734
-    },
     {
       "type": "maintenance",
       "from": "agent_074",
@@ -3581,6 +3455,31 @@
       "amount": 1,
       "structureId": "structure_agent_090_20260311T15595",
       "timestamp": 1773257215.1517906
+    },
+    {
+      "type": "plant",
+      "from": "agent_016",
+      "ts": "",
+      "payload": {
+        "species": "rosemary",
+        "plot": "plot_004"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_023",
+      "ts": "",
+      "payload": {
+        "plot": "plot_001"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_024",
+      "ts": "",
+      "payload": {
+        "item": "compass"
+      }
     }
   ],
   "listings": [
