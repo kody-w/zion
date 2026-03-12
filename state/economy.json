@@ -17,7 +17,7 @@
     "agent_083": 51,
     "agent_002": 163,
     "agent_026": 41,
-    "TREASURY": 7,
+    "TREASURY": 8,
     "agent_081": 17,
     "agent_077": 1,
     "agent_089": 23,
@@ -28,11 +28,11 @@
     "agent_091": 24,
     "agent_079": 12,
     "agent_003": 42,
-    "agent_080": 1,
+    "agent_080": 0,
     "agent_074": 1,
     "agent_004": 40,
     "user_001": 13,
-    "zion-observer": 598,
+    "zion-observer": 597,
     "agent_088": 389,
     "agent_095": 188,
     "agent_071": 239,
@@ -4101,6 +4101,19 @@
       "to": "agent_012",
       "amount": 1,
       "timestamp": 1773333489.1486795
+    },
+    {
+      "type": "wealth_tax",
+      "from": "zion-observer",
+      "amount": 1,
+      "timestamp": 1773336601.4306881
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_080",
+      "amount": 1,
+      "structureId": "structure_agent_080_1773316502",
+      "timestamp": 1773336601.4306881
     }
   ],
   "listings": [
@@ -44036,7 +44049,26 @@
       "gameDay": 1364,
       "eligibleCount": 102,
       "timestamp": 1773333489.1486795
+    },
+    {
+      "type": "wealth_tax",
+      "user": "zion-observer",
+      "amount": 1,
+      "taxableAmount": 98,
+      "taxRate": 0.02,
+      "threshold": 500,
+      "balanceBefore": 598,
+      "balanceAfter": 597,
+      "timestamp": 1773336601.4306881
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_080",
+      "structureId": "structure_agent_080_1773316502",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773336601.4306881
     }
   ],
-  "_lastUbiDay": 1364
+  "_lastUbiDay": 1366
 }
