@@ -1,6 +1,6 @@
 {
   "balances": {
-    "agent_019": 178,
+    "agent_019": 184,
     "agent_016": 142,
     "agent_022": 138,
     "agent_021": 190,
@@ -8,8 +8,8 @@
     "agent_082": 54,
     "agent_027": 49,
     "agent_025": 54,
-    "agent_017": 206,
-    "agent_018": 162,
+    "agent_017": 211,
+    "agent_018": 168,
     "agent_001": 145,
     "agent_013": 43,
     "agent_020": 208,
@@ -24,7 +24,7 @@
     "agent_078": 0,
     "agent_090": 0,
     "agent_076": 13,
-    "agent_075": 0,
+    "agent_075": 7,
     "agent_091": 23,
     "agent_079": 11,
     "agent_003": 29,
@@ -32,7 +32,7 @@
     "agent_074": 12,
     "agent_004": 26,
     "user_001": 12,
-    "zion-observer": 600,
+    "zion-observer": 601,
     "agent_088": 361,
     "agent_095": 173,
     "agent_071": 238,
@@ -40,7 +40,7 @@
     "agent_032": 74,
     "agent_036": 292,
     "agent_014": 78,
-    "agent_060": 347,
+    "agent_060": 348,
     "agent_069": 61,
     "agent_045": 217,
     "agent_009": 312,
@@ -56,21 +56,21 @@
     "agent_099": 161,
     "agent_096": 172,
     "agent_092": 265,
-    "agent_049": 278,
+    "agent_049": 282,
     "agent_046": 244,
     "agent_097": 58,
     "agent_063": 49,
     "agent_067": 75,
     "agent_011": 138,
     "agent_070": 302,
-    "agent_054": 318,
+    "agent_054": 319,
     "agent_028": 170,
     "agent_038": 159,
     "agent_086": 375,
     "agent_039": 249,
     "agent_055": 204,
     "agent_062": 70,
-    "agent_044": 247,
+    "agent_044": 248,
     "agent_006": 232,
     "agent_066": 74,
     "agent_061": 182,
@@ -81,7 +81,7 @@
     "agent_030": 210,
     "agent_035": 68,
     "agent_087": 340,
-    "agent_007": 65,
+    "agent_007": 66,
     "agent_031": 170,
     "agent_005": 261,
     "agent_043": 307,
@@ -101,69 +101,10 @@
     "agent_072": 339,
     "agent_100": 164,
     "agent_042": 216,
-    "agent_033": 95,
+    "agent_033": 96,
     "agent_012": 265
   },
   "transactions": [
-    {
-      "type": "maintenance",
-      "from": "agent_078",
-      "amount": 1,
-      "structureId": "structure_agent_078_20260310T23282",
-      "timestamp": 1773186180.3797016
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 1,
-      "timestamp": 1773187017.0389674
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_079",
-      "amount": 1,
-      "structureId": "structure_agent_079_20260310T08343",
-      "timestamp": 1773187017.0389674
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_090",
-      "amount": 1,
-      "structureId": "structure_agent_090_1773178113",
-      "timestamp": 1773187017.0389674
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_074",
-      "amount": 1,
-      "structureId": "structure_agent_074_20260310T21584",
-      "timestamp": 1773187017.0389674
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_078",
-      "amount": 1,
-      "structureId": "structure_agent_078_20260310T23282",
-      "timestamp": 1773187017.0389674
-    },
-    {
-      "type": "compose",
-      "from": "agent_093",
-      "ts": "",
-      "payload": {
-        "title": "Creation 457",
-        "type": "song"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_094",
-      "ts": "",
-      "payload": {
-        "title": "Creation 700",
-        "type": "riddle"
-      }
-    },
     {
       "type": "wealth_tax",
       "from": "zion-observer",
@@ -3487,6 +3428,49 @@
       "amount": 1,
       "structureId": "structure_agent_074_20260311T21551",
       "timestamp": 1773300885.4754174
+    },
+    {
+      "type": "sell",
+      "from": "agent_007",
+      "ts": "",
+      "payload": {
+        "item": "tool",
+        "price": 3
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_017",
+      "ts": "",
+      "payload": {
+        "plot": "plot_009"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_018",
+      "ts": "",
+      "payload": {
+        "species": "ivy",
+        "plot": "plot_012"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_019",
+      "ts": "",
+      "payload": {
+        "species": "thyme",
+        "plot": "plot_019"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_075",
+      "ts": "",
+      "payload": {
+        "recipe": "tool"
+      }
     }
   ],
   "listings": [
