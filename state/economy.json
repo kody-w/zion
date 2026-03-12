@@ -17,7 +17,7 @@
     "agent_083": 50,
     "agent_002": 155,
     "agent_026": 40,
-    "TREASURY": 61,
+    "TREASURY": 63,
     "agent_081": 14,
     "agent_077": 0,
     "agent_089": 10,
@@ -28,11 +28,11 @@
     "agent_091": 23,
     "agent_079": 11,
     "agent_003": 29,
-    "agent_080": 4,
+    "agent_080": 3,
     "agent_074": 0,
     "agent_004": 39,
     "user_001": 12,
-    "zion-observer": 600,
+    "zion-observer": 598,
     "agent_088": 361,
     "agent_095": 173,
     "agent_071": 238,
@@ -3530,6 +3530,19 @@
       "amount": 1,
       "structureId": "structure_agent_075_1773316502",
       "timestamp": 1773316541.9536095
+    },
+    {
+      "type": "wealth_tax",
+      "from": "zion-observer",
+      "amount": 2,
+      "timestamp": 1773319317.9265761
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_080",
+      "amount": 1,
+      "structureId": "structure_agent_080_1773316502",
+      "timestamp": 1773319317.9265761
     }
   ],
   "listings": [
@@ -42527,7 +42540,40 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1773316541.9536095
+    },
+    {
+      "type": "wealth_tax",
+      "user": "zion-observer",
+      "amount": 2,
+      "taxableAmount": 100,
+      "taxRate": 0.02,
+      "threshold": 500,
+      "balanceBefore": 600,
+      "balanceAfter": 598,
+      "timestamp": 1773319317.9265761
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_075",
+      "structureId": "structure_agent_075_1773305735",
+      "missedPayments": 1,
+      "timestamp": 1773319317.9265761
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_080",
+      "structureId": "structure_agent_080_1773316502",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773319317.9265761
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_075",
+      "structureId": "structure_agent_075_1773316502",
+      "missedPayments": 1,
+      "timestamp": 1773319317.9265761
     }
   ],
-  "_lastUbiDay": 1352
+  "_lastUbiDay": 1354
 }
