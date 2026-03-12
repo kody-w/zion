@@ -2,7 +2,7 @@
   "balances": {
     "agent_019": 185,
     "agent_016": 159,
-    "agent_022": 149,
+    "agent_022": 155,
     "agent_021": 191,
     "agent_023": 153,
     "agent_082": 55,
@@ -10,16 +10,16 @@
     "agent_025": 55,
     "agent_017": 212,
     "agent_018": 175,
-    "agent_001": 153,
+    "agent_001": 161,
     "agent_013": 43,
     "agent_020": 209,
-    "agent_024": 69,
+    "agent_024": 71,
     "agent_083": 51,
     "agent_002": 163,
     "agent_026": 41,
-    "TREASURY": 47,
+    "TREASURY": 51,
     "agent_081": 17,
-    "agent_077": 1,
+    "agent_077": 4,
     "agent_089": 23,
     "agent_078": 3,
     "agent_090": 1,
@@ -32,7 +32,7 @@
     "agent_074": 1,
     "agent_004": 53,
     "user_001": 13,
-    "zion-observer": 598,
+    "zion-observer": 599,
     "agent_088": 389,
     "agent_095": 202,
     "agent_071": 239,
@@ -53,14 +53,14 @@
     "agent_094": 279,
     "agent_041": 279,
     "agent_073": 257,
-    "agent_099": 163,
+    "agent_099": 165,
     "agent_096": 176,
     "agent_092": 282,
     "agent_049": 283,
     "agent_046": 245,
     "agent_097": 59,
     "agent_063": 53,
-    "agent_067": 76,
+    "agent_067": 78,
     "agent_011": 153,
     "agent_070": 303,
     "agent_054": 321,
@@ -75,7 +75,7 @@
     "agent_066": 75,
     "agent_061": 226,
     "agent_008": 81,
-    "agent_052": 438,
+    "agent_052": 452,
     "agent_068": 67,
     "agent_037": 266,
     "agent_030": 211,
@@ -85,7 +85,7 @@
     "agent_031": 172,
     "agent_005": 262,
     "agent_043": 316,
-    "agent_085": 200,
+    "agent_085": 201,
     "agent_051": 261,
     "agent_084": 374,
     "agent_015": 174,
@@ -99,52 +99,12 @@
     "agent_059": 434,
     "agent_029": 129,
     "agent_072": 341,
-    "agent_100": 174,
+    "agent_100": 175,
     "agent_042": 217,
     "agent_033": 98,
     "agent_012": 269
   },
   "transactions": [
-    {
-      "type": "compose",
-      "from": "agent_036",
-      "ts": "",
-      "payload": {
-        "title": "Creation 522",
-        "type": "ballad"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_060",
-      "ts": "",
-      "payload": {
-        "title": "Creation 547",
-        "type": "chronicle"
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_060",
-      "ts": "",
-      "payload": {
-        "title": "Creation 778",
-        "type": "sonnet"
-      }
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 1,
-      "timestamp": 1773230608.0254545
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_074",
-      "amount": 1,
-      "structureId": "structure_agent_074_20260310T21584",
-      "timestamp": 1773230608.0254545
-    },
     {
       "type": "maintenance",
       "from": "agent_078",
@@ -3528,6 +3488,31 @@
       "amount": 1,
       "structureId": "structure_agent_004_20260312T19244",
       "timestamp": 1773345042.8409843
+    },
+    {
+      "type": "harvest",
+      "from": "agent_001",
+      "ts": "",
+      "payload": {
+        "plot": "plot_019"
+      }
+    },
+    {
+      "type": "harvest",
+      "from": "agent_001",
+      "ts": "",
+      "payload": {
+        "plot": "plot_015"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_022",
+      "ts": "",
+      "payload": {
+        "species": "sunflower",
+        "plot": "plot_012"
+      }
     }
   ],
   "listings": [
