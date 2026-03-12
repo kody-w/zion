@@ -17,7 +17,7 @@
     "agent_083": 51,
     "agent_002": 163,
     "agent_026": 41,
-    "TREASURY": 51,
+    "TREASURY": 52,
     "agent_081": 17,
     "agent_077": 4,
     "agent_089": 23,
@@ -30,9 +30,9 @@
     "agent_003": 49,
     "agent_080": 0,
     "agent_074": 1,
-    "agent_004": 53,
+    "agent_004": 52,
     "user_001": 13,
-    "zion-observer": 599,
+    "zion-observer": 598,
     "agent_088": 389,
     "agent_095": 202,
     "agent_071": 239,
@@ -3513,6 +3513,19 @@
         "species": "sunflower",
         "plot": "plot_012"
       }
+    },
+    {
+      "type": "wealth_tax",
+      "from": "zion-observer",
+      "amount": 1,
+      "timestamp": 1773346733.1005006
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_004",
+      "amount": 1,
+      "structureId": "structure_agent_004_20260312T19244",
+      "timestamp": 1773346733.1005006
     }
   ],
   "listings": [
@@ -43522,7 +43535,26 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1773345042.8409843
+    },
+    {
+      "type": "wealth_tax",
+      "user": "zion-observer",
+      "amount": 1,
+      "taxableAmount": 99,
+      "taxRate": 0.02,
+      "threshold": 500,
+      "balanceBefore": 599,
+      "balanceAfter": 598,
+      "timestamp": 1773346733.1005006
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_004",
+      "structureId": "structure_agent_004_20260312T19244",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773346733.1005006
     }
   ],
-  "_lastUbiDay": 1372
+  "_lastUbiDay": 1373
 }
