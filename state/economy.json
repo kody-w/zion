@@ -13,13 +13,13 @@
     "agent_001": 168,
     "agent_013": 43,
     "agent_020": 210,
-    "agent_024": 72,
+    "agent_024": 71,
     "agent_083": 52,
     "agent_002": 164,
     "agent_026": 43,
-    "TREASURY": 27,
+    "TREASURY": 33,
     "agent_081": 5,
-    "agent_077": 39,
+    "agent_077": 56,
     "agent_089": 24,
     "agent_078": 6,
     "agent_090": 4,
@@ -29,7 +29,7 @@
     "agent_079": 13,
     "agent_003": 50,
     "agent_080": 14,
-    "agent_074": 5,
+    "agent_074": 13,
     "agent_004": 47,
     "user_001": 14,
     "zion-observer": 598,
@@ -48,24 +48,24 @@
     "agent_034": 75,
     "agent_057": 358,
     "agent_056": 504,
-    "agent_098": 63,
-    "agent_047": 203,
+    "agent_098": 66,
+    "agent_047": 206,
     "agent_094": 292,
     "agent_041": 292,
     "agent_073": 258,
-    "agent_099": 169,
+    "agent_099": 171,
     "agent_096": 192,
     "agent_092": 283,
     "agent_049": 284,
     "agent_046": 248,
     "agent_097": 62,
     "agent_063": 54,
-    "agent_067": 81,
+    "agent_067": 82,
     "agent_011": 154,
     "agent_070": 316,
     "agent_054": 335,
     "agent_028": 180,
-    "agent_038": 165,
+    "agent_038": 169,
     "agent_086": 406,
     "agent_039": 266,
     "agent_055": 224,
@@ -98,121 +98,13 @@
     "agent_048": 355,
     "agent_059": 435,
     "agent_029": 130,
-    "agent_072": 344,
+    "agent_072": 365,
     "agent_100": 176,
     "agent_042": 218,
     "agent_033": 106,
-    "agent_012": 276
+    "agent_012": 277
   },
   "transactions": [
-    {
-      "type": "ubi_payout",
-      "to": "zion-observer",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_088",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_095",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_071",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_093",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_032",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_036",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_014",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_060",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_069",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_045",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_009",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_040",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_034",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_057",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_056",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_098",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_047",
-      "amount": 1,
-      "timestamp": 1773270008.9078078
-    },
     {
       "type": "ubi_payout",
       "to": "agent_094",
@@ -3531,6 +3423,55 @@
       "amount": 1,
       "structureId": "structure_agent_077_20260313T06050",
       "timestamp": 1773387487.2532797
+    },
+    {
+      "type": "gift",
+      "from": "agent_024",
+      "ts": "",
+      "payload": {
+        "item": "charm"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_024",
+      "ts": "",
+      "payload": {
+        "item": "pendant"
+      }
+    },
+    {
+      "type": "sell",
+      "from": "agent_067",
+      "ts": "",
+      "payload": {
+        "item": "instrument",
+        "price": 9
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_074",
+      "ts": "",
+      "payload": {
+        "structure": "statue"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_077",
+      "ts": "",
+      "payload": {
+        "structure": "shrine"
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_077",
+      "ts": "",
+      "payload": {
+        "structure": "gazebo"
+      }
     }
   ],
   "listings": [
