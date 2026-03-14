@@ -1,7 +1,7 @@
 {
   "balances": {
     "agent_019": 206,
-    "agent_016": 173,
+    "agent_016": 175,
     "agent_022": 170,
     "agent_021": 214,
     "agent_023": 172,
@@ -14,17 +14,17 @@
     "agent_013": 52,
     "agent_020": 217,
     "agent_024": 83,
-    "agent_083": 64,
+    "agent_083": 63,
     "agent_002": 205,
     "agent_026": 48,
-    "TREASURY": 77,
+    "TREASURY": 79,
     "agent_081": 20,
     "agent_077": 0,
     "agent_089": 2,
     "agent_078": 6,
     "agent_090": 1,
     "agent_076": 0,
-    "agent_075": 0,
+    "agent_075": 2,
     "agent_091": 0,
     "agent_079": 0,
     "agent_003": 28,
@@ -62,7 +62,7 @@
     "agent_063": 62,
     "agent_067": 101,
     "agent_011": 161,
-    "agent_070": 319,
+    "agent_070": 324,
     "agent_054": 439,
     "agent_028": 193,
     "agent_038": 190,
@@ -82,141 +82,29 @@
     "agent_035": 82,
     "agent_087": 367,
     "agent_007": 79,
-    "agent_031": 182,
+    "agent_031": 184,
     "agent_005": 295,
-    "agent_043": 349,
+    "agent_043": 357,
     "agent_085": 241,
     "agent_051": 321,
     "agent_084": 392,
     "agent_015": 215,
     "agent_050": 243,
     "agent_053": 398,
-    "agent_065": 88,
+    "agent_065": 90,
     "agent_064": 80,
     "agent_058": 256,
     "agent_010": 140,
-    "agent_048": 360,
+    "agent_048": 361,
     "agent_059": 486,
-    "agent_029": 157,
+    "agent_029": 162,
     "agent_072": 425,
     "agent_100": 183,
     "agent_042": 225,
-    "agent_033": 116,
+    "agent_033": 118,
     "agent_012": 287
   },
   "transactions": [
-    {
-      "type": "plant",
-      "from": "agent_018",
-      "ts": "",
-      "payload": {
-        "species": "melon",
-        "plot": "plot_011"
-      }
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 1,
-      "timestamp": 1773442626.1140678
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_004",
-      "amount": 1,
-      "structureId": "structure_agent_004_20260312T19244",
-      "timestamp": 1773442626.1140678
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260313T03574",
-      "timestamp": 1773442626.1140678
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_20260313T06050",
-      "timestamp": 1773442626.1140678
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_20260313T07532",
-      "timestamp": 1773442626.1140678
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_089",
-      "amount": 1,
-      "structureId": "structure_agent_089_1773400827",
-      "timestamp": 1773442626.1140678
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_090",
-      "amount": 1,
-      "structureId": "structure_agent_090_20260313T16335",
-      "timestamp": 1773442626.1140678
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_075",
-      "amount": 1,
-      "structureId": "structure_agent_075_1773431847",
-      "timestamp": 1773442626.1140678
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_076",
-      "amount": 1,
-      "structureId": "structure_agent_076_1773441280",
-      "timestamp": 1773442626.1140678
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 1,
-      "timestamp": 1773444282.7618718
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_004",
-      "amount": 1,
-      "structureId": "structure_agent_004_20260312T19244",
-      "timestamp": 1773444282.7618718
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260313T03574",
-      "timestamp": 1773444282.7618718
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_20260313T06050",
-      "timestamp": 1773444282.7618718
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_20260313T07532",
-      "timestamp": 1773444282.7618718
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_089",
-      "amount": 1,
-      "structureId": "structure_agent_089_1773400827",
-      "timestamp": 1773444282.7618718
-    },
     {
       "type": "maintenance",
       "from": "agent_090",
@@ -3514,15 +3402,51 @@
       "amount": 1,
       "structureId": "structure_agent_004_1773510242",
       "timestamp": 1773519654.8818064
+    },
+    {
+      "type": "craft",
+      "from": "agent_043",
+      "ts": "",
+      "payload": {
+        "recipe": "scroll"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_065",
+      "ts": "",
+      "payload": {
+        "item": "instrument",
+        "price": 3
+      }
+    },
+    {
+      "type": "sell",
+      "from": "agent_065",
+      "ts": "",
+      "payload": {
+        "item": "charm",
+        "price": 10
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_083",
+      "ts": "",
+      "payload": {
+        "item": "ring"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_083",
+      "ts": "",
+      "payload": {
+        "item": "tool"
+      }
     }
   ],
   "listings": [
-    {
-      "item": "unknown",
-      "price": 0,
-      "seller": "agent_063",
-      "ts": "2026-02-27T12:44:23.925183Z"
-    },
     {
       "item": "unknown",
       "price": 0,
@@ -4116,6 +4040,12 @@
       "price": 4,
       "seller": "agent_068",
       "ts": "2026-03-14T14:23:05.464097Z"
+    },
+    {
+      "item": "instrument",
+      "price": 3,
+      "seller": "agent_065",
+      "ts": "2026-03-14T20:21:30.480595Z"
     }
   ],
   "ledger": [
