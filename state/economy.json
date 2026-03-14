@@ -13,14 +13,14 @@
     "agent_001": 175,
     "agent_013": 46,
     "agent_020": 217,
-    "agent_024": 79,
+    "agent_024": 83,
     "agent_083": 61,
     "agent_002": 186,
     "agent_026": 48,
     "TREASURY": 19,
     "agent_081": 7,
     "agent_077": 2,
-    "agent_089": 2,
+    "agent_089": 17,
     "agent_078": 3,
     "agent_090": 1,
     "agent_076": 1,
@@ -48,7 +48,7 @@
     "agent_034": 84,
     "agent_057": 366,
     "agent_056": 507,
-    "agent_098": 74,
+    "agent_098": 78,
     "agent_047": 293,
     "agent_094": 307,
     "agent_041": 315,
@@ -56,12 +56,12 @@
     "agent_099": 180,
     "agent_096": 231,
     "agent_092": 338,
-    "agent_049": 316,
+    "agent_049": 318,
     "agent_046": 253,
     "agent_097": 80,
     "agent_063": 62,
-    "agent_067": 92,
-    "agent_011": 158,
+    "agent_067": 95,
+    "agent_011": 161,
     "agent_070": 319,
     "agent_054": 435,
     "agent_028": 191,
@@ -73,25 +73,25 @@
     "agent_044": 275,
     "agent_006": 252,
     "agent_066": 84,
-    "agent_061": 270,
+    "agent_061": 275,
     "agent_008": 92,
     "agent_052": 475,
     "agent_068": 71,
     "agent_037": 283,
-    "agent_030": 217,
+    "agent_030": 221,
     "agent_035": 79,
     "agent_087": 367,
     "agent_007": 79,
     "agent_031": 182,
     "agent_005": 295,
-    "agent_043": 348,
+    "agent_043": 349,
     "agent_085": 241,
     "agent_051": 321,
     "agent_084": 392,
     "agent_015": 190,
     "agent_050": 243,
     "agent_053": 398,
-    "agent_065": 83,
+    "agent_065": 85,
     "agent_064": 80,
     "agent_058": 253,
     "agent_010": 138,
@@ -105,114 +105,6 @@
     "agent_012": 287
   },
   "transactions": [
-    {
-      "type": "ubi_payout",
-      "to": "agent_043",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_085",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_051",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_084",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_015",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_050",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_053",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_065",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_064",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_058",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_010",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_048",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_059",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_029",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_072",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_100",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_042",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_033",
-      "amount": 1,
-      "timestamp": 1773418819.790496
-    },
     {
       "type": "ubi_payout",
       "to": "agent_012",
@@ -3532,6 +3424,31 @@
       "amount": 1,
       "structureId": "structure_agent_079_1773492217",
       "timestamp": 1773492314.9289598
+    },
+    {
+      "type": "gift",
+      "from": "agent_024",
+      "ts": "",
+      "payload": {
+        "item": "vessel"
+      }
+    },
+    {
+      "type": "buy",
+      "from": "agent_067",
+      "ts": "",
+      "payload": {
+        "item": "charm",
+        "price": 7
+      }
+    },
+    {
+      "type": "build",
+      "from": "agent_089",
+      "ts": "",
+      "payload": {
+        "structure": "wall"
+      }
     }
   ],
   "listings": [
