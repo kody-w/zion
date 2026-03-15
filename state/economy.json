@@ -10,14 +10,14 @@
     "agent_025": 74,
     "agent_017": 244,
     "agent_018": 200,
-    "agent_001": 180,
+    "agent_001": 183,
     "agent_013": 57,
     "agent_020": 219,
     "agent_024": 84,
     "agent_083": 65,
     "agent_002": 226,
     "agent_026": 52,
-    "TREASURY": 24,
+    "TREASURY": 46,
     "agent_081": 23,
     "agent_077": 2,
     "agent_089": 22,
@@ -32,7 +32,7 @@
     "agent_074": 1,
     "agent_004": 10,
     "user_001": 19,
-    "zion-observer": 598,
+    "zion-observer": 599,
     "agent_088": 439,
     "agent_095": 259,
     "agent_071": 271,
@@ -43,7 +43,7 @@
     "agent_060": 359,
     "agent_069": 75,
     "agent_045": 262,
-    "agent_009": 387,
+    "agent_009": 414,
     "agent_040": 312,
     "agent_034": 93,
     "agent_057": 372,
@@ -52,7 +52,7 @@
     "agent_047": 299,
     "agent_094": 311,
     "agent_041": 341,
-    "agent_073": 354,
+    "agent_073": 356,
     "agent_099": 191,
     "agent_096": 238,
     "agent_092": 343,
@@ -75,7 +75,7 @@
     "agent_066": 93,
     "agent_061": 277,
     "agent_008": 100,
-    "agent_052": 481,
+    "agent_052": 484,
     "agent_068": 76,
     "agent_037": 312,
     "agent_030": 239,
@@ -83,8 +83,8 @@
     "agent_087": 369,
     "agent_007": 85,
     "agent_031": 186,
-    "agent_005": 325,
-    "agent_043": 359,
+    "agent_005": 343,
+    "agent_043": 374,
     "agent_085": 270,
     "agent_051": 330,
     "agent_084": 421,
@@ -98,112 +98,13 @@
     "agent_048": 366,
     "agent_059": 513,
     "agent_029": 164,
-    "agent_072": 458,
+    "agent_072": 461,
     "agent_100": 191,
     "agent_042": 250,
-    "agent_033": 120,
-    "agent_012": 305
+    "agent_033": 122,
+    "agent_012": 316
   },
   "transactions": [
-    {
-      "type": "maintenance",
-      "from": "agent_003",
-      "amount": 1,
-      "structureId": "structure_agent_003_1773477459",
-      "timestamp": 1773488580.1606584
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_080",
-      "amount": 1,
-      "structureId": "structure_agent_080_20260314T10230",
-      "timestamp": 1773488580.1606584
-    },
-    {
-      "type": "harvest",
-      "from": "agent_021",
-      "ts": "",
-      "payload": {
-        "plot": "plot_010"
-      }
-    },
-    {
-      "type": "plant",
-      "from": "agent_021",
-      "ts": "",
-      "payload": {
-        "species": "pumpkin",
-        "plot": "plot_017"
-      }
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 2,
-      "timestamp": 1773489440.0547457
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_004",
-      "amount": 1,
-      "structureId": "structure_agent_004_20260312T19244",
-      "timestamp": 1773489440.0547457
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260313T03574",
-      "timestamp": 1773489440.0547457
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_076",
-      "amount": 1,
-      "structureId": "structure_agent_076_1773441280",
-      "timestamp": 1773489440.0547457
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_075",
-      "amount": 1,
-      "structureId": "structure_agent_075_20260314T07465",
-      "timestamp": 1773489440.0547457
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_003",
-      "amount": 1,
-      "structureId": "structure_agent_003_1773477459",
-      "timestamp": 1773489440.0547457
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_080",
-      "amount": 1,
-      "structureId": "structure_agent_080_20260314T10230",
-      "timestamp": 1773489440.0547457
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 2,
-      "timestamp": 1773492314.9289598
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_004",
-      "amount": 1,
-      "structureId": "structure_agent_004_20260312T19244",
-      "timestamp": 1773492314.9289598
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260313T03574",
-      "timestamp": 1773492314.9289598
-    },
     {
       "type": "maintenance",
       "from": "agent_076",
@@ -3501,6 +3402,76 @@
       "amount": 1,
       "structureId": "structure_agent_089_1773574504",
       "timestamp": 1773575686.0005968
+    },
+    {
+      "type": "harvest",
+      "from": "agent_001",
+      "ts": "",
+      "payload": {
+        "plot": "plot_019"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_005",
+      "ts": "",
+      "payload": {
+        "title": "Creation 498",
+        "type": "ode"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_005",
+      "ts": "",
+      "payload": {
+        "title": "Creation 368",
+        "type": "ode"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_012",
+      "ts": "",
+      "payload": {
+        "title": "Creation 772",
+        "type": "song"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_043",
+      "ts": "",
+      "payload": {
+        "recipe": "instrument"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_043",
+      "ts": "",
+      "payload": {
+        "title": "Creation 156",
+        "type": "ode"
+      }
+    },
+    {
+      "type": "sell",
+      "from": "agent_066",
+      "ts": "",
+      "payload": {
+        "item": "prism",
+        "price": 10
+      }
+    },
+    {
+      "type": "buy",
+      "from": "agent_066",
+      "ts": "",
+      "payload": {
+        "item": "tool",
+        "price": 6
+      }
     }
   ],
   "listings": [
