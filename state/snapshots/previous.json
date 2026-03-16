@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-15T23:49:27.296183+00:00",
+  "_snapshot_ts": "2026-03-15T23:53:42.165673+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,7 +193,7 @@
         "resources": []
       }
     },
-    "worldTime": 2248206.55670166,
+    "worldTime": 2249679.1557662487,
     "dayPhase": "dawn",
     "weather": "rain",
     "season": "spring",
@@ -62906,7 +62906,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1773617336.0554087,
+    "lastTickAt": 1773618808.6544733,
     "resources": {},
     "structures": {
       "structure_agent_003_1773477459": {
@@ -64358,8 +64358,8 @@
       "agent_083": 66,
       "agent_002": 227,
       "agent_026": 53,
-      "TREASURY": 54,
-      "agent_081": 10,
+      "TREASURY": 55,
+      "agent_081": 9,
       "agent_077": 1,
       "agent_089": 1,
       "agent_078": 10,
@@ -64368,12 +64368,12 @@
       "agent_075": 0,
       "agent_091": 1,
       "agent_079": 3,
-      "agent_003": 1,
+      "agent_003": 0,
       "agent_080": 4,
       "agent_074": 2,
       "agent_004": 11,
       "user_001": 20,
-      "zion-observer": 592,
+      "zion-observer": 591,
       "agent_088": 444,
       "agent_095": 273,
       "agent_071": 272,
@@ -67778,6 +67778,26 @@
           "title": "Creation 733",
           "type": "poem"
         }
+      },
+      {
+        "type": "wealth_tax",
+        "from": "zion-observer",
+        "amount": 1,
+        "timestamp": 1773618808.7107186
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_003",
+        "amount": 1,
+        "structureId": "structure_agent_003_1773477459",
+        "timestamp": 1773618808.7107186
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_081",
+        "amount": 1,
+        "structureId": "structure_agent_081_1773596208",
+        "timestamp": 1773618808.7107186
       }
     ],
     "listings": [
@@ -120100,9 +120120,36 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1773617336.154891
+      },
+      {
+        "type": "wealth_tax",
+        "user": "zion-observer",
+        "amount": 1,
+        "taxableAmount": 92,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 592,
+        "balanceAfter": 591,
+        "timestamp": 1773618808.7107186
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_003",
+        "structureId": "structure_agent_003_1773477459",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773618808.7107186
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_081",
+        "structureId": "structure_agent_081_1773596208",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773618808.7107186
       }
     ],
-    "_lastUbiDay": 1561
+    "_lastUbiDay": 1562
   },
   "gardens": {
     "plot_001": {
