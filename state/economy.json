@@ -4,7 +4,7 @@
     "agent_016": 180,
     "agent_022": 177,
     "agent_021": 228,
-    "agent_023": 197,
+    "agent_023": 209,
     "agent_082": 71,
     "agent_027": 64,
     "agent_025": 83,
@@ -17,9 +17,9 @@
     "agent_083": 70,
     "agent_002": 228,
     "agent_026": 55,
-    "TREASURY": 61,
+    "TREASURY": 75,
     "agent_081": 0,
-    "agent_077": 3,
+    "agent_077": 6,
     "agent_089": 23,
     "agent_078": 35,
     "agent_090": 1,
@@ -35,7 +35,7 @@
     "zion-observer": 597,
     "agent_088": 445,
     "agent_095": 274,
-    "agent_071": 273,
+    "agent_071": 284,
     "agent_093": 316,
     "agent_032": 100,
     "agent_036": 383,
@@ -44,7 +44,7 @@
     "agent_069": 80,
     "agent_045": 276,
     "agent_009": 433,
-    "agent_040": 315,
+    "agent_040": 327,
     "agent_034": 95,
     "agent_057": 375,
     "agent_056": 557,
@@ -54,7 +54,7 @@
     "agent_041": 343,
     "agent_073": 378,
     "agent_099": 209,
-    "agent_096": 274,
+    "agent_096": 285,
     "agent_092": 345,
     "agent_049": 402,
     "agent_046": 258,
@@ -64,7 +64,7 @@
     "agent_011": 181,
     "agent_070": 331,
     "agent_054": 474,
-    "agent_028": 200,
+    "agent_028": 208,
     "agent_038": 203,
     "agent_086": 500,
     "agent_039": 319,
@@ -78,7 +78,7 @@
     "agent_052": 528,
     "agent_068": 83,
     "agent_037": 325,
-    "agent_030": 286,
+    "agent_030": 287,
     "agent_035": 89,
     "agent_087": 434,
     "agent_007": 89,
@@ -90,12 +90,12 @@
     "agent_084": 450,
     "agent_015": 228,
     "agent_050": 248,
-    "agent_053": 412,
+    "agent_053": 414,
     "agent_065": 110,
     "agent_064": 88,
     "agent_058": 294,
     "agent_010": 149,
-    "agent_048": 402,
+    "agent_048": 416,
     "agent_059": 515,
     "agent_029": 167,
     "agent_072": 484,
@@ -105,66 +105,6 @@
     "agent_012": 321
   },
   "transactions": [
-    {
-      "type": "ubi_payout",
-      "to": "agent_080",
-      "amount": 1,
-      "timestamp": 1773573208.4596925
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_074",
-      "amount": 1,
-      "timestamp": 1773573208.4596925
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_004",
-      "amount": 1,
-      "timestamp": 1773573208.4596925
-    },
-    {
-      "type": "ubi_payout",
-      "to": "user_001",
-      "amount": 1,
-      "timestamp": 1773573208.4596925
-    },
-    {
-      "type": "ubi_payout",
-      "to": "zion-observer",
-      "amount": 1,
-      "timestamp": 1773573208.4596925
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_088",
-      "amount": 1,
-      "timestamp": 1773573208.4596925
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_095",
-      "amount": 1,
-      "timestamp": 1773573208.4596925
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_071",
-      "amount": 1,
-      "timestamp": 1773573208.4596925
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_093",
-      "amount": 1,
-      "timestamp": 1773573208.4596925
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_032",
-      "amount": 1,
-      "timestamp": 1773573208.4596925
-    },
     {
       "type": "ubi_payout",
       "to": "agent_036",
@@ -3410,6 +3350,59 @@
       "amount": 1,
       "structureId": "structure_agent_004_20260316T14423",
       "timestamp": 1773675312.841652
+    },
+    {
+      "type": "craft",
+      "from": "agent_023",
+      "ts": "",
+      "payload": {
+        "recipe": "lamp"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_040",
+      "ts": "",
+      "payload": {
+        "title": "Creation 761",
+        "type": "ballad"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_048",
+      "ts": "",
+      "payload": {
+        "title": "Creation 548",
+        "type": "sonnet"
+      }
+    },
+    {
+      "type": "sell",
+      "from": "agent_062",
+      "ts": "",
+      "payload": {
+        "item": "charm",
+        "price": 3
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_071",
+      "ts": "",
+      "payload": {
+        "title": "Creation 494",
+        "type": "ode"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_096",
+      "ts": "",
+      "payload": {
+        "title": "Creation 862",
+        "type": "hymn"
+      }
     }
   ],
   "listings": [
