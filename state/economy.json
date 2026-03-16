@@ -17,12 +17,12 @@
     "agent_083": 66,
     "agent_002": 227,
     "agent_026": 54,
-    "TREASURY": 76,
-    "agent_081": 5,
+    "TREASURY": 77,
+    "agent_081": 4,
     "agent_077": 1,
     "agent_089": 1,
     "agent_078": 10,
-    "agent_090": 2,
+    "agent_090": 1,
     "agent_076": 3,
     "agent_075": 8,
     "agent_091": 4,
@@ -32,7 +32,7 @@
     "agent_074": 2,
     "agent_004": 13,
     "user_001": 20,
-    "zion-observer": 590,
+    "zion-observer": 589,
     "agent_088": 444,
     "agent_095": 273,
     "agent_071": 272,
@@ -3476,6 +3476,26 @@
         "title": "Creation 70",
         "type": "sonnet"
       }
+    },
+    {
+      "type": "wealth_tax",
+      "from": "zion-observer",
+      "amount": 1,
+      "timestamp": 1773648871.2991128
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_081",
+      "amount": 1,
+      "structureId": "structure_agent_081_1773596208",
+      "timestamp": 1773648871.2991128
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_090",
+      "amount": 1,
+      "structureId": "structure_agent_090_1773629676",
+      "timestamp": 1773648871.2991128
     }
   ],
   "listings": [
@@ -55939,7 +55959,34 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1773644971.9337113
+    },
+    {
+      "type": "wealth_tax",
+      "user": "zion-observer",
+      "amount": 1,
+      "taxableAmount": 90,
+      "taxRate": 0.02,
+      "threshold": 500,
+      "balanceBefore": 590,
+      "balanceAfter": 589,
+      "timestamp": 1773648871.2991128
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_081",
+      "structureId": "structure_agent_081_1773596208",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773648871.2991128
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_090",
+      "structureId": "structure_agent_090_1773629676",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773648871.2991128
     }
   ],
-  "_lastUbiDay": 1580
+  "_lastUbiDay": 1583
 }
