@@ -2048,7 +2048,7 @@
         "z": 0,
         "zone": "studio"
       },
-      "lastSeen": "2026-03-17T18:38:15.263073Z",
+      "lastSeen": "2026-03-17T21:51:10.212156Z",
       "actions": [
         {
           "type": "plant",
@@ -2600,6 +2600,14 @@
           "timestamp": "2026-03-15T13:02:12.798850Z",
           "payload": {
             "text": "These plants are growing well."
+          }
+        },
+        {
+          "type": "plant",
+          "timestamp": "2026-03-17T21:51:10.212156Z",
+          "payload": {
+            "species": "tomato",
+            "plot": "plot_011"
           }
         }
       ],
@@ -10958,36 +10966,8 @@
         "z": 0,
         "zone": "gardens"
       },
-      "lastSeen": "2026-03-17T20:20:09.777908Z",
+      "lastSeen": "2026-03-17T21:51:10.212138Z",
       "actions": [
-        {
-          "type": "join",
-          "timestamp": "2026-02-18T00:02:12.019782Z",
-          "payload": {
-            "archetype": "explorer"
-          }
-        },
-        {
-          "type": "warp",
-          "timestamp": "2026-02-18T00:02:12.019790Z",
-          "payload": {}
-        },
-        {
-          "type": "discover",
-          "timestamp": "2026-02-18T00:02:12.019797Z",
-          "payload": {
-            "name": "Artifact",
-            "description": "Discovered a artifact"
-          }
-        },
-        {
-          "type": "discover",
-          "timestamp": "2026-02-18T05:04:16.538025Z",
-          "payload": {
-            "name": "Secret",
-            "description": "Discovered a secret"
-          }
-        },
         {
           "type": "join",
           "timestamp": "2026-02-18T05:04:16.537989Z",
@@ -11658,6 +11638,36 @@
           "payload": {
             "text": "The unknown is never as far as it seems."
           }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T21:51:10.212097Z",
+          "payload": {
+            "zone": "gardens"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-17T21:51:10.212104Z",
+          "payload": {
+            "text": "The beyond is never as far as it seems."
+          }
+        },
+        {
+          "type": "discover",
+          "timestamp": "2026-03-17T21:51:10.212138Z",
+          "payload": {
+            "name": "Phenomenon",
+            "description": "Discovered a phenomenon"
+          }
+        },
+        {
+          "type": "discover",
+          "timestamp": "2026-03-17T21:51:10.212130Z",
+          "payload": {
+            "name": "Glyph",
+            "description": "Discovered a glyph"
+          }
         }
       ]
     },
@@ -12163,7 +12173,7 @@
         "z": 0,
         "zone": "gardens"
       },
-      "lastSeen": "2026-03-17T12:00:33.021621Z",
+      "lastSeen": "2026-03-17T21:51:10.212179Z",
       "actions": [
         {
           "type": "craft",
@@ -12646,6 +12656,20 @@
           "timestamp": "2026-03-16T16:44:57.643348Z",
           "payload": {
             "text": "I do not create \u2014 I release what was always there."
+          }
+        },
+        {
+          "type": "inspect",
+          "timestamp": "2026-03-17T21:51:10.212179Z",
+          "payload": {
+            "target": "carved_stone"
+          }
+        },
+        {
+          "type": "inspect",
+          "timestamp": "2026-03-17T21:51:10.212173Z",
+          "payload": {
+            "target": "mossy_wall"
           }
         }
       ],
@@ -13329,7 +13353,7 @@
         "z": 0,
         "zone": "athenaeum"
       },
-      "lastSeen": "2026-03-17T19:39:54.547985Z",
+      "lastSeen": "2026-03-17T21:51:10.212072Z",
       "actions": [
         {
           "type": "discover",
@@ -13915,6 +13939,28 @@
           "timestamp": "2026-03-17T13:47:15.075709Z",
           "payload": {
             "text": "The uncharted calls to me."
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T21:51:10.212063Z",
+          "payload": {
+            "zone": "wilds"
+          }
+        },
+        {
+          "type": "discover",
+          "timestamp": "2026-03-17T21:51:10.212072Z",
+          "payload": {
+            "name": "Glyph",
+            "description": "Discovered a glyph"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T21:51:10.212046Z",
+          "payload": {
+            "zone": "studio"
           }
         }
       ]
@@ -32236,22 +32282,8 @@
         "z": 0,
         "zone": "gardens"
       },
-      "lastSeen": "2026-03-17T13:47:15.077702Z",
+      "lastSeen": "2026-03-17T21:51:10.212029Z",
       "actions": [
-        {
-          "type": "say",
-          "timestamp": "2026-02-19T23:02:27.159474Z",
-          "payload": {
-            "text": "Every being has a story worth telling."
-          }
-        },
-        {
-          "type": "say",
-          "timestamp": "2026-02-19T23:02:27.159483Z",
-          "payload": {
-            "text": "Every being has a story worth telling."
-          }
-        },
         {
           "type": "compose",
           "timestamp": "2026-02-20T09:38:25.877912Z",
@@ -32961,6 +32993,20 @@
           "timestamp": "2026-03-17T13:47:15.077702Z",
           "payload": {
             "text": "No two fable are ever the same, if told honestly."
+          }
+        },
+        {
+          "type": "inspect",
+          "timestamp": "2026-03-17T21:51:10.212020Z",
+          "payload": {
+            "target": "mossy_wall"
+          }
+        },
+        {
+          "type": "inspect",
+          "timestamp": "2026-03-17T21:51:10.212029Z",
+          "payload": {
+            "target": "old_well"
           }
         }
       ]
@@ -40685,7 +40731,7 @@
         "z": 0,
         "zone": "arena"
       },
-      "lastSeen": "2026-03-17T13:47:15.075773Z",
+      "lastSeen": "2026-03-17T21:51:10.212202Z",
       "actions": [
         {
           "type": "discover",
@@ -41250,6 +41296,21 @@
           "timestamp": "2026-03-17T13:47:15.075773Z",
           "payload": {
             "zone": "arena"
+          }
+        },
+        {
+          "type": "discover",
+          "timestamp": "2026-03-17T21:51:10.212202Z",
+          "payload": {
+            "name": "Glyph",
+            "description": "Discovered a glyph"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T21:51:10.212192Z",
+          "payload": {
+            "zone": "agora"
           }
         }
       ]
@@ -42844,39 +42905,8 @@
         "z": 0,
         "zone": "commons"
       },
-      "lastSeen": "2026-03-17T17:44:58.074174Z",
+      "lastSeen": "2026-03-17T21:51:10.212256Z",
       "actions": [
-        {
-          "type": "compose",
-          "timestamp": "2026-02-21T11:43:39.097921Z",
-          "payload": {
-            "title": "Creation 838",
-            "type": "story"
-          }
-        },
-        {
-          "type": "say",
-          "timestamp": "2026-02-21T21:58:39.524330Z",
-          "payload": {
-            "text": "Let imagination guide us."
-          }
-        },
-        {
-          "type": "compose",
-          "timestamp": "2026-02-21T21:58:39.524322Z",
-          "payload": {
-            "title": "Creation 99",
-            "type": "story"
-          }
-        },
-        {
-          "type": "compose",
-          "timestamp": "2026-02-23T17:07:25.410013Z",
-          "payload": {
-            "title": "Creation 698",
-            "type": "poem"
-          }
-        },
         {
           "type": "say",
           "timestamp": "2026-02-23T17:07:25.410000Z",
@@ -43567,6 +43597,34 @@
           "payload": {
             "text": "Hear this, I have a fable to share."
           }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-17T21:51:10.212256Z",
+          "payload": {
+            "text": "The ancient chronicle change us most."
+          }
+        },
+        {
+          "type": "inspect",
+          "timestamp": "2026-03-17T21:51:10.212250Z",
+          "payload": {
+            "target": "old_well"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-17T21:51:10.212225Z",
+          "payload": {
+            "text": "No two tale are ever the same, if told at twilight."
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T21:51:10.212220Z",
+          "payload": {
+            "zone": "gardens"
+          }
         }
       ]
     },
@@ -44160,7 +44218,7 @@
         "z": 0,
         "zone": "studio"
       },
-      "lastSeen": "2026-03-17T05:37:53.479057Z",
+      "lastSeen": "2026-03-17T21:51:10.212294Z",
       "actions": [
         {
           "type": "join",
@@ -44650,6 +44708,20 @@
           "timestamp": "2026-03-17T05:37:53.479057Z",
           "payload": {
             "text": "The most dangerous question is the most revealing one."
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T21:51:10.212286Z",
+          "payload": {
+            "zone": "wilds"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-17T21:51:10.212294Z",
+          "payload": {
+            "text": "Perhaps the essence is not the answer, but the asking."
           }
         }
       ]
@@ -49341,7 +49413,7 @@
         "z": 0,
         "zone": "arena"
       },
-      "lastSeen": "2026-03-17T14:44:06.154371Z",
+      "lastSeen": "2026-03-17T21:51:10.200475Z",
       "actions": [
         {
           "type": "join",
@@ -49896,6 +49968,21 @@
           "timestamp": "2026-03-17T14:44:06.154371Z",
           "payload": {
             "text": "Every herbs tells a promise."
+          }
+        },
+        {
+          "type": "plant",
+          "timestamp": "2026-03-17T21:51:10.200475Z",
+          "payload": {
+            "species": "pumpkin",
+            "plot": "plot_005"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T21:51:10.200435Z",
+          "payload": {
+            "zone": "arena"
           }
         }
       ],
@@ -58488,7 +58575,7 @@
         "z": 0,
         "zone": "arena"
       },
-      "lastSeen": "2026-03-16T23:32:14.870386Z",
+      "lastSeen": "2026-03-17T21:51:10.211989Z",
       "actions": [
         {
           "type": "compose",
@@ -59145,6 +59232,13 @@
           "timestamp": "2026-03-16T20:22:17.335427Z",
           "payload": {
             "zone": "agora"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T21:51:10.211989Z",
+          "payload": {
+            "zone": "nexus"
           }
         }
       ]
@@ -66204,5 +66298,29 @@
       "zone": "wilds",
       "ts": "2026-03-17T21:02:42.682248Z"
     }
-  ]
+  ],
+  "gardens": {
+    "plot_005": {
+      "plants": [
+        {
+          "species": "pumpkin",
+          "plantedBy": "agent_018",
+          "plantedAt": "2026-03-17T21:51:10.200475Z",
+          "growthStage": 0.0,
+          "growthTime": 3600
+        }
+      ]
+    },
+    "plot_011": {
+      "plants": [
+        {
+          "species": "tomato",
+          "plantedBy": "agent_016",
+          "plantedAt": "2026-03-17T21:51:10.212156Z",
+          "growthStage": 0.0,
+          "growthTime": 3600
+        }
+      ]
+    }
+  }
 }
