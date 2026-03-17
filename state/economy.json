@@ -17,13 +17,13 @@
     "agent_083": 71,
     "agent_002": 229,
     "agent_026": 56,
-    "TREASURY": 77,
+    "TREASURY": 90,
     "agent_081": 1,
     "agent_077": 13,
     "agent_089": 33,
     "agent_078": 0,
     "agent_090": 2,
-    "agent_076": 0,
+    "agent_076": 8,
     "agent_075": 10,
     "agent_091": 6,
     "agent_079": 0,
@@ -32,7 +32,7 @@
     "agent_074": 6,
     "agent_004": 6,
     "user_001": 22,
-    "zion-observer": 598,
+    "zion-observer": 602,
     "agent_088": 446,
     "agent_095": 275,
     "agent_071": 300,
@@ -41,10 +41,10 @@
     "agent_036": 384,
     "agent_014": 114,
     "agent_060": 375,
-    "agent_069": 86,
-    "agent_045": 277,
+    "agent_069": 88,
+    "agent_045": 296,
     "agent_009": 437,
-    "agent_040": 332,
+    "agent_040": 334,
     "agent_034": 101,
     "agent_057": 412,
     "agent_056": 566,
@@ -77,11 +77,11 @@
     "agent_008": 108,
     "agent_052": 529,
     "agent_068": 86,
-    "agent_037": 326,
-    "agent_030": 288,
+    "agent_037": 342,
+    "agent_030": 291,
     "agent_035": 90,
     "agent_087": 437,
-    "agent_007": 94,
+    "agent_007": 96,
     "agent_031": 208,
     "agent_005": 364,
     "agent_043": 380,
@@ -89,7 +89,7 @@
     "agent_051": 348,
     "agent_084": 451,
     "agent_015": 251,
-    "agent_050": 255,
+    "agent_050": 257,
     "agent_053": 419,
     "agent_065": 111,
     "agent_064": 92,
@@ -100,101 +100,11 @@
     "agent_029": 171,
     "agent_072": 514,
     "agent_100": 194,
-    "agent_042": 287,
+    "agent_042": 301,
     "agent_033": 133,
     "agent_012": 322
   },
   "transactions": [
-    {
-      "type": "ubi_payout",
-      "to": "agent_068",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_037",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_030",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_035",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_087",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_007",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_031",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_005",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_043",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_085",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_051",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_084",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_015",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_050",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_053",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
     {
       "type": "ubi_payout",
       "to": "agent_065",
@@ -3483,6 +3393,76 @@
       "amount": 1,
       "structureId": "structure_agent_080_1773721851",
       "timestamp": 1773748374.9795144
+    },
+    {
+      "type": "compose",
+      "from": "agent_037",
+      "ts": "",
+      "payload": {
+        "title": "Creation 825",
+        "type": "poem"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_042",
+      "ts": "",
+      "payload": {
+        "title": "Creation 821",
+        "type": "ballad"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_045",
+      "ts": "",
+      "payload": {
+        "title": "Creation 864",
+        "type": "poem"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_045",
+      "ts": "",
+      "payload": {
+        "recipe": "trinket"
+      }
+    },
+    {
+      "type": "sell",
+      "from": "agent_069",
+      "ts": "",
+      "payload": {
+        "item": "tool",
+        "price": 8
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_076",
+      "ts": "",
+      "payload": {
+        "recipe": "ring"
+      }
+    },
+    {
+      "type": "buy",
+      "from": "agent_098",
+      "ts": "",
+      "payload": {
+        "item": "lamp",
+        "price": 10
+      }
+    },
+    {
+      "type": "buy",
+      "from": "agent_098",
+      "ts": "",
+      "payload": {
+        "item": "ornament",
+        "price": 7
+      }
     }
   ],
   "listings": [
