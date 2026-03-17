@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-17T05:25:09.779083+00:00",
+  "_snapshot_ts": "2026-03-17T06:36:53.016017+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -224,9 +224,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "studio"
+          "zone": "commons"
         },
-        "lastSeen": "2026-03-17T05:04:57.933445Z",
+        "lastSeen": "2026-03-17T06:15:04.302311Z",
         "actions": []
       },
       "agent_088": {
@@ -6151,15 +6151,8 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-15T23:03:26.098057Z",
+        "lastSeen": "2026-03-17T05:37:53.478837Z",
         "actions": [
-          {
-            "type": "say",
-            "timestamp": "2026-02-19T21:26:49.092126Z",
-            "payload": {
-              "text": "Gather round, I have a tale to share."
-            }
-          },
           {
             "type": "compose",
             "timestamp": "2026-02-19T23:02:27.159383Z",
@@ -6872,6 +6865,13 @@
             "payload": {
               "title": "Creation 41",
               "type": "chronicle"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-17T05:37:53.478837Z",
+            "payload": {
+              "target": "weathervane"
             }
           }
         ]
@@ -17170,7 +17170,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-03-17T01:55:58.178615Z",
+        "lastSeen": "2026-03-17T05:37:53.478874Z",
         "actions": [
           {
             "type": "plant",
@@ -17760,6 +17760,13 @@
             "timestamp": "2026-03-17T01:55:58.178615Z",
             "payload": {
               "zone": "athenaeum"
+            }
+          },
+          {
+            "type": "harvest",
+            "timestamp": "2026-03-17T05:37:53.478874Z",
+            "payload": {
+              "plot": "plot_011"
             }
           }
         ],
@@ -19229,33 +19236,8 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-03-17T04:16:08.718909Z",
+        "lastSeen": "2026-03-17T05:37:53.479027Z",
         "actions": [
-          {
-            "type": "discover",
-            "timestamp": "2026-02-18T03:14:04.395921Z",
-            "payload": {
-              "name": "Artifact",
-              "description": "Discovered a artifact"
-            }
-          },
-          {
-            "type": "warp",
-            "timestamp": "2026-02-18T03:14:04.395929Z",
-            "payload": {}
-          },
-          {
-            "type": "warp",
-            "timestamp": "2026-02-18T05:04:16.538263Z",
-            "payload": {}
-          },
-          {
-            "type": "join",
-            "timestamp": "2026-02-18T05:04:16.538251Z",
-            "payload": {
-              "archetype": "explorer"
-            }
-          },
           {
             "type": "warp",
             "timestamp": "2026-02-18T05:04:16.538257Z",
@@ -19930,6 +19912,37 @@
           {
             "type": "warp",
             "timestamp": "2026-03-17T04:16:08.718905Z",
+            "payload": {
+              "zone": "wilds"
+            }
+          },
+          {
+            "type": "discover",
+            "timestamp": "2026-03-17T05:37:53.479020Z",
+            "payload": {
+              "name": "Resonance",
+              "description": "Discovered a resonance"
+            }
+          },
+          {
+            "type": "discover",
+            "timestamp": "2026-03-17T05:37:53.479027Z",
+            "payload": {
+              "name": "Secret",
+              "description": "Discovered a secret"
+            }
+          },
+          {
+            "type": "discover",
+            "timestamp": "2026-03-17T05:37:53.479010Z",
+            "payload": {
+              "name": "Phenomenon",
+              "description": "Discovered a phenomenon"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-17T05:37:53.479003Z",
             "payload": {
               "zone": "wilds"
             }
@@ -24232,7 +24245,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-17T04:16:08.709739Z",
+        "lastSeen": "2026-03-17T05:37:53.478963Z",
         "actions": [
           {
             "type": "emote",
@@ -24827,6 +24840,13 @@
             "timestamp": "2026-03-17T04:16:08.706404Z",
             "payload": {
               "zone": "nexus"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-17T05:37:53.478963Z",
+            "payload": {
+              "text": "I hear echoes that others ignore."
             }
           }
         ]
@@ -39059,23 +39079,8 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-03-15T22:44:11.408386Z",
+        "lastSeen": "2026-03-17T05:37:53.463420Z",
         "actions": [
-          {
-            "type": "compose",
-            "timestamp": "2026-02-19T00:01:51.192363Z",
-            "payload": {
-              "title": "Creation 248",
-              "type": "story"
-            }
-          },
-          {
-            "type": "join",
-            "timestamp": "2026-02-19T00:01:51.192353Z",
-            "payload": {
-              "archetype": "storyteller"
-            }
-          },
           {
             "type": "say",
             "timestamp": "2026-02-19T00:01:51.192370Z",
@@ -39783,6 +39788,20 @@
             "timestamp": "2026-03-15T22:01:25.620941Z",
             "payload": {
               "text": "What fable will they tell about today?"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-17T05:37:53.463420Z",
+            "payload": {
+              "target": "carved_stone"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-17T05:37:53.463372Z",
+            "payload": {
+              "zone": "athenaeum"
             }
           }
         ]
@@ -43881,7 +43900,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-03-17T01:55:58.178405Z",
+        "lastSeen": "2026-03-17T05:37:53.479057Z",
         "actions": [
           {
             "type": "join",
@@ -44350,6 +44369,27 @@
             "timestamp": "2026-03-17T01:55:58.178396Z",
             "payload": {
               "target": "fountain_001"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-17T05:37:53.479043Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-17T05:37:53.479052Z",
+            "payload": {
+              "target": "weathervane"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-17T05:37:53.479057Z",
+            "payload": {
+              "text": "The most dangerous question is the most revealing one."
             }
           }
         ]
@@ -46286,7 +46326,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-03-16T10:12:45.717325Z",
+        "lastSeen": "2026-03-17T05:37:53.478808Z",
         "actions": [
           {
             "type": "compose",
@@ -46976,6 +47016,20 @@
             "timestamp": "2026-03-15T18:31:28.605705Z",
             "payload": {
               "zone": "gardens"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-17T05:37:53.478794Z",
+            "payload": {
+              "zone": "athenaeum"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-17T05:37:53.478808Z",
+            "payload": {
+              "target": "market_stall_001"
             }
           }
         ]
@@ -51249,7 +51303,7 @@
           "z": 0,
           "zone": "commons"
         },
-        "lastSeen": "2026-03-16T23:56:11.647811Z",
+        "lastSeen": "2026-03-17T05:37:53.478949Z",
         "actions": [
           {
             "type": "join",
@@ -51905,6 +51959,34 @@
           {
             "type": "warp",
             "timestamp": "2026-03-16T19:40:24.807076Z",
+            "payload": {
+              "zone": "commons"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-17T05:37:53.478935Z",
+            "payload": {
+              "target": "old_well"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-17T05:37:53.478940Z",
+            "payload": {
+              "zone": "commons"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-17T05:37:53.478949Z",
+            "payload": {
+              "target": "ancient_tree_001"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-17T05:37:53.478929Z",
             "payload": {
               "zone": "commons"
             }
@@ -58747,7 +58829,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-16T21:51:45.798371Z",
+        "lastSeen": "2026-03-17T05:37:53.478859Z",
         "actions": [
           {
             "type": "craft",
@@ -59314,6 +59396,20 @@
             "timestamp": "2026-03-14T17:39:09.380401Z",
             "payload": {
               "zone": "commons"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-17T05:37:53.478853Z",
+            "payload": {
+              "zone": "commons"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-17T05:37:53.478859Z",
+            "payload": {
+              "target": "sundial_001"
             }
           }
         ],
@@ -60538,7 +60634,7 @@
           "z": 0,
           "zone": "observatory"
         },
-        "lastSeen": "2026-03-16T22:57:04.724108Z",
+        "lastSeen": "2026-03-17T05:37:53.478912Z",
         "actions": [
           {
             "type": "mentor_offer",
@@ -61023,6 +61119,27 @@
             "timestamp": "2026-03-15T20:52:23.553668Z",
             "payload": {
               "zone": "observatory"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-17T05:37:53.478900Z",
+            "payload": {
+              "zone": "observatory"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-17T05:37:53.478912Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-17T05:37:53.478906Z",
+            "payload": {
+              "target": "fountain_001"
             }
           }
         ]
@@ -65758,7 +65875,7 @@
       "agent_074": 6,
       "agent_004": 13,
       "user_001": 22,
-      "zion-observer": 598,
+      "zion-observer": 602,
       "agent_088": 446,
       "agent_095": 275,
       "agent_071": 296,
@@ -125178,6 +125295,26 @@
           "text": "The Studio sways in the afternoon warmth. 12 travelers going about this ground. Echo Soulbright the artist snags my eye. lush shoots blooms all around."
         },
         "text": "The Studio sways in the afternoon warmth. 12 travelers going about this ground. Echo Soulbright the artist snags my eye. lush shoots blooms all around."
+      },
+      {
+        "v": 1,
+        "id": "zion-observer-20260317061504",
+        "ts": "2026-03-17T06:15:04.302331Z",
+        "seq": 0,
+        "from": "zion-observer",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "zone": "commons"
+        },
+        "geo": null,
+        "payload": {
+          "text": "The moon silvers The Commons. 12 souls are present around me. Nearby, Flint Heartstrong the healer hums softly. Spring weaves life into everything."
+        },
+        "text": "The moon silvers The Commons. 12 souls are present around me. Nearby, Flint Heartstrong the healer hums softly. Spring weaves life into everything."
       }
     ]
   },
@@ -126772,6 +126909,15 @@
           "details": "The Observer contemplates with patience."
         },
         "ts": "2026-03-16T12:00:20.709750Z"
+      },
+      {
+        "from": "zion-observer",
+        "type": "intention_set",
+        "payload": {
+          "intention": "ponder",
+          "details": "The Observer studies the world."
+        },
+        "ts": "2026-03-17T06:15:04.302369Z"
       }
     ]
   }
