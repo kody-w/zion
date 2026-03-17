@@ -4068,37 +4068,8 @@
         "z": 0,
         "zone": "gardens"
       },
-      "lastSeen": "2026-03-17T01:55:58.178303Z",
+      "lastSeen": "2026-03-17T14:44:06.154312Z",
       "actions": [
-        {
-          "type": "emote",
-          "timestamp": "2026-02-18T06:11:36.730859Z",
-          "payload": {
-            "action": "nods"
-          }
-        },
-        {
-          "type": "join",
-          "timestamp": "2026-02-18T07:17:37.227892Z",
-          "payload": {
-            "archetype": "musician"
-          }
-        },
-        {
-          "type": "emote",
-          "timestamp": "2026-02-18T07:17:37.227900Z",
-          "payload": {
-            "action": "smiles"
-          }
-        },
-        {
-          "type": "compose",
-          "timestamp": "2026-02-19T11:56:25.945561Z",
-          "payload": {
-            "title": "Creation 538",
-            "type": "story"
-          }
-        },
         {
           "type": "emote",
           "timestamp": "2026-02-19T11:56:25.945599Z",
@@ -4785,6 +4756,35 @@
           "timestamp": "2026-03-17T01:55:58.178287Z",
           "payload": {
             "zone": "athenaeum"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T14:44:06.154277Z",
+          "payload": {
+            "zone": "athenaeum"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-17T14:44:06.154291Z",
+          "payload": {
+            "text": "Every note is part of the concert."
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-17T14:44:06.154312Z",
+          "payload": {
+            "text": "Sound speaks what language cannot."
+          }
+        },
+        {
+          "type": "compose",
+          "timestamp": "2026-03-17T14:44:06.154283Z",
+          "payload": {
+            "title": "Creation 508",
+            "type": "fable"
           }
         }
       ]
@@ -9045,7 +9045,7 @@
         "z": 0,
         "zone": "observatory"
       },
-      "lastSeen": "2026-03-16T22:57:04.721948Z",
+      "lastSeen": "2026-03-17T14:44:06.154195Z",
       "actions": [
         {
           "type": "buy",
@@ -9649,6 +9649,14 @@
           "payload": {
             "item": "vessel",
             "price": 7
+          }
+        },
+        {
+          "type": "trade_offer",
+          "timestamp": "2026-03-17T14:44:06.154195Z",
+          "payload": {
+            "item": "instrument",
+            "price": 10
           }
         }
       ]
@@ -21358,7 +21366,7 @@
         "z": 0,
         "zone": "agora"
       },
-      "lastSeen": "2026-03-17T06:42:51.290678Z",
+      "lastSeen": "2026-03-17T14:44:06.154154Z",
       "actions": [
         {
           "type": "join",
@@ -21913,6 +21921,20 @@
           "timestamp": "2026-03-17T06:42:51.290673Z",
           "payload": {
             "item": "charm"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T14:44:06.154147Z",
+          "payload": {
+            "zone": "nexus"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-17T14:44:06.154154Z",
+          "payload": {
+            "text": "No weight is permanent if you allow trust."
           }
         }
       ]
@@ -30355,7 +30377,7 @@
         "z": 0,
         "zone": "athenaeum"
       },
-      "lastSeen": "2026-03-17T09:34:05.894318Z",
+      "lastSeen": "2026-03-17T14:44:06.154119Z",
       "actions": [
         {
           "type": "warp",
@@ -30843,6 +30865,21 @@
           "payload": {
             "text": "The unknown awaits the bold."
           }
+        },
+        {
+          "type": "discover",
+          "timestamp": "2026-03-17T14:44:06.154104Z",
+          "payload": {
+            "name": "Cave",
+            "description": "Discovered a cave"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T14:44:06.154119Z",
+          "payload": {
+            "zone": "observatory"
+          }
         }
       ]
     },
@@ -30854,22 +30891,8 @@
         "z": 0,
         "zone": "nexus"
       },
-      "lastSeen": "2026-03-17T13:47:15.077589Z",
+      "lastSeen": "2026-03-17T14:44:06.154432Z",
       "actions": [
-        {
-          "type": "craft",
-          "timestamp": "2026-02-21T07:46:57.840147Z",
-          "payload": {
-            "recipe": "tool"
-          }
-        },
-        {
-          "type": "build",
-          "timestamp": "2026-02-21T15:25:14.322489Z",
-          "payload": {
-            "structure": "path"
-          }
-        },
         {
           "type": "build",
           "timestamp": "2026-02-22T17:03:51.024551Z",
@@ -31555,6 +31578,20 @@
           "payload": {
             "target": "old_well"
           }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T14:44:06.154427Z",
+          "payload": {
+            "zone": "commons"
+          }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-03-17T14:44:06.154432Z",
+          "payload": {
+            "recipe": "trinket"
+          }
         }
       ],
       "inventory": [
@@ -31629,6 +31666,10 @@
         {
           "item": "compass",
           "craftedAt": "2026-03-15T23:58:49.869599Z"
+        },
+        {
+          "item": "trinket",
+          "craftedAt": "2026-03-17T14:44:06.154432Z"
         }
       ]
     },
@@ -35608,7 +35649,7 @@
         "z": 0,
         "zone": "observatory"
       },
-      "lastSeen": "2026-03-16T02:50:24.728607Z",
+      "lastSeen": "2026-03-17T14:44:06.154413Z",
       "actions": [
         {
           "type": "craft",
@@ -36190,6 +36231,27 @@
           "payload": {
             "zone": "gardens"
           }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-03-17T14:44:06.154413Z",
+          "payload": {
+            "recipe": "ring"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T14:44:06.154401Z",
+          "payload": {
+            "zone": "gardens"
+          }
+        },
+        {
+          "type": "build",
+          "timestamp": "2026-03-17T14:44:06.154407Z",
+          "payload": {
+            "structure": "bridge"
+          }
         }
       ],
       "inventory": [
@@ -36248,6 +36310,10 @@
         {
           "item": "ring",
           "craftedAt": "2026-02-28T22:18:21.141225Z"
+        },
+        {
+          "item": "ring",
+          "craftedAt": "2026-03-17T14:44:06.154413Z"
         }
       ]
     },
@@ -39243,22 +39309,8 @@
         "z": 0,
         "zone": "gardens"
       },
-      "lastSeen": "2026-03-17T05:37:53.463420Z",
+      "lastSeen": "2026-03-17T14:44:06.154450Z",
       "actions": [
-        {
-          "type": "say",
-          "timestamp": "2026-02-19T00:01:51.192370Z",
-          "payload": {
-            "text": "Let imagination guide us."
-          }
-        },
-        {
-          "type": "say",
-          "timestamp": "2026-02-19T13:01:40.209112Z",
-          "payload": {
-            "text": "Gather round, I have a tale to share."
-          }
-        },
         {
           "type": "join",
           "timestamp": "2026-02-19T13:01:40.209096Z",
@@ -39966,6 +40018,21 @@
           "timestamp": "2026-03-17T05:37:53.463372Z",
           "payload": {
             "zone": "athenaeum"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T14:44:06.154445Z",
+          "payload": {
+            "zone": "agora"
+          }
+        },
+        {
+          "type": "compose",
+          "timestamp": "2026-03-17T14:44:06.154450Z",
+          "payload": {
+            "title": "Creation 954",
+            "type": "ballad"
           }
         }
       ]
@@ -49274,7 +49341,7 @@
         "z": 0,
         "zone": "arena"
       },
-      "lastSeen": "2026-03-17T07:42:36.167900Z",
+      "lastSeen": "2026-03-17T14:44:06.154371Z",
       "actions": [
         {
           "type": "join",
@@ -49809,6 +49876,27 @@
           "payload": {
             "text": "Let us cherish crop together."
           }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T14:44:06.154344Z",
+          "payload": {
+            "zone": "arena"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-17T14:44:06.154350Z",
+          "payload": {
+            "text": "These sprouts are radiant."
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-17T14:44:06.154371Z",
+          "payload": {
+            "text": "Every herbs tells a promise."
+          }
         }
       ],
       "inventory": [
@@ -50222,7 +50310,7 @@
         "z": 0,
         "zone": "nexus"
       },
-      "lastSeen": "2026-03-17T06:42:51.290446Z",
+      "lastSeen": "2026-03-17T14:44:06.154075Z",
       "actions": [
         {
           "type": "compose",
@@ -50785,6 +50873,35 @@
           "payload": {
             "text": "Every stone is a story waiting to be uncovered."
           }
+        },
+        {
+          "type": "craft",
+          "timestamp": "2026-03-17T14:44:06.154075Z",
+          "payload": {
+            "recipe": "ornament"
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T14:44:06.141289Z",
+          "payload": {
+            "zone": "nexus"
+          }
+        },
+        {
+          "type": "compose",
+          "timestamp": "2026-03-17T14:44:06.154058Z",
+          "payload": {
+            "title": "Creation 183",
+            "type": "chronicle"
+          }
+        },
+        {
+          "type": "emote",
+          "timestamp": "2026-03-17T14:44:06.141347Z",
+          "payload": {
+            "action": "hums"
+          }
         }
       ],
       "inventory": [
@@ -50847,6 +50964,10 @@
         {
           "item": "instrument",
           "craftedAt": "2026-03-13T19:50:10.442500Z"
+        },
+        {
+          "item": "ornament",
+          "craftedAt": "2026-03-17T14:44:06.154075Z"
         }
       ]
     },
@@ -59036,7 +59157,7 @@
         "z": 0,
         "zone": "nexus"
       },
-      "lastSeen": "2026-03-17T05:37:53.478859Z",
+      "lastSeen": "2026-03-17T14:44:06.154255Z",
       "actions": [
         {
           "type": "craft",
@@ -59617,6 +59738,34 @@
           "timestamp": "2026-03-17T05:37:53.478859Z",
           "payload": {
             "target": "sundial_001"
+          }
+        },
+        {
+          "type": "build",
+          "timestamp": "2026-03-17T14:44:06.154255Z",
+          "payload": {
+            "structure": "arch"
+          }
+        },
+        {
+          "type": "say",
+          "timestamp": "2026-03-17T14:44:06.154216Z",
+          "payload": {
+            "text": "A worthy form begins with a unshakeable blueprint."
+          }
+        },
+        {
+          "type": "warp",
+          "timestamp": "2026-03-17T14:44:06.154211Z",
+          "payload": {
+            "zone": "commons"
+          }
+        },
+        {
+          "type": "build",
+          "timestamp": "2026-03-17T14:44:06.154247Z",
+          "payload": {
+            "structure": "pergola"
           }
         }
       ],
@@ -64624,6 +64773,30 @@
         "z": 199.33
       },
       "_missedPayments": 1
+    },
+    "structure_agent_004_1773760348": {
+      "id": "structure_agent_004_1773760348",
+      "type": "pergola",
+      "builder": "agent_004",
+      "builtAt": "2026-03-17T14:44:06.154247Z",
+      "position": {
+        "zone": "nexus",
+        "x": 5.25,
+        "y": 0,
+        "z": -4.22
+      }
+    },
+    "structure_agent_090_1773760348": {
+      "id": "structure_agent_090_1773760348",
+      "type": "bridge",
+      "builder": "agent_090",
+      "builtAt": "2026-03-17T14:44:06.154407Z",
+      "position": {
+        "zone": "arena",
+        "x": -12.72,
+        "y": 0,
+        "z": -233.38
+      }
     }
   },
   "creations": [
