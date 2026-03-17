@@ -1,27 +1,27 @@
 {
   "balances": {
     "agent_019": 235,
-    "agent_016": 195,
+    "agent_016": 199,
     "agent_022": 178,
     "agent_021": 243,
     "agent_023": 210,
-    "agent_082": 73,
+    "agent_082": 78,
     "agent_027": 65,
     "agent_025": 87,
     "agent_017": 259,
     "agent_018": 218,
     "agent_001": 207,
     "agent_013": 66,
-    "agent_020": 225,
+    "agent_020": 229,
     "agent_024": 91,
     "agent_083": 71,
     "agent_002": 229,
     "agent_026": 56,
-    "TREASURY": 73,
+    "TREASURY": 74,
     "agent_081": 1,
     "agent_077": 14,
     "agent_089": 33,
-    "agent_078": 0,
+    "agent_078": 2,
     "agent_090": 2,
     "agent_076": 0,
     "agent_075": 10,
@@ -32,10 +32,10 @@
     "agent_074": 6,
     "agent_004": 7,
     "user_001": 22,
-    "zion-observer": 598,
+    "zion-observer": 600,
     "agent_088": 446,
     "agent_095": 275,
-    "agent_071": 296,
+    "agent_071": 300,
     "agent_093": 317,
     "agent_032": 103,
     "agent_036": 384,
@@ -62,7 +62,7 @@
     "agent_063": 72,
     "agent_067": 113,
     "agent_011": 199,
-    "agent_070": 339,
+    "agent_070": 341,
     "agent_054": 482,
     "agent_028": 212,
     "agent_038": 204,
@@ -76,7 +76,7 @@
     "agent_061": 290,
     "agent_008": 108,
     "agent_052": 529,
-    "agent_068": 84,
+    "agent_068": 86,
     "agent_037": 326,
     "agent_030": 288,
     "agent_035": 90,
@@ -85,7 +85,7 @@
     "agent_031": 208,
     "agent_005": 364,
     "agent_043": 380,
-    "agent_085": 275,
+    "agent_085": 282,
     "agent_051": 348,
     "agent_084": 451,
     "agent_015": 251,
@@ -95,7 +95,7 @@
     "agent_064": 92,
     "agent_058": 295,
     "agent_010": 150,
-    "agent_048": 418,
+    "agent_048": 419,
     "agent_059": 516,
     "agent_029": 171,
     "agent_072": 514,
@@ -105,66 +105,6 @@
     "agent_012": 322
   },
   "transactions": [
-    {
-      "type": "ubi_payout",
-      "to": "agent_086",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_039",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_055",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_062",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_044",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_006",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_066",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_061",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_008",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_052",
-      "amount": 1,
-      "timestamp": 1773603859.8509507
-    },
     {
       "type": "ubi_payout",
       "to": "agent_068",
@@ -3452,6 +3392,50 @@
       "amount": 1,
       "structureId": "structure_agent_080_1773721851",
       "timestamp": 1773745703.8504102
+    },
+    {
+      "type": "plant",
+      "from": "agent_016",
+      "ts": "",
+      "payload": {
+        "species": "basil",
+        "plot": "plot_019"
+      }
+    },
+    {
+      "type": "plant",
+      "from": "agent_020",
+      "ts": "",
+      "payload": {
+        "species": "basil",
+        "plot": "plot_013"
+      }
+    },
+    {
+      "type": "buy",
+      "from": "agent_068",
+      "ts": "",
+      "payload": {
+        "item": "tool",
+        "price": 3
+      }
+    },
+    {
+      "type": "sell",
+      "from": "agent_068",
+      "ts": "",
+      "payload": {
+        "item": "charm",
+        "price": 10
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_085",
+      "ts": "",
+      "payload": {
+        "recipe": "ring"
+      }
     }
   ],
   "listings": [
