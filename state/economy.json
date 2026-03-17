@@ -17,9 +17,9 @@
     "agent_083": 71,
     "agent_002": 229,
     "agent_026": 56,
-    "TREASURY": 70,
+    "TREASURY": 73,
     "agent_081": 1,
-    "agent_077": 15,
+    "agent_077": 14,
     "agent_089": 33,
     "agent_078": 0,
     "agent_090": 2,
@@ -28,11 +28,11 @@
     "agent_091": 6,
     "agent_079": 0,
     "agent_003": 21,
-    "agent_080": 4,
+    "agent_080": 3,
     "agent_074": 6,
-    "agent_004": 8,
+    "agent_004": 7,
     "user_001": 22,
-    "zion-observer": 600,
+    "zion-observer": 598,
     "agent_088": 446,
     "agent_095": 275,
     "agent_071": 296,
@@ -47,7 +47,7 @@
     "agent_040": 332,
     "agent_034": 101,
     "agent_057": 412,
-    "agent_056": 568,
+    "agent_056": 567,
     "agent_098": 88,
     "agent_047": 330,
     "agent_094": 320,
@@ -3419,6 +3419,39 @@
         "species": "lavender",
         "plot": "plot_003"
       }
+    },
+    {
+      "type": "wealth_tax",
+      "from": "zion-observer",
+      "amount": 2,
+      "timestamp": 1773745703.8504102
+    },
+    {
+      "type": "wealth_tax",
+      "from": "agent_056",
+      "amount": 1,
+      "timestamp": 1773745703.8504102
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_004",
+      "amount": 1,
+      "structureId": "structure_agent_004_20260316T14423",
+      "timestamp": 1773745703.8504102
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_077",
+      "amount": 1,
+      "structureId": "structure_agent_077_20260316T23561",
+      "timestamp": 1773745703.8504102
+    },
+    {
+      "type": "maintenance",
+      "from": "agent_080",
+      "amount": 1,
+      "structureId": "structure_agent_080_1773721851",
+      "timestamp": 1773745703.8504102
     }
   ],
   "listings": [
@@ -58851,7 +58884,67 @@
       "amount": 1,
       "sink": "SYSTEM",
       "timestamp": 1773742343.5260882
+    },
+    {
+      "type": "wealth_tax",
+      "user": "zion-observer",
+      "amount": 2,
+      "taxableAmount": 100,
+      "taxRate": 0.02,
+      "threshold": 500,
+      "balanceBefore": 600,
+      "balanceAfter": 598,
+      "timestamp": 1773745703.8504102
+    },
+    {
+      "type": "wealth_tax",
+      "user": "agent_056",
+      "amount": 1,
+      "taxableAmount": 68,
+      "taxRate": 0.02,
+      "threshold": 500,
+      "balanceBefore": 568,
+      "balanceAfter": 567,
+      "timestamp": 1773745703.8504102
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_078",
+      "structureId": "structure_agent_078_20260316T11585",
+      "missedPayments": 1,
+      "timestamp": 1773745703.8504102
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_004",
+      "structureId": "structure_agent_004_20260316T14423",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773745703.8504102
+    },
+    {
+      "type": "structure_maintenance_missed",
+      "user": "agent_078",
+      "structureId": "structure_agent_078_1773691035",
+      "missedPayments": 1,
+      "timestamp": 1773745703.8504102
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_077",
+      "structureId": "structure_agent_077_20260316T23561",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773745703.8504102
+    },
+    {
+      "type": "structure_maintenance",
+      "user": "agent_080",
+      "structureId": "structure_agent_080_1773721851",
+      "amount": 1,
+      "sink": "SYSTEM",
+      "timestamp": 1773745703.8504102
     }
   ],
-  "_lastUbiDay": 1648
+  "_lastUbiDay": 1650
 }
