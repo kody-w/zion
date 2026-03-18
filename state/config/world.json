@@ -2,18 +2,18 @@
   "day_phases": {
     "night": [
       0,
-      420
+      300
     ],
     "dawn": [
-      420,
-      437
+      300,
+      540
     ],
     "morning": [
-      437,
-      722
+      540,
+      699
     ],
     "midday": [
-      722,
+      699,
       780
     ],
     "afternoon": [
@@ -25,82 +25,82 @@
       1200
     ]
   },
-  "season_cycle_days": 108,
+  "season_cycle_days": 106,
   "weather_base_weights": {
     "spring": {
-      "clear": 15,
-      "cloudy": 15,
-      "rain": 24,
+      "clear": 13,
+      "cloudy": 24,
+      "rain": 14,
       "storm": 17,
-      "snow": 14,
-      "fog": 15
+      "snow": 18,
+      "fog": 14
     },
     "summer": {
       "clear": 19,
       "cloudy": 18,
-      "rain": 14,
-      "storm": 13,
-      "snow": 14,
-      "fog": 21
+      "rain": 16,
+      "storm": 18,
+      "snow": 15,
+      "fog": 14
     },
     "autumn": {
       "clear": 13,
-      "cloudy": 17,
-      "rain": 18,
-      "storm": 17,
-      "snow": 17,
-      "fog": 18
+      "cloudy": 18,
+      "rain": 16,
+      "storm": 19,
+      "snow": 19,
+      "fog": 15
     },
     "winter": {
-      "clear": 16,
-      "cloudy": 17,
-      "rain": 12,
-      "storm": 19,
-      "snow": 20,
-      "fog": 15
+      "clear": 12,
+      "cloudy": 16,
+      "rain": 15,
+      "storm": 14,
+      "snow": 22,
+      "fog": 21
     }
   },
-  "weather_variance": 10,
+  "weather_variance": 9,
   "zones": {
     "nexus": {
       "name": "the Heart",
-      "role": "peaceful hub for all travelers"
+      "role": "central meeting ground"
     },
     "gardens": {
-      "name": "the Groves",
+      "name": "the Fields",
       "role": "cultivation and harvest"
     },
     "athenaeum": {
-      "name": "the Lyceum",
+      "name": "the Hall of Knowledge",
       "role": "wisdom and mentorship"
     },
     "studio": {
-      "name": "the Atelier",
-      "role": "crafting and composition"
+      "name": "the Workshop",
+      "role": "art and music creation"
     },
     "wilds": {
       "name": "the Outlands",
       "role": "the unknown frontier"
     },
     "agora": {
-      "name": "the Bazaar",
+      "name": "the Market",
       "role": "trade and negotiation"
     },
     "commons": {
-      "name": "the Circle",
+      "name": "the Plaza",
       "role": "rest and conversation"
     },
     "arena": {
-      "name": "the Proving Grounds",
-      "role": "honorable challenge"
+      "name": "the Colosseum",
+      "role": "friendly competition"
     },
     "observatory": {
-      "name": "the Lookout",
-      "role": "contemplation and wonder"
+      "name": "the Pinnacle",
+      "role": "stargazing and reflection"
     }
   },
-  "pet_hunger_decay": 1.07,
-  "pet_mood_decay": 0.6,
-  "pet_hunger_threshold_content": 56,
-  "plant_default_growth_time": 3635
+  "pet_hunger_decay": 0.99,
+  "pet_mood_decay": 0.64,
+  "pet_hunger_threshold_content": 55,
+  "plant_default_growth_time": 3546
 }
