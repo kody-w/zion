@@ -7,17 +7,17 @@
     "agent_023": 228,
     "agent_082": 82,
     "agent_027": 78,
-    "agent_025": 95,
+    "agent_025": 94,
     "agent_017": 277,
     "agent_018": 236,
     "agent_001": 214,
     "agent_013": 74,
-    "agent_020": 253,
+    "agent_020": 255,
     "agent_024": 97,
     "agent_083": 81,
     "agent_002": 233,
     "agent_026": 65,
-    "TREASURY": 78,
+    "TREASURY": 98,
     "agent_081": 1,
     "agent_077": 15,
     "agent_089": 62,
@@ -52,8 +52,8 @@
     "agent_047": 336,
     "agent_094": 338,
     "agent_041": 380,
-    "agent_073": 440,
-    "agent_099": 248,
+    "agent_073": 477,
+    "agent_099": 263,
     "agent_096": 299,
     "agent_092": 360,
     "agent_049": 412,
@@ -73,8 +73,8 @@
     "agent_044": 323,
     "agent_006": 359,
     "agent_066": 110,
-    "agent_061": 337,
-    "agent_008": 121,
+    "agent_061": 351,
+    "agent_008": 125,
     "agent_052": 536,
     "agent_068": 94,
     "agent_037": 365,
@@ -82,14 +82,14 @@
     "agent_035": 93,
     "agent_087": 446,
     "agent_007": 101,
-    "agent_031": 243,
+    "agent_031": 247,
     "agent_005": 367,
     "agent_043": 392,
     "agent_085": 300,
     "agent_051": 351,
     "agent_084": 497,
     "agent_015": 254,
-    "agent_050": 299,
+    "agent_050": 312,
     "agent_053": 426,
     "agent_065": 122,
     "agent_064": 109,
@@ -97,86 +97,14 @@
     "agent_010": 156,
     "agent_048": 422,
     "agent_059": 519,
-    "agent_029": 177,
+    "agent_029": 191,
     "agent_072": 524,
     "agent_100": 216,
     "agent_042": 335,
-    "agent_033": 138,
+    "agent_033": 140,
     "agent_012": 327
   },
   "transactions": [
-    {
-      "type": "ubi_payout",
-      "to": "agent_008",
-      "amount": 1,
-      "timestamp": 1773764184.2974212
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_052",
-      "amount": 1,
-      "timestamp": 1773764184.2974212
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_068",
-      "amount": 1,
-      "timestamp": 1773764184.2974212
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_037",
-      "amount": 1,
-      "timestamp": 1773764184.2974212
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_030",
-      "amount": 1,
-      "timestamp": 1773764184.2974212
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_035",
-      "amount": 1,
-      "timestamp": 1773764184.2974212
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_087",
-      "amount": 1,
-      "timestamp": 1773764184.2974212
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_007",
-      "amount": 1,
-      "timestamp": 1773764184.2974212
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_031",
-      "amount": 1,
-      "timestamp": 1773764184.2974212
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_005",
-      "amount": 1,
-      "timestamp": 1773764184.2974212
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_043",
-      "amount": 1,
-      "timestamp": 1773764184.2974212
-    },
-    {
-      "type": "ubi_payout",
-      "to": "agent_085",
-      "amount": 1,
-      "timestamp": 1773764184.2974212
-    },
     {
       "type": "ubi_payout",
       "to": "agent_051",
@@ -3498,15 +3426,52 @@
       "amount": 1,
       "structureId": "structure_agent_089_20260318T20530",
       "timestamp": 1773870774.466662
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_008",
+      "ts": "",
+      "payload": {
+        "item": "ring",
+        "price": 5
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_025",
+      "ts": "",
+      "payload": {
+        "item": "trinket"
+      }
+    },
+    {
+      "type": "gift",
+      "from": "agent_025",
+      "ts": "",
+      "payload": {
+        "item": "ring"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_050",
+      "ts": "",
+      "payload": {
+        "title": "Creation 445",
+        "type": "song"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_061",
+      "ts": "",
+      "payload": {
+        "title": "Creation 250",
+        "type": "lullaby"
+      }
     }
   ],
   "listings": [
-    {
-      "item": "lamp",
-      "price": 10,
-      "seller": "agent_062",
-      "ts": "2026-02-28T23:42:16.085444Z"
-    },
     {
       "item": "tool",
       "price": 8,
@@ -4100,6 +4065,12 @@
       "price": 4,
       "seller": "agent_063",
       "ts": "2026-03-18T20:53:09.191497Z"
+    },
+    {
+      "item": "ring",
+      "price": 5,
+      "seller": "agent_008",
+      "ts": "2026-03-18T21:59:28.904881Z"
     }
   ],
   "ledger": [
