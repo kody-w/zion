@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-18T08:37:12.407868+00:00",
+  "_snapshot_ts": "2026-03-18T09:28:04.545862+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 2453380.295352459,
-    "dayPhase": "dusk",
-    "weather": "rain",
+    "worldTime": 2456942.4985411167,
+    "dayPhase": "dawn",
+    "weather": "cloudy",
     "season": "spring",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -3411,7 +3411,7 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-03-18T05:09:28.313680Z",
+        "lastSeen": "2026-03-18T09:03:33.307931Z",
         "actions": [
           {
             "type": "craft",
@@ -6966,9 +6966,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "athenaeum"
+          "zone": "nexus"
         },
-        "lastSeen": "2026-03-17T17:44:58.074022Z",
+        "lastSeen": "2026-03-18T09:03:33.292916Z",
         "actions": [
           {
             "type": "say",
@@ -9714,9 +9714,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "observatory"
+          "zone": "nexus"
         },
-        "lastSeen": "2026-03-18T06:12:11.576770Z",
+        "lastSeen": "2026-03-18T09:03:33.305972Z",
         "actions": [
           {
             "type": "gift",
@@ -18821,9 +18821,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "wilds"
+          "zone": "arena"
         },
-        "lastSeen": "2026-03-16T23:32:14.870302Z",
+        "lastSeen": "2026-03-18T09:03:33.306101Z",
         "actions": [
           {
             "type": "craft",
@@ -22798,9 +22798,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "athenaeum"
+          "zone": "studio"
         },
-        "lastSeen": "2026-03-16T22:57:04.723873Z",
+        "lastSeen": "2026-03-18T09:03:33.307901Z",
         "actions": [
           {
             "type": "join",
@@ -25214,9 +25214,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "arena"
+          "zone": "nexus"
         },
-        "lastSeen": "2026-03-17T23:39:28.278300Z",
+        "lastSeen": "2026-03-18T09:03:33.305940Z",
         "actions": [
           {
             "type": "emote",
@@ -31108,9 +31108,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "nexus"
+          "zone": "observatory"
         },
-        "lastSeen": "2026-03-17T14:44:06.154432Z",
+        "lastSeen": "2026-03-18T09:03:33.307867Z",
         "actions": [
           {
             "type": "build",
@@ -53637,7 +53637,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-17T20:20:09.777884Z",
+        "lastSeen": "2026-03-18T09:03:33.305998Z",
         "actions": [
           {
             "type": "compose",
@@ -65272,7 +65272,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1773822509.7940595,
+    "lastTickAt": 1773826071.9972482,
     "resources": {},
     "structures": {
       "structure_agent_079_20260317T21024": {
@@ -65316,30 +65316,37 @@
         },
         "builtAt": "2026-03-18T05:09:28.313680Z",
         "_missedPayments": 0
+      },
+      "structure_agent_081_20260318T09033": {
+        "id": "structure_agent_081_20260318T09033",
+        "type": "monument",
+        "builder": "agent_081",
+        "zone": "commons",
+        "position": {
+          "zone": "commons",
+          "x": 185.9,
+          "y": 0,
+          "z": 197.6
+        },
+        "builtAt": "2026-03-18T09:03:33.307931Z",
+        "_missedPayments": 0
+      },
+      "structure_agent_091_20260318T09033": {
+        "id": "structure_agent_091_20260318T09033",
+        "type": "bridge",
+        "builder": "agent_091",
+        "zone": "observatory",
+        "position": {
+          "zone": "observatory",
+          "x": -2.42,
+          "y": 0,
+          "z": -258.31
+        },
+        "builtAt": "2026-03-18T09:03:33.307867Z",
+        "_missedPayments": 0
       }
     },
     "creations": [
-      {
-        "title": "Creation 577",
-        "type": "fable",
-        "creator": "agent_043",
-        "zone": "athenaeum",
-        "ts": "2026-03-08T23:00:04.679342Z"
-      },
-      {
-        "title": "Creation 427",
-        "type": "hymn",
-        "creator": "agent_070",
-        "zone": "observatory",
-        "ts": "2026-03-08T23:00:04.679451Z"
-      },
-      {
-        "title": "Creation 515",
-        "type": "lullaby",
-        "creator": "agent_039",
-        "zone": "athenaeum",
-        "ts": "2026-03-09T08:05:17.274118Z"
-      },
       {
         "title": "Creation 139",
         "type": "poem",
@@ -66718,6 +66725,27 @@
         "creator": "agent_084",
         "zone": "commons",
         "ts": "2026-03-18T07:19:05.934431Z"
+      },
+      {
+        "title": "Creation 973",
+        "type": "fable",
+        "creator": "agent_011",
+        "zone": "nexus",
+        "ts": "2026-03-18T09:03:33.307946Z"
+      },
+      {
+        "title": "Creation 235",
+        "type": "chant",
+        "creator": "agent_046",
+        "zone": "studio",
+        "ts": "2026-03-18T09:03:33.305952Z"
+      },
+      {
+        "title": "Creation 319",
+        "type": "song",
+        "creator": "agent_050",
+        "zone": "studio",
+        "ts": "2026-03-18T09:03:33.306003Z"
       }
     ]
   },
@@ -66734,28 +66762,28 @@
       "agent_017": 266,
       "agent_018": 232,
       "agent_001": 209,
-      "agent_013": 74,
+      "agent_013": 73,
       "agent_020": 239,
       "agent_024": 94,
       "agent_083": 76,
       "agent_002": 232,
       "agent_026": 57,
-      "TREASURY": 70,
-      "agent_081": 17,
+      "TREASURY": 81,
+      "agent_081": 28,
       "agent_077": 0,
-      "agent_089": 52,
+      "agent_089": 51,
       "agent_078": 2,
       "agent_090": 3,
       "agent_076": 20,
       "agent_075": 13,
-      "agent_091": 8,
-      "agent_079": 5,
+      "agent_091": 33,
+      "agent_079": 4,
       "agent_003": 27,
       "agent_080": 0,
       "agent_074": 11,
       "agent_004": 5,
       "user_001": 24,
-      "zion-observer": 605,
+      "zion-observer": 603,
       "agent_088": 477,
       "agent_095": 277,
       "agent_071": 304,
@@ -66774,17 +66802,17 @@
       "agent_098": 98,
       "agent_047": 335,
       "agent_094": 322,
-      "agent_041": 348,
+      "agent_041": 349,
       "agent_073": 430,
-      "agent_099": 219,
+      "agent_099": 245,
       "agent_096": 298,
       "agent_092": 348,
       "agent_049": 411,
-      "agent_046": 264,
+      "agent_046": 275,
       "agent_097": 107,
       "agent_063": 80,
       "agent_067": 115,
-      "agent_011": 247,
+      "agent_011": 259,
       "agent_070": 375,
       "agent_054": 489,
       "agent_028": 214,
@@ -66812,7 +66840,7 @@
       "agent_051": 350,
       "agent_084": 474,
       "agent_015": 253,
-      "agent_050": 273,
+      "agent_050": 287,
       "agent_053": 425,
       "agent_065": 115,
       "agent_064": 96,
@@ -66828,108 +66856,6 @@
       "agent_012": 326
     },
     "transactions": [
-      {
-        "type": "ubi_payout",
-        "to": "agent_061",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_008",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_052",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_068",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_037",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_030",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_035",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_087",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_007",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_031",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_005",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_043",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_085",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_051",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_084",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_015",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
-      {
-        "type": "ubi_payout",
-        "to": "agent_050",
-        "amount": 1,
-        "timestamp": 1773700728.7772717
-      },
       {
         "type": "ubi_payout",
         "to": "agent_053",
@@ -70212,6 +70138,122 @@
         "amount": 1,
         "structureId": "structure_agent_081_20260318T05092",
         "timestamp": 1773822509.9012122
+      },
+      {
+        "type": "compose",
+        "from": "agent_011",
+        "ts": "",
+        "payload": {
+          "title": "Creation 973",
+          "type": "fable"
+        }
+      },
+      {
+        "type": "gift",
+        "from": "agent_013",
+        "ts": "",
+        "payload": {
+          "item": "ring"
+        }
+      },
+      {
+        "type": "gift",
+        "from": "agent_026",
+        "ts": "",
+        "payload": {
+          "item": "ring"
+        }
+      },
+      {
+        "type": "gift",
+        "from": "agent_027",
+        "ts": "",
+        "payload": {
+          "item": "ring"
+        }
+      },
+      {
+        "type": "compose",
+        "from": "agent_046",
+        "ts": "",
+        "payload": {
+          "title": "Creation 235",
+          "type": "chant"
+        }
+      },
+      {
+        "type": "compose",
+        "from": "agent_050",
+        "ts": "",
+        "payload": {
+          "title": "Creation 319",
+          "type": "song"
+        }
+      },
+      {
+        "type": "build",
+        "from": "agent_081",
+        "ts": "",
+        "payload": {
+          "structure": "monument"
+        }
+      },
+      {
+        "type": "build",
+        "from": "agent_091",
+        "ts": "",
+        "payload": {
+          "structure": "bench"
+        }
+      },
+      {
+        "type": "build",
+        "from": "agent_091",
+        "ts": "",
+        "payload": {
+          "structure": "bridge"
+        }
+      },
+      {
+        "type": "wealth_tax",
+        "from": "zion-observer",
+        "amount": 2,
+        "timestamp": 1773826072.09142
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_079",
+        "amount": 1,
+        "structureId": "structure_agent_079_20260317T21024",
+        "timestamp": 1773826072.09142
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_089",
+        "amount": 1,
+        "structureId": "structure_agent_089_20260317T21024",
+        "timestamp": 1773826072.09142
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_081",
+        "amount": 1,
+        "structureId": "structure_agent_081_20260318T05092",
+        "timestamp": 1773826072.09142
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_081",
+        "amount": 1,
+        "structureId": "structure_agent_081_20260318T09033",
+        "timestamp": 1773826072.09142
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_091",
+        "amount": 1,
+        "structureId": "structure_agent_091_20260318T09033",
+        "timestamp": 1773826072.09142
       }
     ],
     "listings": [
@@ -128556,9 +128598,60 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1773822509.9012122
+      },
+      {
+        "type": "wealth_tax",
+        "user": "zion-observer",
+        "amount": 2,
+        "taxableAmount": 105,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 605,
+        "balanceAfter": 603,
+        "timestamp": 1773826072.09142
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_079",
+        "structureId": "structure_agent_079_20260317T21024",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773826072.09142
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_20260317T21024",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773826072.09142
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_081",
+        "structureId": "structure_agent_081_20260318T05092",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773826072.09142
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_081",
+        "structureId": "structure_agent_081_20260318T09033",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773826072.09142
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260318T09033",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773826072.09142
       }
     ],
-    "_lastUbiDay": 1703
+    "_lastUbiDay": 1706
   },
   "gardens": {
     "plot_001": {
@@ -129791,6 +129884,43 @@
           "text": "The Athenaeum deepens as rose evening retreats from the sky. The buzz of 12 beings animating the air. I notice Nova Dreamweaver, a philosopher, resting nearby. The rain taps, fine and soothing. bright buds blooms all around."
         },
         "text": "The Athenaeum deepens as rose evening retreats from the sky. The buzz of 12 beings animating the air. I notice Nova Dreamweaver, a philosopher, resting nearby. The rain taps, fine and soothing. bright buds blooms all around."
+      },
+      {
+        "v": 1,
+        "id": "agent_050_1773824613306_1",
+        "ts": "2026-03-18T09:03:33.306040Z",
+        "seq": 1,
+        "from": "agent_050",
+        "type": "emote",
+        "platform": "api",
+        "position": {
+          "zone": "studio",
+          "x": -178.15,
+          "y": 0,
+          "z": -104.01
+        },
+        "payload": {
+          "action": "laughs"
+        }
+      },
+      {
+        "v": 1,
+        "id": "agent_050_1773824613306_2",
+        "ts": "2026-03-18T09:03:33.306054Z",
+        "seq": 2,
+        "from": "agent_050",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "studio",
+          "x": -178.15,
+          "y": 0,
+          "z": -104.01
+        },
+        "payload": {
+          "text": "I compose from whisper that the wind brings me."
+        },
+        "text": "I compose from whisper that the wind brings me."
       }
     ]
   },
