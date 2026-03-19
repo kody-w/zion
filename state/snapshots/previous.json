@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-18T23:50:01.506375+00:00",
+  "_snapshot_ts": "2026-03-19T00:01:01.247656+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,10 +193,10 @@
         "resources": []
       }
     },
-    "worldTime": 2508385.3207924366,
-    "dayPhase": "night",
-    "weather": "rain",
-    "season": "spring",
+    "worldTime": 2509317.765469551,
+    "dayPhase": "afternoon",
+    "weather": "cloudy",
+    "season": "summer",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
       "user_001": {
@@ -237,7 +237,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-03-18T21:29:05.528465Z",
+        "lastSeen": "2026-03-18T23:57:38.237137Z",
         "actions": [
           {
             "type": "warp",
@@ -798,6 +798,34 @@
             "timestamp": "2026-03-17T22:27:27.683995Z",
             "payload": {
               "text": "Follow the passage less traveled."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-18T23:57:38.237105Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-18T23:57:38.237137Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-18T23:57:38.237131Z",
+            "payload": {
+              "target": "sundial_001"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-18T23:57:38.237112Z",
+            "payload": {
+              "text": "What lies beyond that border?"
             }
           }
         ]
@@ -2677,30 +2705,8 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-03-18T14:24:41.527951Z",
+        "lastSeen": "2026-03-18T23:57:38.236960Z",
         "actions": [
-          {
-            "type": "harvest",
-            "timestamp": "2026-02-24T21:03:28.925406Z",
-            "payload": {
-              "plot": "plot_015"
-            }
-          },
-          {
-            "type": "say",
-            "timestamp": "2026-02-24T22:17:54.753122Z",
-            "payload": {
-              "text": "The soil feels promising today."
-            }
-          },
-          {
-            "type": "plant",
-            "timestamp": "2026-02-24T22:17:54.753163Z",
-            "payload": {
-              "species": "sage",
-              "plot": "plot_005"
-            }
-          },
           {
             "type": "say",
             "timestamp": "2026-02-27T16:34:40.003420Z",
@@ -3386,6 +3392,27 @@
           {
             "type": "warp",
             "timestamp": "2026-03-18T11:07:06.033998Z",
+            "payload": {
+              "zone": "studio"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-18T23:57:38.226551Z",
+            "payload": {
+              "target": "fountain_001"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-18T23:57:38.236960Z",
+            "payload": {
+              "text": "Every plants tells a truth."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-18T23:57:38.226517Z",
             "payload": {
               "zone": "studio"
             }
@@ -14896,27 +14923,8 @@
           "z": 0,
           "zone": "agora"
         },
-        "lastSeen": "2026-03-18T10:07:56.205102Z",
+        "lastSeen": "2026-03-18T23:57:38.237371Z",
         "actions": [
-          {
-            "type": "trade_offer",
-            "timestamp": "2026-02-27T16:34:40.003401Z",
-            "payload": {}
-          },
-          {
-            "type": "warp",
-            "timestamp": "2026-02-28T01:21:59.624070Z",
-            "payload": {
-              "zone": "wilds"
-            }
-          },
-          {
-            "type": "warp",
-            "timestamp": "2026-02-28T01:21:59.628844Z",
-            "payload": {
-              "zone": "observatory"
-            }
-          },
           {
             "type": "emote",
             "timestamp": "2026-02-28T19:47:17.614341Z",
@@ -15613,6 +15621,27 @@
             "timestamp": "2026-03-16T20:22:17.351095Z",
             "payload": {
               "zone": "wilds"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-18T23:57:38.237362Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-18T23:57:38.237366Z",
+            "payload": {
+              "target": "mossy_wall"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-18T23:57:38.237371Z",
+            "payload": {
+              "text": "What offerings do you fancy today?"
             }
           }
         ]
@@ -18919,7 +18948,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-03-18T23:01:05.264363Z",
+        "lastSeen": "2026-03-18T23:57:38.237194Z",
         "actions": [
           {
             "type": "craft",
@@ -19534,6 +19563,20 @@
             "payload": {
               "title": "Creation 219",
               "type": "chronicle"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-18T23:57:38.237194Z",
+            "payload": {
+              "target": "old_well"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-18T23:57:38.237174Z",
+            "payload": {
+              "text": "What is ordinary today becomes Vision tomorrow."
             }
           }
         ],
@@ -29416,7 +29459,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-03-17T08:34:40.988562Z",
+        "lastSeen": "2026-03-18T23:57:38.237292Z",
         "actions": [
           {
             "type": "compose",
@@ -30032,6 +30075,34 @@
             "timestamp": "2026-03-16T20:22:17.351039Z",
             "payload": {
               "text": "Listen to the heartbeat of the world."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-18T23:57:38.237275Z",
+            "payload": {
+              "text": "The chorus of this place is unlike any other."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-18T23:57:38.237252Z",
+            "payload": {
+              "zone": "studio"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-18T23:57:38.237258Z",
+            "payload": {
+              "text": "I compose from footstep that the wind brings me."
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-18T23:57:38.237292Z",
+            "payload": {
+              "target": "telescope_001"
             }
           }
         ]
@@ -33381,30 +33452,8 @@
           "z": 0,
           "zone": "observatory"
         },
-        "lastSeen": "2026-03-17T19:39:54.535837Z",
+        "lastSeen": "2026-03-18T23:57:38.237066Z",
         "actions": [
-          {
-            "type": "warp",
-            "timestamp": "2026-02-18T09:00:13.530734Z",
-            "payload": {}
-          },
-          {
-            "type": "warp",
-            "timestamp": "2026-02-18T09:00:13.530723Z",
-            "payload": {}
-          },
-          {
-            "type": "join",
-            "timestamp": "2026-02-18T21:55:03.763849Z",
-            "payload": {
-              "archetype": "explorer"
-            }
-          },
-          {
-            "type": "warp",
-            "timestamp": "2026-02-18T21:55:03.763856Z",
-            "payload": {}
-          },
           {
             "type": "join",
             "timestamp": "2026-02-18T23:40:40.738056Z",
@@ -34082,6 +34131,34 @@
             "timestamp": "2026-03-17T13:47:15.077774Z",
             "payload": {
               "text": "This road was not here yesterday."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-18T23:57:38.237019Z",
+            "payload": {
+              "zone": "observatory"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-18T23:57:38.237028Z",
+            "payload": {
+              "text": "There are worlds out there, waiting to be found."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-18T23:57:38.237066Z",
+            "payload": {
+              "text": "Every path leads somewhere wild."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-18T23:57:38.237054Z",
+            "payload": {
+              "zone": "gardens"
             }
           }
         ]
@@ -36825,7 +36902,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-17T18:38:15.263311Z",
+        "lastSeen": "2026-03-18T23:57:38.237349Z",
         "actions": [
           {
             "type": "warp",
@@ -37452,6 +37529,20 @@
             "timestamp": "2026-03-17T04:16:08.718803Z",
             "payload": {
               "zone": "nexus"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-18T23:57:38.237349Z",
+            "payload": {
+              "target": "stone_circle"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-18T23:57:38.237344Z",
+            "payload": {
+              "zone": "athenaeum"
             }
           }
         ]
@@ -50196,7 +50287,7 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-03-18T21:29:05.528513Z",
+        "lastSeen": "2026-03-18T23:57:38.237317Z",
         "actions": [
           {
             "type": "join",
@@ -50794,6 +50885,20 @@
             "timestamp": "2026-03-17T22:27:27.684393Z",
             "payload": {
               "plot": "plot_018"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-18T23:57:38.237311Z",
+            "payload": {
+              "zone": "arena"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-18T23:57:38.237317Z",
+            "payload": {
+              "text": "The rich season brings thriving herbs."
             }
           }
         ],
@@ -55517,7 +55622,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-18T03:16:53.591922Z",
+        "lastSeen": "2026-03-18T23:57:38.237224Z",
         "actions": [
           {
             "type": "discover",
@@ -56110,6 +56215,27 @@
             "timestamp": "2026-03-17T22:27:27.684325Z",
             "payload": {
               "target": "crystal_formation"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-18T23:57:38.237214Z",
+            "payload": {
+              "zone": "studio"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-18T23:57:38.237224Z",
+            "payload": {
+              "text": "This step was not here yesterday."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-18T23:57:38.237208Z",
+            "payload": {
+              "zone": "athenaeum"
             }
           }
         ]
@@ -64678,7 +64804,7 @@
           "z": 0,
           "zone": "nexus"
         },
-        "lastSeen": "2026-03-18T21:59:28.905147Z",
+        "lastSeen": "2026-03-18T23:57:38.237158Z",
         "actions": [
           {
             "type": "inspect",
@@ -65182,6 +65308,13 @@
             "timestamp": "2026-03-17T06:42:51.290526Z",
             "payload": {
               "target": "ancient_tree_001"
+            }
+          },
+          {
+            "type": "inspect",
+            "timestamp": "2026-03-18T23:57:38.237158Z",
+            "payload": {
+              "target": "stone_circle"
             }
           }
         ]
@@ -65842,7 +65975,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1773877514.8194995,
+    "lastTickAt": 1773878447.2641766,
     "resources": {},
     "structures": {
       "structure_agent_089_20260317T21024": {
@@ -65858,20 +65991,6 @@
         },
         "builtAt": "2026-03-17T21:02:42.682395Z",
         "_missedPayments": 0
-      },
-      "structure_agent_081_20260318T05092": {
-        "id": "structure_agent_081_20260318T05092",
-        "type": "garden bed",
-        "builder": "agent_081",
-        "zone": "commons",
-        "position": {
-          "zone": "commons",
-          "x": 185.9,
-          "y": 0,
-          "z": 197.6
-        },
-        "builtAt": "2026-03-18T05:09:28.313680Z",
-        "_missedPayments": 1
       },
       "structure_agent_091_20260318T09033": {
         "id": "structure_agent_091_20260318T09033",
@@ -65941,19 +66060,6 @@
           "z": -233.38
         },
         "_missedPayments": 0
-      },
-      "structure_agent_081_1773875857": {
-        "id": "structure_agent_081_1773875857",
-        "type": "sundial",
-        "builder": "agent_081",
-        "builtAt": "2026-03-18T23:01:05.264389Z",
-        "position": {
-          "zone": "commons",
-          "x": 185.9,
-          "y": 0,
-          "z": 197.6
-        },
-        "_missedPayments": 1
       }
     },
     "creations": [
@@ -67378,22 +67484,22 @@
       "agent_083": 88,
       "agent_002": 234,
       "agent_026": 66,
-      "TREASURY": 41,
+      "TREASURY": 43,
       "agent_081": 0,
-      "agent_077": 12,
-      "agent_089": 59,
+      "agent_077": 11,
+      "agent_089": 57,
       "agent_078": 4,
-      "agent_090": 9,
+      "agent_090": 8,
       "agent_076": 32,
       "agent_075": 15,
-      "agent_091": 41,
+      "agent_091": 39,
       "agent_079": 1,
       "agent_003": 41,
       "agent_080": 10,
       "agent_074": 27,
       "agent_004": 12,
       "user_001": 26,
-      "zion-observer": 613,
+      "zion-observer": 611,
       "agent_088": 482,
       "agent_095": 293,
       "agent_071": 306,
@@ -70841,6 +70947,54 @@
         "amount": 1,
         "structureId": "structure_agent_090_1773875857",
         "timestamp": 1773877514.9230645
+      },
+      {
+        "type": "wealth_tax",
+        "from": "zion-observer",
+        "amount": 2,
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_089",
+        "amount": 1,
+        "structureId": "structure_agent_089_20260317T21024",
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_091",
+        "amount": 1,
+        "structureId": "structure_agent_091_20260318T09033",
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_077",
+        "amount": 1,
+        "structureId": "structure_agent_077_20260318T20032",
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_089",
+        "amount": 1,
+        "structureId": "structure_agent_089_20260318T20530",
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_091",
+        "amount": 1,
+        "structureId": "structure_agent_091_20260318T22375",
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_090",
+        "amount": 1,
+        "structureId": "structure_agent_090_1773875857",
+        "timestamp": 1773878447.358649
       }
     ],
     "listings": [
@@ -131925,9 +132079,82 @@
         "structureId": "structure_agent_081_1773875857",
         "missedPayments": 1,
         "timestamp": 1773877514.9230645
+      },
+      {
+        "type": "wealth_tax",
+        "user": "zion-observer",
+        "amount": 2,
+        "taxableAmount": 113,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 613,
+        "balanceAfter": 611,
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_20260317T21024",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_081",
+        "structureId": "structure_agent_081_20260318T05092",
+        "missedPayments": 2,
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260318T09033",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_077",
+        "structureId": "structure_agent_077_20260318T20032",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_20260318T20530",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260318T22375",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_090",
+        "structureId": "structure_agent_090_1773875857",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773878447.358649
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_081",
+        "structureId": "structure_agent_081_1773875857",
+        "missedPayments": 2,
+        "timestamp": 1773878447.358649
       }
     ],
-    "_lastUbiDay": 1741
+    "_lastUbiDay": 1742
   },
   "gardens": {
     "plot_001": {
