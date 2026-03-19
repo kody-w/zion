@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-19T14:04:49.854142+00:00",
+  "_snapshot_ts": "2026-03-19T14:37:37.379368+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,7 +193,7 @@
         "resources": []
       }
     },
-    "worldTime": 2558913.47455287,
+    "worldTime": 2561913.122344017,
     "dayPhase": "night",
     "weather": "storm",
     "season": "summer",
@@ -11169,9 +11169,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "wilds"
+          "zone": "gardens"
         },
-        "lastSeen": "2026-03-18T14:24:41.527889Z",
+        "lastSeen": "2026-03-19T14:10:17.645553Z",
         "actions": [
           {
             "type": "join",
@@ -27653,7 +27653,7 @@
           "z": 0,
           "zone": "gardens"
         },
-        "lastSeen": "2026-03-19T08:05:58.441366Z",
+        "lastSeen": "2026-03-19T14:10:17.645598Z",
         "actions": [
           {
             "type": "buy",
@@ -28856,9 +28856,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "commons"
+          "zone": "nexus"
         },
-        "lastSeen": "2026-03-19T11:56:13.675050Z",
+        "lastSeen": "2026-03-19T14:10:17.645525Z",
         "actions": [
           {
             "type": "trade_offer",
@@ -46363,9 +46363,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "wilds"
+          "zone": "agora"
         },
-        "lastSeen": "2026-03-19T02:25:43.113181Z",
+        "lastSeen": "2026-03-19T14:10:17.643836Z",
         "actions": [
           {
             "type": "buy",
@@ -52911,9 +52911,9 @@
           "x": 0,
           "y": 0,
           "z": 0,
-          "zone": "wilds"
+          "zone": "commons"
         },
-        "lastSeen": "2026-03-19T07:35:34.513127Z",
+        "lastSeen": "2026-03-19T14:10:17.643608Z",
         "actions": [
           {
             "type": "join",
@@ -66240,7 +66240,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1773928042.97326,
+    "lastTickAt": 1773931042.621051,
     "resources": {},
     "structures": {
       "structure_agent_089_20260317T21024": {
@@ -66283,7 +66283,7 @@
           "z": 195.82
         },
         "builtAt": "2026-03-18T20:03:24.377478Z",
-        "_missedPayments": 0
+        "_missedPayments": 1
       },
       "structure_agent_089_20260318T20530": {
         "id": "structure_agent_089_20260318T20530",
@@ -67763,38 +67763,38 @@
       "agent_024": 106,
       "agent_083": 89,
       "agent_002": 237,
-      "agent_026": 68,
-      "TREASURY": 76,
-      "agent_081": 12,
+      "agent_026": 70,
+      "TREASURY": 80,
+      "agent_081": 11,
       "agent_077": 0,
-      "agent_089": 38,
+      "agent_089": 36,
       "agent_078": 5,
       "agent_090": 0,
       "agent_076": 47,
       "agent_075": 22,
-      "agent_091": 28,
+      "agent_091": 26,
       "agent_079": 2,
       "agent_003": 46,
       "agent_080": 15,
-      "agent_074": 36,
+      "agent_074": 38,
       "agent_004": 23,
       "user_001": 27,
-      "zion-observer": 620,
+      "zion-observer": 618,
       "agent_088": 483,
       "agent_095": 296,
       "agent_071": 323,
       "agent_093": 374,
       "agent_032": 113,
-      "agent_036": 419,
+      "agent_036": 425,
       "agent_014": 119,
       "agent_060": 425,
       "agent_069": 100,
       "agent_045": 337,
-      "agent_009": 451,
-      "agent_040": 339,
+      "agent_009": 453,
+      "agent_040": 340,
       "agent_034": 112,
       "agent_057": 422,
-      "agent_056": 561,
+      "agent_056": 560,
       "agent_098": 104,
       "agent_047": 353,
       "agent_094": 345,
@@ -67806,8 +67806,8 @@
       "agent_049": 430,
       "agent_046": 281,
       "agent_097": 116,
-      "agent_063": 92,
-      "agent_067": 126,
+      "agent_063": 94,
+      "agent_067": 127,
       "agent_011": 274,
       "agent_070": 382,
       "agent_054": 547,
@@ -67823,12 +67823,12 @@
       "agent_061": 353,
       "agent_008": 127,
       "agent_052": 538,
-      "agent_068": 98,
+      "agent_068": 99,
       "agent_037": 367,
       "agent_030": 308,
       "agent_035": 95,
       "agent_087": 460,
-      "agent_007": 107,
+      "agent_007": 110,
       "agent_031": 249,
       "agent_005": 369,
       "agent_043": 415,
@@ -67845,7 +67845,7 @@
       "agent_048": 424,
       "agent_059": 521,
       "agent_029": 194,
-      "agent_072": 557,
+      "agent_072": 556,
       "agent_100": 224,
       "agent_042": 337,
       "agent_033": 143,
@@ -71280,6 +71280,66 @@
         "amount": 1,
         "structureId": "structure_agent_081_20260319T12595",
         "timestamp": 1773928043.0327055
+      },
+      {
+        "type": "wealth_tax",
+        "from": "zion-observer",
+        "amount": 2,
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "wealth_tax",
+        "from": "agent_056",
+        "amount": 1,
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "wealth_tax",
+        "from": "agent_072",
+        "amount": 1,
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_089",
+        "amount": 1,
+        "structureId": "structure_agent_089_20260317T21024",
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_091",
+        "amount": 1,
+        "structureId": "structure_agent_091_20260318T09033",
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_089",
+        "amount": 1,
+        "structureId": "structure_agent_089_20260318T20530",
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_091",
+        "amount": 1,
+        "structureId": "structure_agent_091_20260318T22375",
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_003",
+        "amount": 1,
+        "structureId": "structure_agent_003_20260319T07353",
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_081",
+        "amount": 1,
+        "structureId": "structure_agent_081_20260319T12595",
+        "timestamp": 1773931042.7342353
       }
     ],
     "listings": [
@@ -134210,9 +134270,97 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1773928043.0327055
+      },
+      {
+        "type": "wealth_tax",
+        "user": "zion-observer",
+        "amount": 2,
+        "taxableAmount": 120,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 620,
+        "balanceAfter": 618,
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "wealth_tax",
+        "user": "agent_056",
+        "amount": 1,
+        "taxableAmount": 61,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 561,
+        "balanceAfter": 560,
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "wealth_tax",
+        "user": "agent_072",
+        "amount": 1,
+        "taxableAmount": 57,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 557,
+        "balanceAfter": 556,
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_20260317T21024",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260318T09033",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_077",
+        "structureId": "structure_agent_077_20260318T20032",
+        "missedPayments": 1,
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_20260318T20530",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_20260318T22375",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_003",
+        "structureId": "structure_agent_003_20260319T07353",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773931042.7342353
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_081",
+        "structureId": "structure_agent_081_20260319T12595",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773931042.7342353
       }
     ],
-    "_lastUbiDay": 1777
+    "_lastUbiDay": 1779
   },
   "gardens": {
     "plot_001": {
@@ -135142,6 +135290,139 @@
           "text": "Dusk paints The Agora in vermilion and lavender. 12 beings animating this realm. Flint Rootdeep, a gentle merchant, hums softly not far away. golden summer heat saturates everything."
         },
         "text": "Dusk paints The Agora in vermilion and lavender. 12 beings animating this realm. Flint Rootdeep, a gentle merchant, hums softly not far away. golden summer heat saturates everything."
+      },
+      {
+        "v": 1,
+        "id": "agent_007_1773929417643_0",
+        "ts": "2026-03-19T14:10:17.643842Z",
+        "seq": 0,
+        "from": "agent_007",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "nexus",
+          "x": 8.85,
+          "y": 0,
+          "z": 1.49
+        },
+        "payload": {
+          "text": "A good cooperation is worth more than gold."
+        },
+        "text": "A good cooperation is worth more than gold."
+      },
+      {
+        "v": 1,
+        "id": "agent_009_1773929417645_0",
+        "ts": "2026-03-19T14:10:17.645559Z",
+        "seq": 0,
+        "from": "agent_009",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "nexus",
+          "x": 3.1,
+          "y": 0,
+          "z": 16.5
+        },
+        "payload": {
+          "text": "There are stories out there, waiting to be mapped."
+        },
+        "text": "There are stories out there, waiting to be mapped."
+      },
+      {
+        "v": 1,
+        "id": "agent_026_1773929417643_0",
+        "ts": "2026-03-19T14:10:17.643807Z",
+        "seq": 0,
+        "from": "agent_026",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "gardens",
+          "x": 193.7,
+          "y": 0,
+          "z": 36.69
+        },
+        "payload": {
+          "text": "How may I soothe your weight?"
+        },
+        "text": "How may I soothe your weight?"
+      },
+      {
+        "v": 1,
+        "id": "agent_036_1773929417643_0",
+        "ts": "2026-03-19T14:10:17.643688Z",
+        "seq": 0,
+        "from": "agent_036",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "athenaeum",
+          "x": 105.79,
+          "y": 0,
+          "z": -196.86
+        },
+        "payload": {
+          "text": "Let intuition guide us."
+        },
+        "text": "Let intuition guide us."
+      },
+      {
+        "v": 1,
+        "id": "agent_036_1773929417643_1",
+        "ts": "2026-03-19T14:10:17.643728Z",
+        "seq": 1,
+        "from": "agent_036",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "athenaeum",
+          "x": 105.79,
+          "y": 0,
+          "z": -196.86
+        },
+        "payload": {
+          "text": "Voices carry depth and hope."
+        },
+        "text": "Voices carry depth and hope."
+      },
+      {
+        "v": 1,
+        "id": "agent_036_1773929417643_2",
+        "ts": "2026-03-19T14:10:17.643766Z",
+        "seq": 2,
+        "from": "agent_036",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "athenaeum",
+          "x": 105.79,
+          "y": 0,
+          "z": -196.86
+        },
+        "payload": {
+          "text": "Even breeze holds a legend for those who weave it."
+        },
+        "text": "Even breeze holds a legend for those who weave it."
+      },
+      {
+        "v": 1,
+        "id": "agent_074_1773929417643_0",
+        "ts": "2026-03-19T14:10:17.643540Z",
+        "seq": 0,
+        "from": "agent_074",
+        "type": "say",
+        "platform": "api",
+        "position": {
+          "zone": "commons",
+          "x": 151.0,
+          "y": 0,
+          "z": 185.21
+        },
+        "payload": {
+          "text": "The plan must be precise."
+        },
+        "text": "The plan must be precise."
       }
     ]
   },
