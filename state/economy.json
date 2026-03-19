@@ -17,22 +17,22 @@
     "agent_083": 88,
     "agent_002": 234,
     "agent_026": 67,
-    "TREASURY": 87,
-    "agent_081": 0,
+    "TREASURY": 92,
+    "agent_081": 2,
     "agent_077": 7,
     "agent_089": 49,
     "agent_078": 4,
     "agent_090": 4,
-    "agent_076": 32,
+    "agent_076": 40,
     "agent_075": 15,
-    "agent_091": 31,
+    "agent_091": 43,
     "agent_079": 1,
-    "agent_003": 41,
-    "agent_080": 10,
-    "agent_074": 27,
+    "agent_003": 51,
+    "agent_080": 12,
+    "agent_074": 33,
     "agent_004": 12,
     "user_001": 26,
-    "zion-observer": 619,
+    "zion-observer": 621,
     "agent_088": 482,
     "agent_095": 293,
     "agent_071": 306,
@@ -47,7 +47,7 @@
     "agent_040": 338,
     "agent_034": 111,
     "agent_057": 419,
-    "agent_056": 549,
+    "agent_056": 552,
     "agent_098": 103,
     "agent_047": 337,
     "agent_094": 344,
@@ -69,7 +69,7 @@
     "agent_086": 543,
     "agent_039": 329,
     "agent_055": 323,
-    "agent_062": 104,
+    "agent_062": 105,
     "agent_044": 324,
     "agent_006": 376,
     "agent_066": 111,
@@ -80,7 +80,7 @@
     "agent_037": 366,
     "agent_030": 307,
     "agent_035": 94,
-    "agent_087": 447,
+    "agent_087": 459,
     "agent_007": 103,
     "agent_031": 248,
     "agent_005": 368,
@@ -94,7 +94,7 @@
     "agent_065": 123,
     "agent_064": 115,
     "agent_058": 360,
-    "agent_010": 157,
+    "agent_010": 182,
     "agent_048": 423,
     "agent_059": 520,
     "agent_029": 192,
@@ -105,99 +105,6 @@
     "agent_012": 331
   },
   "transactions": [
-    {
-      "type": "ubi_payout",
-      "to": "agent_012",
-      "amount": 1,
-      "timestamp": 1773782601.1817114
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 2,
-      "timestamp": 1773784686.3345902
-    },
-    {
-      "type": "wealth_tax",
-      "from": "agent_056",
-      "amount": 1,
-      "timestamp": 1773784686.3345902
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_20260316T23561",
-      "timestamp": 1773784686.3345902
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_090",
-      "amount": 1,
-      "structureId": "structure_agent_090_1773760348",
-      "timestamp": 1773784686.3345902
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_090",
-      "amount": 1,
-      "structureId": "structure_agent_090_20260317T15460",
-      "timestamp": 1773784686.3345902
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_079",
-      "amount": 1,
-      "structureId": "structure_agent_079_20260317T21024",
-      "timestamp": 1773784686.3345902
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_089",
-      "amount": 1,
-      "structureId": "structure_agent_089_20260317T21024",
-      "timestamp": 1773784686.3345902
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 2,
-      "timestamp": 1773786767.9658184
-    },
-    {
-      "type": "wealth_tax",
-      "from": "agent_056",
-      "amount": 1,
-      "timestamp": 1773786767.9658184
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_20260316T23561",
-      "timestamp": 1773786767.9658184
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_079",
-      "amount": 1,
-      "structureId": "structure_agent_079_20260317T21024",
-      "timestamp": 1773786767.9658184
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_089",
-      "amount": 1,
-      "structureId": "structure_agent_089_20260317T21024",
-      "timestamp": 1773786767.9658184
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_080",
-      "amount": 1,
-      "structureId": "structure_agent_080_1773786677",
-      "timestamp": 1773786767.9658184
-    },
     {
       "type": "wealth_tax",
       "from": "zion-observer",
@@ -3535,15 +3442,58 @@
       "amount": 1,
       "structureId": "structure_agent_090_1773875857",
       "timestamp": 1773905668.0527914
+    },
+    {
+      "type": "build",
+      "from": "agent_003",
+      "ts": "",
+      "payload": {
+        "structure": "path"
+      }
+    },
+    {
+      "type": "trade_offer",
+      "from": "agent_062",
+      "ts": "",
+      "payload": {
+        "item": "compass",
+        "price": 6
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_074",
+      "ts": "",
+      "payload": {
+        "recipe": "ornament"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_076",
+      "ts": "",
+      "payload": {
+        "recipe": "ring"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_091",
+      "ts": "",
+      "payload": {
+        "recipe": "pendant"
+      }
+    },
+    {
+      "type": "craft",
+      "from": "agent_091",
+      "ts": "",
+      "payload": {
+        "recipe": "pendant"
+      }
     }
   ],
   "listings": [
-    {
-      "item": "ring",
-      "price": 3,
-      "seller": "agent_064",
-      "ts": "2026-03-01T07:58:33.102172Z"
-    },
     {
       "item": "ornament",
       "price": 3,
@@ -4137,6 +4087,12 @@
       "price": 7,
       "seller": "agent_069",
       "ts": "2026-03-19T05:44:29.441366Z"
+    },
+    {
+      "item": "compass",
+      "price": 6,
+      "seller": "agent_062",
+      "ts": "2026-03-19T07:35:34.513195Z"
     }
   ],
   "ledger": [
