@@ -3,7 +3,7 @@
     "agent_019": 270,
     "agent_016": 226,
     "agent_022": 201,
-    "agent_021": 254,
+    "agent_021": 258,
     "agent_023": 232,
     "agent_082": 92,
     "agent_027": 78,
@@ -17,7 +17,7 @@
     "agent_083": 91,
     "agent_002": 249,
     "agent_026": 73,
-    "TREASURY": 86,
+    "TREASURY": 98,
     "agent_081": 0,
     "agent_077": 7,
     "agent_089": 0,
@@ -27,7 +27,7 @@
     "agent_075": 24,
     "agent_091": 0,
     "agent_079": 4,
-    "agent_003": 23,
+    "agent_003": 27,
     "agent_080": 23,
     "agent_074": 47,
     "agent_004": 29,
@@ -51,27 +51,27 @@
     "agent_098": 118,
     "agent_047": 357,
     "agent_094": 347,
-    "agent_041": 417,
-    "agent_073": 522,
+    "agent_041": 433,
+    "agent_073": 525,
     "agent_099": 279,
     "agent_096": 328,
     "agent_092": 393,
     "agent_049": 453,
     "agent_046": 300,
     "agent_097": 120,
-    "agent_063": 103,
+    "agent_063": 109,
     "agent_067": 129,
     "agent_011": 276,
     "agent_070": 399,
     "agent_054": 565,
     "agent_028": 235,
-    "agent_038": 232,
+    "agent_038": 234,
     "agent_086": 553,
-    "agent_039": 345,
+    "agent_039": 346,
     "agent_055": 326,
     "agent_062": 113,
-    "agent_044": 332,
-    "agent_006": 379,
+    "agent_044": 346,
+    "agent_006": 396,
     "agent_066": 117,
     "agent_061": 364,
     "agent_008": 129,
@@ -102,154 +102,9 @@
     "agent_100": 226,
     "agent_042": 339,
     "agent_033": 152,
-    "agent_012": 349
+    "agent_012": 351
   },
   "transactions": [
-    {
-      "type": "maintenance",
-      "from": "agent_003",
-      "amount": 1,
-      "structureId": "structure_agent_003_20260319T07353",
-      "timestamp": 1773915849.2331495
-    },
-    {
-      "type": "craft",
-      "from": "agent_001",
-      "ts": "",
-      "payload": {
-        "recipe": "ring"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_017",
-      "ts": "",
-      "payload": {
-        "recipe": "pendant"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_019",
-      "ts": "",
-      "payload": {
-        "recipe": "bell"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_019",
-      "ts": "",
-      "payload": {
-        "recipe": "instrument"
-      }
-    },
-    {
-      "type": "sell",
-      "from": "agent_062",
-      "ts": "",
-      "payload": {
-        "item": "ring",
-        "price": 2
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_064",
-      "ts": "",
-      "payload": {
-        "item": "vessel",
-        "price": 6
-      }
-    },
-    {
-      "type": "trade_offer",
-      "from": "agent_065",
-      "ts": "",
-      "payload": {
-        "item": "prism",
-        "price": 4
-      }
-    },
-    {
-      "type": "sell",
-      "from": "agent_065",
-      "ts": "",
-      "payload": {
-        "item": "vessel",
-        "price": 9
-      }
-    },
-    {
-      "type": "compose",
-      "from": "agent_085",
-      "ts": "",
-      "payload": {
-        "title": "Creation 128",
-        "type": "ballad"
-      }
-    },
-    {
-      "type": "craft",
-      "from": "agent_085",
-      "ts": "",
-      "payload": {
-        "recipe": "scroll"
-      }
-    },
-    {
-      "type": "wealth_tax",
-      "from": "zion-observer",
-      "amount": 2,
-      "timestamp": 1773918333.4352076
-    },
-    {
-      "type": "wealth_tax",
-      "from": "agent_056",
-      "amount": 1,
-      "timestamp": 1773918333.4352076
-    },
-    {
-      "type": "wealth_tax",
-      "from": "agent_072",
-      "amount": 1,
-      "timestamp": 1773918333.4352076
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_089",
-      "amount": 1,
-      "structureId": "structure_agent_089_20260317T21024",
-      "timestamp": 1773918333.4352076
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260318T09033",
-      "timestamp": 1773918333.4352076
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_077",
-      "amount": 1,
-      "structureId": "structure_agent_077_20260318T20032",
-      "timestamp": 1773918333.4352076
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_089",
-      "amount": 1,
-      "structureId": "structure_agent_089_20260318T20530",
-      "timestamp": 1773918333.4352076
-    },
-    {
-      "type": "maintenance",
-      "from": "agent_091",
-      "amount": 1,
-      "structureId": "structure_agent_091_20260318T22375",
-      "timestamp": 1773918333.4352076
-    },
     {
       "type": "maintenance",
       "from": "agent_090",
@@ -3526,6 +3381,33 @@
       "amount": 1,
       "structureId": "structure_agent_003_20260319T07353",
       "timestamp": 1774005699.9952633
+    },
+    {
+      "type": "compose",
+      "from": "agent_006",
+      "ts": "",
+      "payload": {
+        "title": "Creation 798",
+        "type": "lullaby"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_041",
+      "ts": "",
+      "payload": {
+        "title": "Creation 100",
+        "type": "ballad"
+      }
+    },
+    {
+      "type": "compose",
+      "from": "agent_044",
+      "ts": "",
+      "payload": {
+        "title": "Creation 875",
+        "type": "story"
+      }
     }
   ],
   "listings": [
