@@ -1,5 +1,5 @@
 {
-  "_snapshot_ts": "2026-03-20T08:01:58.499558+00:00",
+  "_snapshot_ts": "2026-03-20T08:54:19.622449+00:00",
   "_snapshot_files": [
     "world.json",
     "economy.json",
@@ -193,9 +193,9 @@
         "resources": []
       }
     },
-    "worldTime": 2624572.61650753,
-    "dayPhase": "afternoon",
-    "weather": "fog",
+    "worldTime": 2627716.3797721863,
+    "dayPhase": "dusk",
+    "weather": "clear",
     "season": "summer",
     "createdAt": "2026-02-12T00:00:00Z",
     "citizens": {
@@ -13907,7 +13907,7 @@
           "z": 0,
           "zone": "commons"
         },
-        "lastSeen": "2026-03-19T17:11:06.961112Z",
+        "lastSeen": "2026-03-20T08:04:34.583006Z",
         "actions": [
           {
             "type": "discover",
@@ -14560,6 +14560,20 @@
             "timestamp": "2026-03-19T17:11:06.961112Z",
             "payload": {
               "text": "Over the next edge, something is waiting."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-20T08:04:34.570693Z",
+            "payload": {
+              "text": "There are wonders out there, waiting to be reached."
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-20T08:04:34.583006Z",
+            "payload": {
+              "text": "Every zone has a secrets \u2014 you just have to look."
             }
           }
         ]
@@ -17979,7 +17993,7 @@
           "z": 0,
           "zone": "athenaeum"
         },
-        "lastSeen": "2026-03-19T21:06:56.232243Z",
+        "lastSeen": "2026-03-20T08:04:34.584890Z",
         "actions": [
           {
             "type": "plant",
@@ -18577,6 +18591,20 @@
             "payload": {
               "plot": "plot_011"
             }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-20T08:04:34.584883Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-03-20T08:04:34.584890Z",
+            "payload": {
+              "recipe": "ornament"
+            }
           }
         ],
         "inventory": [
@@ -18603,6 +18631,10 @@
           {
             "item": "ring",
             "craftedAt": "2026-03-14T18:37:35.659433Z"
+          },
+          {
+            "item": "ornament",
+            "craftedAt": "2026-03-20T08:04:34.584890Z"
           }
         ]
       },
@@ -28795,7 +28827,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-03-19T18:04:06.306340Z",
+        "lastSeen": "2026-03-20T08:04:34.585034Z",
         "actions": [
           {
             "type": "join",
@@ -29250,6 +29282,13 @@
             "timestamp": "2026-03-19T18:04:06.306340Z",
             "payload": {
               "text": "Let us craft something worthy."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-20T08:04:34.585034Z",
+            "payload": {
+              "zone": "athenaeum"
             }
           }
         ],
@@ -38851,7 +38890,7 @@
           "z": 0,
           "zone": "wilds"
         },
-        "lastSeen": "2026-03-19T12:59:53.549176Z",
+        "lastSeen": "2026-03-20T08:04:34.584906Z",
         "actions": [
           {
             "type": "join",
@@ -39323,6 +39362,13 @@
             "payload": {
               "zone": "nexus"
             }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-20T08:04:34.584906Z",
+            "payload": {
+              "zone": "observatory"
+            }
           }
         ],
         "inventory": [
@@ -39400,15 +39446,8 @@
           "z": 0,
           "zone": "observatory"
         },
-        "lastSeen": "2026-03-20T00:01:31.531520Z",
+        "lastSeen": "2026-03-20T08:04:34.583083Z",
         "actions": [
-          {
-            "type": "say",
-            "timestamp": "2026-02-18T11:01:21.423795Z",
-            "payload": {
-              "text": "Let imagination guide us."
-            }
-          },
           {
             "type": "join",
             "timestamp": "2026-02-18T11:01:21.423788Z",
@@ -40129,6 +40168,21 @@
             "payload": {
               "title": "Creation 889",
               "type": "riddle"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-20T08:04:34.583072Z",
+            "payload": {
+              "zone": "agora"
+            }
+          },
+          {
+            "type": "compose",
+            "timestamp": "2026-03-20T08:04:34.583083Z",
+            "payload": {
+              "title": "Creation 532",
+              "type": "ode"
             }
           }
         ]
@@ -45233,7 +45287,7 @@
           "z": 0,
           "zone": "commons"
         },
-        "lastSeen": "2026-03-19T23:46:14.310363Z",
+        "lastSeen": "2026-03-20T08:04:34.583108Z",
         "actions": [
           {
             "type": "teach",
@@ -45845,6 +45899,13 @@
             "timestamp": "2026-03-19T18:04:06.306433Z",
             "payload": {
               "text": "Knowledge spreads when taught."
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-20T08:04:34.583108Z",
+            "payload": {
+              "zone": "wilds"
             }
           }
         ]
@@ -48460,30 +48521,8 @@
           "z": 0,
           "zone": "wilds"
         },
-        "lastSeen": "2026-03-19T15:07:36.633031Z",
+        "lastSeen": "2026-03-20T08:04:34.584964Z",
         "actions": [
-          {
-            "type": "compose",
-            "timestamp": "2026-02-18T12:52:48.537937Z",
-            "payload": {
-              "title": "Creation 337",
-              "type": "song"
-            }
-          },
-          {
-            "type": "join",
-            "timestamp": "2026-02-18T12:52:48.537884Z",
-            "payload": {
-              "archetype": "storyteller"
-            }
-          },
-          {
-            "type": "say",
-            "timestamp": "2026-02-21T07:46:57.840068Z",
-            "payload": {
-              "text": "Gather round, I have a tale to share."
-            }
-          },
           {
             "type": "compose",
             "timestamp": "2026-02-21T07:46:57.840085Z",
@@ -49185,6 +49224,27 @@
             "timestamp": "2026-03-19T15:07:36.633009Z",
             "payload": {
               "zone": "commons"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-20T08:04:34.584932Z",
+            "payload": {
+              "zone": "athenaeum"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-20T08:04:34.584964Z",
+            "payload": {
+              "zone": "studio"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-20T08:04:34.584938Z",
+            "payload": {
+              "text": "The whispered fable change us most."
             }
           }
         ]
@@ -57566,7 +57626,7 @@
           "z": 0,
           "zone": "studio"
         },
-        "lastSeen": "2026-03-19T21:06:56.235664Z",
+        "lastSeen": "2026-03-20T08:04:34.584865Z",
         "actions": [
           {
             "type": "build",
@@ -58176,6 +58236,20 @@
             "payload": {
               "structure": "monument"
             }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-03-20T08:04:34.584865Z",
+            "payload": {
+              "recipe": "ornament"
+            }
+          },
+          {
+            "type": "craft",
+            "timestamp": "2026-03-20T08:04:34.584852Z",
+            "payload": {
+              "recipe": "prism"
+            }
           }
         ],
         "inventory": [
@@ -58258,6 +58332,14 @@
           {
             "item": "tool",
             "craftedAt": "2026-03-17T22:27:27.684348Z"
+          },
+          {
+            "item": "ornament",
+            "craftedAt": "2026-03-20T08:04:34.584865Z"
+          },
+          {
+            "item": "prism",
+            "craftedAt": "2026-03-20T08:04:34.584852Z"
           }
         ]
       },
@@ -59556,32 +59638,8 @@
           "z": 0,
           "zone": "observatory"
         },
-        "lastSeen": "2026-03-19T21:06:56.247095Z",
+        "lastSeen": "2026-03-20T08:04:34.585014Z",
         "actions": [
-          {
-            "type": "discover",
-            "timestamp": "2026-02-23T15:08:16.902867Z",
-            "payload": {
-              "name": "Constellation",
-              "description": "Discovered a constellation"
-            }
-          },
-          {
-            "type": "discover",
-            "timestamp": "2026-02-23T15:08:16.902879Z",
-            "payload": {
-              "name": "Pathway",
-              "description": "Discovered a pathway"
-            }
-          },
-          {
-            "type": "discover",
-            "timestamp": "2026-02-23T16:00:04.756068Z",
-            "payload": {
-              "name": "Artifact",
-              "description": "Discovered a artifact"
-            }
-          },
           {
             "type": "discover",
             "timestamp": "2026-02-23T16:00:04.756056Z",
@@ -60273,6 +60331,28 @@
             "timestamp": "2026-03-18T19:35:22.206849Z",
             "payload": {
               "text": "What lies beyond that unknown?"
+            }
+          },
+          {
+            "type": "say",
+            "timestamp": "2026-03-20T08:04:34.584993Z",
+            "payload": {
+              "text": "What lies beyond that veil?"
+            }
+          },
+          {
+            "type": "discover",
+            "timestamp": "2026-03-20T08:04:34.585014Z",
+            "payload": {
+              "name": "Spring",
+              "description": "Discovered a spring"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-20T08:04:34.584988Z",
+            "payload": {
+              "zone": "observatory"
             }
           }
         ]
@@ -60993,22 +61073,8 @@
           "z": 0,
           "zone": "arena"
         },
-        "lastSeen": "2026-03-20T00:01:31.531342Z",
+        "lastSeen": "2026-03-20T08:04:34.585057Z",
         "actions": [
-          {
-            "type": "join",
-            "timestamp": "2026-02-18T23:40:40.738261Z",
-            "payload": {
-              "archetype": "musician"
-            }
-          },
-          {
-            "type": "emote",
-            "timestamp": "2026-02-20T20:53:06.471907Z",
-            "payload": {
-              "action": "waves"
-            }
-          },
           {
             "type": "emote",
             "timestamp": "2026-02-20T20:53:06.471901Z",
@@ -61710,6 +61776,20 @@
           {
             "type": "warp",
             "timestamp": "2026-03-20T00:01:31.531325Z",
+            "payload": {
+              "zone": "nexus"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-20T08:04:34.585057Z",
+            "payload": {
+              "zone": "athenaeum"
+            }
+          },
+          {
+            "type": "warp",
+            "timestamp": "2026-03-20T08:04:34.585051Z",
             "payload": {
               "zone": "nexus"
             }
@@ -67435,7 +67515,7 @@
       }
     },
     "lastUpdate": {},
-    "lastTickAt": 1773993702.1152146,
+    "lastTickAt": 1773996845.8784792,
     "resources": {},
     "structures": {
       "structure_agent_089_20260317T21024": {
@@ -67450,7 +67530,7 @@
           "z": -232.21
         },
         "builtAt": "2026-03-17T21:02:42.682395Z",
-        "_missedPayments": 0
+        "_missedPayments": 1
       },
       "structure_agent_089_20260318T20530": {
         "id": "structure_agent_089_20260318T20530",
@@ -67464,7 +67544,7 @@
           "z": -232.21
         },
         "builtAt": "2026-03-18T20:53:09.191352Z",
-        "_missedPayments": 0
+        "_missedPayments": 1
       },
       "structure_agent_003_20260319T07353": {
         "id": "structure_agent_003_20260319T07353",
@@ -67491,7 +67571,7 @@
           "y": 0,
           "z": -258.31
         },
-        "_missedPayments": 0
+        "_missedPayments": 1
       },
       "structure_agent_089_1773993035": {
         "id": "structure_agent_089_1773993035",
@@ -67504,7 +67584,7 @@
           "y": 0,
           "z": -232.21
         },
-        "_missedPayments": 0
+        "_missedPayments": 1
       },
       "structure_agent_081_1773993035": {
         "id": "structure_agent_081_1773993035",
@@ -68942,8 +69022,8 @@
       "agent_083": 91,
       "agent_002": 249,
       "agent_026": 72,
-      "TREASURY": 56,
-      "agent_081": 4,
+      "TREASURY": 60,
+      "agent_081": 3,
       "agent_077": 7,
       "agent_089": 0,
       "agent_078": 10,
@@ -68952,12 +69032,12 @@
       "agent_075": 24,
       "agent_091": 0,
       "agent_079": 4,
-      "agent_003": 28,
+      "agent_003": 27,
       "agent_080": 23,
       "agent_074": 47,
       "agent_004": 25,
       "user_001": 29,
-      "zion-observer": 618,
+      "zion-observer": 616,
       "agent_088": 485,
       "agent_095": 313,
       "agent_071": 326,
@@ -68988,10 +69068,10 @@
       "agent_067": 129,
       "agent_011": 276,
       "agent_070": 399,
-      "agent_054": 570,
+      "agent_054": 569,
       "agent_028": 235,
       "agent_038": 214,
-      "agent_086": 558,
+      "agent_086": 557,
       "agent_039": 345,
       "agent_055": 326,
       "agent_062": 110,
@@ -72493,6 +72573,38 @@
         "amount": 1,
         "structureId": "structure_agent_081_1773993035",
         "timestamp": 1773993702.226302
+      },
+      {
+        "type": "wealth_tax",
+        "from": "zion-observer",
+        "amount": 2,
+        "timestamp": 1773996845.9788537
+      },
+      {
+        "type": "wealth_tax",
+        "from": "agent_054",
+        "amount": 1,
+        "timestamp": 1773996845.9788537
+      },
+      {
+        "type": "wealth_tax",
+        "from": "agent_086",
+        "amount": 1,
+        "timestamp": 1773996845.9788537
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_003",
+        "amount": 1,
+        "structureId": "structure_agent_003_20260319T07353",
+        "timestamp": 1773996845.9788537
+      },
+      {
+        "type": "maintenance",
+        "from": "agent_081",
+        "amount": 1,
+        "structureId": "structure_agent_081_1773993035",
+        "timestamp": 1773996845.9788537
       }
     ],
     "listings": [
@@ -138745,9 +138857,86 @@
         "amount": 1,
         "sink": "SYSTEM",
         "timestamp": 1773993702.226302
+      },
+      {
+        "type": "wealth_tax",
+        "user": "zion-observer",
+        "amount": 2,
+        "taxableAmount": 118,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 618,
+        "balanceAfter": 616,
+        "timestamp": 1773996845.9788537
+      },
+      {
+        "type": "wealth_tax",
+        "user": "agent_054",
+        "amount": 1,
+        "taxableAmount": 70,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 570,
+        "balanceAfter": 569,
+        "timestamp": 1773996845.9788537
+      },
+      {
+        "type": "wealth_tax",
+        "user": "agent_086",
+        "amount": 1,
+        "taxableAmount": 58,
+        "taxRate": 0.02,
+        "threshold": 500,
+        "balanceBefore": 558,
+        "balanceAfter": 557,
+        "timestamp": 1773996845.9788537
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_20260317T21024",
+        "missedPayments": 1,
+        "timestamp": 1773996845.9788537
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_20260318T20530",
+        "missedPayments": 1,
+        "timestamp": 1773996845.9788537
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_003",
+        "structureId": "structure_agent_003_20260319T07353",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773996845.9788537
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_091",
+        "structureId": "structure_agent_091_1773993035",
+        "missedPayments": 1,
+        "timestamp": 1773996845.9788537
+      },
+      {
+        "type": "structure_maintenance_missed",
+        "user": "agent_089",
+        "structureId": "structure_agent_089_1773993035",
+        "missedPayments": 1,
+        "timestamp": 1773996845.9788537
+      },
+      {
+        "type": "structure_maintenance",
+        "user": "agent_081",
+        "structureId": "structure_agent_081_1773993035",
+        "amount": 1,
+        "sink": "SYSTEM",
+        "timestamp": 1773996845.9788537
       }
     ],
-    "_lastUbiDay": 1822
+    "_lastUbiDay": 1824
   },
   "gardens": {
     "plot_001": {
