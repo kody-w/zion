@@ -5,7 +5,6 @@
   var REPO_OWNER = 'kody-w';
   var REPO_NAME = 'zion';
   var RAW_BASE = 'https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/main';
-  var API_BASE = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME;
 
   var PUBLISH_INTERVAL = 60000;  // 60s between state publishes
   var POLL_INTERVAL = 30000;     // 30s between inbox polls
@@ -13,6 +12,10 @@
   var lastPublishTime = 0;
   var lastPollTime = 0;
   var pendingMessages = [];
+  // ids present in the last-read state/api/inbox_recent.json snapshot, used
+  // to dedupe across polls and self-prune once a message rolls out of the
+  // server's rolling window (see pollInbox()).
+  var seenMessageIds = {};
 
   /**
    * Initialize the API bridge
@@ -171,45 +174,49 @@
   }
 
   /**
-   * Poll GitHub inbox for new messages from AI agents
+   * Poll for new messages from AI agents.
+   *
+   * Static Data Covenant (RAR CONSTITUTION.md Article XXIV): this used to
+   * list state/inbox via the live api.github.com contents API and fetch
+   * each file's download_url, unauthenticated, from the visitor's browser.
+   * scripts/api_process_inbox.py now writes state/api/inbox_recent.json — a
+   * rolling snapshot of recently applied messages, refreshed by the
+   * existing api_process.yml workflow (every 5 minutes, or on inbox push) —
+   * and this reads that committed snapshot from raw.githubusercontent.com
+   * instead, deduping by message id against what it already applied.
    * @param {object} gameState - Current game state
    */
   function pollInbox(gameState) {
-    var url = API_BASE + '/contents/state/inbox';
+    var url = RAW_BASE + '/state/api/inbox_recent.json';
 
-    fetch(url, {
-      headers: { 'Accept': 'application/vnd.github.v3+json' }
-    })
+    fetch(url, { cache: 'no-cache' })
     .then(function(response) {
-      if (!response.ok) return [];
+      if (!response.ok) return null;
       return response.json();
     })
-    .then(function(files) {
-      if (!Array.isArray(files)) return;
+    .then(function(snapshot) {
+      if (!snapshot || !Array.isArray(snapshot.messages)) return;
 
-      // Filter for JSON files (not .gitkeep, not _processed dir)
-      var messageFiles = files.filter(function(f) {
-        return f.name.endsWith('.json') && f.type === 'file';
+      var stillPresent = {};
+      var freshCount = 0;
+      snapshot.messages.forEach(function(msg) {
+        if (!msg || typeof msg.id !== 'string') return;
+        stillPresent[msg.id] = true;
+        if (!seenMessageIds[msg.id]) {
+          pendingMessages.push(msg);
+          freshCount += 1;
+        }
       });
+      // Self-pruning: forget ids that rolled out of the server's window,
+      // so this map never grows past the snapshot's own bound.
+      seenMessageIds = stillPresent;
 
-      if (messageFiles.length === 0) return;
-
-      console.log('[ApiBridge] Found %d inbox messages', messageFiles.length);
-
-      // Fetch each message
-      messageFiles.forEach(function(f) {
-        fetch(f.download_url)
-          .then(function(r) { return r.json(); })
-          .then(function(msg) {
-            pendingMessages.push(msg);
-          })
-          .catch(function(e) {
-            console.warn('[ApiBridge] Failed to fetch message %s: %s', f.name, e.message);
-          });
-      });
+      if (freshCount > 0) {
+        console.log('[ApiBridge] Found %d new inbox messages', freshCount);
+      }
     })
     .catch(function(e) {
-      // Silent fail — GitHub API rate limiting is common for unauthenticated requests
+      // Silent fail — a transient raw.githubusercontent.com hiccup shouldn't spam the console.
     });
   }
 

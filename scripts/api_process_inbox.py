@@ -4,6 +4,14 @@
 Reads JSON files from state/inbox/, validates them against the protocol,
 applies valid messages to canonical state, and moves processed files
 to state/inbox/_processed/.
+
+Also maintains state/api/inbox_recent.json, a rolling snapshot of recently
+applied messages. This is the Static Data Covenant replacement (RAR
+CONSTITUTION.md Article XXIV) for the browser's old behavior of polling
+the live api.github.com contents API for state/inbox every 30s: the
+browser now reads this CI-harvested, committed file from
+raw.githubusercontent.com instead, on the same interval, tracking a
+high-water mark so it only re-applies messages it hasn't seen yet.
 """
 import json
 import os
@@ -49,6 +57,9 @@ API_ALLOWED_TYPES = {
 
 # Default rate limits
 DEFAULT_RATE = {'messages_per_minute': 2, 'messages_per_hour': 30}
+
+# Rolling buffer size for state/api/inbox_recent.json (see module docstring).
+INBOX_RECENT_MAX = 300
 
 
 def load_json(path):
@@ -508,7 +519,7 @@ def process_inbox(state_dir):
     processed_dir = os.path.join(inbox_dir, '_processed')
     os.makedirs(processed_dir, exist_ok=True)
 
-    results = {'processed': 0, 'rejected': 0, 'errors': []}
+    results = {'processed': 0, 'rejected': 0, 'errors': [], 'applied_messages': []}
 
     if not os.path.isdir(inbox_dir):
         print('No inbox directory found at %s' % inbox_dir)
@@ -574,6 +585,7 @@ def process_inbox(state_dir):
             apply_to_state(msg, state_dir)
             print('OK (%s from %s)' % (msg['type'], msg['from']))
             results['processed'] += 1
+            results['applied_messages'].append(msg)
             shutil.move(filepath, os.path.join(processed_dir, filename))
         except Exception as e:
             print('APPLY ERROR — %s' % e)
@@ -583,6 +595,29 @@ def process_inbox(state_dir):
 
     print('\nResults: %d processed, %d rejected' % (results['processed'], results['rejected']))
     return results
+
+
+def update_inbox_recent_snapshot(state_dir, applied_messages):
+    """Append newly applied messages to the rolling state/api/inbox_recent.json
+    snapshot, trimmed to INBOX_RECENT_MAX entries.
+
+    This is what the browser now reads (via raw.githubusercontent.com)
+    instead of polling api.github.com's contents API for state/inbox — see
+    the module docstring and src/js/api_bridge.js's pollInbox().
+    """
+    snapshot_path = os.path.join(state_dir, 'api', 'inbox_recent.json')
+    snapshot = load_json(snapshot_path)
+    if not isinstance(snapshot, dict) or not isinstance(snapshot.get('messages'), list):
+        snapshot = {'messages': []}
+
+    if applied_messages:
+        snapshot['messages'].extend(applied_messages)
+        if len(snapshot['messages']) > INBOX_RECENT_MAX:
+            snapshot['messages'] = snapshot['messages'][-INBOX_RECENT_MAX:]
+
+    snapshot['generated_at'] = datetime.now(timezone.utc).isoformat()
+    os.makedirs(os.path.dirname(snapshot_path), exist_ok=True)
+    save_json(snapshot_path, snapshot)
 
 
 def cleanup_old_processed(state_dir, max_age_seconds=604800):
@@ -629,6 +664,10 @@ def main():
         'rejected': results['rejected'],
         'errors': results['errors'],
     })
+
+    # Static Data Covenant snapshot the browser reads instead of polling
+    # api.github.com — see update_inbox_recent_snapshot()'s docstring.
+    update_inbox_recent_snapshot(state_dir, results['applied_messages'])
 
     return 0
 

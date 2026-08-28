@@ -20894,7 +20894,6 @@
   var REPO_OWNER = 'kody-w';
   var REPO_NAME = 'zion';
   var RAW_BASE = 'https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/main';
-  var API_BASE = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME;
 
   var PUBLISH_INTERVAL = 60000;  // 60s between state publishes
   var POLL_INTERVAL = 30000;     // 30s between inbox polls
@@ -20902,6 +20901,7 @@
   var lastPublishTime = 0;
   var lastPollTime = 0;
   var pendingMessages = [];
+  var seenMessageIds = {};
 
   function init() {
     console.log('[ApiBridge] Initialized — publish every %ds, poll every %ds',
@@ -21034,36 +21034,31 @@
   }
 
   function pollInbox(gameState) {
-    var url = API_BASE + '/contents/state/inbox';
+    var url = RAW_BASE + '/state/api/inbox_recent.json';
 
-    fetch(url, {
-      headers: { 'Accept': 'application/vnd.github.v3+json' }
-    })
+    fetch(url, { cache: 'no-cache' })
     .then(function(response) {
-      if (!response.ok) return [];
+      if (!response.ok) return null;
       return response.json();
     })
-    .then(function(files) {
-      if (!Array.isArray(files)) return;
+    .then(function(snapshot) {
+      if (!snapshot || !Array.isArray(snapshot.messages)) return;
 
-      var messageFiles = files.filter(function(f) {
-        return f.name.endsWith('.json') && f.type === 'file';
+      var stillPresent = {};
+      var freshCount = 0;
+      snapshot.messages.forEach(function(msg) {
+        if (!msg || typeof msg.id !== 'string') return;
+        stillPresent[msg.id] = true;
+        if (!seenMessageIds[msg.id]) {
+          pendingMessages.push(msg);
+          freshCount += 1;
+        }
       });
+      seenMessageIds = stillPresent;
 
-      if (messageFiles.length === 0) return;
-
-      console.log('[ApiBridge] Found %d inbox messages', messageFiles.length);
-
-      messageFiles.forEach(function(f) {
-        fetch(f.download_url)
-          .then(function(r) { return r.json(); })
-          .then(function(msg) {
-            pendingMessages.push(msg);
-          })
-          .catch(function(e) {
-            console.warn('[ApiBridge] Failed to fetch message %s: %s', f.name, e.message);
-          });
-      });
+      if (freshCount > 0) {
+        console.log('[ApiBridge] Found %d new inbox messages', freshCount);
+      }
     })
     .catch(function(e) {
     });
